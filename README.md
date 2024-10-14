@@ -1,15 +1,15 @@
-# STARTER-team02
+# STARTER-team01
 
-Instructions: <https://ucsb-cs156.github.io/f24/lab/team02.html>
+Instructions: <https://ucsb-cs156.github.io/f24/lab/team01.html>
 
-TODO: change heading above to your repo name, e.g. `# team02-f24-17`
+TODO: change heading above to your repo name, e.g. `# team01-f24-17`
 
 TODO: Add a link to the deployed Dokku app for your team here, e.g.
 
 Deployments:
 
-* Prod: <https://team02.dokku-17.cs.ucsb.edu>
-* QA: <https://team02-qa.dokku-17.cs.ucsb.edu>
+* Prod: <https://team01.dokku-17.cs.ucsb.edu>
+* QA: <https://team01-qa.dokku-17.cs.ucsb.edu>
 
 TODO: Fill in this table with correct information. 
 
@@ -37,13 +37,13 @@ TODO: remove this header and content of this section before submitting.
 However leave the section `# Overview of application` and its content 
 intact.
 
-The starter code here starts with a base similar to `team02`, but with 
+The starter code here starts with a base similar to `team01`, but with 
 some extra frontend code on top of the of backend CRUD operations
-that were present in `team02`.
+that were present in `team01`.
 
 You can use this code as a basis to:
-* Add the backend code from team02 *in stages* as suggested in the issues (doing that in "one giant pull request" is *not recommended) 
-* Add a frontend on top of the backend CRUD features you added in team02, using the existing
+* Add the backend code from team01 *in stages* as suggested in the issues (doing that in "one giant pull request" is *not recommended) 
+* Add a frontend on top of the backend CRUD features you added in team01, using the existing
   code as examples.
 
 # Overview of application
