@@ -93,7 +93,7 @@ will likely see an error such as:
 * In the second window:
   ```
   cd frontend
-  npm install  # only on first run or when dependencies change
+  npm ci  # only on first run
   npm start
   ```
 
