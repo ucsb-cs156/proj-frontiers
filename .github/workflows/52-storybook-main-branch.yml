@@ -36,7 +36,7 @@ jobs:
     - name: Build Storybook for main branch
       working-directory: frontend
       run: | # Install npm packages and build the Storybook files
-        npm install
+        npm ci
         npx build-storybook --docs -o storybook_static -s public
 
     - name: Deploy 🚀
