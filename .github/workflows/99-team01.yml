@@ -245,11 +245,10 @@ jobs:
             deployment.
             
             # Acceptance Criteria:
-            - [ ] An app named `${{env.ASN_NAME}}-YOURGITHUBID-dev` is created on this team's dokku server, where
-                  `YOURGITHUBID` is your github id.
-
-            - [ ] An database is configured for that app (see: <https://ucsb-cs156.github.io/topics/dokku/postgres_database.html>)
-            - [ ] HTTPS is configured for that app (see: <https://ucsb-cs156.github.io/topics/dokku/enabling_https.html>)
+            # Acceptance Criteria:
+            - [ ] In general, the steps in <https://ucsb-cs156.github.io/topics/dokku/deploying_an_app.html> have been followed.
+            - [ ] An app named <tt>${{env.ASN_NAME}}-dev-yourGithubid</tt> is created on this team's dokku server.
+            - [ ] You have run <tt>dokku git:set ${{env.ASN_NAME}}-dev-yourGithubid keep-git-dir true</tt>
             - [ ] The ADMIN_EMAILS are configured for that app.
                   * You should find the ones you need in a pinned post on your team's Slack channel.
                   * Instructions for configuring the variable are here: 
@@ -258,10 +257,13 @@ jobs:
                   * Instructions for configuring OAuth credentials are here: 
                     <https://ucsb-cs156.github.io/topics/oauth/oauth_google_setup.html>
                   * Then you need to use the instructions here to configure the environment variables `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`: <https://ucsb-cs156.github.io/topics/dokku/environment_variables.html>
+            - [ ] An database is configured for that app (see: <https://ucsb-cs156.github.io/topics/dokku/postgres_database.html>)
+            - [ ] HTTPS is configured for that app (see: <https://ucsb-cs156.github.io/topics/dokku/enabling_https.html>)
+            - [ ] The main branch is deployed on Dokku at, for example,
+                  <https://${{env.ASN_NAME}}-dev-yourGithubid.dokku-xx.cs.ucsb.edu> (substituting your
+                  own Dokku instances for xx).  (Later you'll deploy other branches as you test them.)
             - [ ] Everyone on the team, and the instructor and TAs, are all able to 
                   login with OAuth and see that they have admin privileges.
-            - [ ] Initially, the `main` branch is deployed and works properly (later, you will deploy your own branches to this 
-                  instance as you test them before merging.)     
             # Next issue
 
             Next, work on 
