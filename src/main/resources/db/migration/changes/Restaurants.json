@@ -1,0 +1,56 @@
+{
+    "databaseChangeLog": [
+      {
+        "changeSet": {
+          "id": "Restaurants-1",
+          "author": "phtcon",
+          "preConditions": [
+            {
+              "onFail": "MARK_RAN"
+            },
+            {
+              "not": [
+                {
+                  "tableExists": {
+                    "tableName": "RESTAURANTS"
+                  }
+                }
+              ]
+            }
+          ],
+          "changes": [
+            {
+              "createTable": {
+                "columns": [
+                  {
+                    "column": {
+                      "autoIncrement": true,
+                      "constraints": {
+                        "primaryKey": true,
+                        "primaryKeyName": "RESTAURANTS_PK"
+                      },
+                      "name": "ID",
+                      "type": "BIGINT"
+                    }
+                  },
+                  {
+                    "column": {
+                      "name": "NAME",
+                      "type": "VARCHAR(255)"
+                    }
+                  },
+                  {
+                    "column": {
+                      "name": "DESCRIPTION",
+                      "type": "VARCHAR(255)"
+                    }
+                  }
+                ],
+                "tableName": "RESTAURANTS"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
