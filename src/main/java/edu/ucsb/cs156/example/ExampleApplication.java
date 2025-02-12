@@ -6,6 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import edu.ucsb.cs156.example.services.wiremock.WiremockService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @SpringBootApplication
 @Slf4j
+@EnableAsync // for @Async annotation for JobsService
+@EnableScheduling // for @Scheduled annotation for JobsService
 public class ExampleApplication {
 
   @Autowired
