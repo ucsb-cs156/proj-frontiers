@@ -75,15 +75,22 @@ jobs:
          java-version-file: ./.java-version
   
     - name: Build javadoc
-      run: mvn -DskipTests javadoc:javadoc
+      run: |
+         mkdir -p target/site/apidocs
+         mvn -DskipTests javadoc:javadoc
  
-    - name: Deploy 🚀
-      uses: JamesIves/github-pages-deploy-action@v4
+    - name: Deploy 🚀    
+      if: always() # always upload artifacts, even if tests fail
+      uses: Wandalen/wretry.action@master
       with:
-        branch: gh-pages # The branch the action should deploy to.
-        folder: target/site/apidocs # The folder where mvn javadoc:javadoc outputs the javadoc files
-        clean: true # Automatically remove deleted files from the deploy branch
-        target-folder: prs/${{ needs.get-pr-num.outputs.pr_number }}/javadoc # The folder that we serve our javadoc files from 
+        action: JamesIves/github-pages-deploy-action@v4
+        attempt_limit: 3
+        attempt_delay: 5000
+        with: |        
+          branch: gh-pages # The branch the action should deploy to.
+          folder: target/site/apidocs # The folder where mvn javadoc:javadoc outputs the javadoc files
+          clean: true # Automatically remove deleted files from the deploy branch
+          target-folder: prs/${{ needs.get-pr-num.outputs.pr_number }}/javadoc # The folder that we serve our javadoc files from 
   
   
  
