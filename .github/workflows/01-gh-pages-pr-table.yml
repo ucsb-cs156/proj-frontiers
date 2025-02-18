@@ -75,8 +75,12 @@ jobs:
         cp -r frontend/docs-index/* site
   
     - name: Deploy 🚀
-      uses: JamesIves/github-pages-deploy-action@v4
+      uses: Wandalen/wretry.action@master
       with:
-        folder: site # The folder the action should deploy.
-        branch: gh-pages
-        clean: false # Automatically remove deleted files from the deploy branch
+        action: JamesIves/github-pages-deploy-action@v4
+        attempt_limit: 3
+        attempt_delay: 5000
+        with: |
+          folder: site # The folder the action should deploy.
+          branch: gh-pages
+          clean: false

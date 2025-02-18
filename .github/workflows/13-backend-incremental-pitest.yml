@@ -92,9 +92,13 @@ jobs:
 
     - name: Deploy 🚀
       if: always() # always upload artifacts, even if tests fail
-      uses: JamesIves/github-pages-deploy-action@v4
+      uses: Wandalen/wretry.action@master
       with:
-        branch: gh-pages # The branch the action should deploy to.
-        folder: target/pit-reports # The folder where the files we want to publish are located
-        clean: true # Automatically remove deleted files from the deploy branch
-        target-folder: ${{env.prefix}}pitest # The folder that we serve our files from
+        action: JamesIves/github-pages-deploy-action@v4
+        attempt_limit: 3
+        attempt_delay: 5000
+        with: |
+          branch: gh-pages # The branch the action should deploy to.
+          folder: target/pit-reports # The folder where the files we want to publish are located
+          clean: true # Automatically remove deleted files from the deploy branch
+          target-folder: ${{env.prefix}}pitest # The folder that we serve our files from
