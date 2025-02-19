@@ -63,6 +63,7 @@
     "@stryker-mutator/jest-runner": "^8.5.0",
     "@testing-library/react": "^16.0.0",
     "axios-mock-adapter": "^2.0.0",
+    "chromatic": "^11.25.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-storybook": "^0.8.0",
