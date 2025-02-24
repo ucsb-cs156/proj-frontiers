@@ -90,7 +90,7 @@ public class JobsController extends ApiController {
   @GetMapping("/logs/{id}")
   public String getJobLogs(@Parameter(name = "id", description = "Job ID") @PathVariable Long id) {
 
-    return jobService.getLongJob(id);
+    return jobService.getJobLogs(id);
   }
 
 

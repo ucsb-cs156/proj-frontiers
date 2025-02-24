@@ -41,7 +41,7 @@ public class JobService {
     jobsRepository.save(job);
   }
 
-  public String getLongJob(Long jobId) {
+  public String getJobLogs(Long jobId) {
     Job job =
         jobsRepository
             .findById(jobId)
