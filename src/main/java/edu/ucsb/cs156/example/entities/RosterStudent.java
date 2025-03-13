@@ -1,8 +1,7 @@
 package edu.ucsb.cs156.example.entities;
 
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import edu.ucsb.cs156.example.services.statuses.OrgStatus;
-import edu.ucsb.cs156.example.services.statuses.RosterStatus;
+import edu.ucsb.cs156.example.enums.OrgStatus;
+import edu.ucsb.cs156.example.enums.RosterStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
