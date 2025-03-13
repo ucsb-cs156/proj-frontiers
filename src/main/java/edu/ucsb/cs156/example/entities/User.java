@@ -1,14 +1,15 @@
 package edu.ucsb.cs156.example.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
+import java.util.List;
 
 /**
  * This is a JPA entity that represents a user.
@@ -33,4 +34,16 @@ public class User {
   private String locale;
   private String hostedDomain;
   private boolean admin;
+  private boolean professor;
+  private String githubId;
+  private String githubLogin;
+  private String perm;
+
+  @OneToMany(mappedBy = "user")
+  @Fetch(FetchMode.JOIN)
+  private List<RosterStudent> linkedStudents;
+
+  @OneToMany(mappedBy = "user")
+  @Fetch(FetchMode.JOIN)
+  private List<CourseStaff> roles;
 }
