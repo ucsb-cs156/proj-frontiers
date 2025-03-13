@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [initialize]
     env:
-      destination: target/site/apidocs   
+      destination: target/reports/apidocs   
     steps:
     - name: Checkout local code to establish repo
       uses: actions/checkout@v4
@@ -296,7 +296,7 @@ jobs:
     needs: [initialize]
 
     env:
-      destination: target/site/apidocs   
+      destination: target/reports/apidocs   
     strategy:
       matrix:
         value: ${{ fromJSON(needs.initialize.outputs.pull_requests)}}
