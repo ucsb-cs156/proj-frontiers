@@ -5,7 +5,7 @@ describe("Footer tests", () => {
   test("renders correctly", async () => {
     render(<Footer />);
     const expectedText =
-      "This is a sample webapp using React with a Spring Boot backend. See the source code on Github.";
+      "This is the MVP for the Frontiers project. See the repo on Github.";
     expect(screen.getByTestId("Footer").textContent).toBe(expectedText);
     // await screen.findByText(
     //   /This is a sample webapp using React with a Spring Boot backend./,
