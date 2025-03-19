@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-write-entities","number":7,"title":"Writing the Database Tables and Entities","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/7"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-FixBranding","number":8,"title":"Updating the Frontiers Branding","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/8"},{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-write-entities","number":7,"title":"Writing the Database Tables and Entities","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/7"}]
