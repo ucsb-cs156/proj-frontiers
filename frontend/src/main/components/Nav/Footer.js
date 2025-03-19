@@ -6,9 +6,7 @@ export default function Footer() {
       <Container>
         <p>
           This is the MVP for the Frontiers project. See the repo on{" "}
-          <a href="https://github.com/ucsb-cs156/proj-frontiers">
-            Github.
-          </a>
+          <a href="https://github.com/ucsb-cs156/proj-frontiers">Github.</a>
         </p>
       </Container>
     </footer>
