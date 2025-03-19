@@ -3,6 +3,7 @@ edu.ucsb.cs156.example.aop
 edu.ucsb.cs156.example.config
 edu.ucsb.cs156.example.controllers
 edu.ucsb.cs156.example.entities
+edu.ucsb.cs156.example.enums
 edu.ucsb.cs156.example.errors
 edu.ucsb.cs156.example.jobs
 edu.ucsb.cs156.example.models
