@@ -13,5 +13,6 @@ team01,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
 team01,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,3,0,2,0,2
 team01,edu.ucsb.cs156.frontiers.controllers,ApiController,0,24,0,0,0,7,0,5,0,5
 team01,edu.ucsb.cs156.frontiers.controllers,UsersController,0,16,0,0,0,5,0,2,0,2
-team01,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,7,0,0,0,2,0,2,0,2
+team01,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,7,0,0,0,3,0,2,0,2
+team01,edu.ucsb.cs156.frontiers.models,SystemInfo,3,0,0,0,2,0,1,0,1,0
 team01,edu.ucsb.cs156.frontiers.entities,User,0,3,0,0,0,2,0,1,0,1
