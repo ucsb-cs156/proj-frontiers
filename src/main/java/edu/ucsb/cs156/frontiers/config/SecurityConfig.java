@@ -60,6 +60,10 @@ import java.util.function.Supplier;
 @Slf4j
 public class SecurityConfig {
 
+  /** default constructor */
+  public SecurityConfig() {
+  }
+
   @Value("${app.admin.emails}")
   private final List<String> adminEmails = new ArrayList<>();
 

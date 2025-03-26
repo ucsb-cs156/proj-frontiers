@@ -30,6 +30,10 @@ import edu.ucsb.cs156.frontiers.services.SystemInfoService;
 @RestController
 public class SystemInfoController extends ApiController {
 
+    /** default constructor */
+    public SystemInfoController() {
+    }
+
     @Autowired
     private SystemInfoService systemInfoService;
 
