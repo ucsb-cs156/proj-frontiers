@@ -19,6 +19,12 @@ import java.util.Map;
 
 @Slf4j
 public abstract class ApiController {
+
+  /**
+   * Default constructor
+   */
+  public ApiController() {} 
+
   @Autowired
   private CurrentUserService currentUserService;
 

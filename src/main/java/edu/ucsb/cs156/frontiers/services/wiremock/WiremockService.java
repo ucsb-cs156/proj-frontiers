@@ -10,6 +10,10 @@ import com.github.tomakehurst.wiremock.WireMockServer;
  * There are two imlementations of the class, depending on the profile in use
  */
 public abstract class WiremockService {
+
+  /** default consructor */
+  public WiremockService() {}
+
   /**
    * This method returns the wiremockServer
    * @return the wiremockServer

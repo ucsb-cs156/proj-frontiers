@@ -18,6 +18,11 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 @ConfigurationProperties
 public class WiremockServiceDummy extends WiremockService {
   
+  /**
+   * Default constructor
+   */
+  public WiremockServiceDummy() {}
+
     /**
      * Dummy call for getWiremockServer()
      * @return null

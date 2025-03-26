@@ -34,6 +34,11 @@ public class WiremockServiceImpl extends WiremockService {
   WireMockServer wireMockServer;
 
   /**
+   * Default constructor
+   */
+  public WiremockServiceImpl() {}
+
+  /**  
    * This method returns the wiremockServer
    * 
    * @return the wiremockServer
@@ -46,6 +51,7 @@ public class WiremockServiceImpl extends WiremockService {
    * This method sets up the necessary mocks for authentication
    * 
    * @param s in an instance of a WireMockServer or WireMockExtension
+   * @param isAdmin a boolean indicating if the user is an admin
    */
   public static void setupOauthMocks(Stubbing s, boolean isAdmin) {
 

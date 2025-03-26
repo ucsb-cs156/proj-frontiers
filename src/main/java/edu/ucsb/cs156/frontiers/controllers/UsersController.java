@@ -32,6 +32,10 @@ public class UsersController extends ApiController {
     @Autowired
     ObjectMapper mapper;
 
+    /** default constructor */
+    public UsersController() {
+    }
+
     /**
      * This method returns a list of all users.  Accessible only to users with the role "ROLE_ADMIN".
      * @return a list of all users
