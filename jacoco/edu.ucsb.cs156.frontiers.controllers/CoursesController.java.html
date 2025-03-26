@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
     * @return the created course
      */
 
-    @Operation(summary = &quot;Create a new course&quot;)
+    @Operation(summary = &quot;Create a new recommendation request&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
     @PostMapping(&quot;/post&quot;)
     public Course postCourse(
