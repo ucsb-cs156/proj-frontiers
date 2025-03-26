@@ -6,4 +6,5 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 
 public interface CourseRepository extends JpaRepository<Course,Long>
 {
+    
 }

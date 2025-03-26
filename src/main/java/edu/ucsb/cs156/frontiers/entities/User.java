@@ -37,7 +37,7 @@ public class User {
   private boolean professor;
   private String githubId;
   private String githubLogin;
-  private String perm;
+  private String studentId;
 
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
