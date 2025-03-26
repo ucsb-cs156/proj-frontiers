@@ -17,4 +17,7 @@ public abstract class SystemInfoService {
    * @return the system information
    */
   public abstract SystemInfo getSystemInfo();
+
+  /** default constructor */
+  public SystemInfoService() {}
 }

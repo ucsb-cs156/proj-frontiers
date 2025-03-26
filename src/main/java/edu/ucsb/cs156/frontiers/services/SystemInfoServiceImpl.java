@@ -20,6 +20,9 @@ import edu.ucsb.cs156.frontiers.models.SystemInfo;
 @ConfigurationProperties
 public class SystemInfoServiceImpl extends SystemInfoService {
 
+  /** default constructor */
+  public SystemInfoServiceImpl() {}
+
   @Value("${spring.h2.console.enabled:false}")
   private boolean springH2ConsoleEnabled;
 
@@ -38,6 +41,12 @@ public class SystemInfoServiceImpl extends SystemInfoService {
   @Value("${git.commit.id.abbrev:unknown}")
   private String commitId;
 
+  /**
+   * This method returns the github URL for the given repo and commit.
+   * @param repo repository
+   * @param commit commit SHA
+   * @return the GitHub URL
+   */
   public static String githubUrl(String repo, String commit) {
     return commit != null && repo != null ? repo + "/commit/" + commit : null;
   }
