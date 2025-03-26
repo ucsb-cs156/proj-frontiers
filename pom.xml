@@ -230,6 +230,7 @@
             <exclude>**/${app.packagePath}/services/GrantedAuthoritiesService.*</exclude>
             <exclude>**/${app.packagePath}/FrontiersMain.*</exclude>
             <exclude>**/edu/ucsb/cs156/frontiers/services/wiremock/*</exclude>
+            <exclude>**/${app.packagePath}/services/JwtService.*</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -322,6 +323,7 @@
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceDummy</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceImpl</param>
             <param>${app.package}.services.GrantedAuthoritiesService</param>
+            <param>${app.package}.services.JwtService</param>
           </excludedClasses>
           <excludedTestClasses>
             <param>edu.ucsb.cs156.frontiers.web.*</param>
