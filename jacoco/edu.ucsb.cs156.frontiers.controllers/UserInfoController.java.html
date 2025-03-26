@@ -17,11 +17,7 @@ import edu.ucsb.cs156.frontiers.models.CurrentUser;
 @Tag(name=&quot;Current User Information&quot;)
 @RequestMapping(&quot;/api/currentUser&quot;)
 @RestController
-public class UserInfoController extends ApiController {
-
-  /** default constructor */
-<span class="fc" id="L23">  public UserInfoController() {</span>
-<span class="fc" id="L24">  }</span>
+<span class="fc" id="L20">public class UserInfoController extends ApiController {</span>
  
   /**
    * This method returns the current user.
@@ -32,7 +28,7 @@ public class UserInfoController extends ApiController {
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;&quot;)
   public CurrentUser getCurrentUser() {
-<span class="fc" id="L35">    return super.getCurrentUser();</span>
+<span class="fc" id="L31">    return super.getCurrentUser();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -18,13 +18,7 @@ import java.util.Map;
  */
 
 <span class="fc" id="L20">@Slf4j</span>
-public abstract class ApiController {
-
-  /**
-   * Default constructor
-   */
-<span class="fc" id="L26">  public ApiController() {} </span>
-
+<span class="fc" id="L21">public abstract class ApiController {</span>
   @Autowired
   private CurrentUserService currentUserService;
 
@@ -33,7 +27,7 @@ public abstract class ApiController {
    * @return the current user
    */
   protected CurrentUser getCurrentUser() {
-<span class="fc" id="L36">    return currentUserService.getCurrentUser();</span>
+<span class="fc" id="L30">    return currentUserService.getCurrentUser();</span>
   }
 
   /**
@@ -42,7 +36,7 @@ public abstract class ApiController {
    * @return a map with the message
    */
   protected Object genericMessage(String message) {
-<span class="fc" id="L45">    return Map.of(&quot;message&quot;, message);</span>
+<span class="fc" id="L39">    return Map.of(&quot;message&quot;, message);</span>
   }
 
   /**
@@ -53,9 +47,9 @@ public abstract class ApiController {
   @ExceptionHandler({ EntityNotFoundException.class })
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public Object handleGenericException(Throwable e) {
-<span class="fc" id="L56">    return Map.of(</span>
-<span class="fc" id="L57">      &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L58">      &quot;message&quot;, e.getMessage()</span>
+<span class="fc" id="L50">    return Map.of(</span>
+<span class="fc" id="L51">      &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L52">      &quot;message&quot;, e.getMessage()</span>
     );
   }
 }

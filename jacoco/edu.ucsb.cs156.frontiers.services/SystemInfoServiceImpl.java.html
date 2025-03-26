@@ -18,10 +18,7 @@ import edu.ucsb.cs156.frontiers.models.SystemInfo;
 <span class="fc" id="L18">@Slf4j</span>
 @Service(&quot;systemInfo&quot;)
 @ConfigurationProperties
-public class SystemInfoServiceImpl extends SystemInfoService {
-
-  /** default constructor */
-<span class="fc" id="L24">  public SystemInfoServiceImpl() {}</span>
+<span class="fc" id="L21">public class SystemInfoServiceImpl extends SystemInfoService {</span>
 
   @Value(&quot;${spring.h2.console.enabled:false}&quot;)
   private boolean springH2ConsoleEnabled;
@@ -41,14 +38,8 @@ public class SystemInfoServiceImpl extends SystemInfoService {
   @Value(&quot;${git.commit.id.abbrev:unknown}&quot;)
   private String commitId;
 
-  /**
-   * This method returns the github URL for the given repo and commit.
-   * @param repo repository
-   * @param commit commit SHA
-   * @return the GitHub URL
-   */
   public static String githubUrl(String repo, String commit) {
-<span class="fc bfc" id="L51" title="All 4 branches covered.">    return commit != null &amp;&amp; repo != null ? repo + &quot;/commit/&quot; + commit : null;</span>
+<span class="fc bfc" id="L42" title="All 4 branches covered.">    return commit != null &amp;&amp; repo != null ? repo + &quot;/commit/&quot; + commit : null;</span>
   }
 
   /**
@@ -58,17 +49,17 @@ public class SystemInfoServiceImpl extends SystemInfoService {
    * @return the system information
    */
   public SystemInfo getSystemInfo() {
-<span class="fc" id="L61">    SystemInfo si = SystemInfo.builder()</span>
-<span class="fc" id="L62">        .springH2ConsoleEnabled(this.springH2ConsoleEnabled)</span>
-<span class="fc" id="L63">        .showSwaggerUILink(this.showSwaggerUILink)</span>
-<span class="fc" id="L64">        .oauthLogin(this.oauthLogin)</span>
-<span class="fc" id="L65">        .sourceRepo(this.sourceRepo)</span>
-<span class="fc" id="L66">        .commitMessage(this.commitMessage)</span>
-<span class="fc" id="L67">        .commitId(this.commitId)</span>
-<span class="fc" id="L68">        .githubUrl(githubUrl(this.sourceRepo, this.commitId))</span>
-<span class="fc" id="L69">        .build();</span>
-<span class="fc" id="L70">    log.info(&quot;getSystemInfo returns {}&quot;, si);</span>
-<span class="fc" id="L71">    return si;</span>
+<span class="fc" id="L52">    SystemInfo si = SystemInfo.builder()</span>
+<span class="fc" id="L53">        .springH2ConsoleEnabled(this.springH2ConsoleEnabled)</span>
+<span class="fc" id="L54">        .showSwaggerUILink(this.showSwaggerUILink)</span>
+<span class="fc" id="L55">        .oauthLogin(this.oauthLogin)</span>
+<span class="fc" id="L56">        .sourceRepo(this.sourceRepo)</span>
+<span class="fc" id="L57">        .commitMessage(this.commitMessage)</span>
+<span class="fc" id="L58">        .commitId(this.commitId)</span>
+<span class="fc" id="L59">        .githubUrl(githubUrl(this.sourceRepo, this.commitId))</span>
+<span class="fc" id="L60">        .build();</span>
+<span class="fc" id="L61">    log.info(&quot;getSystemInfo returns {}&quot;, si);</span>
+<span class="fc" id="L62">    return si;</span>
   }
 
 }

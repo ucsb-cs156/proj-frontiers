@@ -28,11 +28,7 @@ import edu.ucsb.cs156.frontiers.services.SystemInfoService;
 @Tag(name = &quot;System Information&quot;)
 @RequestMapping(&quot;/api/systemInfo&quot;)
 @RestController
-public class SystemInfoController extends ApiController {
-
-    /** default constructor */
-<span class="fc" id="L34">    public SystemInfoController() {</span>
-<span class="fc" id="L35">    }</span>
+<span class="fc" id="L31">public class SystemInfoController extends ApiController {</span>
 
     @Autowired
     private SystemInfoService systemInfoService;
@@ -45,7 +41,7 @@ public class SystemInfoController extends ApiController {
     @Operation(summary = &quot;Get global information about the application&quot;)
     @GetMapping(&quot;&quot;)
     public SystemInfo getSystemInfo() {
-<span class="fc" id="L48">        return systemInfoService.getSystemInfo();</span>
+<span class="fc" id="L44">        return systemInfoService.getSystemInfo();</span>
     }
 
 }

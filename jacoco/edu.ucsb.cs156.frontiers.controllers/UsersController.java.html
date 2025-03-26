@@ -25,16 +25,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name=&quot;User information (admin only)&quot;)
 @RequestMapping(&quot;/api/admin/users&quot;)
 @RestController
-public class UsersController extends ApiController {
+<span class="fc" id="L28">public class UsersController extends ApiController {</span>
     @Autowired
     UserRepository userRepository;
 
     @Autowired
     ObjectMapper mapper;
-
-    /** default constructor */
-<span class="fc" id="L36">    public UsersController() {</span>
-<span class="fc" id="L37">    }</span>
 
     /**
      * This method returns a list of all users.  Accessible only to users with the role &quot;ROLE_ADMIN&quot;.
@@ -46,9 +42,9 @@ public class UsersController extends ApiController {
     @GetMapping(&quot;&quot;)
     public ResponseEntity&lt;String&gt; users()
             throws JsonProcessingException {
-<span class="fc" id="L49">        Iterable&lt;User&gt; users = userRepository.findAll();</span>
-<span class="fc" id="L50">        String body = mapper.writeValueAsString(users);</span>
-<span class="fc" id="L51">        return ResponseEntity.ok().body(body);</span>
+<span class="fc" id="L45">        Iterable&lt;User&gt; users = userRepository.findAll();</span>
+<span class="fc" id="L46">        String body = mapper.writeValueAsString(users);</span>
+<span class="fc" id="L47">        return ResponseEntity.ok().body(body);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
