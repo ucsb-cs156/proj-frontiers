@@ -121,40 +121,42 @@ import com.opencsv.exceptions.CsvException;
 <span class="fc" id="L121">            List&lt;String[]&gt; myEntries = csvReader.readAll();</span>
 <span class="fc bfc" id="L122" title="All 2 branches covered.">            for (String[] row : myEntries) {</span>
 <span class="fc" id="L123">                RosterStudent rosterStudent = fromEgradesCSVRow(row);</span>
-<span class="fc" id="L124">                rosterStudent.setCourse(course);</span>
-<span class="fc" id="L125">                InsertStatus s = upsertStudent(rosterStudent, course);</span>
-<span class="fc" id="L126">                counts[s.ordinal()]++;</span>
-<span class="fc" id="L127">            }</span>
+<span class="fc" id="L124">                InsertStatus s = upsertStudent(rosterStudent, course);</span>
+<span class="fc" id="L125">                counts[s.ordinal()]++;</span>
+<span class="fc" id="L126">            }</span>
         }
-<span class="fc" id="L129">        return Map.of(</span>
-<span class="fc" id="L130">                &quot;filename&quot;, file.getOriginalFilename(),</span>
-<span class="fc" id="L131">                &quot;message&quot;, String.format(&quot;Inserted %d new students, Updated %d students&quot;,</span>
-<span class="fc" id="L132">                        counts[InsertStatus.INSERTED.ordinal()], counts[InsertStatus.UPDATED.ordinal()]));</span>
+<span class="fc" id="L128">        return Map.of(</span>
+<span class="fc" id="L129">                &quot;filename&quot;, file.getOriginalFilename(),</span>
+<span class="fc" id="L130">                &quot;message&quot;, String.format(&quot;Inserted %d new students, Updated %d students&quot;,</span>
+<span class="fc" id="L131">                        counts[InsertStatus.INSERTED.ordinal()], counts[InsertStatus.UPDATED.ordinal()]));</span>
 
     }
 
     public RosterStudent fromEgradesCSVRow(String[] row) {
-<span class="fc" id="L137">        return RosterStudent.builder()</span>
-<span class="fc" id="L138">                .firstName(row[5])</span>
-<span class="fc" id="L139">                .lastName(row[4])</span>
-<span class="fc" id="L140">                .studentId(row[1])</span>
-<span class="fc" id="L141">                .email(row[10])</span>
-<span class="fc" id="L142">                .build();</span>
+<span class="fc" id="L136">        return RosterStudent.builder()</span>
+<span class="fc" id="L137">                .firstName(row[5])</span>
+<span class="fc" id="L138">                .lastName(row[4])</span>
+<span class="fc" id="L139">                .studentId(row[1])</span>
+<span class="fc" id="L140">                .email(row[10])</span>
+<span class="fc" id="L141">                .build();</span>
     }
 
     public InsertStatus upsertStudent(RosterStudent student, Course course) {
-<span class="fc" id="L146">        Optional&lt;RosterStudent&gt; existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),</span>
-<span class="fc" id="L147">                student.getStudentId());</span>
-<span class="fc bfc" id="L148" title="All 2 branches covered.">        if (existingStudent.isPresent()) {</span>
-<span class="fc" id="L149">            RosterStudent existingStudentObj = existingStudent.get();</span>
-<span class="fc" id="L150">            existingStudentObj.setFirstName(student.getFirstName());</span>
-<span class="fc" id="L151">            existingStudentObj.setLastName(student.getLastName());</span>
-<span class="fc" id="L152">            existingStudentObj.setEmail(student.getEmail());</span>
-<span class="fc" id="L153">            rosterStudentRepository.save(existingStudentObj);</span>
-<span class="fc" id="L154">            return InsertStatus.UPDATED;</span>
+<span class="fc" id="L145">        Optional&lt;RosterStudent&gt; existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),</span>
+<span class="fc" id="L146">                student.getStudentId());</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (existingStudent.isPresent()) {</span>
+<span class="fc" id="L148">            RosterStudent existingStudentObj = existingStudent.get();</span>
+<span class="fc" id="L149">            existingStudentObj.setFirstName(student.getFirstName());</span>
+<span class="fc" id="L150">            existingStudentObj.setLastName(student.getLastName());</span>
+<span class="fc" id="L151">            existingStudentObj.setEmail(student.getEmail());</span>
+<span class="fc" id="L152">            rosterStudentRepository.save(existingStudentObj);</span>
+<span class="fc" id="L153">            return InsertStatus.UPDATED;</span>
         } else {
-<span class="fc" id="L156">            rosterStudentRepository.save(student);</span>
-<span class="fc" id="L157">            return InsertStatus.INSERTED;</span>
+<span class="fc" id="L155">            student.setCourse(course);</span>
+<span class="fc" id="L156">            student.setRosterStatus(RosterStatus.ROSTER);</span>
+<span class="fc" id="L157">            student.setOrgStatus(OrgStatus.NONE);</span>
+<span class="fc" id="L158">            rosterStudentRepository.save(student);</span>
+<span class="fc" id="L159">            return InsertStatus.INSERTED;</span>
         }
 
     }
