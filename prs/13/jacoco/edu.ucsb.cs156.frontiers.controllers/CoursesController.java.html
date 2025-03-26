@@ -31,10 +31,11 @@ import lombok.extern.slf4j.Slf4j;
      /**
      * This method creates a new Course.
      * 
-     * @param recommendationType recommendation types of request
-     * @param details details of request
-     * @param dueDate submission date of request
-     * @return the save recommendationrequests (with it's id field set by the database)
+    * @param orgName the name of the organization
+    * @param courseName the name of the course
+    * @param term the term of the course
+    * @param school the school of the course
+    * @return the created course
      */
 
     @Operation(summary = &quot;Create a new recommendation request&quot;)
@@ -48,17 +49,17 @@ import lombok.extern.slf4j.Slf4j;
            )
             {
         //get current date right now and set status to pending
-<span class="fc" id="L51">        CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L52">        Course course = Course.builder()</span>
-<span class="fc" id="L53">                .orgName(orgName)</span>
-<span class="fc" id="L54">                .courseName(courseName)</span>
-<span class="fc" id="L55">                .term(term)</span>
-<span class="fc" id="L56">                .school(school)</span>
-<span class="fc" id="L57">                .creator(currentUser.getUser())</span>
-<span class="fc" id="L58">                .build();</span>
-<span class="fc" id="L59">        Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L52">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L53">        Course course = Course.builder()</span>
+<span class="fc" id="L54">                .orgName(orgName)</span>
+<span class="fc" id="L55">                .courseName(courseName)</span>
+<span class="fc" id="L56">                .term(term)</span>
+<span class="fc" id="L57">                .school(school)</span>
+<span class="fc" id="L58">                .creator(currentUser.getUser())</span>
+<span class="fc" id="L59">                .build();</span>
+<span class="fc" id="L60">        Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L61">        return savedCourse;</span>
+<span class="fc" id="L62">        return savedCourse;</span>
     }
 
       /**
@@ -70,8 +71,8 @@ import lombok.extern.slf4j.Slf4j;
     @GetMapping(&quot;/all&quot;)
     public Iterable&lt;Course&gt; allCourses(
     ) {
-<span class="fc" id="L73">        Iterable&lt;Course&gt; courses = courseRepository.findAll();</span>
-<span class="fc" id="L74">        return courses;</span>
+<span class="fc" id="L74">        Iterable&lt;Course&gt; courses = courseRepository.findAll();</span>
+<span class="fc" id="L75">        return courses;</span>
     }
 
 }
