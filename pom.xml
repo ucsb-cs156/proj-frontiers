@@ -47,9 +47,9 @@
 
   <properties>
     <java.version>21</java.version>
-    <mainClass>edu.ucsb.cs156.example.ExampleApplication</mainClass>
-    <app.package>edu.ucsb.cs156.example</app.package>
-    <app.packagePath>edu/ucsb/cs156/example</app.packagePath>
+    <mainClass>edu.ucsb.cs156.frontiers.FrontiersMain</mainClass>
+    <app.package>edu.ucsb.cs156.frontiers</app.package>
+    <app.packagePath>edu/ucsb/cs156/frontiers</app.packagePath>
     <targetClasses>${targetClasses:edu.ucsb.cs156.*}</targetClasses>
   </properties>
 
@@ -209,8 +209,8 @@
             <exclude>**/${app.packagePath}/controllers/FrontendProxyController.*</exclude>
             <exclude>**/${app.packagePath}/services/CurrentUserServiceImpl.*</exclude>
             <exclude>**/${app.packagePath}/services/GrantedAuthoritiesService.*</exclude>
-            <exclude>**/${app.packagePath}/ExampleApplication.*</exclude>
-            <exclude>**/edu/ucsb/cs156/example/services/wiremock/*</exclude>
+            <exclude>**/${app.packagePath}/FrontiersMain.*</exclude>
+            <exclude>**/edu/ucsb/cs156/frontiers/services/wiremock/*</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -295,18 +295,18 @@
             <param>${app.package}.controllers.FrontendController</param>
             <param>${app.package}.controllers.FrontendProxyController</param>
             <param>${app.package}.services.CurrentUserServiceImpl</param>
-            <param>${app.package}.ExampleApplication</param>
+            <param>${app.package}.FrontiersMain</param>
             <param>${app.package}.config.SecurityConfig</param>
             <param>${app.package}.config.SpaCsrfTokenRequestHandler</param>
             <param>${app.package}.config.CsrfCookieFilter</param>
-            <param>edu.ucsb.cs156.example.services.wiremock.WiremockService</param>
-            <param>edu.ucsb.cs156.example.services.wiremock.WiremockServiceDummy</param>
-            <param>edu.ucsb.cs156.example.services.wiremock.WiremockServiceImpl</param>
+            <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockService</param>
+            <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceDummy</param>
+            <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceImpl</param>
             <param>${app.package}.services.GrantedAuthoritiesService</param>
           </excludedClasses>
           <excludedTestClasses>
-            <param>edu.ucsb.cs156.example.web.*</param>
-            <param>edu.ucsb.cs156.example.integration.*</param>
+            <param>edu.ucsb.cs156.frontiers.web.*</param>
+            <param>edu.ucsb.cs156.frontiers.integration.*</param>
           </excludedTestClasses>
           <outputFormats>
             <outputFormat>HTML</outputFormat>
