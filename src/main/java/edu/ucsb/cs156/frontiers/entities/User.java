@@ -17,7 +17,6 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Entity(name = "users")
 public class User {
@@ -46,4 +45,8 @@ public class User {
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
   private List<CourseStaff> roles;
+
+  /** default constructor for JPA */
+  public User() {
+  }
 }

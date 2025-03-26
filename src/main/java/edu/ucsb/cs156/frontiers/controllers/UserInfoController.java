@@ -18,6 +18,10 @@ import edu.ucsb.cs156.frontiers.models.CurrentUser;
 @RequestMapping("/api/currentUser")
 @RestController
 public class UserInfoController extends ApiController {
+
+  /** default constructor */
+  public UserInfoController() {
+  }
  
   /**
    * This method returns the current user.
