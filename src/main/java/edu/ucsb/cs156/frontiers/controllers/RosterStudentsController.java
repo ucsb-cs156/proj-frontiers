@@ -93,7 +93,7 @@ public class RosterStudentsController extends ApiController {
      */
     @Operation(summary = "List all roster students for a course")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/all")
+    @GetMapping("/course")
     public Iterable<RosterStudent> rosterStudentForCourse(
             @Parameter(name = "course_id") @RequestParam Long course_id) throws EntityNotFoundException {
         courseRepository.findById(course_id).orElseThrow(() -> new EntityNotFoundException(Course.class, course_id));
