@@ -210,7 +210,7 @@
             <exclude>**/${app.packagePath}/services/CurrentUserServiceImpl.*</exclude>
             <exclude>**/${app.packagePath}/services/GrantedAuthoritiesService.*</exclude>
             <exclude>**/${app.packagePath}/FrontiersMain.*</exclude>
-            <exclude>**/edu/ucsb/cs156/example/services/wiremock/*</exclude>
+            <exclude>**/edu/ucsb/cs156/frontiers/services/wiremock/*</exclude>
           </excludes>
         </configuration>
         <executions>
