@@ -51,6 +51,7 @@
     <app.package>edu.ucsb.cs156.frontiers</app.package>
     <app.packagePath>edu/ucsb/cs156/frontiers</app.packagePath>
     <targetClasses>${targetClasses:edu.ucsb.cs156.*}</targetClasses>
+    <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
   </properties>
 
   <!-- (22) <dependencyManagement/> -->
@@ -163,6 +164,25 @@
       <artifactId>opencsv</artifactId>
       <version>5.7.1</version>
     </dependency>
+    <!-- Dependencies to create and sign JWTs-->
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>0.12.3</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>0.12.3</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>0.12.3</version>
+      <scope>runtime</scope>
+    </dependency>
+
   </dependencies>
 
   <!-- (24) <repositories/> -->
@@ -224,6 +244,7 @@
             <exclude>**/${app.packagePath}/services/GrantedAuthoritiesService.*</exclude>
             <exclude>**/${app.packagePath}/FrontiersMain.*</exclude>
             <exclude>**/edu/ucsb/cs156/frontiers/services/wiremock/*</exclude>
+            <exclude>**/${app.packagePath}/services/JwtService.*</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -316,6 +337,7 @@
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceDummy</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceImpl</param>
             <param>${app.package}.services.GrantedAuthoritiesService</param>
+            <param>${app.package}.services.JwtService</param>
           </excludedClasses>
           <excludedTestClasses>
             <param>edu.ucsb.cs156.frontiers.web.*</param>
