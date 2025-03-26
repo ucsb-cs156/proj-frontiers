@@ -37,8 +37,8 @@ import com.opencsv.exceptions.CsvException;
 @Tag(name = &quot;RosterStudents&quot;)
 @RequestMapping(&quot;/api/rosterstudents&quot;)
 @RestController
-<span class="nc" id="L40">@Slf4j</span>
-<span class="nc" id="L41">public class RosterStudentsController extends ApiController {</span>
+<span class="fc" id="L40">@Slf4j</span>
+<span class="fc" id="L41">public class RosterStudentsController extends ApiController {</span>
 
 <span class="nc" id="L43">    public enum InsertStatus {</span>
 <span class="nc" id="L44">        INSERTED, UPDATED</span>
@@ -69,21 +69,21 @@ import com.opencsv.exceptions.CsvException;
 
         // Get Course or else throw an error
 
-<span class="nc" id="L72">        Course course = courseRepository.findById(course_id)</span>
-<span class="nc" id="L73">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, course_id));</span>
+<span class="fc" id="L72">        Course course = courseRepository.findById(course_id)</span>
+<span class="pc" id="L73">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, course_id));</span>
 
-<span class="nc" id="L75">        RosterStudent rosterStudent = RosterStudent.builder()</span>
-<span class="nc" id="L76">                .studentId(studentId)</span>
-<span class="nc" id="L77">                .firstName(firstName)</span>
-<span class="nc" id="L78">                .lastName(lastName)</span>
-<span class="nc" id="L79">                .email(email)</span>
-<span class="nc" id="L80">                .course(course)</span>
-<span class="nc" id="L81">                .rosterStatus(RosterStatus.MANUAL)</span>
-<span class="nc" id="L82">                .orgStatus(OrgStatus.NONE)</span>
-<span class="nc" id="L83">                .build();</span>
-<span class="nc" id="L84">        RosterStudent savedRosterStudent = rosterStudentRepository.save(rosterStudent);</span>
+<span class="fc" id="L75">        RosterStudent rosterStudent = RosterStudent.builder()</span>
+<span class="fc" id="L76">                .studentId(studentId)</span>
+<span class="fc" id="L77">                .firstName(firstName)</span>
+<span class="fc" id="L78">                .lastName(lastName)</span>
+<span class="fc" id="L79">                .email(email)</span>
+<span class="fc" id="L80">                .course(course)</span>
+<span class="fc" id="L81">                .rosterStatus(RosterStatus.MANUAL)</span>
+<span class="fc" id="L82">                .orgStatus(OrgStatus.NONE)</span>
+<span class="fc" id="L83">                .build();</span>
+<span class="fc" id="L84">        RosterStudent savedRosterStudent = rosterStudentRepository.save(rosterStudent);</span>
 
-<span class="nc" id="L86">        return savedRosterStudent;</span>
+<span class="fc" id="L86">        return savedRosterStudent;</span>
     }
 
     /**
@@ -93,12 +93,12 @@ import com.opencsv.exceptions.CsvException;
      */
     @Operation(summary = &quot;List all roster students for a course&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
-    @GetMapping(&quot;/all&quot;)
+    @GetMapping(&quot;/course&quot;)
     public Iterable&lt;RosterStudent&gt; rosterStudentForCourse(
             @Parameter(name = &quot;course_id&quot;) @RequestParam Long course_id) throws EntityNotFoundException {
-<span class="nc" id="L99">        courseRepository.findById(course_id).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, course_id));</span>
-<span class="nc" id="L100">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findByCourseId(course_id);</span>
-<span class="nc" id="L101">        return rosterStudents;</span>
+<span class="pc" id="L99">        courseRepository.findById(course_id).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, course_id));</span>
+<span class="fc" id="L100">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findByCourseId(course_id);</span>
+<span class="fc" id="L101">        return rosterStudents;</span>
     }
 
     @Operation(summary = &quot;Upload Roster students for Course in UCSB Egrades Format&quot;)
