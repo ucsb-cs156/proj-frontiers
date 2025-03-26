@@ -24,7 +24,7 @@ In the first callback URL, fill in `http://localhost:8080/api/courses/link`. For
 
 Click the checkbox for "Request user authorization (OAuth) during installation"
 
-![image](https://github.com/user-attachments/assets/7b52701a-6108-4d54-832e-0db0f2d1d1e5)
+![image](https://github.com/user-attachments/assets/a06af72c-e08d-4f47-bd6a-91b5d1aef65f)
 
 
 Scroll down to permissions, and under repository, set the following accesses:
@@ -109,6 +109,4 @@ Select "Install" next to "ucsb-cs156". It must be an organization, not a user, a
 
 Select "All Repositories". Then, select "Install and Authorize." This should take you to your localhost application link. This should redirect you to a blank page, with the url http://localhost:8080/courses/success.
 
-Stop your application, and then run it again with `mvn spring-boot:run`.
-
-Try the endpoint http://localhost:8080/api/installations/testStudentRepos to test creating and pushing a student repo, or http://localhost:8080/api/installations/provideToken to get a github application token.
+The org name and installation ID should now be visible in the h2 console.
