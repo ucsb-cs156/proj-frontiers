@@ -31,10 +31,11 @@ public class CoursesController extends ApiController {
      /**
      * This method creates a new Course.
      * 
-     * @param recommendationType recommendation types of request
-     * @param details details of request
-     * @param dueDate submission date of request
-     * @return the save recommendationrequests (with it's id field set by the database)
+    * @param orgName the name of the organization
+    * @param courseName the name of the course
+    * @param term the term of the course
+    * @param school the school of the course
+    * @return the created course
      */
 
     @Operation(summary = "Create a new recommendation request")
