@@ -121,7 +121,6 @@ public class RosterStudentsController extends ApiController {
             List<String[]> myEntries = csvReader.readAll();
             for (String[] row : myEntries) {
                 RosterStudent rosterStudent = fromEgradesCSVRow(row);
-                rosterStudent.setCourse(course);
                 InsertStatus s = upsertStudent(rosterStudent, course);
                 counts[s.ordinal()]++;
             }
@@ -153,6 +152,9 @@ public class RosterStudentsController extends ApiController {
             rosterStudentRepository.save(existingStudentObj);
             return InsertStatus.UPDATED;
         } else {
+            student.setCourse(course);
+            student.setRosterStatus(RosterStatus.ROSTER);
+            student.setOrgStatus(OrgStatus.NONE);
             rosterStudentRepository.save(student);
             return InsertStatus.INSERTED;
         }

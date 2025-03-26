@@ -80,12 +80,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .build();
 
         RosterStudent rs2 = RosterStudent.builder()
+                        .id(2L)
                         .firstName("Lauren")
                         .lastName("Del Playa")
                         .studentId("A987654")
                         .email("ldelplaya@ucsb.edu")
                         .course(course1)
-                        .rosterStatus(RosterStatus.MANUAL)
+                        .rosterStatus(RosterStatus.ROSTER)
                         .orgStatus(OrgStatus.NONE)
                         .build();
 
@@ -184,11 +185,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 assertEquals(expectedJson, responseString);
         }
 
-   
-
         /** Test whether admin can get roster students for a non existing course */
-
-
 
         @WithMockUser(roles = { "ADMIN" })
         @Test
@@ -206,7 +203,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .andReturn();
 
                 // assert
-                
+
                 verify(courseRepository, atLeastOnce()).findById(eq(1L));
                 String responseString = response.getResponse().getContentAsString();
                 Map<String, String> expectedMap = Map.of(
@@ -219,14 +216,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         /** Test whether admin can upload students */
 
-
         private final String sampleCSVContents = """
-                Enrl Cd,Perm #,Grade,Final Units,Student Last,Student First Middle,Quarter,Course ID,Section,Meeting Time(s) / Location(s),Email,ClassLevel,Major1,Major2,Date/Time,Pronoun
+                        Enrl Cd,Perm #,Grade,Final Units,Student Last,Student First Middle,Quarter,Course ID,Section,Meeting Time(s) / Location(s),Email,ClassLevel,Major1,Major2,Date/Time,Pronoun
 
-                08235,A123456,,4.0,GAUCHO,CHRIS FAKE,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,cgaucho@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,
-                08250,A987654,,4.0,DEL PLAYA,LAUREN,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,ldelplaya@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,She (She/Her/Hers)
-                08243,1234567,,4.0,TARDE,SABADO,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,sabadotarde@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,He (He/Him/His)
-                """;
+                        08235,A123456,,4.0,GAUCHO,CHRIS FAKE,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,cgaucho@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,
+                        08250,A987654,,4.0,DEL PLAYA,LAUREN,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,ldelplaya@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,She (She/Her/Hers)
+                        08243,1234567,,4.0,TARDE,SABADO,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,sabadotarde@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,He (He/Him/His)
+                        """;
 
         @WithMockUser(roles = { "ADMIN" })
         @Test
@@ -296,6 +292,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // assert
 
                 verify(courseRepository, atLeastOnce()).findById(eq(1L));
+                verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("A123456"));
+                verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("A987654"));
+                verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("1234567"));
+                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1));
+                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2After));
+                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3Before));
+
                 String responseString = response.getResponse().getContentAsString();
                 Map<String, String> expectedMap = Map.of(
                                 "filename", "egrades.csv",
