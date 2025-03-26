@@ -26,10 +26,10 @@ import java.util.Date;
 @Service
 <span class="fc" id="L27">@Slf4j</span>
 public class JwtService {
-    @Value(&quot;${app.private.key}&quot;)
+    @Value(&quot;${app.private.key:no-key-present}&quot;)
     private String privateKey;
 
-    @Value(&quot;${app.client.id}&quot;)
+    @Value(&quot;${app.client.id:no-client-id-present}&quot;)
     private String clientId;
 
     private final RestTemplate restTemplate;
