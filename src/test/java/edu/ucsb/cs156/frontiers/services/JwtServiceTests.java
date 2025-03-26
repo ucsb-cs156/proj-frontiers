@@ -23,7 +23,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-@TestPropertySource(locations = "/testproperties.yaml")
+@TestPropertySource(locations = "/testproperties.properties")
 @RestClientTest(JwtService.class)
 public class JwtServiceTests {
 
@@ -37,11 +37,11 @@ public class JwtServiceTests {
     @MockitoBean
     private WiremockService wiremockService;
 
-    private String expectedJwt = "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MzU2ODk1NzAsImV4cCI6MTczNTY4OTkwMCwiaXNzIjoiJHthcHAuY2xpZW50" +
-            "LmlkfSJ9.0WgTqDfUqqVjZODiYdxOXd7QkTKw7ozQd-HLbNK00DIwaqWJJHcO0HQWJfa6MMZHQvs0YtcJXMPAlJ1W-CZrCCyCaUZT_y" +
-            "EobBVA9uXJjWINJKW93lYf0XFODidi4WoU3R6TTiM9TxnX3UU4Hzp8Kn6t06Kf6ddmVjz7o_gupjKTuPlipJjBhgCGQog3BcHnmw_u8" +
-            "fWaD17jw_xRhjaK-B_Wy6iL6qHXxOVpJCrUpcqPuLit19-1pONErpDvydue1fPr6IlGes1ByKgmvcgl3wsUlYqApWYspEPL_JjBwaJ3Q" +
-            "NFuLLxRGwFw55IfxuMopb_EHqFNZ6bTRcmG2--HUw";
+    private String expectedJwt = "eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MzU2ODk1NzAsImV4cCI6MTczNTY4OTkwMCwiaXNzIjoibm8tY2x" +
+            "pZW50LWlkLXByZXNlbnQifQ.Oqn-cRBUK1H3ycTx3hHxh_IsJMi_X8bXNRY0JwlsY3xsqUY6Vji0Y40IoK0hsB8yMlSk3tKCevRambgKT" +
+            "ElyOt5Zr8m4W3di7bUN0rUgoHgAXtkK-2p4N-3jWpXXcwqnyi5H59vbgpKzNy8PS7HlqbQj63A8M9ZaVZkF2CNSp5HpkFiaTnar2563Ao" +
+            "zH8sFe9Rm4Pbblx3vnOI8sCp_BKXTKFa5LsszmXvn7H5xmgNRNk7xOVZYSbKA7KvWBscZ3wGkHuDEwVyFQwqda0XbZCW0mVbjdsRFU2P8" +
+            "DL2A03ZRzSaPwa68LjVAUX1UKreU4-ne3yGigGVJ02pq3EBjSSA";
     private String expectedToken = "ghs_16C7e42F292c6912E7710c838347Ae178B4a";
 
     @BeforeEach
