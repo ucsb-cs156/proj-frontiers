@@ -105,7 +105,7 @@ public class RosterStudentsController extends ApiController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(value = "/upload/egrades", consumes = { "multipart/form-data" })
     public Map<String, String> uploadRosterStudents(
-            @Parameter(name = "courseId") @RequestParam Long courseId,
+            @Parameter(name = "course_id") @RequestParam Long courseId,
             @Parameter(name = "file") @RequestParam("file") MultipartFile file)
             throws JsonProcessingException, IOException, CsvException {
 
