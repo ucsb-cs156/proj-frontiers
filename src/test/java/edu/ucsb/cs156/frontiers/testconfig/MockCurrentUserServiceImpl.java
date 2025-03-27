@@ -4,6 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.stereotype.Service;
 
 import edu.ucsb.cs156.frontiers.entities.User;
@@ -20,10 +21,6 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
     String pictureUrl = "https://example.org/fake.jpg";
     String fullName = "Fake User";
     String givenName = "Fake";
-    String familyName = "User";
-    boolean emailVerified = true;
-    String locale="";
-    String hostedDomain="example.org";
     boolean admin=false;
 
     org.springframework.security.core.userdetails.User user = null;
@@ -36,10 +33,6 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
       pictureUrl = "https://example.org/" +  user.getUsername() + ".jpg";
       fullName = "Fake " + user.getUsername();
       givenName = "Fake";
-      familyName = user.getUsername();
-      emailVerified = true;
-      locale="";
-      hostedDomain="example.org";
       admin= (user.getUsername().equals("admin"));
     }
 
@@ -49,10 +42,6 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
     .pictureUrl(pictureUrl)
     .fullName(fullName)
     .givenName(givenName)
-    .familyName(familyName)
-    .emailVerified(emailVerified)
-    .locale(locale)
-    .hostedDomain(hostedDomain)
     .admin(admin)
     .id(1L)
     .build();
@@ -64,7 +53,7 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
     SecurityContext securityContext = SecurityContextHolder.getContext();
     Authentication authentication = securityContext.getAuthentication();
 
-    if (!(authentication instanceof OAuth2AuthenticationToken)) {
+    if (!(authentication instanceof OidcIdToken)) {
       return getMockUser(securityContext, authentication);
     }
 

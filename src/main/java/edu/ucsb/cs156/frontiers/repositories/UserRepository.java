@@ -18,4 +18,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
    * @return Optional of User (empty if not found)
    */
   Optional<User> findByEmail(String email);
+
+  Optional<User> findByGoogleSub(String googleSub);
 }

@@ -58,21 +58,6 @@
                 },
                 {
                   "column": {
-                    "constraints": {
-                      "nullable": false
-                    },
-                    "name": "EMAIL_VERIFIED",
-                    "type": "BOOLEAN"
-                  }
-                },
-                {
-                  "column": {
-                    "name": "FAMILY_NAME",
-                    "type": "VARCHAR(255)"
-                  }
-                },
-                {
-                  "column": {
                     "name": "FULL_NAME",
                     "type": "VARCHAR(255)"
                   }
@@ -86,18 +71,6 @@
                 {
                   "column": {
                     "name": "GOOGLE_SUB",
-                    "type": "VARCHAR(255)"
-                  }
-                },
-                {
-                  "column": {
-                    "name": "HOSTED_DOMAIN",
-                    "type": "VARCHAR(255)"
-                  }
-                },
-                {
-                  "column": {
-                    "name": "LOCALE",
                     "type": "VARCHAR(255)"
                   }
                 },
@@ -121,7 +94,7 @@
                 },
                 {
                   "column": {
-                    "name": "PERM",
+                    "name": "STUDENT_ID",
                     "type": "VARCHAR(255)"
                   }
                 }
