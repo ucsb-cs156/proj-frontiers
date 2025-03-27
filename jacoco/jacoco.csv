@@ -6,7 +6,7 @@ team01,edu.ucsb.cs156.frontiers.services.jobs,JobContext,0,48,0,4,0,6,0,4,0,2
 team01,edu.ucsb.cs156.frontiers.services.jobs,JobService,0,75,0,2,0,20,0,6,0,5
 team01,edu.ucsb.cs156.frontiers.services,GithubSignInServiceImpl,126,0,8,0,30,0,8,0,4,0
 team01,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,52,0,4,0,14,0,6,0,4
-team01,edu.ucsb.cs156.frontiers.services,GoogleSignInServiceImpl,195,0,20,0,48,0,13,0,3,0
+team01,edu.ucsb.cs156.frontiers.services,GoogleSignInServiceImpl,216,0,24,0,51,0,15,0,3,0
 team01,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
 team01,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 team01,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.InsertStatus,0,15,0,0,0,2,0,1,0,1

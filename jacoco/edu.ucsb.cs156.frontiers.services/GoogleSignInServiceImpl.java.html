@@ -65,26 +65,31 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
 <span class="nc" id="L65">                user.setPictureUrl(oidcUser.getPicture());</span>
 <span class="nc" id="L66">                changed = true;</span>
             }
+<span class="nc bnc" id="L68" title="All 4 branches missed.">            if (user.getGithubId() != null &amp;&amp; user.getGithubLogin() != null) {</span>
+<span class="nc" id="L69">                authorities.add(new SimpleGrantedAuthority(&quot;ROLE_GITHUB&quot;));</span>
+            }
 
-<span class="nc bnc" id="L69" title="All 2 branches missed.">            if(changed){</span>
-<span class="nc" id="L70">                userRepository.save(user);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if(changed){</span>
+<span class="nc" id="L73">                userRepository.save(user);</span>
             }
-<span class="nc" id="L72">        }else{</span>
-<span class="nc" id="L73">            User newUser = User.builder()</span>
-<span class="nc" id="L74">                    .googleSub(oidcUser.getSubject())</span>
-<span class="nc" id="L75">                    .fullName(oidcUser.getFullName())</span>
-<span class="nc" id="L76">                    .email(oidcUser.getEmail())</span>
-<span class="nc" id="L77">                    .givenName(oidcUser.getGivenName())</span>
-<span class="nc" id="L78">                    .pictureUrl(oidcUser.getPicture())</span>
-<span class="nc" id="L79">                    .build();</span>
-<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (adminEmails.contains(oidcUser.getEmail())) {</span>
-<span class="nc" id="L81">                newUser.setAdmin(true);</span>
+<span class="nc" id="L75">        }else{</span>
+<span class="nc" id="L76">            User newUser = User.builder()</span>
+<span class="nc" id="L77">                    .googleSub(oidcUser.getSubject())</span>
+<span class="nc" id="L78">                    .fullName(oidcUser.getFullName())</span>
+<span class="nc" id="L79">                    .email(oidcUser.getEmail())</span>
+<span class="nc" id="L80">                    .givenName(oidcUser.getGivenName())</span>
+<span class="nc" id="L81">                    .pictureUrl(oidcUser.getPicture())</span>
+<span class="nc" id="L82">                    .build();</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            if (adminEmails.contains(oidcUser.getEmail())) {</span>
+<span class="nc" id="L84">                newUser.setAdmin(true);</span>
+<span class="nc" id="L85">                authorities.add(new SimpleGrantedAuthority(&quot;ROLE_ADMIN&quot;));</span>
+            }else{
+<span class="nc" id="L87">                authorities.add(new SimpleGrantedAuthority(&quot;ROLE_USER&quot;));</span>
             }
-<span class="nc" id="L83">            userRepository.save(newUser);</span>
-<span class="nc" id="L84">            authorities.add(new SimpleGrantedAuthority(&quot;ROLE_USER&quot;));</span>
+<span class="nc" id="L89">            userRepository.save(newUser);</span>
         }
-<span class="nc" id="L86">        authorities.addAll(oidcUser.getAuthorities());</span>
-<span class="nc" id="L87">        return new DefaultOidcUser(authorities, oidcUser.getIdToken(),  oidcUser.getUserInfo());</span>
+<span class="nc" id="L91">        authorities.addAll(oidcUser.getAuthorities());</span>
+<span class="nc" id="L92">        return new DefaultOidcUser(authorities, oidcUser.getIdToken(),  oidcUser.getUserInfo());</span>
     }
 
 }
