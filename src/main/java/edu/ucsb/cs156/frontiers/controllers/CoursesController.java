@@ -38,7 +38,7 @@ public class CoursesController extends ApiController {
     * @return the created course
      */
 
-    @Operation(summary = "Create a new recommendation request")
+    @Operation(summary = "Create a new course")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/post")
     public Course postCourse(

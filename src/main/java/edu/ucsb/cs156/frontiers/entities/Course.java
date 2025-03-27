@@ -37,4 +37,8 @@ public class Course {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
     @Fetch(FetchMode.JOIN)
     private List<CourseStaff> courseStaff;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
+    @Fetch(FetchMode.JOIN)
+    private List<RosterStudent> rosterStudents;
 }
