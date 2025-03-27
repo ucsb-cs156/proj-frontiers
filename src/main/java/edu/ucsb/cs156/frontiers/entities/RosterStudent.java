@@ -1,5 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import jakarta.persistence.*;
@@ -19,9 +21,11 @@ public class RosterStudent {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "roster_id")
-    private Roster roster;
-    private String perm;
+    @JoinColumn(name = "course_id")
+    @JsonIgnore
+    private Course course;
+
+    private String studentId;
     private String firstName;
     private String lastName;
     private String email;

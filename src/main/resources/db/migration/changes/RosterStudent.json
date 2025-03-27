@@ -34,11 +34,11 @@
               },
               {
                 "column": {
-                  "name": "ROSTER_ID",
+                  "name": "COURSE_ID",
                   "type": "BIGINT",
                   "constraints": {
-                    "foreignKeyName": "FK_ROSTER_ID",
-                    "referencedTableName": "ROSTER",
+                    "foreignKeyName": "FK_COURSE_ID",
+                    "referencedTableName": "COURSE",
                     "referencedColumnName": "ID",
                     "nullable": false
                   }
@@ -46,7 +46,7 @@
               },
               {
                 "column": {
-                  "name": "PERM",
+                  "name": "STUDENT_ID",
                   "type": "VARCHAR(255)"
                 }
               },

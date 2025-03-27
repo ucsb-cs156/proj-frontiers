@@ -121,7 +121,7 @@
                 },
                 {
                   "column": {
-                    "name": "PERM",
+                    "name": "STUDENT_ID",
                     "type": "VARCHAR(255)"
                   }
                 }
