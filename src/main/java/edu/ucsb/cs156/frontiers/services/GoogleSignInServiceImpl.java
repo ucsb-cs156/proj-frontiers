@@ -65,6 +65,9 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                 user.setPictureUrl(oidcUser.getPicture());
                 changed = true;
             }
+            if (user.getGithubId() != null && user.getGithubLogin() != null) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_GITHUB"));
+            }
 
             if(changed){
                 userRepository.save(user);
@@ -79,9 +82,11 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                     .build();
             if (adminEmails.contains(oidcUser.getEmail())) {
                 newUser.setAdmin(true);
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            }else{
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
             }
             userRepository.save(newUser);
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
         }
         authorities.addAll(oidcUser.getAuthorities());
         return new DefaultOidcUser(authorities, oidcUser.getIdToken(),  oidcUser.getUserInfo());

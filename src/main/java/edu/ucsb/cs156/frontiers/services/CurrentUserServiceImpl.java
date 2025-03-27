@@ -16,6 +16,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -80,8 +81,7 @@ public class CurrentUserServiceImpl extends CurrentUserService {
   public User getUser() {
     SecurityContext securityContext = SecurityContextHolder.getContext();
     Authentication authentication = securityContext.getAuthentication();
-
-    if (authentication instanceof OidcIdToken) {
+    if (authentication instanceof OAuth2AuthenticationToken) {
       return getOAuth2AuthenticatedUser(securityContext, authentication);
     }
     return null;
