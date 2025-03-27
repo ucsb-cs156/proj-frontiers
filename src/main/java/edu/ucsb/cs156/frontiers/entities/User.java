@@ -31,7 +31,7 @@ public class User {
   private String givenName;
   private boolean admin;
   private boolean professor;
-  private String githubId;
+  private int githubId;
   private String githubLogin;
   private String studentId;
 

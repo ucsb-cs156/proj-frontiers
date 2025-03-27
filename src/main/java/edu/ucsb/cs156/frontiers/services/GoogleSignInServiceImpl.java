@@ -65,7 +65,7 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                 user.setPictureUrl(oidcUser.getPicture());
                 changed = true;
             }
-            if (user.getGithubId() != null && user.getGithubLogin() != null) {
+            if (user.getGithubId() != 0 && user.getGithubLogin() != null) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_GITHUB"));
             }
 

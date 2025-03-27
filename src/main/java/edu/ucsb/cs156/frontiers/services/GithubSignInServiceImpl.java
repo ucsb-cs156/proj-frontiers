@@ -59,7 +59,7 @@ public class GithubSignInServiceImpl extends DefaultOAuth2UserService implements
             currentUser = (OidcUser) authentication.getPrincipal();
             User currentLocalUser = currentUserService.getCurrentUser().getUser();
             if (currentLocalUser != null) {
-                currentLocalUser.setGithubId((String) oAuth2User.getAttributes().get("id"));
+                currentLocalUser.setGithubId((Integer) oAuth2User.getAttributes().get("id"));
                 currentLocalUser.setGithubLogin((String) oAuth2User.getAttributes().get("login"));
                 attachRosterStudents(currentLocalUser);
                 userRepository.save(currentLocalUser);

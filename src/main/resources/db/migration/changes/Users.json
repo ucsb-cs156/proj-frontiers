@@ -83,7 +83,7 @@
                 {
                   "column": {
                     "name": "GITHUB_ID",
-                    "type": "VARCHAR(255)"
+                    "type": "BIGINT"
                   }
                 },
                 {
