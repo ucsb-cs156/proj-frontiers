@@ -65,7 +65,7 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
 <span class="nc" id="L65">                user.setPictureUrl(oidcUser.getPicture());</span>
 <span class="nc" id="L66">                changed = true;</span>
             }
-<span class="nc bnc" id="L68" title="All 4 branches missed.">            if (user.getGithubId() != null &amp;&amp; user.getGithubLogin() != null) {</span>
+<span class="nc bnc" id="L68" title="All 4 branches missed.">            if (user.getGithubId() != 0 &amp;&amp; user.getGithubLogin() != null) {</span>
 <span class="nc" id="L69">                authorities.add(new SimpleGrantedAuthority(&quot;ROLE_GITHUB&quot;));</span>
             }
 
