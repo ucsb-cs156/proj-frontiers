@@ -19,7 +19,6 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.setDefaul
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-@Import(TestConfig.class)
 public class OauthWebIT extends WebTestCase {
     @Test
     public void regular_user_can_login_logout() throws Exception {
