@@ -10,16 +10,20 @@ import com.microsoft.playwright.Playwright;
 
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceImpl;
 
+import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 @ActiveProfiles("integration")
+@Import(TestConfig.class)
 public abstract class WebTestCase {
     @LocalServerPort
     private int port;

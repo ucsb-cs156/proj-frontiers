@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -31,8 +32,7 @@ import edu.ucsb.cs156.frontiers.repositories.UserRepository;
  */
 
 @Slf4j
-@Service("currentUser")
-@Primary
+@Service
 public class CurrentUserServiceImpl extends CurrentUserService {
   @Autowired
   private UserRepository userRepository;
