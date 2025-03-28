@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
-import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -38,13 +37,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.mockito.Mock;
-
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 
 @Slf4j
@@ -108,7 +100,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .param("firstName", "Chris")
                                 .param("lastName", "Gaucho")
                                 .param("email", "cgaucho@example.org")
-                                .param("course_id", "1"))
+                                .param("courseId", "1"))
                                 .andExpect(status().isOk())
                                 .andReturn();
 
@@ -143,7 +135,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .param("firstName", "Chris")
                                 .param("lastName", "Gaucho")
                                 .param("email", "cgaucho@example.org")
-                                .param("course_id", "1"))
+                                .param("courseId", "1"))
                                 .andExpect(status().isNotFound())
                                 .andReturn();
 
@@ -174,7 +166,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // act
 
                 MvcResult response = mockMvc.perform(get("/api/rosterstudents/course")
-                                .param("course_id", "1"))
+                                .param("courseId", "1"))
                                 .andExpect(status().isOk())
                                 .andReturn();
 
@@ -198,7 +190,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // act
 
                 MvcResult response = mockMvc.perform(get("/api/rosterstudents/course")
-                                .param("course_id", "1"))
+                                .param("courseId", "1"))
                                 .andExpect(status().isNotFound())
                                 .andReturn();
 
