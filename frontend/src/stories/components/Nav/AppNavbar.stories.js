@@ -29,7 +29,7 @@ export const User = Template.bind({});
 User.args = {
   currentUser: {
     loggedIn: true,
-    root: apiCurrentUserFixtures.userOnly
+    root: apiCurrentUserFixtures.userOnly,
   },
 };
 
@@ -37,7 +37,7 @@ export const Admin = Template.bind({});
 Admin.args = {
   currentUser: {
     loggedIn: true,
-    root: apiCurrentUserFixtures.adminUser
+    root: apiCurrentUserFixtures.adminUser,
   },
 };
 

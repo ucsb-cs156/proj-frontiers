@@ -24,38 +24,38 @@ const Template = (args) => <GoogleLogin {...args} />;
 export const LoggedOut = Template.bind({});
 LoggedOut.parameters = {
   currentUser: {
-    loggedIn: false
+    loggedIn: false,
   },
   systemInfo: null,
-  doLogout: () => { }
+  doLogout: () => {},
 };
-
 
 export const LoggedInUser = Template.bind({});
 LoggedInUser.args = {
   currentUser: {
     loggedIn: true,
-    root: apiCurrentUserFixtures.userOnly
+    root: apiCurrentUserFixtures.userOnly,
   },
   systemInfo: {
-    oauthLogin: "/oauth2/authorization/test" // This simulates the oauth login URL
+    oauthLogin: "/oauth2/authorization/test", // This simulates the oauth login URL
   },
-  doLogout: () => { window.alert("Logging out"); console.log("Logged out"); }
+  doLogout: () => {
+    window.alert("Logging out");
+    console.log("Logged out");
+  },
 };
-
 
 export const LoggedInAdmin = Template.bind({});
 LoggedInAdmin.args = {
   currentUser: {
     loggedIn: true,
-    root: apiCurrentUserFixtures.adminUser
+    root: apiCurrentUserFixtures.adminUser,
   },
   systemInfo: {
-    oauthLogin: "/oauth2/authorization/test" // This simulates the oauth login URL
+    oauthLogin: "/oauth2/authorization/test", // This simulates the oauth login URL
   },
-  doLogout: () => { window.alert("Logging out"); console.log("Logged out"); }
+  doLogout: () => {
+    window.alert("Logging out");
+    console.log("Logged out");
+  },
 };
-
-
-
-
