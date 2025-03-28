@@ -245,6 +245,9 @@
             <exclude>**/${app.packagePath}/FrontiersMain.*</exclude>
             <exclude>**/edu/ucsb/cs156/frontiers/services/wiremock/*</exclude>
             <exclude>**/${app.packagePath}/services/JwtService.*</exclude>
+            <exclude>**/${app.packagePath}/services/GithubSignInServiceImpl.*</exclude>
+            <exclude>**/${app.packagePath}/services/GoogleSignInServiceImpl.*</exclude>
+            <exclude>**/${app.packagePath}/errors/NotAuthenticatedWithGoogleException.*</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -338,6 +341,9 @@
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceImpl</param>
             <param>${app.package}.services.GrantedAuthoritiesService</param>
             <param>${app.package}.services.JwtService</param>
+            <param>${app.package}.services.GithubSignInServiceImpl</param>
+            <param>${app.package}.services.GoogleSignInServiceImpl</param>
+            <param>${app.package}.errors.NotAuthenticatedWithGoogleException</param>
           </excludedClasses>
           <excludedTestClasses>
             <param>edu.ucsb.cs156.frontiers.web.*</param>

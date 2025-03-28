@@ -1,4 +1,4 @@
-package edu.ucsb.cs156.frontiers.exceptions;
+package edu.ucsb.cs156.frontiers.errors;
 
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 
