@@ -35,6 +35,41 @@ describe("GithubLogin tests", () => {
     expect(loginButton).toBeInTheDocument();
   });
 
+  test("link can be overridden via systemInfo", async () => {
+    const currentUser = currentUserFixtures.userOnly;
+
+    const overriddenSystemInfo = {
+      ...systemInfo, // Spread the existing system info
+      githubOauthLogin: "/oauth2/authorization/custom-github", // Override the oauth login URL
+    };
+
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={overriddenSystemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Connect Github");
+    // Check if the button is rendered with the overridden link
+    const loginButton = screen.getByRole("button", {
+      name: "Connect Github",
+    });
+    expect(loginButton).toBeInTheDocument();
+    // Ensure the login button has the correct href
+    expect(loginButton).toHaveAttribute(
+      "href",
+      "/oauth2/authorization/custom-github",
+    ); // This checks if the overridden URL is used
+  });
+
   test("renders correctly for user logged into Google but not Github", async () => {
     const currentUser = currentUserFixtures.userOnly;
 
