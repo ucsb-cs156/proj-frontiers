@@ -1,12 +1,16 @@
 package edu.ucsb.cs156.frontiers.web;
 
+import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -19,6 +23,7 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@Import(TestConfig.class)
 @ActiveProfiles("integration")
 public class HomePageWebIT {
     @Value("${app.playwright.headless:true}")

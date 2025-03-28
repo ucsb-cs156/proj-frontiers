@@ -29,13 +29,9 @@ public class User {
   private String pictureUrl;
   private String fullName;
   private String givenName;
-  private String familyName;
-  private boolean emailVerified;
-  private String locale;
-  private String hostedDomain;
   private boolean admin;
   private boolean professor;
-  private String githubId;
+  private int githubId;
   private String githubLogin;
   private String studentId;
 
