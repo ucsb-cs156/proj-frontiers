@@ -65,6 +65,8 @@ export default function AppNavbar({
                 currentUser={currentUser}
                 systemInfo={systemInfo}
               />
+            </Nav>
+            <Nav className="ml-auto">
               <GoogleLogin
                 currentUser={currentUser}
                 systemInfo={systemInfo}
