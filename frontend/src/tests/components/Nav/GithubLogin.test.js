@@ -45,7 +45,7 @@ describe("GithubLogin tests", () => {
     await screen.findByText("Connect Github");
   });
 
-  test("renders correctly for user logged into Google but not Github", async () => {
+  test("renders correctly for admin logged into Google but not Github", async () => {
     const currentUser = currentUserFixtures.adminUser;
     const doLogin = jest.fn();
 
@@ -76,7 +76,7 @@ describe("GithubLogin tests", () => {
     await screen.findByText("Github: cgaucho-github");
   });
 
-  test("renders correctly for user logged into Google but not Github", async () => {
+  test("renders correctly for admin logged into Google and Github", async () => {
     const currentUser = currentUserFixturesWithGithub.adminUser;
     const doLogin = jest.fn();
 
