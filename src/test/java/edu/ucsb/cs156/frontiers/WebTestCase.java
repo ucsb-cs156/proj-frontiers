@@ -24,7 +24,6 @@ import org.springframework.test.context.ActiveProfiles;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 @ActiveProfiles("integration")
-@Import(TestConfig.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public abstract class WebTestCase {
     @LocalServerPort

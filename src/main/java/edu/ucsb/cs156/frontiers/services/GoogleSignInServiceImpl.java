@@ -29,39 +29,41 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
     }
 
     @Override
-    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException{
+    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(userRequest);
         return managePrimarySignIn(oidcUser);
     }
 
-    private OidcUser managePrimarySignIn(OidcUser oidcUser){
+    private OidcUser managePrimarySignIn(OidcUser oidcUser) {
         Optional<User> currentUser = userRepository.findByGoogleSub(oidcUser.getSubject());
         Set<GrantedAuthority> authorities = new HashSet<>();
         boolean changed = false;
         if (currentUser.isPresent()) {
             User user = currentUser.get();
-            if(user.getAdmin()){
+            if (user.getAdmin()) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-            }else if(adminEmails.contains(user.getEmail())){
+            } else if (adminEmails.contains(user.getEmail())) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 user.setAdmin(true);
                 changed = true;
-            }
-            else if(user.getProfessor()){
+            } else if (user.getProfessor()) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_PROFESSOR"));
-            }else{
+            } else {
                 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
             }
-            if(!user.getFullName().equals(oidcUser.getFullName())){
+            if (!user.getFullName().equals(oidcUser.getFullName())) {
                 user.setFullName(oidcUser.getFullName());
                 changed = true;
-            }if(!user.getEmail().equals(oidcUser.getEmail())){
+            }
+            if (!user.getEmail().equals(oidcUser.getEmail())) {
                 user.setEmail(oidcUser.getEmail());
                 changed = true;
-            }if(!user.getGivenName().equals(oidcUser.getGivenName())){
+            }
+            if (!user.getGivenName().equals(oidcUser.getGivenName())) {
                 user.setGivenName(oidcUser.getGivenName());
                 changed = true;
-            }if(!user.getPictureUrl().equals(oidcUser.getPicture())){
+            }
+            if (!user.getPictureUrl().equals(oidcUser.getPicture())) {
                 user.setPictureUrl(oidcUser.getPicture());
                 changed = true;
             }
@@ -69,10 +71,10 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                 authorities.add(new SimpleGrantedAuthority("ROLE_GITHUB"));
             }
 
-            if(changed){
+            if (changed) {
                 userRepository.save(user);
             }
-        }else{
+        } else {
             User newUser = User.builder()
                     .googleSub(oidcUser.getSubject())
                     .fullName(oidcUser.getFullName())
@@ -83,13 +85,13 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
             if (adminEmails.contains(oidcUser.getEmail())) {
                 newUser.setAdmin(true);
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-            }else{
+            } else {
                 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
             }
             userRepository.save(newUser);
         }
         authorities.addAll(oidcUser.getAuthorities());
-        return new DefaultOidcUser(authorities, oidcUser.getIdToken(),  oidcUser.getUserInfo());
+        return new DefaultOidcUser(authorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
     }
 
 }
