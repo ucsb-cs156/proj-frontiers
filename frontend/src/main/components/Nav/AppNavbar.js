@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { hasRole } from "main/utils/currentUser";
 import AppNavbarLocalhost from "main/components/Nav/AppNavbarLocalhost";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
+import GithubLogin from "main/components/Nav/GithubLogin";
 
 export default function AppNavbar({
   currentUser,
@@ -14,8 +15,8 @@ export default function AppNavbar({
     <>
       {(currentUrl.startsWith("http://localhost:3000") ||
         currentUrl.startsWith("http://127.0.0.1:3000")) && (
-        <AppNavbarLocalhost url={currentUrl} />
-      )}
+          <AppNavbarLocalhost url={currentUrl} />
+        )}
       <Navbar
         expand="xl"
         variant="dark"
@@ -60,6 +61,10 @@ export default function AppNavbar({
               )}
             </Nav>
             <Nav className="ml-auto">
+              <GithubLogin
+                currentUser={currentUser}
+                systemInfo={systemInfo}
+              />
               <GoogleLogin
                 currentUser={currentUser}
                 systemInfo={systemInfo}

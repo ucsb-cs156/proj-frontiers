@@ -1,10 +1,10 @@
 import { apiCurrentUserFixtures, apiCurrentUserFixturesWithGithub } from "fixtures/currentUserFixtures";
-import AppNavbar from "main/components/Nav/AppNavbar";
+import GithubLogin from "main/components/Nav/GithubLogin";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 export default {
-  title: "components/Nav/AppNavbar",
-  component: AppNavbar,
+  title: "components/Nav/GithubLogin",
+  component: GithubLogin,
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
     layout: "centered",
@@ -19,10 +19,7 @@ export default {
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 
-const Template = (args) => {
-  return <AppNavbar {...args} />;
-};
-
+const Template = (args) => <GithubLogin {...args} />;
 
 export const LoggedOut = Template.bind({});
 LoggedOut.parameters = {
@@ -91,19 +88,4 @@ LoggedInAdminWithGithub.args = {
     window.alert("Logging out");
     console.log("Logged out");
   },
-}
-
-export const Localhost3000 = Template.bind({});
-Localhost3000.args = {
-  currentUrl: "http://localhost:3000",
-};
-
-export const LocalhostNumeric3000 = Template.bind({});
-LocalhostNumeric3000.args = {
-  currentUrl: "http://127.0.0.1:3000",
-};
-
-export const Localhost8080 = Template.bind({});
-Localhost8080.args = {
-  currentUrl: "http://localhost:8080",
 };
