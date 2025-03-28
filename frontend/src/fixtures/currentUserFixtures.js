@@ -116,18 +116,16 @@ const apiCurrentUserFixturesWithGithub = {
       ...apiCurrentUserFixtures.adminUser.user, // Reuse the admin user from above
       githubId: 123456, // Adding a Github ID to simulate Github login
       githubLogin: "phtcon-github", // Simulating a Github login
-    }
-  }, 
+    },
+  },
   userOnly: {
     user: {
       ...apiCurrentUserFixtures.userOnly.user, // Reuse the admin user from above
       githubId: 654321, // Adding a Github ID to simulate Github login
       githubLogin: "cgaucho-github", // Simulating a Github login
-    }
-  }
-
-}
-
+    },
+  },
+};
 
 const currentUserFixtures = {
   adminUser: {
@@ -174,7 +172,7 @@ const currentUserFixturesWithGithub = {
         "SCOPE_https://www.googleapis.com/auth/userinfo.email",
         "ROLE_USER",
         "ROLE_ADMIN",
-        "ROLE_GITHUB"
+        "ROLE_GITHUB",
       ],
     },
   },
@@ -187,7 +185,7 @@ const currentUserFixturesWithGithub = {
         "ROLE_USER",
         "SCOPE_https://www.googleapis.com/auth/userinfo.profile",
         "SCOPE_https://www.googleapis.com/auth/userinfo.email",
-        "ROLE_GITHUB"
+        "ROLE_GITHUB",
       ],
     },
   },
@@ -197,5 +195,9 @@ const currentUserFixturesWithGithub = {
   },
 };
 
-
-export { currentUserFixtures, currentUserFixturesWithGithub, apiCurrentUserFixtures, apiCurrentUserFixturesWithGithub };
+export {
+  currentUserFixtures,
+  currentUserFixturesWithGithub,
+  apiCurrentUserFixtures,
+  apiCurrentUserFixturesWithGithub,
+};

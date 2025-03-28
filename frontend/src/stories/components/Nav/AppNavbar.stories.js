@@ -1,4 +1,7 @@
-import { apiCurrentUserFixtures, apiCurrentUserFixturesWithGithub } from "fixtures/currentUserFixtures";
+import {
+  apiCurrentUserFixtures,
+  apiCurrentUserFixturesWithGithub,
+} from "fixtures/currentUserFixtures";
 import AppNavbar from "main/components/Nav/AppNavbar";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
@@ -23,14 +26,13 @@ const Template = (args) => {
   return <AppNavbar {...args} />;
 };
 
-
 export const LoggedOut = Template.bind({});
 LoggedOut.parameters = {
   currentUser: {
     loggedIn: false,
   },
   systemInfo: null,
-  doLogout: () => { },
+  doLogout: () => {},
 };
 
 export const LoggedInUserNoGithub = Template.bind({});
@@ -91,7 +93,7 @@ LoggedInAdminWithGithub.args = {
     window.alert("Logging out");
     console.log("Logged out");
   },
-}
+};
 
 export const Localhost3000 = Template.bind({});
 Localhost3000.args = {

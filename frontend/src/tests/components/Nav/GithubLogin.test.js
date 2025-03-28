@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
-import { currentUserFixtures, currentUserFixturesWithGithub } from "fixtures/currentUserFixtures";
+import {
+  currentUserFixtures,
+  currentUserFixturesWithGithub,
+} from "fixtures/currentUserFixtures";
 
 import GithubLogin from "main/components/Nav/GithubLogin";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
@@ -18,7 +21,11 @@ describe("GithubLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GithubLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -28,7 +35,6 @@ describe("GithubLogin tests", () => {
     expect(loginButton).toBeInTheDocument();
   });
 
-
   test("renders correctly for user logged into Google but not Github", async () => {
     const currentUser = currentUserFixtures.userOnly;
 
@@ -37,7 +43,11 @@ describe("GithubLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GithubLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -52,7 +62,11 @@ describe("GithubLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GithubLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -68,7 +82,11 @@ describe("GithubLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GithubLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -83,13 +101,15 @@ describe("GithubLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GithubLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
     await screen.findByText("Github: phtcon-github");
   });
-
-
 });

@@ -19,7 +19,11 @@ describe("GoogleLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GoogleLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -34,7 +38,11 @@ describe("GoogleLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GoogleLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -49,7 +57,11 @@ describe("GoogleLogin tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <GoogleLogin currentUser={currentUser} systemInfo={systemInfo} doLogin={doLogin} />
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );

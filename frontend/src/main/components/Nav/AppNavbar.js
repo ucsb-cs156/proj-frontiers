@@ -15,8 +15,8 @@ export default function AppNavbar({
     <>
       {(currentUrl.startsWith("http://localhost:3000") ||
         currentUrl.startsWith("http://127.0.0.1:3000")) && (
-          <AppNavbarLocalhost url={currentUrl} />
-        )}
+        <AppNavbarLocalhost url={currentUrl} />
+      )}
       <Navbar
         expand="xl"
         variant="dark"
@@ -61,10 +61,7 @@ export default function AppNavbar({
               )}
             </Nav>
             <Nav className="ml-auto">
-              <GithubLogin
-                currentUser={currentUser}
-                systemInfo={systemInfo}
-              />
+              <GithubLogin currentUser={currentUser} systemInfo={systemInfo} />
             </Nav>
             <Nav className="ml-auto">
               <GoogleLogin
