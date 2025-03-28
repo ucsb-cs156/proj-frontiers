@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function GithubLogin({ currentUser, systemInfo }) {
   var githubOauthLogin = systemInfo?.githubOauthLogin || "/oauth2/authorization/github";
   if (!currentUser || !currentUser.loggedIn ) {
-    return <> </>
+    return <span data-testid="GithubLogin-logged-out" />
   }
   console.log("GithubLogin: currentUser = ", currentUser);
   if (currentUser.root.user.githubLogin) {
