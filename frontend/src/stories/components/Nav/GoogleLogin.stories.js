@@ -1,10 +1,10 @@
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
-import AppNavbar from "main/components/Nav/AppNavbar";
+import GoogleLogin from "main/components/Nav/GoogleLogin";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 export default {
-  title: "components/Nav/AppNavbar",
-  component: AppNavbar,
+  title: "components/Nav/GoogleLogin",
+  component: GoogleLogin,
   parameters: {
     // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
     layout: "centered",
@@ -19,39 +19,43 @@ export default {
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 
-const Template = (args) => {
-  return <AppNavbar {...args} />;
-};
+const Template = (args) => <GoogleLogin {...args} />;
 
 export const LoggedOut = Template.bind({});
+LoggedOut.parameters = {
+  currentUser: {
+    loggedIn: false,
+  },
+  systemInfo: null,
+  doLogout: () => {},
+};
 
-export const User = Template.bind({});
-User.args = {
+export const LoggedInUser = Template.bind({});
+LoggedInUser.args = {
   currentUser: {
     loggedIn: true,
     root: apiCurrentUserFixtures.userOnly,
   },
+  systemInfo: {
+    oauthLogin: "/oauth2/authorization/test", // This simulates the oauth login URL
+  },
+  doLogout: () => {
+    window.alert("Logging out");
+    console.log("Logged out");
+  },
 };
 
-export const Admin = Template.bind({});
-Admin.args = {
+export const LoggedInAdmin = Template.bind({});
+LoggedInAdmin.args = {
   currentUser: {
     loggedIn: true,
     root: apiCurrentUserFixtures.adminUser,
   },
-};
-
-export const Localhost3000 = Template.bind({});
-Localhost3000.args = {
-  currentUrl: "http://localhost:3000",
-};
-
-export const LocalhostNumeric3000 = Template.bind({});
-LocalhostNumeric3000.args = {
-  currentUrl: "http://127.0.0.1:3000",
-};
-
-export const Localhost8080 = Template.bind({});
-Localhost8080.args = {
-  currentUrl: "http://localhost:8080",
+  systemInfo: {
+    oauthLogin: "/oauth2/authorization/test", // This simulates the oauth login URL
+  },
+  doLogout: () => {
+    window.alert("Logging out");
+    console.log("Logged out");
+  },
 };
