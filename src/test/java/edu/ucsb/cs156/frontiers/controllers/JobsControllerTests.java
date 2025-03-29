@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -365,7 +366,12 @@ public class JobsControllerTests extends ControllerTestCase {
         .andReturn();
 
     // assert
-    
+
+
+    verify(updateUserService, times(1)).attachRosterStudentsAllUsers();
+    String responseString = response.getResponse().getContentAsString();
+    Job jobReturned = objectMapper.readValue(responseString, Job.class);
+    assertEquals("running", jobReturned.getStatus());
   }
 
 }
