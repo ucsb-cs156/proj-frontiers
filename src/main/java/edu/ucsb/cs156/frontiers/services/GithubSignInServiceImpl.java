@@ -1,10 +1,10 @@
 package edu.ucsb.cs156.frontiers.services;
 
-import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.errors.NotAuthenticatedWithGoogleException;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,7 +20,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -31,11 +30,13 @@ public class GithubSignInServiceImpl extends DefaultOAuth2UserService implements
 
     private final CurrentUserService currentUserService;
     private final RosterStudentRepository rosterStudentRepository;
+    private final UpdateUserService updateUserService;
 
-    public GithubSignInServiceImpl(@Autowired UserRepository userRepository, @Autowired CurrentUserService currentUserService, @Autowired RosterStudentRepository rosterStudentRepository) {
+    public GithubSignInServiceImpl(@Autowired UserRepository userRepository, @Autowired CurrentUserService currentUserService, @Autowired RosterStudentRepository rosterStudentRepository, @Autowired UpdateUserService updateUserService) {
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
         this.rosterStudentRepository = rosterStudentRepository;
+        this.updateUserService = updateUserService;
     }
 
     @Override
@@ -60,7 +61,7 @@ public class GithubSignInServiceImpl extends DefaultOAuth2UserService implements
             if (currentLocalUser != null) {
                 currentLocalUser.setGithubId((Integer) oAuth2User.getAttributes().get("id"));
                 currentLocalUser.setGithubLogin((String) oAuth2User.getAttributes().get("login"));
-                attachRosterStudents(currentLocalUser);
+                updateUserService.attachRosterStudents(currentLocalUser);
                 userRepository.save(currentLocalUser);
             }
             authorities.add(new SimpleGrantedAuthority("ROLE_GITHUB"));
@@ -71,15 +72,4 @@ public class GithubSignInServiceImpl extends DefaultOAuth2UserService implements
         }
 
     }
-
-    private void attachRosterStudents(User user) {
-        List<RosterStudent> matchedStudents = rosterStudentRepository.findAllByEmail(user.getEmail());
-        for(int i = 0; i < matchedStudents.size(); i++){
-            RosterStudent matchedStudent = matchedStudents.get(i);
-            matchedStudent.setUser(user);
-        }
-        rosterStudentRepository.saveAll(matchedStudents);
-
-    }
-
 }
