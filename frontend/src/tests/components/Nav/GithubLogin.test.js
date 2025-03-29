@@ -35,6 +35,33 @@ describe("GithubLogin tests", () => {
     expect(loginButton).toBeInTheDocument();
   });
 
+  test("default link is the correct value", async () => {
+    const currentUser = currentUserFixtures.userOnly;
+
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Connect Github");
+    // Check if the button is rendered with the overridden link
+    const loginButton = screen.getByRole("button", {
+      name: "Connect Github",
+    });
+    expect(loginButton).toBeInTheDocument();
+    // Ensure the login button has the correct href
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/github"); // This checks if the overridden URL is used
+  });
+
   test("link can be overridden via systemInfo", async () => {
     const currentUser = currentUserFixtures.userOnly;
 
