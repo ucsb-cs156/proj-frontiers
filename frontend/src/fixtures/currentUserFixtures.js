@@ -13,6 +13,8 @@ const apiCurrentUserFixtures = {
       locale: "en",
       hostedDomain: "ucsb.edu",
       admin: true,
+      githubId: 0,
+      githubLogin: null,
     },
     roles: [
       {
@@ -61,6 +63,8 @@ const apiCurrentUserFixtures = {
       locale: "en",
       hostedDomain: null,
       admin: false,
+      githubId: 0,
+      githubLogin: null,
     },
     roles: [
       {
@@ -106,6 +110,23 @@ const apiCurrentUserFixtures = {
   },
 };
 
+const apiCurrentUserFixturesWithGithub = {
+  adminUser: {
+    user: {
+      ...apiCurrentUserFixtures.adminUser.user, // Reuse the admin user from above
+      githubId: 123456, // Adding a Github ID to simulate Github login
+      githubLogin: "phtcon-github", // Simulating a Github login
+    },
+  },
+  userOnly: {
+    user: {
+      ...apiCurrentUserFixtures.userOnly.user, // Reuse the admin user from above
+      githubId: 654321, // Adding a Github ID to simulate Github login
+      githubLogin: "cgaucho-github", // Simulating a Github login
+    },
+  },
+};
+
 const currentUserFixtures = {
   adminUser: {
     loggedIn: true,
@@ -139,4 +160,44 @@ const currentUserFixtures = {
   },
 };
 
-export { currentUserFixtures, apiCurrentUserFixtures };
+const currentUserFixturesWithGithub = {
+  adminUser: {
+    loggedIn: true,
+    root: {
+      ...apiCurrentUserFixturesWithGithub.adminUser,
+      rolesList: [
+        "ROLE_MEMBER",
+        "SCOPE_openid",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.profile",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.email",
+        "ROLE_USER",
+        "ROLE_ADMIN",
+        "ROLE_GITHUB",
+      ],
+    },
+  },
+  userOnly: {
+    loggedIn: true,
+    root: {
+      ...apiCurrentUserFixturesWithGithub.userOnly,
+      rolesList: [
+        "SCOPE_openid",
+        "ROLE_USER",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.profile",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.email",
+        "ROLE_GITHUB",
+      ],
+    },
+  },
+  notLoggedIn: {
+    loggedIn: false,
+    root: {},
+  },
+};
+
+export {
+  currentUserFixtures,
+  currentUserFixturesWithGithub,
+  apiCurrentUserFixtures,
+  apiCurrentUserFixturesWithGithub,
+};

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { hasRole } from "main/utils/currentUser";
 import AppNavbarLocalhost from "main/components/Nav/AppNavbarLocalhost";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
+import GithubLogin from "main/components/Nav/GithubLogin";
 
 export default function AppNavbar({
   currentUser,
@@ -58,6 +59,9 @@ export default function AppNavbar({
                   <NavDropdown.Item href="/admin/users">Users</NavDropdown.Item>
                 </NavDropdown>
               )}
+            </Nav>
+            <Nav className="ml-auto">
+              <GithubLogin currentUser={currentUser} systemInfo={systemInfo} />
             </Nav>
             <Nav className="ml-auto">
               <GoogleLogin
