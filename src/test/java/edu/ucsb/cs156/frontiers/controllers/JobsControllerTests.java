@@ -22,6 +22,7 @@ import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 
 import java.util.ArrayList;
@@ -45,15 +46,22 @@ import org.springframework.test.web.servlet.MvcResult;
 @AutoConfigureDataJpa
 public class JobsControllerTests extends ControllerTestCase {
 
-  @MockitoBean JobsRepository jobsRepository;
+  @MockitoBean
+  JobsRepository jobsRepository;
 
-  @MockitoBean UserRepository userRepository;
+  @MockitoBean
+  UserRepository userRepository;
 
-  @Autowired JobService jobService;
+  @MockitoBean
+  UpdateUserService updateUserService; // This will be used in the UpdateAllJob to call the GithubSignInService
 
-  @Autowired ObjectMapper objectMapper;
+  @Autowired
+  JobService jobService;
 
-  @WithMockUser(roles = {"ADMIN"})
+  @Autowired
+  ObjectMapper objectMapper;
+
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void admin_can_get_all_jobs() throws Exception {
 
@@ -68,8 +76,7 @@ public class JobsControllerTests extends ControllerTestCase {
     when(jobsRepository.findAll()).thenReturn(expectedJobs);
 
     // act
-    MvcResult response =
-        mockMvc.perform(get("/api/jobs/all")).andExpect(status().isOk()).andReturn();
+    MvcResult response = mockMvc.perform(get("/api/jobs/all")).andExpect(status().isOk()).andReturn();
 
     // assert
 
@@ -79,7 +86,7 @@ public class JobsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void api_getJobLogById__admin_logged_in__returns_job_by_id() throws Exception {
 
@@ -91,8 +98,7 @@ public class JobsControllerTests extends ControllerTestCase {
 
     // act
 
-    MvcResult response =
-        mockMvc.perform(get("/api/jobs?id=1")).andExpect(status().isOk()).andReturn();
+    MvcResult response = mockMvc.perform(get("/api/jobs?id=1")).andExpect(status().isOk()).andReturn();
 
     // assert
 
@@ -102,7 +108,7 @@ public class JobsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void api_getJobLogById__admin_logged_in__returns_not_found_for_missing_job()
       throws Exception {
@@ -113,8 +119,7 @@ public class JobsControllerTests extends ControllerTestCase {
 
     // act
 
-    MvcResult response =
-        mockMvc.perform(get("/api/jobs?id=2")).andExpect(status().isNotFound()).andReturn();
+    MvcResult response = mockMvc.perform(get("/api/jobs?id=2")).andExpect(status().isNotFound()).andReturn();
 
     // assert
 
@@ -124,18 +129,17 @@ public class JobsControllerTests extends ControllerTestCase {
     assertEquals("Job with id 2 not found", json.get("message"));
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void admin_can_delete_all_jobs() throws Exception {
 
     doNothing().when(jobsRepository).deleteAll();
 
     // act
-    MvcResult response =
-        mockMvc
-            .perform(delete("/api/jobs/all").with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
+    MvcResult response = mockMvc
+        .perform(delete("/api/jobs/all").with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
 
     // assert
 
@@ -145,7 +149,7 @@ public class JobsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void test_getJobLogs_admin_can_get_job_log() throws Exception {
     // Arrange
@@ -162,7 +166,7 @@ public class JobsControllerTests extends ControllerTestCase {
         .andExpect(content().string(jobLog));
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void test_getJobLogs_admin_can_get_empty_log() throws Exception {
     // Arrange
@@ -178,7 +182,7 @@ public class JobsControllerTests extends ControllerTestCase {
         .andExpect(content().string(""));
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void admin_can_delete_specific_job() throws Exception {
 
@@ -188,11 +192,10 @@ public class JobsControllerTests extends ControllerTestCase {
     doNothing().when(jobsRepository).deleteById(eq(1L));
 
     // act
-    MvcResult response =
-        mockMvc
-            .perform(delete("/api/jobs?id=1").with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
+    MvcResult response = mockMvc
+        .perform(delete("/api/jobs?id=1").with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
 
     // assert
 
@@ -202,7 +205,7 @@ public class JobsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void admin_gets_reasonable_error_when_deleting_non_existing_job() throws Exception {
 
@@ -211,11 +214,10 @@ public class JobsControllerTests extends ControllerTestCase {
     when(jobsRepository.existsById(eq(2L))).thenReturn(false);
 
     // act
-    MvcResult response =
-        mockMvc
-            .perform(delete("/api/jobs?id=2").with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
+    MvcResult response = mockMvc
+        .perform(delete("/api/jobs?id=2").with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
 
     // assert
 
@@ -225,7 +227,7 @@ public class JobsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void admin_can_launch_test_job() throws Exception {
 
@@ -233,34 +235,31 @@ public class JobsControllerTests extends ControllerTestCase {
 
     User user = currentUserService.getUser();
 
-    Job jobStarted =
-        Job.builder()
-            .id(0L)
-            .createdBy(user)
-            .createdAt(null)
-            .updatedAt(null)
-            .status("running")
-            .log("Hello World! from test job!")
-            .build();
+    Job jobStarted = Job.builder()
+        .id(0L)
+        .createdBy(user)
+        .createdAt(null)
+        .updatedAt(null)
+        .status("running")
+        .log("Hello World! from test job!")
+        .build();
 
-    Job jobCompleted =
-        Job.builder()
-            .id(0L)
-            .createdBy(user)
-            .createdAt(null)
-            .updatedAt(null)
-            .status("complete")
-            .log("Hello World! from test job!\nGoodbye from test job!")
-            .build();
+    Job jobCompleted = Job.builder()
+        .id(0L)
+        .createdBy(user)
+        .createdAt(null)
+        .updatedAt(null)
+        .status("complete")
+        .log("Hello World! from test job!\nGoodbye from test job!")
+        .build();
 
     when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobCompleted);
 
     // act
-    MvcResult response =
-        mockMvc
-            .perform(post("/api/jobs/launch/testjob?fail=false&sleepMs=2000").with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
+    MvcResult response = mockMvc
+        .perform(post("/api/jobs/launch/testjob?fail=false&sleepMs=2000").with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
 
     // assert
     String responseString = response.getResponse().getContentAsString();
@@ -276,7 +275,7 @@ public class JobsControllerTests extends ControllerTestCase {
         .untilAsserted(() -> verify(jobsRepository, times(4)).save(eq(jobCompleted)));
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithMockUser(roles = { "ADMIN" })
   @Test
   public void admin_can_launch_test_job_that_fails() throws Exception {
 
@@ -284,34 +283,31 @@ public class JobsControllerTests extends ControllerTestCase {
 
     User user = currentUserService.getUser();
 
-    Job jobStarted =
-        Job.builder()
-            .id(0L)
-            .createdBy(user)
-            .createdAt(null)
-            .updatedAt(null)
-            .status("running")
-            .log("Hello World! from test job!")
-            .build();
+    Job jobStarted = Job.builder()
+        .id(0L)
+        .createdBy(user)
+        .createdAt(null)
+        .updatedAt(null)
+        .status("running")
+        .log("Hello World! from test job!")
+        .build();
 
-    Job jobFailed =
-        Job.builder()
-            .id(0L)
-            .createdBy(user)
-            .createdAt(null)
-            .updatedAt(null)
-            .status("error")
-            .log("Hello World! from test job!\nFail!")
-            .build();
+    Job jobFailed = Job.builder()
+        .id(0L)
+        .createdBy(user)
+        .createdAt(null)
+        .updatedAt(null)
+        .status("error")
+        .log("Hello World! from test job!\nFail!")
+        .build();
 
     when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobFailed);
 
     // act
-    MvcResult response =
-        mockMvc
-            .perform(post("/api/jobs/launch/testjob?fail=true&sleepMs=4000").with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
+    MvcResult response = mockMvc
+        .perform(post("/api/jobs/launch/testjob?fail=true&sleepMs=4000").with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
 
     String responseString = response.getResponse().getContentAsString();
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
@@ -325,6 +321,38 @@ public class JobsControllerTests extends ControllerTestCase {
     await()
         .atMost(10, SECONDS)
         .untilAsserted(() -> verify(jobsRepository, times(3)).save(eq(jobFailed)));
+  }
+
+  @WithMockUser(roles = { "ADMIN" })
+  @Test
+  public void admin_can_launch_updateAll_job() throws Exception {
+
+    // arrange
+
+    User user = currentUserService.getUser();
+
+    Job jobStarted = Job.builder()
+        .id(0L)
+        .createdBy(user)
+        .createdAt(null)
+        .updatedAt(null)
+        .status("complete")
+        .build();
+
+    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobStarted);
+
+    // act
+    MvcResult response = mockMvc
+        .perform(post("/api/jobs/launch/updateAll").with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    Job jobReturned = objectMapper.readValue(responseString, Job.class);
+
+    assertEquals("complete", jobReturned.getStatus());
+  
   }
 
 }
