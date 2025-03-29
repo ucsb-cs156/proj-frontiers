@@ -65,12 +65,12 @@ import com.opencsv.exceptions.CsvException;
             @Parameter(name = &quot;firstName&quot;) @RequestParam String firstName,
             @Parameter(name = &quot;lastName&quot;) @RequestParam String lastName,
             @Parameter(name = &quot;email&quot;) @RequestParam String email,
-            @Parameter(name = &quot;course_id&quot;) @RequestParam Long course_id) throws EntityNotFoundException {
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
 
         // Get Course or else throw an error
 
-<span class="fc" id="L72">        Course course = courseRepository.findById(course_id)</span>
-<span class="fc" id="L73">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, course_id));</span>
+<span class="fc" id="L72">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L73">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
 <span class="fc" id="L75">        RosterStudent rosterStudent = RosterStudent.builder()</span>
 <span class="fc" id="L76">                .studentId(studentId)</span>
@@ -95,9 +95,9 @@ import com.opencsv.exceptions.CsvException;
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
     @GetMapping(&quot;/course&quot;)
     public Iterable&lt;RosterStudent&gt; rosterStudentForCourse(
-            @Parameter(name = &quot;course_id&quot;) @RequestParam Long course_id) throws EntityNotFoundException {
-<span class="fc" id="L99">        courseRepository.findById(course_id).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, course_id));</span>
-<span class="fc" id="L100">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findByCourseId(course_id);</span>
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
+<span class="fc" id="L99">        courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L100">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findByCourseId(courseId);</span>
 <span class="fc" id="L101">        return rosterStudents;</span>
     }
 
@@ -105,7 +105,7 @@ import com.opencsv.exceptions.CsvException;
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
     @PostMapping(value = &quot;/upload/egrades&quot;, consumes = { &quot;multipart/form-data&quot; })
     public Map&lt;String, String&gt; uploadRosterStudents(
-            @Parameter(name = &quot;course_id&quot;) @RequestParam Long courseId,
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
             @Parameter(name = &quot;file&quot;) @RequestParam(&quot;file&quot;) MultipartFile file)
             throws JsonProcessingException, IOException, CsvException {
 
