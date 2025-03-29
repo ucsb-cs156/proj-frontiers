@@ -65,12 +65,12 @@ public class RosterStudentsController extends ApiController {
             @Parameter(name = "firstName") @RequestParam String firstName,
             @Parameter(name = "lastName") @RequestParam String lastName,
             @Parameter(name = "email") @RequestParam String email,
-            @Parameter(name = "course_id") @RequestParam Long course_id) throws EntityNotFoundException {
+            @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException {
 
         // Get Course or else throw an error
 
-        Course course = courseRepository.findById(course_id)
-                .orElseThrow(() -> new EntityNotFoundException(Course.class, course_id));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
         RosterStudent rosterStudent = RosterStudent.builder()
                 .studentId(studentId)
@@ -95,9 +95,9 @@ public class RosterStudentsController extends ApiController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/course")
     public Iterable<RosterStudent> rosterStudentForCourse(
-            @Parameter(name = "course_id") @RequestParam Long course_id) throws EntityNotFoundException {
-        courseRepository.findById(course_id).orElseThrow(() -> new EntityNotFoundException(Course.class, course_id));
-        Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(course_id);
+            @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException {
+        courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+        Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
         return rosterStudents;
     }
 
@@ -105,7 +105,7 @@ public class RosterStudentsController extends ApiController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(value = "/upload/egrades", consumes = { "multipart/form-data" })
     public Map<String, String> uploadRosterStudents(
-            @Parameter(name = "course_id") @RequestParam Long courseId,
+            @Parameter(name = "courseId") @RequestParam Long courseId,
             @Parameter(name = "file") @RequestParam("file") MultipartFile file)
             throws JsonProcessingException, IOException, CsvException {
 
