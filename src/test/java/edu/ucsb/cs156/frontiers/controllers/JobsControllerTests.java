@@ -23,6 +23,7 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 
 import java.util.ArrayList;
@@ -60,6 +61,7 @@ public class JobsControllerTests extends ControllerTestCase {
 
   @Autowired
   ObjectMapper objectMapper;
+
 
   @WithMockUser(roles = { "ADMIN" })
   @Test
@@ -341,6 +343,8 @@ public class JobsControllerTests extends ControllerTestCase {
 
     when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobStarted);
 
+    doNothing().when(updateUserService).attachRosterStudentsAllUsers();
+
     // act
     MvcResult response = mockMvc
         .perform(post("/api/jobs/launch/updateAll").with(csrf()))
@@ -348,11 +352,8 @@ public class JobsControllerTests extends ControllerTestCase {
         .andReturn();
 
     // assert
-    String responseString = response.getResponse().getContentAsString();
-    Job jobReturned = objectMapper.readValue(responseString, Job.class);
-
-    assertEquals("complete", jobReturned.getStatus());
-  
-  }
+    verify(jobsRepository, atLeast(1)).save(any(Job.class));
+    verify(updateUserService, times(1)).attachRosterStudentsAllUsers();
+    }  
 
 }
