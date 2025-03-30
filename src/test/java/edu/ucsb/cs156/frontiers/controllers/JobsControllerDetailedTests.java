@@ -38,11 +38,22 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
+/**
+ * This class tests the ability of the JobsController to manipulate jobs, and
+ * the funcitonality of the jobs system in general.
+ * 
+ * By contrast, JobsControllerJobsTests tests the ability of the JobsController
+ * to launch specific jobs.
+ *
+ * @see JobsController
+ * @see JobsControllerJobsTests
+ */
+
 @Slf4j
 @WebMvcTest(controllers = JobsController.class)
 @Import(JobService.class)
 @AutoConfigureDataJpa
-public class JobsControllerTests extends ControllerTestCase {
+public class JobsControllerDetailedTests extends ControllerTestCase {
 
   @MockitoBean
   JobsRepository jobsRepository;

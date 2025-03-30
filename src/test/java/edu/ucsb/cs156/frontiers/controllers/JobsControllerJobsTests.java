@@ -28,11 +28,20 @@ import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import lombok.extern.slf4j.Slf4j;
 
+
+/**
+ * This class tests the ability of the JobsController to launch jobs.
+ * By contrast, JobsControllerDetailedTests tests the ability of the JobsController
+ * to get the status of jobs that have already been launched.
+ *
+ * @see JobsController
+ * @see JobsControllerDetailedTests
+ */
 @Slf4j
 @WebMvcTest(controllers = JobsController.class)
 @Import(JobService.class)
 @AutoConfigureDataJpa
-public class JobsControllerSpyTests extends ControllerTestCase {
+public class JobsControllerJobsTests extends ControllerTestCase {
 
   @MockitoBean
   JobsRepository jobsRepository;
