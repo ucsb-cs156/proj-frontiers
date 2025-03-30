@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.TestJob;
+import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +34,8 @@ public class JobsController extends ApiController {
 
   @Autowired private JobService jobService;
 
+  @Autowired private UpdateUserService updateUserService; 
+  
   @Autowired ObjectMapper mapper;
 
   @Operation(summary = "List all jobs")
@@ -94,5 +98,15 @@ public class JobsController extends ApiController {
     return jobService.getJobLogs(id);
   }
 
+  @Operation(summary = "Launch UpdateAll job")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/launch/updateAll")
+  public Job launchUpdateAllJob() {
 
+    UpdateAllJob job = 
+        UpdateAllJob.builder()
+            .updateUserService(updateUserService) 
+            .build();
+    return jobService.runAsJob(job);
+  }
 }
