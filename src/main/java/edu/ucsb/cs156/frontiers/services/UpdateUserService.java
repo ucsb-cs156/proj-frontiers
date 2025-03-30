@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class UpdateUserService  {
+public class UpdateUserService {
 
     @Autowired
     private UserRepository userRepository;
@@ -36,7 +36,6 @@ public class UpdateUserService  {
 
     /** attach roster students for all Users */
     public void attachRosterStudentsAllUsers() {
-        // This method can be used to attach roster students for all users in the system
         Iterable<User> allUsers = userRepository.findAll();
         for (User user : allUsers) {
             attachRosterStudents(user);
