@@ -1,14 +1,14 @@
 package edu.ucsb.cs156.frontiers.services;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UpdateUserService {
