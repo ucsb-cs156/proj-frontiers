@@ -33,6 +33,7 @@ public class UpdateUsersJobTests {
                 Done""";
 
         assertEquals(expected, jobStarted.getLog());
+        verify(updateUserService, times(1)).attachRosterStudentsAllUsers();
 
     }
 

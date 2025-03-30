@@ -367,8 +367,6 @@ public class JobsControllerTests extends ControllerTestCase {
 
     // assert
 
-
-    verify(updateUserService, times(1)).attachRosterStudentsAllUsers();
     String responseString = response.getResponse().getContentAsString();
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
     assertEquals("running", jobReturned.getStatus());
