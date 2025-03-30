@@ -34,8 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 
   @Autowired private JobService jobService;
 
-  @Autowired private UpdateUserService updateUserService; // This will be used in the UpdateAllJob to call the GithubSignInService
-
+  @Autowired private UpdateUserService updateUserService; 
+  
   @Autowired ObjectMapper mapper;
 
   @Operation(summary = &quot;List all jobs&quot;)
@@ -105,7 +105,7 @@ import org.springframework.web.bind.annotation.RestController;
 
     UpdateAllJob job = 
 <span class="fc" id="L107">        UpdateAllJob.builder()</span>
-<span class="fc" id="L108">            .updateUserService(updateUserService) // Pass the GithubSignInService to the job</span>
+<span class="fc" id="L108">            .updateUserService(updateUserService) </span>
 <span class="fc" id="L109">            .build();</span>
 <span class="fc" id="L110">    return jobService.runAsJob(job);</span>
   }
