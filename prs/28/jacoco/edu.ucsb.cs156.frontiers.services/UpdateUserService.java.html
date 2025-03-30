@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-<span class="fc" id="L14">public class UpdateUserService  {</span>
+<span class="fc" id="L14">public class UpdateUserService {</span>
 
     @Autowired
     private UserRepository userRepository;
@@ -36,11 +36,10 @@ import java.util.List;
 
     /** attach roster students for all Users */
     public void attachRosterStudentsAllUsers() {
-        // This method can be used to attach roster students for all users in the system
-<span class="fc" id="L40">        Iterable&lt;User&gt; allUsers = userRepository.findAll();</span>
-<span class="fc bfc" id="L41" title="All 2 branches covered.">        for (User user : allUsers) {</span>
-<span class="fc" id="L42">            attachRosterStudents(user);</span>
-<span class="fc" id="L43">        }</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L39">        Iterable&lt;User&gt; allUsers = userRepository.findAll();</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for (User user : allUsers) {</span>
+<span class="fc" id="L41">            attachRosterStudents(user);</span>
+<span class="fc" id="L42">        }</span>
+<span class="fc" id="L43">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
