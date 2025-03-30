@@ -34,8 +34,8 @@ public class JobsController extends ApiController {
 
   @Autowired private JobService jobService;
 
-  @Autowired private UpdateUserService updateUserService; // This will be used in the UpdateAllJob to call the GithubSignInService
-
+  @Autowired private UpdateUserService updateUserService; 
+  
   @Autowired ObjectMapper mapper;
 
   @Operation(summary = "List all jobs")
@@ -105,7 +105,7 @@ public class JobsController extends ApiController {
 
     UpdateAllJob job = 
         UpdateAllJob.builder()
-            .updateUserService(updateUserService) // Pass the GithubSignInService to the job
+            .updateUserService(updateUserService) 
             .build();
     return jobService.runAsJob(job);
   }
