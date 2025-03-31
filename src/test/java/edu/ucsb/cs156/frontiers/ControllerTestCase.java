@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,8 +20,15 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+/**
+ * This is a base class for all controller test cases. It provides
+ * common functionality such as mocking the current user and
+ * setting up the MockMvc object.
+ */
+
 @ActiveProfiles("test")
 @Import(TestConfig.class)
+@AutoConfigureDataJpa
 public abstract class ControllerTestCase {
   @Autowired
   public CurrentUserService currentUserService;
