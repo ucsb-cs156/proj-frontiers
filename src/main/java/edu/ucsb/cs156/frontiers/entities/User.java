@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.List;
 
 /**
@@ -35,6 +37,7 @@ public class User {
   private String githubLogin;
   private String studentId;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
   private List<RosterStudent> linkedStudents;
