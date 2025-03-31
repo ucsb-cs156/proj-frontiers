@@ -1,1 +1,0 @@
-/opt/hostedtoolcache/Java_IBM_Semeru_jdk/21.0.6-7.0.LTS/x64/bin/javadoc -J-Duser.language= -J-Duser.country= @options @packages
