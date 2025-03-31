@@ -17,6 +17,7 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -52,6 +53,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Autowired
         private CurrentUserService currentUserService;
+
+        @MockitoBean
+        private UpdateUserService updateUserService;
 
         Course course1 = Course.builder()
                         .id(1L)
@@ -222,33 +226,66 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 // arrange
 
-                RosterStudent rs2After = RosterStudent.builder()
+                RosterStudent rs1BeforeWithId = RosterStudent.builder()
+                                .id(1L)
+                                .firstName("Chris")
+                                .lastName("Gaucho")
+                                .studentId("A123456")
+                                .email("cgaucho@umail.ucsb.edu")
+                                .course(course1)
+                                .rosterStatus(RosterStatus.MANUAL)
+                                .orgStatus(OrgStatus.NONE)
+                                .build();
+
+                RosterStudent rs1AfterWithId = RosterStudent.builder()
+                                .id(1L)
+                                .firstName("CHRIS FAKE")
+                                .lastName("GAUCHO")
+                                .studentId("A123456")
+                                .email("cgaucho@ucsb.edu")
+                                .course(course1)
+                                .rosterStatus(RosterStatus.ROSTER)
+                                .orgStatus(OrgStatus.NONE)
+                                .build();
+
+                RosterStudent rs2BeforeWithId = RosterStudent.builder()
+                                .id(2L)
+                                .firstName("Lauren")
+                                .lastName("Del Playa")
+                                .studentId("A987654")
+                                .email("ldelplaya@umail.ucsb.edu")
+                                .course(course1)
+                                .rosterStatus(RosterStatus.ROSTER)
+                                .orgStatus(OrgStatus.NONE)
+                                .build();
+
+                RosterStudent rs2AfterWithId = RosterStudent.builder()
                                 .id(2L)
                                 .course(course1)
                                 .firstName("LAUREN")
                                 .lastName("DEL PLAYA")
-                                .email("ldelplaya@umail.ucsb.edu")
+                                .email("ldelplaya@ucsb.edu")
                                 .studentId("A987654")
                                 .rosterStatus(RosterStatus.ROSTER)
                                 .orgStatus(OrgStatus.NONE)
                                 .build();
 
-                RosterStudent rs3Before = RosterStudent.builder()
+                RosterStudent rs3NoId = RosterStudent.builder()
                                 .course(course1)
                                 .firstName("SABADO")
                                 .lastName("TARDE")
-                                .email("sabadotarde@umail.ucsb.edu")
+                                .email("sabadotarde@ucsb.edu")
                                 .studentId("1234567")
                                 .rosterStatus(RosterStatus.ROSTER)
                                 .orgStatus(OrgStatus.NONE)
                                 .build();
 
-                RosterStudent rs3After = RosterStudent.builder()
+                RosterStudent rs3WithId = RosterStudent.builder()
                                 .id(3L)
                                 .course(course1)
                                 .firstName("SABADO")
                                 .lastName("TARDE")
-                                .email("sabadotarde@umail.ucsb.edu")
+                                .email("sabadotarde@ucsb.edu")
                                 .studentId("1234567")
                                 .rosterStatus(RosterStatus.ROSTER)
                                 .orgStatus(OrgStatus.NONE)
@@ -262,15 +299,15 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
                 when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
-                                .thenReturn(Optional.of(rs1));
+                                .thenReturn(Optional.of(rs1BeforeWithId));
                 when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
-                                .thenReturn(Optional.of(rs2));
+                                .thenReturn(Optional.of(rs2BeforeWithId));
                 when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("1234567")))
                                 .thenReturn(Optional.empty());
 
-                when(rosterStudentRepository.save(eq(rs1))).thenReturn(rs1);
-                when(rosterStudentRepository.save(eq(rs2))).thenReturn(rs2After);
-                when(rosterStudentRepository.save(eq(rs3Before))).thenReturn(rs3After);
+                when(rosterStudentRepository.save(eq(rs1AfterWithId))).thenReturn(rs1AfterWithId);
+                when(rosterStudentRepository.save(eq(rs2AfterWithId))).thenReturn(rs2AfterWithId);
+                when(rosterStudentRepository.save(eq(rs3NoId))).thenReturn(rs3WithId);
 
                 // act
 
@@ -287,9 +324,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("A123456"));
                 verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("A987654"));
                 verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("1234567"));
-                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1));
-                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2After));
-                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3Before));
+                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
+                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
+                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
 
                 String responseString = response.getResponse().getContentAsString();
                 Map<String, String> expectedMap = Map.of(
