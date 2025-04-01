@@ -21,4 +21,4 @@ team01,edu.ucsb.cs156.frontiers.controllers,UsersController,0,16,0,0,0,4,0,2,0,2
 team01,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,7,0,0,0,2,0,2,0,2
 team01,edu.ucsb.cs156.frontiers.jobs,TestJob,0,22,0,2,0,7,0,2,0,1
 team01,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
-team01,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,40,0,0,0,13,0,1,0,1
+team01,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,61,0,6,0,16,0,4,0,1
