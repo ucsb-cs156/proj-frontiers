@@ -46,7 +46,7 @@ import java.util.Map;
    */
   @ExceptionHandler({ EntityNotFoundException.class })
   @ResponseStatus(HttpStatus.NOT_FOUND)
-  public Object handleGenericException(Throwable e) {
+  public Object handleEntityNotFoundException(Throwable e) {
 <span class="fc" id="L50">    return Map.of(</span>
 <span class="fc" id="L51">      &quot;type&quot;, e.getClass().getSimpleName(),</span>
 <span class="fc" id="L52">      &quot;message&quot;, e.getMessage()</span>
