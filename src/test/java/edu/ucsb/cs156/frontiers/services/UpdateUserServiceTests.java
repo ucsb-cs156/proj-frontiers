@@ -13,7 +13,12 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 public class UpdateUserServiceTests {
@@ -85,4 +90,42 @@ public class UpdateUserServiceTests {
         assertEquals(user1, student1.getUser());
         assertEquals(user2, student2.getUser());
     }
+
+    @Test
+    public void testAttachUserToRosterStudent_userExists() {
+        // Arrange
+        String email = "test@example.com";
+        User user = User.builder().email(email).build();
+
+        RosterStudent rosterStudent = new RosterStudent();
+        rosterStudent.setEmail(email);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        // Act
+        updateUserService.attachUserToRosterStudent(rosterStudent);
+
+        // Assert
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(rosterStudentRepository, times(1)).save(rosterStudent);
+        assertEquals(rosterStudent.getUser(), user);
+    }
+
+    @Test
+    public void testAttachUserToRosterStudent_userDoesNotExist() {
+        // Arrange
+        String email = "test@example.com";
+        RosterStudent rosterStudent = new RosterStudent();
+        rosterStudent.setEmail(email);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        // Act
+        updateUserService.attachUserToRosterStudent(rosterStudent);
+
+        // Assert
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+        assertNull(rosterStudent.getUser());
+    }        
 }

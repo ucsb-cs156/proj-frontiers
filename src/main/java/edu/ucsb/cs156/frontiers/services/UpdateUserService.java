@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,19 @@ public class UpdateUserService {
         Iterable<User> allUsers = userRepository.findAll();
         for (User user : allUsers) {
             attachRosterStudents(user);
+        }
+    }
+
+    /**
+     * This method attaches a SingleRoster student to the User based on their email.
+     */
+    public void attachUserToRosterStudent(RosterStudent rosterStudent) {
+        String email = rosterStudent.getEmail();
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isPresent()) {
+            User matchedUser = optionalUser.get();
+            rosterStudent.setUser(matchedUser);
+            rosterStudentRepository.save(rosterStudent);
         }
     }
 }

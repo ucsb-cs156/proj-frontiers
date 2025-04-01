@@ -26,6 +26,7 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +50,9 @@ public class RosterStudentsController extends ApiController {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private UpdateUserService updateUserService;
 
     /**
      * This method creates a new RosterStudent.
@@ -144,20 +148,26 @@ public class RosterStudentsController extends ApiController {
     public InsertStatus upsertStudent(RosterStudent student, Course course) {
         Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),
                 student.getStudentId());
+        String convertedEmail = student.getEmail().replace("@umail.ucsb.edu","@ucsb.edu");
         if (existingStudent.isPresent()) {
             RosterStudent existingStudentObj = existingStudent.get();
+            existingStudentObj.setRosterStatus(RosterStatus.ROSTER);
             existingStudentObj.setFirstName(student.getFirstName());
             existingStudentObj.setLastName(student.getLastName());
-            existingStudentObj.setEmail(student.getEmail());
-            rosterStudentRepository.save(existingStudentObj);
+            if (!existingStudentObj.getEmail().equals(convertedEmail)) {
+                existingStudentObj.setEmail(convertedEmail);
+            }
+            existingStudentObj = rosterStudentRepository.save(existingStudentObj);
+            updateUserService.attachUserToRosterStudent(existingStudentObj);
             return InsertStatus.UPDATED;
         } else {
             student.setCourse(course);
+            student.setEmail(convertedEmail);
             student.setRosterStatus(RosterStatus.ROSTER);
             student.setOrgStatus(OrgStatus.NONE);
-            rosterStudentRepository.save(student);
+            student = rosterStudentRepository.save(student);
+            updateUserService.attachUserToRosterStudent(student);
             return InsertStatus.INSERTED;
         }
-
     }
 }
