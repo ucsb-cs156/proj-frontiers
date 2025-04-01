@@ -37,9 +37,10 @@ public class RosterStudentDTOTests {
         rosterStudent.setOrgStatus(OrgStatus.NONE);
 
         // Act
-        RosterStudentDTO dto = RosterStudentDTO.from(rosterStudent);
 
+        RosterStudentDTO dto = RosterStudentDTO.from(rosterStudent);
         // Assert
+
         assertEquals(3L, dto.getId());
         assertEquals(1L, dto.getCourseId());
         assertEquals("U123456", dto.getStudentId());
@@ -51,5 +52,40 @@ public class RosterStudentDTOTests {
         assertEquals("testuser", dto.getUserGithubLogin());
         assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
         assertEquals(OrgStatus.NONE, dto.getOrgStatus());
+    }
+
+    @Test
+    public void test_from_when_user_is_null() {
+        // Arrange
+        Course course = new Course();
+        course.setId(1L);
+
+        RosterStudent rosterStudent = new RosterStudent();
+        rosterStudent.setId(3L);
+        rosterStudent.setCourse(course);
+        rosterStudent.setStudentId("U123456");
+        rosterStudent.setFirstName("John");
+        rosterStudent.setLastName("Doe");
+        rosterStudent.setEmail("johndoe@example.com");
+        rosterStudent.setUser(null);
+        rosterStudent.setRosterStatus(RosterStatus.ROSTER);
+        rosterStudent.setOrgStatus(OrgStatus.NONE);
+
+        // Act
+        RosterStudentDTO dto = RosterStudentDTO.from(rosterStudent);
+
+        // Assert
+        assertEquals(3L, dto.getId());
+        assertEquals(1L, dto.getCourseId());
+        assertEquals("U123456", dto.getStudentId());
+        assertEquals("John", dto.getFirstName());
+        assertEquals("Doe", dto.getLastName());
+        assertEquals("johndoe@example.com", dto.getEmail());
+        assertEquals(0, dto.getUserId());
+        assertEquals(0, dto.getUserGithubId());
+        assertEquals("", dto.getUserGithubLogin());
+        assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
+        assertEquals(OrgStatus.NONE, dto.getOrgStatus());
+
     }
 }

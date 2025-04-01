@@ -43,6 +43,10 @@ public class RosterStudentDTO {
 
 
     public static RosterStudentDTO from(RosterStudent student) {
+        long userId = student.getUser() != null ? student.getUser().getId() : 0;
+        int userGithubId = student.getUser() != null ? student.getUser().getGithubId() : 0;
+        String userGithubLogin = student.getUser() != null ? student.getUser().getGithubLogin() : "";
+        
         return RosterStudentDTO.builder()
                 .id(student.getId())
                 .courseId(student.getCourse().getId())
@@ -50,9 +54,9 @@ public class RosterStudentDTO {
                 .firstName(student.getFirstName())
                 .lastName(student.getLastName())
                 .email(student.getEmail())
-                .userId(student.getUser().getId())
-                .userGithubId(student.getUser().getGithubId())
-                .userGithubLogin(student.getUser().getGithubLogin())
+                .userId(userId)
+                .userGithubId(userGithubId)
+                .userGithubLogin(userGithubLogin)
                 .rosterStatus(student.getRosterStatus())
                 .orgStatus(student.getOrgStatus())
                 .build();
