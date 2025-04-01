@@ -46,7 +46,7 @@ public abstract class ApiController {
    */
   @ExceptionHandler({ EntityNotFoundException.class })
   @ResponseStatus(HttpStatus.NOT_FOUND)
-  public Object handleGenericException(Throwable e) {
+  public Object handleEntityNotFoundException(Throwable e) {
     return Map.of(
       "type", e.getClass().getSimpleName(),
       "message", e.getMessage()
