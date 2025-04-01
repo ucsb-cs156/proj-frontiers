@@ -156,19 +156,18 @@ import com.opencsv.exceptions.CsvException;
 <span class="fc" id="L156">            existingStudentObj.setLastName(student.getLastName());</span>
 <span class="fc bfc" id="L157" title="All 2 branches covered.">            if (!existingStudentObj.getEmail().equals(convertedEmail)) {</span>
 <span class="fc" id="L158">                existingStudentObj.setEmail(convertedEmail);</span>
-<span class="fc" id="L159">                existingStudentObj.setUser(null);</span>
             }
-<span class="fc" id="L161">            existingStudentObj = rosterStudentRepository.save(existingStudentObj);</span>
-<span class="fc" id="L162">            updateUserService.attachUserToRosterStudent(existingStudentObj);</span>
-<span class="fc" id="L163">            return InsertStatus.UPDATED;</span>
+<span class="fc" id="L160">            existingStudentObj = rosterStudentRepository.save(existingStudentObj);</span>
+<span class="fc" id="L161">            updateUserService.attachUserToRosterStudent(existingStudentObj);</span>
+<span class="fc" id="L162">            return InsertStatus.UPDATED;</span>
         } else {
-<span class="fc" id="L165">            student.setCourse(course);</span>
-<span class="fc" id="L166">            student.setEmail(convertedEmail);</span>
-<span class="fc" id="L167">            student.setRosterStatus(RosterStatus.ROSTER);</span>
-<span class="fc" id="L168">            student.setOrgStatus(OrgStatus.NONE);</span>
-<span class="fc" id="L169">            student = rosterStudentRepository.save(student);</span>
-<span class="fc" id="L170">            updateUserService.attachUserToRosterStudent(student);</span>
-<span class="fc" id="L171">            return InsertStatus.INSERTED;</span>
+<span class="fc" id="L164">            student.setCourse(course);</span>
+<span class="fc" id="L165">            student.setEmail(convertedEmail);</span>
+<span class="fc" id="L166">            student.setRosterStatus(RosterStatus.ROSTER);</span>
+<span class="fc" id="L167">            student.setOrgStatus(OrgStatus.NONE);</span>
+<span class="fc" id="L168">            student = rosterStudentRepository.save(student);</span>
+<span class="fc" id="L169">            updateUserService.attachUserToRosterStudent(student);</span>
+<span class="fc" id="L170">            return InsertStatus.INSERTED;</span>
         }
     }
 }
