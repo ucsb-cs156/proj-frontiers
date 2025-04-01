@@ -53,7 +53,7 @@ public class CSVDownloadsController extends ApiController {
   public ResponseEntity<StreamingResponseBody> csvForQuarter(
       @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam Long courseId,
       @Parameter(name = "testException", description = "test exception", example = "CsvDataTypeMismatchException") @RequestParam(required = false, defaultValue = "") String testException)
-      throws Exception, IOException {
+      throws EntityNotFoundException, Exception, IOException {
     Course course = courseRepository.findById(courseId)
         .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     StreamingResponseBody stream = (outputStream) -> {

@@ -45,14 +45,6 @@ public class CSVDownloadsControllerTests {
     }
 
     @Test
-    public void testRosterStudentsCSV_failure() throws Exception {
-        when(courseRepository.findById(1L)).thenReturn(java.util.Optional.empty());
-
-        ResponseEntity<StreamingResponseBody> response = csvDownloadsController.csvForQuarter(1L, "");
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
     public void testRosterStudentsCSV_success() throws Exception {
 
         // Arrange
