@@ -156,7 +156,6 @@ public class RosterStudentsController extends ApiController {
             existingStudentObj.setLastName(student.getLastName());
             if (!existingStudentObj.getEmail().equals(convertedEmail)) {
                 existingStudentObj.setEmail(convertedEmail);
-                existingStudentObj.setUser(null);
             }
             existingStudentObj = rosterStudentRepository.save(existingStudentObj);
             updateUserService.attachUserToRosterStudent(existingStudentObj);

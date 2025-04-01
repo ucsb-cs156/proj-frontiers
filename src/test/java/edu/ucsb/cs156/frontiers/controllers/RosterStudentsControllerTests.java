@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -309,6 +310,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.save(eq(rs2AfterWithId))).thenReturn(rs2AfterWithId);
                 when(rosterStudentRepository.save(eq(rs3NoId))).thenReturn(rs3WithId);
 
+                doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));               
+                doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
+                doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs3WithId));
+
                 // act
 
                 MvcResult response = mockMvc
@@ -327,6 +332,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
                 verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
                 verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
+
+                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1AfterWithId));
+                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs2AfterWithId));
+                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
 
                 String responseString = response.getResponse().getContentAsString();
                 Map<String, String> expectedMap = Map.of(
