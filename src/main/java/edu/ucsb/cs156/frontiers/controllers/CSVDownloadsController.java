@@ -6,6 +6,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import com.opencsv.bean.StatefulBeanToCsv;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -51,21 +52,17 @@ public class CSVDownloadsController extends ApiController {
   })
   @GetMapping(value = "/rosterstudents", produces = "text/csv")
   public ResponseEntity<StreamingResponseBody> csvForQuarter(
-      @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam Long courseId,
-      @Parameter(name = "testException", description = "test exception", example = "CsvDataTypeMismatchException") @RequestParam(required = false, defaultValue = "") String testException)
+      @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam Long courseId)
       throws EntityNotFoundException, Exception, IOException {
     Course course = courseRepository.findById(courseId)
         .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     StreamingResponseBody stream = (outputStream) -> {
 
       List<RosterStudentDTO> list = rosterStudentDTOService.getRosterStudentDTOs(courseId);
-
       try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
         try {
-          if (testException.equals("CsvDataTypeMismatchException")) {
-            throw new CsvDataTypeMismatchException("test exception");
-          }
-          new StatefulBeanToCsvBuilder<RosterStudentDTO>(writer).build().write(list);
+          StatefulBeanToCsv<RosterStudentDTO> beanToCsvWriter = rosterStudentDTOService.getStatefulBeanToCSV(writer);
+          beanToCsvWriter.write(list);
         } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
           log.error("Error writing CSV file", e);
           throw new IOException("Error writing CSV file: " + e.getMessage());
