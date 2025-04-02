@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -36,9 +37,12 @@ public class JwtService {
 
     private final ObjectMapper objectMapper;
 
-    public JwtService(RestTemplateBuilder restTemplateBuilder,  ObjectMapper objectMapper) {
+    private final DateTimeProvider  dateTimeProvider;
+
+    public JwtService(RestTemplateBuilder restTemplateBuilder,  ObjectMapper objectMapper, DateTimeProvider dateTimeProvider) {
         this.restTemplate = restTemplateBuilder.build();
         this.objectMapper = objectMapper;
+        this.dateTimeProvider = dateTimeProvider;
     }
 
     private RSAPrivateKey getPrivateKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -53,9 +57,10 @@ public class JwtService {
     }
 
     public String getJwt() throws NoSuchAlgorithmException, InvalidKeySpecException {
+        Instant currentTime = Instant.from(dateTimeProvider.getNow().get());
         String token = Jwts.builder()
-                .issuedAt(Date.from(Instant.now().minus(30, ChronoUnit.SECONDS)))
-                .expiration(Date.from(Instant.now().plus(5, ChronoUnit.MINUTES)))
+                .issuedAt(Date.from(currentTime.minus(30, ChronoUnit.SECONDS)))
+                .expiration(Date.from(currentTime.plus(5, ChronoUnit.MINUTES)))
                 .issuer(clientId)
                 .signWith(getPrivateKey(), Jwts.SIG.RS256)
                 .compact();
