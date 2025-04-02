@@ -357,16 +357,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
         .log("Processing...\n")
         .build();
 
-    Job jobCompleted = Job.builder()
-        .id(0L)
-        .createdBy(user)
-        .createdAt(null)
-        .updatedAt(null)
-        .status("complete")
-        .log("Processing...Done\n")
-        .build();
-
-    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobRunning).thenReturn(jobCompleted);
+    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobRunning);
 
     doNothing().when(updateUserService).attachRosterStudentsAllUsers();
 
