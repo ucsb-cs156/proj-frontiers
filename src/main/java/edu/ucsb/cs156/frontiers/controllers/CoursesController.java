@@ -1,15 +1,24 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.services.JwtService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -18,6 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.client.RestTemplate;
 
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
@@ -27,6 +37,8 @@ public class CoursesController extends ApiController {
     
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired private OrganizationLinkerService linkerService;
 
      /**
      * This method creates a new Course.
@@ -74,5 +86,54 @@ public class CoursesController extends ApiController {
         Iterable<Course> courses = courseRepository.findAll();
         return courses;
     }
+
+    @Operation(summary = "Authorize Frontiers to a Github Course")
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @GetMapping("/redirect")
+    public ResponseEntity<Void> linkCourse(@Parameter Long courseId) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+        String newUrl = linkerService.getRedirectUrl();
+        newUrl += "/installations/new?state="+courseId;
+        //found this convenient solution here: https://stackoverflow.com/questions/29085295/spring-mvc-restcontroller-and-redirect
+        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, newUrl).build();
+    }
+
+
+    @Operation(summary = "Link a Course to a Github Course")
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @GetMapping("link")
+    public ResponseEntity<Void> addInstallation(@Parameter(name = "installationId") @RequestParam Optional<String> installation_id,
+                                                @Parameter(name = "setupAction") @RequestParam String setup_action,
+                                                @Parameter(name = "code") @RequestParam String code,
+                                                @Parameter(name = "state") @RequestParam Long state) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        if(installation_id.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, "/courses/nopermissions").build();
+        }else {
+            Course course = courseRepository.findById(state).orElseThrow(() -> new EntityNotFoundException(Course.class, state));
+            if(!(course.getCreator().getId() ==getCurrentUser().getUser().getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }else{
+                String orgName = linkerService.getOrgName(installation_id.get());
+                course.setInstallationId(installation_id.get());
+                course.setOrgName(orgName);
+                courseRepository.save(course);
+                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, "/courses/success").build();
+            }
+        }
+    }
+
+    /**
+     * This method handles the InvalidInstallationTypeException.
+     * @param e the exception
+     * @return a map with the type and message of the exception
+     */
+    @ExceptionHandler({ InvalidInstallationTypeException.class })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Object handleInvalidInstallationType(Throwable e) {
+        return Map.of(
+                "type", e.getClass().getSimpleName(),
+                "message", e.getMessage()
+        );
+    }
+
 
 }
