@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.services.JwtService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -44,6 +45,8 @@ public class CoursesController extends ApiController {
     @Autowired private RestTemplateBuilder restTemplateBuilder;
 
     @Autowired private ObjectMapper objectMapper;
+
+    @Autowired private OrganizationLinkerService linkerService;
 
      /**
      * This method creates a new Course.
@@ -96,22 +99,12 @@ public class CoursesController extends ApiController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/redirect")
     public ResponseEntity<Void> linkCourse(@Parameter Long courseId) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-        RestTemplate restTemplate = restTemplateBuilder.build();
-        String token = jwtService.getJwt();
-        HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.add("Authorization", "Bearer " + token);
-        requestHeaders.add("Accept", "application/vnd.github+json");
-        requestHeaders.add("X-GitHub-Api-Version", "2022-11-28");
-        String ENDPOINT = "https://api.github.com/app";
-        HttpEntity<String> newEntity = new HttpEntity<>(requestHeaders);
-        ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.GET,  newEntity, String.class);
-
-        JsonNode responseJson = objectMapper.readTree(response.getBody());
-
-        String newUrl = responseJson.get("html_url").toString().replaceAll("\"", "") + "/installations/new?state="+courseId;
+        String newUrl = linkerService.getRedirectUrl();
+        newUrl += "/installations/new?state="+courseId;
         //found this convenient solution here: https://stackoverflow.com/questions/29085295/spring-mvc-restcontroller-and-redirect
         return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, newUrl).build();
     }
+
 
     @Operation(summary = "Link a Course to a Github Course")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -123,27 +116,17 @@ public class CoursesController extends ApiController {
         if(installation_id.isEmpty()) {
             return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, "/courses/nopermissions").build();
         }else {
-            RestTemplate restTemplate = restTemplateBuilder.build();
-            String token = jwtService.getJwt();
-            String ENDPOINT = "https://api.github.com/app/installations/" + installation_id;
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("Authorization", "Bearer " + token);
-            headers.add("Accept", "application/vnd.github+json");
-            headers.add("X-GitHub-Api-Version", "2022-11-28");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);
-            JsonNode responseJson = objectMapper.readTree(response.getBody());
-
-            String orgName = responseJson.get("account").get("login").asText();
-
+            String orgName = linkerService.getOrgName(installation_id.get());
             Course course = courseRepository.findById(state).orElseThrow(() -> new EntityNotFoundException(Course.class, state));
-            course.setInstallationId(installation_id.get());
-            course.setOrgName(orgName);
-            courseRepository.save(course);
+            if(!course.getCreator().equals(getCurrentUser().getUser())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }else{
+                course.setInstallationId(installation_id.get());
+                course.setOrgName(orgName);
+                courseRepository.save(course);
+                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, "/courses/success").build();
+            }
         }
-
-        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, "/courses/success").build();
     }
 
 
