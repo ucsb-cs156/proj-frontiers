@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -234,6 +235,36 @@ public class CoursesControllerTests extends ControllerTestCase {
         Map<String, String> expectedMap = Map.of(
                 "type", "EntityNotFoundException",
                 "message", "Course with id 1 not found");
+        String expectedJson = mapper.writeValueAsString(expectedMap);
+        assertEquals(expectedJson, responseString);
+    }
+
+    @Test
+    @WithMockUser(roles = {"ADMIN"})
+    public void testNotOrganization() throws Exception {
+        User user = currentUserService.getCurrentUser().getUser();
+        Course course1 = Course.builder()
+                .courseName("CS156")
+                .term("S25")
+                .school("UCSB")
+                .creator(user)
+                .id(1L)
+                .build();
+
+        doThrow(new InvalidInstallationTypeException("User")).when(linkerService).getOrgName(eq("1234"));
+        doReturn(Optional.of(course1)).when(courseRepository).findById(eq(1L));
+        MvcResult response = mockMvc.perform(get("/api/courses/link")
+                        .param("installation_id", "1234")
+                        .param("setup_action", "install")
+                        .param("code", "abcdefg")
+                        .param("state", "1"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseString = response.getResponse().getContentAsString();
+        Map<String, String> expectedMap = Map.of(
+                "type", "InvalidInstallationTypeException",
+                "message", "Invalid installation type: User. Frontiers can only be linked to organizations");
         String expectedJson = mapper.writeValueAsString(expectedMap);
         assertEquals(expectedJson, responseString);
     }

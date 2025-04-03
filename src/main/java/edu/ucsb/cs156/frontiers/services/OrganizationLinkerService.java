@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -56,7 +57,10 @@ public class OrganizationLinkerService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);
         JsonNode responseJson = objectMapper.readTree(response.getBody());
-
+        String type = responseJson.get("account").get("type").asText();
+        if(!type.equals("Organization")){
+            throw new InvalidInstallationTypeException(type);
+        }
         String orgName = responseJson.get("account").get("login").asText();
         return orgName;
     }

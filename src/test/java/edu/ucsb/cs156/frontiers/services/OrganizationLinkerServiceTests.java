@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -65,7 +67,8 @@ public class OrganizationLinkerServiceTests {
                 {
                   "id": 1,
                   "account":{
-                    "login" : "%s"
+                    "login" : "%s",
+                    "type" : "Organization"
                   }
                 }
                 """, orgName);
@@ -77,8 +80,37 @@ public class OrganizationLinkerServiceTests {
                 .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
                 .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
 
-        String actualUrl = organizationLinkerService.getOrgName("123456");
-        assertEquals(orgName, actualUrl);
+        String actualOrgName = organizationLinkerService.getOrgName("123456");
+        assertEquals(orgName, actualOrgName);
+    }
+
+    @Test
+    public void testNotAnOrganization() throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        String orgName = "githubuser1";
+        String apiResponse = String.format("""
+                {
+                  "id": 1,
+                  "account":{
+                    "login" : "%s",
+                    "type" : "User"
+                  }
+                }
+                """, orgName);
+
+        String expectedMessage = "Invalid installation type: User. Frontiers can only be linked to organizations";
+
+        doReturn("definitely.real.jwt").when(jwtService).getJwt();
+        mockRestServiceServer.expect(requestTo("https://api.github.com/app/installations/123456"))
+                .andExpect(header("Authorization", "Bearer definitely.real.jwt" ))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
+
+        Exception thrownException = assertThrows(InvalidInstallationTypeException.class, () -> {
+            organizationLinkerService.getOrgName("123456");
+        });
+
+        assertEquals(expectedMessage, thrownException.getMessage());
     }
 
 }
