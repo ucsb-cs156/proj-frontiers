@@ -14,12 +14,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Optional;
 
 @Service
 public class OrganizationLinkerService {
-    @Autowired
-    RestTemplateBuilder restTemplateBuilder;
+    private RestTemplate restTemplate;
 
     @Autowired
     JwtService jwtService;
@@ -27,8 +25,11 @@ public class OrganizationLinkerService {
     @Autowired
     ObjectMapper objectMapper;
 
+    public OrganizationLinkerService(RestTemplateBuilder restTemplateBuilder) {
+        restTemplate = restTemplateBuilder.build();
+    }
+
     public String getRedirectUrl() throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        RestTemplate restTemplate = restTemplateBuilder.build();
         String token = jwtService.getJwt();
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.add("Authorization", "Bearer " + token);
@@ -45,7 +46,6 @@ public class OrganizationLinkerService {
     }
 
     public String getOrgName(String installation_id) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        RestTemplate restTemplate = restTemplateBuilder.build();
         String token = jwtService.getJwt();
         String ENDPOINT = "https://api.github.com/app/installations/" + installation_id;
 

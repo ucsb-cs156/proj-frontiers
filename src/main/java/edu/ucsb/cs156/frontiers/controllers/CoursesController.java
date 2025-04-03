@@ -40,12 +40,6 @@ public class CoursesController extends ApiController {
     @Autowired
     private CourseRepository courseRepository;
 
-    @Autowired private JwtService jwtService;
-
-    @Autowired private RestTemplateBuilder restTemplateBuilder;
-
-    @Autowired private ObjectMapper objectMapper;
-
     @Autowired private OrganizationLinkerService linkerService;
 
      /**
@@ -116,11 +110,11 @@ public class CoursesController extends ApiController {
         if(installation_id.isEmpty()) {
             return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, "/courses/nopermissions").build();
         }else {
-            String orgName = linkerService.getOrgName(installation_id.get());
             Course course = courseRepository.findById(state).orElseThrow(() -> new EntityNotFoundException(Course.class, state));
             if(!course.getCreator().equals(getCurrentUser().getUser())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }else{
+                String orgName = linkerService.getOrgName(installation_id.get());
                 course.setInstallationId(installation_id.get());
                 course.setOrgName(orgName);
                 courseRepository.save(course);
