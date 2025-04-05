@@ -59,5 +59,18 @@ public class ApiControllerTests extends ControllerTestCase {
                 assertEquals("String with id 7 not found", json.get("message"));
         }
 
+        @Test
+        public void test_dummy_controller_returns_no_linked_org() throws Exception {
+                // act
+                MvcResult response = mockMvc.perform(get("/dummycontroller/noorg?courseName=course"))
+                        .andExpect(status().isBadRequest()).andReturn();
+
+                // assert
+
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("NoLinkedOrganizationException", json.get("type"));
+                assertEquals("No linked GitHub Organization to course. Please link a GitHub Organization first.", json.get("message"));
+        }
+
 }
 
