@@ -13,17 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/webhooks")
 public class WebhookController {
-
-    private ObjectMapper mapper;
-
-    public WebhookController(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
+    
 
     @PostMapping("/github")
-    public ResponseEntity<String> createGitHubWebhook(@RequestBody String body) throws JsonProcessingException {
-        System.out.println(body);
-        JsonNode jsonBody = mapper.readTree(body);
+    public ResponseEntity<String> createGitHubWebhook(@RequestBody JsonNode jsonBody) throws JsonProcessingException {
         if(jsonBody.get("action").toString().equals("member_added")){
             String githubLogin = jsonBody.get("membership").get("user").get("login").toString();
         }
