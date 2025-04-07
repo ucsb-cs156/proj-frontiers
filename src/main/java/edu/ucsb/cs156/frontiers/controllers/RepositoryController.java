@@ -9,6 +9,7 @@ import edu.ucsb.cs156.frontiers.jobs.CreateStudentRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
 
+
+@Tag(name = "Repository Controller")
 @RestController
 @RequestMapping("/api/repos")
 public class RepositoryController extends ApiController {
@@ -33,7 +37,7 @@ public class RepositoryController extends ApiController {
 
     @PostMapping("/createRepos")
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
-    public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix) {
+    public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional<Boolean> isPrivate) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
         if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {
             if (course.getOrgName() == null || course.getInstallationId() == null) {
@@ -41,6 +45,7 @@ public class RepositoryController extends ApiController {
             } else {
                 CreateStudentRepositoriesJob job = CreateStudentRepositoriesJob.builder()
                         .repositoryPrefix(repoPrefix)
+                        .isPrivate(isPrivate.orElse(false))
                         .repositoryService(repositoryService)
                         .course(course)
                         .build();

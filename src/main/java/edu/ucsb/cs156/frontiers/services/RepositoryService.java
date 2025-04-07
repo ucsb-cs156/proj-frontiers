@@ -26,12 +26,12 @@ public class RepositoryService {
         this.mapper = mapper;
     }
 
-    public void createStudentRepository(String installationId, String orgName, RosterStudent student, String repoPrefix) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    public void createStudentRepository(String installationId, String orgName, RosterStudent student, String repoPrefix, Boolean isPrivate) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         String newRepoName = repoPrefix+"-"+student.getUser().getGithubLogin();
         String token = jwtService.getInstallationToken(installationId);
         String existenceEndpoint = "https://api.github.com/repos/"+orgName+"/"+newRepoName;
         String createEndpoint = "https://api.github.com/orgs/"+orgName+"/repos";
-        String provisionEndpoint = "https://api.github.com/"+orgName+"/"+newRepoName+"/collaborators/"+student.getUser().getGithubLogin();
+        String provisionEndpoint = "https://api.github.com/repos/"+orgName+"/"+newRepoName+"/collaborators/"+student.getUser().getGithubLogin();
 
         HttpHeaders existenceHeaders = new HttpHeaders();
         existenceHeaders.add("Authorization", "Bearer " + token);
@@ -51,6 +51,7 @@ public class RepositoryService {
 
                 Map<String, Object> body  = new HashMap<>();
                 body.put("name", newRepoName);
+                body.put("private",  isPrivate);
                 String bodyAsJson =  mapper.writeValueAsString(body);
 
                 HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, createHeaders);
