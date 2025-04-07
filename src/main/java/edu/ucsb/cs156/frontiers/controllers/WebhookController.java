@@ -39,8 +39,8 @@ public class WebhookController {
 
         if(jsonBody.has("action")){
             if(jsonBody.get("action").asText().equals("member_added")){
-                String githubLogin = jsonBody.get("membership").get("user").get("login").toString();
-                String installationId = jsonBody.get("installation").get("id").toString();
+                String githubLogin = jsonBody.get("membership").get("user").get("login").asText();
+                String installationId = jsonBody.get("installation").get("id").asText();
                 Optional<Course> course = courseRepository.findByInstallationId(installationId);
                 Optional<User> user = userRepository.findByGithubLogin(githubLogin);
                 if(course.isPresent() && user.isPresent()){
