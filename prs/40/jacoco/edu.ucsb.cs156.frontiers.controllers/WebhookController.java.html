@@ -39,8 +39,8 @@ public class WebhookController {
 
 <span class="fc bfc" id="L40" title="All 2 branches covered.">        if(jsonBody.has(&quot;action&quot;)){</span>
 <span class="fc bfc" id="L41" title="All 2 branches covered.">            if(jsonBody.get(&quot;action&quot;).asText().equals(&quot;member_added&quot;)){</span>
-<span class="fc" id="L42">                String githubLogin = jsonBody.get(&quot;membership&quot;).get(&quot;user&quot;).get(&quot;login&quot;).toString();</span>
-<span class="fc" id="L43">                String installationId = jsonBody.get(&quot;installation&quot;).get(&quot;id&quot;).toString();</span>
+<span class="fc" id="L42">                String githubLogin = jsonBody.get(&quot;membership&quot;).get(&quot;user&quot;).get(&quot;login&quot;).asText();</span>
+<span class="fc" id="L43">                String installationId = jsonBody.get(&quot;installation&quot;).get(&quot;id&quot;).asText();</span>
 <span class="fc" id="L44">                Optional&lt;Course&gt; course = courseRepository.findByInstallationId(installationId);</span>
 <span class="fc" id="L45">                Optional&lt;User&gt; user = userRepository.findByGithubLogin(githubLogin);</span>
 <span class="fc bfc" id="L46" title="All 4 branches covered.">                if(course.isPresent() &amp;&amp; user.isPresent()){</span>
