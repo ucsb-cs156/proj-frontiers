@@ -1,3 +1,8 @@
+## Don't store .pem files, or pkcs8.key
+
+*.pem
+pkcs8.key
+
 ## emacs ##
 *~
 
@@ -52,3 +57,4 @@ build/
 .env
 secrets.yaml
 .DS_Store
+
