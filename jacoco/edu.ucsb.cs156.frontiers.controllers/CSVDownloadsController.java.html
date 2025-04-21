@@ -6,6 +6,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import com.opencsv.bean.StatefulBeanToCsv;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,8 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = &quot;CSV Downloads&quot;)
 @RequestMapping(&quot;/api/csv&quot;)
 @RestController
-<span class="fc" id="L39">@Slf4j</span>
-<span class="fc" id="L40">public class CSVDownloadsController extends ApiController {</span>
+<span class="fc" id="L40">@Slf4j</span>
+<span class="fc" id="L41">public class CSVDownloadsController extends ApiController {</span>
 
   @Autowired
   private CourseRepository courseRepository;
@@ -51,36 +52,32 @@ import lombok.extern.slf4j.Slf4j;
   })
   @GetMapping(value = &quot;/rosterstudents&quot;, produces = &quot;text/csv&quot;)
   public ResponseEntity&lt;StreamingResponseBody&gt; csvForQuarter(
-      @Parameter(name = &quot;courseId&quot;, description = &quot;course id&quot;, example = &quot;1&quot;) @RequestParam Long courseId,
-      @Parameter(name = &quot;testException&quot;, description = &quot;test exception&quot;, example = &quot;CsvDataTypeMismatchException&quot;) @RequestParam(required = false, defaultValue = &quot;&quot;) String testException)
+      @Parameter(name = &quot;courseId&quot;, description = &quot;course id&quot;, example = &quot;1&quot;) @RequestParam Long courseId)
       throws EntityNotFoundException, Exception, IOException {
 <span class="fc" id="L57">    Course course = courseRepository.findById(courseId)</span>
 <span class="fc" id="L58">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 <span class="fc" id="L59">    StreamingResponseBody stream = (outputStream) -&gt; {</span>
 
 <span class="fc" id="L61">      List&lt;RosterStudentDTO&gt; list = rosterStudentDTOService.getRosterStudentDTOs(courseId);</span>
-
-<span class="fc" id="L63">      try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {</span>
+<span class="fc" id="L62">      try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {</span>
         try {
-<span class="fc bfc" id="L65" title="All 2 branches covered.">          if (testException.equals(&quot;CsvDataTypeMismatchException&quot;)) {</span>
-<span class="fc" id="L66">            throw new CsvDataTypeMismatchException(&quot;test exception&quot;);</span>
-          }
-<span class="fc" id="L68">          new StatefulBeanToCsvBuilder&lt;RosterStudentDTO&gt;(writer).build().write(list);</span>
-<span class="fc" id="L69">        } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {</span>
-<span class="fc" id="L70">          log.error(&quot;Error writing CSV file&quot;, e);</span>
-<span class="fc" id="L71">          throw new IOException(&quot;Error writing CSV file: &quot; + e.getMessage());</span>
-<span class="fc" id="L72">        }</span>
+<span class="fc" id="L64">          StatefulBeanToCsv&lt;RosterStudentDTO&gt; beanToCsvWriter = rosterStudentDTOService.getStatefulBeanToCSV(writer);</span>
+<span class="fc" id="L65">          beanToCsvWriter.write(list);</span>
+<span class="fc" id="L66">        } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {</span>
+<span class="fc" id="L67">          log.error(&quot;Error writing CSV file&quot;, e);</span>
+<span class="fc" id="L68">          throw new IOException(&quot;Error writing CSV file: &quot; + e.getMessage());</span>
+<span class="fc" id="L69">        }</span>
       }
-<span class="fc" id="L74">    };</span>
+<span class="fc" id="L71">    };</span>
 
-<span class="fc" id="L76">    return ResponseEntity.ok()</span>
-<span class="fc" id="L77">        .contentType(MediaType.parseMediaType(&quot;text/csv; charset=UTF-8&quot;))</span>
-<span class="fc" id="L78">        .header(</span>
+<span class="fc" id="L73">    return ResponseEntity.ok()</span>
+<span class="fc" id="L74">        .contentType(MediaType.parseMediaType(&quot;text/csv; charset=UTF-8&quot;))</span>
+<span class="fc" id="L75">        .header(</span>
             HttpHeaders.CONTENT_DISPOSITION,
-<span class="fc" id="L80">            String.format(&quot;attachment;filename=%s_roster.csv&quot;, course.getCourseName()))</span>
-<span class="fc" id="L81">        .header(HttpHeaders.CONTENT_TYPE, &quot;text/csv; charset=UTF-8&quot;)</span>
-<span class="fc" id="L82">        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)</span>
-<span class="fc" id="L83">        .body(stream);</span>
+<span class="fc" id="L77">            String.format(&quot;attachment;filename=%s_roster.csv&quot;, course.getCourseName()))</span>
+<span class="fc" id="L78">        .header(HttpHeaders.CONTENT_TYPE, &quot;text/csv; charset=UTF-8&quot;)</span>
+<span class="fc" id="L79">        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)</span>
+<span class="fc" id="L80">        .body(stream);</span>
   }
 
 }
