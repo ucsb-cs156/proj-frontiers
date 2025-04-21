@@ -8,6 +8,7 @@ team01,edu.ucsb.cs156.frontiers.services.jobs,JobService,0,75,0,2,0,20,0,6,0,5
 team01,edu.ucsb.cs156.frontiers.services,UpdateUserService,0,74,0,6,0,19,0,7,0,4
 team01,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,52,0,4,0,14,0,6,0,4
 team01,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
+team01,edu.ucsb.cs156.frontiers.services,JwtService,0,139,0,0,0,33,0,5,0,5
 team01,edu.ucsb.cs156.frontiers.services,RosterStudentDTOService,0,24,0,0,0,6,0,3,0,3
 team01,edu.ucsb.cs156.frontiers.services,OrganizationLinkerService,0,133,0,2,0,28,0,4,0,3
 team01,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
