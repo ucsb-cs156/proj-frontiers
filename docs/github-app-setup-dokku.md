@@ -23,7 +23,7 @@ Click the checkbox for "Request user authorization (OAuth) during installation"
 
 Scroll further and under webhooks, fill in the following url where *appname* is your appname and *xx* is your dokku server:
 ```
-https://appname.dokku-xx.cs.ucsb.edu/api/webhooks
+https://appname.dokku-xx.cs.ucsb.edu/api/webhooks/github
 ```
 
 Scroll down to permissions, and under repository, set the following accesses:
