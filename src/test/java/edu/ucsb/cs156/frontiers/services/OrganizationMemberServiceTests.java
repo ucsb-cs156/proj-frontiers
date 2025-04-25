@@ -87,16 +87,20 @@ public class OrganizationMemberServiceTests {
     @Test
     void testGetOrganizationMembers_MultiplePages() throws Exception {
         // Prepare test data for two pages
+        OrgMember orgMember1 = OrgMember.builder().githubId(1).githubLogin("user1").build();
+        OrgMember orgMember2 = OrgMember.builder().githubId(2).githubLogin("user2").build();
+
         List<OrgMember> firstPageMembers = List.of(
-            OrgMember.builder().githubId(1).githubLogin("user1").build()
+            orgMember1
         );
         List<OrgMember> secondPageMembers = List.of(
-            OrgMember.builder().githubId(2).githubLogin("user2").build()
+            orgMember2
         );
 
         String firstPageJson = objectMapper.writeValueAsString(firstPageMembers);
         String secondPageJson = objectMapper.writeValueAsString(secondPageMembers);
 
+        List<OrgMember> expectedResults = List.of(orgMember1, orgMember2);
         // Setup headers for pagination
         HttpHeaders firstPageHeaders = new HttpHeaders();
         firstPageHeaders.add("link", 
@@ -127,11 +131,7 @@ public class OrganizationMemberServiceTests {
 
         // Verify results
         mockServer.verify();
-        assertEquals(2, result.size());
-        assertEquals(1, result.get(0).getGithubId());
-        assertEquals(2, result.get(1).getGithubId());
-        assertEquals("user1", result.get(0).getGithubLogin());
-        assertEquals("user2", result.get(1).getGithubLogin());
+        assertEquals(expectedResults, result);
     }
 
     @Test
