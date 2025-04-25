@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import edu.ucsb.cs156.frontiers.entities.User;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 
 /**
@@ -22,4 +23,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
   Optional<User> findByGoogleSub(String googleSub);
 
   Optional<User> findByGithubLogin(String githubLogin);
+
+  Optional<User> findByGithubId(int githubId);
 }
