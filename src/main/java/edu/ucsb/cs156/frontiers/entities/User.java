@@ -1,11 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -40,9 +36,11 @@ public class User {
   @JsonIgnore
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
+  @ToString.Exclude
   private List<RosterStudent> linkedStudents;
 
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
+  @ToString.Exclude
   private List<CourseStaff> roles;
 }

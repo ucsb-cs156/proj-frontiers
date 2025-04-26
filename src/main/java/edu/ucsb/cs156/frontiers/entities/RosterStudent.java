@@ -5,10 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
@@ -23,6 +20,7 @@ public class RosterStudent {
     @ManyToOne
     @JoinColumn(name = "course_id")
     @JsonIgnore
+    @ToString.Exclude
     private Course course;
 
     private String studentId;
@@ -32,6 +30,7 @@ public class RosterStudent {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @ToString.Exclude
     private User user;
 
     @Enumerated(EnumType.STRING)

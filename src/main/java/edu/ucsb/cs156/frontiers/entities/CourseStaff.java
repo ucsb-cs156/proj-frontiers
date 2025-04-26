@@ -2,10 +2,7 @@ package edu.ucsb.cs156.frontiers.entities;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
@@ -19,10 +16,12 @@ public class CourseStaff {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @ToString.Exclude
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "course_id")
+    @ToString.Exclude
     private Course course;
 
     private String role;

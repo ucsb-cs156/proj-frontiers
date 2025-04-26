@@ -30,6 +30,10 @@ public class OrganizationLinkerService {
         restTemplate = restTemplateBuilder.build();
     }
 
+    /**
+     * Returns the URL for a redirect to install Frontiers
+     * @return URL to install Frontiers to an organization
+     */
     public String getRedirectUrl() throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         String token = jwtService.getJwt();
         HttpHeaders requestHeaders = new HttpHeaders();
@@ -46,6 +50,11 @@ public class OrganizationLinkerService {
         return newUrl;
     }
 
+    /**
+     * Provides the name of the organization attached to a particular installation ID
+     * @param installation_id ID of the app installation
+     * @return name of the organization attached to the installation
+     */
     public String getOrgName(String installation_id) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         String token = jwtService.getJwt();
         String ENDPOINT = "https://api.github.com/app/installations/" + installation_id;
