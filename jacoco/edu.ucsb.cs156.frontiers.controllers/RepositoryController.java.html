@@ -35,24 +35,33 @@ import java.util.Optional;
     @Autowired
     CourseRepository courseRepository;
 
+
+    /**
+    * Fires a job that creates a repo for every RosterStudent with a linked user with a GitHub account.
+    * @param courseId ID of course to create repos for
+    * @param repoPrefix each repo created will begin with this prefix, followed by a dash and the student's GitHub username
+    * @param isPrivate determines whether the repository being created is private
+    *
+    * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
+    */
     @PostMapping(&quot;/createRepos&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_PROFESSOR')&quot;)
     public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional&lt;Boolean&gt; isPrivate) {
-<span class="fc" id="L41">        Course course = courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {</span>
-<span class="fc bfc" id="L43" title="All 4 branches covered.">            if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L44">                throw new NoLinkedOrganizationException(course.getCourseName());</span>
+<span class="fc" id="L50">        Course course = courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {</span>
+<span class="fc bfc" id="L52" title="All 4 branches covered.">            if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L53">                throw new NoLinkedOrganizationException(course.getCourseName());</span>
             } else {
-<span class="fc" id="L46">                CreateStudentRepositoriesJob job = CreateStudentRepositoriesJob.builder()</span>
-<span class="fc" id="L47">                        .repositoryPrefix(repoPrefix)</span>
-<span class="fc" id="L48">                        .isPrivate(isPrivate.orElse(false))</span>
-<span class="fc" id="L49">                        .repositoryService(repositoryService)</span>
-<span class="fc" id="L50">                        .course(course)</span>
-<span class="fc" id="L51">                        .build();</span>
-<span class="fc" id="L52">                return jobService.runAsJob(job);</span>
+<span class="fc" id="L55">                CreateStudentRepositoriesJob job = CreateStudentRepositoriesJob.builder()</span>
+<span class="fc" id="L56">                        .repositoryPrefix(repoPrefix)</span>
+<span class="fc" id="L57">                        .isPrivate(isPrivate.orElse(false))</span>
+<span class="fc" id="L58">                        .repositoryService(repositoryService)</span>
+<span class="fc" id="L59">                        .course(course)</span>
+<span class="fc" id="L60">                        .build();</span>
+<span class="fc" id="L61">                return jobService.runAsJob(job);</span>
             }
         } else {
-<span class="fc" id="L55">            throw new AccessDeniedException(&quot;You do not have permission to create student repositories on this course&quot;);</span>
+<span class="fc" id="L64">            throw new AccessDeniedException(&quot;You do not have permission to create student repositories on this course&quot;);</span>
         }
     }
 }

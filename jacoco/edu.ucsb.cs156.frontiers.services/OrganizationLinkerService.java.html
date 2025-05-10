@@ -30,39 +30,48 @@ public class OrganizationLinkerService {
 <span class="fc" id="L30">        restTemplate = restTemplateBuilder.build();</span>
 <span class="fc" id="L31">    }</span>
 
+    /**
+     * Returns the URL for a redirect to install Frontiers
+     * @return URL to install Frontiers to an organization
+     */
     public String getRedirectUrl() throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc" id="L34">        String token = jwtService.getJwt();</span>
-<span class="fc" id="L35">        HttpHeaders requestHeaders = new HttpHeaders();</span>
-<span class="fc" id="L36">        requestHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L37">        requestHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L38">        requestHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L39">        String ENDPOINT = &quot;https://api.github.com/app&quot;;</span>
-<span class="fc" id="L40">        HttpEntity&lt;String&gt; newEntity = new HttpEntity&lt;&gt;(requestHeaders);</span>
-<span class="fc" id="L41">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET,  newEntity, String.class);</span>
+<span class="fc" id="L38">        String token = jwtService.getJwt();</span>
+<span class="fc" id="L39">        HttpHeaders requestHeaders = new HttpHeaders();</span>
+<span class="fc" id="L40">        requestHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L41">        requestHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L42">        requestHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L43">        String ENDPOINT = &quot;https://api.github.com/app&quot;;</span>
+<span class="fc" id="L44">        HttpEntity&lt;String&gt; newEntity = new HttpEntity&lt;&gt;(requestHeaders);</span>
+<span class="fc" id="L45">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET,  newEntity, String.class);</span>
 
-<span class="fc" id="L43">        JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L47">        JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
 
-<span class="fc" id="L45">        String newUrl = responseJson.get(&quot;html_url&quot;).toString().replaceAll(&quot;\&quot;&quot;, &quot;&quot;);</span>
-<span class="fc" id="L46">        return newUrl;</span>
+<span class="fc" id="L49">        String newUrl = responseJson.get(&quot;html_url&quot;).toString().replaceAll(&quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L50">        return newUrl;</span>
     }
 
+    /**
+     * Provides the name of the organization attached to a particular installation ID
+     * @param installation_id ID of the app installation
+     * @return name of the organization attached to the installation
+     */
     public String getOrgName(String installation_id) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc" id="L50">        String token = jwtService.getJwt();</span>
-<span class="fc" id="L51">        String ENDPOINT = &quot;https://api.github.com/app/installations/&quot; + installation_id;</span>
+<span class="fc" id="L59">        String token = jwtService.getJwt();</span>
+<span class="fc" id="L60">        String ENDPOINT = &quot;https://api.github.com/app/installations/&quot; + installation_id;</span>
 
-<span class="fc" id="L53">        HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L54">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L55">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L56">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L57">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
-<span class="fc" id="L58">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L59">        JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
-<span class="fc" id="L60">        String type = responseJson.get(&quot;account&quot;).get(&quot;type&quot;).asText();</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">        if(!type.equals(&quot;Organization&quot;)){</span>
-<span class="fc" id="L62">            throw new InvalidInstallationTypeException(type);</span>
+<span class="fc" id="L62">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L63">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L64">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L65">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L66">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L67">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L68">        JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L69">        String type = responseJson.get(&quot;account&quot;).get(&quot;type&quot;).asText();</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if(!type.equals(&quot;Organization&quot;)){</span>
+<span class="fc" id="L71">            throw new InvalidInstallationTypeException(type);</span>
         }
-<span class="fc" id="L64">        String orgName = responseJson.get(&quot;account&quot;).get(&quot;login&quot;).asText();</span>
-<span class="fc" id="L65">        return orgName;</span>
+<span class="fc" id="L73">        String orgName = responseJson.get(&quot;account&quot;).get(&quot;login&quot;).asText();</span>
+<span class="fc" id="L74">        return orgName;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
