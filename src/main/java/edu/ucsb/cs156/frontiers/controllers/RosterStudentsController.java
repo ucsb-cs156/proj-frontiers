@@ -4,10 +4,20 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.JwtService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +50,13 @@ import com.opencsv.exceptions.CsvException;
 @RestController
 @Slf4j
 public class RosterStudentsController extends ApiController {
+    
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private JobService jobService;
+    @Autowired
+    private OrganizationMemberService organizationMemberService;
 
     public enum InsertStatus {
         INSERTED, UPDATED
@@ -168,6 +185,24 @@ public class RosterStudentsController extends ApiController {
             student = rosterStudentRepository.save(student);
             updateUserService.attachUserToRosterStudent(student);
             return InsertStatus.INSERTED;
+        }
+    }
+
+    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PostMapping("/updateCourseMembership")
+    public Job updateCourseMembership(@Parameter(name = "courseId", description = "Course ID") @RequestParam Long courseId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+        if(course.getInstallationId() == null || course.getOrgName() == null){
+            throw new NoLinkedOrganizationException(course.getCourseName());
+        }else{
+            UpdateOrgMembershipJob job = UpdateOrgMembershipJob.builder()
+                    .rosterStudentRepository(rosterStudentRepository)
+                    .organizationMemberService(organizationMemberService)
+                    .userRepository(userRepository)
+                    .course(course)
+                    .build();
+
+            return jobService.runAsJob(job);
         }
     }
 }
