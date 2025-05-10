@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrganizationLinkerService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">OrganizationLinkerService.java</span></div><h1>OrganizationLinkerService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+@Service
+public class OrganizationLinkerService {
+    private RestTemplate restTemplate;
+
+    @Autowired
+    JwtService jwtService;
+
+    @Autowired
+    ObjectMapper objectMapper;
+
+<span class="fc" id="L29">    public OrganizationLinkerService(RestTemplateBuilder restTemplateBuilder) {</span>
+<span class="fc" id="L30">        restTemplate = restTemplateBuilder.build();</span>
+<span class="fc" id="L31">    }</span>
+
+    public String getRedirectUrl() throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L34">        String token = jwtService.getJwt();</span>
+<span class="fc" id="L35">        HttpHeaders requestHeaders = new HttpHeaders();</span>
+<span class="fc" id="L36">        requestHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L37">        requestHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L38">        requestHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L39">        String ENDPOINT = &quot;https://api.github.com/app&quot;;</span>
+<span class="fc" id="L40">        HttpEntity&lt;String&gt; newEntity = new HttpEntity&lt;&gt;(requestHeaders);</span>
+<span class="fc" id="L41">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET,  newEntity, String.class);</span>
+
+<span class="fc" id="L43">        JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+
+<span class="fc" id="L45">        String newUrl = responseJson.get(&quot;html_url&quot;).toString().replaceAll(&quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L46">        return newUrl;</span>
+    }
+
+    public String getOrgName(String installation_id) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L50">        String token = jwtService.getJwt();</span>
+<span class="fc" id="L51">        String ENDPOINT = &quot;https://api.github.com/app/installations/&quot; + installation_id;</span>
+
+<span class="fc" id="L53">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L54">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L55">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L56">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L57">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L58">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L59">        JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L60">        String type = responseJson.get(&quot;account&quot;).get(&quot;type&quot;).asText();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if(!type.equals(&quot;Organization&quot;)){</span>
+<span class="fc" id="L62">            throw new InvalidInstallationTypeException(type);</span>
+        }
+<span class="fc" id="L64">        String orgName = responseJson.get(&quot;account&quot;).get(&quot;login&quot;).asText();</span>
+<span class="fc" id="L65">        return orgName;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
