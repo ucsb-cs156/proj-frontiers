@@ -357,7 +357,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
         .log("Processing...\n")
         .build();
 
-    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobRunning);
+    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted, jobRunning);
 
     doNothing().when(updateUserService).attachRosterStudentsAllUsers();
 
@@ -368,7 +368,6 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
         .andReturn();
 
     // assert
-
     String responseString = response.getResponse().getContentAsString();
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
     assertEquals("running", jobReturned.getStatus());

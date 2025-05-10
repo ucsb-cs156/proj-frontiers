@@ -22,6 +22,7 @@ public class Job {
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_id")
+  @ToString.Exclude
   private User createdBy;
 
   @CreatedDate private ZonedDateTime createdAt;

@@ -87,6 +87,15 @@ public class CoursesController extends ApiController {
         return courses;
     }
 
+
+    /**
+     * <p>This is the outgoing method, redirecting from Frontiers to GitHub to allow a Course to be linked to a GitHub Organization.
+     * It redirects from Frontiers to the GitHub app installation process, and will return with the {@link #addInstallation(Optional, String, String, Long) addInstallation()} endpoint
+     * </p>
+     * @param courseId id of the course to be linked to
+     * @return dynamically loaded url to install Frontiers to a Github Organization, with the courseId marked as the state parameter, which GitHub will return.
+     *
+     */
     @Operation(summary = "Authorize Frontiers to a Github Course")
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @GetMapping("/redirect")
@@ -98,6 +107,14 @@ public class CoursesController extends ApiController {
     }
 
 
+    /**
+     *
+     * @param installation_id id of the incoming GitHub Organization installation
+     * @param setup_action whether the permissions are installed or updated. Required RequestParam but not used by the method.
+     * @param code token to be exchanged with GitHub to ensure the request is legitimate and not spoofed.
+     * @param state id of the Course to be linked with the GitHub installation.
+     * @return ResponseEntity, returning /success if the course was successfully linked or /noperms if the user does not have the permission to install the application on GitHub. Alternately returns 403 Forbidden if the user is not the creator.
+     */
     @Operation(summary = "Link a Course to a Github Course")
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     @GetMapping("link")

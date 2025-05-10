@@ -56,6 +56,11 @@ public class JwtService {
         return (RSAPrivateKey) kf.generatePrivate(spec);
     }
 
+    /**
+     * Method to retrieve a signed JWT that a service can use to authenticate with GitHub as an app installation without permissions to a specific organization.
+     * @return Signed JWT that expires in 5 minutes in the form of a String
+     * @throws InvalidKeySpecException if the key is invalid, the exception will be thrown.
+     */
     public String getJwt() throws NoSuchAlgorithmException, InvalidKeySpecException {
         Instant currentTime = Instant.from(dateTimeProvider.getNow().get());
         String token = Jwts.builder()
@@ -67,6 +72,11 @@ public class JwtService {
         return token;
     }
 
+    /**
+     * Method to retrieve a token to act as a particular app installation in a particular organization
+     * @param installationId ID of the particular app installation to act as
+     * @return Token accepted by GitHub to act as a particular installation.
+     */
     public String getInstallationToken(String installationId) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
         String token = getJwt();
         String ENDPOINT = "https://api.github.com/app/installations/"+installationId+"/access_tokens";

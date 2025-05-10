@@ -26,6 +26,14 @@ public class RepositoryService {
         this.mapper = mapper;
     }
 
+    /**
+     * Creates a single student repository if it doesn't already exist, and provisions access to the repository by that student
+     * @param installationId ID of the installation to act as
+     * @param orgName Name of the organization attached to a particular installation
+     * @param student RosterStudent of the student the repository should be created for
+     * @param repoPrefix Name of the project or assignment. Used to title the repository, in the format repoPrefix-githubLogin
+     * @param isPrivate Whether the repository is private or not
+     */
     public void createStudentRepository(String installationId, String orgName, RosterStudent student, String repoPrefix, Boolean isPrivate) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         String newRepoName = repoPrefix+"-"+student.getUser().getGithubLogin();
         String token = jwtService.getInstallationToken(installationId);

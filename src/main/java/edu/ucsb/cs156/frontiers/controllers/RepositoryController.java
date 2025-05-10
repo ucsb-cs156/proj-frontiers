@@ -35,6 +35,15 @@ public class RepositoryController extends ApiController {
     @Autowired
     CourseRepository courseRepository;
 
+
+    /**
+    * Fires a job that creates a repo for every RosterStudent with a linked user with a GitHub account.
+    * @param courseId ID of course to create repos for
+    * @param repoPrefix each repo created will begin with this prefix, followed by a dash and the student's GitHub username
+    * @param isPrivate determines whether the repository being created is private
+    *
+    * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
+    */
     @PostMapping("/createRepos")
     @PreAuthorize("hasRole('ROLE_PROFESSOR')")
     public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional<Boolean> isPrivate) {

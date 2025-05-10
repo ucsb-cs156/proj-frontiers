@@ -1,10 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -29,6 +26,7 @@ public class Course {
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore
+    @ToString.Exclude
     private User creator;
 
     private String courseName;
@@ -39,9 +37,11 @@ public class Course {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
     @Fetch(FetchMode.JOIN)
+    @ToString.Exclude
     private List<CourseStaff> courseStaff;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
     @Fetch(FetchMode.JOIN)
+    @ToString.Exclude
     private List<RosterStudent> rosterStudents;
 }

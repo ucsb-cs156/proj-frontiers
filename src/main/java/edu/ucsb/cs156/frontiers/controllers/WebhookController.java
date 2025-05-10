@@ -35,6 +35,12 @@ public class WebhookController {
         this.rosterStudentRepository = rosterStudentRepository;
     }
 
+    /**
+    * Accepts webhooks from GitHub, currently to update the membership status of a RosterStudent.
+    * @param jsonBody body of the webhook. The description of the currently used webhook is available in docs/webhooks.md
+    *
+    * @return either the word success so GitHub will not flag the webhook as a failure, or the updated RosterStudent
+    */
     @PostMapping("/github")
     public ResponseEntity<String> createGitHubWebhook(@RequestBody JsonNode jsonBody) throws JsonProcessingException {
 
