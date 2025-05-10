@@ -41,4 +41,4 @@ COPY . /home/app
 
 RUN mvn -B -Pproduction -DskipTests -f /home/app/pom.xml clean package
 
-ENTRYPOINT ["java","-jar","/home/app/target/team01-1.0.0.jar"]
+ENTRYPOINT ["java","-jar","/home/app/target/frontiers-1.0.0.jar"]
