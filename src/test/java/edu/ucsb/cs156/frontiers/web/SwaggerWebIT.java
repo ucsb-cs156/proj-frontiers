@@ -54,7 +54,7 @@ public class SwaggerWebIT {
 
     @Test
     public void swagger_page_can_be_loaded() throws Exception {
-        assertThat(page.getByText("Swagger: UCSB CMPSC 156 team01"))
+        assertThat(page.getByText("Swagger: UCSB CMPSC 156 frontiers"))
                 .isVisible();
 
         assertThat(page.getByText("Home Page"))
