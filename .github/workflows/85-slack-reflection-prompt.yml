@@ -108,7 +108,7 @@ jobs:
    
       #This step sends the report to the Slack channel associated with the team
       - name: Send Report to Slack
-        uses: archive/github-actions-slack@v2.9.0
+        uses: archive/github-actions-slack@v2.10.1
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: ${{ fromJSON(env.TEAM_TO_CHANNEL)[needs.get_team_name.outputs.team] }}
