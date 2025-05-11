@@ -119,7 +119,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "⚖️🤝💭 *Weekly Reflection Prompt* ⚖️🤝💭"
+                    "text": "⚖️🤝💭 *Weekly Reflection Prompt* 💭🤝⚖️"
                   }
                 },
                 {
@@ -166,7 +166,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "To earn credit for this graded participation activity, each team member is required to respond to this post (by *replying on this thread*) with a few sentences that address these points, and then participate in a brief group discussion on this thread (responding to what others have said)."
+                    "text": "To earn credit for this graded participation activity, each team member is required to respond to this post (by *replying on this thread*; click the `Reply in thread` button) with a few sentences that address these points, and then participate in a brief group discussion on this thread (responding to what others have said)."
                   }
                 },
                 {
