@@ -114,21 +114,29 @@ jobs:
           slack-channel: ${{ fromJSON(env.TEAM_TO_CHANNEL)[needs.get_team_name.outputs.team] }}
           slack-optional-icon_emoji: ":thought_balloon:"
           slack-text: |
+            ⚖️🤝💭 
 
             *Weekly Reflection Prompt*
 
             Hey team! It's time for our weekly reflection on contributions and team dynamics.  
             Consider the following things:
             
-            • What factors does the team think are important in evaluating individual contributions (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)
+            ```
+            • What factors does the team think are important in evaluating individual contributions 
+              (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)
             
-            • Is each of us contributing in a fair and equitable way to finishing the work that needs to be done? (including coding, code review and other contributions)?
+            • Is each of us contributing in a fair and equitable way to finishing the work that needs
+              to be done? (including coding, code review and other contributions)?
             
             • Are we holding each other accountable?
             
             • Is each of us doing high quality work?
-            
-            To earn credit for this graded participation activity, each team member is required to respond to this post (by replying on this thread) with a few sentences that address these points, and then participate in a brief group discussion on this thread (responding to what others have said).
+            ```
+
+            To earn credit for this graded participation activity, each team member is required 
+            to respond to this post (by replying on this thread) with a few sentences that address 
+            these points, and then participate in a brief group discussion on this thread 
+            (responding to what others have said).
             
             For more information including an example of the type of discussion we are looking for see:  
             <https://ucsb-cs156.github.io/s25/info/reflection.html>
