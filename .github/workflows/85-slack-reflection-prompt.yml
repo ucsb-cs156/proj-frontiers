@@ -132,9 +132,7 @@ jobs:
                     "text": "Hey team! It's time for our weekly reflection on contributions and team dynamics. Consider the following things:"
                   }
                 },
-                {
-                  "type": "divider"
-                },
+  
                 {
                   "type": "context",
                   "elements": [{
@@ -163,9 +161,7 @@ jobs:
                     "text": "> Is each of us doing *high quality* work?"
                   }]
                 },
-                {
-                  "type": "divider"
-                },
+         
                 {
                   "type": "section",
                   "text": {
