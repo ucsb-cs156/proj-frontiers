@@ -1,4 +1,4 @@
-name: "85-slack-reflection-prompt.yml"
+name: "86-slack-reflection-prompt.yml"
 
 # This workflow uses the same setup as workflow 82:
 # <https://ucsb-cs156.github.io/topics/github_actions/workflow_82.html>
@@ -139,16 +139,64 @@ jobs:
                   "type": "section",
                   "text": {
                       "type": "mrkdwn",
-                      "text": "*Weekly Reflection Prompt*\n\nHey team! It's time for our weekly reflection..."
+                      "text": "*Weekly Reflection Prompt*",
                   }
+              },
+              {
+                  "type": "divider"
               },
               {
                   "type": "section",
                   "text": {
                       "type": "mrkdwn",
-                      "text": "• What factors are important in evaluating individual contributions?"
+                      "text": "Hey team! It's time for our weekly reflection on contributions and team dynamics. Consider the following things:"
                   }
               },
+               {
+                  "type": "rich_text_list",
+                  "style": "bullet",
+                  "indent": 0,
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": "list item one"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": "list item two"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": "list item three"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": "list item four"
+                        }
+                      ]
+                    }
+                  ]
+                },
+              {
+                  "type": "divider"
               {
                   "type": "context",
                   "elements": [
