@@ -108,37 +108,83 @@ jobs:
    
       #This step sends the report to the Slack channel associated with the team
       - name: Send Report to Slack
-        uses: archive/github-actions-slack@v2.9.0
+        uses: archive/github-actions-slack@v2.10.1
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: ${{ fromJSON(env.TEAM_TO_CHANNEL)[needs.get_team_name.outputs.team] }}
-          slack-optional-icon_emoji: ":thought_balloon:"
-          slack-text: |
-            ⚖️🤝💭 
+          slack-optional-icon_emoji: ":fire:"
+          slack-blocks: >-
+            [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "⚖️🤝💭 *Weekly Reflection Prompt* 💭🤝⚖️"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Hey team! It's time for our weekly reflection on contributions and team dynamics. Consider the following things:"
+                  }
+                },
+  
+                {
+                  "type": "context",
+                  "elements": [{
+                    "type": "mrkdwn",
+                    "text": "> (1) What *factors* does the team think are important in evaluating individual contributions (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)"
+                  }]
+                },
+                {
+                  "type": "context",
+                  "elements": [{
+                    "type": "mrkdwn",
+                    "text": "> (2) Is each of us contributing in a *fair and equitable* way to finishing the work that needs to be done? (including coding, code review and other contributions)?"
+                  }]
+                },
+                {
+                  "type": "context",
+                  "elements": [{
+                    "type": "mrkdwn",
+                    "text": "> (3) Are we holding each other *accountable*?"
+                  }]
+                },
+                {
+                  "type": "context",
+                  "elements": [{
+                    "type": "mrkdwn",
+                    "text": "> (4) Is each of us doing *high quality* work?"
+                  }]
+                },
+         
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "To earn credit for this graded participation activity, each team member is required to respond to this post (by *replying on this thread*; click the `Reply in thread` button) with a few sentences that address these points, and then participate in a brief group discussion on this thread (responding to what others have said)."
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "For more info and an example, see: <https://ucsb-cs156.github.io/s25/info/reflection.html>"
+                    }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+              ]
 
-            *Weekly Reflection Prompt*
-
-            Hey team! It's time for our weekly reflection on contributions and team dynamics.  
-            Consider the following things:
-            
-            ```
-            • What factors does the team think are important in evaluating individual contributions 
-              (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)
-            
-            • Is each of us contributing in a fair and equitable way to finishing the work that needs
-              to be done? (including coding, code review and other contributions)?
-            
-            • Are we holding each other accountable?
-            
-            • Is each of us doing high quality work?
-            ```
-
-            To earn credit for this graded participation activity, each team member is required 
-            to respond to this post (by replying on this thread) with a few sentences that address 
-            these points, and then participate in a brief group discussion on this thread 
-            (responding to what others have said).
-            
-            For more information including an example of the type of discussion we are looking for see:  
-            <https://ucsb-cs156.github.io/s25/info/reflection.html>
 
 
