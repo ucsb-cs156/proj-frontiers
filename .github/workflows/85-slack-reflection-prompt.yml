@@ -139,7 +139,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "What *factors* does the team think are important in evaluating individual contributions (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)"
+                    "text": "> What *factors* does the team think are important in evaluating individual contributions (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)"
                   }
                 },
                 {
@@ -149,7 +149,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Is each of us contributing in a *fair and equitable* way to finishing the work that needs to be done? (including coding, code review and other contributions)?"
+                    "text": "> Is each of us contributing in a *fair and equitable* way to finishing the work that needs to be done? (including coding, code review and other contributions)?"
                   }
                 },
                 {
@@ -159,7 +159,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Are we holding each other *accountable*?"
+                    "text": "> Are we holding each other *accountable*?"
                   }
                 },
                 {
@@ -169,7 +169,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Is each of us doing *high quality* work?"
+                    "text": "> Is each of us doing *high quality* work?"
                   }
                 },
                 {
