@@ -137,8 +137,8 @@ jobs:
                 },
                 {
                   "type": "context",
-                  "text": {
-                    "elements": "mrkdwn",
+                  "elements": {
+                    "type": "mrkdwn",
                     "text": "> What *factors* does the team think are important in evaluating individual contributions (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)"
                   }
                 },
