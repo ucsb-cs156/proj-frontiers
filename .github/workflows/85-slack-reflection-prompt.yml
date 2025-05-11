@@ -138,27 +138,27 @@ jobs:
                 {
                   "type": "context",
                   "text": {
-                    "type": "mrkdwn",
+                    "elements": "mrkdwn",
                     "text": "> What *factors* does the team think are important in evaluating individual contributions (e.g. size, complexity, scope of various tasks, individual circumstances, etc.)"
                   }
                 },
                 {
                   "type": "context",
-                  "text": {
+                  "elements": {
                     "type": "mrkdwn",
                     "text": "> Is each of us contributing in a *fair and equitable* way to finishing the work that needs to be done? (including coding, code review and other contributions)?"
                   }
                 },
                 {
                   "type": "context",
-                  "text": {
+                  "elements": {
                     "type": "mrkdwn",
                     "text": "> Are we holding each other *accountable*?"
                   }
                 },
                 {
                   "type": "context",
-                  "text": {
+                  "elements": {
                     "type": "mrkdwn",
                     "text": "> Is each of us doing *high quality* work?"
                   }
