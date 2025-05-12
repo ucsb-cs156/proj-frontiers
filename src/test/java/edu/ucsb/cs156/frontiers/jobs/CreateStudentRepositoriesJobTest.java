@@ -43,7 +43,7 @@ public class CreateStudentRepositoriesJobTest {
         RosterStudent student = RosterStudent.builder().user(user).orgStatus(OrgStatus.MEMBER).build();
         course.setRosterStudents(List.of(student));
 
-        doNothing().when(service).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(false));
+        doNothing().when(service).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(false));
 
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
@@ -58,7 +58,7 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(1)).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(false));
+        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(false));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class CreateStudentRepositoriesJobTest {
         RosterStudent student = RosterStudent.builder().user(user).orgStatus(OrgStatus.MEMBER).build();
         course.setRosterStudents(List.of(student));
 
-        doNothing().when(service).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(true));
+        doNothing().when(service).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true));
 
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
@@ -83,7 +83,7 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(1)).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(true));
+        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true));
     }
 
     @Test
@@ -104,7 +104,7 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any(), any());
+        verify(service, times(0)).createStudentRepository(any(),any(),any(),any());
     }
 
     @Test
@@ -127,7 +127,7 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any(), any());
+        verify(service, times(0)).createStudentRepository(any(),any(),any(),any());
     }
 
     @Test
@@ -149,6 +149,6 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any(), any());
+        verify(service, times(0)).createStudentRepository(any(),any(),any(),any());
     }
 }

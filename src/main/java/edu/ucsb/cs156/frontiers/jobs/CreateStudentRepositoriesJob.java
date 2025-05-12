@@ -20,7 +20,7 @@ public class CreateStudentRepositoriesJob implements JobContextConsumer {
         ctx.log("Processing...");
         for(RosterStudent student : course.getRosterStudents()){
             if(student.getUser() != null && student.getUser().getGithubLogin() != null && student.getOrgStatus() == OrgStatus.MEMBER){
-                repositoryService.createStudentRepository(course.getInstallationId(), course.getOrgName(), student, repositoryPrefix, isPrivate);
+                repositoryService.createStudentRepository(course, student, repositoryPrefix, isPrivate);
             }
         }
         ctx.log("Done");

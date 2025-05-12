@@ -3,6 +3,8 @@ package edu.ucsb.cs156.frontiers.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,20 +76,25 @@ public class JwtService {
 
     /**
      * Method to retrieve a token to act as a particular app installation in a particular organization
-     * @param installationId ID of the particular app installation to act as
+     *
+     * @param course ID of the particular app installation to act as
      * @return Token accepted by GitHub to act as a particular installation.
      */
-    public String getInstallationToken(String installationId) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-        String token = getJwt();
-        String ENDPOINT = "https://api.github.com/app/installations/"+installationId+"/access_tokens";
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
-        headers.add("Accept", "application/vnd.github+json");
-        headers.add("X-GitHub-Api-Version", "2022-11-28");
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.POST,  entity, String.class);
-        JsonNode responseJson = objectMapper.readTree(response.getBody());
-        String installationToken = responseJson.get("token").asText();
-        return installationToken;
+    public String getInstallationToken(Course course) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException, NoLinkedOrganizationException {
+        if(course.getOrgName() == null || course.getInstallationId() == null){
+            throw new NoLinkedOrganizationException(course.getCourseName());
+        }else {
+            String token = getJwt();
+            String ENDPOINT = "https://api.github.com/app/installations/" + course.getOrgName() + "/access_tokens";
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + token);
+            headers.add("Accept", "application/vnd.github+json");
+            headers.add("X-GitHub-Api-Version", "2022-11-28");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);
+            JsonNode responseJson = objectMapper.readTree(response.getBody());
+            String installationToken = responseJson.get("token").asText();
+            return installationToken;
+        }
     }
 }
