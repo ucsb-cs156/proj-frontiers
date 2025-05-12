@@ -35,6 +35,11 @@ will likely see an error such as:
 
 <img src="https://user-images.githubusercontent.com/1119017/149858436-c9baa238-a4f7-4c52-b995-0ed8bee97487.png" alt="Authorization Error; Error 401: invalid_client; The OAuth client was not found." width="400"/>
 
+For certain functions to work properly, you'll also need to set up the app as a Github App.  Here's how:
+
+* On localhost: [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md)
+* On dokku: [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md)
+
 # Getting Started on localhost
 
 * Open *two separate terminal windows*  
