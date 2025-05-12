@@ -268,4 +268,79 @@ public class CoursesControllerTests extends ControllerTestCase {
         String expectedJson = mapper.writeValueAsString(expectedMap);
         assertEquals(expectedJson, responseString);
     }
+
+    @Test
+    @WithMockUser(roles = {"ADMIN"})
+    public void testSetInstallation_success() throws Exception {
+        // Arrange
+        User user = currentUserService.getCurrentUser().getUser();
+
+        Course course = Course.builder()
+                .id(1L)
+                .courseName("CS156")
+                .term("S25")
+                .school("UCSB")
+                .creator(user)
+                .build();
+
+        Course updatedCourse = Course.builder()
+                .id(1L)
+                .courseName("CS156")
+                .term("S25")
+                .school("UCSB")
+                .creator(user)
+                .installationId("12345")
+                .orgName("ucsb-org")
+                .build();
+
+        when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+        when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+        // Act
+        MvcResult response = mockMvc.perform(post("/api/courses/setInstallation")
+                        .with(csrf())
+                        .param("courseId", "1")
+                        .param("installationId", "12345")
+                        .param("orgName", "ucsb-org"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Assert
+        verify(courseRepository, times(1)).findById(1L);
+        verify(courseRepository, times(1)).save(updatedCourse);
+
+        String responseString = response.getResponse().getContentAsString();
+        String expectedJson = mapper.writeValueAsString(updatedCourse);
+
+        assertEquals(expectedJson, responseString);
+    }
+
+    @Test
+    @WithMockUser(roles = {"ADMIN"})
+    public void testSetInstallation_courseNotFound() throws Exception {
+        // Arrange
+        when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+        // Act
+        MvcResult response = mockMvc.perform(post("/api/courses/setInstallation")
+                        .with(csrf())
+                        .param("courseId", "1")
+                        .param("installationId", "12345")
+                        .param("orgName", "ucsb-org"))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        // Assert
+        verify(courseRepository, times(1)).findById(1L);
+        verify(courseRepository, times(0)).save(any(Course.class));
+
+        String responseString = response.getResponse().getContentAsString();
+        Map<String, String> expectedMap = Map.of(
+                "type", "EntityNotFoundException",
+                "message", "Course with id 1 not found"
+        );
+        String expectedJson = mapper.writeValueAsString(expectedMap);
+
+        assertEquals(expectedJson, responseString);
+    }
 }

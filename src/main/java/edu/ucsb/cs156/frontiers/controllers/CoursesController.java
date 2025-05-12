@@ -138,6 +138,17 @@ public class CoursesController extends ApiController {
         }
     }
 
+    @Operation(summary = "Manually Set an Existing Course Installation")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/setInstallation")
+    public Course setInstallation(@Parameter(name = "courseId") @RequestParam Long courseId, @Parameter(name = "installationId") @RequestParam String installationId, @Parameter(name = "orgName") @RequestParam String orgName) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+        course.setInstallationId(installationId);
+        course.setOrgName(orgName);
+        return courseRepository.save(course);
+    }
+
+
     /**
      * This method handles the InvalidInstallationTypeException.
      * @param e the exception
