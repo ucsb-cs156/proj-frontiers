@@ -7,6 +7,8 @@ import { hasRole, useCurrentUser } from "main/utils/currentUser";
 
 import "bootstrap/dist/css/bootstrap.css";
 import "react-toastify/dist/ReactToastify.css";
+import SuccessfulLinkPage from "./main/pages/Courses/SuccessfulLinkPage";
+import NoPermsLinkPage from "main/pages/Courses/NoPermsLinkPage";
 
 function App() {
   const { data: currentUser } = useCurrentUser();
@@ -19,6 +21,8 @@ function App() {
         {hasRole(currentUser, "ROLE_ADMIN") && (
           <Route exact path="/admin/users" element={<AdminUsersPage />} />
         )}
+        <Route exact path="/courses/success/" element={<SuccessfulLinkPage />} />
+        <Route exact path="/courses/noperms/" element={<NoPermsLinkPage />} />
       </Routes>
     </BrowserRouter>
   );
