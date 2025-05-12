@@ -14,7 +14,7 @@ Frontiers is a platform designed to replace the old GitHub-linker tool used by U
     - **Note:** Frontiers does not permit installation on user accounts; it only integrates with organizations.
 
 2. **Acting as an application**:
-    - Requires a **JWT** for authentication and an **installation token** for specific actions.
+    - Requires a **JWT** for authentication or an **installation token** for specific actions.
     - Changes made are attributed to the application (not a user).
 
 ---
