@@ -19,6 +19,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
@@ -54,7 +55,7 @@ public class OrganizationMemberServiceTests {
                 .installationId("123")
                 .build();
 
-        when(jwtService.getInstallationToken(anyString())).thenReturn(TEST_TOKEN);
+        when(jwtService.getInstallationToken(any(Course.class))).thenReturn(TEST_TOKEN);
     }
 
     @Test
