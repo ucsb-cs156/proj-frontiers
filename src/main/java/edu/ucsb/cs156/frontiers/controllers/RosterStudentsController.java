@@ -50,9 +50,7 @@ import com.opencsv.exceptions.CsvException;
 @RestController
 @Slf4j
 public class RosterStudentsController extends ApiController {
-    
-    @Autowired
-    private UserRepository userRepository;
+
     @Autowired
     private JobService jobService;
     @Autowired
@@ -198,7 +196,6 @@ public class RosterStudentsController extends ApiController {
             UpdateOrgMembershipJob job = UpdateOrgMembershipJob.builder()
                     .rosterStudentRepository(rosterStudentRepository)
                     .organizationMemberService(organizationMemberService)
-                    .userRepository(userRepository)
                     .course(course)
                     .build();
 

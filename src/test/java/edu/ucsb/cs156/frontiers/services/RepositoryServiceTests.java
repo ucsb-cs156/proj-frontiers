@@ -59,8 +59,7 @@ public class RepositoryServiceTests {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
         repositoryService.createStudentRepository(course, student, "repo1", false);
         mockRestServiceServer.verify();
@@ -102,8 +101,7 @@ public class RepositoryServiceTests {
                 .andExpect(content().json(provisionBodyJson))
                 .andRespond(withSuccess());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
         repositoryService.createStudentRepository(course, student, "repo1", false);
 
@@ -146,8 +144,8 @@ public class RepositoryServiceTests {
                 .andExpect(content().json(provisionBodyJson))
                 .andRespond(withSuccess());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
         repositoryService.createStudentRepository(course, student, "repo1", true);
 
@@ -165,8 +163,7 @@ public class RepositoryServiceTests {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withForbiddenRequest());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
         repositoryService.createStudentRepository(course, student, "repo1", false);
         mockRestServiceServer.verify();

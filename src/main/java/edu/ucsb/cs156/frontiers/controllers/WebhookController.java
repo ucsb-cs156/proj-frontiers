@@ -26,12 +26,10 @@ public class WebhookController {
 
 
     private final CourseRepository courseRepository;
-    private final UserRepository userRepository;
     private final RosterStudentRepository rosterStudentRepository;
 
-    public WebhookController(CourseRepository courseRepository, UserRepository userRepository, RosterStudentRepository rosterStudentRepository) {
+    public WebhookController(CourseRepository courseRepository, RosterStudentRepository rosterStudentRepository) {
         this.courseRepository = courseRepository;
-        this.userRepository = userRepository;
         this.rosterStudentRepository = rosterStudentRepository;
     }
 
@@ -49,9 +47,8 @@ public class WebhookController {
                 String githubLogin = jsonBody.get("membership").get("user").get("login").asText();
                 String installationId = jsonBody.get("installation").get("id").asText();
                 Optional<Course> course = courseRepository.findByInstallationId(installationId);
-                Optional<User> user = userRepository.findByGithubLogin(githubLogin);
-                if(course.isPresent() && user.isPresent()){
-                    Optional<RosterStudent> student = rosterStudentRepository.findByCourseAndUser(course.get(), user.get());
+                if(course.isPresent()){
+                    Optional<RosterStudent> student = rosterStudentRepository.findByCourseAndGithubLogin(course.get(), githubLogin);
                     if(student.isPresent()){
                         RosterStudent updatedStudent = student.get();
                         updatedStudent.setOrgStatus(OrgStatus.MEMBER);

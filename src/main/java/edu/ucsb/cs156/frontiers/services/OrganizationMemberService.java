@@ -17,7 +17,9 @@ import org.springframework.web.client.RestTemplate;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,5 +61,34 @@ public class OrganizationMemberService {
         orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference<List<OrgMember>>() {
         }));
         return orgMembers;
+    }
+
+    public void addOrganizationMember(Course course, int githubId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/invitations";
+        String token = jwtService.getInstallationToken(course);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Accept", "application/vnd.github+json");
+        Map<String, Object> body  = new HashMap<>();
+        body.put("invitee_id", githubId);
+        body.put("role", "direct_member");
+        String provisionAsJson =  objectMapper.writeValueAsString(body);
+        HttpEntity<String> entity = new HttpEntity<>(provisionAsJson, headers);
+        restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);
+    }
+
+    public void removeOrganizationMember(Course course, String githubLogin) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members/"+githubLogin;
+        String token = jwtService.getInstallationToken(course);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Accept", "application/vnd.github+json");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);
+    }
+
+    public void replaceOrganizationMember(Course course, String oldGithubLogin, int newGithubId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        removeOrganizationMember(course, oldGithubLogin);
+        addOrganizationMember(course, newGithubId);
     }
 }

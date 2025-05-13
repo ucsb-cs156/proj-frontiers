@@ -99,5 +99,45 @@
         }]
 
     }
+  },
+  {
+    "changeSet": {
+      "id": "RosterStudent-2",
+      "author": "DanielJ",
+      "preConditions": [
+        {
+          "onFail": "MARK_RAN"
+        },
+        {
+          "not": {
+            "columnExists": {
+              "tableName": "ROSTER_STUDENT",
+              "columnName": "GITHUB_LOGIN"
+            }
+          }
+        }
+      ],
+      "changes": [
+        {
+          "addColumn": {
+            "columns": [
+              {
+                "column": {
+                  "name": "GITHUB_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "GITHUB_LOGIN",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ],
+            "tableName": "ROSTER_STUDENT"
+          }
+        }
+      ]
+    }
   }
 ]}
