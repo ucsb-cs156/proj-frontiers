@@ -36,6 +36,16 @@ describe("CoursesIndexPage tests", () => {
       .reply(200, systemInfoFixtures.showingNeither);
   };
 
+  const setupNonAdminUser = () => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
   const queryClient = new QueryClient();
 
   test("Renders for admin user", async () => {
@@ -86,6 +96,13 @@ describe("CoursesIndexPage tests", () => {
 
     const orgName = screen.getByText("wsu-cpts489-fa20");
     expect(orgName).toBeInTheDocument();
+
+    // expect that the button for "Install Github App" is present
+    const button = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-Install Github App-button",
+    );
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent("Install Github App");
   });
 
   test("renders empty table when backend unavailable, admin only", async () => {
@@ -112,5 +129,32 @@ describe("CoursesIndexPage tests", () => {
       "Error communicating with backend via GET on /api/courses/all",
     );
     restoreConsole();
+  });
+
+  test("no button to connect to Github App for non-admin user", async () => {
+    setupNonAdminUser();
+    axiosMock
+      .onGet("/api/courses/all")
+      .reply(200, coursesFixtures.threeCourses);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-id`),
+      ).toHaveTextContent("1");
+    });
+
+    // expect that the button for "Install Github App" is not present
+    const button = screen.queryByTestId(
+      "CoursesTable-cell-row-0-col-Install Github App-button",
+    );
+    expect(button).not.toBeInTheDocument();
   });
 });
