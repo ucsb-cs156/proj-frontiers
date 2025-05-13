@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"MDQ6VXNlcjQyNDg2NTk1","is_bot":false,"login":"Bennyyyyy","name":"Benny Conte"},"headRefName":"BC-api-redirect","number":91,"title":"server side redirect","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/91"},{"author":{"id":"MDQ6VXNlcjQyNDg2NTk1","is_bot":false,"login":"Bennyyyyy","name":"Benny Conte"},"headRefName":"main","number":90,"title":"BC - Fixed minor bug when redirecting server side","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/90"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjQyNDg2NTk1","is_bot":false,"login":"Bennyyyyy","name":"Benny Conte"},"headRefName":"BC-api-redirect","number":91,"title":"BC - Fixed minor bug when redirecting server side","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/91"}]
