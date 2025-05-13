@@ -1,5 +1,4 @@
 import OurTable, { ButtonColumn } from "main/components/OurTable";
-import { useNavigate } from "react-router-dom";
 
 const columns = [
   {
@@ -33,14 +32,13 @@ export default function CoursesTable({
   showInstallButton = false,
   storybook = false,
 }) {
-  const navigate = useNavigate();
   const installCallback = (cell) => {
     const url = `/api/courses/redirect?courseId=${cell.row.values.id}`;
     if (storybook) {
       window.alert(`would have navigated to: ${url}`);
       return;
     }
-    navigate(url);
+    window.location.href = url;
   };
 
   const buttonColumns = [
@@ -49,7 +47,7 @@ export default function CoursesTable({
       "Install Github App",
       "primary",
       installCallback,
-      "CoursesTable",
+      "CoursesTable"
     ),
   ];
   const columnsToDisplay = showInstallButton ? buttonColumns : columns;
