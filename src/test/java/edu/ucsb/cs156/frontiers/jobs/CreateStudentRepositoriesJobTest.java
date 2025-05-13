@@ -110,8 +110,7 @@ public class CreateStudentRepositoriesJobTest {
     @Test
     public void expectDoesntCallForNotMember() throws Exception {
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        User user = User.builder().githubLogin("banana").build();
-        RosterStudent student = RosterStudent.builder().user(user).orgStatus(OrgStatus.NONE).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("banana").orgStatus(OrgStatus.NONE).build();
         course.setRosterStudents(List.of(student));
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
