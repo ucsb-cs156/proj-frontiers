@@ -39,7 +39,7 @@ public class OrganizationMemberService {
 <span class="fc" id="L39">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/members&quot;;</span>
         //happily stolen directly from GitHub: https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28
 <span class="fc" id="L41">        Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
-<span class="fc" id="L42">        String token = jwtService.getInstallationToken(course.getInstallationId());</span>
+<span class="fc" id="L42">        String token = jwtService.getInstallationToken(course);</span>
 <span class="fc" id="L43">        HttpHeaders headers = new HttpHeaders();</span>
 <span class="fc" id="L44">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
 <span class="fc" id="L45">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
