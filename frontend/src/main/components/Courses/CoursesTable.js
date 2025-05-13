@@ -47,7 +47,7 @@ export default function CoursesTable({
       "Install Github App",
       "primary",
       installCallback,
-      "CoursesTable"
+      "CoursesTable",
     ),
   ];
   const columnsToDisplay = showInstallButton ? buttonColumns : columns;
