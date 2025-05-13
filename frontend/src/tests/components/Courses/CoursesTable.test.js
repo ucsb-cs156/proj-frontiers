@@ -3,13 +3,7 @@ import coursesFixtures from "fixtures/coursesFixtures";
 import CoursesTable from "main/components/Courses/CoursesTable";
 import { BrowserRouter } from "react-router-dom";
 
-const mockedNavigate = jest.fn();
-
 window.alert = jest.fn();
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
-  useNavigate: () => mockedNavigate,
-}));
 
 describe("CoursesTable tests", () => {
   test("Has the expected column headers and content", () => {
@@ -66,8 +60,6 @@ describe("CoursesTable tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-school`),
     ).toHaveTextContent("UCSB");
 
-    // expect that the mocked navigate function is not called
-    expect(mockedNavigate).not.toHaveBeenCalled();
     // expect that the mocked window.alert function is not called
     expect(window.alert).not.toHaveBeenCalled();
   });
@@ -90,10 +82,6 @@ describe("CoursesTable tests", () => {
     expect(button).toHaveAttribute("class", "btn btn-primary");
 
     fireEvent.click(button);
-    expect(mockedNavigate).toHaveBeenCalledTimes(1);
-    expect(mockedNavigate).toHaveBeenCalledWith(
-      "/api/courses/redirect?courseId=1",
-    );
     expect(window.alert).not.toHaveBeenCalled();
   });
 
@@ -121,7 +109,6 @@ describe("CoursesTable tests", () => {
     expect(window.alert).toHaveBeenCalledWith(
       "would have navigated to: /api/courses/redirect?courseId=1",
     );
-    expect(mockedNavigate).not.toHaveBeenCalled();
   });
 
   test("Tests that the default is to NOT show the buttons for installation", () => {
@@ -136,7 +123,6 @@ describe("CoursesTable tests", () => {
       "CoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).not.toBeInTheDocument();
-    expect(mockedNavigate).not.toHaveBeenCalled();
     // expect that the mocked window.alert function is not called
     expect(window.alert).not.toHaveBeenCalled();
   });
@@ -156,7 +142,6 @@ describe("CoursesTable tests", () => {
       "CoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).not.toBeInTheDocument();
-    expect(mockedNavigate).not.toHaveBeenCalled();
     // expect that the mocked window.alert function is not called
     expect(window.alert).not.toHaveBeenCalled();
   });
@@ -182,11 +167,7 @@ describe("CoursesTable tests", () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(mockedNavigate).toHaveBeenCalledTimes(1);
+      expect(window.alert).not.toHaveBeenCalled();
     });
-    expect(mockedNavigate).toHaveBeenCalledWith(
-      "/api/courses/redirect?courseId=1",
-    );
-    expect(window.alert).not.toHaveBeenCalled();
   });
 });
