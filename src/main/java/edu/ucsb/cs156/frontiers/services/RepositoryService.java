@@ -35,12 +35,11 @@ public class RepositoryService {
      * @param isPrivate Whether the repository is private or not
      */
     public void createStudentRepository(Course course, RosterStudent student, String repoPrefix, Boolean isPrivate) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        String newRepoName = repoPrefix+"-"+student.getUser().getGithubLogin();
+        String newRepoName = repoPrefix+"-"+student.getGithubLogin();
         String token = jwtService.getInstallationToken(course);
         String existenceEndpoint = "https://api.github.com/repos/"+course.getOrgName()+"/"+newRepoName;
         String createEndpoint = "https://api.github.com/orgs/"+course.getOrgName()+"/repos";
-        String provisionEndpoint = "https://api.github.com/repos/"+course.getOrgName()+"/"+newRepoName+"/collaborators/"+student.getUser().getGithubLogin();
-
+        String provisionEndpoint = "https://api.github.com/repos/"+course.getOrgName()+"/"+newRepoName+"/collaborators/"+student.getGithubLogin();
         HttpHeaders existenceHeaders = new HttpHeaders();
         existenceHeaders.add("Authorization", "Bearer " + token);
         existenceHeaders.add("Accept", "application/vnd.github+json");
