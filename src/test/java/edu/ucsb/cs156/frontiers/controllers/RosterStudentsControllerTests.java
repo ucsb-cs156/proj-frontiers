@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -28,12 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -453,5 +453,279 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 Map<String, Object> json = responseToJson(response);
                 assertEquals("EntityNotFoundException", json.get("type"));
                 assertEquals("Course with id 2 not found", json.get("message"));
+        }
+
+        /**
+         * Tests for the linkGitHub endpoint
+         */
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testLinkGitHub_success() throws Exception {
+                // Arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(0)  // Not linked yet
+                        .githubLogin(null)  // Not linked yet
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                RosterStudent rosterStudentUpdated = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "3"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+                // Assert
+                verify(rosterStudentRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+
+                assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testLinkGitHub_notFound() throws Exception {
+                // Arrange
+                when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "99"))
+                        .andExpect(status().isNotFound())
+                        .andReturn();
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(99L));
+
+                // Verify correct error response
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "RosterStudent with id 99 not found");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testLinkGitHub_unauthorized() throws Exception {
+                // Arrange
+                User currentUser = currentUserService.getUser();
+
+                User differentUser = User.builder()
+                        .id(-1L)  // Different from current user
+                        .build();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(4L)
+                        .firstName("Other")
+                        .lastName("Student")
+                        .studentId("A666666")
+                        .email("otherstudent@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(differentUser)  // Belongs to a different user
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(4L))).thenReturn(Optional.of(rosterStudent));
+
+                // Act & Assert
+                mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "4"))
+                        .andExpect(status().isForbidden());
+
+                // Verify nothing was saved
+                verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testLinkGitHub_alreadyLinked() throws Exception {
+                // Arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(5L)
+                        .firstName("Already")
+                        .lastName("Linked")
+                        .studentId("A777777")
+                        .email("alreadylinked@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(98765)  // Already has a GitHub ID
+                        .githubLogin("existinguser")  // Already has a GitHub login
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(5L))).thenReturn(Optional.of(rosterStudent));
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "5"))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(5L));
+                verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+
+                assertEquals("This roster student is already linked to a GitHub account", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testLinkGitHub_success_no_login_only() throws Exception {
+                // Arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(123456789)  // Not linked yet
+                        .githubLogin(null)  // Not linked yet
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                RosterStudent rosterStudentUpdated = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "3"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+                // Assert
+                verify(rosterStudentRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+
+                assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testGetAssociatedRosterStudents() throws Exception {
+                // Arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rs1WithUser = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                RosterStudent rs2WithUser = RosterStudent.builder()
+                        .id(2L)
+                        .firstName("Lauren")
+                        .lastName("Del Playa")
+                        .studentId("A987654")
+                        .email("ldelplaya@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                List<RosterStudent> expectedRosterStudents = List.of(rs1WithUser, rs2WithUser);
+
+                when(rosterStudentRepository.findAllByUser(eq(currentUser))).thenReturn(expectedRosterStudents);
+
+                // Act
+                MvcResult response = mockMvc.perform(get("/api/rosterstudents/associatedRosterStudents")
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // Assert
+                verify(rosterStudentRepository, times(1)).findAllByUser(eq(currentUser));
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(expectedRosterStudents);
+                assertEquals(expectedJson, responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testGetAssociatedRosterStudents_noStudentsFound() throws Exception {
+                // Arrange
+                User currentUser = currentUserService.getUser();
+
+                when(rosterStudentRepository.findAllByUser(eq(currentUser))).thenReturn(List.of());
+
+                // Act
+                MvcResult response = mockMvc.perform(get("/api/rosterstudents/associatedRosterStudents")
+                                .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // Assert
+                verify(rosterStudentRepository, times(1)).findAllByUser(eq(currentUser));
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(List.of());
+                assertEquals(expectedJson, responseString);
         }
 }
