@@ -35,45 +35,44 @@ public class RepositoryService {
      * @param isPrivate Whether the repository is private or not
      */
     public void createStudentRepository(Course course, RosterStudent student, String repoPrefix, Boolean isPrivate) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc" id="L38">        String newRepoName = repoPrefix+&quot;-&quot;+student.getUser().getGithubLogin();</span>
+<span class="fc" id="L38">        String newRepoName = repoPrefix+&quot;-&quot;+student.getGithubLogin();</span>
 <span class="fc" id="L39">        String token = jwtService.getInstallationToken(course);</span>
 <span class="fc" id="L40">        String existenceEndpoint = &quot;https://api.github.com/repos/&quot;+course.getOrgName()+&quot;/&quot;+newRepoName;</span>
 <span class="fc" id="L41">        String createEndpoint = &quot;https://api.github.com/orgs/&quot;+course.getOrgName()+&quot;/repos&quot;;</span>
-<span class="fc" id="L42">        String provisionEndpoint = &quot;https://api.github.com/repos/&quot;+course.getOrgName()+&quot;/&quot;+newRepoName+&quot;/collaborators/&quot;+student.getUser().getGithubLogin();</span>
+<span class="fc" id="L42">        String provisionEndpoint = &quot;https://api.github.com/repos/&quot;+course.getOrgName()+&quot;/&quot;+newRepoName+&quot;/collaborators/&quot;+student.getGithubLogin();</span>
+<span class="fc" id="L43">        HttpHeaders existenceHeaders = new HttpHeaders();</span>
+<span class="fc" id="L44">        existenceHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L45">        existenceHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L46">        existenceHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
 
-<span class="fc" id="L44">        HttpHeaders existenceHeaders = new HttpHeaders();</span>
-<span class="fc" id="L45">        existenceHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L46">        existenceHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L47">        existenceHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-
-<span class="fc" id="L49">        HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
+<span class="fc" id="L48">        HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
 
         try {
-<span class="fc" id="L52">            restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
-<span class="fc" id="L53">        } catch(HttpClientErrorException e){</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">            if(e.getStatusCode().equals(HttpStatus.NOT_FOUND)){</span>
-<span class="fc" id="L55">                HttpHeaders createHeaders = new HttpHeaders();</span>
-<span class="fc" id="L56">                createHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L57">                createHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L58">                createHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L51">            restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
+<span class="fc" id="L52">        } catch(HttpClientErrorException e){</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            if(e.getStatusCode().equals(HttpStatus.NOT_FOUND)){</span>
+<span class="fc" id="L54">                HttpHeaders createHeaders = new HttpHeaders();</span>
+<span class="fc" id="L55">                createHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L56">                createHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L57">                createHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
 
-<span class="fc" id="L60">                Map&lt;String, Object&gt; body  = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L61">                body.put(&quot;name&quot;, newRepoName);</span>
-<span class="fc" id="L62">                body.put(&quot;private&quot;,  isPrivate);</span>
-<span class="fc" id="L63">                String bodyAsJson =  mapper.writeValueAsString(body);</span>
+<span class="fc" id="L59">                Map&lt;String, Object&gt; body  = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L60">                body.put(&quot;name&quot;, newRepoName);</span>
+<span class="fc" id="L61">                body.put(&quot;private&quot;,  isPrivate);</span>
+<span class="fc" id="L62">                String bodyAsJson =  mapper.writeValueAsString(body);</span>
 
-<span class="fc" id="L65">                HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
+<span class="fc" id="L64">                HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
 
-<span class="fc" id="L67">                restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
-<span class="fc" id="L68">                Map&lt;String, Object&gt; provisionBody  = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L69">                provisionBody.put(&quot;permission&quot;, &quot;admin&quot;);</span>
-<span class="fc" id="L70">                String provisionAsJson =  mapper.writeValueAsString(provisionBody);</span>
+<span class="fc" id="L66">                restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
+<span class="fc" id="L67">                Map&lt;String, Object&gt; provisionBody  = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L68">                provisionBody.put(&quot;permission&quot;, &quot;admin&quot;);</span>
+<span class="fc" id="L69">                String provisionAsJson =  mapper.writeValueAsString(provisionBody);</span>
 
-<span class="fc" id="L72">                HttpEntity&lt;String&gt; provisionEntity = new HttpEntity&lt;&gt;(provisionAsJson, createHeaders);</span>
-<span class="fc" id="L73">                restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
+<span class="fc" id="L71">                HttpEntity&lt;String&gt; provisionEntity = new HttpEntity&lt;&gt;(provisionAsJson, createHeaders);</span>
+<span class="fc" id="L72">                restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
             }
-<span class="fc" id="L75">        }</span>
+<span class="fc" id="L74">        }</span>
 
-<span class="fc" id="L77">    }</span>
+<span class="fc" id="L76">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
