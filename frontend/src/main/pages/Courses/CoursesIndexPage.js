@@ -24,7 +24,10 @@ export default function CoursesIndexPage() {
     <BasicLayout>
       <div className="pt-2">
         <h1>Courses</h1>
-        <CoursesTable courses={courses} showInstallButton={hasRole(currentUser, "ROLE_ADMIN")} />
+        <CoursesTable
+          courses={courses}
+          showInstallButton={hasRole(currentUser, "ROLE_ADMIN")}
+        />
       </div>
     </BasicLayout>
   );

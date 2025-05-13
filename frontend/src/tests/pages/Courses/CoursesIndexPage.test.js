@@ -1,10 +1,9 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Courses/CoursesIndexPage";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import mockConsole from "jest-mock-console";
 import coursesFixtures from "fixtures/coursesFixtures";
-
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
@@ -85,11 +84,8 @@ describe("CoursesIndexPage tests", () => {
     const installationId = screen.getByText("654321");
     expect(installationId).toBeInTheDocument();
 
-    const orgName = screen.getByText(
-      "wsu-cpts489-fa20",
-    );
+    const orgName = screen.getByText("wsu-cpts489-fa20");
     expect(orgName).toBeInTheDocument();
-
   });
 
   test("renders empty table when backend unavailable, admin only", async () => {
@@ -117,5 +113,4 @@ describe("CoursesIndexPage tests", () => {
     );
     restoreConsole();
   });
-
 });
