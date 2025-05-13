@@ -19,7 +19,7 @@ GitHub Tokens, on the other hand, are used to act as a specific "installation" o
 There are abstracted in frontiers via the `JwtService`, which provides access to JWTs via `getJwt()` and installation tokens via `getInstallationToken(String installationId)`. All that is needed to access one of these endpoints is to provide whichever token is listed in the Reference in the `Authorization` header, listed as `Bearer: <token>`
 
 ## Frontiers-Specific Applications:
-In frontiers, every installation is linked to a Course instance. This is so that we know the GitHub organization that a particular course is using. The `installationId` property of a Course can be used to obtain a GitHub installation token for a particular installation, and the `organization` property can be used to get the organization name of a particular organization.
+In frontiers, every installation is linked to a Course entity. This is so that we know the GitHub organization that a particular course is using. The `installationId` property of a Course can be used to obtain a GitHub installation token for a particular installation, and the `organization` property can be used to get the organization name of a particular organization.
 
 Together, these can usually be used to access any endpoint that is listed in the GitHub Rest API reference. 
 
