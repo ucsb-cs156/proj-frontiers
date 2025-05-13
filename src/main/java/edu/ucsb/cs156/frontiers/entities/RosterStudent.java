@@ -37,7 +37,7 @@ public class RosterStudent {
     @Enumerated(EnumType.STRING)
     private OrgStatus orgStatus;
 
-    private int githubId;
+    private Integer githubId;
     private String githubLogin;
 
 }
