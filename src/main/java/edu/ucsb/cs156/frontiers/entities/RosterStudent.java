@@ -19,8 +19,6 @@ public class RosterStudent {
 
     @ManyToOne
     @JoinColumn(name = "course_id")
-    @JsonIgnore
-    @ToString.Exclude
     private Course course;
 
     private String studentId;
@@ -38,5 +36,8 @@ public class RosterStudent {
 
     @Enumerated(EnumType.STRING)
     private OrgStatus orgStatus;
+
+    private Integer githubId;
+    private String githubLogin;
 
 }

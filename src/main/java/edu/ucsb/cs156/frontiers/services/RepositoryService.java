@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
@@ -28,19 +29,17 @@ public class RepositoryService {
 
     /**
      * Creates a single student repository if it doesn't already exist, and provisions access to the repository by that student
-     * @param installationId ID of the installation to act as
-     * @param orgName Name of the organization attached to a particular installation
+     * @param course The Course in question
      * @param student RosterStudent of the student the repository should be created for
      * @param repoPrefix Name of the project or assignment. Used to title the repository, in the format repoPrefix-githubLogin
      * @param isPrivate Whether the repository is private or not
      */
-    public void createStudentRepository(String installationId, String orgName, RosterStudent student, String repoPrefix, Boolean isPrivate) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        String newRepoName = repoPrefix+"-"+student.getUser().getGithubLogin();
-        String token = jwtService.getInstallationToken(installationId);
-        String existenceEndpoint = "https://api.github.com/repos/"+orgName+"/"+newRepoName;
-        String createEndpoint = "https://api.github.com/orgs/"+orgName+"/repos";
-        String provisionEndpoint = "https://api.github.com/repos/"+orgName+"/"+newRepoName+"/collaborators/"+student.getUser().getGithubLogin();
-
+    public void createStudentRepository(Course course, RosterStudent student, String repoPrefix, Boolean isPrivate) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        String newRepoName = repoPrefix+"-"+student.getGithubLogin();
+        String token = jwtService.getInstallationToken(course);
+        String existenceEndpoint = "https://api.github.com/repos/"+course.getOrgName()+"/"+newRepoName;
+        String createEndpoint = "https://api.github.com/orgs/"+course.getOrgName()+"/repos";
+        String provisionEndpoint = "https://api.github.com/repos/"+course.getOrgName()+"/"+newRepoName+"/collaborators/"+student.getGithubLogin();
         HttpHeaders existenceHeaders = new HttpHeaders();
         existenceHeaders.add("Authorization", "Bearer " + token);
         existenceHeaders.add("Accept", "application/vnd.github+json");

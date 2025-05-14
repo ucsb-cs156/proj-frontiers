@@ -7,14 +7,11 @@
 
 # testing
 /coverage
-<<<<<<< Updated upstream
 /reports
-=======
 /.nyc_output
 
 # Dont store storybook logs
 build-storybook.log
->>>>>>> Stashed changes
 
 # production
 /build

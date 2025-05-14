@@ -1,30 +1,23 @@
 package edu.ucsb.cs156.frontiers.services;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.OAuth2Token;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is a service that provides information about the current user.
@@ -40,9 +33,6 @@ public class CurrentUserServiceImpl extends CurrentUserService {
 
   @Autowired
   GrantedAuthoritiesService grantedAuthoritiesService;
-
-  @Value("${app.admin.emails}")
-  final private List<String> adminEmails = new ArrayList<String>();
 
   /**
    * This method returns the current user as a User object.

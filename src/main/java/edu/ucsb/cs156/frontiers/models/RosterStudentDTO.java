@@ -32,7 +32,7 @@ public class RosterStudentDTO {
     private String email;
 
     private long userId;
-    private int userGithubId;
+    private Integer userGithubId;
     private String userGithubLogin;
 
     @Enumerated(EnumType.STRING)
@@ -44,8 +44,6 @@ public class RosterStudentDTO {
 
     public static RosterStudentDTO from(RosterStudent student) {
         long userId = student.getUser() != null ? student.getUser().getId() : 0;
-        int userGithubId = student.getUser() != null ? student.getUser().getGithubId() : 0;
-        String userGithubLogin = student.getUser() != null ? student.getUser().getGithubLogin() : "";
         
         return RosterStudentDTO.builder()
                 .id(student.getId())
@@ -55,8 +53,8 @@ public class RosterStudentDTO {
                 .lastName(student.getLastName())
                 .email(student.getEmail())
                 .userId(userId)
-                .userGithubId(userGithubId)
-                .userGithubLogin(userGithubLogin)
+                .userGithubId(student.getGithubId())
+                .userGithubLogin(student.getGithubLogin())
                 .rosterStatus(student.getRosterStatus())
                 .orgStatus(student.getOrgStatus())
                 .build();
