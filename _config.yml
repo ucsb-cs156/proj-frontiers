@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"U_kgDOCu01tQ","is_bot":false,"login":"divyanipunj","name":""},"headRefName":"divyanipunj-patch-1","number":96,"title":"Create 99-copy-issues.yml for proj-frontiers","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/96"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-removeDuplicate","number":112,"title":"Removing the duplicate migration file","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/112"}]
