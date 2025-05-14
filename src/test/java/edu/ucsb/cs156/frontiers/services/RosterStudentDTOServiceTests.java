@@ -43,8 +43,6 @@ public class RosterStudentDTOServiceTests {
 
         User user = User.builder().build();
         user.setId(2L);
-        user.setGithubId(12345);
-        user.setGithubLogin("testuser");
 
         RosterStudent rosterStudent = new RosterStudent();
         rosterStudent.setId(3L);
@@ -53,6 +51,8 @@ public class RosterStudentDTOServiceTests {
         rosterStudent.setFirstName("John");
         rosterStudent.setLastName("Doe");
         rosterStudent.setEmail("johndoe@example.com");
+        rosterStudent.setGithubId(12345);
+        rosterStudent.setGithubLogin("testuser");
         rosterStudent.setUser(user);
         rosterStudent.setRosterStatus(RosterStatus.ROSTER);
         rosterStudent.setOrgStatus(OrgStatus.NONE);
