@@ -53,24 +53,19 @@ public class UpdateOrgMembershipJobTests {
     public void match_students_correctly() throws Exception {
         OrgMember orgMember1 = OrgMember.builder().githubId(123456).githubLogin("division7").build();
         OrgMember orgMember2 = OrgMember.builder().githubId(123457).githubLogin("division8").build();
-        User user1 = User.builder().githubLogin("division7").githubId(123456).id(1L).build();
-        User user2 = User.builder().githubLogin("division8").githubId(123457).id(2L).build();
         List<OrgMember> orgMembers = List.of(orgMember1, orgMember2);
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        RosterStudent student1 = RosterStudent.builder().studentId("banana").course(course).user(user1).build();
-        RosterStudent student2 = RosterStudent.builder().studentId("apple").course(course).user(user2).build();
-        RosterStudent student1Updated = RosterStudent.builder().studentId("banana").course(course).user(user1).orgStatus(OrgStatus.MEMBER).build();
-        RosterStudent student2Updated = RosterStudent.builder().studentId("apple").course(course).user(user2).orgStatus(OrgStatus.MEMBER).build();
+        RosterStudent student1 = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).build();
+        RosterStudent student2 = RosterStudent.builder().studentId("apple").githubLogin("division8").githubId(123457).course(course).build();
+        RosterStudent student1Updated = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).orgStatus(OrgStatus.MEMBER).build();
+        RosterStudent student2Updated = RosterStudent.builder().studentId("apple").githubLogin("division8").githubId(123457).course(course).orgStatus(OrgStatus.MEMBER).build();
 
         doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
-        doReturn(Optional.of(user1)).when(userRepository).findByGithubId(eq(123456));
-        doReturn(Optional.of(user2)).when(userRepository).findByGithubId(eq(123457));
-        doReturn(Optional.of(student1)).when(rosterStudentRepository).findByCourseAndUser(eq(course), eq(user1));
-        doReturn(Optional.of(student2)).when(rosterStudentRepository).findByCourseAndUser(eq(course), eq(user2));
+        doReturn(Optional.of(student1)).when(rosterStudentRepository).findByCourseAndGithubId(eq(course), eq(123456));
+        doReturn(Optional.of(student2)).when(rosterStudentRepository).findByCourseAndGithubId(eq(course), eq(123457));
 
         var matchJob = spy(UpdateOrgMembershipJob.builder()
                 .rosterStudentRepository(rosterStudentRepository)
-                .userRepository(userRepository)
                 .organizationMemberService(organizationMemberService)
                 .course(course)
                 .build());
@@ -86,44 +81,16 @@ public class UpdateOrgMembershipJobTests {
     }
 
     @Test
-    public void no_user() throws Exception {
-        OrgMember orgMember1 = OrgMember.builder().githubId(123456).githubLogin("division7").build();
-        List<OrgMember> orgMembers = List.of(orgMember1);
-        Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-
-        doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
-        doReturn(Optional.empty()).when(userRepository).findByGithubId(eq(123456));
-
-        var matchJob = spy(UpdateOrgMembershipJob.builder()
-                .rosterStudentRepository(rosterStudentRepository)
-                .userRepository(userRepository)
-                .organizationMemberService(organizationMemberService)
-                .course(course)
-                .build());
-
-        matchJob.accept(ctx);
-        String expected = """
-                Processing...
-                Done""";
-        assertEquals(expected, jobStarted.getLog());
-
-        verify(rosterStudentRepository, times(0)).save(any());
-    }
-
-    @Test
     public void no_roster_student() throws Exception {
         OrgMember orgMember1 = OrgMember.builder().githubId(123456).githubLogin("division7").build();
-        User user1 = User.builder().githubLogin("division7").githubId(123456).id(1L).build();
         List<OrgMember> orgMembers = List.of(orgMember1);
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
 
         doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
-        doReturn(Optional.of(user1)).when(userRepository).findByGithubId(eq(123456));
-        doReturn(Optional.empty()).when(rosterStudentRepository).findByCourseAndUser(eq(course), eq(user1));
+        doReturn(Optional.empty()).when(rosterStudentRepository).findByCourseAndGithubId(eq(course), eq(123456));
 
         var matchJob = spy(UpdateOrgMembershipJob.builder()
                 .rosterStudentRepository(rosterStudentRepository)
-                .userRepository(userRepository)
                 .organizationMemberService(organizationMemberService)
                 .course(course)
                 .build());

@@ -11,20 +11,18 @@ import java.util.Map;
 import java.util.Optional;
 
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
-import edu.ucsb.cs156.frontiers.services.JwtService;
-import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
-import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.*;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,7 +34,6 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
-import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,9 +47,7 @@ import com.opencsv.exceptions.CsvException;
 @RestController
 @Slf4j
 public class RosterStudentsController extends ApiController {
-    
-    @Autowired
-    private UserRepository userRepository;
+
     @Autowired
     private JobService jobService;
     @Autowired
@@ -70,6 +65,9 @@ public class RosterStudentsController extends ApiController {
 
     @Autowired
     private UpdateUserService updateUserService;
+
+    @Autowired
+    private CurrentUserService currentUserService;
 
     /**
      * This method creates a new RosterStudent.
@@ -198,11 +196,41 @@ public class RosterStudentsController extends ApiController {
             UpdateOrgMembershipJob job = UpdateOrgMembershipJob.builder()
                     .rosterStudentRepository(rosterStudentRepository)
                     .organizationMemberService(organizationMemberService)
-                    .userRepository(userRepository)
                     .course(course)
                     .build();
 
             return jobService.runAsJob(job);
         }
+    }
+    
+    @Operation(summary = "Link a Roster Student to a Github Account")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @PutMapping("/linkGitHub")
+    public ResponseEntity<String> linkGitHub(@Parameter(name = "rosterStudentId", description = "Roster Student to be linked to") @RequestParam Long rosterStudentId){
+        User currentUser = currentUserService.getUser();
+        RosterStudent rosterStudent = rosterStudentRepository.findById(rosterStudentId)
+                .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, rosterStudentId));
+
+        if (currentUser.getId() != rosterStudent.getUser().getId()) {
+            throw new AccessDeniedException("User not authorized to link this roster student");
+        }
+
+        if (rosterStudent.getGithubId() != 0 && rosterStudent.getGithubLogin() != null ) {
+            return ResponseEntity.badRequest().body("This roster student is already linked to a GitHub account");
+        }
+
+        rosterStudent.setGithubId(currentUser.getGithubId());
+        rosterStudent.setGithubLogin(currentUser.getGithubLogin());
+        rosterStudentRepository.save(rosterStudent);
+        return ResponseEntity.ok("Successfully linked GitHub account to roster student");
+    }
+
+    @Operation(summary = "Get Associated Roster Students with a User")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/associatedRosterStudents")
+    public Iterable<RosterStudent> getAssociatedRosterStudents(){
+        User currentUser = currentUserService.getUser();
+        Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findAllByUser((currentUser));
+        return rosterStudents;
     }
 }

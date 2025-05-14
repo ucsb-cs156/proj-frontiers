@@ -51,6 +51,8 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
                 .fullName(fullName)
                 .givenName(givenName)
                 .admin(admin)
+                .githubLogin("fake_login")
+                .githubId(123456789)
                 .id(1L)
                 .build();
 
