@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-swapForObject","number":94,"title":"Replacing RosterStudent & RosterStudentDTO int with Integer","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/94"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjEyNTM2MTg3","is_bot":false,"login":"ameymwalimbe","name":""},"headRefName":"aw-addWorkflow","number":95,"title":"copying workflow99","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/95"},{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-swapForObject","number":94,"title":"Replacing RosterStudent & RosterStudentDTO int with Integer","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/94"}]
