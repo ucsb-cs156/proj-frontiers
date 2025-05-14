@@ -25,8 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = WebhookController.class)
 public class WebhookControllerTests extends ControllerTestCase {
-    @MockitoBean
-    UserRepository userRepository;
 
     @MockitoBean
     RosterStudentRepository rosterStudentRepository;
@@ -36,14 +34,12 @@ public class WebhookControllerTests extends ControllerTestCase {
 
     @Test
     public void successfulWebhook() throws Exception {
-        User user = User.builder().githubLogin("testLogin").build();
         Course course = Course.builder().installationId("1234").build();
-        RosterStudent student = RosterStudent.builder().user(user).course(course).build();
-        RosterStudent updated = RosterStudent.builder().user(user).course(course).orgStatus(OrgStatus.MEMBER).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("testLogin").course(course).build();
+        RosterStudent updated = RosterStudent.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.MEMBER).build();
 
-        doReturn(Optional.of(user)).when(userRepository).findByGithubLogin(contains("testLogin"));
         doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
-        doReturn(Optional.of(student)).when(rosterStudentRepository).findByCourseAndUser(eq(course), eq(user));
+        doReturn(Optional.of(student)).when(rosterStudentRepository).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
         doReturn(updated).when(rosterStudentRepository).save(eq(updated));
 
         String sendBody = """
@@ -65,8 +61,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        verify(userRepository, times(1)).findByGithubLogin(contains("testLogin"));
-        verify(rosterStudentRepository, times(1)).findByCourseAndUser(eq(course), eq(user));
+        verify(rosterStudentRepository, times(1)).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
         verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
         verify(rosterStudentRepository, times(1)).save(eq(updated));
         String actualBody = response.getResponse().getContentAsString();
@@ -75,12 +70,9 @@ public class WebhookControllerTests extends ControllerTestCase {
 
     @Test
     public void noStudent() throws Exception {
-        User user = User.builder().githubLogin("testLogin").build();
         Course course = Course.builder().installationId("1234").build();
-
-        doReturn(Optional.of(user)).when(userRepository).findByGithubLogin(contains("testLogin"));
         doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
-        doReturn(Optional.empty()).when(rosterStudentRepository).findByCourseAndUser(eq(course), eq(user));
+        doReturn(Optional.empty()).when(rosterStudentRepository).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
 
         String sendBody = """
                 {
@@ -101,42 +93,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        verify(userRepository, times(1)).findByGithubLogin(contains("testLogin"));
-        verify(rosterStudentRepository, times(1)).findByCourseAndUser(eq(course), eq(user));
-        verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
-        verify(rosterStudentRepository, times(0)).save(any());
-        String actualBody = response.getResponse().getContentAsString();
-        assertEquals("success", actualBody);
-    }
-
-    @Test
-    public void noUser() throws Exception {
-        Course course = Course.builder().installationId("1234").build();
-
-        doReturn(Optional.empty()).when(userRepository).findByGithubLogin(contains("testLogin"));
-        doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
-
-        String sendBody = """
-                {
-                "action" : "member_added",
-                "membership": {
-                    "user": {
-                        "login": "testLogin"
-                    }
-                },
-                "installation":{
-                    "id": "1234"
-                }
-                }
-                """;
-
-        MvcResult response = mockMvc.perform(post("/api/webhooks/github")
-                        .content(sendBody)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-        verify(userRepository, times(1)).findByGithubLogin(contains("testLogin"));
-        verify(rosterStudentRepository, times(0)).findByCourseAndUser(any(), any());
+        verify(rosterStudentRepository, times(1)).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
         verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
         verify(rosterStudentRepository, times(0)).save(any());
         String actualBody = response.getResponse().getContentAsString();
@@ -145,9 +102,6 @@ public class WebhookControllerTests extends ControllerTestCase {
 
     @Test
     public void noCourse() throws Exception {
-        User user = User.builder().githubLogin("testLogin").build();
-
-        doReturn(Optional.of(user)).when(userRepository).findByGithubLogin(contains("testLogin"));
         doReturn(Optional.empty()).when(courseRepository).findByInstallationId(contains("1234"));
 
         String sendBody = """
@@ -169,8 +123,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        verify(userRepository, times(1)).findByGithubLogin(contains("testLogin"));
-        verify(rosterStudentRepository, times(0)).findByCourseAndUser(any(), any());
+        verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
         verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
         verify(rosterStudentRepository, times(0)).save(any());
         String actualBody = response.getResponse().getContentAsString();
@@ -198,8 +151,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        verify(userRepository, times(0)).findByGithubLogin(contains("testLogin"));
-        verify(rosterStudentRepository, times(0)).findByCourseAndUser(any(), any());
+        verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
         verify(courseRepository, times(0)).findByInstallationId(contains("1234"));
         verify(rosterStudentRepository, times(0)).save(any());
         String actualBody = response.getResponse().getContentAsString();
@@ -226,8 +178,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        verify(userRepository, times(0)).findByGithubLogin(contains("testLogin"));
-        verify(rosterStudentRepository, times(0)).findByCourseAndUser(any(), any());
+        verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
         verify(courseRepository, times(0)).findByInstallationId(contains("1234"));
         verify(rosterStudentRepository, times(0)).save(any());
         String actualBody = response.getResponse().getContentAsString();
