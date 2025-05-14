@@ -39,11 +39,10 @@ public class CreateStudentRepositoriesJobTest {
     @Test
     public void testCreateStudentRepository_public() throws Exception {
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        User user = User.builder().githubLogin("studentLogin").build();
-        RosterStudent student = RosterStudent.builder().user(user).orgStatus(OrgStatus.MEMBER).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
         course.setRosterStudents(List.of(student));
 
-        doNothing().when(service).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(false));
+        doNothing().when(service).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(false));
 
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
@@ -58,17 +57,16 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(1)).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(false));
+        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(false));
     }
 
     @Test
     public void testCreateStudentRepository_private() throws Exception {
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        User user = User.builder().githubLogin("studentLogin").build();
-        RosterStudent student = RosterStudent.builder().user(user).orgStatus(OrgStatus.MEMBER).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
         course.setRosterStudents(List.of(student));
 
-        doNothing().when(service).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(true));
+        doNothing().when(service).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true));
 
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
@@ -83,35 +81,14 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(1)).createStudentRepository(contains("1234"), contains("ucsb-cs156"), eq(student), contains("repo-prefix"), eq(true));
+        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true));
     }
 
-    @Test
-    public void expectDoesntCallForNoUser() throws Exception {
-        Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        RosterStudent student = RosterStudent.builder().build();
-        course.setRosterStudents(List.of(student));
-        var repoJob = spy(CreateStudentRepositoriesJob.builder()
-                .repositoryService(service)
-                .repositoryPrefix("repo-prefix")
-                .isPrivate(false)
-                .course(course)
-                .build());
-
-        repoJob.accept(ctx);
-        String expected = """
-                Processing...
-                Done""";
-        assertEquals(expected, jobStarted.getLog());
-
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any(), any());
-    }
 
     @Test
     public void expectDoesntCallForNoLogin() throws Exception {
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        User user = User.builder().build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+        RosterStudent student = RosterStudent.builder().build();
         course.setRosterStudents(List.of(student));
 
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
@@ -127,14 +104,13 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any(), any());
+        verify(service, times(0)).createStudentRepository(any(),any(),any(),any());
     }
 
     @Test
     public void expectDoesntCallForNotMember() throws Exception {
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        User user = User.builder().githubLogin("banana").build();
-        RosterStudent student = RosterStudent.builder().user(user).orgStatus(OrgStatus.NONE).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("banana").orgStatus(OrgStatus.NONE).build();
         course.setRosterStudents(List.of(student));
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
@@ -149,6 +125,6 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any(), any());
+        verify(service, times(0)).createStudentRepository(any(),any(),any(),any());
     }
 }

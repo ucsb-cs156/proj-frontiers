@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
@@ -40,9 +42,11 @@ public class RepositoryServiceTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
     @BeforeEach
     public void setup() throws Exception{
-        doReturn("real.installation.token").when(jwtService).getInstallationToken(contains("1234"));
+        doReturn("real.installation.token").when(jwtService).getInstallationToken(eq(course));
     }
 
     @Test
@@ -55,10 +59,9 @@ public class RepositoryServiceTests {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-        repositoryService.createStudentRepository("1234", "ucsb-cs156", student, "repo1", false);
+        repositoryService.createStudentRepository(course, student, "repo1", false);
         mockRestServiceServer.verify();
     }
 
@@ -98,10 +101,9 @@ public class RepositoryServiceTests {
                 .andExpect(content().json(provisionBodyJson))
                 .andRespond(withSuccess());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-        repositoryService.createStudentRepository("1234", "ucsb-cs156", student, "repo1", false);
+        repositoryService.createStudentRepository(course, student, "repo1", false);
 
         mockRestServiceServer.verify();
     }
@@ -142,10 +144,10 @@ public class RepositoryServiceTests {
                 .andExpect(content().json(provisionBodyJson))
                 .andRespond(withSuccess());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
 
-        repositoryService.createStudentRepository("1234", "ucsb-cs156", student, "repo1", true);
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+
+        repositoryService.createStudentRepository(course, student, "repo1", true);
 
         mockRestServiceServer.verify();
     }
@@ -161,10 +163,9 @@ public class RepositoryServiceTests {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withForbiddenRequest());
 
-        User user = User.builder().githubLogin("student1").build();
-        RosterStudent student = RosterStudent.builder().user(user).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-        repositoryService.createStudentRepository("1234", "ucsb-cs156", student, "repo1", false);
+        repositoryService.createStudentRepository(course, student, "repo1", false);
         mockRestServiceServer.verify();
     }
 }

@@ -1,6 +1,8 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
 import edu.ucsb.cs156.frontiers.testconfig.DummyClock;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
@@ -42,6 +44,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.doReturn;
@@ -96,8 +99,8 @@ public class JwtServiceTests {
                   "repository_selection": "all"
                 }
                 """, expectedToken);
-        String installationId = "03112004";
-        String expectedURL = "https://api.github.com/app/installations/"+installationId+"/access_tokens";
+        Course course = Course.builder().installationId("03112004").orgName("ucsb-cs156").build();
+        String expectedURL = "https://api.github.com/app/installations/"+course.getOrgName()+"/access_tokens";
         mockRestServiceServer.expect(requestTo(expectedURL))
                 .andExpect(header("Accept", "application/vnd.github+json"))
                 .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
@@ -105,7 +108,7 @@ public class JwtServiceTests {
                 .andRespond(withSuccess(expectedResult, MediaType.APPLICATION_JSON));
 
         doReturn(Optional.of(setInstant)).when(dateTimeProvider).getNow();
-        String token = jwtService.getInstallationToken(installationId);
+        String token = jwtService.getInstallationToken(course);
         assertEquals(expectedToken, token);
     }
 
@@ -128,6 +131,54 @@ public class JwtServiceTests {
                 .build();
         parser.parse(compacted);
     }
+
+    @Test
+    public void testGetInstallationToken_throwsNoLinkedOrganizationException_whenOrgNameIsNull() {
+        // Arrange
+        Course course = Course.builder()
+                .courseName("CS156")
+                .installationId("1234")
+                .build(); // OrgName is null
+
+        // Act and Assert
+        NoLinkedOrganizationException thrown = assertThrows(NoLinkedOrganizationException.class, () -> {
+            jwtService.getInstallationToken(course);
+        });
+
+        assertEquals("No linked GitHub Organization to CS156. Please link a GitHub Organization first.", thrown.getMessage());
+    }
+
+    @Test
+    public void testGetInstallationToken_throwsNoLinkedOrganizationException_whenInstallationIdIsNull() {
+        // Arrange
+        Course course = Course.builder()
+                .courseName("CS156")
+                .orgName("ucsb-cs156")
+                .build(); // InstallationId is null
+
+        // Act and Assert
+        NoLinkedOrganizationException thrown = assertThrows(NoLinkedOrganizationException.class, () -> {
+            jwtService.getInstallationToken(course);
+        });
+
+        assertEquals("No linked GitHub Organization to CS156. Please link a GitHub Organization first.", thrown.getMessage());
+    }
+
+    @Test
+    public void testGetInstallationToken_throwsNoLinkedOrganizationException_whenBothOrgNameAndInstallationIdAreNull() {
+        // Arrange
+        Course course = Course.builder()
+                .courseName("CS156")
+                .build(); // Both OrgName and InstallationId are null
+
+        // Act and Assert
+        NoLinkedOrganizationException thrown = assertThrows(NoLinkedOrganizationException.class, () -> {
+            jwtService.getInstallationToken(course);
+        });
+
+        assertEquals("No linked GitHub Organization to CS156. Please link a GitHub Organization first.", thrown.getMessage());
+    }
+
 
 
 

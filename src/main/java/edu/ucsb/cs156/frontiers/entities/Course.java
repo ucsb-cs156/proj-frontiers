@@ -37,11 +37,13 @@ public class Course {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
     @Fetch(FetchMode.JOIN)
+    @JsonIgnore
     @ToString.Exclude
     private List<CourseStaff> courseStaff;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
     @Fetch(FetchMode.JOIN)
+    @JsonIgnore
     @ToString.Exclude
     private List<RosterStudent> rosterStudents;
 }

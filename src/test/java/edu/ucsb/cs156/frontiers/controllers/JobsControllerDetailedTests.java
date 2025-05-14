@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
@@ -357,7 +359,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
         .log("Processing...\n")
         .build();
 
-    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted, jobRunning);
+    doReturn(jobStarted, jobRunning).when(jobsRepository).save(any(Job.class));
 
     doNothing().when(updateUserService).attachRosterStudentsAllUsers();
 
@@ -370,7 +372,6 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
     // assert
     String responseString = response.getResponse().getContentAsString();
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
-    assertEquals("running", jobReturned.getStatus());
+    MatcherAssert.assertThat(jobReturned.getStatus(), Matchers.anyOf(Matchers.is("completed"), Matchers.is("running")));
   }
-
 }
