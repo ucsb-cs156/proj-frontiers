@@ -32,6 +32,7 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.InvalidRequestException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.dto.RosterStudentUpdateDTO;
@@ -142,9 +143,8 @@ public class RosterStudentsController extends ApiController {
 
         Optional<RosterStudent> duplicate = rosterStudentRepository.findByStudentId(incoming.getStudentId());
         if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
-        throw new IllegalArgumentException("Another student with studentId '" 
-            + incoming.getStudentId() + "' already exists.");
-    }
+            throw new InvalidRequestException("studentId " + incoming.getStudentId() + " already exists");
+        }
         rosterStudent.setFirstName(incoming.getFirstName());
         rosterStudent.setLastName(incoming.getLastName());
         rosterStudent.setStudentId(incoming.getStudentId());
