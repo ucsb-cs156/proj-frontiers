@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -728,4 +730,235 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(List.of());
                 assertEquals(expectedJson, responseString);
         }
+
+        // Authorization tests for /api/rosterstudents/updateStudent
+
+        @Test
+        public void logged_out_users_cannot_update_rosterstudents() throws Exception {
+                mockMvc.perform(put("/api/rosterstudents/updateStudent?id=2"))
+                                .andExpect(status().is(403));
+        }
+
+        @WithMockUser(roles = { "USER" })
+        @Test
+        public void logged_in_regular_users_cannot_update_rosterstudents() throws Exception {
+                mockMvc.perform(put("/api/rosterstudents/updateStudent?id=2"))
+                                .andExpect(status().is(403)); // only admins can Update
+        }
+
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_can_update_an_existing_rosterstudent() throws Exception {
+                // arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudentOrig = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                RosterStudent rosterStudentEdited = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Lauren")
+                        .lastName("Del Playa")
+                        .studentId("A987654")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                String requestBody = mapper.writeValueAsString(rosterStudentEdited);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudentOrig));
+
+                // act
+                MvcResult response = mockMvc.perform(
+                                put("/api/rosterstudents/updateStudent?id=1")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .characterEncoding("utf-8")
+                                                .content(requestBody)
+                                                .with(csrf()))
+                                .andExpect(status().isOk()).andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(1L);
+                verify(rosterStudentRepository, times(1)).save(rosterStudentEdited); // should be saved with correct user
+                String responseString = response.getResponse().getContentAsString();
+                assertEquals(requestBody, responseString);
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_cannot_update_rosterstudent_that_does_not_exist() throws Exception {
+                // arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudentEdited = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                String requestBody = mapper.writeValueAsString(rosterStudentEdited);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+                // act
+                MvcResult response = mockMvc.perform(
+                                put("/api/rosterstudents/updateStudent?id=1")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .characterEncoding("utf-8")
+                                                .content(requestBody)
+                                                .with(csrf()))
+                                .andExpect(status().isNotFound()).andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(1L);
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("RosterStudent with id 1 not found", json.get("message"));
+
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_cannot_update_rosterstudent_to_duplicate_studentId() throws Exception {
+                // arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudentOrig = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                RosterStudent rosterStudentConflicting = RosterStudent.builder()
+                        .id(2L)
+                        .firstName("Lauren")
+                        .lastName("Del Playa")
+                        .studentId("A987654")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                RosterStudent rosterStudentEdited = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Bris")
+                        .lastName("Maucho")
+                        .studentId("A987654") // attempting to change to existing ID
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                String requestBody = mapper.writeValueAsString(rosterStudentEdited);
+
+                when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(rosterStudentOrig));
+                when(rosterStudentRepository.findByStudentId("A987654")).thenReturn(Optional.of(rosterStudentConflicting));
+
+                // act
+                MvcResult response = mockMvc.perform(
+                                put("/api/rosterstudents/updateStudent?id=1")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .characterEncoding("utf-8")
+                                        .content(requestBody)
+                                        .with(csrf()))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(1L);
+                verify(rosterStudentRepository, times(1)).findByStudentId("A987654");
+                verify(rosterStudentRepository, times(0)).save(any()); // should not save due to conflict
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_can_update_rosterstudent_when_duplicate_studentId_is_same_record() throws Exception {
+                // arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudentOrig = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                RosterStudent rosterStudentDuplicateSameId = RosterStudent.builder()
+                        .id(1L)  // same ID as rosterStudentOrig
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                RosterStudent rosterStudentEdited = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Chris Updated")
+                        .lastName("Gaucho Updated")
+                        .studentId("A123456")  // same studentId, same record
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                String requestBody = mapper.writeValueAsString(rosterStudentEdited);
+
+                when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(rosterStudentOrig));
+                when(rosterStudentRepository.findByStudentId("A123456")).thenReturn(Optional.of(rosterStudentDuplicateSameId));
+
+                // act
+                MvcResult response = mockMvc.perform(
+                                put("/api/rosterstudents/updateStudent?id=1")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .characterEncoding("utf-8")
+                                        .content(requestBody)
+                                        .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(1L);
+                verify(rosterStudentRepository, times(1)).findByStudentId("A123456");
+                verify(rosterStudentRepository, times(1)).save(rosterStudentEdited);
+        }
+
 }
