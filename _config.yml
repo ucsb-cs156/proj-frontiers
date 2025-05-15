@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: []
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-fix-redirect-on-github-app-install","number":119,"title":"HOTFIX - fix redirect after github app install","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/119"}]
