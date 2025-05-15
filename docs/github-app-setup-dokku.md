@@ -17,12 +17,12 @@ For Callback URLs, select "Add Callback URL"
 
 In the first callback URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/courses/link`. For the second URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github`, replacing appname with the name of your app, and dokku-number with your dokku installation.
 
-![image](https://github.com/user-attachments/assets/124c7883-f769-4ca1-8199-2086131232ed)
 
 
 Click the checkbox for "Request user authorization (OAuth) during installation"
 
-![image](https://github.com/user-attachments/assets/05e47776-b71b-40fb-a247-f42f609fcd13)
+![image](https://github.com/user-attachments/assets/bd58b939-6c3f-481a-a7f5-a118f65acc1b)
+
 
 Scroll further and under webhooks, fill in the following url where *appname* is your appname and *xx* is your dokku server:
 ```
