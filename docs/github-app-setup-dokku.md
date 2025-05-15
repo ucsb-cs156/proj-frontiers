@@ -15,7 +15,10 @@ For the homepage url, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.ed
 For Callback URLs, select "Add Callback URL"
 
 
-In the first callback URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/installations/installation`. For the second URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github`, replacing appname with the name of your app, and dokku-number with your dokku installation.
+In the first callback URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/courses/link`. For the second URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github`, replacing appname with the name of your app, and dokku-number with your dokku installation.
+
+![image](https://github.com/user-attachments/assets/124c7883-f769-4ca1-8199-2086131232ed)
+
 
 Click the checkbox for "Request user authorization (OAuth) during installation"
 
@@ -92,7 +95,7 @@ dokku config:set --no-restart <appname> GOOGLE_CLIENT_SECRET=<client-secret>
 
 Next, set up a Postgres database for your app. A separate set of directions for this step are listed [here](https://ucsb-cs156.github.io/topics/dokku/postgres_database.html#postgres-database---how-to-deploy-a-postgres-database).
 
-Next, sync the app with the repository. At the moment, you should use the `dokku-secured-branch`, so bad actors cannot generate client tokens without authorization. You do so with the following command:
+Next, sync the app with the repository.
 ```bash
 dokku git:sync <appname> https://github.com/ucsb-cs156/proj-frontiers main
 ```
