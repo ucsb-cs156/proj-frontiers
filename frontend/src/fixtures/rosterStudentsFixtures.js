@@ -7,7 +7,7 @@ const rosterStudentsFixtures = {
     {
       id: 1,
       course: coursesFixtures.threeCourses[0],
-      studentID: "1234X67",
+      studentId: "1234X67",
       firstName: "Phill",
       lastName: "Conrad",
       email: "phtcon@ucsb.edu",
@@ -20,7 +20,7 @@ const rosterStudentsFixtures = {
     {
       id: 2,
       course: coursesFixtures.threeCourses[0],
-      studentID: "XM43KJ3",
+      studentId: "XM43KJ3",
       firstName: "Phillip",
       lastName: "Conrad",
       email: "pconrad.cis@gmail.com",
@@ -33,7 +33,7 @@ const rosterStudentsFixtures = {
     {
       id: 3,
       course: coursesFixtures.threeCourses[0],
-      studentID: "ZZZZZZZ",
+      studentId: "ZZZZZZZ",
       firstName: "Craig",
       lastName: "Zzyxx",
       email: "craig.zzyzx@example.org",
