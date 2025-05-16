@@ -233,4 +233,30 @@ public class RosterStudentsController extends ApiController {
         Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findAllByUser((currentUser));
         return rosterStudents;
     }
+
+    @Operation(summary = "Update a roster student")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping("/update")
+    public RosterStudent updateRosterStudent(
+            @Parameter(name = "id") @RequestParam Long id,
+            @Parameter(name = "firstName") @RequestParam String firstName,
+            @Parameter(name = "lastName") @RequestParam String lastName,
+            @Parameter(name = "studentId") @RequestParam String studentId) throws EntityNotFoundException{
+        
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+        if(!rosterStudent.getStudentId().equals(studentId)){
+            Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(
+                    rosterStudent.getCourse().getId(), studentId);
+            if (existingStudent.isPresent()){
+                throw new IllegalArgumentException("Student ID already exists in this course");
+            }
+        }
+
+        rosterStudent.setFirstName(firstName);
+        rosterStudent.setLastName(lastName);
+        rosterStudent.setStudentId(studentId);
+
+        return rosterStudentRepository.save(rosterStudent);
+    }
 }
