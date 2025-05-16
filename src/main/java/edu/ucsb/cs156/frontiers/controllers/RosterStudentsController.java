@@ -106,6 +106,26 @@ public class RosterStudentsController extends ApiController {
     }
 
     /**
+     * This method deletes an existing RosterStudent.
+     * 
+     * @param id the id of the roster student to delete
+     * @return a message indicating the RosterStudent was deleted
+     */
+
+    @Operation(summary = "Delete a roster student")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("")
+    // @Transactional
+    public Object deleteRosterStudent(
+            @Parameter(name="id") @RequestParam Long id) {
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        rosterStudentRepository.delete(rosterStudent);
+        return genericMessage("RosterStudent with id %s deleted".formatted(id));
+    }
+
+    /**
      * This method returns a list of roster students for a given course.
      * 
      * @return a list of all courses.
