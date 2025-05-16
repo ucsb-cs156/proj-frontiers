@@ -239,23 +239,29 @@ public class RosterStudentsController extends ApiController {
     @PutMapping("/update")
     public RosterStudent updateRosterStudent(
             @Parameter(name = "id") @RequestParam Long id,
-            @Parameter(name = "firstName") @RequestParam String firstName,
-            @Parameter(name = "lastName") @RequestParam String lastName,
-            @Parameter(name = "studentId") @RequestParam String studentId) throws EntityNotFoundException{
+            @Parameter(name = "firstName") @RequestParam(required = false) String firstName,
+            @Parameter(name = "lastName") @RequestParam(required = false) String lastName,
+            @Parameter(name = "studentId") @RequestParam(required = false) String studentId) throws EntityNotFoundException {
         
+        if(firstName == null || lastName == null || studentId == null ||
+            firstName.trim().isEmpty() || lastName.trim().isEmpty() || studentId.trim().isEmpty()){
+            throw new IllegalArgumentException("Required fields cannot be empty");
+        }
+
         RosterStudent rosterStudent = rosterStudentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
-        if(!rosterStudent.getStudentId().equals(studentId)){
+
+        if(!rosterStudent.getStudentId().trim().equals(studentId.trim())){
             Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(
-                    rosterStudent.getCourse().getId(), studentId);
+                    rosterStudent.getCourse().getId(), studentId.trim());
             if (existingStudent.isPresent()){
                 throw new IllegalArgumentException("Student ID already exists in this course");
             }
         }
 
-        rosterStudent.setFirstName(firstName);
-        rosterStudent.setLastName(lastName);
-        rosterStudent.setStudentId(studentId);
+        rosterStudent.setFirstName(firstName.trim());
+        rosterStudent.setLastName(lastName.trim());
+        rosterStudent.setStudentId(studentId.trim());
 
         return rosterStudentRepository.save(rosterStudent);
     }
