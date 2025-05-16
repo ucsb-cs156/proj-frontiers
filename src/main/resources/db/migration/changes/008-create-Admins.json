@@ -2,7 +2,7 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "Admin-1",
+        "id": "008-create-Admins.json",
         "author": "ShellyZ",
         "preConditions": [
           {
