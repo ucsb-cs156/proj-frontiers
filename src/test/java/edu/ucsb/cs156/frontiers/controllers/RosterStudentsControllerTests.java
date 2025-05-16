@@ -47,6 +47,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 import org.springframework.http.MediaType;
+import org.mockito.ArgumentCaptor;
 
 @ControllerAdvice
 class GlobalExceptionHandler {
@@ -775,7 +776,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 RosterStudent existingStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("Old")
-                        .lastName("Name")
+                        .lastName("OldName")
                         .studentId("A123456")
                         .email("old@ucsb.edu")
                         .course(course1)
@@ -786,7 +787,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 RosterStudent updatedStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("New")
-                        .lastName("Name")
+                        .lastName("NewName")
                         .studentId("A123456")
                         .email("old@ucsb.edu")
                         .course(course1)
@@ -800,14 +801,18 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 MvcResult response = mockMvc.perform(put("/api/rosterstudents/update")
                         .with(csrf())
                         .param("id", "1")
-                        .param("firstName", "New")
-                        .param("lastName", "Name")
-                        .param("studentId", "A123456"))
+                        .param("firstName", "   New   ")
+                        .param("lastName", "   NewName   ")
+                        .param("studentId", "   A123456   "))
                         .andExpect(status().isOk())
                         .andReturn();
 
-                verify(rosterStudentRepository).findById(eq(1L));
-                verify(rosterStudentRepository).save(any(RosterStudent.class));
+                ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+                verify(rosterStudentRepository).save(captor.capture());
+                RosterStudent saved = captor.getValue();
+                assertEquals("New", saved.getFirstName());
+                assertEquals("NewName", saved.getLastName());
+                assertEquals("A123456", saved.getStudentId());
 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(updatedStudent);
@@ -910,7 +915,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 RosterStudent existingStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("Old")
-                        .lastName("Name")
+                        .lastName("OldName")
                         .studentId("A123456")
                         .email("old@ucsb.edu")
                         .course(course1)
@@ -921,7 +926,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 RosterStudent updatedStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("New")
-                        .lastName("Name")
+                        .lastName("NewName")
                         .studentId("A999999") 
                         .email("old@ucsb.edu")
                         .course(course1)
@@ -937,15 +942,18 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 MvcResult response = mockMvc.perform(put("/api/rosterstudents/update")
                         .with(csrf())
                         .param("id", "1")
-                        .param("firstName", "New")
-                        .param("lastName", "Name")
-                        .param("studentId", "A999999"))
+                        .param("firstName", "   New   ")
+                        .param("lastName", "   NewName   ")
+                        .param("studentId", "   A999999   "))
                         .andExpect(status().isOk())
                         .andReturn();
 
-                verify(rosterStudentRepository).findById(eq(1L));
-                verify(rosterStudentRepository).findByCourseIdAndStudentId(eq(1L), eq("A999999"));
-                verify(rosterStudentRepository).save(any(RosterStudent.class));
+                ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+                verify(rosterStudentRepository).save(captor.capture());
+                RosterStudent saved = captor.getValue();
+                assertEquals("New", saved.getFirstName());
+                assertEquals("NewName", saved.getLastName());
+                assertEquals("A999999", saved.getStudentId());
 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(updatedStudent);
@@ -958,7 +966,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 RosterStudent existingStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("Old")
-                        .lastName("Name")
+                        .lastName("OldName")
                         .studentId("A123456")
                         .email("old@ucsb.edu")
                         .course(course1)
@@ -969,7 +977,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 RosterStudent updatedStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("New")
-                        .lastName("Name")
+                        .lastName("NewName")
                         .studentId("A123456")
                         .email("old@ucsb.edu")
                         .course(course1)
@@ -984,14 +992,17 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .with(csrf())
                         .param("id", "1")
                         .param("firstName", "  New  ")
-                        .param("lastName", "  Name  ")
+                        .param("lastName", "  NewName  ")
                         .param("studentId", "  A123456  "))
                         .andExpect(status().isOk())
                         .andReturn();
 
-                verify(rosterStudentRepository).findById(eq(1L));
-                verify(rosterStudentRepository, never()).findByCourseIdAndStudentId(any(), any());
-                verify(rosterStudentRepository).save(any(RosterStudent.class));
+                ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+                verify(rosterStudentRepository).save(captor.capture());
+                RosterStudent saved = captor.getValue();
+                assertEquals("New", saved.getFirstName());
+                assertEquals("NewName", saved.getLastName());
+                assertEquals("A123456", saved.getStudentId());
 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(updatedStudent);
