@@ -8,6 +8,10 @@ const columns = [
     accessor: "id", // accessor is the "key" in the data
   },
   {
+    Header: "Student ID",
+    accessor: "studentId",
+  },
+  {
     Header: "First Name",
     accessor: "firstName",
   },
