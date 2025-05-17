@@ -24,6 +24,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -245,7 +247,7 @@ public class RosterStudentsController extends ApiController {
         
         if(firstName == null || lastName == null || studentId == null ||
             firstName.trim().isEmpty() || lastName.trim().isEmpty() || studentId.trim().isEmpty()){
-            throw new IllegalArgumentException("Required fields cannot be empty");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Required fields cannot be empty");
         }
 
         RosterStudent rosterStudent = rosterStudentRepository.findById(id)
@@ -255,7 +257,7 @@ public class RosterStudentsController extends ApiController {
             Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(
                     rosterStudent.getCourse().getId(), studentId.trim());
             if (existingStudent.isPresent()){
-                throw new IllegalArgumentException("Student ID already exists in this course");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Student ID already exists in this course");
             }
         }
 

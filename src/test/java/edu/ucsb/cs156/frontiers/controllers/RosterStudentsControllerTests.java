@@ -49,20 +49,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import org.springframework.http.MediaType;
 import org.mockito.ArgumentCaptor;
 
-@ControllerAdvice
-class GlobalExceptionHandler {
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        Map<String, String> response = Map.of(
-            "type", "IllegalArgumentException",
-            "message", ex.getMessage()
-        );
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-}
-
 @Slf4j
-@WebMvcTest(controllers = {RosterStudentsController.class, GlobalExceptionHandler.class})
+@WebMvcTest(controllers = {RosterStudentsController.class})
 @AutoConfigureDataJpa
 public class RosterStudentsControllerTests extends ControllerTestCase {
 
@@ -762,12 +750,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 
         @Test
@@ -825,7 +809,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 RosterStudent existingStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("Old")
-                        .lastName("Name")
+                        .lastName("OldName")
                         .studentId("A123456")
                         .email("old@ucsb.edu")
                         .course(course1)
@@ -852,7 +836,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .with(csrf())
                         .param("id", "1")
                         .param("firstName", "New")
-                        .param("lastName", "Name")
+                        .param("lastName", "NewName")
                         .param("studentId", "A789012"))
                         .andExpect(status().isBadRequest())
                         .andReturn();
@@ -861,12 +845,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository).findByCourseIdAndStudentId(eq(1L), eq("A789012"));
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Student ID already exists in this course");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Student ID already exists in this course", responseString);
         }
 
         @Test
@@ -1023,12 +1003,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 
         @Test
@@ -1045,12 +1021,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 
         @Test
@@ -1067,12 +1039,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 
         @Test
@@ -1089,12 +1057,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 
         @Test
@@ -1112,12 +1076,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 
         @Test
@@ -1135,12 +1095,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 
         @Test
@@ -1158,11 +1114,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                        "type", "IllegalArgumentException",
-                        "message", "Required fields cannot be empty");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Required fields cannot be empty", responseString);
         }
 }
