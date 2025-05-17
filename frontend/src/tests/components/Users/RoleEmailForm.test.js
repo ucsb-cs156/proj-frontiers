@@ -16,9 +16,7 @@ jest.mock("react-router-dom", () => ({
 describe("RoleEmailForm tests", () => {
   const queryClient = new QueryClient();
 
-  const expectedHeaders = [
-    "Email"
-  ];
+  const expectedHeaders = ["Email"];
   const testId = "RoleEmailForm";
 
   test("renders correctly with no initialContents", async () => {
@@ -58,7 +56,9 @@ describe("RoleEmailForm tests", () => {
 
     expect(await screen.findByTestId(`${testId}-email`)).toBeInTheDocument();
     expect(screen.getByText("Email")).toBeInTheDocument();
-    expect(screen.getByTestId(`${testId}-email`)).toHaveValue("joegaucho@ucsb.edu");
+    expect(screen.getByTestId(`${testId}-email`)).toHaveValue(
+      "joegaucho@ucsb.edu",
+    );
 
     const submitButton = await screen.findByTestId(`${testId}-submit`);
     expect(submitButton).toBeInTheDocument();

@@ -24,8 +24,7 @@ Create.args = {
 export const Update = Template.bind({});
 
 Update.args = {
-  initialContents:
-    roleEmailFormFixtures.oneRoleEmailForm,
+  initialContents: roleEmailFormFixtures.oneRoleEmailForm,
   buttonLabel: "Update",
   submitAction: (data) => {
     console.log("Submit was clicked with data: ", data);
