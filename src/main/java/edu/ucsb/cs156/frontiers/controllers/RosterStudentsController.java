@@ -90,7 +90,7 @@ public class RosterStudentsController extends ApiController {
             @Parameter(name = "firstName") @RequestParam String firstName,
             @Parameter(name = "lastName") @RequestParam String lastName,
             @Parameter(name = "email") @RequestParam String email,
-            @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException {
+            @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException, ResponseStatusException {
 
         // Get Course or else throw an error
 
@@ -121,9 +121,9 @@ public class RosterStudentsController extends ApiController {
     @PutMapping("/update")
     public RosterStudent updateRosterStudent(
         @Parameter(name = "id") @RequestParam Long id,
-        @Parameter(name = "Updated First Name") @RequestParam String firstName,
-        @Parameter(name = "Updated Last Name") @RequestParam String lastName,
-        @Parameter(name = "Updated Student Id") @RequestParam String studentId) throws EntityNotFoundException, ResponseStatusException {
+        @Parameter(name = "firstName") @RequestParam String firstName,
+        @Parameter(name = "lastName") @RequestParam String lastName,
+        @Parameter(name = "studentId") @RequestParam String studentId) throws EntityNotFoundException, ResponseStatusException {
 
     RosterStudent rosterStudent = rosterStudentRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
