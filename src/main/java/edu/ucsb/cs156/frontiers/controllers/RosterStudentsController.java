@@ -115,7 +115,6 @@ public class RosterStudentsController extends ApiController {
     @Operation(summary = "Delete a roster student")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("")
-    // @Transactional
     public Object deleteRosterStudent(
             @Parameter(name="id") @RequestParam Long id) {
         RosterStudent rosterStudent = rosterStudentRepository.findById(id)
