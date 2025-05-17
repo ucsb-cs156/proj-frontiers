@@ -116,6 +116,12 @@ public class RosterStudentsController extends ApiController {
         return savedRosterStudent;
     }
 
+    /**
+     * This method updates a RosterStudent.
+     * 
+     * 
+     * @return the updated RosterStudent
+     */
     @Operation(summary = "Update a Roster Student")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/update")
@@ -131,8 +137,10 @@ public class RosterStudentsController extends ApiController {
     Long courseId = rosterStudent.getCourse().getId();
 
     Optional<RosterStudent> existing = rosterStudentRepository.findByCourseIdAndStudentId(courseId, studentId);
-    if (existing.isPresent() && !existing.get().getId().equals(id)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Another student in this course already has that student ID.");
+    if (existing.isPresent()) {
+        if (!existing.get().getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Another student in this course already has student ID " + studentId + ".");
+        }
     }
 
     rosterStudent.setFirstName(firstName);
