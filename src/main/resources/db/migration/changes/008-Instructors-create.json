@@ -2,8 +2,8 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "Instructor-1",
-        "author": "wsong",
+        "id": "008-Instructors-create",
+        "author": "Wendy192837",
         "preConditions": [
           { "onFail": "MARK_RAN" },
           {
