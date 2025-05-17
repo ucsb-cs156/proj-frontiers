@@ -28,18 +28,25 @@ jobs:
 
           # Poll GitHub API until all checks are completed
           while true; do
-            statuses=$(gh api "repos/$repo/pulls/$pr_number" --jq '.head.sha' | \
-              xargs -I {} gh api "repos/$repo/commits/{}/check-runs" --jq '.check_runs')
-            state=$(echo "$statuses" | jq '[.[] | select(.name != "Require All Checks Pass")] | all(.status == "completed")')
+            raw_data1=$(gh api "repos/$repo/pulls/$pr_number")
+            # echo "raw_data=$raw_data1"
+            head_sha=$(echo $raw_data1 | jq -r '.head.sha' --)
+            # echo "head_sha=$head_sha"
+            statuses=$(gh api "repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' )
+            # echo "statuses=$statuses"
+            statuses_summarized=$(echo "$statuses" | jq '[.[] | select(.name != "enforce")] | map({name: .name, status: .status, conclusion: .conclusion})')
+            echo "statuses_summarized=$statuses_summarized"
+            state=$( echo $statuses_summarized | jq  'all(.[]; .status == "completed")')
+            echo "state=$state"
             if [[ "$state" == "true" ]]; then
               break
             fi
             echo "Waiting for other checks to complete..."
-            sleep 10
+            sleep 60
           done
 
           # Check if any of the other checks failed
-          failed=$(echo "$statuses" | jq '[.[] | select(.name != "Require All Checks Pass" and .conclusion != "success")] | length')
+          failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .conclusion != "success")] | length')
           if [ "$failed" -gt 0 ]; then
             echo "Some required checks failed."
             exit 1
