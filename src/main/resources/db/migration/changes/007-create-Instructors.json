@@ -2,8 +2,8 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "Instructor-1",
-        "author": "shawnz",
+        "id": "007-create-Instructors",
+        "author": "yxz29315",
         "preConditions": [
           { "onFail": "MARK_RAN" },
           { "not": [ { "tableExists": { "tableName": "INSTRUCTORS" } } ] }
