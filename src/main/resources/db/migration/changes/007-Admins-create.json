@@ -1,8 +1,8 @@
 { "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "Admins-1",
-        "author": "YourName",
+        "id": "007-Admins-create",
+        "author": "aaasami",
         "preConditions": [
           {
             "onFail": "MARK_RAN"
