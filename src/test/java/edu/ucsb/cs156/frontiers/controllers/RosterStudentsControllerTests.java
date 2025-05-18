@@ -27,7 +27,6 @@ import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -97,7 +96,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .rosterStatus(RosterStatus.ROSTER)
                         .orgStatus(OrgStatus.NONE)
                         .build();
-
         /**
          * Test the POST endpoint
          */
@@ -446,13 +444,56 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         public void notFound() throws Exception {
                 doReturn(Optional.empty()).when(courseRepository).findById(eq(2L));
                 MvcResult response = mockMvc.perform(post("/api/rosterstudents/updateCourseMembership")
-                                .with(csrf())
-                                .param("courseId", "2")
-                        ).andExpect(status().isNotFound())
+                .with(csrf())
+                .param("courseId", "2")
+                ).andExpect(status().isNotFound())
                         .andReturn();
-                Map<String, Object> json = responseToJson(response);
+                        Map<String, Object> json = responseToJson(response);
                 assertEquals("EntityNotFoundException", json.get("type"));
                 assertEquals("Course with id 2 not found", json.get("message"));
+        }
+
+        /*
+         * Test the DELETE endpoint
+         */
+        
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_can_delete_a_rosterstudent() throws Exception {
+                when(rosterStudentRepository.findById(eq(15L))).thenReturn(Optional.of(rs1));
+
+                // act
+                MvcResult response2 = mockMvc.perform(
+                                delete("/api/rosterstudents?id=15")
+                                                .with(csrf()))
+                                .andExpect(status().isOk()).andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(15L);
+                verify(rosterStudentRepository, times(1)).delete(any());
+
+                Map<String, Object> json2 = responseToJson(response2);
+                assertEquals("RosterStudent with id 15 deleted", json2.get("message"));
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_tries_to_delete_non_existant_rosterstudent_and_gets_right_error_message()
+                throws Exception {
+                // arrange
+
+                when(rosterStudentRepository.findById(eq(15L))).thenReturn(Optional.empty());
+
+                // act
+                MvcResult response = mockMvc.perform(
+                                delete("/api/rosterstudents?id=15")
+                                                .with(csrf()))
+                                .andExpect(status().isNotFound()).andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(15L);
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("RosterStudent with id 15 not found", json.get("message"));
         }
 
         /**
