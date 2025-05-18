@@ -32,8 +32,10 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.InvalidRequestException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.dto.RosterStudentUpdateDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
+
+import jakarta.validation.Valid;
 
 @Tag(name = "RosterStudents")
 @RequestMapping("/api/rosterstudents")
@@ -118,6 +122,36 @@ public class RosterStudentsController extends ApiController {
         courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
         Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
         return rosterStudents;
+    }
+
+    /**
+     * This method updates a student from a list of roster students.
+     * 
+     * @param id       id of the student object
+     * @param incoming the new student
+     * @return the updated student object.
+     */
+    @Operation(summary= "Update a roster student")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping("/updateStudent")
+    public RosterStudent updateRosterStudent(
+            @Parameter(name="id") @RequestParam Long id,
+            @RequestBody @Valid RosterStudentUpdateDTO incoming) {
+
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        Optional<RosterStudent> duplicate = rosterStudentRepository.findByStudentId(incoming.getStudentId());
+        if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
+            throw new InvalidRequestException("studentId " + incoming.getStudentId() + " already exists");
+        }
+        rosterStudent.setFirstName(incoming.getFirstName());
+        rosterStudent.setLastName(incoming.getLastName());
+        rosterStudent.setStudentId(incoming.getStudentId());
+
+        rosterStudentRepository.save(rosterStudent);
+
+        return rosterStudent;
     }
 
     @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
