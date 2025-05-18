@@ -99,7 +99,7 @@ public class RosterStudentsController extends ApiController {
 
         Optional<RosterStudent> existing = rosterStudentRepository.findByCourseIdAndStudentId(courseId, studentId);
         if (existing.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Another student in this course already has that student ID.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Another student in this course already has student ID " + studentId + ".");
         }
 
         RosterStudent rosterStudent = RosterStudent.builder()

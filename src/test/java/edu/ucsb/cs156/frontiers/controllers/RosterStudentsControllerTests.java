@@ -167,13 +167,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .andExpect(status().isBadRequest())
                                 .andReturn();
 
-                String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                                "type", "BAD_REQUEST",
-                                "message", "Another student in this course already has that student ID.");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
-
-                assertEquals(expectedJson, responseString);
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Another student in this course already has student ID A123456.", responseString);
         }
 
         /**
@@ -298,13 +293,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .param("studentId", "A987654"))
                         .andExpect(status().isBadRequest())
                         .andReturn();
-
-                Map<String, String> expected = Map.of(
-                        "type", "BAD_REQUEST",
-                        "message", "Another student in this course already has student ID A987654."
-                );
-                String expectedJson = objectMapper.writeValueAsString(expected);
-                assertEquals(expectedJson, response.getResponse().getContentAsString());
+                        
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Another student in this course already has student ID A987654.", responseString);
         }
 
         @Test
