@@ -20,9 +20,16 @@ import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.ArrayList;
+
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +44,12 @@ public class CoursesController extends ApiController {
     
     @Autowired
     private CourseRepository courseRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RosterStudentRepository rosterStudentRepository;
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -152,5 +165,30 @@ public class CoursesController extends ApiController {
         );
     }
 
+    /**
+     * student see what courses they appear on roster of
+     * 
+     * @param studentId the id of the student making request
+     * @return a list of all courses student is in
+     */
+    @Operation(summary= "Student see what courses they appear on roster of")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/studentCourses") 
+    public Iterable<Course> studentCourses() {
+        CurrentUser currentUser = getCurrentUser();
+        User user = currentUser.getUser();
+
+        String email = user.getEmail();
+
+        Iterable<RosterStudent> rosters = rosterStudentRepository.findAllByEmail(email);
+        
+        List<Long> courseIds = new ArrayList<>();
+        for (RosterStudent roster : rosters) {
+            courseIds.add(roster.getCourse().getId());
+        }
+
+        Iterable<Course> courses = courseRepository.findAllById(courseIds);
+        return courses;
+    }
 
 }
