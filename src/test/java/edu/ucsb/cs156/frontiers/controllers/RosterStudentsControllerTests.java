@@ -1,29 +1,55 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
-import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.Captor;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.mockito.Mockito.*;
@@ -67,6 +93,14 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Autowired
         private ObjectMapper objectMapper;
+
+        @Captor
+        private ArgumentCaptor<RosterStudent> captor;
+
+        @BeforeEach
+        public void setUp() {
+                MockitoAnnotations.openMocks(this);
+        }
 
         Course course1 = Course.builder()
                         .id(1L)
@@ -127,6 +161,191 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(rs1);
                 assertEquals(expectedJson, responseString);
 
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testPostDuplicateRosterStudentFails() throws Exception {
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+                when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456"))).thenReturn(Optional.of(rs1));
+
+                // act
+
+                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
+                                .with(csrf())
+                                .param("studentId", "A123456")
+                                .param("firstName", "Chris")
+                                .param("lastName", "Gaucho")
+                                .param("email", "cgaucho@example.org")
+                                .param("courseId", "1"))
+                                .andExpect(status().isBadRequest())
+                                .andReturn();
+
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Another student in this course already has student ID A123456.", responseString);
+        }
+
+        /**
+         * Test the UPDATE endpoint
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateRosterStudent() throws Exception {
+                rs1.setId(1L);
+            
+                when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(rs1));
+            
+                RosterStudent rsUpdated = RosterStudent.builder()
+                    .id(1L)
+                    .firstName("Updated")
+                    .lastName("Name")
+                    .studentId("A999999")
+                    .email("cgaucho@example.org")
+                    .course(course1)
+                    .rosterStatus(RosterStatus.MANUAL)
+                    .orgStatus(OrgStatus.NONE)
+                    .build();
+            
+                when(rosterStudentRepository.findByCourseIdAndStudentId(1L, "A123456")).thenReturn(Optional.of(rs1));
+                when(rosterStudentRepository.save(any())).thenReturn(rsUpdated);
+            
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/update")
+                        .with(csrf())
+                        .param("id", "1")
+                        .param("firstName", "Updated")
+                        .param("lastName", "Name")
+                        .param("studentId", "A999999"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).save(captor.capture());
+                RosterStudent saved = captor.getValue();
+                assertEquals("Updated", saved.getFirstName());
+                assertEquals("Name", saved.getLastName());
+                assertEquals("A999999", saved.getStudentId());
+            
+                String expectedJson = objectMapper.writeValueAsString(rsUpdated);
+                String responseString = response.getResponse().getContentAsString();
+                assertEquals(expectedJson, responseString);
+                RosterStudent returned = objectMapper.readValue(responseString, RosterStudent.class);
+                assertEquals("Updated", returned.getFirstName());
+                assertEquals("Name", returned.getLastName());
+                assertEquals("A999999", returned.getStudentId());
+
+                rs2.setId(2L);
+            
+                when(rosterStudentRepository.findById(2L)).thenReturn(Optional.of(rs2));
+            
+                RosterStudent rsUpdated2 = RosterStudent.builder()
+                        .id(2L)
+                        .firstName("Updated")
+                        .lastName("Name")
+                        .studentId("A987654")
+                        .email("ldelplaya@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .build();
+            
+                when(rosterStudentRepository.findByCourseIdAndStudentId(2L, "A987654")).thenReturn(Optional.of(rs2));
+                when(rosterStudentRepository.save(any())).thenReturn(rsUpdated2);
+            
+                MvcResult response2 = mockMvc.perform(put("/api/rosterstudents/update")
+                        .with(csrf())
+                        .param("id", "2")
+                        .param("firstName", "Updated")
+                        .param("lastName", "Name")
+                        .param("studentId", "A987654"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                String expectedJson2 = objectMapper.writeValueAsString(rsUpdated2);
+                String responseString2 = response2.getResponse().getContentAsString();
+                assertEquals(expectedJson2, responseString2);
+                RosterStudent returned2 = objectMapper.readValue(responseString2, RosterStudent.class);
+                assertEquals("Updated", returned2.getFirstName());
+                assertEquals("Name", returned2.getLastName());
+                assertEquals("A987654", returned2.getStudentId());
+        }
+        
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateRosterStudentDoesNotExist() throws Exception {
+                when(rosterStudentRepository.findById(1L)).thenReturn(Optional.empty());
+
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/update")
+                        .with(csrf())
+                        .param("id", "1")
+                        .param("firstName", "Updated")
+                        .param("lastName", "Name")
+                        .param("studentId", "A123456"))
+                        .andExpect(status().isNotFound())
+                .andReturn();
+
+                Map<String, String> expected = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "RosterStudent with id 1 not found"
+                );
+                String expectedJson = objectMapper.writeValueAsString(expected);
+                assertEquals(expectedJson, response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateRosterStudentDuplicateStudentId() throws Exception {
+                rs1.setId(1L);
+                rs2.setId(2L);
+
+                when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(rs1));
+                when(rosterStudentRepository.findByCourseIdAndStudentId(1L, "A987654")).thenReturn(Optional.of(rs2));
+
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/update")
+                        .with(csrf())
+                        .param("id", "1")
+                        .param("firstName", "Updated")
+                        .param("lastName", "Name")
+                        .param("studentId", "A987654"))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+                        
+                String responseString = response.getResponse().getErrorMessage();
+                assertEquals("Another student in this course already has student ID A987654.", responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateRosterStudentSameStudentIdSameStudent() throws Exception {
+                rs1.setId(1L);
+
+                when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(rs1));
+                when(rosterStudentRepository.findByCourseIdAndStudentId(1L, "A123456")).thenReturn(Optional.of(rs1));
+
+                RosterStudent rsUpdated = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("ChrisUpdated")
+                        .lastName("GauchoUpdated")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .build();
+
+                when(rosterStudentRepository.save(any())).thenReturn(rsUpdated);
+
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/update")
+                        .with(csrf())
+                        .param("id", "1")
+                        .param("firstName", "ChrisUpdated")
+                        .param("lastName", "GauchoUpdated")
+                        .param("studentId", "A123456"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                String expectedJson = objectMapper.writeValueAsString(rsUpdated);
+                String responseString = response.getResponse().getContentAsString();
+                assertEquals(expectedJson, responseString);
         }
 
         /**
