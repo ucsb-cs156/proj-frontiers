@@ -78,4 +78,75 @@ describe("RoleEmailForm tests", () => {
       ).toBeInTheDocument();
     });
   });
+
+  test("shows error on invalid email with partial valid email", async () => {
+    const mockSubmit = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <RoleEmailForm submitAction={mockSubmit} />
+        </Router>
+      </QueryClientProvider>
+    );
+
+    const testInput = screen.getByTestId(`${testId}-email`);
+    const submitButton = screen.getByRole("button", { name: /Add Email/i });
+
+    fireEvent.change(testInput, { target: { value: "valid@email.com invalid" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Please enter a valid email address./i)).toBeInTheDocument();
+    });
+
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+
+  test("shows error on invalid email", async () => {
+    const mockSubmit = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <RoleEmailForm submitAction={mockSubmit} />
+        </Router>
+      </QueryClientProvider>
+    );
+
+    const testInput = screen.getByTestId(`${testId}-email`);
+    const submitButton = screen.getByRole("button", { name: /Add Email/i });
+
+    fireEvent.change(testInput, { target: { value: "invalid email@ucsb.edu" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Please enter a valid email address./i)).toBeInTheDocument();
+    });
+
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+  
+  test("does not show error on valid email and submits", async () => {
+    const mockSubmit = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <RoleEmailForm submitAction={mockSubmit} />
+        </Router>
+      </QueryClientProvider>
+    );
+
+    const input = screen.getByLabelText(/email/i);
+    const submitButton = screen.getByRole("button", { name: /add email/i });
+
+    fireEvent.change(input, { target: { value: "user@ucsb.com" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockSubmit).toHaveBeenCalled();
+    });
+  });
+
 });
