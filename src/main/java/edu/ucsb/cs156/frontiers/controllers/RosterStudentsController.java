@@ -131,24 +131,43 @@ public class RosterStudentsController extends ApiController {
         @Parameter(name = "lastName") @RequestParam String lastName,
         @Parameter(name = "studentId") @RequestParam String studentId) throws EntityNotFoundException, ResponseStatusException {
 
-    RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
 
-    Long courseId = rosterStudent.getCourse().getId();
+        Long courseId = rosterStudent.getCourse().getId();
 
-    Optional<RosterStudent> existing = rosterStudentRepository.findByCourseIdAndStudentId(courseId, studentId);
-    if (existing.isPresent()) {
-        if (!existing.get().getId().equals(id)) {
+        Optional<RosterStudent> existing = rosterStudentRepository.findByCourseIdAndStudentId(courseId, studentId);
+        if (existing.isPresent()) {
+          if (!existing.get().getId().equals(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Another student in this course already has student ID " + studentId + ".");
+          }
         }
+
+        rosterStudent.setFirstName(firstName);
+        rosterStudent.setLastName(lastName);
+        rosterStudent.setStudentId(studentId);
+
+        return rosterStudentRepository.save(rosterStudent);
     }
 
-    rosterStudent.setFirstName(firstName);
-    rosterStudent.setLastName(lastName);
-    rosterStudent.setStudentId(studentId);
+    /*  
+     * This method deletes an existing RosterStudent.
+     * 
+     * @param id the id of the roster student to delete
+     * @return a message indicating the RosterStudent was deleted
+     */
 
-    return rosterStudentRepository.save(rosterStudent);
-}
+    @Operation(summary = "Delete a roster student")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("")
+    public Object deleteRosterStudent(
+            @Parameter(name="id") @RequestParam Long id) {
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        rosterStudentRepository.delete(rosterStudent);
+        return genericMessage("RosterStudent with id %s deleted".formatted(id));
+    }
 
     /**
      * This method returns a list of roster students for a given course.
