@@ -2,7 +2,7 @@ import React from "react";
 import RoleEmailForm from "main/components/Users/RoleEmailForm";
 
 export default {
-  title: "components/RoleEmail/RoleEmailForm",
+  title: "components/Users/RoleEmailForm",
   component: RoleEmailForm,
 };
 
