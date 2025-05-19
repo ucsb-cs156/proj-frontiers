@@ -188,6 +188,7 @@ public class CoursesController extends ApiController {
 
             matchedCourses.add(courseInfo);
         }
+        
         return matchedCourses;
     }
 }

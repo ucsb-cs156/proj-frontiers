@@ -340,13 +340,6 @@ public class CoursesControllerTests extends ControllerTestCase {
                 .rosterStatus(RosterStatus.MANUAL)
                 .orgStatus(OrgStatus.NONE)
                 .build();
-
-        RosterStudent rs2 = RosterStudent.builder()
-                .email("test@example.org")
-                .course(course)
-                .rosterStatus(RosterStatus.MANUAL)
-                .orgStatus(OrgStatus.NONE)
-                .build();
         
         when(courseRepository.findAll()).thenReturn(List.of(course, course2));
         when(rosterStudentRepository.findAllByEmail("cgaucho@example.org")).thenReturn(List.of(rs1));
