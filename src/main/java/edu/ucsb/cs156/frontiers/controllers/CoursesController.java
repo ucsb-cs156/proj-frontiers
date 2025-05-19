@@ -2,6 +2,8 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -30,6 +33,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.*; 
 
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
@@ -154,5 +159,114 @@ public class CoursesController extends ApiController {
         );
     }
 
+    @Operation(summary = "Student can see what courses they appear on roster of and their status in each")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/lookup")
+    public List<Map<String, Object>> lookUpStudentCourseRoster() 
+    {
+        CurrentUser currentUser = getCurrentUser();
+        String studentEmail = currentUser.getUser().getEmail();
+
+        Iterable<Course> allCourses = courseRepository.findAll();
+        List<Map<String, Object>> matchedCourses = new ArrayList<>();
+
+        for (Course course : allCourses) 
+        {
+            for (RosterStudent rs : course.getRosterStudents()) 
+            {
+                if (rs.getEmail().equals(studentEmail)) 
+                {
+                    Map<String, Object> courseInfo = new HashMap<>();
+                    courseInfo.put("id", course.getId());
+                    courseInfo.put("orgName", course.getOrgName());
+                    courseInfo.put("courseName", course.getCourseName());
+                    courseInfo.put("term", course.getTerm());
+                    courseInfo.put("school", course.getSchool());
+
+                    // String installation_id = course.getInstallationId(); 
+                    // if(installation_id == null)
+                    // {
+                    //     installation_id = "setup in progress"; 
+                    // }
+                    // else 
+                    // {
+                    //     installation_id = "joinable"; 
+                    // }
+                    courseInfo.put("installationId", course.getInstallationId());
+
+                    // String status = ""; 
+                    // if (rs.getOrgStatus() != null)
+                    // {
+                    //     status = rs.getOrgStatus().name(); 
+                    //     if (status.equals("NONE"))
+                    //     {
+                    //         status = "Not yet requested"; 
+                    //     }
+                    // } 
+                    courseInfo.put("status", rs.getOrgStatus().name()); 
+
+                    matchedCourses.add(courseInfo);
+                    break; 
+                }
+            }
+        }
+
+        return matchedCourses;
+    }
+
+    // @Operation(summary = "Student can see what courses they appear on roster of and their status in each")
+    // @PreAuthorize("hasRole('ROLE_USER')")
+    // @GetMapping("/lookup")
+    // public List<Map<String, Object>> lookUpStaffCourseRoster() 
+    // {
+    //     CurrentUser currentUser = getCurrentUser();
+    //     String studentEmail = currentUser.getUser().getEmail();
+
+    //     Iterable<Course> allCourses = courseRepository.findAll();
+    //     List<Map<String, Object>> matchedCourses = new ArrayList<>();
+
+    //     for (Course course : allCourses) 
+    //     {
+    //         for (RosterStudent rs : course.getRosterStudents()) 
+    //         {
+    //             if (rs.getEmail().equals(studentEmail)) 
+    //             {
+    //                 Map<String, Object> courseInfo = new HashMap<>();
+    //                 courseInfo.put("id", course.getId());
+    //                 courseInfo.put("orgName", course.getOrgName());
+    //                 courseInfo.put("courseName", course.getCourseName());
+    //                 courseInfo.put("term", course.getTerm());
+    //                 courseInfo.put("school", course.getSchool());
+
+    //                 String installation_id = course.getInstallationId(); 
+    //                 if(installation_id == null)
+    //                 {
+    //                     installation_id = "setup in progress"; 
+    //                 }
+    //                 else 
+    //                 {
+    //                     installation_id = "joinable"; 
+    //                 }
+    //                 courseInfo.put("installationId", installation_id);
+
+    //                 String status = ""; 
+    //                 if (rs.getOrgStatus() != null)
+    //                 {
+    //                     status = rs.getOrgStatus().name(); 
+    //                     if (status.equals("NONE"))
+    //                     {
+    //                         status = "Not yet requested"; 
+    //                     }
+    //                 } 
+    //                 courseInfo.put("status", status); 
+
+    //                 matchedCourses.add(courseInfo);
+    //                 break; 
+    //             }
+    //         }
+    //     }
+
+    //     return matchedCourses;
+    // }
 
 }
