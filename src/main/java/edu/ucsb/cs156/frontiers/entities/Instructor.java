@@ -3,13 +3,15 @@ package edu.ucsb.cs156.frontiers.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Entity
 @Builder
-@Table(name = "admins")
-public class Admin {
+@Entity
+@Table(name = "instructors")
+public class Instructor {
+
     @Id
     private String email;
+
 }
