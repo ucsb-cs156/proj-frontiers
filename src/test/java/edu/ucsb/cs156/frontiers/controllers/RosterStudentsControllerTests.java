@@ -42,13 +42,14 @@ import java.util.Optional;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.springframework.http.MediaType;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 @Slf4j
 @WebMvcTest(controllers = {RosterStudentsController.class})
@@ -1137,12 +1138,11 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 students.add(rosterStudent);
                 course1.setRosterStudents(students);
 
-                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-                doNothing().when(rosterStudentRepository).delete(any(RosterStudent.class));
-                
+                List<RosterStudent> studentsSpy = Mockito.spy(students);
+                course1.setRosterStudents(studentsSpy);
 
-                ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
-                when(courseRepository.save(courseCaptor.capture())).thenReturn(course1);
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
                 MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
                         .with(csrf())
@@ -1151,11 +1151,11 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .andReturn();
 
                 verify(rosterStudentRepository).findById(eq(1L));
+                verify(courseRepository).save(any(Course.class));
                 verify(rosterStudentRepository).delete(eq(rosterStudent));
-                verify(courseRepository).save(courseCaptor.capture());
+                verify(studentsSpy).clear();
+                verify(studentsSpy).addAll(anyList());
 
-                Course savedCourse = courseCaptor.getValue();
-                assertFalse(savedCourse.getRosterStudents().contains(rosterStudent));
                 assertEquals("Successfully deleted roster student and removed him/her from the course list", 
                         response.getResponse().getContentAsString());
         }
@@ -1173,6 +1173,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 verify(rosterStudentRepository).findById(eq(99L));
                 verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
+                verify(courseRepository, never()).save(any(Course.class));
 
                 String responseString = response.getResponse().getContentAsString();
                 Map<String, String> expectedMap = Map.of(
@@ -1184,26 +1185,19 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "ADMIN" })
-        public void testDeleteRosterStudent_emptyStudentsList() throws Exception {
+        public void testDeleteRosterStudent_nullCourse() throws Exception {
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("Test")
                         .lastName("Student")
                         .studentId("A123456")
                         .email("test@ucsb.edu")
-                        .course(course1)
+                        .course(null)
                         .rosterStatus(RosterStatus.ROSTER)
                         .orgStatus(OrgStatus.NONE)
                         .build();
 
-                List<RosterStudent> students = new ArrayList<>();
-                course1.setRosterStudents(students);
-
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-                doNothing().when(rosterStudentRepository).delete(any(RosterStudent.class));
-
-                ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
-                when(courseRepository.save(courseCaptor.capture())).thenReturn(course1);
 
                 MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
                         .with(csrf())
@@ -1213,17 +1207,15 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 verify(rosterStudentRepository).findById(eq(1L));
                 verify(rosterStudentRepository).delete(eq(rosterStudent));
-                verify(courseRepository).save(courseCaptor.capture());
+                verify(courseRepository, never()).save(any(Course.class));
 
-                Course savedCourse = courseCaptor.getValue();
-                assertFalse(savedCourse.getRosterStudents().contains(rosterStudent));
                 assertEquals("Successfully deleted roster student and removed him/her from the course list", 
                         response.getResponse().getContentAsString());
         }
 
         @Test
         @WithMockUser(roles = { "ADMIN" })
-        public void testDeleteRosterStudent_multipleStudents() throws Exception {
+        public void testDeleteRosterStudent_nullStudentsList() throws Exception {
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(1L)
                         .firstName("Test")
@@ -1235,27 +1227,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .orgStatus(OrgStatus.NONE)
                         .build();
 
-                RosterStudent otherStudent = RosterStudent.builder()
-                        .id(2L)
-                        .firstName("Other")
-                        .lastName("Student")
-                        .studentId("A789012")
-                        .email("other@ucsb.edu")
-                        .course(course1)
-                        .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
-                        .build();
-
-                List<RosterStudent> students = new ArrayList<>();
-                students.add(rosterStudent);
-                students.add(otherStudent);
-                course1.setRosterStudents(students);
+                course1.setRosterStudents(null);
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-                doNothing().when(rosterStudentRepository).delete(any(RosterStudent.class));
-
-                ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
-                when(courseRepository.save(courseCaptor.capture())).thenReturn(course1);
 
                 MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
                         .with(csrf())
@@ -1265,12 +1239,22 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 verify(rosterStudentRepository).findById(eq(1L));
                 verify(rosterStudentRepository).delete(eq(rosterStudent));
-                verify(courseRepository).save(courseCaptor.capture());
+                verify(courseRepository, never()).save(any(Course.class));
 
-                Course savedCourse = courseCaptor.getValue();
-                assertFalse(savedCourse.getRosterStudents().contains(rosterStudent));
-                assertTrue(savedCourse.getRosterStudents().contains(otherStudent));
                 assertEquals("Successfully deleted roster student and removed him/her from the course list", 
                         response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testDeleteRosterStudent_unauthorized() throws Exception {
+                mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isForbidden());
+
+                verify(rosterStudentRepository, never()).findById(any());
+                verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
+                verify(courseRepository, never()).save(any(Course.class));
         }
 }

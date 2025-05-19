@@ -281,7 +281,8 @@ public class RosterStudentsController extends ApiController {
             List<RosterStudent> students = course.getRosterStudents();
             if(students != null){
                 students.remove(rosterStudent);
-                course.setRosterStudents(students);
+                course.getRosterStudents().clear();
+                course.getRosterStudents().addAll(students);
                 courseRepository.save(course);
             }
         }
