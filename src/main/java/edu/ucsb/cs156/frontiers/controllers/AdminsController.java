@@ -55,7 +55,7 @@ public class AdminsController extends ApiController{
      * @return a list of all admins
      */
     @Operation(summary= "List all Admins")
-    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/all")
     public Iterable<Admin> allAdmins() {
         Iterable<Admin> admins = adminRepository.findAll();

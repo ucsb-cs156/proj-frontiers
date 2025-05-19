@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Entity
+@Builder
 @Table(name = "admins")
 public class Admin {
     @Id
