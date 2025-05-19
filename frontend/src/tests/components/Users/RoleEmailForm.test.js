@@ -87,17 +87,21 @@ describe("RoleEmailForm tests", () => {
         <Router>
           <RoleEmailForm submitAction={mockSubmit} />
         </Router>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const testInput = screen.getByTestId(`${testId}-email`);
     const submitButton = screen.getByRole("button", { name: /Add Email/i });
 
-    fireEvent.change(testInput, { target: { value: "valid@email.com invalid" } });
+    fireEvent.change(testInput, {
+      target: { value: "valid@email.com invalid" },
+    });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Please enter a valid email address./i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Please enter a valid email address./i),
+      ).toBeInTheDocument();
     });
 
     expect(mockSubmit).not.toHaveBeenCalled();
@@ -111,22 +115,26 @@ describe("RoleEmailForm tests", () => {
         <Router>
           <RoleEmailForm submitAction={mockSubmit} />
         </Router>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const testInput = screen.getByTestId(`${testId}-email`);
     const submitButton = screen.getByRole("button", { name: /Add Email/i });
 
-    fireEvent.change(testInput, { target: { value: "invalid email@ucsb.edu" } });
+    fireEvent.change(testInput, {
+      target: { value: "invalid email@ucsb.edu" },
+    });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Please enter a valid email address./i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Please enter a valid email address./i),
+      ).toBeInTheDocument();
     });
 
     expect(mockSubmit).not.toHaveBeenCalled();
   });
-  
+
   test("does not show error on valid email and submits", async () => {
     const mockSubmit = jest.fn();
 
@@ -135,7 +143,7 @@ describe("RoleEmailForm tests", () => {
         <Router>
           <RoleEmailForm submitAction={mockSubmit} />
         </Router>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const input = screen.getByLabelText(/email/i);
@@ -148,5 +156,4 @@ describe("RoleEmailForm tests", () => {
       expect(mockSubmit).toHaveBeenCalled();
     });
   });
-
 });
