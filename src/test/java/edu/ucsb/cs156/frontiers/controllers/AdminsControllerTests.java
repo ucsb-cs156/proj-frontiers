@@ -8,6 +8,8 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -107,5 +109,62 @@ public class AdminsControllerTests extends ControllerTestCase {
         String expectedJson = mapper.writeValueAsString(expectedAdmins);
         String responseString = response.getResponse().getContentAsString();
         assertEquals(expectedJson, responseString);
+    }
+
+    @WithMockUser(roles = { "ADMIN" })
+    @Test
+    public void admin_can_delete_an_admin() throws Exception {
+            // arrange
+
+            Admin admin = Admin.builder()
+                .email("test01@ucsb.edu")
+                .build();
+
+
+            when(adminRepository.findById(eq("test01@ucsb.edu"))).thenReturn(Optional.of(admin));
+
+            // act
+            MvcResult response = mockMvc.perform(
+                    delete("/api/admins")
+                        .param("email", "test01@ucsb.edu")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+            // assert
+            verify(adminRepository, times(1)).findById("test01@ucsb.edu");
+            verify(adminRepository, times(1)).delete(any());
+
+            Map<String, Object> json = responseToJson(response);
+            assertEquals("Admin with id test01@ucsb.edu deleted", json.get("message"));
+    }
+
+    @WithMockUser(roles = { "ADMIN" })
+    @Test
+    public void admin_tries_to_delete_non_existant_admin_and_gets_right_error_message()
+                    throws Exception {
+            // arrange
+
+            when(adminRepository.findById(eq("test@ucsb.edu"))).thenReturn(Optional.empty());
+
+            // act
+            MvcResult response = mockMvc.perform(
+                            delete("/api/admins")
+                                .param("email", "test@ucsb.edu")
+                                .with(csrf()))
+                            .andExpect(status().isNotFound()).andReturn();
+
+            // assert
+            verify(adminRepository, times(1)).findById("test@ucsb.edu");
+            Map<String, Object> json = responseToJson(response);
+            assertEquals("Admin with id test@ucsb.edu not found", json.get("message"));
+    }
+
+    @Test
+    public void logged_out_users_cannot_delete() throws Exception {
+        mockMvc.perform(delete("/api/admins")
+                .param("email", "test01@ucsb.edu")
+                .with(csrf()))
+            .andExpect(status().is(403));
     }
 }
