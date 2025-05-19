@@ -28,6 +28,7 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,6 +45,9 @@ public class CoursesController extends ApiController {
     
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private RosterStudentRepository rosterStudentRepository;
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -161,112 +165,29 @@ public class CoursesController extends ApiController {
 
     @Operation(summary = "Student can see what courses they appear on roster of and their status in each")
     @PreAuthorize("hasRole('ROLE_USER')")
-    @GetMapping("/lookup")
+    @GetMapping("/student")
     public List<Map<String, Object>> lookUpStudentCourseRoster() 
     {
         CurrentUser currentUser = getCurrentUser();
         String studentEmail = currentUser.getUser().getEmail();
 
-        Iterable<Course> allCourses = courseRepository.findAll();
         List<Map<String, Object>> matchedCourses = new ArrayList<>();
+        Iterable<RosterStudent> roster = rosterStudentRepository.findAllByEmail(studentEmail); 
 
-        for (Course course : allCourses) 
+        for (RosterStudent rs : roster) 
         {
-            for (RosterStudent rs : course.getRosterStudents()) 
-            {
-                if (rs.getEmail().equals(studentEmail)) 
-                {
-                    Map<String, Object> courseInfo = new HashMap<>();
-                    courseInfo.put("id", course.getId());
-                    courseInfo.put("orgName", course.getOrgName());
-                    courseInfo.put("courseName", course.getCourseName());
-                    courseInfo.put("term", course.getTerm());
-                    courseInfo.put("school", course.getSchool());
+            Course course = rs.getCourse(); 
+            Map<String, Object> courseInfo = new HashMap<>();
+            courseInfo.put("id", course.getId());
+            courseInfo.put("orgName", course.getOrgName());
+            courseInfo.put("courseName", course.getCourseName());
+            courseInfo.put("term", course.getTerm());
+            courseInfo.put("school", course.getSchool());
+            courseInfo.put("installationId", course.getInstallationId());
+            courseInfo.put("status", rs.getOrgStatus().name()); 
 
-                    // String installation_id = course.getInstallationId(); 
-                    // if(installation_id == null)
-                    // {
-                    //     installation_id = "setup in progress"; 
-                    // }
-                    // else 
-                    // {
-                    //     installation_id = "joinable"; 
-                    // }
-                    courseInfo.put("installationId", course.getInstallationId());
-
-                    // String status = ""; 
-                    // if (rs.getOrgStatus() != null)
-                    // {
-                    //     status = rs.getOrgStatus().name(); 
-                    //     if (status.equals("NONE"))
-                    //     {
-                    //         status = "Not yet requested"; 
-                    //     }
-                    // } 
-                    courseInfo.put("status", rs.getOrgStatus().name()); 
-
-                    matchedCourses.add(courseInfo);
-                    break; 
-                }
-            }
+            matchedCourses.add(courseInfo);
         }
-
         return matchedCourses;
     }
-
-    // @Operation(summary = "Student can see what courses they appear on roster of and their status in each")
-    // @PreAuthorize("hasRole('ROLE_USER')")
-    // @GetMapping("/lookup")
-    // public List<Map<String, Object>> lookUpStaffCourseRoster() 
-    // {
-    //     CurrentUser currentUser = getCurrentUser();
-    //     String studentEmail = currentUser.getUser().getEmail();
-
-    //     Iterable<Course> allCourses = courseRepository.findAll();
-    //     List<Map<String, Object>> matchedCourses = new ArrayList<>();
-
-    //     for (Course course : allCourses) 
-    //     {
-    //         for (RosterStudent rs : course.getRosterStudents()) 
-    //         {
-    //             if (rs.getEmail().equals(studentEmail)) 
-    //             {
-    //                 Map<String, Object> courseInfo = new HashMap<>();
-    //                 courseInfo.put("id", course.getId());
-    //                 courseInfo.put("orgName", course.getOrgName());
-    //                 courseInfo.put("courseName", course.getCourseName());
-    //                 courseInfo.put("term", course.getTerm());
-    //                 courseInfo.put("school", course.getSchool());
-
-    //                 String installation_id = course.getInstallationId(); 
-    //                 if(installation_id == null)
-    //                 {
-    //                     installation_id = "setup in progress"; 
-    //                 }
-    //                 else 
-    //                 {
-    //                     installation_id = "joinable"; 
-    //                 }
-    //                 courseInfo.put("installationId", installation_id);
-
-    //                 String status = ""; 
-    //                 if (rs.getOrgStatus() != null)
-    //                 {
-    //                     status = rs.getOrgStatus().name(); 
-    //                     if (status.equals("NONE"))
-    //                     {
-    //                         status = "Not yet requested"; 
-    //                     }
-    //                 } 
-    //                 courseInfo.put("status", status); 
-
-    //                 matchedCourses.add(courseInfo);
-    //                 break; 
-    //             }
-    //         }
-    //     }
-
-    //     return matchedCourses;
-    // }
-
 }

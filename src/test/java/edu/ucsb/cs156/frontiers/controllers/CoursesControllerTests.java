@@ -27,6 +27,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,9 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     @MockitoBean
     private CourseRepository courseRepository;
+
+    @MockitoBean
+    private RosterStudentRepository rosterStudentRepository;
 
     @MockitoBean
     private CurrentUserService currentUserService;
@@ -330,26 +334,24 @@ public class CoursesControllerTests extends ControllerTestCase {
                 .build();
 
         RosterStudent rs1 = RosterStudent.builder()
-                        .user(user)
-                        .email("cgaucho@example.org")
-                        .course(course)
-                        .rosterStatus(RosterStatus.MANUAL)
-                        .orgStatus(OrgStatus.NONE)
-                        .build();
+                .user(user)
+                .email("cgaucho@example.org")
+                .course(course)
+                .rosterStatus(RosterStatus.MANUAL)
+                .orgStatus(OrgStatus.NONE)
+                .build();
 
         RosterStudent rs2 = RosterStudent.builder()
-                        .email("test@example.org")
-                        .course(course)
-                        .rosterStatus(RosterStatus.MANUAL)
-                        .orgStatus(OrgStatus.NONE)
-                        .build();
-
-        course.setRosterStudents(List.of(rs1, rs2));
-        course2.setRosterStudents(List.of(rs1));
-
+                .email("test@example.org")
+                .course(course)
+                .rosterStatus(RosterStatus.MANUAL)
+                .orgStatus(OrgStatus.NONE)
+                .build();
+        
         when(courseRepository.findAll()).thenReturn(List.of(course, course2));
+        when(rosterStudentRepository.findAllByEmail("cgaucho@example.org")).thenReturn(List.of(rs1));
 
-        MvcResult response = mockMvc.perform(get("/api/courses/lookup"))
+        MvcResult response = mockMvc.perform(get("/api/courses/student"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -362,18 +364,8 @@ public class CoursesControllerTests extends ControllerTestCase {
         expectedMap.put("school", course.getSchool());
         expectedMap.put("installationId", course.getInstallationId()); 
         expectedMap.put("status", "NONE"); 
-
-        Map<String, Object> expectedMap2 = new HashMap<>();
-        expectedMap2.put("id", course2.getId());
-        expectedMap2.put("orgName", course2.getOrgName());
-        expectedMap2.put("courseName", course2.getCourseName());
-        expectedMap2.put("term", course2.getTerm());
-        expectedMap2.put("school", course2.getSchool());
-        expectedMap2.put("installationId", course2.getInstallationId()); 
-        expectedMap2.put("status", "NONE"); 
-
-        String expectedJson = mapper.writeValueAsString(List.of(expectedMap, expectedMap2));
+        
+        String expectedJson = mapper.writeValueAsString(List.of(expectedMap));
         assertEquals(expectedJson, responseString);
     }
-
 }
