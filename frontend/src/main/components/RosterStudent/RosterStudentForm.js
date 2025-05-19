@@ -21,36 +21,21 @@ function RosterStudentForm({
 
   return (
     <Form onSubmit={handleSubmit(submitAction)}>
-      {!initialContents && (
-        <Form.Group className="mb-3">
-          <Form.Label htmlFor="studentId">Student Id</Form.Label>
-          <Form.Control
-            id="studentId"
-            type="text"
-            isInvalid={Boolean(errors.studentId)}
-            {...register("studentId", {
-              required: "Student Id is required.",
-            })}
-          />
-          <Form.Control.Feedback type="invalid">
-            {errors.studentId?.message}
-          </Form.Control.Feedback>
-        </Form.Group>
-      )}
-
-      {initialContents && (
-        <Form.Group className="mb-3">
-          <Form.Label htmlFor="studentId">Student Id</Form.Label>
-          <Form.Control
-            data-testid={testIdPrefix + "-studentId"}
-            id="studentId"
-            type="text"
-            {...register("studentId")}
-            value={initialContents.studentId}
-            disabled
-          />
-        </Form.Group>
-      )}
+      <Form.Group className="mb-3">
+        <Form.Label htmlFor="studentId">Student Id</Form.Label>
+        <Form.Control
+          data-testid={testIdPrefix + "-studentId"}
+          id="studentId"
+          type="text"
+          isInvalid={Boolean(errors.studentId)}
+          {...register("studentId", {
+            required: "Student Id is required.",
+          })}
+        />
+        <Form.Control.Feedback type="invalid">
+          {errors.studentId?.message}
+        </Form.Control.Feedback>
+      </Form.Group>
 
       <Form.Group className="mb-3">
         <Form.Label htmlFor="firstName">First Name</Form.Label>
@@ -84,21 +69,36 @@ function RosterStudentForm({
         </Form.Control.Feedback>
       </Form.Group>
 
-      <Form.Group className="mb-3">
-        <Form.Label htmlFor="email">Email</Form.Label>
-        <Form.Control
-          data-testid={testIdPrefix + "-email"}
-          id="email"
-          type="text"
-          isInvalid={Boolean(errors.email)}
-          {...register("email", {
-            required: "Email is required.",
-          })}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.email?.message}
-        </Form.Control.Feedback>
-      </Form.Group>
+      {!initialContents && (
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="email">Email</Form.Label>
+          <Form.Control
+            id="email"
+            type="text"
+            isInvalid={Boolean(errors.email)}
+            {...register("email", {
+              required: "Email is required.",
+            })}
+          />
+          <Form.Control.Feedback type="invalid">
+            {errors.email?.message}
+          </Form.Control.Feedback>
+        </Form.Group>
+      )}
+
+      {initialContents && (
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="email">Email</Form.Label>
+          <Form.Control
+            data-testid={testIdPrefix + "-email"}
+            id="email"
+            type="text"
+            {...register("email")}
+            value={initialContents.email}
+            disabled
+          />
+        </Form.Group>
+      )}
 
       <Button type="submit" data-testid={testIdPrefix + "-submit"}>
         {buttonLabel}
