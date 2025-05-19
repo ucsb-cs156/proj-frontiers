@@ -29,7 +29,7 @@ function RoleEmailForm({
       <Form.Group className="mb-3" controlId="email">
         <Form.Label>{roleName} Email</Form.Label>
         <Form.Control
-          type="Create Email"
+          type="email"
           placeholder={`Enter email`}
           {...register("email", {
             required: `Email is required.`,
@@ -46,7 +46,7 @@ function RoleEmailForm({
         {buttonLabel}
       </Button>
       <Button
-        variant="Secondary"
+        variant="secondary"
         className="ms-2"
         onClick={() => navigate(-1)}
         data-testid="RoleEmailForm-cancel"
