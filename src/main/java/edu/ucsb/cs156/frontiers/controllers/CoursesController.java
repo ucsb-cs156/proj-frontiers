@@ -31,6 +31,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+// Possible imports needed for code
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
 @RestController
@@ -153,6 +158,49 @@ public class CoursesController extends ApiController {
                 "message", e.getMessage()
         );
     }
+
+
+
+
+
+    // My code starts here
+
+
+    
+    /**
+     * This method looks up a current user and gets their email.
+     * With that email, it that email on every course roster,
+     * and when it appears, notes/stores course id
+     * We then return all courses for those course ids, with relevant
+     * fields for the student.
+     * 
+     * Relevant fields are: id, installationId, orgName, courseName, term, school
+     * For each course, return the status that the student is in
+     */
+
+
+    @Operation(summary = "Get all courses for a student")
+    @PreAuthorize("hasRole('ROLE_USER')")  // Changed from ROLE_STUDENT
+    @GetMapping("/student")
+    public ResponseEntity<List<Course>> getCoursesForStudent() {
+        String email = getCurrentUser().getUser().getEmail();
+        List<Course> matches = courseRepository.findAll().stream()
+            .filter(course -> course.getRosterStudents().stream()
+                .anyMatch(student -> student.getEmail().equals(email)))
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(matches);
+    }
+
+
+
+
+    // My code ends here
+
+
+
+
+
 
 
 }
