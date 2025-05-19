@@ -39,7 +39,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -1113,5 +1117,160 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 String responseString = response.getResponse().getErrorMessage();
                 assertEquals("Required fields cannot be empty", responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testDeleteRosterStudent_success() throws Exception {
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Test")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("test@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .build();
+
+                List<RosterStudent> students = new ArrayList<>();
+                students.add(rosterStudent);
+                course1.setRosterStudents(students);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                doNothing().when(rosterStudentRepository).delete(any(RosterStudent.class));
+                
+
+                ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+                when(courseRepository.save(courseCaptor.capture())).thenReturn(course1);
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(1L));
+                verify(rosterStudentRepository).delete(eq(rosterStudent));
+                verify(courseRepository).save(courseCaptor.capture());
+
+                Course savedCourse = courseCaptor.getValue();
+                assertFalse(savedCourse.getRosterStudents().contains(rosterStudent));
+                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
+                        response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testDeleteRosterStudent_notFound() throws Exception {
+                when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "99"))
+                        .andExpect(status().isNotFound())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(99L));
+                verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
+
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "RosterStudent with id 99 not found");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testDeleteRosterStudent_emptyStudentsList() throws Exception {
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Test")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("test@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .build();
+
+                List<RosterStudent> students = new ArrayList<>();
+                course1.setRosterStudents(students);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                doNothing().when(rosterStudentRepository).delete(any(RosterStudent.class));
+
+                ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+                when(courseRepository.save(courseCaptor.capture())).thenReturn(course1);
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(1L));
+                verify(rosterStudentRepository).delete(eq(rosterStudent));
+                verify(courseRepository).save(courseCaptor.capture());
+
+                Course savedCourse = courseCaptor.getValue();
+                assertFalse(savedCourse.getRosterStudents().contains(rosterStudent));
+                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
+                        response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testDeleteRosterStudent_multipleStudents() throws Exception {
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Test")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("test@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .build();
+
+                RosterStudent otherStudent = RosterStudent.builder()
+                        .id(2L)
+                        .firstName("Other")
+                        .lastName("Student")
+                        .studentId("A789012")
+                        .email("other@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .build();
+
+                List<RosterStudent> students = new ArrayList<>();
+                students.add(rosterStudent);
+                students.add(otherStudent);
+                course1.setRosterStudents(students);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                doNothing().when(rosterStudentRepository).delete(any(RosterStudent.class));
+
+                ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+                when(courseRepository.save(courseCaptor.capture())).thenReturn(course1);
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(1L));
+                verify(rosterStudentRepository).delete(eq(rosterStudent));
+                verify(courseRepository).save(courseCaptor.capture());
+
+                Course savedCourse = courseCaptor.getValue();
+                assertFalse(savedCourse.getRosterStudents().contains(rosterStudent));
+                assertTrue(savedCourse.getRosterStudents().contains(otherStudent));
+                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
+                        response.getResponse().getContentAsString());
         }
 }
