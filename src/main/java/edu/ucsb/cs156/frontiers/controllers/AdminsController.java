@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.entities.Admin;
@@ -9,6 +10,7 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,5 +62,22 @@ public class AdminsController extends ApiController{
     public Iterable<Admin> allAdmins() {
         Iterable<Admin> admins = adminRepository.findAll();
         return admins;
+    }
+
+    /**
+     * Delete an admin. Accessible only to users with the role "ROLE_ADMIN".
+     * @param email email of the admin
+     * @return a message indiciating the organization was deleted
+     */
+    @Operation(summary= "Delete an Admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("")
+    public Object deleteAdmin(
+            @Parameter(name="email") @RequestParam String email) {
+        Admin admin = adminRepository.findById(email)
+                .orElseThrow(() -> new EntityNotFoundException(Admin.class, email));
+
+        adminRepository.delete(admin);
+        return genericMessage("Admin with id %s deleted".formatted(email));
     }
 }
