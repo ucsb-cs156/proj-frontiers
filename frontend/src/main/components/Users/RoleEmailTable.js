@@ -44,8 +44,6 @@ export default function RoleEmailTable({
     );
   }
 
-  console.log("RoleEmailTable items:", items); // for debugging
-
   return (
     <OurTable
       data={Array.isArray(items) ? items : []}
