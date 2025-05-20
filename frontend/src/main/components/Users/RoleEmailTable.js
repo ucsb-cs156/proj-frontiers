@@ -45,14 +45,10 @@ export default function RoleEmailTable({
   }
 
   return (
-<<<<<<< HEAD
     <OurTable
       data={Array.isArray(items) ? items : []}
       columns={columns}
       testid={testIdPrefix}
     />
-=======
-    <OurTable data={items ?? []} columns={columns} testid={testIdPrefix} />
->>>>>>> a018af93 (ra-Instructors index page, tests, and stories; tests and coverage at 100%:small RoleEmailTable fix)
   );
 }
