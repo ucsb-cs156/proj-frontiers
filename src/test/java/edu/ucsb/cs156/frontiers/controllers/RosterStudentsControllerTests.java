@@ -34,6 +34,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -959,6 +960,83 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, times(1)).findById(1L);
                 verify(rosterStudentRepository, times(1)).findByStudentId("A123456");
                 verify(rosterStudentRepository, times(1)).save(rosterStudentEdited);
+        }
+
+        // Authorization tests for /api/rosterstudents/delete
+
+        @Test
+        public void logged_out_users_cannot_delete() throws Exception {
+                mockMvc.perform(delete("/api/rosterstudents?id=15"))
+                                .andExpect(status().is(403));
+        }
+
+        @WithMockUser(roles = { "USER" })
+        @Test
+        public void logged_in_regular_users_cannot_delete() throws Exception {
+                mockMvc.perform(delete("/api/rosterstudents?id=15"))
+                                .andExpect(status().is(403)); // only admins can delete
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_can_delete_a_rosterstudent() throws Exception {
+                // arrange
+                User currentUser = currentUserService.getUser();
+
+                Course course1 = Course.builder()
+                        .id(1L)
+                        .courseName("CS156")
+                        .orgName("ucsb-cs156-s25")
+                        .term("S25")
+                        .school("UCSB")
+                        .rosterStudents(new ArrayList<>())
+                        .build();
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(15L)
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .studentId("A123456")
+                        .email("cgaucho@example.org")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .orgStatus(OrgStatus.NONE)
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(15L))).thenReturn(Optional.of(rosterStudent));
+
+                // act
+                MvcResult response = mockMvc.perform(
+                                delete("/api/rosterstudents?id=15")
+                                                .with(csrf()))
+                                .andExpect(status().isOk()).andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(15L);
+                verify(rosterStudentRepository, times(1)).delete(any());
+
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("RosterStudent with id 15 deleted", json.get("message"));
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_tries_to_delete_non_existant_rosterstudent_and_gets_right_error_message()
+                        throws Exception {
+                // arrange
+
+                when(rosterStudentRepository.findById(eq(15L))).thenReturn(Optional.empty());
+
+                // act
+                MvcResult response = mockMvc.perform(
+                                delete("/api/rosterstudents?id=15")
+                                                .with(csrf()))
+                                .andExpect(status().isNotFound()).andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(15L);
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("RosterStudent with id 15 not found", json.get("message"));
         }
 
 }
