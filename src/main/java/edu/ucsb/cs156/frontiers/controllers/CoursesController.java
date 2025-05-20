@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -32,7 +33,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-// Possible imports needed for code
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -180,27 +180,59 @@ public class CoursesController extends ApiController {
 
 
     @Operation(summary = "Get all courses for a student")
-    @PreAuthorize("hasRole('ROLE_USER')")  // Changed from ROLE_STUDENT
+    @PreAuthorize("hasRole('ROLE_STUDENT')")
     @GetMapping("/student")
-    public ResponseEntity<List<Course>> getCoursesForStudent() {
+    public ResponseEntity<List<StudentCourseView>> getCoursesForStudent() {
         String email = getCurrentUser().getUser().getEmail();
-        List<Course> matches = courseRepository.findAll().stream()
-            .filter(course -> course.getRosterStudents().stream()
-                .anyMatch(student -> student.getEmail().equals(email)))
-            .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(matches);
+
+        List<StudentCourseView> results = courseRepository
+                .findAllByRosterStudents_Email(email)
+.stream()
+            .map(c -> new StudentCourseView(c, email))
+                .toList();
+
+        return ResponseEntity.ok(results);
     }
 
+    /* Lightweight projection kept inside this file */
+    public static record StudentCourseView(
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            String status) {
 
+        public StudentCourseView(Course c, String email) {
+            this(
+                c.getId(),
+                c.getInstallationId(),
+                c.getOrgName(),
+                c.getCourseName(),
+                c.getTerm(),
+                c.getSchool(),
+                mapStatus(
+                    c.getRosterStudents()
+                     .stream()
+                     .filter(s -> s.getEmail().equals(email))
+                     .findFirst()
+                     .orElse(null)));
+        }
 
+        private static String mapStatus(RosterStudent rs) {
+            if (rs == null) return "Not yet requested an invitation";
+
+            return switch (rs.getRole()) {        // adjust getter if field is called "status"
+                case "NONE"    -> "Not yet requested an invitation";
+                case "PENDING" -> "Has requested an invitation but isn't yet a member";
+                case "MEMBER"  -> "Is a member of the org";
+                case "ADMIN"   -> "Is an admin in the org";
+                default        -> "unknown";
+            };
+        }
+    }
 
     // My code ends here
-
-
-
-
-
-
 
 }
