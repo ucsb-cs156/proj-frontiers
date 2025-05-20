@@ -1,9 +1,9 @@
-package edu.ucsb.cs156.frontiers.repositories;
+// package edu.ucsb.cs156.frontiers.repositories;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import edu.ucsb.cs156.frontiers.entities.Admin;
+// import edu.ucsb.cs156.frontiers.entities.Admin;
 
 import java.util.Optional;
 
