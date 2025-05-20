@@ -2,8 +2,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*; 
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -21,10 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff; 
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,6 +41,10 @@ public class CoursesController extends ApiController {
     
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private RosterStudentRepository rosterStudentRepository;
+
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -154,5 +160,34 @@ public class CoursesController extends ApiController {
         );
     }
 
+    @Operation(summary = "student can see what courses they appear on staff roster of and their status in each")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/staff")
+    public List<Map<String, Object>> lookUpStaffCourseRoster() 
+    {
+        CurrentUser currentUser = getCurrentUser();
+        String email = currentUser.getUser().getEmail(); 
+        List<CourseStaff> staffRoster = currentUser.getUser().getRoles();
 
+        List<Map<String, Object>> matchedCourses = new ArrayList<>();
+
+        for (CourseStaff st : staffRoster) 
+        {
+            Course course = st.getCourse(); 
+            Optional <RosterStudent> studentRoster = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(), currentUser.getUser().getStudentId()); 
+            RosterStudent rs = studentRoster.get(); 
+            
+            Map<String, Object> courseInfo = new HashMap<>();
+            courseInfo.put("id", course.getId());
+            courseInfo.put("orgName", course.getOrgName());
+            courseInfo.put("courseName", course.getCourseName());
+            courseInfo.put("term", course.getTerm());
+            courseInfo.put("school", course.getSchool());
+            courseInfo.put("installationId", course.getInstallationId());
+            courseInfo.put("status", rs.getOrgStatus()); 
+
+            matchedCourses.add(courseInfo);
+        }
+        return matchedCourses;
+    }
 }
