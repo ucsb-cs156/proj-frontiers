@@ -41,7 +41,7 @@ export default function RosterStudentTable({
       console.log(msg);
     }
   };
-  
+
   const deleteCallback = (cell) => {
     const id = cell.row.values.id;
     const msg = `Delete clicked for row with id: ${id}`;
@@ -51,7 +51,7 @@ export default function RosterStudentTable({
       console.log(msg);
     }
   };
-  
+
   const columnsToDisplay = showButtons
     ? [
         ...columns,
@@ -59,7 +59,6 @@ export default function RosterStudentTable({
         ButtonColumn("Delete", "danger", deleteCallback, "RosterStudentsTable"),
       ]
     : columns;
-  
 
   return (
     <OurTable
