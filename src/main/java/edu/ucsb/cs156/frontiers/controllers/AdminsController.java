@@ -62,4 +62,17 @@ public class AdminsController extends ApiController {
       Admin savedAdmin = adminRepository.save(admin);
       return savedAdmin;
   }
+
+  /**
+    * List all admins
+    *
+    * @return an iterable of Admin
+    */
+    @Operation(summary= "List all admins")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/all")
+    public Iterable<Admin> allAdmins() {
+        Iterable<Admin> admins = adminRepository.findAll();
+        return admins;
+    }
 }

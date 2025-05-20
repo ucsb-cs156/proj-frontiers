@@ -67,6 +67,31 @@ public class AdminsControllerTests extends ControllerTestCase {
                               .andExpect(status().is(403)); // only admins can post
       }
 
+      // Authorization tests for get all
+
+      @Test
+      public void logged_out_users_cannot_get_all() throws Exception {
+              mockMvc.perform(get("/api/admin/all"))
+                              .andExpect(status().is(403)); // logged out users can't get all
+      }
+
+
+      @WithMockUser(roles = { "USER" })
+      @Test
+      public void logged_in_users_cannot_get_all() throws Exception {
+              mockMvc.perform(get("/api/admin/all"))
+                              .andExpect(status().is(403)); // user roles can't get all
+      }
+
+
+      @WithMockUser(roles = { "ADMIN" })
+      @Test
+      public void logged_in_admin_can_get_all() throws Exception {
+              mockMvc.perform(get("/api/admin/all"))
+                              .andExpect(status().is(200));
+      }
+
+
       // Functionality tests
 
       @WithMockUser(roles = { "ADMIN", "USER" })
@@ -87,4 +112,33 @@ public class AdminsControllerTests extends ControllerTestCase {
               String responseString = response.getResponse().getContentAsString();
               assertEquals(expectedJson, responseString);
       }
+
+      @WithMockUser(roles = { "ADMIN" })
+       @Test
+       public void logged_in_admin_can_get_all_admins() throws Exception {
+               Admin admin1 = Admin.builder()
+                               .email("acdamstedt@ucsb.edu")
+                               .build();
+
+
+               Admin admin2 = Admin.builder()
+                               .email("acdamstedt@csil.cs.ucsb.edu")
+                               .build();
+
+               ArrayList<Admin> expectedAdmins = new ArrayList<>();
+               expectedAdmins.addAll(Arrays.asList(admin1, admin2));
+
+               when(adminRepository.findAll()).thenReturn(expectedAdmins);
+
+               // act
+               MvcResult response = mockMvc.perform(get("/api/admin/all"))
+                               .andExpect(status().isOk()).andReturn();
+
+               // assert
+               verify(adminRepository, times(1)).findAll();
+               String expectedJson = mapper.writeValueAsString(expectedAdmins);
+               String responseString = response.getResponse().getContentAsString();
+               assertEquals(expectedJson, responseString);
+       }
+
 }
