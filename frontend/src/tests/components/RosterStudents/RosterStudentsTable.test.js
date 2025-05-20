@@ -20,8 +20,10 @@ describe("RosterStudentsTable tests", () => {
 
     render(
       <BrowserRouter>
-        <RosterStudentsTable rosterStudents={rosterStudentsFixtures.threeRosterStudents} />
-      </BrowserRouter>
+        <RosterStudentsTable
+          rosterStudents={rosterStudentsFixtures.threeRosterStudents}
+        />
+      </BrowserRouter>,
     );
 
     expectedHeaders.forEach((headerText) => {
@@ -32,18 +34,34 @@ describe("RosterStudentsTable tests", () => {
   test("renders expected field data for all rows", () => {
     render(
       <BrowserRouter>
-        <RosterStudentsTable rosterStudents={rosterStudentsFixtures.threeRosterStudents} />
-      </BrowserRouter>
+        <RosterStudentsTable
+          rosterStudents={rosterStudentsFixtures.threeRosterStudents}
+        />
+      </BrowserRouter>,
     );
 
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-firstName`)).toHaveTextContent("Shuang");
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-lastName`)).toHaveTextContent("Li");
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-email`)).toHaveTextContent("shuang@ucsb.edu");
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-githubLogin`)).toHaveTextContent("aliceGH");
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-githubId`)).toHaveTextContent("123456");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-firstName`),
+    ).toHaveTextContent("Shuang");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-lastName`),
+    ).toHaveTextContent("Li");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-email`),
+    ).toHaveTextContent("shuang@ucsb.edu");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-githubLogin`),
+    ).toHaveTextContent("aliceGH");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-githubId`),
+    ).toHaveTextContent("123456");
 
-    expect(screen.getByTestId(`${testId}-cell-row-1-col-lastName`)).toHaveTextContent("Green");
-    expect(screen.getByTestId(`${testId}-cell-row-2-col-email`)).toHaveTextContent("wendy@ucsb.edu");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-1-col-lastName`),
+    ).toHaveTextContent("Green");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-2-col-email`),
+    ).toHaveTextContent("wendy@ucsb.edu");
   });
 
   test("does NOT show Edit/Delete buttons when showButtons is false explicitly", () => {
@@ -53,22 +71,32 @@ describe("RosterStudentsTable tests", () => {
           rosterStudents={rosterStudentsFixtures.threeRosterStudents}
           showButtons={false}
         />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
-    expect(screen.queryByTestId(`${testId}-cell-row-0-col-Edit-button`)).not.toBeInTheDocument();
-    expect(screen.queryByTestId(`${testId}-cell-row-0-col-Delete-button`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-cell-row-0-col-Edit-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-cell-row-0-col-Delete-button`),
+    ).not.toBeInTheDocument();
   });
 
   test("does NOT show Edit/Delete buttons when showButtons is omitted", () => {
     render(
       <BrowserRouter>
-        <RosterStudentsTable rosterStudents={rosterStudentsFixtures.threeRosterStudents} />
-      </BrowserRouter>
+        <RosterStudentsTable
+          rosterStudents={rosterStudentsFixtures.threeRosterStudents}
+        />
+      </BrowserRouter>,
     );
 
-    expect(screen.queryByTestId(`${testId}-cell-row-0-col-Edit-button`)).not.toBeInTheDocument();
-    expect(screen.queryByTestId(`${testId}-cell-row-0-col-Delete-button`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-cell-row-0-col-Edit-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-cell-row-0-col-Delete-button`),
+    ).not.toBeInTheDocument();
   });
 
   test("shows Edit/Delete buttons and triggers alerts in storybook mode", async () => {
@@ -79,11 +107,13 @@ describe("RosterStudentsTable tests", () => {
           showButtons={true}
           storybook={true}
         />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const editBtn = screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`);
-    const deleteBtn = screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`);
+    const deleteBtn = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
 
     fireEvent.click(editBtn);
     fireEvent.click(deleteBtn);
@@ -103,11 +133,13 @@ describe("RosterStudentsTable tests", () => {
           showButtons={true}
           storybook={false}
         />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     fireEvent.click(screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`));
-    fireEvent.click(screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`));
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`),
+    );
 
     expect(logSpy).toHaveBeenCalledWith("Edit clicked for row with id: 1");
     expect(logSpy).toHaveBeenCalledWith("Delete clicked for row with id: 1");
@@ -124,11 +156,13 @@ describe("RosterStudentsTable tests", () => {
           rosterStudents={rosterStudentsFixtures.threeRosterStudents}
           showButtons={true}
         />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     fireEvent.click(screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`));
-    fireEvent.click(screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`));
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`),
+    );
 
     expect(logSpy).toHaveBeenCalledWith("Edit clicked for row with id: 1");
     expect(logSpy).toHaveBeenCalledWith("Delete clicked for row with id: 1");
@@ -143,11 +177,13 @@ describe("RosterStudentsTable tests", () => {
           rosterStudents={rosterStudentsFixtures.threeRosterStudents}
           showButtons={true}
         />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
     const editBtn = screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`);
-    const deleteBtn = screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`);
+    const deleteBtn = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
 
     expect(editBtn).toHaveTextContent("Edit");
     expect(editBtn).toHaveClass("btn-primary");
