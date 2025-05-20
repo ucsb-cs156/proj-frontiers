@@ -25,17 +25,6 @@ describe("InstructorsIndexPage tests", () => {
 
   const testId = "RoleEmailTable";
 
-  const setupUserOnly = () => {
-    axiosMock.reset();
-    axiosMock.resetHistory();
-    axiosMock
-      .onGet("/api/currentUser")
-      .reply(200, apiCurrentUserFixtures.userOnly);
-    axiosMock
-      .onGet("/api/systemInfo")
-      .reply(200, systemInfoFixtures.showingNeither);
-  };
-
   const setupAdminUser = () => {
     axiosMock.reset();
     axiosMock.resetHistory();
@@ -97,7 +86,7 @@ describe("InstructorsIndexPage tests", () => {
 
     // delete button should be visible
     expect(
-      screen.queryByTestId("RoleEmailTable-cell-row-0-col-Delete-button"),
+      screen.getByTestId("RoleEmailTable-cell-row-0-col-Delete-button"),
     ).toBeInTheDocument();
   });
 
