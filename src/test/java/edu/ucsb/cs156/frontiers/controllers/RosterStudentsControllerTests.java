@@ -6,6 +6,8 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+
+import org.apache.coyote.BadRequestException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
@@ -20,6 +22,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -27,7 +30,6 @@ import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -38,8 +40,14 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
 
 import org.springframework.http.MediaType;
 
@@ -727,5 +735,94 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(List.of());
                 assertEquals(expectedJson, responseString);
+        }
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_success_noIdChange() throws Exception {
+                doReturn(Optional.of(rs2))
+                .when(rosterStudentRepository).findById(2L);
+                doReturn(rs2)
+                .when(rosterStudentRepository).save(any(RosterStudent.class));
+
+                mockMvc.perform(put("/api/rosterstudents/2")
+                        .with(csrf())
+                        .param("firstName", rs2.getFirstName())
+                        .param("lastName",  rs2.getLastName())
+                        .param("studentId", rs2.getStudentId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.studentId").value(rs2.getStudentId()));
+
+                verify(rosterStudentRepository, never())
+                .findByCourseIdAndStudentId(anyLong(), anyString());
+        }
+
+        // 2) Success: student-ID changed (no duplicate)
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_success_withIdChange() throws Exception {
+                doReturn(Optional.of(rs2))
+                .when(rosterStudentRepository).findById(2L);
+                doReturn(Optional.empty())
+                .when(rosterStudentRepository)
+                .findByCourseIdAndStudentId(eq(course1.getId()), eq("NEWID"));
+                doReturn(rs2)
+                .when(rosterStudentRepository).save(any(RosterStudent.class));
+
+                mockMvc.perform(put("/api/rosterstudents/2")
+                        .with(csrf())
+                        .param("firstName", rs2.getFirstName())
+                        .param("lastName",  rs2.getLastName())
+                        .param("studentId", "NEWID"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.studentId").value("NEWID"));
+        }
+
+        // 3) Duplicate student-ID → 400 Bad Request
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_badRequest_onDuplicate() throws Exception {
+                doReturn(Optional.of(rs2))
+                .when(rosterStudentRepository).findById(2L);
+                doReturn(Optional.of(rs1))
+                .when(rosterStudentRepository)
+                .findByCourseIdAndStudentId(eq(course1.getId()), eq(rs1.getStudentId()));
+
+                mockMvc.perform(put("/api/rosterstudents/2")
+                        .with(csrf())
+                        .param("firstName", rs2.getFirstName())
+                        .param("lastName",  rs2.getLastName())
+                        .param("studentId", rs1.getStudentId()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(
+                        String.format("Student number '%s' is already used in course %d",
+                                rs1.getStudentId(), course1.getId())));
+        }
+
+        // 4) Non-existent ID → 404 Not Found
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_notFound() throws Exception {
+                doReturn(Optional.empty())
+                .when(rosterStudentRepository).findById(999L);
+
+                mockMvc.perform(put("/api/rosterstudents/999")
+                        .with(csrf())
+                        .param("firstName", "Foo")
+                        .param("lastName",  "Bar")
+                        .param("studentId", "X123"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(
+                        "RosterStudent with id 999 not found"));
+        }
+
+        // 5) Forbidden if not ADMIN
+        @Test
+        public void updateRosterStudent_forbidden_forNonAdmin() throws Exception {
+                mockMvc.perform(put("/api/rosterstudents/2")
+                        .with(csrf())
+                        .param("firstName", "Foo")
+                        .param("lastName",  "Bar")
+                        .param("studentId", "X123"))
+                .andExpect(status().isForbidden());
         }
 }
