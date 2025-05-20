@@ -10,5 +10,8 @@ export default function RoleEmailTable({ data, deleteCallback }) {
     ButtonColumn("Delete", "danger", deleteCallback, "RoleEmailTable"),
   ];
 
-  return <OurTable data={data} columns={columns} testid={"RoleEmailTable"} />;
+  return <OurTable 
+      data={Array.isArray(items) ? items : []}
+      columns={columns} 
+      testid={"RoleEmailTable"} />;
 }
