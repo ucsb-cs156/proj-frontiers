@@ -203,9 +203,7 @@ public class CoursesController extends ApiController {
     @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/list")
     public List<Map<String, Object>> listCoursesForCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2User user = (OAuth2User) authentication.getPrincipal();
-        String email = user.getAttribute("email");
+        String email = getCurrentUser().getUser().getEmail();
         Iterable<RosterStudent> rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);
         List<RosterStudent> rosterStudents = new ArrayList<>();
         rosterStudentsIterable.forEach(rosterStudents::add);
