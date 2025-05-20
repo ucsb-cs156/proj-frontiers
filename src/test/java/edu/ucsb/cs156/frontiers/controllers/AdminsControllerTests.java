@@ -91,6 +91,22 @@ public class AdminsControllerTests extends ControllerTestCase {
                               .andExpect(status().is(200));
       }
 
+      // Authorization tests for delete
+
+      @Test
+      public void logged_out_users_cannot_delete() throws Exception {
+              mockMvc.perform(delete("/api/admin?email=acdamstedt@gmail.com"))
+                              .andExpect(status().is(403));
+      }
+
+
+      @WithMockUser(roles = { "USER" })
+      @Test
+      public void logged_in_regular_users_cannot_delete() throws Exception {
+              mockMvc.perform(delete("/api/admin?email=acdamstedt@gmail.com"))
+                              .andExpect(status().is(403)); 
+      }
+
 
       // Functionality tests
 
@@ -141,4 +157,75 @@ public class AdminsControllerTests extends ControllerTestCase {
                assertEquals(expectedJson, responseString);
        }
 
+       @WithMockUser(roles = { "ADMIN", "USER" })
+       @Test
+       public void admin_can_delete_an_admin() throws Exception {
+               // arrange
+
+               Admin admin = Admin.builder()
+                               .email("acdamstedt@gmail.com")
+                               .build();
+
+               when(adminRepository.findByEmail("acdamstedt@gmail.com")).thenReturn(Optional.of(admin));
+
+               // act
+               MvcResult response = mockMvc.perform(
+                               delete("/api/admin?email=acdamstedt@gmail.com")
+                                               .with(csrf()))
+                               .andExpect(status().isOk()).andReturn();
+
+               // assert
+               verify(adminRepository, times(1)).findByEmail("acdamstedt@gmail.com");
+               verify(adminRepository, times(1)).delete(any());
+
+               Map<String, Object> json = responseToJson(response);
+               assertEquals("Admin with id acdamstedt@gmail.com deleted", json.get("message"));
+       }
+
+
+       @WithMockUser(roles = { "ADMIN", "USER" })
+       @Test
+       public void admin_tries_to_delete_non_existant_admin_and_gets_right_error_message()
+                       throws Exception {
+               // arrange
+
+               when(adminRepository.findByEmail("acdamstedt@gmail.com")).thenReturn(Optional.empty());
+
+               // act
+               MvcResult response = mockMvc.perform(
+                               delete("/api/admin?email=acdamstedt@gmail.com")
+                                               .with(csrf()))
+                               .andExpect(status().isNotFound()).andReturn();
+
+               // assert
+               verify(adminRepository, times(1)).findByEmail("acdamstedt@gmail.com");
+               Map<String, Object> json = responseToJson(response);
+               assertEquals("Admin with id acdamstedt@gmail.com not found", json.get("message"));
+       }
+
+       @WithMockUser(roles = { "ADMIN", "USER" })
+       @Test
+       public void admin_tries_to_delete_an_ADMIN_EMAIL_and_gets_right_error_message()
+                       throws Exception {
+                
+                Admin admin = Admin.builder()
+                        .email("acdamstedt@ucsb.edu")
+                        .build();
+
+               when(adminRepository.findByEmail("acdamstedt@ucsb.edu")).thenReturn(Optional.of(admin));
+
+               // act
+               MvcResult response = mockMvc.perform(
+                               delete("/api/admin?email=acdamstedt@ucsb.edu")
+                                               .with(csrf()))
+                               .andExpect(status().is(403)).andReturn();
+
+                String content = response.getResponse().getContentAsString();
+                System.out.println("Response content: " + content);
+                               
+               // assert
+               verify(adminRepository, times(1)).findByEmail("acdamstedt@ucsb.edu");
+               Map<String, Object> json = responseToJson(response);
+               assertEquals("Forbidden to delete an admin from ADMIN_EMAILS list", json.get("message"));
+       }
 }
