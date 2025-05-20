@@ -10,41 +10,46 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
-import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
-import edu.ucsb.cs156.frontiers.repositories.UserRepository;
-import edu.ucsb.cs156.frontiers.services.*;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 
+import edu.ucsb.cs156.frontiers.dtos.RosterStudentUpdateDTO;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidRequestException;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
-import edu.ucsb.cs156.frontiers.dto.RosterStudentUpdateDTO;
+import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
-
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
-
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "RosterStudents")
 @RequestMapping("/api/rosterstudents")
@@ -152,6 +157,29 @@ public class RosterStudentsController extends ApiController {
         rosterStudentRepository.save(rosterStudent);
 
         return rosterStudent;
+    }
+
+    /**
+     * This method deletes a RosterStudent
+     * 
+     * @param id id of the student object
+     * @return   a message indicating the student was deleted
+     */
+    @Operation(summary= "Delete a RosterStudent")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("")
+    public Object deleteRosterStudent(
+            @Parameter(name="id") @RequestParam Long id) {
+
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        rosterStudentRepository.delete(rosterStudent);
+
+        Course course = rosterStudent.getCourse();
+        course.getRosterStudents().remove(rosterStudent); // remove from list
+        courseRepository.save(course);
+        return genericMessage("RosterStudent with id %s deleted".formatted(id));
     }
 
     @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
