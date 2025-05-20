@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -1003,6 +1004,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .user(currentUser)
                         .build();
 
+                course1.getRosterStudents().add(rosterStudent);
+
                 when(rosterStudentRepository.findById(eq(15L))).thenReturn(Optional.of(rosterStudent));
 
                 // act
@@ -1017,6 +1020,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 Map<String, Object> json = responseToJson(response);
                 assertEquals("RosterStudent with id 15 deleted", json.get("message"));
+
+                assertFalse(course1.getRosterStudents().contains(rosterStudent),
+                "RosterStudent should be removed from course1's roster list");
         }
 
         @WithMockUser(roles = { "ADMIN", "USER" })
