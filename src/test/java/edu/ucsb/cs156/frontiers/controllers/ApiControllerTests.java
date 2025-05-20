@@ -81,18 +81,16 @@ public class ApiControllerTests extends ControllerTestCase {
 
         @Test
         public void handleBadRequestException_returnsTypeAndMessage() {
-                // Arrange: make an instance of your controller (DummyController extends ApiController)
                 ApiController controller = new DummyController();
 
-                // Create the same exception you throw in your endpoint
                 BadRequestException ex = new BadRequestException(
                 "Student number 'X' is already used in course 1"
                 );
 
-                // Act: call the exception handler directly
+                // act
                 Object raw = controller.handleBadRequestException(ex);
 
-                // Assert: it returns a Map with the correct entries
+                // assert
                 @SuppressWarnings("unchecked")
                 Map<String, Object> result = (Map<String, Object>) raw;
 

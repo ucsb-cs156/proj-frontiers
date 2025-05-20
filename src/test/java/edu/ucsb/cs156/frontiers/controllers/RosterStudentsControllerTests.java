@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -38,8 +40,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -736,6 +740,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(List.of());
                 assertEquals(expectedJson, responseString);
         }
+        
         @Test
         @WithMockUser(roles = "ADMIN")
         public void updateRosterStudent_success_noIdChange() throws Exception {
@@ -756,7 +761,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 .findByCourseIdAndStudentId(anyLong(), anyString());
         }
 
-        // 2) Success: student-ID changed (no duplicate)
         @Test
         @WithMockUser(roles = "ADMIN")
         public void updateRosterStudent_success_withIdChange() throws Exception {
@@ -777,7 +781,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 .andExpect(jsonPath("$.studentId").value("NEWID"));
         }
 
-        // 3) Duplicate student-ID → 400 Bad Request
         @Test
         @WithMockUser(roles = "ADMIN")
         public void updateRosterStudent_badRequest_onDuplicate() throws Exception {
@@ -798,7 +801,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 rs1.getStudentId(), course1.getId())));
         }
 
-        // 4) Non-existent ID → 404 Not Found
         @Test
         @WithMockUser(roles = "ADMIN")
         public void updateRosterStudent_notFound() throws Exception {
@@ -815,7 +817,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         "RosterStudent with id 999 not found"));
         }
 
-        // 5) Forbidden if not ADMIN
         @Test
         public void updateRosterStudent_forbidden_forNonAdmin() throws Exception {
                 mockMvc.perform(put("/api/rosterstudents/2")
@@ -824,5 +825,78 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .param("lastName",  "Bar")
                         .param("studentId", "X123"))
                 .andExpect(status().isForbidden());
+        }
+        @Test
+        public void noArgsConstructor_and_setters_getters_work() {
+        RosterStudentDTO dto = new RosterStudentDTO();
+        
+        dto.setId(123L);
+        dto.setCourseId(99L);
+        dto.setStudentId("A111222");
+        dto.setFirstName("Jane");
+        dto.setLastName("Doe");
+        dto.setEmail("jane.doe@example.org");
+        dto.setOrgStatus(null);
+        dto.setRosterStatus(null);
+
+        assertEquals(123L, dto.getId());
+        assertEquals(99L, dto.getCourseId());
+        assertEquals("A111222", dto.getStudentId());
+        assertEquals("Jane", dto.getFirstName());
+        assertEquals("Doe", dto.getLastName());
+        assertEquals("jane.doe@example.org", dto.getEmail());
+        assertNull(dto.getOrgStatus());
+        assertNull(dto.getRosterStatus());
+        }
+
+        @Test
+        public void builder_allArgsConstructor_and_getters_work() {
+        Collection<SimpleGrantedAuthority> dummyRoles = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+        RosterStudentDTO dto = RosterStudentDTO.builder()
+                .id(555L)
+                .courseId(42L)
+                .studentId("B333444")
+                .firstName("John")
+                .lastName("Smith")
+                .email("john.smith@ucsb.edu")
+                .orgStatus(null)
+                .rosterStatus(null)
+                .build();
+
+        assertEquals(555L, dto.getId());
+        assertEquals(42L,  dto.getCourseId());
+        assertEquals("B333444", dto.getStudentId());
+        assertEquals("John", dto.getFirstName());
+        assertEquals("Smith", dto.getLastName());
+        assertEquals("john.smith@ucsb.edu", dto.getEmail());
+        }
+
+        @Test
+        public void equals_hashCode_toString() {
+        RosterStudentDTO a = RosterStudentDTO.builder()
+                .id(10L)
+                .courseId(20L)
+                .studentId("X")
+                .firstName("A")
+                .lastName("B")
+                .email("a@b.com")
+                .build();
+        RosterStudentDTO b = RosterStudentDTO.builder()
+                .id(10L)
+                .courseId(20L)
+                .studentId("X")
+                .firstName("A")
+                .lastName("B")
+                .email("a@b.com")
+                .build();
+
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+
+        String ts = a.toString();
+        assertTrue(ts.contains("RosterStudentDTO"));
+        assertTrue(ts.contains("id=10"));
+        assertTrue(ts.contains("studentId=X"));
         }
 }
