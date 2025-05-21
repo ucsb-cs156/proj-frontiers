@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router-dom";
 
 import RoleEmailForm from "main/components/Users/RoleEmailForm";
-import { roleEmailFormFixtures } from "fixtures/roleEmailFormFixtures";
+import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 
 import { QueryClient, QueryClientProvider } from "react-query";
 
@@ -40,9 +40,7 @@ describe("RoleEmailForm tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailForm
-            initialContents={roleEmailFormFixtures.oneRoleEmailForm}
-          />
+          <RoleEmailForm initialContents={roleEmailFixtures.oneRoleEmail} />
         </Router>
       </QueryClientProvider>,
     );
@@ -93,6 +91,6 @@ describe("RoleEmailForm tests", () => {
     const submitButton = screen.getByText(/Create/);
     fireEvent.click(submitButton);
 
-    await screen.findByText(/Email is required./);
+    expect(screen.getByText(/Email is required./)).toBeInTheDocument();
   });
 });

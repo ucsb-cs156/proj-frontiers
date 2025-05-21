@@ -1,6 +1,6 @@
 import React from "react";
 import RoleEmailForm from "main/components/Users/RoleEmailForm";
-import { roleEmailFormFixtures } from "fixtures/roleEmailFormFixtures";
+import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 
 export default {
   title: "components/Users/RoleEmailForm",
@@ -24,7 +24,7 @@ Create.args = {
 export const Update = Template.bind({});
 
 Update.args = {
-  initialContents: roleEmailFormFixtures.oneRoleEmailForm,
+  initialContents: roleEmailFixtures.oneRoleEmail,
   buttonLabel: "Update",
   submitAction: (data) => {
     console.log("Submit was clicked with data: ", data);

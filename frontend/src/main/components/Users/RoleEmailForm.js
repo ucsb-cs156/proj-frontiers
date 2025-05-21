@@ -20,7 +20,7 @@ function RoleEmailForm({
   // Stryker restore all
 
   const navigate = useNavigate();
-
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const testIdPrefix = "RoleEmailForm";
 
   return (
@@ -34,6 +34,7 @@ function RoleEmailForm({
           isInvalid={Boolean(errors.email)}
           {...register("email", {
             required: "Email is required.",
+            pattern: emailRegex,
           })}
         />
         <Form.Control.Feedback type="invalid">

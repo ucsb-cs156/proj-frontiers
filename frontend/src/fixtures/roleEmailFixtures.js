@@ -1,4 +1,4 @@
-const roleEmailFormFixtures = {
+const roleEmailFixtures = {
   oneRoleEmailForm: {
     email: "joegaucho@ucsb.edu",
   },
@@ -15,4 +15,4 @@ const roleEmailFormFixtures = {
   ],
 };
 
-export { roleEmailFormFixtures };
+export { roleEmailFixtures };
