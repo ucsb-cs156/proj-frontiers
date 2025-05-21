@@ -61,13 +61,13 @@
                   "name": "ROLE",
                   "type": "VARCHAR(255)"
                 }
-              }              
+              }
             ]
           ,
             "tableName": "COURSE_STAFF"
           }
-        }
-      ]
+        }]
+
     }
   }
 ]}
