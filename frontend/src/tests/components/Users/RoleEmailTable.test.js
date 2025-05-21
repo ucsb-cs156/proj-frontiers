@@ -7,7 +7,8 @@ import { MemoryRouter } from "react-router-dom";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { QueryClient, QueryClientProvider } from "react-query";
-
+import { toast } from "react-toastify";
+jest.mock("react-toastify");
 const queryClient = new QueryClient();
 
 describe("RoleEmailTable tests", () => {
@@ -16,14 +17,19 @@ describe("RoleEmailTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailTable users={roleEmailFixtures.threeRoleEmails} currentUser={currentUser} />
+          <RoleEmailTable
+            users={roleEmailFixtures.threeRoleEmails}
+            currentUser={currentUser}
+          />
         </Router>
       </QueryClientProvider>,
     );
     const testId = "RoleEmailTable";
 
     expect(screen.getByText("Email")).toBeInTheDocument();
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-${"email"}`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-${"email"}`),
+    ).toBeInTheDocument();
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-email`),
     ).toHaveTextContent("joegaucho@ucsb.edu");
@@ -34,7 +40,10 @@ describe("RoleEmailTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailTable users={roleEmailFixtures.threeRoleEmails} currentUser={currentUser}/>
+          <RoleEmailTable
+            users={roleEmailFixtures.threeRoleEmails}
+            currentUser={currentUser}
+          />
         </Router>
       </QueryClientProvider>,
     );
@@ -45,7 +54,9 @@ describe("RoleEmailTable tests", () => {
 
     expect(screen.getByText("Email")).toBeInTheDocument();
 
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-${"email"}`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-${"email"}`),
+    ).toBeInTheDocument();
 
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-email`),
@@ -58,14 +69,18 @@ describe("RoleEmailTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailTable users={roleEmailFixtures.threeRoleEmails} currentUser={currentUser}/>
+          <RoleEmailTable
+            users={roleEmailFixtures.threeRoleEmails}
+            currentUser={currentUser}
+          />
         </Router>
       </QueryClientProvider>,
     );
 
-
     const testId = "RoleEmailTable";
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-email`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-email`),
+    ).toBeInTheDocument();
 
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-email`),
@@ -89,9 +104,7 @@ describe("RoleEmailTable tests", () => {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RoleEmailTable
-            users={
-              roleEmailFixtures.threeRoleEmails
-            }
+            users={roleEmailFixtures.threeRoleEmails}
             currentUser={currentUser}
           />
         </MemoryRouter>
@@ -114,6 +127,10 @@ describe("RoleEmailTable tests", () => {
     // assert - check that the delete endpoint was called
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].params).toEqual({ id: 'joegaucho@ucsb.edu' });
+    // expect(toast).toHaveBeenCalledWith({ message: "User deleted" });
+    expect(axiosMock.history.delete[0].url).toBe("/api/users");
+    expect(axiosMock.history.delete[0].params).toEqual({
+      id: "joegaucho@ucsb.edu",
+    });
   });
 });
