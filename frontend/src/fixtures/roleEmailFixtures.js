@@ -1,8 +1,8 @@
 const roleEmailFixtures = {
-  oneRoleEmailForm: {
+  oneRoleEmail: {
     email: "joegaucho@ucsb.edu",
   },
-  threeRoleEmailForms: [
+  threeRoleEmails: [
     {
       email: "joegaucho@ucsb.edu",
     },
