@@ -15,25 +15,25 @@ const Template = (args) => {
 
 export const Empty = Template.bind({});
 Empty.args = {
-  users: [],
+  roleemails: [],
   currentUser: currentUserFixtures.userOnly,
 };
 
 export const ThreeItemsOrdinaryUser = Template.bind({});
 ThreeItemsOrdinaryUser.args = {
-  users: roleEmailFixtures.threeRoleEmails,
+  roleemails: roleEmailFixtures.threeRoleEmails,
   currentUser: currentUserFixtures.userOnly,
 };
 
 export const ThreeItemsAdminUser = Template.bind({});
 ThreeItemsAdminUser.args = {
-  users: roleEmailFixtures.threeRoleEmails,
+  roleemails: roleEmailFixtures.threeRoleEmails,
   currentUser: currentUserFixtures.adminUser,
 };
 
 ThreeItemsAdminUser.parameters = {
   msw: [
-    http.delete("/api/users", () => {
+    http.delete("/api/roleemails", () => {
       return HttpResponse.json(
         { message: "Organization deleted successfully" },
         { status: 200 },

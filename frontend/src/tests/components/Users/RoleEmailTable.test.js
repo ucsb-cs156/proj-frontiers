@@ -7,18 +7,16 @@ import { MemoryRouter } from "react-router-dom";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { toast } from "react-toastify";
-jest.mock("react-toastify");
 const queryClient = new QueryClient();
 
 describe("RoleEmailTable tests", () => {
-  test("renders without crashing for three users", () => {
+  test("renders without crashing for three roleemails", () => {
     const currentUser = currentUserFixtures.userOnly;
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
           <RoleEmailTable
-            users={roleEmailFixtures.threeRoleEmails}
+            roleemails={roleEmailFixtures.threeRoleEmails}
             currentUser={currentUser}
           />
         </Router>
@@ -41,15 +39,13 @@ describe("RoleEmailTable tests", () => {
       <QueryClientProvider client={queryClient}>
         <Router>
           <RoleEmailTable
-            users={roleEmailFixtures.threeRoleEmails}
+            roleemails={roleEmailFixtures.threeRoleEmails}
             currentUser={currentUser}
           />
         </Router>
       </QueryClientProvider>,
     );
 
-    // const expectedHeaders = ["Email"];
-    // const expectedFields = ["email"];
     const testId = "RoleEmailTable";
 
     expect(screen.getByText("Email")).toBeInTheDocument();
@@ -70,7 +66,7 @@ describe("RoleEmailTable tests", () => {
       <QueryClientProvider client={queryClient}>
         <Router>
           <RoleEmailTable
-            users={roleEmailFixtures.threeRoleEmails}
+            roleemails={roleEmailFixtures.threeRoleEmails}
             currentUser={currentUser}
           />
         </Router>
@@ -97,14 +93,16 @@ describe("RoleEmailTable tests", () => {
     const currentUser = currentUserFixtures.adminUser;
     const testId = "RoleEmailTable";
     const axiosMock = new AxiosMockAdapter(axios);
-    axiosMock.onDelete("/api/users").reply(200, { message: "User deleted" });
+    axiosMock
+      .onDelete("/api/roleemails")
+      .reply(200, { message: "User deleted" });
 
     // act - render the component
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RoleEmailTable
-            users={roleEmailFixtures.threeRoleEmails}
+            roleemails={roleEmailFixtures.threeRoleEmails}
             currentUser={currentUser}
           />
         </MemoryRouter>
@@ -127,8 +125,7 @@ describe("RoleEmailTable tests", () => {
     // assert - check that the delete endpoint was called
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    // expect(toast).toHaveBeenCalledWith({ message: "User deleted" });
-    expect(axiosMock.history.delete[0].url).toBe("/api/users");
+    expect(axiosMock.history.delete[0].url).toBe("/api/roleemails");
     expect(axiosMock.history.delete[0].params).toEqual({
       id: "joegaucho@ucsb.edu",
     });

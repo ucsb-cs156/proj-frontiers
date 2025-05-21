@@ -9,14 +9,14 @@ import {
 import { hasRole } from "main/utils/currentUser";
 
 export default function RoleEmailTable({
-  users,
+  roleemails,
   currentUser,
   testIdPrefix = "RoleEmailTable",
 }) {
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
-    ["/api/users/all"],
+    ["/api/roleemails/all"],
   );
 
   // Stryker disable next-line all : TODO try to make a good test for this
@@ -36,5 +36,5 @@ export default function RoleEmailTable({
       ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
     );
   }
-  return <OurTable data={users} columns={columns} testid={"RoleEmailTable"} />;
+  return <OurTable data={roleemails} columns={columns} testid={testIdPrefix} />;
 }
