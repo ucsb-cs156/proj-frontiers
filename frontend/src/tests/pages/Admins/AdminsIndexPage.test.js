@@ -1,0 +1,229 @@
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import AdminsIndexPage from "main/pages/Admins/AdminsIndexPage";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { MemoryRouter } from "react-router-dom";
+import mockConsole from "jest-mock-console";
+import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
+
+import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
+import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
+
+const mockToast = jest.fn();
+
+jest.mock("react-toastify", () => {
+  const originalModule = jest.requireActual("react-toastify");
+
+  const mockToastFn = (msg) => mockToast(msg);
+  mockToastFn.error = (msg) => mockToast(msg);
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    toast: mockToastFn,
+  };
+});
+
+describe("AdminsIndexPage tests", () => {
+  const axiosMock = new AxiosMockAdapter(axios);
+
+  const testId = "RoleEmailTable";
+
+  const setupAdminUser = () => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.adminUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const queryClient = new QueryClient();
+
+  test("Renders with New Admin Button", async () => {
+    setupAdminUser();
+    axiosMock.onGet("/api/admin/admins").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/New Admin/)).toBeInTheDocument();
+    });
+    const button = screen.getByText(/New Admin/);
+    expect(button).toHaveAttribute("href", "/admin/admins/create");
+    expect(button).toHaveAttribute("style", "float: right;");
+  });
+
+  test("renders three items correctly", async () => {
+    setupAdminUser();
+    axiosMock
+      .onGet("/api/admin/admins")
+      .reply(200, roleEmailFixtures.threeItems);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-email`),
+      ).toHaveTextContent("instructor1@example.com");
+    });
+    expect(
+      screen.getByTestId(`${testId}-cell-row-1-col-email`),
+    ).toHaveTextContent("admin1@example.com");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-2-col-email`),
+    ).toHaveTextContent("instructor2@example.com");
+
+    // delete button should be visible
+    expect(
+      screen.getByTestId("RoleEmailTable-cell-row-0-col-Delete-button"),
+    ).toBeInTheDocument();
+  });
+
+  test("renders empty table when backend unavailable", async () => {
+    setupAdminUser();
+
+    axiosMock.onGet("/api/admin/admins").timeout();
+
+    const restoreConsole = mockConsole();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(axiosMock.history.get.length).toBeGreaterThanOrEqual(1);
+    });
+
+    const errorMessage = console.error.mock.calls[0][0];
+    expect(errorMessage).toMatch(
+      "Error communicating with backend via GET on /api/admin/admins",
+    );
+    restoreConsole();
+  });
+
+  test("can delete an admin not in ADMIN_EMAILS user", async () => {
+    setupAdminUser();
+
+    const smallAdmin = { email: "adminuno@example.com" };
+
+    axiosMock.onGet("/api/admin/admins").reply(200, [smallAdmin]);
+
+    axiosMock
+      .onDelete("/api/admin/admins", { params: { email: smallAdmin.email } })
+      .reply(200, { email: smallAdmin.email });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const testId = "RoleEmailTable";
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-email`),
+      ).toHaveTextContent("adminuno@example.com");
+    });
+
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        "Admin with email adminuno@example.com deleted",
+      );
+    });
+  });
+
+  test("cannot delete an admin whos email is in ADMIN_EMAILS", async () => {
+    setupAdminUser();
+
+    const admin = { email: "admin@example.com" };
+
+    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+
+    axiosMock
+      .onDelete("/api/admin/admins", { params: { email: admin.email } })
+      .reply(403, "Attempting to delete admin in ADMIN_EMAILS"); // backend should respond with 403 error
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const testId = "RoleEmailTable";
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-email`),
+      ).toHaveTextContent("admin@example.com");
+    });
+
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        "Attempting to delete admin in ADMIN_EMAILS",
+      );
+    });
+  });
+
+  test("shows generic error message on unexpected error", async () => {
+    setupAdminUser();
+
+    const admin = { email: "not-in-admin-emails@example.com" };
+
+    axiosMock
+      .onDelete("/api/admin/admins", { params: { email: admin.email } })
+      .reply(500); // internal server error
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const deleteButton = await screen.findByRole("button", {
+      name: /delete/i,
+    });
+
+    fireEvent.click(deleteButton);
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith("Error deleting admin."),
+    );
+  });
+});
