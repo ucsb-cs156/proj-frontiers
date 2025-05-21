@@ -1,6 +1,11 @@
 import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { useBackendMutation } from "main/utils/useBackend";
-import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+
+import {
+  cellToAxiosParamsDelete,
+  onDeleteSuccess,
+} from "main/utils/rosterStudentUtils";
 
 const columns = [
   {
@@ -44,15 +49,11 @@ const columns = [
 export default function RosterStudentsTable({
   rosterStudents,
   showButtons = false,
-  storybook = false,
 }) {
+  const navigate = useNavigate();
+
   const editCallback = (cell) => {
-    const url = `/api/rosterstudents/edit/${cell.row.values.id}`;
-    if (storybook) {
-      window.alert(`would have navigated to: ${url}`);
-      return;
-    }
-    window.location.href = url;
+    navigate(`/rosterstudents/edit/${cell.row.values.id}`);
   };
 
   // Stryker disable all : hard to test for query caching
@@ -81,19 +82,4 @@ export default function RosterStudentsTable({
       testid={"RosterStudentsTable"}
     />
   );
-}
-
-function onDeleteSuccess(message) {
-  console.log(message);
-  toast(message);
-}
-
-function cellToAxiosParamsDelete(cell) {
-  return {
-    url: "/api/rosterstudents",
-    method: "DELETE",
-    params: {
-      id: cell.row.values.id,
-    },
-  };
 }
