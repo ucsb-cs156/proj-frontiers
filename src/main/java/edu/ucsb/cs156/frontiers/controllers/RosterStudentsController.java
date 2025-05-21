@@ -43,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
+import org.springframework.transaction.annotation.Transactional;
 
 @Tag(name = "RosterStudents")
 @RequestMapping("/api/rosterstudents")
@@ -270,5 +271,19 @@ public class RosterStudentsController extends ApiController {
         rosterStudent.setStudentId(studentId.trim());
 
         return rosterStudentRepository.save(rosterStudent);
+    }
+
+    @Operation(summary = "Delete a roster student")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/delete")
+    @Transactional
+    public ResponseEntity<String> deleteRosterStudent(@Parameter(name = "id") @RequestParam Long id) throws EntityNotFoundException{
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+        Course course = rosterStudent.getCourse();
+        course.getRosterStudents().remove(rosterStudent);
+        rosterStudentRepository.delete(rosterStudent);
+        courseRepository.save(course);
+        return ResponseEntity.ok("Successfully deleted roster student and removed him/her from the course list");
     }
 }
