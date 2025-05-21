@@ -1,7 +1,7 @@
 import coursesFixtures from "./coursesFixtures";
 import usersFixtures from "./usersFixtures";
 
-const RosterStudentsFixtures = {
+const rosterStudentsFixtures = {
   threeRosterStudents: [
     {
       id: 1,
@@ -45,4 +45,4 @@ const RosterStudentsFixtures = {
   ],
 };
 
-export default RosterStudentsFixtures;
+export default rosterStudentsFixtures;
