@@ -110,7 +110,7 @@ public class AdminsControllerTests extends ControllerTestCase {
 
       // Functionality tests
 
-      @WithMockUser(roles = { "ADMIN", "USER" })
+      @WithMockUser(roles = { "ADMIN" })
       @Test
       public void an_admin_user_can_post_a_new_admin() throws Exception {
               Admin admin = Admin.builder()
@@ -157,7 +157,7 @@ public class AdminsControllerTests extends ControllerTestCase {
                assertEquals(expectedJson, responseString);
        }
 
-       @WithMockUser(roles = { "ADMIN", "USER" })
+       @WithMockUser(roles = { "ADMIN" })
        @Test
        public void admin_can_delete_an_admin() throws Exception {
                // arrange
@@ -183,7 +183,7 @@ public class AdminsControllerTests extends ControllerTestCase {
        }
 
 
-       @WithMockUser(roles = { "ADMIN", "USER" })
+       @WithMockUser(roles = { "ADMIN" })
        @Test
        public void admin_tries_to_delete_non_existant_admin_and_gets_right_error_message()
                        throws Exception {
@@ -203,7 +203,7 @@ public class AdminsControllerTests extends ControllerTestCase {
                assertEquals("Admin with id acdamstedt@gmail.com not found", json.get("message"));
        }
 
-       @WithMockUser(roles = { "ADMIN", "USER" })
+       @WithMockUser(roles = { "ADMIN" })
        @Test
        public void admin_tries_to_delete_an_ADMIN_EMAIL_and_gets_right_error_message()
                        throws Exception {
