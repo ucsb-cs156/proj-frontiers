@@ -90,7 +90,7 @@ public class AdminsController extends ApiController {
     */
    @Operation(summary= "Delete an Admin")
    @PreAuthorize("hasRole('ROLE_ADMIN')")
-   @DeleteMapping("")
+   @DeleteMapping("/delete")
    public Object deleteAdmin(
            @Parameter(name="email") @RequestParam String email) {
        Admin admin = adminRepository.findByEmail(email)
