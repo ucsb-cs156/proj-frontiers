@@ -740,46 +740,52 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(List.of());
                 assertEquals(expectedJson, responseString);
         }
-        
+
         @Test
         @WithMockUser(roles = "ADMIN")
         public void updateRosterStudent_success_noIdChange() throws Exception {
-                doReturn(Optional.of(rs2))
-                .when(rosterStudentRepository).findById(2L);
-                doReturn(rs2)
-                .when(rosterStudentRepository).save(any(RosterStudent.class));
+        doReturn(Optional.of(rs2))
+        .when(rosterStudentRepository).findById(2L);
+        doReturn(rs2)
+        .when(rosterStudentRepository).save(any(RosterStudent.class));
 
-                mockMvc.perform(put("/api/rosterstudents/2")
-                        .with(csrf())
-                        .param("firstName", rs2.getFirstName())
-                        .param("lastName",  rs2.getLastName())
-                        .param("studentId", rs2.getStudentId()))
+        mockMvc.perform(put("/api/rosterstudents/2")
+                .with(csrf())
+                .param("firstName", "AliceNew")
+                .param("lastName",  "BobNew")
+                .param("studentId", rs2.getStudentId()))
                 .andExpect(status().isOk())
+
+                .andExpect(jsonPath("$.firstName").value("AliceNew"))
+                .andExpect(jsonPath("$.lastName").value("BobNew"))
                 .andExpect(jsonPath("$.studentId").value(rs2.getStudentId()));
 
-                verify(rosterStudentRepository, never())
+        verify(rosterStudentRepository, never())
                 .findByCourseIdAndStudentId(anyLong(), anyString());
         }
 
         @Test
         @WithMockUser(roles = "ADMIN")
         public void updateRosterStudent_success_withIdChange() throws Exception {
-                doReturn(Optional.of(rs2))
-                .when(rosterStudentRepository).findById(2L);
-                doReturn(Optional.empty())
-                .when(rosterStudentRepository)
-                .findByCourseIdAndStudentId(eq(course1.getId()), eq("NEWID"));
-                doReturn(rs2)
-                .when(rosterStudentRepository).save(any(RosterStudent.class));
+        doReturn(Optional.of(rs2))
+        .when(rosterStudentRepository).findById(2L);
+        doReturn(Optional.empty())
+        .when(rosterStudentRepository)
+        .findByCourseIdAndStudentId(eq(course1.getId()), eq("NEWID"));
+        doReturn(rs2)
+        .when(rosterStudentRepository).save(any(RosterStudent.class));
 
-                mockMvc.perform(put("/api/rosterstudents/2")
-                        .with(csrf())
-                        .param("firstName", rs2.getFirstName())
-                        .param("lastName",  rs2.getLastName())
-                        .param("studentId", "NEWID"))
+        mockMvc.perform(put("/api/rosterstudents/2")
+                .with(csrf())
+                .param("firstName", "CharlieX")
+                .param("lastName",  "DeltaY")
+                .param("studentId", "NEWID"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("CharlieX"))
+                .andExpect(jsonPath("$.lastName").value("DeltaY"))
                 .andExpect(jsonPath("$.studentId").value("NEWID"));
         }
+
 
         @Test
         @WithMockUser(roles = "ADMIN")
@@ -826,6 +832,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .param("studentId", "X123"))
                 .andExpect(status().isForbidden());
         }
+
         @Test
         public void noArgsConstructor_and_setters_getters_work() {
         RosterStudentDTO dto = new RosterStudentDTO();
