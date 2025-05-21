@@ -3,8 +3,8 @@ import RoleEmailForm from "main/components/Users/RoleEmailForm";
 import { roleEmailFormFixtures } from "fixtures/roleEmailFormFixtures";
 
 export default {
-  title: "components/Users/roleEmailForm",
-  component: roleEmailForm,
+  title: "components/Users/RoleEmailForm",
+  component: RoleEmailForm,
 };
 
 const Template = (args) => {
