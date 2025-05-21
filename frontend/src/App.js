@@ -10,8 +10,11 @@ import "react-toastify/dist/ReactToastify.css";
 
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
+
 import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
 import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
+
+import InstructorsCreatePage from "main/pages/Instructors/InstructorsCreatePage";
 
 function App() {
   const { data: currentUser } = useCurrentUser();
@@ -46,6 +49,11 @@ function App() {
               exact
               path="/admin/instructors"
               element={<InstructorsIndexPage />}
+            />
+            <Route
+              exact
+              path="/admin/instructors/create"
+              element={<InstructorsCreatePage />}
             />
           </>
         )}
