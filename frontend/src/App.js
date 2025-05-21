@@ -60,6 +60,13 @@ function App() {
             />
           </>
         )}
+        {hasRole(currentUser, "ROLE_ADMIN") && (
+          <Route
+            exact
+            path="/admin/admins/create"
+            element={<AdminsCreatePage />}
+          />
+        )}
       </Routes>
     </BrowserRouter>
   );
