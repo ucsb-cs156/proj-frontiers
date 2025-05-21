@@ -43,21 +43,33 @@ public class WebhookController {
     public ResponseEntity<String> createGitHubWebhook(@RequestBody JsonNode jsonBody) throws JsonProcessingException {
 
         if(jsonBody.has("action")){
-            if(jsonBody.get("action").asText().equals("member_added")){
+            String action = jsonBody.get("action").asText();
+            
+            // Handle member_added and member_invited events
+            if(action.equals("member_added") || action.equals("member_invited")){
                 String githubLogin = jsonBody.get("membership").get("user").get("login").asText();
                 String installationId = jsonBody.get("installation").get("id").asText();
                 Optional<Course> course = courseRepository.findByInstallationId(installationId);
+                
                 if(course.isPresent()){
                     Optional<RosterStudent> student = rosterStudentRepository.findByCourseAndGithubLogin(course.get(), githubLogin);
                     if(student.isPresent()){
                         RosterStudent updatedStudent = student.get();
-                        updatedStudent.setOrgStatus(OrgStatus.MEMBER);
+                        
+                        // Update status based on action
+                        if(action.equals("member_added")) {
+                            updatedStudent.setOrgStatus(OrgStatus.MEMBER);
+                        } else if(action.equals("member_invited")) {
+                            updatedStudent.setOrgStatus(OrgStatus.INVITED);
+                        }
+                        
                         rosterStudentRepository.save(updatedStudent);
                         return ResponseEntity.ok(updatedStudent.toString());
                     }
                 }
             }
         }
-        return  ResponseEntity.ok().body("success");
+        
+        return ResponseEntity.ok().body("success");
     }
 }
