@@ -17,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.when;
 
 @WebMvcTest(controllers = AdminsController.class)
 @Import(TestConfig.class)
+@TestPropertySource(properties = "ADMIN_EMAILS=djensen@ucsb.edu,benjaminconte@ucsb.edu,samuelzhu@ucsb.edu,divyanipunj@ucsb.edu,sangitakunapuli@ucsb.edu,amey@ucsb.edu,phtcon@ucsb.edu,acdamstedt@ucsb.edu,lzhou@ucsb.edu,hannahzhang@ucsb.edu,yilei_yan@ucsb.edu,zhixiuzhu@ucsb.edu,yuchenliu735@ucsb.edu") 
 public class AdminsControllerTests extends ControllerTestCase {
 
 
@@ -207,7 +209,7 @@ public class AdminsControllerTests extends ControllerTestCase {
        @Test
        public void admin_tries_to_delete_an_ADMIN_EMAIL_and_gets_right_error_message()
                        throws Exception {
-                
+
                 Admin admin = Admin.builder()
                         .email("acdamstedt@ucsb.edu")
                         .build();
