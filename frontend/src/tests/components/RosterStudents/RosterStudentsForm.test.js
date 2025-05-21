@@ -33,7 +33,9 @@ describe("RosterStudentsForm tests", () => {
     );
     await screen.findByTestId(/RosterStudentsForm-studentId/);
     expect(screen.getByText(/Student ID/)).toBeInTheDocument();
-    expect(screen.getByTestId(/RosterStudentsForm-studentId/)).toHaveValue("9627X84");
+    expect(screen.getByTestId(/RosterStudentsForm-studentId/)).toHaveValue(
+      "9627X84",
+    );
   });
 
   test("Correct Error messsages on bad input", async () => {

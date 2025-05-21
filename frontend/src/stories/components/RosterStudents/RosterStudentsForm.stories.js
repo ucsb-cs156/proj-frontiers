@@ -23,10 +23,10 @@ Create.args = {
 
 export const Update = Template.bind({});
 const contents = {
-    studentId: rosterStudentsFixtures.threeRosterStudents[0].studentId,
-    firstName: rosterStudentsFixtures.threeRosterStudents[0].firstName,
-    lastName: rosterStudentsFixtures.threeRosterStudents[0].lastName,
-    email: rosterStudentsFixtures.threeRosterStudents[0].email,
+  studentId: rosterStudentsFixtures.threeRosterStudents[0].studentId,
+  firstName: rosterStudentsFixtures.threeRosterStudents[0].firstName,
+  lastName: rosterStudentsFixtures.threeRosterStudents[0].lastName,
+  email: rosterStudentsFixtures.threeRosterStudents[0].email,
 };
 
 Update.args = {
