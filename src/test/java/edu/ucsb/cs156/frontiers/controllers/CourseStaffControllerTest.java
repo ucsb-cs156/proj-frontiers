@@ -110,4 +110,23 @@ public class CourseStaffControllerTest extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(sr1);
                 assertEquals(expectedJson, responseString);
         }
+
+        @Test
+        @WithMockUser(roles = {"ADMIN"})
+        public void testCourseLinkNotFound() throws Exception {
+                doReturn(Optional.empty()).when(courseRepository).findById(eq(1L));
+                MvcResult response = mockMvc.perform(post("/api/coursestaff/post")
+                                .with(csrf())                    
+                                .param("role", "Teaching Assistant")
+                                .param("studentEmail", "cgaucho@example.org")
+                                .param("courseId", "1"))
+                        .andExpect(status().isNotFound())
+                        .andReturn();
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "Course with id 1 not found");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
+        }
 }
