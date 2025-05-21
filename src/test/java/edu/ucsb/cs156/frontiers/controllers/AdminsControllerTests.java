@@ -170,7 +170,7 @@ public class AdminsControllerTests extends ControllerTestCase {
 
                // act
                MvcResult response = mockMvc.perform(
-                               delete("/api/delete/admin?email=acdamstedt@gmail.com")
+                               delete("/api/admin/delete?email=acdamstedt@gmail.com")
                                                .with(csrf()))
                                .andExpect(status().isOk()).andReturn();
 
@@ -193,7 +193,7 @@ public class AdminsControllerTests extends ControllerTestCase {
 
                // act
                MvcResult response = mockMvc.perform(
-                               delete("/api/delete/admin?email=acdamstedt@gmail.com")
+                               delete("/api/admin/delete?email=acdamstedt@gmail.com")
                                                .with(csrf()))
                                .andExpect(status().isNotFound()).andReturn();
 
@@ -216,7 +216,7 @@ public class AdminsControllerTests extends ControllerTestCase {
 
                // act
                MvcResult response = mockMvc.perform(
-                               delete("/api/delete/admin?email=acdamstedt@ucsb.edu")
+                               delete("/api/admin/delete?email=acdamstedt@ucsb.edu")
                                                .with(csrf()))
                                .andExpect(status().is(403)).andReturn();
 
