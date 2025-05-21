@@ -110,5 +110,4 @@ public class CourseStaffControllerTest extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(sr1);
                 assertEquals(expectedJson, responseString);
         }
-
 }
