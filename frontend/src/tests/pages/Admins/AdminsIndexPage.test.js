@@ -276,7 +276,7 @@ describe("AdminsIndexPage tests", () => {
     axiosMock
       .onDelete("/api/admin/admins", { params: { email: admin.email } })
       .reply(() => {
-        throw { message: "Network Error" }; // this error doesn't have a response property
+        throw new Error("Network Error"); // this error doesn't have a response property
       });
 
     const restoreConsole = mockConsole();
@@ -304,7 +304,7 @@ describe("AdminsIndexPage tests", () => {
 
     await waitFor(() => {
       expect(mockToast.mock.calls).toContainEqual([
-        "Axios Error: [object Object]",
+        "Axios Error: Error: Network Error",
       ]);
     });
 
