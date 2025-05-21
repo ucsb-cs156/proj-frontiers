@@ -40,7 +40,9 @@ describe("RoleEmailForm tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailForm initialContents={roleEmailFixtures.oneRoleEmail} />
+          <RoleEmailForm
+            initialContents={roleEmailFixtures.oneRoleEmail}
+          />
         </Router>
       </QueryClientProvider>,
     );
@@ -91,6 +93,6 @@ describe("RoleEmailForm tests", () => {
     const submitButton = screen.getByText(/Create/);
     fireEvent.click(submitButton);
 
-    expect(screen.getByText(/Email is required./)).toBeInTheDocument();
+    await screen.findByText(/Email is required./);
   });
 });
