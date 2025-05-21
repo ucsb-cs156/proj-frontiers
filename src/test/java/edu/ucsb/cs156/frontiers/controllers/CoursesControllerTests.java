@@ -361,4 +361,3 @@ public class CoursesControllerTests extends ControllerTestCase {
         String expectedJson = mapper.writeValueAsString(List.of(expectedMap));
         assertEquals(expectedJson, responseString);
     }
-}
