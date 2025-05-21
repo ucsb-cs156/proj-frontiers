@@ -277,16 +277,9 @@ public class RosterStudentsController extends ApiController {
         RosterStudent rosterStudent = rosterStudentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
         Course course = rosterStudent.getCourse();
-        if(course != null){
-            List<RosterStudent> students = course.getRosterStudents();
-            if(students != null){
-                students.remove(rosterStudent);
-                course.getRosterStudents().clear();
-                course.getRosterStudents().addAll(students);
-                courseRepository.save(course);
-            }
-        }
+        course.getRosterStudents().remove(rosterStudent);
         rosterStudentRepository.delete(rosterStudent);
+        courseRepository.save(course);
         return ResponseEntity.ok("Successfully deleted roster student and removed him/her from the course list");
     }
 }

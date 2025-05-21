@@ -25,7 +25,6 @@ import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -39,9 +38,8 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import org.springframework.http.MediaType;
 import org.mockito.ArgumentCaptor;
@@ -1149,8 +1147,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository).findById(eq(1L));
                 verify(courseRepository).save(any(Course.class));
                 verify(rosterStudentRepository).delete(eq(rosterStudent));
-                verify(studentsSpy).clear();
-                verify(studentsSpy).addAll(anyList());
+                verify(studentsSpy).remove(eq(rosterStudent));
 
                 assertEquals("Successfully deleted roster student and removed him/her from the course list", 
                         response.getResponse().getContentAsString());
@@ -1177,68 +1174,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         "message", "RosterStudent with id 99 not found");
                 String expectedJson = mapper.writeValueAsString(expectedMap);
                 assertEquals(expectedJson, responseString);
-        }
-
-        @Test
-        @WithMockUser(roles = { "ADMIN" })
-        public void testDeleteRosterStudent_nullCourse() throws Exception {
-                RosterStudent rosterStudent = RosterStudent.builder()
-                        .id(1L)
-                        .firstName("Test")
-                        .lastName("Student")
-                        .studentId("A123456")
-                        .email("test@ucsb.edu")
-                        .course(null)
-                        .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
-                        .build();
-
-                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-
-                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
-                        .with(csrf())
-                        .param("id", "1"))
-                        .andExpect(status().isOk())
-                        .andReturn();
-
-                verify(rosterStudentRepository).findById(eq(1L));
-                verify(rosterStudentRepository).delete(eq(rosterStudent));
-                verify(courseRepository, never()).save(any(Course.class));
-
-                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
-                        response.getResponse().getContentAsString());
-        }
-
-        @Test
-        @WithMockUser(roles = { "ADMIN" })
-        public void testDeleteRosterStudent_nullStudentsList() throws Exception {
-                RosterStudent rosterStudent = RosterStudent.builder()
-                        .id(1L)
-                        .firstName("Test")
-                        .lastName("Student")
-                        .studentId("A123456")
-                        .email("test@ucsb.edu")
-                        .course(course1)
-                        .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
-                        .build();
-
-                course1.setRosterStudents(null);
-
-                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-
-                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
-                        .with(csrf())
-                        .param("id", "1"))
-                        .andExpect(status().isOk())
-                        .andReturn();
-
-                verify(rosterStudentRepository).findById(eq(1L));
-                verify(rosterStudentRepository).delete(eq(rosterStudent));
-                verify(courseRepository, never()).save(any(Course.class));
-
-                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
-                        response.getResponse().getContentAsString());
         }
 
         @Test
