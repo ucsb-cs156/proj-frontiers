@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.List;
@@ -345,4 +346,77 @@ public class CoursesControllerTests extends ControllerTestCase {
         String expectedJson = mapper.writeValueAsString(List.of(expected));
         assertEquals(expectedJson, result.getResponse().getContentAsString());
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Test for #2 start
+
+    /**
+     * Authenticated as STUDENT – expect HTTP 200 and correct JSON payload
+     */
+    @Test
+    @WithMockUser(roles = { "STUDENT" })
+    public void testGetCoursesForStudent() throws Exception {
+        // arrange
+        String email = currentUserService.getCurrentUser().getUser().getEmail();
+
+        Course course = Course.builder()
+                .id(1L)
+                .installationId("inst1")
+                .orgName("org-1")
+                .courseName("Intro to Widgets")
+                .term("F25")
+                .school("UCSB")
+                .build();
+
+        RosterStudent rs = new RosterStudent();
+        rs.setEmail(email);
+        rs.setOrgStatus(OrgStatus.MEMBER);
+        course.setRosterStudents(List.of(rs));
+
+        when(courseRepository.findAllByRosterStudents_Email(eq(email)))
+            .thenReturn(List.of(course));
+
+        // act
+        MvcResult response = mockMvc.perform(get("/api/courses/student"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        // assert
+        String json = response.getResponse().getContentAsString();
+        List<CoursesController.StudentCourseView> expected =
+            List.of(new CoursesController.StudentCourseView(course, email));
+        String expectedJson = mapper.writeValueAsString(expected);
+        assertEquals(expectedJson, json);
+    }
+
+    /**
+     * Authenticated as ADMIN – no STUDENT role, expect HTTP 403 Forbidden
+     */
+    @Test
+    @WithMockUser(roles = { "ADMIN" })
+    public void testGetCoursesForStudent_Forbidden() throws Exception {
+        mockMvc.perform(get("/api/courses/student"))
+            .andExpect(status().isForbidden());
+    }
+
+    /**
+     * Unauthenticated – expect HTTP 403 Forbidden
+     */
+    @Test
+    public void testGetCoursesForStudent_Unauthorized() throws Exception {
+        mockMvc.perform(get("/api/courses/student"))
+               .andExpect(status().isForbidden());    // was .isUnauthorized()
+    }
+
 }

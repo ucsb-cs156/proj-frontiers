@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
 @RestController
@@ -231,7 +233,7 @@ public class CoursesController extends ApiController {
 
 
 
-    // My code starts here
+    // Code start for #2
 
 
     
@@ -247,6 +249,8 @@ public class CoursesController extends ApiController {
      */
 
 
+    
+    // Lists all courses where the current user appears on the roster.
     @Operation(summary = "Get all courses for a student")
     @PreAuthorize("hasRole('ROLE_STUDENT')")
     @GetMapping("/student")
@@ -262,7 +266,8 @@ public class CoursesController extends ApiController {
         return ResponseEntity.ok(results);
     }
 
-    /* Lightweight projection kept inside this file */
+    
+    // Lightweight projection of Course entity with only student-relevant fields
     public static record StudentCourseView(
             Long id,
             String installationId,
@@ -272,6 +277,8 @@ public class CoursesController extends ApiController {
             String school,
             String status) {
 
+        
+        // Creates view from Course entity and student email
         public StudentCourseView(Course c, String email) {
             this(
                 c.getId(),
@@ -288,19 +295,27 @@ public class CoursesController extends ApiController {
                      .orElse(null)));
         }
 
+        
+        // Maps OrgStatus enum to human-readable status message
         private static String mapStatus(RosterStudent rs) {
             if (rs == null) return "Not yet requested an invitation";
 
-            return switch (rs.getRole()) {        // adjust getter if field is called "status"
-                case "NONE"    -> "Not yet requested an invitation";
-                case "PENDING" -> "Has requested an invitation but isn't yet a member";
-                case "MEMBER"  -> "Is a member of the org";
-                case "ADMIN"   -> "Is an admin in the org";
-                default        -> "unknown";
+            return switch (rs.getOrgStatus()) {
+                case NONE -> "Not yet requested an invitation";
+                case INVITED -> "Has requested an invitation but isn't yet a member";
+                case MEMBER -> "Is a member of the org";
+                case OWNER -> "Is an admin in the org";
+                case EXPIRED -> "Invitation has expired";
             };
         }
     }
 
-    // My code ends here
+    // Code end for #2
+
+
+
+
+
+
 
 }
