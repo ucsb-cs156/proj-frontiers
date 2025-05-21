@@ -1,7 +1,7 @@
 { "databaseChangeLog": [
   {
     "changeSet": {
-      "id": "RosterStudent",
+      "id": "RosterStudent-1",
       "author": "DanielJ",
       "preConditions": [
         {
@@ -61,7 +61,7 @@
                   "name": "ROLE",
                   "type": "VARCHAR(255)"
                 }
-              }              
+              }
             ]
           ,
             "tableName": "COURSE_STAFF"
