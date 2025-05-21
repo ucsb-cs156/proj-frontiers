@@ -51,12 +51,11 @@ public class WebhookController {
             
             // Handle member_added and member_invited events
             if(action.equals("member_added") || action.equals("member_invited")){
-                // Add null checks for each level of the JSON structure
-                if (jsonBody.has("membership") && jsonBody.get("membership").has("user") && 
-                    jsonBody.get("membership").get("user").has("login") && 
+                // Based on the actual payload structure
+                if (jsonBody.has("user") && jsonBody.get("user").has("login") && 
                     jsonBody.has("installation") && jsonBody.get("installation").has("id")) {
                     
-                    String githubLogin = jsonBody.get("membership").get("user").get("login").asText();
+                    String githubLogin = jsonBody.get("user").get("login").asText();
                     String installationId = jsonBody.get("installation").get("id").asText();
                     log.info("GitHub login: {}, Installation ID: {}", githubLogin, installationId);
                     
