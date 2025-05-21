@@ -43,7 +43,7 @@ function RosterStudentsForm({
           type="text"
           isInvalid={Boolean(errors.studentId)}
           {...register("studentId", {
-            required: "studentId is required.",
+            required: "Student Id is required.",
             maxLength: {
               value: 255,
               message: "Max length 255 characters",
@@ -62,7 +62,7 @@ function RosterStudentsForm({
           type="text"
           isInvalid={Boolean(errors.firstName)}
           {...register("firstName", {
-            required: "FirstName is required.",
+            required: "First Name is required.",
           })}
         />
         <Form.Control.Feedback type="invalid">
@@ -77,7 +77,7 @@ function RosterStudentsForm({
           type="text"
           isInvalid={Boolean(errors.lastName)}
           {...register("lastName", {
-            required: "LastName is required.",
+            required: "Last Name is required.",
           })}
         />
         <Form.Control.Feedback type="invalid">
