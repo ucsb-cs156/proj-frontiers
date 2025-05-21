@@ -47,24 +47,30 @@ public class WebhookController {
             
             // Handle member_added and member_invited events
             if(action.equals("member_added") || action.equals("member_invited")){
-                String githubLogin = jsonBody.get("membership").get("user").get("login").asText();
-                String installationId = jsonBody.get("installation").get("id").asText();
-                Optional<Course> course = courseRepository.findByInstallationId(installationId);
-                
-                if(course.isPresent()){
-                    Optional<RosterStudent> student = rosterStudentRepository.findByCourseAndGithubLogin(course.get(), githubLogin);
-                    if(student.isPresent()){
-                        RosterStudent updatedStudent = student.get();
-                        
-                        // Update status based on action
-                        if(action.equals("member_added")) {
-                            updatedStudent.setOrgStatus(OrgStatus.MEMBER);
-                        } else if(action.equals("member_invited")) {
-                            updatedStudent.setOrgStatus(OrgStatus.INVITED);
+                // Add null checks for each level of the JSON structure
+                if (jsonBody.has("membership") && jsonBody.get("membership").has("user") && 
+                    jsonBody.get("membership").get("user").has("login") && 
+                    jsonBody.has("installation") && jsonBody.get("installation").has("id")) {
+                    
+                    String githubLogin = jsonBody.get("membership").get("user").get("login").asText();
+                    String installationId = jsonBody.get("installation").get("id").asText();
+                    Optional<Course> course = courseRepository.findByInstallationId(installationId);
+                    
+                    if(course.isPresent()){
+                        Optional<RosterStudent> student = rosterStudentRepository.findByCourseAndGithubLogin(course.get(), githubLogin);
+                        if(student.isPresent()){
+                            RosterStudent updatedStudent = student.get();
+                            
+                            // Update status based on action
+                            if(action.equals("member_added")) {
+                                updatedStudent.setOrgStatus(OrgStatus.MEMBER);
+                            } else if(action.equals("member_invited")) {
+                                updatedStudent.setOrgStatus(OrgStatus.INVITED);
+                            }
+                            
+                            rosterStudentRepository.save(updatedStudent);
+                            return ResponseEntity.ok(updatedStudent.toString());
                         }
-                        
-                        rosterStudentRepository.save(updatedStudent);
-                        return ResponseEntity.ok(updatedStudent.toString());
                     }
                 }
             }
