@@ -23,7 +23,7 @@ describe("RosterStudentsForm tests", () => {
     await screen.findByText(/Email/);
   });
 
-  test("renders correctly when passing in a RosterStudents", async () => {
+  test("renders correctly when passing in a RosterStudent", async () => {
     render(
       <Router>
         <RosterStudentsForm
@@ -31,9 +31,9 @@ describe("RosterStudentsForm tests", () => {
         />
       </Router>,
     );
-    await screen.findByTestId(/RosterStudentsForm-id/);
-    expect(screen.getByText(/Id/)).toBeInTheDocument();
-    expect(screen.getByTestId(/RosterStudentsForm-id/)).toHaveValue("1");
+    await screen.findByTestId(/RosterStudentsForm-studentId/);
+    expect(screen.getByText(/Student ID/)).toBeInTheDocument();
+    expect(screen.getByTestId(/RosterStudentsForm-studentId/)).toHaveValue("9627X84");
   });
 
   test("Correct Error messsages on bad input", async () => {
@@ -51,7 +51,7 @@ describe("RosterStudentsForm tests", () => {
     fireEvent.change(lastNameField, { target: { value: "bad-input" } });
     fireEvent.click(submitButton);
 
-    await screen.findByText(/First Name is required./);
+    await screen.findByText(/Email is required./);
   });
 
   test("Correct Error messsages on missing input", async () => {
