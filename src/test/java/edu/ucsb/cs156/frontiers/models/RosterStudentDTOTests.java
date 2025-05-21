@@ -1,6 +1,8 @@
 package edu.ucsb.cs156.frontiers.models;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
@@ -90,4 +92,66 @@ public class RosterStudentDTOTests {
         assertEquals(OrgStatus.NONE, dto.getOrgStatus());
 
     }
+
+    @Test
+    public void test_noArgsConstructor_defaults() {
+        // exercise Lombok @NoArgsConstructor
+        RosterStudentDTO dto = new RosterStudentDTO();
+
+        // all object‐types should be null
+        assertNull(dto.getId());
+        assertNull(dto.getCourseId());
+        assertNull(dto.getStudentId());
+        assertNull(dto.getFirstName());
+        assertNull(dto.getLastName());
+        assertNull(dto.getEmail());
+        assertNull(dto.getUserGithubId());
+        assertNull(dto.getUserGithubLogin());
+        assertNull(dto.getRosterStatus());
+        assertNull(dto.getOrgStatus());
+
+        // primitive default
+        assertEquals(0L, dto.getUserId());
+    }
+
+    @Test
+    public void test_data_annotation_getters_setters_equals_hashCode_toString() {
+        // set up two identical DTOs via setters
+        RosterStudentDTO dto1 = new RosterStudentDTO();
+        dto1.setId(1L);
+        dto1.setCourseId(2L);
+        dto1.setStudentId("U0001");
+        dto1.setFirstName("Alice");
+        dto1.setLastName("Smith");
+        dto1.setEmail("alice@example.com");
+        dto1.setUserId(42L);
+        dto1.setUserGithubId(1001);
+        dto1.setUserGithubLogin("aliceGH");
+        dto1.setRosterStatus(RosterStatus.ROSTER);
+        dto1.setOrgStatus(OrgStatus.MEMBER);
+
+        RosterStudentDTO dto2 = new RosterStudentDTO();
+        dto2.setId(1L);
+        dto2.setCourseId(2L);
+        dto2.setStudentId("U0001");
+        dto2.setFirstName("Alice");
+        dto2.setLastName("Smith");
+        dto2.setEmail("alice@example.com");
+        dto2.setUserId(42L);
+        dto2.setUserGithubId(1001);
+        dto2.setUserGithubLogin("aliceGH");
+        dto2.setRosterStatus(RosterStatus.ROSTER);
+        dto2.setOrgStatus(OrgStatus.MEMBER);
+
+        // equals and hashCode come from @Data
+        assertEquals(dto1, dto2);
+        assertEquals(dto1.hashCode(), dto2.hashCode());
+
+        // toString comes from @Data
+        String ts = dto1.toString();
+        assertTrue(ts.contains("id=1"));
+        assertTrue(ts.contains("courseId=2"));
+        assertTrue(ts.contains("studentId=U0001"));
+    }
+
 }
