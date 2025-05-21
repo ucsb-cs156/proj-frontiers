@@ -11,7 +11,7 @@ describe("RoleEmailTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailTable users={[]}/>
+          <RoleEmailTable users={[]} />
         </Router>
       </QueryClientProvider>,
     );
@@ -21,7 +21,7 @@ describe("RoleEmailTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailTable users={roleEmailFixtures.threeRoleEmails}/>
+          <RoleEmailTable users={roleEmailFixtures.threeRoleEmails} />
         </Router>
       </QueryClientProvider>,
     );
@@ -31,7 +31,7 @@ describe("RoleEmailTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailTable users={roleEmailFixtures.threeRoleEmails}/>
+          <RoleEmailTable users={roleEmailFixtures.threeRoleEmails} />
         </Router>
       </QueryClientProvider>,
     );
@@ -50,8 +50,8 @@ describe("RoleEmailTable tests", () => {
       expect(header).toBeInTheDocument();
     });
 
-    expect(screen.getByTestId(`${testId}-cell-row-0-col-email`)).toHaveTextContent(
-      "joegaucho@ucsb.edu",
-    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-email`),
+    ).toHaveTextContent("joegaucho@ucsb.edu");
   });
 });

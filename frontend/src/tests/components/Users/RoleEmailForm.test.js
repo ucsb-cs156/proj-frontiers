@@ -40,9 +40,7 @@ describe("RoleEmailForm tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RoleEmailForm
-            initialContents={roleEmailFixtures.oneRoleEmail}
-          />
+          <RoleEmailForm initialContents={roleEmailFixtures.oneRoleEmail} />
         </Router>
       </QueryClientProvider>,
     );

@@ -8,7 +8,11 @@ import {
 } from "main/utils/RoleEmailUtils";
 import { hasRole } from "main/utils/currentUser";
 
-export default function RoleEmailTable({ users, currentUser, testIdPrefix = "RoleEmailTable"}) {
+export default function RoleEmailTable({
+  users,
+  currentUser,
+  testIdPrefix = "RoleEmailTable",
+}) {
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
@@ -23,7 +27,7 @@ export default function RoleEmailTable({ users, currentUser, testIdPrefix = "Rol
   const columns = [
     {
       Header: "Email",
-      accessor: "email"
+      accessor: "email",
     },
   ];
 
