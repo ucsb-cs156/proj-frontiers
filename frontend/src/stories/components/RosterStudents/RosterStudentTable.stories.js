@@ -1,6 +1,6 @@
 import React from "react";
 import RosterStudentTable from "main/components/RosterStudents/RosterStudentsTable";
-import RosterStudentsFixtures from "fixtures/RosterStudentsFixtures";
+import RosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
 
 export default {
   title: "components/RosterStudents/RosterStudentTable",

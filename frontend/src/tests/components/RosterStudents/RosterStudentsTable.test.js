@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import RosterStudentsTable from "main/components/RosterStudents/RosterStudentsTable";
-import rosterStudentsFixtures from "fixtures/RosterStudentsFixtures";
+import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
 import { BrowserRouter } from "react-router-dom";
 
 window.alert = jest.fn();
