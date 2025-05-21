@@ -2,7 +2,10 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.*; 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +24,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
-import edu.ucsb.cs156.frontiers.entities.CourseStaff; 
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -32,6 +34,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.*; 
 
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
@@ -44,7 +48,6 @@ public class CoursesController extends ApiController {
 
     @Autowired
     private RosterStudentRepository rosterStudentRepository;
-
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -160,23 +163,20 @@ public class CoursesController extends ApiController {
         );
     }
 
-    @Operation(summary = "student can see what courses they appear on staff roster of and their status in each")
+    @Operation(summary = "Student can see what courses they appear on roster of and their status in each")
     @PreAuthorize("hasRole('ROLE_USER')")
-    @GetMapping("/staff")
-    public List<Map<String, Object>> lookUpStaffCourseRoster() 
+    @GetMapping("/student")
+    public List<Map<String, Object>> lookUpStudentCourseRoster() 
     {
         CurrentUser currentUser = getCurrentUser();
-        String email = currentUser.getUser().getEmail(); 
-        List<CourseStaff> staffRoster = currentUser.getUser().getRoles();
+        String studentEmail = currentUser.getUser().getEmail();
 
         List<Map<String, Object>> matchedCourses = new ArrayList<>();
+        Iterable<RosterStudent> roster = rosterStudentRepository.findAllByEmail(studentEmail); 
 
-        for (CourseStaff st : staffRoster) 
+        for (RosterStudent rs : roster) 
         {
-            Course course = st.getCourse(); 
-            Optional <RosterStudent> studentRoster = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(), currentUser.getUser().getStudentId()); 
-            RosterStudent rs = studentRoster.get(); 
-            
+            Course course = rs.getCourse(); 
             Map<String, Object> courseInfo = new HashMap<>();
             courseInfo.put("id", course.getId());
             courseInfo.put("orgName", course.getOrgName());
@@ -184,10 +184,11 @@ public class CoursesController extends ApiController {
             courseInfo.put("term", course.getTerm());
             courseInfo.put("school", course.getSchool());
             courseInfo.put("installationId", course.getInstallationId());
-            courseInfo.put("status", rs.getOrgStatus()); 
+            courseInfo.put("status", rs.getOrgStatus().name()); 
 
             matchedCourses.add(courseInfo);
         }
+        
         return matchedCourses;
     }
 }
