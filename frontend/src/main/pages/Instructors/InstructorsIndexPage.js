@@ -25,7 +25,7 @@ export default function InstructorsIndexPage() {
     return (
       <Button
         variant="primary"
-        href="/instructors/create"
+        href="/admin/instructors/create"
         style={{ float: "right" }}
       >
         New Instructor

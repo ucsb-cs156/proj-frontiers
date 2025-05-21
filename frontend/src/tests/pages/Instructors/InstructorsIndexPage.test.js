@@ -54,7 +54,7 @@ describe("InstructorsIndexPage tests", () => {
       expect(screen.getByText(/New Instructor/)).toBeInTheDocument();
     });
     const button = screen.getByText(/New Instructor/);
-    expect(button).toHaveAttribute("href", "/instructors/create");
+    expect(button).toHaveAttribute("href", "/admin/instructors/create");
     expect(button).toHaveAttribute("style", "float: right;");
   });
 
