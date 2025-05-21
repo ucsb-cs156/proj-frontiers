@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router-dom";
 
 import RoleEmailForm from "main/components/Users/RoleEmailForm";
-import { roleEmailFormFixtures } from "fixtures/roleEmailFormFixtures";
+import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 
 import { QueryClient, QueryClientProvider } from "react-query";
 
@@ -41,7 +41,7 @@ describe("RoleEmailForm tests", () => {
       <QueryClientProvider client={queryClient}>
         <Router>
           <RoleEmailForm
-            initialContents={roleEmailFormFixtures.oneRoleEmailForm}
+            initialContents={roleEmailFixtures.oneRoleEmail}
           />
         </Router>
       </QueryClientProvider>,
