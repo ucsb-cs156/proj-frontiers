@@ -67,4 +67,10 @@ public abstract class ApiController {
             "message", e.getMessage()
     );
   }
+
+  @ExceptionHandler(UnsupportedOperationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, String> handleUnsupportedOperation(UnsupportedOperationException ex) {
+        return Map.of("message", ex.getMessage());
+    }
 }
