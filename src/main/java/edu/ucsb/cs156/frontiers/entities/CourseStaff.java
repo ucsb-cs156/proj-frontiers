@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
 
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +19,11 @@ public class CourseStaff {
     @JoinColumn(name = "user_id")
     @ToString.Exclude
     private User user;
+
+    private String email; 
+
+    @Enumerated(EnumType.STRING)
+    private OrgStatus orgStatus; 
 
     @ManyToOne
     @JoinColumn(name = "course_id")
