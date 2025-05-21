@@ -24,9 +24,11 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
@@ -47,6 +49,9 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     @MockitoBean
     private RosterStudentRepository rosterStudentRepository;
+
+    @MockitoBean
+    private CourseStaffRepository courseStaffRepository;
 
     @MockitoBean
     private CurrentUserService currentUserService;
@@ -304,16 +309,16 @@ public class CoursesControllerTests extends ControllerTestCase {
     }
 
     @Test
-    @WithMockUser(roles = { "USER" })
-    public void testLookUpStudentCourseRoster() throws Exception {
+    @WithMockUser(roles = { "ADMIN" })
+    public void testLookUpStaffCourseRoster() throws Exception {
 
         User user = User.builder()
                 .email("cgaucho@example.org")
+                .studentId("ABCD")
                 .build();
         CurrentUser cUser = CurrentUser.builder()
                 .user(user)
                 .build(); 
-        when(currentUserService.getCurrentUser()).thenReturn(cUser); 
 
         Course course = Course.builder()
                 .id(1L)
@@ -333,18 +338,27 @@ public class CoursesControllerTests extends ControllerTestCase {
                 .school("Engineering")
                 .build();
 
-        RosterStudent rs1 = RosterStudent.builder()
-                .user(user)
+        CourseStaff sr1 = CourseStaff.builder()
                 .email("cgaucho@example.org")
                 .course(course)
-                .rosterStatus(RosterStatus.MANUAL)
                 .orgStatus(OrgStatus.NONE)
                 .build();
-        
-        when(courseRepository.findAll()).thenReturn(List.of(course, course2));
-        when(rosterStudentRepository.findAllByEmail("cgaucho@example.org")).thenReturn(List.of(rs1));
 
-        MvcResult response = mockMvc.perform(get("/api/courses/student"))
+        RosterStudent rs = RosterStudent.builder()
+                .user(user)
+                .course(course)
+                .studentId("ABCD")
+                .orgStatus(OrgStatus.NONE)
+                .build();
+
+        user.setLinkedStudents(List.of(rs)); 
+        user.setRoles(List.of(sr1)); 
+        when(currentUserService.getCurrentUser()).thenReturn(cUser); 
+        when(courseRepository.findAll()).thenReturn(List.of(course, course2));
+        when(courseStaffRepository.findAllByEmail("cgaucho@example.org")).thenReturn(List.of(sr1));
+        when(rosterStudentRepository.findByCourseIdAndStudentId(1L, "ABCD")).thenReturn(Optional.of(rs));
+
+        MvcResult response = mockMvc.perform(get("/api/courses/staff"))
                 .andExpect(status().isOk())
                 .andReturn();
 
