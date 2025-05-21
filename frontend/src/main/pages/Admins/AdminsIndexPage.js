@@ -35,9 +35,9 @@ export default function AdminsIndexPage() {
   };
 
   const onError = (error) => {
-    const message = error.response?.data;
+    const message = error.response.data;
 
-    if (error.response?.status === 403 && typeof message === "string") {
+    if (error.response.status === 403 && typeof message === "string") {
       toast.error(message);
     } else {
       toast.error("Error deleting admin.");

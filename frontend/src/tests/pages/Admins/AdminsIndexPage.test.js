@@ -226,4 +226,127 @@ describe("AdminsIndexPage tests", () => {
       expect(mockToast).toHaveBeenCalledWith("Error deleting admin."),
     );
   });
+
+  test("handles error with 403 status but non-string message", async () => {
+    setupAdminUser();
+
+    const admin = { email: "test@example.com" };
+
+    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+
+    // mock a 403 response but with a non-string message
+    axiosMock
+      .onDelete("/api/admin/admins", { params: { email: admin.email } })
+      .reply(403, { error: "This is an object error message" });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const testId = "RoleEmailTable";
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-email`),
+      ).toHaveTextContent("test@example.com");
+    });
+
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith("Error deleting admin.");
+    });
+  });
+
+  test("handles error without response object", async () => {
+    setupAdminUser();
+
+    const admin = { email: "test@example.com" };
+
+    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+
+    // mock an error without a response property
+    axiosMock
+      .onDelete("/api/admin/admins", { params: { email: admin.email } })
+      .reply(() => {
+        throw { message: "Network Error" }; // this error doesn't have a response property
+      });
+
+    const restoreConsole = mockConsole();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const testId = "RoleEmailTable";
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-email`),
+      ).toHaveTextContent("test@example.com");
+    });
+
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockToast.mock.calls).toContainEqual([
+        "Axios Error: [object Object]",
+      ]);
+    });
+
+    restoreConsole();
+  });
+
+  test("handles error with non-403 status", async () => {
+    setupAdminUser();
+
+    const admin = { email: "test@example.com" };
+
+    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+
+    // mock a non-403 error with a string message
+    axiosMock
+      .onDelete("/api/admin/admins", { params: { email: admin.email } })
+      .reply(400, "Bad Request Error");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const testId = "RoleEmailTable";
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-email`),
+      ).toHaveTextContent("test@example.com");
+    });
+
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      // generic error message since its not 403
+      expect(mockToast).toHaveBeenCalledWith("Error deleting admin.");
+    });
+  });
 });
