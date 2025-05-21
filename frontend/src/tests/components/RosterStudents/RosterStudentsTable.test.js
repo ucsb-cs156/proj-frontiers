@@ -140,7 +140,6 @@ describe("RosterStudentsTable tests", () => {
   });
 
   test("Delete button appears and calls delete callback", async () => {
-
     const axiosMock = new AxiosMockAdapter(axios);
     axiosMock
       .onDelete("/api/rosterstudents")
@@ -164,7 +163,6 @@ describe("RosterStudentsTable tests", () => {
     expect(deleteButton).toHaveTextContent("Delete");
     expect(deleteButton).toHaveAttribute("class", "btn btn-danger");
 
-    
     fireEvent.click(deleteButton);
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
