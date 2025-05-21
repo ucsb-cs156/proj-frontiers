@@ -1,7 +1,7 @@
 { "databaseChangeLog": [
   {
     "changeSet": {
-      "id": "RosterStudent-1",
+      "id": "RosterStudent",
       "author": "DanielJ",
       "preConditions": [
         {
@@ -59,18 +59,6 @@
               {
                 "column": {
                   "name": "ROLE",
-                  "type": "VARCHAR(255)"
-                }
-              }, 
-              {
-                "column": {
-                  "name": "ORG_STATUS",
-                  "type": "VARCHAR(255)"
-                }
-              }, 
-              {
-                "column": {
-                  "name": "EMAIL",
                   "type": "VARCHAR(255)"
                 }
               }              
