@@ -61,25 +61,13 @@
                   "name": "ROLE",
                   "type": "VARCHAR(255)"
                 }
-              }, 
-              {
-                "column": {
-                  "name": "ORG_STATUS",
-                  "type": "VARCHAR(255)"
-                }
-              }, 
-              {
-                "column": {
-                  "name": "EMAIL",
-                  "type": "VARCHAR(255)"
-                }
               }              
             ]
           ,
             "tableName": "COURSE_STAFF"
           }
-        }]
-
+        }
+      ]
     }
   }
 ]}
