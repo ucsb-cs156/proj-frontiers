@@ -1,6 +1,6 @@
 import React from "react";
 import RosterStudentTable from "main/components/RosterStudents/RosterStudentsTable";
-import RosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
+import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
 
 export default {
   title: "components/RosterStudents/RosterStudentTable",
@@ -18,14 +18,14 @@ Empty.args = {
 
 export const ThreeRosterStudents = Template.bind({});
 ThreeRosterStudents.args = {
-  rosterStudents: RosterStudentsFixtures.threeRosterStudents,
+  rosterStudents: rosterStudentsFixtures.threeRosterStudents,
   showButtons: false,
   storybook: true,
 };
 
 export const ThreeRosterStudentsWithButtons = Template.bind({});
 ThreeRosterStudentsWithButtons.args = {
-  rosterStudents: RosterStudentsFixtures.threeRosterStudents,
+  rosterStudents: rosterStudentsFixtures.threeRosterStudents,
   showButtons: true,
   storybook: true,
 };
