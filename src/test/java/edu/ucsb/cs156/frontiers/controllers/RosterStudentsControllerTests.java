@@ -906,4 +906,59 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         assertTrue(ts.contains("id=10"));
         assertTrue(ts.contains("studentId=X"));
         }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_can_delete_a_rosterstudent() throws Exception {
+                // arrange
+                Long id = 15L;
+                RosterStudent rs = RosterStudent.builder()
+                .id(id)
+                .studentId("s12345")
+                .firstName("Bob")
+                .lastName("Smith")
+                .email("alice@ucsb.edu")
+                .build();
+
+                when(rosterStudentRepository.findById(eq(id)))
+                .thenReturn(Optional.of(rs));
+
+                // act
+                MvcResult response = mockMvc.perform(
+                        delete("/api/rosterstudents/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(id);
+                verify(rosterStudentRepository, times(1)).delete(rs);
+
+                // since controller returns plain text, we can assert the body directly:
+                assertEquals("Deleted roster student 15",
+                        response.getResponse().getContentAsString());
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_tries_to_delete_non_existent_rosterstudent_and_gets_right_error_message()
+                        throws Exception {
+                // arrange
+                Long id = 15L;
+                when(rosterStudentRepository.findById(eq(id)))
+                .thenReturn(Optional.empty());
+
+                // act
+                MvcResult response = mockMvc.perform(
+                        delete("/api/rosterstudents/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(id);
+
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("RosterStudent with id 15 not found", json.get("message"));
+        }
 }
