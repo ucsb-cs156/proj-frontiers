@@ -38,11 +38,11 @@ describe("RoleEmailUtils", () => {
       const cell = { row: { values: { email: "testemail@ucsb.edu" } } };
 
       // act
-      const result = cellToAxiosParamsDelete(cell, "admin");
+      const result = cellToAxiosParamsDelete(cell, "admins");
 
       // assert
       expect(result).toEqual({
-        url: "/api/admin",
+        url: "/api/admin/admins",
         method: "DELETE",
         params: { email: "testemail@ucsb.edu" },
       });

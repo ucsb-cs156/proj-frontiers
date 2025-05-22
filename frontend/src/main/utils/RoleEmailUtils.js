@@ -7,7 +7,7 @@ export function onDeleteSuccess(message) {
 
 export function cellToAxiosParamsDelete(cell, role) {
   return {
-    url: `/api/${role.toLowerCase()}`,
+    url: `/api/admin/${role.toLowerCase()}`,
     method: "DELETE",
     params: {
       email: cell.row.values.email,

@@ -29,7 +29,7 @@ describe("RoleEmailTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <RoleEmailTable items={[]} currentUser={currentUser} role="admin" />
+          <RoleEmailTable items={[]} currentUser={currentUser} role="admins" />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -170,6 +170,37 @@ describe("RoleEmailTable tests", () => {
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
     expect(axiosMock.history.delete[0].params).toEqual({
       email: "instructor1@example.com",
+    });
+  });
+
+  test("handles rendering table gracefully when non-array object is passed", () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    // act
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable
+            items={null}
+            currentUser={currentUser}
+            role="admins"
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // assert
+    expectedHeaders.forEach((headerText) => {
+      const header = screen.getByText(headerText);
+      expect(header).toBeInTheDocument();
+    });
+
+    expectedFields.forEach((field) => {
+      const fieldElement = screen.queryByTestId(
+        `${testId}-cell-row-0-col-${field}`,
+      );
+      expect(fieldElement).not.toBeInTheDocument();
     });
   });
 });

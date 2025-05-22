@@ -21,14 +21,6 @@ Empty.args = {
   role: "admin",
 };
 
-export const ThreeItemsOrdinaryUser = Template.bind({});
-
-ThreeItemsOrdinaryUser.args = {
-  items: roleEmailFixtures.threeItems,
-  currentUser: currentUserFixtures.userOnly,
-  role: "instructor",
-};
-
 export const ThreeItemsAdminUser = Template.bind({});
 ThreeItemsAdminUser.args = {
   items: roleEmailFixtures.threeItems,
@@ -38,7 +30,7 @@ ThreeItemsAdminUser.args = {
 
 ThreeItemsAdminUser.parameters = {
   msw: [
-    http.delete(new RegExp("/api/(admin|instructor)"), () => {
+    http.delete(new RegExp("/api/admins/(admin|instructor)"), () => {
       return HttpResponse.json(
         { message: "Item deleted successfully" },
         { status: 200 },

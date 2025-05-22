@@ -13,22 +13,23 @@ export default function RoleEmailTable({
   currentUser,
   role,
   testIdPrefix = "RoleEmailTable",
+  deleteCallback: customDeleteCallback, // optional deleteCallback, used in AdminsIndexPage
 }) {
-  //const role = hasRole(currentUser, "ROLE_ADMIN") ? "admin" : "instructor";
-
   // Stryker disable all : hard to test for query caching
 
-  const deleteMutation = useBackendMutation(
-    ({ cell }) => cellToAxiosParamsDelete(cell, role),
+  const defaultDeleteMutation = useBackendMutation(
+    (cell) => cellToAxiosParamsDelete(cell, role),
     { onSuccess: onDeleteSuccess },
-    [`/api/${role.toLowerCase()}/all`],
+    [`/api/admin/${role.toLowerCase()}/all`],
   );
   // Stryker restore all
 
   // Stryker disable next-line all
-  const deleteCallback = async (cell) => {
-    deleteMutation.mutate({ cell });
+  const defaultDeleteCallback = async (cell) => {
+    defaultDeleteMutation.mutate(cell);
   };
+
+  const deleteCallback = customDeleteCallback || defaultDeleteCallback;
 
   const columns = [
     {
@@ -43,5 +44,11 @@ export default function RoleEmailTable({
     );
   }
 
-  return <OurTable data={items} columns={columns} testid={testIdPrefix} />;
+  return (
+    <OurTable
+      data={Array.isArray(items) ? items : []}
+      columns={columns}
+      testid={testIdPrefix}
+    />
+  );
 }
