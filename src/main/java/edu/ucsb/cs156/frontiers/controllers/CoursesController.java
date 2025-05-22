@@ -25,6 +25,7 @@ import java.util.ArrayList;
 
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
@@ -35,6 +36,7 @@ import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -55,6 +57,9 @@ public class CoursesController extends ApiController {
 
     @Autowired
     private RosterStudentRepository rosterStudentRepository;
+
+    @Autowired
+    private CourseStaffRepository courseStaffRepository;
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -190,6 +195,32 @@ public class CoursesController extends ApiController {
         List<Long> courseIds = new ArrayList<>();
         for (RosterStudent roster : rosters) {
             courseIds.add(roster.getCourse().getId());
+        }
+
+        Iterable<Course> courses = courseRepository.findAllById(courseIds);
+        return courses;
+    }
+
+    /**
+     * student see what courses they appear as staff in
+     * 
+     * @param studentId the id of the student making request
+     * @return a list of all courses student is staff in
+     */
+    @Operation(summary= "Student see what courses they appear as staff in")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/staffCourses") 
+    public Iterable<Course> staffCourses() {
+        CurrentUser currentUser = getCurrentUser();
+        User user = currentUser.getUser();
+
+        String email = user.getEmail();
+
+        Iterable<CourseStaff> staffs = courseStaffRepository.findAllByEmail(email);
+        
+        List<Long> courseIds = new ArrayList<>();
+        for (CourseStaff staff : staffs) {
+            courseIds.add(staff.getCourse().getId());
         }
 
         Iterable<Course> courses = courseRepository.findAllById(courseIds);
