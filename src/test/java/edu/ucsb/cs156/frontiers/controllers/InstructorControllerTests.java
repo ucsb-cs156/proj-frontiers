@@ -54,28 +54,28 @@ public class InstructorControllerTests extends ControllerTestCase{
 
     @Test
     public void logged_out_users_cannot_get_all() throws Exception {
-            mockMvc.perform(get("/api/instructor/all"))
+            mockMvc.perform(get("/api/admin/instructor/all"))
                             .andExpect(status().is(403)); 
     }
 
     @WithMockUser(roles = { "USER" })
     @Test
     public void logged_in_users_canot_get_all() throws Exception {
-            mockMvc.perform(get("/api/instructor/all"))
+            mockMvc.perform(get("/api/admin/instructor/all"))
                             .andExpect(status().is(403)); 
     }
 
     @WithMockUser(roles = { "ADMIN" })
     @Test
     public void admin_users_can_get_all() throws Exception {
-            mockMvc.perform(get("/api/instructor/all"))
+            mockMvc.perform(get("/api/admin/instructor/all"))
                             .andExpect(status().is(200)); 
     }
 
 
         @Test
         public void logged_out_users_cannot_post() throws Exception {
-                mockMvc.perform(post("/api/instructor/post"))
+                mockMvc.perform(post("/api/admin/instructor/post"))
                                 .andExpect(status().is(403));
         }
 
@@ -84,7 +84,7 @@ public class InstructorControllerTests extends ControllerTestCase{
         @WithMockUser(roles = { "USER" })
         @Test
         public void logged_in_regular_users_cannot_post() throws Exception {
-                mockMvc.perform(post("/api/instructor/post"))
+                mockMvc.perform(post("/api/admin/instructor/post"))
                                 .andExpect(status().is(403));
         }
 
@@ -104,7 +104,7 @@ public class InstructorControllerTests extends ControllerTestCase{
 
                 when(instructorRepository.findAll()).thenReturn(expectedInstructor);
 
-                MvcResult response = mockMvc.perform(get("/api/instructor/all"))
+                MvcResult response = mockMvc.perform(get("/api/admin/instructor/all"))
                                 .andExpect(status().isOk()).andReturn();
 
 
@@ -125,7 +125,7 @@ public class InstructorControllerTests extends ControllerTestCase{
                 when(instructorRepository.save(eq(instructor))).thenReturn(instructor);
 
                 MvcResult response = mockMvc.perform(
-                                post("/api/instructor/post?email=jasonz2005@gmail.com")
+                                post("/api/admin/instructor/post?email=jasonz2005@gmail.com")
                                                 .with(csrf()))
                                 .andExpect(status().isOk()).andReturn();
 
@@ -148,7 +148,7 @@ public class InstructorControllerTests extends ControllerTestCase{
 
 
                 MvcResult response = mockMvc.perform(
-                                delete("/api/instructor?email=jasonz2005@gmail.com")
+                                delete("/api/admin/instructor?email=jasonz2005@gmail.com")
                                                 .with(csrf()))
                                 .andExpect(status().isOk()).andReturn();
 
@@ -167,7 +167,7 @@ public class InstructorControllerTests extends ControllerTestCase{
                 when(instructorRepository.findById(eq("jasonz2005@gmail.com"))).thenReturn(Optional.empty());
 
                 MvcResult response = mockMvc.perform(
-                                delete("/api/instructor?email=jasonz2005@gmail.com")
+                                delete("/api/admin/instructor?email=jasonz2005@gmail.com")
                                                 .with(csrf()))
                                 .andExpect(status().isNotFound()).andReturn();
 

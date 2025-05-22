@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "Instructors")
-@RequestMapping("/api/instructor")
+@RequestMapping("/api/admin/instructor")
 @RestController
 @Slf4j
 public class InstructorController extends ApiController{
