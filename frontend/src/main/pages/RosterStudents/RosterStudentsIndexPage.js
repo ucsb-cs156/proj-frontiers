@@ -4,41 +4,38 @@ import { useBackend } from "main/utils/useBackend";
 import { useParams } from "react-router-dom";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import RosterStudentsTable from "main/components/RosterStudents/RosterStudentsTable";
-import { useCurrentUser, hasRole } from "main/utils/currentUser";
 import { Button } from "react-bootstrap";
 
 export default function RosterStudentsIndexPage() {
   const { courseId } = useParams();
-  const currentUser = useCurrentUser();
 
   const {
     data: rosterStudents,
     error: _error,
     status: _status,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
+    // Stryker disable all: don't test internal caching of React Query
     ["/api/rosterStudents/all", { courseId }],
     {
       method: "GET",
       url: "/api/rosterstudents/course",
       params: { courseId: courseId },
     },
-    // Stryker disable next-line all : don't test default value of empty list
     [],
+    // Stryker enable all
   );
 
+  // Do not need to check whether user is admin or not. The only way to access index page is if the user is an admin.
   const createButton = () => {
-    if (hasRole(currentUser, "ROLE_ADMIN")) {
-      return (
-        <Button
-          variant="primary"
-          href="roster_students/new"
-          style={{ float: "right" }}
-        >
-          Create Roster Student
-        </Button>
-      );
-    }
+    return (
+      <Button
+        variant="primary"
+        href="roster_students/new"
+        style={{ float: "right" }}
+      >
+        Create Roster Student
+      </Button>
+    );
   };
 
   return (
