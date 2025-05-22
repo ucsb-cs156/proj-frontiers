@@ -21,7 +21,7 @@ export default function AdminsCreatePage({ storybook = false }) {
     objectToAxiosParams,
     { onSuccess },
     // Stryker disable next-line all : hard to set up test for caching
-    ["/api/admin/admins"], // mutation makes this key stale so that pages relying on it reload
+    ["/api/admin/admins/all"], // mutation makes this key stale so that pages relying on it reload
   );
 
   const { isSuccess } = mutation;
@@ -31,7 +31,7 @@ export default function AdminsCreatePage({ storybook = false }) {
   };
 
   if (isSuccess && !storybook) {
-    return <Navigate to="/admins" />;
+    return <Navigate to="/admin/admins" />;
   }
 
   return (
