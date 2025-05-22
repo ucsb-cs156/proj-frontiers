@@ -978,7 +978,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .andExpect(status().is(403)); // only admins can delete
         }
 
-        @WithMockUser(roles = { "ADMIN", "USER" })
+        @WithMockUser(roles = { "ADMIN" })
         @Test
         public void admin_can_delete_a_rosterstudent() throws Exception {
                 // arrange
@@ -1025,7 +1025,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 "RosterStudent should be removed from course1's roster list");
         }
 
-        @WithMockUser(roles = { "ADMIN", "USER" })
+        @WithMockUser(roles = { "ADMIN" })
         @Test
         public void admin_tries_to_delete_non_existant_rosterstudent_and_gets_right_error_message()
                         throws Exception {
