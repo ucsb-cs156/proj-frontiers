@@ -1,0 +1,40 @@
+{
+    "databaseChangeLog": [
+      {
+        "changeSet": {
+          "id": "0001-create-admin-table",
+          "author": "yourname",
+          "changes": [
+            {
+              "createTable": {
+                "tableName": "admin",
+                "columns": [
+                  {
+                    "column": {
+                      "name": "id",
+                      "type": "BIGINT",
+                      "autoIncrement": true,
+                      "constraints": {
+                        "primaryKey": true,
+                        "nullable": false
+                      }
+                    }
+                  },
+                  {
+                    "column": {
+                      "name": "email",
+                      "type": "VARCHAR(255)",
+                      "constraints": {
+                        "nullable": false,
+                        "unique": true
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
