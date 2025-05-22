@@ -1,7 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import java.util.List;
-
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,39 +20,18 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "Admins")
-@RequestMapping("/api/admins")
+@RequestMapping("/api/admin/admins")
 @RestController
 @Slf4j
 public class AdminController extends ApiController{
     @Autowired
     AdminRepository adminRepository;
 
-    // @Value("${ADMIN_EMAILS:}")
-    // private String adminEmailsRaw;
-
-    // private List<String> adminEmails;
-
-    // @PostConstruct
-    // public void init() {
-
-    //     log.info("Loaded ADMIN_EMAILS: '{}'", adminEmailsRaw);
-
-    //     if (adminEmailsRaw != null && !adminEmailsRaw.isBlank()) {
-    //         adminEmails = List.of(adminEmailsRaw.split("\\s*,\\s*"));
-    //     } else {
-    //         adminEmails = List.of(); // default to empty list
-    //     }
-
-    //     log.info("Parsed adminEmails list: {}", adminEmails);
-
-
-    // }
-    @Value("#{'${app.admin-emails}'.split(',')}")
-    private List<String> adminEmails;
+    @Value("${app.admin.emails}")
+    private String[] protectedAdminEmails;
 
     @Operation(summary= "List all Admins")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -84,11 +62,11 @@ public class AdminController extends ApiController{
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("")
     public Object deleteAdmin(@Parameter(name="email") @RequestParam String email) {
-        
-        if (adminEmails.contains(email)) {
-            throw new UnsupportedOperationException("Cannot delete admin email: " + email);
-        }
 
+        if (Arrays.asList(protectedAdminEmails).contains(email)) {
+            throw new UnsupportedOperationException("Cannot delete protected admin: " + email);
+        }
+        
         Admin  admin = adminRepository.findById(email)
                 .orElseThrow(() -> new EntityNotFoundException(Admin.class, email));
 
