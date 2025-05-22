@@ -15,21 +15,26 @@ function RoleEmailForm({ submitAction, buttonLabel = "Create" }) {
 
   const testIdPrefix = "RoleEmailForm";
 
+  // Stryker disable next-line Regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   return (
     <Form onSubmit={handleSubmit(submitAction)}>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="email">Email</Form.Label>
         <Form.Control
+          // Stryker disable next-line all
           data-testid={testIdPrefix + "-email"}
           id="email"
           type="text"
           isInvalid={Boolean(errors.email)}
           {...register("email", {
             required: "Email is required.",
+            pattern: emailRegex,
           })}
         />
         <Form.Control.Feedback type="invalid">
-          {errors.email?.message}
+          {errors.email && "A valid email is required."}
         </Form.Control.Feedback>
       </Form.Group>
 

@@ -62,6 +62,16 @@ describe("RoleEmailForm tests", () => {
     const submitButton = screen.getByText(/Create/);
     fireEvent.click(submitButton);
 
-    await screen.findByText(/Email is required/);
+    await screen.findByText(/A valid email is required./);
+
+    const endInput = screen.getByTestId(`${testId}-email`);
+    fireEvent.change(endInput, { target: { value: "email" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/A valid email is required./),
+      ).toBeInTheDocument();
+    });
   });
 });
