@@ -27,7 +27,7 @@ Empty.parameters = {
         status: 200,
       });
     }),
-    http.get("/api/admin/instructors", () => {
+    http.get("/api/admin/instructors/all", () => {
       return HttpResponse.json([], { status: 200 });
     }),
   ],
@@ -43,10 +43,10 @@ ThreeItemsAdminUser.parameters = {
     http.get("/api/systemInfo", () => {
       return HttpResponse.json(systemInfoFixtures.showingNeither);
     }),
-    http.get("/api/admin/instructors", () => {
+    http.get("/api/admin/instructors/all", () => {
       return HttpResponse.json(roleEmailFixtures.threeItems);
     }),
-    http.delete("/api/instructors", () => {
+    http.delete("/api/admins/instructors/all", () => {
       return HttpResponse.json(
         { message: "Item deleted successfully" },
         { status: 200 },
