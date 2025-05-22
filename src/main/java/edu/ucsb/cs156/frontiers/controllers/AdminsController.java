@@ -16,11 +16,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
 
 @Tag(name = "Admins")
 @RequestMapping("/api/admins")
@@ -63,6 +68,9 @@ public class AdminsController extends ApiController{
         return admins;
     }
 
+    @Value("#{'${app.admin.emails}'.split(',')}")
+    private List<String> adminEmails;
+
     /**
      * Delete an admin. Accessible only to users with the role "ROLE_ADMIN".
      * @param email email of the admin
@@ -75,6 +83,10 @@ public class AdminsController extends ApiController{
             @Parameter(name="email") @RequestParam String email) {
         Admin admin = adminRepository.findById(email)
                 .orElseThrow(() -> new EntityNotFoundException(Admin.class, email));
+
+        if (adminEmails.contains(email)) {
+        throw new UnsupportedOperationException("Can not delete an admin from ADMIN_EMAILS list");
+        }
 
         adminRepository.delete(admin);
         return genericMessage("Admin with id %s deleted".formatted(email));

@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import org.springframework.test.context.TestPropertySource;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @WebMvcTest(controllers = AdminsController.class)
 @Import(TestConfig.class)
+@TestPropertySource(properties = 
+"ADMIN_EMAILS=djensen@ucsb.edu,benjaminconte@ucsb.edu,samuelzhu@ucsb.edu,divyanipunj@ucsb.edu,sangitakunapuli@ucsb.edu,amey@ucsb.edu,phtcon@ucsb.edu,saul_diaz@ucsb.edu,jonahso@ucsb.edu,luismendoza@ucsb.edu,shuang_li@ucsb.edu,t_rocha@ucsb.edu,wsong@ucsb.edu")
 public class AdminsControllerTests extends ControllerTestCase {
 
     @MockBean
@@ -167,4 +170,32 @@ public class AdminsControllerTests extends ControllerTestCase {
                 .with(csrf()))
             .andExpect(status().is(403));
     }
+
+    @WithMockUser(roles = { "ADMIN" })
+    @Test
+    public void admin_tries_to_delete_an_ADMIN_EMAIL_and_gets_right_error_message()
+                    throws Exception {
+
+            Admin admin = Admin.builder()
+                    .email("saul_diaz@ucsb.edu")
+                    .build();
+
+            when(adminRepository.findById("saul_diaz@ucsb.edu")).thenReturn(Optional.of(admin));
+
+            // act
+            MvcResult response = mockMvc.perform(
+                            delete("/api/admins")
+                                    .param("email", "saul_diaz@ucsb.edu")
+                                    .with(csrf()))
+                            .andExpect(status().is(403)).andReturn();
+
+            String content = response.getResponse().getContentAsString();
+            System.out.println("Response content: " + content);
+
+            // assert
+            verify(adminRepository, times(1)).findById("saul_diaz@ucsb.edu");
+            Map<String, Object> json = responseToJson(response);
+            assertEquals("Can not delete an admin from ADMIN_EMAILS list", json.get("message"));
+    }
+
 }
