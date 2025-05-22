@@ -197,7 +197,7 @@ public class CoursesController extends ApiController {
         return matchedCourses;
     }
 
-    @Operation(summary = "student can see what courses they appear on staff roster of and their status in each")
+    @Operation(summary = "Student can see what courses they appear on staff roster of and their status in each")
     @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/staff")
     public List<Map<String, Object>> lookUpStaffCourseRoster() 
