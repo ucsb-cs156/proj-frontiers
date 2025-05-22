@@ -53,10 +53,6 @@ public class CourseStaffController extends ApiController {
     @Autowired
     private OrganizationMemberService organizationMemberService;
 
-    public enum InsertStatus {
-        INSERTED, UPDATED
-    };
-
     @Autowired
     private CourseStaffRepository courseStaffRepository;
 
