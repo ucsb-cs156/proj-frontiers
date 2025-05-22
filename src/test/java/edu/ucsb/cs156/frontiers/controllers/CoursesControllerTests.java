@@ -38,6 +38,7 @@ import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
@@ -46,6 +47,9 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -289,6 +293,12 @@ public class CoursesControllerTests extends ControllerTestCase {
                 assertEquals(expectedJson, responseString);
         }
 
+    @MockitoBean
+    private CourseStaffRepository courseStaffRepository;
+
+    /**
+     * Test the POST endpoint
+     */
     @Test
     public void testListCoursesForCurrentUser() throws Exception {
         String email = "student@example.com";
@@ -344,5 +354,65 @@ public class CoursesControllerTests extends ControllerTestCase {
 
         String expectedJson = mapper.writeValueAsString(List.of(expected));
         assertEquals(expectedJson, result.getResponse().getContentAsString());
+    }
+
+    @Test
+    @WithMockUser(roles = {"USER"})
+    public void testStudenIsStaffInCourse() throws Exception {
+        // arrange
+        User currentUser = User.builder()
+            .id(123L)
+            .email("user@example.org")
+            .build();
+
+        Course course1 = Course.builder()
+                        .id(1L)
+                        .courseName("CS156")
+                        .orgName("ucsb-cs156-s25")
+                        .term("S25")
+                        .school("UCSB")
+                        .build();
+
+        Course course2 = Course.builder()
+                        .id(2L)
+                        .courseName("CS24")
+                        .orgName("ucsb-cs24-s25")
+                        .term("S25")
+                        .school("UCSB")
+                        .build();
+
+        
+        CourseStaff cs1 = CourseStaff.builder()
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .email("user@example.org")
+                        .course(course1)
+                        .user(currentUser)
+                        .build();
+
+        CourseStaff cs2 = CourseStaff.builder()
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .email("user@example.org")
+                        .course(course2)
+                        .user(currentUser)
+                        .build();
+
+        when(courseStaffRepository.findAllByEmail("user@example.org"))
+                .thenReturn(List.of(cs1, cs2));
+
+        when(courseRepository.findAllById(List.of(1L, 2L)))
+                .thenReturn(List.of(course1, course2));
+
+        // act
+        MvcResult response = mockMvc.perform(get("/api/courses/staffCourses")
+                        .param("studentId", "123"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // assert
+        String responseString = response.getResponse().getContentAsString();
+        String expectedJson = mapper.writeValueAsString(List.of(course1, course2));
+        assertEquals(expectedJson, responseString);
     }
 }
