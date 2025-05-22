@@ -45,7 +45,7 @@ describe("AdminsIndexPage tests", () => {
 
   test("Renders with New Admin Button", async () => {
     setupAdminUser();
-    axiosMock.onGet("/api/admin/admins").reply(200, []);
+    axiosMock.onGet("/api/admin/admins/all").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
