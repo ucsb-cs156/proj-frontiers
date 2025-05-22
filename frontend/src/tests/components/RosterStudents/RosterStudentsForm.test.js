@@ -88,9 +88,13 @@ describe("RosterStudentsForm tests", () => {
     fireEvent.click(submitButton);
 
     await screen.findByTestId(`${testId}-studentId`);
+    await screen.findByText(/Student Id is required./);
     expect(screen.getByTestId(`${testId}-firstName`)).toBeInTheDocument();
+    expect(screen.getByText(/First Name is required/)).toBeInTheDocument();
     expect(screen.getByTestId(`${testId}-lastName`)).toBeInTheDocument();
+    expect(screen.getByText(/Last Name is required/)).toBeInTheDocument();
     expect(screen.getByTestId(`${testId}-email`)).toBeInTheDocument();
+    expect(screen.getByText(/Email is required/)).toBeInTheDocument();
 
     const studentIdInput = screen.getByTestId(`${testId}-studentId`);
     fireEvent.change(studentIdInput, { target: { value: "a".repeat(256) } });
