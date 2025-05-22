@@ -35,7 +35,7 @@ ThreeItemsAdminUser.parameters = {
   msw: [
     http.delete("/api/roleemails", () => {
       return HttpResponse.json(
-        { message: "Organization deleted successfully" },
+        { message: "User deleted successfully" },
         { status: 200 },
       );
     }),
