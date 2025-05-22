@@ -27,6 +27,7 @@ export default function CoursesIndexPage() {
         <CoursesTable
           courses={courses}
           showInstallButton={hasRole(currentUser, "ROLE_ADMIN")}
+          showRosterButton={hasRole(currentUser, "ROLE_ADMIN")}
         />
       </div>
     </BasicLayout>

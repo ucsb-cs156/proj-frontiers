@@ -53,7 +53,7 @@ export default function RosterStudentsTable({
   const navigate = useNavigate();
 
   const editCallback = (cell) => {
-    navigate(`/rosterstudents/edit/${cell.row.values.id}`);
+    navigate(`edit/${cell.row.values.id}`);
   };
 
   // Stryker disable all : hard to test for query caching
