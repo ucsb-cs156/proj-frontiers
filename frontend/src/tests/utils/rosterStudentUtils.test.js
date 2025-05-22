@@ -14,7 +14,7 @@ jest.mock("react-toastify", () => {
   };
 });
 
-describe("helpRequestUtils", () => {
+describe("rosterStudentUtils", () => {
   describe("onDeleteSuccess", () => {
     test("It puts the message on console.log and in a toast", () => {
       // arrange
