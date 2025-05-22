@@ -13,9 +13,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Map;
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
@@ -30,9 +27,15 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.*; 
+import edu.ucsb.cs156.frontiers.models.CurrentUser; 
+import edu.ucsb.cs156.frontiers.entities.RosterStudent; 
+import edu.ucsb.cs156.frontiers.enums.*; 
 
 @Slf4j
 @WebMvcTest(controllers = CoursesController.class)
@@ -42,7 +45,10 @@ public class CoursesControllerTests extends ControllerTestCase {
     @MockitoBean
     private CourseRepository courseRepository;
 
-    @Autowired
+    @MockitoBean
+    private RosterStudentRepository rosterStudentRepository;
+
+    @MockitoBean
     private CurrentUserService currentUserService;
 
     @MockitoBean
@@ -55,8 +61,13 @@ public class CoursesControllerTests extends ControllerTestCase {
     @WithMockUser(roles = { "ADMIN" })
     public void testPostCourse() throws Exception {
 
-        User user = currentUserService.getCurrentUser().getUser();
-
+        User user = User.builder()
+                .email("cgaucho@example.org")
+                .build();
+        CurrentUser cUser = CurrentUser.builder()
+                .user(user)
+                .build(); 
+        when(currentUserService.getCurrentUser()).thenReturn(cUser); 
 
         // arrange
         Course course = Course.builder()
@@ -148,7 +159,14 @@ public class CoursesControllerTests extends ControllerTestCase {
     @Test
     @WithMockUser(roles = {"ADMIN"})
     public void testLinkCourseSuccessfully() throws Exception {
-        User user = currentUserService.getCurrentUser().getUser();
+        User user = User.builder()
+                .email("cgaucho@example.org")
+                .build();
+        CurrentUser cUser = CurrentUser.builder()
+                .user(user)
+                .build(); 
+        when(currentUserService.getCurrentUser()).thenReturn(cUser); 
+
         Course course1 = Course.builder()
                 .courseName("CS156")
                 .term("S25")
@@ -200,6 +218,14 @@ public class CoursesControllerTests extends ControllerTestCase {
     @Test
     @WithMockUser(roles = {"ADMIN"})
     public void testNotCreator() throws Exception {
+        User user = User.builder()
+                .email("cgaucho@example.org")
+                .build();
+        CurrentUser cUser = CurrentUser.builder()
+                .user(user)
+                .build(); 
+        when(currentUserService.getCurrentUser()).thenReturn(cUser); 
+
         User separateUser = User.builder().id(2L).build();
         Course course1 = Course.builder()
                 .courseName("CS156")
@@ -243,7 +269,14 @@ public class CoursesControllerTests extends ControllerTestCase {
     @Test
     @WithMockUser(roles = {"ADMIN"})
     public void testNotOrganization() throws Exception {
-        User user = currentUserService.getCurrentUser().getUser();
+        User user = User.builder()
+                .email("cgaucho@example.org")
+                .build();
+        CurrentUser cUser = CurrentUser.builder()
+                .user(user)
+                .build(); 
+        when(currentUserService.getCurrentUser()).thenReturn(cUser); 
+
         Course course1 = Course.builder()
                 .courseName("CS156")
                 .term("S25")
@@ -267,6 +300,65 @@ public class CoursesControllerTests extends ControllerTestCase {
                 "type", "InvalidInstallationTypeException",
                 "message", "Invalid installation type: User. Frontiers can only be linked to organizations");
         String expectedJson = mapper.writeValueAsString(expectedMap);
+        assertEquals(expectedJson, responseString);
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER" })
+    public void testLookUpStudentCourseRoster() throws Exception {
+
+        User user = User.builder()
+                .email("cgaucho@example.org")
+                .build();
+        CurrentUser cUser = CurrentUser.builder()
+                .user(user)
+                .build(); 
+        when(currentUserService.getCurrentUser()).thenReturn(cUser); 
+
+        Course course = Course.builder()
+                .id(1L)
+                .courseName("CS156")
+                .orgName("ucsb-cs156")
+                .installationId(null)
+                .term("F23")
+                .school("Engineering")
+                .build();
+
+        Course course2 = Course.builder()
+                .id(2L)
+                .courseName("CS157")
+                .orgName("ucsb-cs157")
+                .installationId("1234")
+                .term("F23")
+                .school("Engineering")
+                .build();
+
+        RosterStudent rs1 = RosterStudent.builder()
+                .user(user)
+                .email("cgaucho@example.org")
+                .course(course)
+                .rosterStatus(RosterStatus.MANUAL)
+                .orgStatus(OrgStatus.NONE)
+                .build();
+        
+        when(courseRepository.findAll()).thenReturn(List.of(course, course2));
+        when(rosterStudentRepository.findAllByEmail("cgaucho@example.org")).thenReturn(List.of(rs1));
+
+        MvcResult response = mockMvc.perform(get("/api/courses/student"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseString = response.getResponse().getContentAsString();
+        Map<String, Object> expectedMap = new HashMap<>();
+        expectedMap.put("id", course.getId());
+        expectedMap.put("orgName", course.getOrgName());
+        expectedMap.put("courseName", course.getCourseName());
+        expectedMap.put("term", course.getTerm());
+        expectedMap.put("school", course.getSchool());
+        expectedMap.put("installationId", course.getInstallationId()); 
+        expectedMap.put("status", "NONE"); 
+        
+        String expectedJson = mapper.writeValueAsString(List.of(expectedMap));
         assertEquals(expectedJson, responseString);
     }
 }
