@@ -16,6 +16,7 @@ function RosterStudentsForm({
   // Stryker restore all
 
   const navigate = useNavigate();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const testIdPrefix = "RosterStudentsForm";
 
@@ -58,6 +59,7 @@ function RosterStudentsForm({
       <Form.Group className="mb-3">
         <Form.Label htmlFor="firstName">First Name</Form.Label>
         <Form.Control
+          data-testid={testIdPrefix + "-firstName"}
           id="firstName"
           type="text"
           isInvalid={Boolean(errors.firstName)}
@@ -73,6 +75,7 @@ function RosterStudentsForm({
       <Form.Group className="mb-3">
         <Form.Label htmlFor="lastName">Last Name</Form.Label>
         <Form.Control
+          data-testid={testIdPrefix + "-lastName"}
           id="lastName"
           type="text"
           isInvalid={Boolean(errors.lastName)}
@@ -88,12 +91,18 @@ function RosterStudentsForm({
       <Form.Group className="mb-3">
         <Form.Label htmlFor="email">Email</Form.Label>
         <Form.Control
+          data-testid={testIdPrefix + "-email"}
           id="email"
           type="text"
           isInvalid={Boolean(errors.email)}
           {...register("email", {
             required: "Email is required.",
+            pattern: {
+              value: emailRegex,
+              message: "Email is not valid.",
+            },
           })}
+          disabled={initialContents}
         />
         <Form.Control.Feedback type="invalid">
           {errors.email?.message}

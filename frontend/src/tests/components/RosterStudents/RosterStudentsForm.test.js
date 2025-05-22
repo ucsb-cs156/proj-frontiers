@@ -87,10 +87,10 @@ describe("RosterStudentsForm tests", () => {
     const submitButton = screen.getByTestId(`${testId}-submit`);
     fireEvent.click(submitButton);
 
-    await screen.findByText(/Student Id is required/);
-    expect(screen.getByText(/First Name is required/)).toBeInTheDocument();
-    expect(screen.getByText(/Last Name is required/)).toBeInTheDocument();
-    expect(screen.getByText(/Email is required/)).toBeInTheDocument();
+    await screen.findByTestId(`${testId}-studentId`);
+    expect(screen.getByTestId(`${testId}-firstName`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-lastName`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-email`)).toBeInTheDocument();
 
     const studentIdInput = screen.getByTestId(`${testId}-studentId`);
     fireEvent.change(studentIdInput, { target: { value: "a".repeat(256) } });
@@ -98,6 +98,14 @@ describe("RosterStudentsForm tests", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Max length 255 characters/)).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId(`${testId}-email`);
+    fireEvent.change(emailInput, { target: { value: "invalid email" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Email is not valid/)).toBeInTheDocument();
     });
   });
 });
