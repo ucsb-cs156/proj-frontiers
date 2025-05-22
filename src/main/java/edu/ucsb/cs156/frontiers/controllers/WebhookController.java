@@ -51,12 +51,30 @@ public class WebhookController {
             
             // Handle member_added and member_invited events
             if(action.equals("member_added") || action.equals("member_invited")){
-                // Based on the actual payload structure
-                if (jsonBody.has("user") && jsonBody.get("user").has("login") && 
-                    jsonBody.has("installation") && jsonBody.get("installation").has("id")) {
+                // Extract GitHub login based on payload structure
+                String githubLogin = null;
+                String installationId = null;
+                
+                // For member_added events, the structure is different
+                if (action.equals("member_added") && jsonBody.has("membership") && 
+                    jsonBody.get("membership").has("user") && 
+                    jsonBody.get("membership").get("user").has("login") &&
+                    jsonBody.has("installation") && 
+                    jsonBody.get("installation").has("id")) {
                     
-                    String githubLogin = jsonBody.get("user").get("login").asText();
-                    String installationId = jsonBody.get("installation").get("id").asText();
+                    githubLogin = jsonBody.get("membership").get("user").get("login").asText();
+                    installationId = jsonBody.get("installation").get("id").asText();
+                } 
+                // For member_invited events, use the original structure
+                else if (action.equals("member_invited") && 
+                         jsonBody.has("user") && jsonBody.get("user").has("login") && 
+                         jsonBody.has("installation") && jsonBody.get("installation").has("id")) {
+                    
+                    githubLogin = jsonBody.get("user").get("login").asText();
+                    installationId = jsonBody.get("installation").get("id").asText();
+                }
+                
+                if (githubLogin != null && installationId != null) {
                     log.info("GitHub login: {}, Installation ID: {}", githubLogin, installationId);
                     
                     Optional<Course> course = courseRepository.findByInstallationId(installationId);
