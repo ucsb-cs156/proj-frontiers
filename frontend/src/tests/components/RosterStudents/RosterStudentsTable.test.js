@@ -134,9 +134,7 @@ describe("RosterStudentsTable tests", () => {
 
     fireEvent.click(editButton);
 
-    await waitFor(() =>
-      expect(mockedNavigate).toHaveBeenCalledWith("/rosterstudents/edit/1"),
-    );
+    await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith("edit/1"));
   });
 
   test("Delete button appears and calls delete callback", async () => {
