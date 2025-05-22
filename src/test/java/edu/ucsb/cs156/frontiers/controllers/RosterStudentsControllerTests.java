@@ -13,10 +13,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
@@ -29,7 +25,6 @@ import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -39,12 +34,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 
 import org.springframework.http.MediaType;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 @Slf4j
 @WebMvcTest(controllers = {RosterStudentsController.class})
