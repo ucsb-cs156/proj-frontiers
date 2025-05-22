@@ -156,7 +156,3 @@ public class CoursesController extends ApiController {
 
 
 }
-
-
-
-}
