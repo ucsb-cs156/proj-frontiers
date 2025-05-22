@@ -62,7 +62,7 @@ describe("InstructorsCreatePage tests", () => {
     });
   });
 
-  test("on submit, makes request to backend, and redirects to /instructors", async () => {
+  test("on submit, makes request to backend, and redirects to /admin/instructors", async () => {
     const queryClient = new QueryClient();
     const instructor = {
       email: "testemailone@ucsb.edu",
@@ -105,7 +105,7 @@ describe("InstructorsCreatePage tests", () => {
       "New instructor added - email: testemailone@ucsb.edu",
     );
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: "/instructors",
+      to: "/admin/instructors",
     });
   });
 });
