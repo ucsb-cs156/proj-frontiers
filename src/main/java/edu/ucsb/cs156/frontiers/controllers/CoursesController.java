@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -160,7 +162,8 @@ public class CoursesController extends ApiController {
     public List<RosterStudentDTO> getRosterForCourse(
             @Parameter(name = "courseId") @RequestParam Long courseId
     ) {
-        List<RosterStudent> students = rosterStudentRepository.findAllByCourseId(courseId);
+        Iterable<RosterStudent> studentsIterable = rosterStudentRepository.findByCourseId(courseId);
+        List<RosterStudent> students = StreamSupport.stream(studentsIterable.spliterator(), false).collect(Collectors.toList());
         return students.stream()
                 .map(RosterStudentDTO::from)
                 .collect(Collectors.toList());
