@@ -7,7 +7,10 @@ import { useCurrentUser } from "main/utils/currentUser";
 import { Button } from "react-bootstrap";
 import { toast } from "react-toastify";
 
+import { useQueryClient } from "react-query";
+
 export default function AdminsIndexPage() {
+  const queryClient = useQueryClient();
   const currentUser = useCurrentUser();
 
   const {
@@ -16,8 +19,8 @@ export default function AdminsIndexPage() {
     status: _status,
   } = useBackend(
     // Stryker disable next-line all : don't test internal caching of React Query
-    ["/api/admin/admins"],
-    { method: "GET", url: "/api/admin/admins" },
+    ["/api/admin/admins/all"],
+    { method: "GET", url: "/api/admin/admins/all" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
   );
@@ -32,6 +35,7 @@ export default function AdminsIndexPage() {
 
   const onSuccess = (response) => {
     toast(`Admin with email ${response.email} deleted`);
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/admins/all"] });
   };
 
   const onError = (error) => {

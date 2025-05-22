@@ -66,7 +66,7 @@ describe("AdminsIndexPage tests", () => {
   test("renders three items correctly", async () => {
     setupAdminUser();
     axiosMock
-      .onGet("/api/admin/admins")
+      .onGet("/api/admin/admins/all")
       .reply(200, roleEmailFixtures.threeItems);
 
     render(
@@ -98,7 +98,7 @@ describe("AdminsIndexPage tests", () => {
   test("renders empty table when backend unavailable", async () => {
     setupAdminUser();
 
-    axiosMock.onGet("/api/admin/admins").timeout();
+    axiosMock.onGet("/api/admin/admins/all").timeout();
 
     const restoreConsole = mockConsole();
 
@@ -116,7 +116,7 @@ describe("AdminsIndexPage tests", () => {
 
     const errorMessage = console.error.mock.calls[0][0];
     expect(errorMessage).toMatch(
-      "Error communicating with backend via GET on /api/admin/admins",
+      "Error communicating with backend via GET on /api/admin/admins/all",
     );
     restoreConsole();
   });
@@ -126,7 +126,7 @@ describe("AdminsIndexPage tests", () => {
 
     const smallAdmin = { email: "adminuno@example.com" };
 
-    axiosMock.onGet("/api/admin/admins").reply(200, [smallAdmin]);
+    axiosMock.onGet("/api/admin/admins/all").reply(200, [smallAdmin]);
 
     axiosMock
       .onDelete("/api/admin/admins", { params: { email: smallAdmin.email } })
@@ -139,8 +139,6 @@ describe("AdminsIndexPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    const testId = "RoleEmailTable";
 
     await waitFor(() => {
       expect(
@@ -165,7 +163,7 @@ describe("AdminsIndexPage tests", () => {
 
     const admin = { email: "admin@example.com" };
 
-    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+    axiosMock.onGet("/api/admin/admins/all").reply(200, [admin]);
 
     axiosMock
       .onDelete("/api/admin/admins", { params: { email: admin.email } })
@@ -178,8 +176,6 @@ describe("AdminsIndexPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    const testId = "RoleEmailTable";
 
     await waitFor(() => {
       expect(
@@ -216,9 +212,9 @@ describe("AdminsIndexPage tests", () => {
       </QueryClientProvider>,
     );
 
-    const deleteButton = await screen.findByRole("button", {
-      name: /delete/i,
-    });
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
 
     fireEvent.click(deleteButton);
 
@@ -232,7 +228,7 @@ describe("AdminsIndexPage tests", () => {
 
     const admin = { email: "test@example.com" };
 
-    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+    axiosMock.onGet("/api/admin/admins/all").reply(200, [admin]);
 
     // mock a 403 response but with a non-string message
     axiosMock
@@ -246,8 +242,6 @@ describe("AdminsIndexPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    const testId = "RoleEmailTable";
 
     await waitFor(() => {
       expect(
@@ -270,7 +264,7 @@ describe("AdminsIndexPage tests", () => {
 
     const admin = { email: "test@example.com" };
 
-    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+    axiosMock.onGet("/api/admin/admins/all").reply(200, [admin]);
 
     // mock an error without a response property
     axiosMock
@@ -288,8 +282,6 @@ describe("AdminsIndexPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    const testId = "RoleEmailTable";
 
     await waitFor(() => {
       expect(
@@ -316,7 +308,7 @@ describe("AdminsIndexPage tests", () => {
 
     const admin = { email: "test@example.com" };
 
-    axiosMock.onGet("/api/admin/admins").reply(200, [admin]);
+    axiosMock.onGet("/api/admin/admins/all").reply(200, [admin]);
 
     // mock a non-403 error with a string message
     axiosMock
@@ -330,8 +322,6 @@ describe("AdminsIndexPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    const testId = "RoleEmailTable";
 
     await waitFor(() => {
       expect(
@@ -348,5 +338,58 @@ describe("AdminsIndexPage tests", () => {
       // generic error message since its not 403
       expect(mockToast).toHaveBeenCalledWith("Error deleting admin.");
     });
+  });
+
+  test("invalidateQueries is called with the correct query key when admin is deleted", async () => {
+    setupAdminUser();
+
+    const admin = { email: "test@example.com" };
+
+    axiosMock.onGet("/api/admin/admins/all").reply(200, [admin]);
+    axiosMock
+      .onDelete("/api/admin/admins", { params: { email: admin.email } })
+      .reply(200, { email: admin.email });
+
+    // create a mock for queryClient.invalidateQueries
+    const invalidateQueriesMock = jest.fn();
+    const mockQueryClient = {
+      ...queryClient,
+      invalidateQueries: invalidateQueriesMock,
+    };
+
+    // override the useQueryClient hook to return our mock
+    const useQueryClientOrig = require("react-query").useQueryClient;
+    jest
+      .spyOn(require("react-query"), "useQueryClient")
+      .mockImplementation(() => mockQueryClient);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-email`),
+      ).toHaveTextContent("test@example.com");
+    });
+
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => {
+      // verifies that the invalidateQueries was called with the correct query key
+      expect(invalidateQueriesMock).toHaveBeenCalledWith({
+        queryKey: ["/api/admin/admins/all"],
+      });
+    });
+
+    // restores the original useQueryClient implementation
+    require("react-query").useQueryClient = useQueryClientOrig;
   });
 });
