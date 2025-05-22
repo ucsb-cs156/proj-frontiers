@@ -1193,4 +1193,79 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
         }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testDeleteRosterStudent_success() throws Exception {
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Test")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("test@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .build();
+
+                List<RosterStudent> students = new ArrayList<>();
+                students.add(rosterStudent);
+                course1.setRosterStudents(students);
+
+                List<RosterStudent> studentsSpy = Mockito.spy(students);
+                course1.setRosterStudents(studentsSpy);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(1L));
+                verify(courseRepository).save(any(Course.class));
+                verify(rosterStudentRepository).delete(eq(rosterStudent));
+                verify(studentsSpy).remove(eq(rosterStudent));
+
+                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
+                        response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testDeleteRosterStudent_notFound() throws Exception {
+                when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "99"))
+                        .andExpect(status().isNotFound())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(99L));
+                verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
+                verify(courseRepository, never()).save(any(Course.class));
+
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "RosterStudent with id 99 not found");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testDeleteRosterStudent_unauthorized() throws Exception {
+                mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isForbidden());
+
+                verify(rosterStudentRepository, never()).findById(any());
+                verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
+                verify(courseRepository, never()).save(any(Course.class));
+        }
 }
