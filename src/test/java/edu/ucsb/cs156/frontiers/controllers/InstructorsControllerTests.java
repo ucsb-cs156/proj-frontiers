@@ -8,6 +8,8 @@ import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -107,5 +109,62 @@ public class InstructorsControllerTests extends ControllerTestCase {
         String expectedJson = mapper.writeValueAsString(expectedInstructors);
         String responseString = response.getResponse().getContentAsString();
         assertEquals(expectedJson, responseString);
+    }
+
+    @WithMockUser(roles = { "ADMIN" })
+    @Test
+    public void admin_can_delete_an_insrtuctor() throws Exception {
+            // arrange
+
+            Instructor instructor = Instructor.builder()
+                .email("testing@ucsb.edu")
+                .build();
+
+
+            when(instructorRepository.findById(eq("testing@ucsb.edu"))).thenReturn(Optional.of(instructor));
+
+            // act
+            MvcResult response = mockMvc.perform(
+                    delete("/api/instructors")
+                        .param("email", "testing@ucsb.edu")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+            // assert
+            verify(instructorRepository, times(1)).findById("testing@ucsb.edu");
+            verify(instructorRepository, times(1)).delete(any());
+
+            Map<String, Object> json = responseToJson(response);
+            assertEquals("Instructor with id testing@ucsb.edu deleted", json.get("message"));
+    }
+
+    @WithMockUser(roles = { "ADMIN" })
+    @Test
+    public void admin_tries_to_delete_non_existant_instructor_and_gets_right_error_message()
+                    throws Exception {
+            // arrange
+
+            when(instructorRepository.findById(eq("testing@ucsb.edu"))).thenReturn(Optional.empty());
+
+            // act
+            MvcResult response = mockMvc.perform(
+                            delete("/api/instructors")
+                                .param("email", "testing@ucsb.edu")
+                                .with(csrf()))
+                            .andExpect(status().isNotFound()).andReturn();
+
+            // assert
+            verify(instructorRepository, times(1)).findById("testing@ucsb.edu");
+            Map<String, Object> json = responseToJson(response);
+            assertEquals("Instructor with id testing@ucsb.edu not found", json.get("message"));
+    }
+
+    @Test
+    public void logged_out_users_cannot_delete() throws Exception {
+        mockMvc.perform(delete("/api/instructors")
+                .param("email", "testing@ucsb.edu")
+                .with(csrf()))
+            .andExpect(status().is(403));
     }
 }
