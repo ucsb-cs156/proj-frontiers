@@ -961,4 +961,5 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 Map<String, Object> json = responseToJson(response);
                 assertEquals("RosterStudent with id 15 not found", json.get("message"));
         }
+
 }
