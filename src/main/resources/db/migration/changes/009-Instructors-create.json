@@ -3,7 +3,7 @@
     {
       "changeSet": {
         "id": "Instructors-create",
-        "author": "your-name",
+        "author": "Andrew Kim",
         "changes": [
           {
             "createTable": {
