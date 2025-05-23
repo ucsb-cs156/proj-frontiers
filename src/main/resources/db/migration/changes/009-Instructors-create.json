@@ -2,8 +2,8 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "Instructors-create",
-        "author": "Andrew Kim",
+        "id": "009-Instructors-create",
+        "author": "andrewkim102",
         "changes": [
           {
             "createTable": {
