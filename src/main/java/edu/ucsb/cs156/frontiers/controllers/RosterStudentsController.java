@@ -284,5 +284,22 @@ public class RosterStudentsController extends ApiController {
 
         return rosterStudentRepository.save(rs);
     }
+
+    @Operation(summary = "Delete a roster student by record ID")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteRosterStudentById(
+        @Parameter(description = "RosterStudent record ID") @PathVariable Long id)
+        throws EntityNotFoundException {
+
+        RosterStudent rs = rosterStudentRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        rosterStudentRepository.delete(rs);
+
+        return ResponseEntity.ok(
+            String.format("Deleted roster student %d", id));
+    }
+
 }
 
