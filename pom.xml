@@ -474,6 +474,10 @@
                           <not>
                             <available file="${project.basedir}/frontend/build" type="dir"/>
                           </not>
+                          <!-- Check if output build exists -->
+                          <not>
+                            <available file="${project.build.outputDirectory}/public" type="dir"/>
+                          </not>
                           <!-- Check if package.json exists and is newer than node_modules directory -->
                           <and>
                             <available file="${project.basedir}/frontend/package.json"/>
@@ -504,13 +508,13 @@
                               </uptodate>
                             </not>
                           </and>
-                          <!-- Check if public files are newer than build directory -->
+                          <!-- Check if build files are newer than public directory -->
                           <and>
-                            <available file="${project.basedir}/frontend/public" type="dir"/>
+                            <available file="${project.build.outputDirectory}/public" type="dir"/>
                             <available file="${project.basedir}/frontend/build" type="dir"/>
                             <not>
-                              <uptodate targetfile="${project.basedir}/frontend/build">
-                                <srcfiles dir="${project.basedir}/frontend/public" includes="**/*"/>
+                              <uptodate targetfile="${project.build.outputDirectory}/public">
+                                <srcfiles dir="${project.basedir}/frontend/build" includes="**/*"/>
                               </uptodate>
                             </not>
                           </and>
@@ -532,7 +536,7 @@
 
               <execution>
                 <id>copy-frontend-build</id>
-                <phase>generate-resources</phase>
+                <phase>process-resources</phase>
                 <goals>
                   <goal>run</goal>
                 </goals>
