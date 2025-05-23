@@ -62,7 +62,7 @@ This will download a private key to your computer. Move this file into the repos
 Next, we will switch the standard of the key we just downloaded so Java can understand it.
 To do so, open a terminal in the repository folder, and run the following command, replacing `<file-name>` with the name of the key.
 ```bash
-openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in <file-name> -out pkcs8.key
+./keyconvert.sh <file-name>
 ```
 
 Next, create a copy of `secrets.yaml.EXAMPLE` with the following command:

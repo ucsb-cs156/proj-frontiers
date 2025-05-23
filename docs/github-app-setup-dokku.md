@@ -68,7 +68,7 @@ This will download a private key to your computer.
 Next, we will switch the standard of the key we just downloaded so Java can understand it.
 To do so, open a terminal in the folder the key is in, and run the following command, replacing `<file-name>` with the name of the key.
 ```bash
-openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in <file-name> -out pkcs8.key
+./keyconvert.sh <file-name>
 ```
 
 Next, we're going to take the output of this newly created file and set it as an environmental variable on Dokku. To do so, output the file into your terminal with the following command:
