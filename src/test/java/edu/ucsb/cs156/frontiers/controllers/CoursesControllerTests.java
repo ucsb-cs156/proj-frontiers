@@ -347,20 +347,6 @@ public class CoursesControllerTests extends ControllerTestCase {
         assertEquals(expectedJson, result.getResponse().getContentAsString());
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-    // Test for #2 start
-
     /**
      * Authenticated as STUDENT – expect HTTP 200 and correct JSON payload
      */
