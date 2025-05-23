@@ -1,8 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,7 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "Instructors")
-@RequestMapping("/api/admin/instructor")
+@RequestMapping("/api/admin/instructors")
 @RestController
 @Slf4j
 public class InstructorController extends ApiController{
