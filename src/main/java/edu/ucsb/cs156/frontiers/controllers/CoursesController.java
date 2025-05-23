@@ -163,12 +163,6 @@ public class CoursesController extends ApiController {
 
 
 
-
-
-    // Code start for #2
-
-
-    
     /**
      * This method looks up a current user and gets their email.
      * With that email, it that email on every course roster,
@@ -179,10 +173,7 @@ public class CoursesController extends ApiController {
      * Relevant fields are: id, installationId, orgName, courseName, term, school
      * For each course, return the status that the student is in
      */
-
-
     
-    // Lists all courses where the current user appears on the roster.
     @Operation(summary = "Get all courses for a student")
     @PreAuthorize("hasRole('ROLE_STUDENT')")
     @GetMapping("/student")
@@ -241,13 +232,5 @@ public class CoursesController extends ApiController {
             };
         }
     }
-
-    // Code end for #2
-
-
-
-
-
-
 
 }
