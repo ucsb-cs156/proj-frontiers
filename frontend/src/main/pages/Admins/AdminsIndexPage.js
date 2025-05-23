@@ -33,8 +33,8 @@ export default function AdminsIndexPage() {
     },
   });
 
-  const onSuccess = (response) => {
-    toast(`Admin with email ${response.email} deleted`);
+  const onSuccess = (email) => {
+    toast(`Admin with email ${email} deleted`);
     queryClient.invalidateQueries({ queryKey: ["/api/admin/admins/all"] });
   };
 
@@ -49,12 +49,13 @@ export default function AdminsIndexPage() {
   };
 
   const deleteMutation = useBackendMutation(objectToAxiosParams, {
-    onSuccess,
     onError,
   });
 
   const deleteCallback = async (cell) => {
-    deleteMutation.mutate(cell);
+    deleteMutation.mutate(cell, {
+      onSuccess: () => onSuccess(cell.row.values.email),
+    });
   };
 
   const createButton = () => {
