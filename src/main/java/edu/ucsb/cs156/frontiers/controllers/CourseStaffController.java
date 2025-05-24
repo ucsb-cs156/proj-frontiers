@@ -100,7 +100,7 @@ public class CourseStaffController extends ApiController {
     /**
      * This method returns a list of course staff for a given course.
      * 
-     * @return a list of all courses.
+     * @return a list of all course staff.
      */
     @Operation(summary = "List all course staff for a course")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
