@@ -6,4 +6,5 @@ import edu.ucsb.cs156.frontiers.entities.Admin;
 
 @Repository
 public interface AdminRepository extends JpaRepository<Admin, String> {
+    boolean existsByEmail(String email);
 }
