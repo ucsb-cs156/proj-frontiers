@@ -21,6 +21,8 @@ function RoleEmailForm({
 
   const navigate = useNavigate();
 
+  // Stryker disable next-line Regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const testIdPrefix = "RoleEmailForm";
 
   return (
@@ -34,6 +36,7 @@ function RoleEmailForm({
           isInvalid={Boolean(errors.email)}
           {...register("email", {
             required: "Email is required.",
+            pattern: emailRegex,
           })}
         />
         <Form.Control.Feedback type="invalid">
