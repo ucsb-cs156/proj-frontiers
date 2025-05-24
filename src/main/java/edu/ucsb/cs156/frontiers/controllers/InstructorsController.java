@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.entities.Instructor;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,4 +63,22 @@ public class InstructorsController extends ApiController{
         Iterable<Instructor> instructors = instructorRepository.findAll();
         return instructors;
     }
+
+    /**
+     * This method deletes an instructor. Accessible only to users with the role "ROLE_ADMIN".
+     * @param email email of the instructor
+     * @return a message indicating the instructor was deleted
+     * */
+
+    @Operation(summary= "Delete an Instructor")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("")
+    public Object deleteInstructor(
+            @Parameter(name="email") @RequestParam String email) {
+        Instructor instructor = instructorRepository.findById(email)
+                .orElseThrow(() -> new EntityNotFoundException(Instructor.class, email));
+        instructorRepository.delete(instructor);
+        return genericMessage("Instructor with id %s deleted".formatted(email));
+    }
+
 }
