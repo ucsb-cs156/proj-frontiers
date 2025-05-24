@@ -1,33 +1,5 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import edu.ucsb.cs156.frontiers.repositories.UserRepository;
-import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
-import edu.ucsb.cs156.frontiers.ControllerTestCase;
-import edu.ucsb.cs156.frontiers.entities.Admin;
-import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
-import edu.ucsb.cs156.frontiers.controllers.AdminController;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.MvcResult;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import org.springframework.test.context.TestPropertySource;
-
-
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,6 +7,32 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MvcResult;
+
+import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.entities.Admin;
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 
 
 @TestPropertySource(properties = {
@@ -100,15 +98,15 @@ public class AdminControllerTests extends ControllerTestCase{
 
 
                 ArrayList<Admin> expectedAdmin = new ArrayList<>();
-                expectedAdmin.addAll(Arrays.asList(admin));
+                expectedAdmin.add(admin);
 
-                when(adminRepository.findAll()).thenReturn(expectedAdmin);
+                when(adminRepository.findAll(Sort.by("email"))).thenReturn(expectedAdmin);
 
                 MvcResult response = mockMvc.perform(get("/api/admin/admins/all"))
                                 .andExpect(status().isOk()).andReturn();
 
 
-                verify(adminRepository, times(1)).findAll();
+                verify(adminRepository, times(1)).findAll(Sort.by("email"));
                 String expectedJson = mapper.writeValueAsString(expectedAdmin);
                 String responseString = response.getResponse().getContentAsString();
                 assertEquals(expectedJson, responseString);
@@ -195,7 +193,4 @@ public class AdminControllerTests extends ControllerTestCase{
             Map<String, Object> json = responseToJson(response);
             assertTrue(((String) json.get("message")).contains("Cannot delete protected admin: " + protectedEmail));
         }
-
-        
-
 }

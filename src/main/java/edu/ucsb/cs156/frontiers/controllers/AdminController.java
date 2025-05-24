@@ -2,8 +2,9 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,8 +38,7 @@ public class AdminController extends ApiController{
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/all")
     public Iterable<Admin> allAdmin() {
-        Iterable<Admin> admin = adminRepository.findAll();
-        return admin;
+        return adminRepository.findAll(Sort.by("email").ascending());
     }
 
     @Operation(summary= "Create a new admin")
@@ -47,8 +47,6 @@ public class AdminController extends ApiController{
     public Admin postAdmin(
     @Parameter(name="email") @RequestParam String email)
     throws JsonProcessingException {
-
-
 
     Admin admin = new Admin();
     admin.setEmail(email);
@@ -73,7 +71,4 @@ public class AdminController extends ApiController{
         adminRepository.delete(admin);
         return genericMessage("Admin with email is deleted".formatted(email));
     }
-
-
-
 }
