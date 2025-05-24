@@ -70,6 +70,12 @@ public abstract class ApiController {
     );
   }
 
+  @ExceptionHandler(UnsupportedOperationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, String> handleUnsupportedOperation(UnsupportedOperationException ex) {
+        return Map.of("message", ex.getMessage());
+    }
+
       /**
      * This method handles BadRequestException.
      * @param e the exception
@@ -83,5 +89,4 @@ public abstract class ApiController {
         "message", e.getMessage()
       );
     }
-
 }
