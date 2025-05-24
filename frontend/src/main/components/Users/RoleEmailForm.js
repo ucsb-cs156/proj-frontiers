@@ -20,6 +20,7 @@ function RoleEmailForm({
   // Stryker restore all
 
   const navigate = useNavigate();
+
   // Stryker disable next-line Regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const testIdPrefix = "RoleEmailForm";
