@@ -2,6 +2,8 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,8 +34,7 @@ public class InstructorController extends ApiController{
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/all")
     public Iterable<Instructor> allInstructors() {
-        Iterable<Instructor> instructor = instructorRepository.findAll();
-        return instructor;
+        return instructorRepository.findAll(Sort.by("email").ascending());
     }
 
     @Operation(summary= "Create a new instructor")
@@ -42,8 +43,6 @@ public class InstructorController extends ApiController{
     public Instructor postInstructor(
     @Parameter(name="email") @RequestParam String email)
     throws JsonProcessingException {
-
-
 
     Instructor instructor = new Instructor();
     instructor.setEmail(email);
@@ -64,6 +63,4 @@ public class InstructorController extends ApiController{
         instructorRepository.delete(instructor);
         return genericMessage("Instructor with valid email is deleted".formatted(email));
     }
-
-
 }

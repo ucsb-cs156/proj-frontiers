@@ -7,7 +7,6 @@ import edu.ucsb.cs156.frontiers.entities.Instructor;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.data.domain.Sort;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -92,15 +92,15 @@ public class InstructorControllerTests extends ControllerTestCase{
 
 
                 ArrayList<Instructor> expectedInstructor = new ArrayList<>();
-                expectedInstructor.addAll(Arrays.asList(instructor));
+                expectedInstructor.add(instructor);
 
-                when(instructorRepository.findAll()).thenReturn(expectedInstructor);
+                when(instructorRepository.findAll(Sort.by("email"))).thenReturn(expectedInstructor);
 
                 MvcResult response = mockMvc.perform(get("/api/admin/instructors/all"))
                                 .andExpect(status().isOk()).andReturn();
 
 
-                verify(instructorRepository, times(1)).findAll();
+                verify(instructorRepository, times(1)).findAll(Sort.by("email"));
                 String expectedJson = mapper.writeValueAsString(expectedInstructor);
                 String responseString = response.getResponse().getContentAsString();
                 assertEquals(expectedJson, responseString);

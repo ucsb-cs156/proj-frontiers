@@ -1,7 +1,7 @@
 package edu.ucsb.cs156.frontiers.repositories;
 
 import edu.ucsb.cs156.frontiers.entities.Instructor;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
  * Provides CRUD operations for the Instructor entity using email as the primary key.
  */
 @Repository
-public interface InstructorRepository extends CrudRepository<Instructor, String> {
+public interface InstructorRepository extends JpaRepository<Instructor, String> {
 
 }
