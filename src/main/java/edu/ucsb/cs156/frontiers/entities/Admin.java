@@ -10,7 +10,9 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
+
 @Table(name = "ADMINS")
+
 public class Admin {
     @Id
     private String email;
