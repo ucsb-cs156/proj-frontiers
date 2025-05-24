@@ -9,6 +9,4 @@ import org.springframework.stereotype.Repository;
  * Provides CRUD operations for the Instructor entity using email as the primary key.
  */
 @Repository
-public interface InstructorRepository extends JpaRepository<Instructor, String> {
-
-}
+public interface InstructorRepository extends JpaRepository<Instructor, String> {}
