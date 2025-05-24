@@ -1,5 +1,4 @@
 package edu.ucsb.cs156.frontiers.controllers;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -152,6 +151,29 @@ public class RosterStudentsController extends ApiController {
         rosterStudentRepository.save(rosterStudent);
 
         return rosterStudent;
+    }
+
+    /**
+     * This method deletes a RosterStudent
+     * 
+     * @param id id of the student object
+     * @return   a message indicating the student was deleted
+     */
+    @Operation(summary= "Delete a RosterStudent")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("")
+    public Object deleteRosterStudent(
+            @Parameter(name="id") @RequestParam Long id) {
+
+        RosterStudent rosterStudent = rosterStudentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        rosterStudentRepository.delete(rosterStudent);
+
+        Course course = rosterStudent.getCourse();
+        course.getRosterStudents().remove(rosterStudent); // remove from list
+        courseRepository.save(course);
+        return genericMessage("RosterStudent with id %s deleted".formatted(id));
     }
 
     @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
