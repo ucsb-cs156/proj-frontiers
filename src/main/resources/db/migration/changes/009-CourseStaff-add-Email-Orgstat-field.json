@@ -1,8 +1,8 @@
 { "databaseChangeLog": [
   {
     "changeSet": {
-      "id": "009-CourseStaff-add-email-orgstat-fields",
-      "author": "JonahS",
+      "id": "009-CourseStaff-add-Email-orgstat-field",
+      "author": "jonahso",
       "preConditions": [
         {
           "onFail": "MARK_RAN"
