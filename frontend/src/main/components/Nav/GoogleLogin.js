@@ -5,7 +5,7 @@ export default function GoogleLogin({ currentUser, systemInfo, doLogout }) {
   var oauthLogin = systemInfo?.oauthLogin || "/oauth2/authorization/google";
   return (
     <>
-      {currentUser && currentUser.loggedIn ? (
+      {currentUser && currentUser.loggedIn && currentUser.root?.user ? (
         <>
           <Navbar.Text className="me-3" as={Link} to="/profile">
             Welcome, {currentUser.root.user.email}

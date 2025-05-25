@@ -7,6 +7,12 @@ export default function GithubLogin({ currentUser, systemInfo }) {
   if (!currentUser || !currentUser.loggedIn) {
     return <span data-testid="GithubLogin-logged-out" />;
   }
+
+  // Add this null check for currentUser.root.user
+  if (!currentUser.root?.user) {
+    return <span data-testid="GithubLogin-loading" />;
+  }
+
   if (currentUser.root.user.githubLogin) {
     return (
       <>
