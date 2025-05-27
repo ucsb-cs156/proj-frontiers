@@ -24,10 +24,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff; 
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository; 
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,6 +50,9 @@ public class CoursesController extends ApiController {
 
     @Autowired
     private RosterStudentRepository rosterStudentRepository;
+
+    @Autowired
+    private CourseStaffRepository courseStaffRepository;
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -189,6 +194,35 @@ public class CoursesController extends ApiController {
             matchedCourses.add(courseInfo);
         }
         
+        return matchedCourses;
+    }
+
+    @Operation(summary = "Student can see what courses they appear on staff roster of and their status in each")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/staff")
+    public List<Map<String, Object>> lookUpStaffCourseRoster() 
+    {
+        CurrentUser currentUser = getCurrentUser();
+        String email = currentUser.getUser().getEmail(); 
+        List<CourseStaff> staffRoster = courseStaffRepository.findAllByEmail(email); 
+
+        List<Map<String, Object>> matchedCourses = new ArrayList<>();
+
+        for (CourseStaff st : staffRoster) 
+        {
+            Course course = st.getCourse(); 
+            
+            Map<String, Object> courseInfo = new HashMap<>();
+            courseInfo.put("id", course.getId());
+            courseInfo.put("orgName", course.getOrgName());
+            courseInfo.put("courseName", course.getCourseName());
+            courseInfo.put("term", course.getTerm());
+            courseInfo.put("school", course.getSchool());
+            courseInfo.put("installationId", course.getInstallationId());
+            courseInfo.put("status", st.getOrgStatus()); 
+
+            matchedCourses.add(courseInfo);
+        }
         return matchedCourses;
     }
 }
