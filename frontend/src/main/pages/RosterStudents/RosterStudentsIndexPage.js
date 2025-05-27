@@ -8,6 +8,7 @@ import { Button } from "react-bootstrap";
 
 export default function RosterStudentsIndexPage() {
   const { courseId } = useParams();
+  const key = `/api/rosterstudents/course?courseId=${courseId}`
 
   const {
     data: rosterStudents,
@@ -15,7 +16,7 @@ export default function RosterStudentsIndexPage() {
     status: _status,
   } = useBackend(
     // Stryker disable all: don't test internal caching of React Query
-    ["/api/rosterStudents/all", { courseId }],
+    key,
     {
       method: "GET",
       url: "/api/rosterstudents/course",
