@@ -57,7 +57,7 @@ public class CourseStaffController extends ApiController {
      * @return the created course staff roster
      */
 
-    @Operation(summary = "Create a new course staff roster")
+    @Operation(summary = "Create a new course staff member")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/post")
     public CourseStaff postStaffRoster(
