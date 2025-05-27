@@ -8,7 +8,7 @@ import { Button } from "react-bootstrap";
 
 export default function RosterStudentsIndexPage() {
   const { courseId } = useParams();
-  const key = `/api/rosterstudents/course?courseId=${courseId}`
+  const key = `/api/rosterstudents/course?courseId=${courseId}`;
 
   const {
     data: rosterStudents,

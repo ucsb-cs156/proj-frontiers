@@ -57,7 +57,7 @@ export default function RosterStudentsTable({
   };
 
   const { courseId } = useParams();
-  const key = `/api/rosterstudents/course?courseId=${courseId}`
+  const key = `/api/rosterstudents/course?courseId=${courseId}`;
 
   // Stryker disable all : hard to test for query caching
   const deleteMutation = useBackendMutation(
