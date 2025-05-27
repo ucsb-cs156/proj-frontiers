@@ -26,12 +26,15 @@ import java.util.ArrayList;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
@@ -60,6 +63,7 @@ public class CoursesController extends ApiController {
 
     @Autowired
     private CourseStaffRepository courseStaffRepository;
+
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -226,5 +230,6 @@ public class CoursesController extends ApiController {
         Iterable<Course> courses = courseRepository.findAllById(courseIds);
         return courses;
     }
+
 
 }

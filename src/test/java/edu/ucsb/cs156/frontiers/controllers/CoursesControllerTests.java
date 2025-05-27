@@ -32,6 +32,15 @@ import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 
+
+import edu.ucsb.cs156.frontiers.models.CurrentUser;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import java.util.List;
+
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -68,6 +77,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     @MockitoBean
     private CourseStaffRepository courseStaffRepository;
+
 
     /**
      * Test the POST endpoint
@@ -416,4 +426,5 @@ public class CoursesControllerTests extends ControllerTestCase {
         String expectedJson = mapper.writeValueAsString(List.of(course1, course2));
         assertEquals(expectedJson, responseString);
     }
+
 }
