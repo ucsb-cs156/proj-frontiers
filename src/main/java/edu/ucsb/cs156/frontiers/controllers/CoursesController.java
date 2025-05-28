@@ -243,7 +243,7 @@ public class CoursesController extends ApiController {
      */
     
     @Operation(summary = "Get all courses for a student")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/student")
     public ResponseEntity<List<StudentCourseView>> getCoursesForStudent() {
         String email = getCurrentUser().getUser().getEmail();
