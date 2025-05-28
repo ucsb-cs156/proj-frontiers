@@ -41,7 +41,7 @@ public class Course {
     @ToString.Exclude
     private List<CourseStaff> courseStaff;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "course")
     @Fetch(FetchMode.JOIN)
     @JsonIgnore
     @ToString.Exclude
