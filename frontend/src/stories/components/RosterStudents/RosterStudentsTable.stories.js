@@ -1,7 +1,7 @@
 import React from "react";
 
 import RosterStudentsTable from "main/components/RosterStudents/RosterStudentsTable";
-import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
+import { rosterStudentsFixtures } from "fixtures/rosterStudentsFixtures";
 
 export default {
   title: "components/RosterStudents/RosterStudentsTable",
