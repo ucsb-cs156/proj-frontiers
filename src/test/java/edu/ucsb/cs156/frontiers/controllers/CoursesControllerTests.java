@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,9 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +47,9 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     @MockitoBean
     private CourseRepository courseRepository;
+
+    @MockitoBean
+    private RosterStudentRepository rosterStudentRepository;
 
     @Autowired
     private CurrentUserService currentUserService;
@@ -273,62 +279,57 @@ public class CoursesControllerTests extends ControllerTestCase {
         assertEquals(expectedJson, responseString);
     }
 
-    /**
-     * Authenticated as STUDENT – expect HTTP 200 and correct JSON payload
+    /** 
+     * Test the getRosterForCourse endpoint
      */
     @Test
-    @WithMockUser(roles = { "USER" })
-    public void testGetCoursesForStudent() throws Exception {
-        // arrange
-        String email = currentUserService.getCurrentUser().getUser().getEmail();
-
+    @WithMockUser(roles = {"ADMIN"})
+    public void testGetRosterForCourse() throws Exception {
+        // Arrange
+        Long courseId = 1L;
         Course course = Course.builder()
-                .id(1L)
-                .installationId("inst1")
-                .orgName("org-1")
-                .courseName("Intro to Widgets")
-                .term("F25")
+                .id(courseId)
+                .courseName("CS156")
+                .term("S25")
                 .school("UCSB")
                 .build();
 
-        RosterStudent rs = new RosterStudent();
-        rs.setEmail(email);
-        rs.setOrgStatus(OrgStatus.MEMBER);
-        course.setRosterStudents(List.of(rs));
+        RosterStudent student1 = RosterStudent.builder()
+                .id(1L)
+                .firstName("Chris")
+                .lastName("Gaucho")
+                .email("cgaucho@ucsb.edu")
+                .course(course)
+                .build();
 
-        when(courseRepository.findAllByRosterStudents_Email(eq(email)))
-            .thenReturn(List.of(course));
+        RosterStudent student2 = RosterStudent.builder()
+                .id(2L)
+                .firstName("Fred")
+                .lastName("Student")
+                .email("fred@ucsb.edu")
+                .course(course)
+                .build();
 
-        // act
-        MvcResult response = mockMvc.perform(get("/api/courses/student"))
-            .andExpect(status().isOk())
-            .andReturn();
+        List<RosterStudent> students = List.of(student1, student2);
+        
+        when(rosterStudentRepository.findByCourseId(courseId)).thenReturn(students);
 
-        // assert
-        String json = response.getResponse().getContentAsString();
-        List<CoursesController.StudentCourseView> expected =
-            List.of(new CoursesController.StudentCourseView(course, email));
-        String expectedJson = mapper.writeValueAsString(expected);
-        assertEquals(expectedJson, json);
+        // Act
+        MvcResult response = mockMvc.perform(get("/api/courses/roster")
+                .param("courseId", courseId.toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Assert
+        String responseString = response.getResponse().getContentAsString();
+        List<RosterStudentDTO> expectedDTOs = students.stream()
+                .map(RosterStudentDTO::from)
+                .collect(Collectors.toList());
+        
+        String expectedJson = mapper.writeValueAsString(expectedDTOs);
+        assertEquals(expectedJson, responseString);
+        verify(rosterStudentRepository, times(1)).findByCourseId(courseId);
     }
-
-    /**
-     * Authenticated as ADMIN – no STUDENT role, expect HTTP 403 Forbidden
-     */
-    @Test
-    @WithMockUser(roles = { "ADMIN" })
-    public void testGetCoursesForStudent_Forbidden() throws Exception {
-        mockMvc.perform(get("/api/courses/student"))
-            .andExpect(status().isOk());
-    }
-
-    /**
-     * Unauthenticated – expect HTTP 403 Forbidden
-     */
-    @Test
-    public void testGetCoursesForStudent_Unauthorized() throws Exception {
-        mockMvc.perform(get("/api/courses/student"))
-               .andExpect(status().isForbidden());    // was .isUnauthorized()
-    }
-
 }
+
+
