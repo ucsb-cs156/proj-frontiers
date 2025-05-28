@@ -2,7 +2,7 @@ import React from "react";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
-// Remove the 'rest' import since it's not being used
+import { http, HttpResponse } from "msw";
 
 export default {
   title: "components/RosterStudent/RosterStudentTable",
@@ -16,25 +16,23 @@ const Template = (args) => {
 export const Empty = Template.bind({});
 
 Empty.args = {
-  rosterStudents: [],
+  items: [],
+  currentUser: currentUserFixtures.userOnly,
 };
 
-export const ThreeRosterStudents = Template.bind({});
-
-ThreeRosterStudents.args = {
-  rosterStudents: rosterStudentFixtures.threeRosterStudents,
-};
-
-export const ThreeRosterStudentsAsAdmin = Template.bind({});
-
-ThreeRosterStudentsAsAdmin.args = {
-  rosterStudents: rosterStudentFixtures.threeRosterStudents,
+export const ThreeStudentsAdminUser = Template.bind({});
+ThreeStudentsAdminUser.args = {
+  items: rosterStudentFixtures.threeRosterStudents,
   currentUser: currentUserFixtures.adminUser,
 };
 
-export const ThreeRosterStudentsAsUser = Template.bind({});
-
-ThreeRosterStudentsAsUser.args = {
-  rosterStudents: rosterStudentFixtures.threeRosterStudents,
-  currentUser: currentUserFixtures.userOnly,
+ThreeStudentsAdminUser.parameters = {
+  msw: [
+    http.delete("/api/rosterstudent", () => {
+      return HttpResponse.json(
+        { message: "Student deleted successfully" },
+        { status: 200 },
+      );
+    }),
+  ],
 };

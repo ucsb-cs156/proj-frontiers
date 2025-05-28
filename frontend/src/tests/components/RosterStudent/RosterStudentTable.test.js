@@ -1,81 +1,76 @@
 import { fireEvent, render, waitFor, screen } from "@testing-library/react";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
-import RosterStudentTable, {
-  cellToAxiosParamsDelete,
-} from "main/components/RosterStudent/RosterStudentTable";
+import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
+import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
 
 const mockedNavigate = jest.fn();
-const mockedMutate = jest.fn();
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useNavigate: () => mockedNavigate,
 }));
 
-jest.mock("main/utils/useBackend", () => ({
-  ...jest.requireActual("main/utils/useBackend"),
-  useBackendMutation: () => ({
-    mutate: mockedMutate,
-  }),
-}));
-
 describe("RosterStudentTable tests", () => {
   const queryClient = new QueryClient();
 
-  test("renders without crashing for empty table", () => {
+  const expectedHeaders = [
+    "id",
+    "Student ID",
+    "First Name",
+    "Last Name",
+    "Email",
+  ];
+  const expectedFields = ["id", "studentId", "firstName", "lastName", "email"];
+  const testId = "RosterStudentTable";
+
+  test("renders empty table correctly", () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    // act
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <RosterStudentTable rosterStudents={[]} />
+          <RosterStudentTable items={[]} currentUser={currentUser} />
         </MemoryRouter>
       </QueryClientProvider>,
     );
+
+    // assert
+    expectedHeaders.forEach((headerText) => {
+      const header = screen.getByText(headerText);
+      expect(header).toBeInTheDocument();
+    });
+
+    expectedFields.forEach((field) => {
+      const fieldElement = screen.queryByTestId(
+        `${testId}-cell-row-0-col-${field}`,
+      );
+      expect(fieldElement).not.toBeInTheDocument();
+    });
   });
 
-  test("renders without crashing for three roster students", () => {
+  test("Has the expected column headers, content and buttons for admin user", () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    // act
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RosterStudentTable
-            rosterStudents={rosterStudentFixtures.threeRosterStudents}
-          />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-  });
-
-  test("Has the expected column headers and content", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <RosterStudentTable
-            rosterStudents={rosterStudentFixtures.threeRosterStudents}
+            items={rosterStudentFixtures.threeRosterStudents}
+            currentUser={currentUser}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
-    const expectedHeaders = [
-      "id",
-      "Enrollment Code",
-      "Student ID",
-      "First Name",
-      "Last Name",
-      "Email",
-    ];
-    const expectedFields = [
-      "id",
-      "enrollmentCode",
-      "studentId",
-      "firstName",
-      "lastName",
-      "email",
-    ];
-    const testId = "RosterStudentTable";
-
+    // assert
     expectedHeaders.forEach((headerText) => {
       const header = screen.getByText(headerText);
       expect(header).toBeInTheDocument();
@@ -90,120 +85,129 @@ describe("RosterStudentTable tests", () => {
       "1",
     );
     expect(
-      screen.getByTestId(`${testId}-cell-row-0-col-enrollmentCode`),
-    ).toHaveTextContent("12345");
+      screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
+    ).toHaveTextContent("123456789");
+
     expect(screen.getByTestId(`${testId}-cell-row-1-col-id`)).toHaveTextContent(
       "2",
     );
     expect(
-      screen.getByTestId(`${testId}-cell-row-1-col-enrollmentCode`),
-    ).toHaveTextContent("23456");
+      screen.getByTestId(`${testId}-cell-row-1-col-firstName`),
+    ).toHaveTextContent("Jane");
+
+    const editButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Edit-button`,
+    );
+    expect(editButton).toBeInTheDocument();
+    expect(editButton).toHaveClass("btn-primary");
+
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    expect(deleteButton).toBeInTheDocument();
+    expect(deleteButton).toHaveClass("btn-danger");
   });
 
-  test("Edit button navigates to the edit page for admin user", async () => {
+  test("Edit button navigates to the edit page", async () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    // act - render the component
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RosterStudentTable
-            rosterStudents={rosterStudentFixtures.threeRosterStudents}
-            currentUser={currentUserFixtures.adminUser}
+            items={rosterStudentFixtures.threeRosterStudents}
+            currentUser={currentUser}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
+    // assert - check that the expected content is rendered
     expect(
-      await screen.findByTestId("RosterStudentTable-cell-row-0-col-id"),
+      await screen.findByTestId(`${testId}-cell-row-0-col-id`),
     ).toHaveTextContent("1");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-firstName`),
+    ).toHaveTextContent("John");
 
     const editButton = screen.getByTestId(
-      "RosterStudentTable-cell-row-0-col-Edit-button",
+      `${testId}-cell-row-0-col-Edit-button`,
     );
     expect(editButton).toBeInTheDocument();
 
-    // Test the Edit button has the primary style
-    expect(editButton).toHaveClass("btn-primary");
-
+    // act - click the edit button
     fireEvent.click(editButton);
 
+    // assert - check that the navigate function was called with the expected path
     await waitFor(() =>
       expect(mockedNavigate).toHaveBeenCalledWith("/rosterstudent/edit/1"),
     );
   });
 
-  test("Delete button calls delete callback for admin user", async () => {
+  test("Delete button calls delete callback", async () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    const axiosMock = new AxiosMockAdapter(axios);
+    axiosMock
+      .onDelete("/api/rosterstudent")
+      .reply(200, { message: "Student deleted" });
+
+    // act - render the component
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RosterStudentTable
-            rosterStudents={rosterStudentFixtures.threeRosterStudents}
-            currentUser={currentUserFixtures.adminUser}
+            items={rosterStudentFixtures.threeRosterStudents}
+            currentUser={currentUser}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
+    // assert - check that the expected content is rendered
     expect(
-      await screen.findByTestId("RosterStudentTable-cell-row-0-col-id"),
+      await screen.findByTestId(`${testId}-cell-row-0-col-id`),
     ).toHaveTextContent("1");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-lastName`),
+    ).toHaveTextContent("Doe");
 
     const deleteButton = screen.getByTestId(
-      "RosterStudentTable-cell-row-0-col-Delete-button",
+      `${testId}-cell-row-0-col-Delete-button`,
     );
     expect(deleteButton).toBeInTheDocument();
 
-    // Test the Delete button has the danger style
-    expect(deleteButton).toHaveClass("btn-danger");
-
+    // act - click the delete button
     fireEvent.click(deleteButton);
 
-    // Check that the mutate function was called
-    await waitFor(() => expect(mockedMutate).toHaveBeenCalled());
+    // assert - check that the delete endpoint was called
+
+    await waitFor(() => {
+      expect(axiosMock.history.delete[0].params).toEqual({ id: 1 });
+    });
   });
 
-  test("Edit and Delete buttons are not rendered for non-admin user", async () => {
+  test("does not show edit/delete buttons for non-admin user", async () => {
+    const currentUser = currentUserFixtures.userOnly;
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RosterStudentTable
-            rosterStudents={rosterStudentFixtures.threeRosterStudents}
-            currentUser={currentUserFixtures.userOnly}
+            items={rosterStudentFixtures.threeRosterStudents}
+            currentUser={currentUser}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
     expect(
-      await screen.findByTestId("RosterStudentTable-cell-row-0-col-id"),
-    ).toHaveTextContent("1");
-
-    expect(
-      screen.queryByTestId("RosterStudentTable-cell-row-0-col-Edit-button"),
+      screen.queryByTestId(`${testId}-cell-row-0-col-Edit-button`),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId("RosterStudentTable-cell-row-0-col-Delete-button"),
+      screen.queryByTestId(`${testId}-cell-row-0-col-Delete-button`),
     ).not.toBeInTheDocument();
-  });
-
-  // Test the cellToAxiosParamsDelete function directly
-  test("cellToAxiosParamsDelete returns the correct parameters", () => {
-    // Create a mock cell object that matches the structure expected by the function
-    const cell = {
-      row: {
-        values: {
-          id: 5,
-        },
-      },
-    };
-
-    // Call the function and check its output
-    const result = cellToAxiosParamsDelete(cell);
-    expect(result).toEqual({
-      url: "/api/rosterstudents",
-      method: "DELETE",
-      params: {
-        id: 5,
-      },
-    });
   });
 });
