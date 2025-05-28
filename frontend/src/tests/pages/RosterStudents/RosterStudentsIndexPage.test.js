@@ -3,7 +3,7 @@ import RosterStudentsIndexPage from "main/pages/RosterStudents/RosterStudentsInd
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import { Route, Routes } from "react-router-dom";
-import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
+import { rosterStudentsFixtures } from "fixtures/rosterStudentsFixtures";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";

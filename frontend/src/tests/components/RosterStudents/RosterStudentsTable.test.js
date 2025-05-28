@@ -1,6 +1,6 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
-import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
+import { rosterStudentsFixtures } from "fixtures/rosterStudentsFixtures";
 import RosterStudentsTable from "main/components/RosterStudents/RosterStudentsTable";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";

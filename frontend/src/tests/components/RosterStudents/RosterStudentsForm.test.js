@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router-dom";
 
 import RosterStudentsForm from "main/components/RosterStudents/RosterStudentsForm";
-import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
+import { rosterStudentsFixtures } from "fixtures/rosterStudentsFixtures";
 
 import { QueryClient, QueryClientProvider } from "react-query";
 
