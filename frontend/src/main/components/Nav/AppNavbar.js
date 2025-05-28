@@ -60,6 +60,12 @@ export default function AppNavbar({
                   <NavDropdown.Item href="/admin/courses">
                     Courses
                   </NavDropdown.Item>
+                  <NavDropdown.Item href="/admin/admins">
+                    Admins
+                  </NavDropdown.Item>
+                  <NavDropdown.Item href="/admin/instructors">
+                    Instructors
+                  </NavDropdown.Item>
                 </NavDropdown>
               )}
             </Nav>

@@ -3,17 +3,16 @@ package edu.ucsb.cs156.frontiers.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * JPA entity representing an instructor.
+ * Uses email as the primary key.
+ */
 @Data
-
-@NoArgsConstructor
 @AllArgsConstructor
-@Entity
+@NoArgsConstructor
 @Builder
-@Table(name = "ADMINS")
-public class Admin {
-
+@Entity
+public class Instructor {
     @Id
-    @Column(nullable = false, unique = true)
     private String email;
-
 }
