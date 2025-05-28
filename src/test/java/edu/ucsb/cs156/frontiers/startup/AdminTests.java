@@ -8,37 +8,27 @@ import static org.junit.jupiter.api.Assertions.*;
 class AdminTests {
 
     @Test
-    void noArgsConstructor_shouldYieldNullFields_andSettersShouldWork() {
+    void noArgsConstructor_andSetterGetter_shouldWork() {
         Admin a = new Admin();
-        assertNull(a.getId());
+        // email starts out null
         assertNull(a.getEmail());
 
-        // exercise setters
-        a.setId(42L);
+        // exercise setter/getter
         a.setEmail("foo@bar.com");
-        assertEquals(42L, a.getId());
         assertEquals("foo@bar.com", a.getEmail());
     }
 
     @Test
-    void allArgsConstructor_shouldSetBothFields() {
-        Admin a = new Admin(7L, "alice@example.com");
-        assertEquals(7L, a.getId());
+    void allArgsConstructor_shouldSetEmail() {
+        Admin a = new Admin("alice@example.com");
         assertEquals("alice@example.com", a.getEmail());
     }
 
     @Test
-    void customEmailConstructor_shouldSetEmail_only() {
-        Admin a = new Admin("bob@example.com");
-        assertNull(a.getId(), "id must remain null");
-        assertEquals("bob@example.com", a.getEmail());
-    }
-
-    @Test
-    void equalsAndHashCode_shouldBeBasedOnAllFields() {
-        Admin a1 = new Admin(1L, "x@x.com");
-        Admin a2 = new Admin(1L, "x@x.com");
-        Admin a3 = new Admin(2L, "x@x.com");
+    void equalsAndHashCode_shouldBeBasedOnEmail() {
+        Admin a1 = new Admin("x@x.com");
+        Admin a2 = new Admin("x@x.com");
+        Admin a3 = new Admin("y@y.com");
 
         assertEquals(a1, a2);
         assertEquals(a1.hashCode(), a2.hashCode());
@@ -46,10 +36,9 @@ class AdminTests {
     }
 
     @Test
-    void toString_shouldContainFieldValues() {
-        Admin a = new Admin(99L, "me@you.org");
+    void toString_shouldContainEmail() {
+        Admin a = new Admin("me@you.org");
         String s = a.toString();
-        assertTrue(s.contains("99"));
         assertTrue(s.contains("me@you.org"));
     }
 }

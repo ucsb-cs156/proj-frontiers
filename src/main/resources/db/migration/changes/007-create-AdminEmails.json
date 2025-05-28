@@ -2,8 +2,8 @@
     "databaseChangeLog": [
       {
         "changeSet": {
-          "id": "0001-create-admin-table",
-          "author": "yourname",
+          "id": "007-create-adminEmails",
+          "author": "andrewkim102",
           "changes": [
             {
               "createTable": {
@@ -11,22 +11,11 @@
                 "columns": [
                   {
                     "column": {
-                      "name": "id",
-                      "type": "BIGINT",
-                      "autoIncrement": true,
-                      "constraints": {
-                        "primaryKey": true,
-                        "nullable": false
-                      }
-                    }
-                  },
-                  {
-                    "column": {
                       "name": "email",
                       "type": "VARCHAR(255)",
                       "constraints": {
-                        "nullable": false,
-                        "unique": true
+                        "primaryKey": true,
+                        "nullable": false
                       }
                     }
                   }

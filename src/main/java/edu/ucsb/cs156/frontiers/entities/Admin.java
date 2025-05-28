@@ -8,14 +8,9 @@ import lombok.*;
 @AllArgsConstructor
 @Entity
 public class Admin {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Id
+    @Column(nullable = false, unique = true)
     private String email;
 
-    public Admin(String email) {
-        this.email = email;
-    }
 }
