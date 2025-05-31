@@ -1,6 +1,6 @@
 import React from "react";
 import RosterStudentsForm from "main/components/RosterStudents/RosterStudentsForm";
-import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
+import { rosterStudentsFixtures } from "fixtures/rosterStudentsFixtures";
 
 export default {
   title: "components/RosterStudents/RosterStudentsForm",

@@ -1,6 +1,6 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
-import rosterStudentsFixtures from "fixtures/rosterStudentsFixtures";
+import { rosterStudentsFixtures } from "fixtures/rosterStudentsFixtures";
 import RosterStudentsTable from "main/components/RosterStudents/RosterStudentsTable";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
@@ -134,9 +134,7 @@ describe("RosterStudentsTable tests", () => {
 
     fireEvent.click(editButton);
 
-    await waitFor(() =>
-      expect(mockedNavigate).toHaveBeenCalledWith("/rosterstudents/edit/1"),
-    );
+    await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith("edit/1"));
   });
 
   test("Delete button appears and calls delete callback", async () => {

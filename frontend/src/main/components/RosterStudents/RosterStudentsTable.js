@@ -1,6 +1,6 @@
 import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { useBackendMutation } from "main/utils/useBackend";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   cellToAxiosParamsDelete,
@@ -53,14 +53,16 @@ export default function RosterStudentsTable({
   const navigate = useNavigate();
 
   const editCallback = (cell) => {
-    navigate(`/rosterstudents/edit/${cell.row.values.id}`);
+    navigate(`edit/${cell.row.values.id}`);
   };
+
+  const { courseId } = useParams();
 
   // Stryker disable all : hard to test for query caching
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
-    ["/api/rosterstudents/all"],
+    [`/api/rosterstudents/course?courseId=${courseId}`],
   );
   // Stryker restore all
 

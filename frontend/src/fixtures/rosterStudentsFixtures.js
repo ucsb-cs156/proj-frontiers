@@ -46,4 +46,4 @@ const rosterStudentsFixtures = {
   ],
 };
 
-export default rosterStudentsFixtures;
+export { rosterStudentsFixtures };
