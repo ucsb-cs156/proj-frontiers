@@ -4,13 +4,16 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Data
-@AllArgsConstructor
+
 @NoArgsConstructor
-@Builder
+@AllArgsConstructor
 @Entity
+@Builder
 @Table(name = "ADMINS")
 public class Admin {
 
     @Id
+    @Column(nullable = false, unique = true)
     private String email;
+
 }
