@@ -4,6 +4,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -21,15 +25,24 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
+import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
@@ -42,6 +55,8 @@ public class CoursesController extends ApiController {
 
     @Autowired private OrganizationLinkerService linkerService;
 
+    @Autowired
+    private RosterStudentRepository rosterStudentRepository;
      /**
      * This method creates a new Course.
      * 
@@ -141,6 +156,26 @@ public class CoursesController extends ApiController {
     }
 
     /**
+     * This method returns a list of students in the roster for a given course,
+     * with each student represented as a RosterStudentDTO including GitHub org status.
+     * 
+     * @param courseId the ID of the course
+     * @return a list of RosterStudentDTOs for the given course
+     */
+    @Operation(summary = "Get list of students in a course roster, including orgStatus")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_PROFESSOR')")
+    @GetMapping("/roster")
+    public List<RosterStudentDTO> getRosterForCourse(
+            @Parameter(name = "courseId") @RequestParam Long courseId
+    ) {
+        Iterable<RosterStudent> studentsIterable = rosterStudentRepository.findByCourseId(courseId);
+        List<RosterStudent> students = StreamSupport.stream(studentsIterable.spliterator(), false).collect(Collectors.toList());
+        return students.stream()
+                .map(RosterStudentDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * This method handles the InvalidInstallationTypeException.
      * @param e the exception
      * @return a map with the type and message of the exception
@@ -154,5 +189,76 @@ public class CoursesController extends ApiController {
         );
     }
 
+
+
+    /**
+     * This method looks up a current user and gets their email.
+     * With that email, it that email on every course roster,
+     * and when it appears, notes/stores course id
+     * We then return all courses for those course ids, with relevant
+     * fields for the student.
+     * 
+     * Relevant fields are: id, installationId, orgName, courseName, term, school
+     * For each course, return the status that the student is in
+     */
+    
+    @Operation(summary = "Get all courses for a student")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/student")
+    public ResponseEntity<List<StudentCourseView>> getCoursesForStudent() {
+        String email = getCurrentUser().getUser().getEmail();
+
+        List<StudentCourseView> results = courseRepository
+                .findAllByRosterStudents_Email(email)
+.stream()
+            .map(c -> new StudentCourseView(c, email))
+                .toList();
+
+        return ResponseEntity.ok(results);
+    }
+
+    
+    // Lightweight projection of Course entity with only student-relevant fields
+    public static record StudentCourseView(
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            String status) {
+
+        
+        // Creates view from Course entity and student email
+        public StudentCourseView(Course c, String email) {
+            this(
+                c.getId(),
+                c.getInstallationId(),
+                c.getOrgName(),
+                c.getCourseName(),
+                c.getTerm(),
+                c.getSchool(),
+                mapStatus(
+                    c.getRosterStudents()
+                     .stream()
+                     .filter(s -> s.getEmail().equals(email))
+                     .findFirst()
+                     .orElse(null)));
+        }
+
+        
+        // Maps OrgStatus enum to human-readable status message
+        private static String mapStatus(RosterStudent rs) {
+            if (rs == null) return "Not yet requested an invitation";
+
+            return switch (rs.getOrgStatus()) {
+                case NONE -> "Not yet requested an invitation";
+                case INVITED -> "Has requested an invitation but isn't yet a member";
+                case MEMBER -> "Is a member of the org";
+                case OWNER -> "Is an admin in the org";
+                case EXPIRED -> "Invitation has expired";
+            };
+        }
+    }
 
 }
