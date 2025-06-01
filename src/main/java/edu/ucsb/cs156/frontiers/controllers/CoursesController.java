@@ -38,6 +38,12 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
 @RestController
@@ -183,5 +189,76 @@ public class CoursesController extends ApiController {
         );
     }
 
+
+
+    /**
+     * This method looks up a current user and gets their email.
+     * With that email, it that email on every course roster,
+     * and when it appears, notes/stores course id
+     * We then return all courses for those course ids, with relevant
+     * fields for the student.
+     * 
+     * Relevant fields are: id, installationId, orgName, courseName, term, school
+     * For each course, return the status that the student is in
+     */
+    
+    @Operation(summary = "Get all courses for a student")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/student")
+    public ResponseEntity<List<StudentCourseView>> getCoursesForStudent() {
+        String email = getCurrentUser().getUser().getEmail();
+
+        List<StudentCourseView> results = courseRepository
+                .findAllByRosterStudents_Email(email)
+.stream()
+            .map(c -> new StudentCourseView(c, email))
+                .toList();
+
+        return ResponseEntity.ok(results);
+    }
+
+    
+    // Lightweight projection of Course entity with only student-relevant fields
+    public static record StudentCourseView(
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            String status) {
+
+        
+        // Creates view from Course entity and student email
+        public StudentCourseView(Course c, String email) {
+            this(
+                c.getId(),
+                c.getInstallationId(),
+                c.getOrgName(),
+                c.getCourseName(),
+                c.getTerm(),
+                c.getSchool(),
+                mapStatus(
+                    c.getRosterStudents()
+                     .stream()
+                     .filter(s -> s.getEmail().equals(email))
+                     .findFirst()
+                     .orElse(null)));
+        }
+
+        
+        // Maps OrgStatus enum to human-readable status message
+        private static String mapStatus(RosterStudent rs) {
+            if (rs == null) return "Not yet requested an invitation";
+
+            return switch (rs.getOrgStatus()) {
+                case NONE -> "Not yet requested an invitation";
+                case INVITED -> "Has requested an invitation but isn't yet a member";
+                case MEMBER -> "Is a member of the org";
+                case OWNER -> "Is an admin in the org";
+                case EXPIRED -> "Invitation has expired";
+            };
+        }
+    }
 
 }
