@@ -4,13 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+
+import org.apache.coyote.BadRequestException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -20,6 +24,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -27,7 +32,6 @@ import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -36,10 +40,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
 
 import org.springframework.http.MediaType;
 
@@ -728,4 +740,226 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(List.of());
                 assertEquals(expectedJson, responseString);
         }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_success_noIdChange() throws Exception {
+        doReturn(Optional.of(rs2))
+        .when(rosterStudentRepository).findById(2L);
+        doReturn(rs2)
+        .when(rosterStudentRepository).save(any(RosterStudent.class));
+
+        mockMvc.perform(put("/api/rosterstudents/2")
+                .with(csrf())
+                .param("firstName", "AliceNew")
+                .param("lastName",  "BobNew")
+                .param("studentId", rs2.getStudentId()))
+                .andExpect(status().isOk())
+
+                .andExpect(jsonPath("$.firstName").value("AliceNew"))
+                .andExpect(jsonPath("$.lastName").value("BobNew"))
+                .andExpect(jsonPath("$.studentId").value(rs2.getStudentId()));
+
+        verify(rosterStudentRepository, never())
+                .findByCourseIdAndStudentId(anyLong(), anyString());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_success_withIdChange() throws Exception {
+        doReturn(Optional.of(rs2))
+        .when(rosterStudentRepository).findById(2L);
+        doReturn(Optional.empty())
+        .when(rosterStudentRepository)
+        .findByCourseIdAndStudentId(eq(course1.getId()), eq("NEWID"));
+        doReturn(rs2)
+        .when(rosterStudentRepository).save(any(RosterStudent.class));
+
+        mockMvc.perform(put("/api/rosterstudents/2")
+                .with(csrf())
+                .param("firstName", "CharlieX")
+                .param("lastName",  "DeltaY")
+                .param("studentId", "NEWID"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("CharlieX"))
+                .andExpect(jsonPath("$.lastName").value("DeltaY"))
+                .andExpect(jsonPath("$.studentId").value("NEWID"));
+        }
+
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_badRequest_onDuplicate() throws Exception {
+                doReturn(Optional.of(rs2))
+                .when(rosterStudentRepository).findById(2L);
+                doReturn(Optional.of(rs1))
+                .when(rosterStudentRepository)
+                .findByCourseIdAndStudentId(eq(course1.getId()), eq(rs1.getStudentId()));
+
+                mockMvc.perform(put("/api/rosterstudents/2")
+                        .with(csrf())
+                        .param("firstName", rs2.getFirstName())
+                        .param("lastName",  rs2.getLastName())
+                        .param("studentId", rs1.getStudentId()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(
+                        String.format("Student number '%s' is already used in course %d",
+                                rs1.getStudentId(), course1.getId())));
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        public void updateRosterStudent_notFound() throws Exception {
+                doReturn(Optional.empty())
+                .when(rosterStudentRepository).findById(999L);
+
+                mockMvc.perform(put("/api/rosterstudents/999")
+                        .with(csrf())
+                        .param("firstName", "Foo")
+                        .param("lastName",  "Bar")
+                        .param("studentId", "X123"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(
+                        "RosterStudent with id 999 not found"));
+        }
+
+        @Test
+        public void updateRosterStudent_forbidden_forNonAdmin() throws Exception {
+                mockMvc.perform(put("/api/rosterstudents/2")
+                        .with(csrf())
+                        .param("firstName", "Foo")
+                        .param("lastName",  "Bar")
+                        .param("studentId", "X123"))
+                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        public void noArgsConstructor_and_setters_getters_work() {
+        RosterStudentDTO dto = new RosterStudentDTO();
+        
+        dto.setId(123L);
+        dto.setCourseId(99L);
+        dto.setStudentId("A111222");
+        dto.setFirstName("Jane");
+        dto.setLastName("Doe");
+        dto.setEmail("jane.doe@example.org");
+        dto.setOrgStatus(null);
+        dto.setRosterStatus(null);
+
+        assertEquals(123L, dto.getId());
+        assertEquals(99L, dto.getCourseId());
+        assertEquals("A111222", dto.getStudentId());
+        assertEquals("Jane", dto.getFirstName());
+        assertEquals("Doe", dto.getLastName());
+        assertEquals("jane.doe@example.org", dto.getEmail());
+        assertNull(dto.getOrgStatus());
+        assertNull(dto.getRosterStatus());
+        }
+
+        @Test
+        public void builder_allArgsConstructor_and_getters_work() {
+        Collection<SimpleGrantedAuthority> dummyRoles = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+        RosterStudentDTO dto = RosterStudentDTO.builder()
+                .id(555L)
+                .courseId(42L)
+                .studentId("B333444")
+                .firstName("John")
+                .lastName("Smith")
+                .email("john.smith@ucsb.edu")
+                .orgStatus(null)
+                .rosterStatus(null)
+                .build();
+
+        assertEquals(555L, dto.getId());
+        assertEquals(42L,  dto.getCourseId());
+        assertEquals("B333444", dto.getStudentId());
+        assertEquals("John", dto.getFirstName());
+        assertEquals("Smith", dto.getLastName());
+        assertEquals("john.smith@ucsb.edu", dto.getEmail());
+        }
+
+        @Test
+        public void equals_hashCode_toString() {
+        RosterStudentDTO a = RosterStudentDTO.builder()
+                .id(10L)
+                .courseId(20L)
+                .studentId("X")
+                .firstName("A")
+                .lastName("B")
+                .email("a@b.com")
+                .build();
+        RosterStudentDTO b = RosterStudentDTO.builder()
+                .id(10L)
+                .courseId(20L)
+                .studentId("X")
+                .firstName("A")
+                .lastName("B")
+                .email("a@b.com")
+                .build();
+
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+
+        String ts = a.toString();
+        assertTrue(ts.contains("RosterStudentDTO"));
+        assertTrue(ts.contains("id=10"));
+        assertTrue(ts.contains("studentId=X"));
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_can_delete_a_rosterstudent() throws Exception {
+                // arrange
+                Long id = 15L;
+                RosterStudent rs = RosterStudent.builder()
+                .id(id)
+                .studentId("s12345")
+                .firstName("Bob")
+                .lastName("Smith")
+                .email("alice@ucsb.edu")
+                .build();
+
+                when(rosterStudentRepository.findById(eq(id)))
+                .thenReturn(Optional.of(rs));
+
+                // act
+                MvcResult response = mockMvc.perform(
+                        delete("/api/rosterstudents/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(id);
+                verify(rosterStudentRepository, times(1)).delete(rs);
+
+                // since controller returns plain text, we can assert the body directly:
+                assertEquals("Deleted roster student 15",
+                        response.getResponse().getContentAsString());
+        }
+
+        @WithMockUser(roles = { "ADMIN", "USER" })
+        @Test
+        public void admin_tries_to_delete_non_existent_rosterstudent_and_gets_right_error_message()
+                        throws Exception {
+                // arrange
+                Long id = 15L;
+                when(rosterStudentRepository.findById(eq(id)))
+                .thenReturn(Optional.empty());
+
+                // act
+                MvcResult response = mockMvc.perform(
+                        delete("/api/rosterstudents/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+                // assert
+                verify(rosterStudentRepository, times(1)).findById(id);
+
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("RosterStudent with id 15 not found", json.get("message"));
+        }
+
 }

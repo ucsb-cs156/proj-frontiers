@@ -1,6 +1,8 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.extern.slf4j.Slf4j;
@@ -67,4 +69,24 @@ public abstract class ApiController {
             "message", e.getMessage()
     );
   }
+
+  @ExceptionHandler(UnsupportedOperationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, String> handleUnsupportedOperation(UnsupportedOperationException ex) {
+        return Map.of("message", ex.getMessage());
+    }
+
+      /**
+     * This method handles BadRequestException.
+     * @param e the exception
+     * @return a map with the type and message of the exception
+     */
+    @ExceptionHandler({ BadRequestException.class })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Object handleBadRequestException(Throwable e) {
+      return Map.of(
+        "type",    e.getClass().getSimpleName(),
+        "message", e.getMessage()
+      );
+    }
 }

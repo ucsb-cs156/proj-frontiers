@@ -11,4 +11,5 @@ public interface CourseRepository extends JpaRepository<Course,Long>
 {
 
     Optional<Course> findByInstallationId(String installationId);
+    List<Course> findAllByRosterStudents_Email(String email);
 }

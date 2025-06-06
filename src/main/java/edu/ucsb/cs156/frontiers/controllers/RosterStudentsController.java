@@ -37,6 +37,7 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 import com.opencsv.CSVReader;
@@ -233,4 +234,72 @@ public class RosterStudentsController extends ApiController {
         Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findAllByUser((currentUser));
         return rosterStudents;
     }
+
+    /**
+     * Update first name, last name, and student number of an existing roster student.
+     * 
+     * @param id the RosterStudent record ID
+     * @param firstName new first name
+     * @param lastName new last name
+     * @param studentId new student number (must be unique within the same course)
+     * @return the updated RosterStudent
+     * @throws EntityNotFoundException if no RosterStudent exists with that ID
+     * @throws BadRequestException if the new student number duplicates another in the same course
+     */
+    @Operation(summary = "Update a roster student's name and student number")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping("/{id}")
+    public RosterStudent updateRosterStudent(
+            @Parameter(name = "id", description = "RosterStudent record ID") 
+            @PathVariable Long id,
+
+            @Parameter(name = "firstName", description = "New first name") 
+            @RequestParam String firstName,
+
+            @Parameter(name = "lastName", description = "New last name") 
+            @RequestParam String lastName,
+
+            @Parameter(name = "studentId", description = "New student number") 
+            @RequestParam String studentId
+    ) throws EntityNotFoundException, BadRequestException {
+
+        RosterStudent rs = rosterStudentRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        if (!rs.getStudentId().equals(studentId)) {
+            Optional<RosterStudent> duplicate = 
+                rosterStudentRepository.findByCourseIdAndStudentId(
+                    rs.getCourse().getId(), studentId);
+
+            if (duplicate.isPresent()) {
+                throw new BadRequestException(
+                    String.format("Student number '%s' is already used in course %d",
+                                  studentId, rs.getCourse().getId()));
+            }
+            rs.setStudentId(studentId);
+        }
+
+        rs.setFirstName(firstName);
+        rs.setLastName(lastName);
+
+        return rosterStudentRepository.save(rs);
+    }
+
+    @Operation(summary = "Delete a roster student by record ID")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteRosterStudentById(
+        @Parameter(description = "RosterStudent record ID") @PathVariable Long id)
+        throws EntityNotFoundException {
+
+        RosterStudent rs = rosterStudentRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+        rosterStudentRepository.delete(rs);
+
+        return ResponseEntity.ok(
+            String.format("Deleted roster student %d", id));
+    }
+
 }
+

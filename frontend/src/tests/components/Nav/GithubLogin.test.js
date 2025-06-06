@@ -35,6 +35,77 @@ describe("GithubLogin tests", () => {
     expect(loginButton).toBeInTheDocument();
   });
 
+  test("renders loading when currentUser is null", async () => {
+    const currentUser = null;
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the logged-out span
+    const loggedOutElement = screen.getByTestId("GithubLogin-logged-out");
+    expect(loggedOutElement).toBeInTheDocument();
+  });
+
+  test("renders loading when currentUser.root is null", async () => {
+    const currentUser = {
+      loggedIn: true,
+      root: null,
+    };
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the loading span
+    const loadingElement = screen.getByTestId("GithubLogin-loading");
+    expect(loadingElement).toBeInTheDocument();
+  });
+
+  test("renders loading when currentUser.root.user is null", async () => {
+    const currentUser = {
+      loggedIn: true,
+      root: {
+        user: null,
+      },
+    };
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the loading span
+    const loadingElement = screen.getByTestId("GithubLogin-loading");
+    expect(loadingElement).toBeInTheDocument();
+  });
+
   test("default link is the correct value", async () => {
     const currentUser = currentUserFixtures.userOnly;
 

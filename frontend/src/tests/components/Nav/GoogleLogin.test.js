@@ -71,4 +71,139 @@ describe("GoogleLogin tests", () => {
     expect(loginButton).toBeInTheDocument();
     expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
   });
+
+  test("renders login button when currentUser is null", async () => {
+    const currentUser = null;
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the login button
+    const loginButton = screen.getByText("Log In");
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
+  });
+
+  test("renders login button when currentUser.loggedIn is false", async () => {
+    const currentUser = {
+      loggedIn: false,
+      root: { user: { email: "test@test.com" } },
+    };
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the login button
+    const loginButton = screen.getByText("Log In");
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
+  });
+
+  test("renders login button when currentUser.root is null", async () => {
+    const currentUser = { loggedIn: true, root: null };
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the login button
+    const loginButton = screen.getByText("Log In");
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
+  });
+
+  test("renders login button when currentUser.root.user is null", async () => {
+    const currentUser = { loggedIn: true, root: { user: null } };
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the login button
+    const loginButton = screen.getByText("Log In");
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
+  });
+
+  test("renders login button when currentUser.root.user is undefined", async () => {
+    const currentUser = { loggedIn: true, root: { user: undefined } };
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the login button
+    const loginButton = screen.getByText("Log In");
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
+  });
+
+  test("renders login button when currentUser.root.user is false", async () => {
+    const currentUser = { loggedIn: true, root: { user: false } };
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GoogleLogin
+            currentUser={currentUser}
+            systemInfo={systemInfo}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check for the login button
+    const loginButton = screen.getByText("Log In");
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
+  });
 });
