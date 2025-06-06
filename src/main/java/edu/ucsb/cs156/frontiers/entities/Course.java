@@ -40,7 +40,6 @@ public class Course {
     @JsonIgnore
     @ToString.Exclude
     private List<CourseStaff> courseStaff;
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
     @Fetch(FetchMode.JOIN)
     @JsonIgnore
