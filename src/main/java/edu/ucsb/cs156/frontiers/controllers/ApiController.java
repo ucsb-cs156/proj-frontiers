@@ -7,12 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.http.ResponseEntity;
 
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 
 import java.util.Map;
+
 
 /**
  * This is an abstract class that provides common functionality for all API controllers.
@@ -66,5 +68,16 @@ public abstract class ApiController {
             "type", e.getClass().getSimpleName(),
             "message", e.getMessage()
     );
+  }
+
+  /**
+   * This method handles the UnsupportedOperationException.
+   * @param e the exception
+   * @return a map with the message of the exception
+   */
+  @ExceptionHandler(UnsupportedOperationException.class)
+  public ResponseEntity<Map<String, String>> handleUnsupportedOperation(UnsupportedOperationException e) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN)
+              .body(Map.of("message", e.getMessage()));
   }
 }
