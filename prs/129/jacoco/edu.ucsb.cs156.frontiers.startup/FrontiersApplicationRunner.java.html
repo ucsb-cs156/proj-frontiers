@@ -5,20 +5,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
-/** This class contains a `run` method that is called once at application startup time. */
-<span class="fc" id="L11">@Slf4j</span>
+<span class="fc" id="L9">@Slf4j</span>
 @Configuration
-<span class="fc" id="L13">public class FrontiersApplicationRunner implements ApplicationRunner {</span>
+<span class="fc" id="L11">public class FrontiersApplicationRunner implements ApplicationRunner {</span>
 
-  @Autowired FrontiersStartup frontiersStartup;
+    @Autowired
+    private FrontiersStartup frontiersStartup;
 
-  /** Called once at application startup time */
-  @Override
-  public void run(ApplicationArguments args) throws Exception {
-<span class="fc" id="L20">    log.info(&quot;FrontiersApplicationRunnerDevelopment.run called&quot;);</span>
-<span class="fc" id="L21">    frontiersStartup.alwaysRunOnStartup();</span>
-<span class="fc" id="L22">  }</span>
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+<span class="fc" id="L18">        log.info(&quot;FrontiersApplicationRunner.run called&quot;);</span>
+<span class="fc" id="L19">        frontiersStartup.alwaysRunOnStartup();</span>
+<span class="fc" id="L20">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

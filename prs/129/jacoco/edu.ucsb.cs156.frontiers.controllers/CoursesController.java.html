@@ -2,8 +2,6 @@
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,37 +20,50 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import edu.ucsb.cs156.frontiers.entities.Course;
+import java.util.List;
+import java.util.ArrayList;
+
+import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
-import edu.ucsb.cs156.frontiers.entities.CourseStaff; 
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
-import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository; 
+
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*; 
-
 @Tag(name = &quot;Course&quot;)
 @RequestMapping(&quot;/api/courses&quot;)
 @RestController
-<span class="fc" id="L45">@Slf4j</span>
-<span class="fc" id="L46">public class CoursesController extends ApiController {</span>
+<span class="fc" id="L52">@Slf4j</span>
+<span class="fc" id="L53">public class CoursesController extends ApiController {</span>
     
     @Autowired
     private CourseRepository courseRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private RosterStudentRepository rosterStudentRepository;
 
     @Autowired
     private CourseStaffRepository courseStaffRepository;
+
 
     @Autowired private OrganizationLinkerService linkerService;
 
@@ -77,17 +88,17 @@ import java.util.*;
            )
             {
         //get current date right now and set status to pending
-<span class="fc" id="L80">        CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L81">        Course course = Course.builder()</span>
-<span class="fc" id="L82">                .orgName(orgName)</span>
-<span class="fc" id="L83">                .courseName(courseName)</span>
-<span class="fc" id="L84">                .term(term)</span>
-<span class="fc" id="L85">                .school(school)</span>
-<span class="fc" id="L86">                .creator(currentUser.getUser())</span>
-<span class="fc" id="L87">                .build();</span>
-<span class="fc" id="L88">        Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L91">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L92">        Course course = Course.builder()</span>
+<span class="fc" id="L93">                .orgName(orgName)</span>
+<span class="fc" id="L94">                .courseName(courseName)</span>
+<span class="fc" id="L95">                .term(term)</span>
+<span class="fc" id="L96">                .school(school)</span>
+<span class="fc" id="L97">                .creator(currentUser.getUser())</span>
+<span class="fc" id="L98">                .build();</span>
+<span class="fc" id="L99">        Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L90">        return savedCourse;</span>
+<span class="fc" id="L101">        return savedCourse;</span>
     }
 
       /**
@@ -99,8 +110,8 @@ import java.util.*;
     @GetMapping(&quot;/all&quot;)
     public Iterable&lt;Course&gt; allCourses(
     ) {
-<span class="fc" id="L102">        Iterable&lt;Course&gt; courses = courseRepository.findAll();</span>
-<span class="fc" id="L103">        return courses;</span>
+<span class="fc" id="L113">        Iterable&lt;Course&gt; courses = courseRepository.findAll();</span>
+<span class="fc" id="L114">        return courses;</span>
     }
 
 
@@ -116,10 +127,10 @@ import java.util.*;
     @PreAuthorize(&quot;hasRole('ROLE_PROFESSOR')&quot;)
     @GetMapping(&quot;/redirect&quot;)
     public ResponseEntity&lt;Void&gt; linkCourse(@Parameter Long courseId) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc" id="L119">        String newUrl = linkerService.getRedirectUrl();</span>
-<span class="fc" id="L120">        newUrl += &quot;/installations/new?state=&quot;+courseId;</span>
+<span class="fc" id="L130">        String newUrl = linkerService.getRedirectUrl();</span>
+<span class="fc" id="L131">        newUrl += &quot;/installations/new?state=&quot;+courseId;</span>
         //found this convenient solution here: https://stackoverflow.com/questions/29085295/spring-mvc-restcontroller-and-redirect
-<span class="fc" id="L122">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, newUrl).build();</span>
+<span class="fc" id="L133">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, newUrl).build();</span>
     }
 
 
@@ -138,18 +149,18 @@ import java.util.*;
                                                 @Parameter(name = &quot;setupAction&quot;) @RequestParam String setup_action,
                                                 @Parameter(name = &quot;code&quot;) @RequestParam String code,
                                                 @Parameter(name = &quot;state&quot;) @RequestParam Long state) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc bfc" id="L141" title="All 2 branches covered.">        if(installation_id.isEmpty()) {</span>
-<span class="fc" id="L142">            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;).build();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if(installation_id.isEmpty()) {</span>
+<span class="fc" id="L153">            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;).build();</span>
         }else {
-<span class="fc" id="L144">            Course course = courseRepository.findById(state).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
-<span class="fc bfc" id="L145" title="All 2 branches covered.">            if(!(course.getCreator().getId() ==getCurrentUser().getUser().getId())) {</span>
-<span class="fc" id="L146">                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
+<span class="fc" id="L155">            Course course = courseRepository.findById(state).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            if(!(course.getCreator().getId() ==getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L157">                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
             }else{
-<span class="fc" id="L148">                String orgName = linkerService.getOrgName(installation_id.get());</span>
-<span class="fc" id="L149">                course.setInstallationId(installation_id.get());</span>
-<span class="fc" id="L150">                course.setOrgName(orgName);</span>
-<span class="fc" id="L151">                courseRepository.save(course);</span>
-<span class="fc" id="L152">                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, &quot;/admin/courses?success=True&amp;course=&quot; + state).build();</span>
+<span class="fc" id="L159">                String orgName = linkerService.getOrgName(installation_id.get());</span>
+<span class="fc" id="L160">                course.setInstallationId(installation_id.get());</span>
+<span class="fc" id="L161">                course.setOrgName(orgName);</span>
+<span class="fc" id="L162">                courseRepository.save(course);</span>
+<span class="fc" id="L163">                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, &quot;/admin/courses?success=True&amp;course=&quot; + state).build();</span>
             }
         }
     }
@@ -162,68 +173,64 @@ import java.util.*;
     @ExceptionHandler({ InvalidInstallationTypeException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Object handleInvalidInstallationType(Throwable e) {
-<span class="fc" id="L165">        return Map.of(</span>
-<span class="fc" id="L166">                &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L167">                &quot;message&quot;, e.getMessage()</span>
+<span class="fc" id="L176">        return Map.of(</span>
+<span class="fc" id="L177">                &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L178">                &quot;message&quot;, e.getMessage()</span>
         );
     }
 
-    @Operation(summary = &quot;Student can see what courses they appear on roster of and their status in each&quot;)
+    /**
+     * student see what courses they appear on roster of
+     * 
+     * @param studentId the id of the student making request
+     * @return a list of all courses student is in
+     */
+    @Operation(summary= &quot;Student see what courses they appear on roster of&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
-    @GetMapping(&quot;/student&quot;)
-    public List&lt;Map&lt;String, Object&gt;&gt; lookUpStudentCourseRoster() 
-    {
-<span class="fc" id="L176">        CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L177">        String studentEmail = currentUser.getUser().getEmail();</span>
+    @GetMapping(&quot;/studentCourses&quot;) 
+    public Iterable&lt;Course&gt; studentCourses() {
+<span class="fc" id="L192">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L193">        User user = currentUser.getUser();</span>
 
-<span class="fc" id="L179">        List&lt;Map&lt;String, Object&gt;&gt; matchedCourses = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L180">        Iterable&lt;RosterStudent&gt; roster = rosterStudentRepository.findAllByEmail(studentEmail); </span>
+<span class="fc" id="L195">        String email = user.getEmail();</span>
 
-<span class="fc bfc" id="L182" title="All 2 branches covered.">        for (RosterStudent rs : roster) </span>
-        {
-<span class="fc" id="L184">            Course course = rs.getCourse(); </span>
-<span class="fc" id="L185">            Map&lt;String, Object&gt; courseInfo = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L186">            courseInfo.put(&quot;id&quot;, course.getId());</span>
-<span class="fc" id="L187">            courseInfo.put(&quot;orgName&quot;, course.getOrgName());</span>
-<span class="fc" id="L188">            courseInfo.put(&quot;courseName&quot;, course.getCourseName());</span>
-<span class="fc" id="L189">            courseInfo.put(&quot;term&quot;, course.getTerm());</span>
-<span class="fc" id="L190">            courseInfo.put(&quot;school&quot;, course.getSchool());</span>
-<span class="fc" id="L191">            courseInfo.put(&quot;installationId&quot;, course.getInstallationId());</span>
-<span class="fc" id="L192">            courseInfo.put(&quot;status&quot;, rs.getOrgStatus().name()); </span>
-
-<span class="fc" id="L194">            matchedCourses.add(courseInfo);</span>
-<span class="fc" id="L195">        }</span>
+<span class="fc" id="L197">        Iterable&lt;RosterStudent&gt; rosters = rosterStudentRepository.findAllByEmail(email);</span>
         
-<span class="fc" id="L197">        return matchedCourses;</span>
+<span class="fc" id="L199">        List&lt;Long&gt; courseIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        for (RosterStudent roster : rosters) {</span>
+<span class="fc" id="L201">            courseIds.add(roster.getCourse().getId());</span>
+<span class="fc" id="L202">        }</span>
+
+<span class="fc" id="L204">        Iterable&lt;Course&gt; courses = courseRepository.findAllById(courseIds);</span>
+<span class="fc" id="L205">        return courses;</span>
     }
 
-    @Operation(summary = &quot;Student can see what courses they appear on staff roster of and their status in each&quot;)
+    /**
+     * student see what courses they appear as staff in
+     * 
+     * @param studentId the id of the student making request
+     * @return a list of all courses student is staff in
+     */
+    @Operation(summary= &quot;Student see what courses they appear as staff in&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
-    @GetMapping(&quot;/staff&quot;)
-    public List&lt;Map&lt;String, Object&gt;&gt; lookUpStaffCourseRoster() 
-    {
-<span class="fc" id="L205">        CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L206">        String email = currentUser.getUser().getEmail(); </span>
-<span class="fc" id="L207">        List&lt;CourseStaff&gt; staffRoster = courseStaffRepository.findAllByEmail(email); </span>
+    @GetMapping(&quot;/staffCourses&quot;) 
+    public Iterable&lt;Course&gt; staffCourses() {
+<span class="fc" id="L218">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L219">        User user = currentUser.getUser();</span>
 
-<span class="fc" id="L209">        List&lt;Map&lt;String, Object&gt;&gt; matchedCourses = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L221">        String email = user.getEmail();</span>
 
-<span class="fc bfc" id="L211" title="All 2 branches covered.">        for (CourseStaff st : staffRoster) </span>
-        {
-<span class="fc" id="L213">            Course course = st.getCourse(); </span>
-            
-<span class="fc" id="L215">            Map&lt;String, Object&gt; courseInfo = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L216">            courseInfo.put(&quot;id&quot;, course.getId());</span>
-<span class="fc" id="L217">            courseInfo.put(&quot;orgName&quot;, course.getOrgName());</span>
-<span class="fc" id="L218">            courseInfo.put(&quot;courseName&quot;, course.getCourseName());</span>
-<span class="fc" id="L219">            courseInfo.put(&quot;term&quot;, course.getTerm());</span>
-<span class="fc" id="L220">            courseInfo.put(&quot;school&quot;, course.getSchool());</span>
-<span class="fc" id="L221">            courseInfo.put(&quot;installationId&quot;, course.getInstallationId());</span>
-<span class="fc" id="L222">            courseInfo.put(&quot;status&quot;, st.getOrgStatus()); </span>
+<span class="fc" id="L223">        Iterable&lt;CourseStaff&gt; staffs = courseStaffRepository.findAllByEmail(email);</span>
+        
+<span class="fc" id="L225">        List&lt;Long&gt; courseIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        for (CourseStaff staff : staffs) {</span>
+<span class="fc" id="L227">            courseIds.add(staff.getCourse().getId());</span>
+<span class="fc" id="L228">        }</span>
 
-<span class="fc" id="L224">            matchedCourses.add(courseInfo);</span>
-<span class="fc" id="L225">        }</span>
-<span class="fc" id="L226">        return matchedCourses;</span>
+<span class="fc" id="L230">        Iterable&lt;Course&gt; courses = courseRepository.findAllById(courseIds);</span>
+<span class="fc" id="L231">        return courses;</span>
     }
+
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
