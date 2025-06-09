@@ -2,7 +2,6 @@ edu.ucsb.cs156.frontiers
 edu.ucsb.cs156.frontiers.aop
 edu.ucsb.cs156.frontiers.config
 edu.ucsb.cs156.frontiers.controllers
-edu.ucsb.cs156.frontiers.dtos
 edu.ucsb.cs156.frontiers.entities
 edu.ucsb.cs156.frontiers.enums
 edu.ucsb.cs156.frontiers.errors
