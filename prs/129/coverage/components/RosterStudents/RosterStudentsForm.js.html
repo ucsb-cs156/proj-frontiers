@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
@@ -185,7 +185,13 @@
 <a name='L120'></a><a href='#L120'>120</a>
 <a name='L121'></a><a href='#L121'>121</a>
 <a name='L122'></a><a href='#L122'>122</a>
-<a name='L123'></a><a href='#L123'>123</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -199,16 +205,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -305,9 +319,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Button, Form, Row, Col } from "react-bootstrap";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 &nbsp;
@@ -326,104 +338,110 @@ function RosterStudentsForm({
 &nbsp;
   const navigate = useNavigate();
 &nbsp;
-  // Stryker disable all
-  const emailRegex = /(.?)@(.?).(.*?)/;
-  // Stryker restore all
+  // Stryker disable next-line Regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+&nbsp;
+  const testIdPrefix = "RosterStudentsForm";
 &nbsp;
   return (
     &lt;Form onSubmit={handleSubmit(submitAction)}&gt;
-      &lt;Row&gt;
-        &lt;Col&gt;
-          &lt;Form.Group className="mb-3"&gt;
-            &lt;Form.Label htmlFor="studentId"&gt;Student ID&lt;/Form.Label&gt;
-            &lt;Form.Control
-              data-testid="RosterStudentsForm-studentId"
-              id="studentId"
-              type="text"
-              isInvalid={Boolean(errors.requesterEmail)}
-              {...register("studentId", {
-                required: "Student ID is required.",
-              })}
-            /&gt;
-            &lt;Form.Control.Feedback type="invalid"&gt;
-              {errors.studentId?.message}
-            &lt;/Form.Control.Feedback&gt;
-          &lt;/Form.Group&gt;
-        &lt;/Col&gt;
-      &lt;/Row&gt;
-      &lt;Row&gt;
-        &lt;Col&gt;
-          &lt;Form.Group className="mb-3"&gt;
-            &lt;Form.Label htmlFor="firstName"&gt;First Name&lt;/Form.Label&gt;
-            &lt;Form.Control
-              data-testid="RosterStudentsForm-firstName"
-              id="firstName"
-              type="text"
-              isInvalid={Boolean(errors.firstName)}
-              {...register("firstName", {
-                required: "First Name is required.",
-              })}
-            /&gt;
-            &lt;Form.Control.Feedback type="invalid"&gt;
-              {errors.firstName?.message}
-            &lt;/Form.Control.Feedback&gt;
-          &lt;/Form.Group&gt;
-        &lt;/Col&gt;
-      &lt;/Row&gt;
-      &lt;Row&gt;
-        &lt;Col&gt;
-          &lt;Form.Group className="mb-3"&gt;
-            &lt;Form.Label htmlFor="lastName"&gt;Last Name&lt;/Form.Label&gt;
-            &lt;Form.Control
-              data-testid="RosterStudentsForm-lastName"
-              id="lastName"
-              type="text"
-              isInvalid={Boolean(errors.lastName)}
-              {...register("lastName", {
-                required: "Last Name is required.",
-              })}
-            /&gt;
-            &lt;Form.Control.Feedback type="invalid"&gt;
-              {errors.lastName?.message}
-            &lt;/Form.Control.Feedback&gt;
-          &lt;/Form.Group&gt;
-        &lt;/Col&gt;
-      &lt;/Row&gt;
-      &lt;Row&gt;
-        &lt;Col&gt;
-          &lt;Form.Group className="mb-3"&gt;
-            &lt;Form.Label htmlFor="email"&gt;Email&lt;/Form.Label&gt;
-            &lt;Form.Control
-              data-testid="RosterStudentsForm-email"
-              id="email"
-              type="email"
-              isInvalid={Boolean(errors.email)}
-              {...register("email", {
-                required: "Email is required.",
-                pattern: emailRegex,
-              })}
-            /&gt;
-            &lt;Form.Control.Feedback type="invalid"&gt;
-              {errors.email?.message}
-            &lt;/Form.Control.Feedback&gt;
-          &lt;/Form.Group&gt;
-        &lt;/Col&gt;
-      &lt;/Row&gt;
+      {initialContents &amp;&amp; (
+        &lt;Form.Group className="mb-3"&gt;
+          &lt;Form.Label htmlFor="id"&gt;Id&lt;/Form.Label&gt;
+          &lt;Form.Control
+            data-testid={testIdPrefix + "-id"}
+            id="id"
+            type="text"
+            {...register("id")}
+            value={initialContents.id}
+            disabled
+          /&gt;
+        &lt;/Form.Group&gt;
+      )}
 &nbsp;
-      &lt;Row&gt;
-        &lt;Col&gt;
-          &lt;Button type="submit" data-testid="RosterStudentsForm-submit"&gt;
-            {buttonLabel}
-          &lt;/Button&gt;
-          &lt;Button
-            variant="secondary"
-            onClick={() =&gt; navigate(-1)}
-            data-testid="RosterStudentsForm-cancel"
-          &gt;
-            Cancel
-          &lt;/Button&gt;
-        &lt;/Col&gt;
-      &lt;/Row&gt;
+      &lt;Form.Group className="mb-3"&gt;
+        &lt;Form.Label htmlFor="studentId"&gt;Student Id&lt;/Form.Label&gt;
+        &lt;Form.Control
+          data-testid={testIdPrefix + "-studentId"}
+          id="studentId"
+          type="text"
+          isInvalid={Boolean(errors.studentId)}
+          {...register("studentId", {
+            required: "Student Id is required.",
+            maxLength: {
+              value: 255,
+              message: "Max length 255 characters",
+            },
+          })}
+        /&gt;
+        &lt;Form.Control.Feedback type="invalid"&gt;
+          {errors.studentId?.message}
+        &lt;/Form.Control.Feedback&gt;
+      &lt;/Form.Group&gt;
+&nbsp;
+      &lt;Form.Group className="mb-3"&gt;
+        &lt;Form.Label htmlFor="firstName"&gt;First Name&lt;/Form.Label&gt;
+        &lt;Form.Control
+          data-testid={testIdPrefix + "-firstName"}
+          id="firstName"
+          type="text"
+          isInvalid={Boolean(errors.firstName)}
+          {...register("firstName", {
+            required: "First Name is required.",
+          })}
+        /&gt;
+        &lt;Form.Control.Feedback type="invalid"&gt;
+          {errors.firstName?.message}
+        &lt;/Form.Control.Feedback&gt;
+      &lt;/Form.Group&gt;
+&nbsp;
+      &lt;Form.Group className="mb-3"&gt;
+        &lt;Form.Label htmlFor="lastName"&gt;Last Name&lt;/Form.Label&gt;
+        &lt;Form.Control
+          data-testid={testIdPrefix + "-lastName"}
+          id="lastName"
+          type="text"
+          isInvalid={Boolean(errors.lastName)}
+          {...register("lastName", {
+            required: "Last Name is required.",
+          })}
+        /&gt;
+        &lt;Form.Control.Feedback type="invalid"&gt;
+          {errors.lastName?.message}
+        &lt;/Form.Control.Feedback&gt;
+      &lt;/Form.Group&gt;
+&nbsp;
+      &lt;Form.Group className="mb-3"&gt;
+        &lt;Form.Label htmlFor="email"&gt;Email&lt;/Form.Label&gt;
+        &lt;Form.Control
+          data-testid={testIdPrefix + "-email"}
+          id="email"
+          type="text"
+          isInvalid={Boolean(errors.email)}
+          {...register("email", {
+            required: "Email is required.",
+            pattern: {
+              value: emailRegex,
+              message: "Email is not valid.",
+            },
+          })}
+          disabled={initialContents}
+        /&gt;
+        &lt;Form.Control.Feedback type="invalid"&gt;
+          {errors.email?.message}
+        &lt;/Form.Control.Feedback&gt;
+      &lt;/Form.Group&gt;
+&nbsp;
+      &lt;Button type="submit" data-testid={testIdPrefix + "-submit"}&gt;
+        {buttonLabel}
+      &lt;/Button&gt;
+      &lt;Button
+        variant="Secondary"
+        onClick={() =&gt; navigate(-1)}
+        data-testid={testIdPrefix + "-cancel"}
+      &gt;
+        Cancel
+      &lt;/Button&gt;
     &lt;/Form&gt;
   );
 }
@@ -436,7 +454,7 @@ export default RosterStudentsForm;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-06-06T17:19:22.724Z
+                at 2025-06-09T16:57:03.759Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
