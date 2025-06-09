@@ -15,6 +15,8 @@ const Template = (args) => {
 export const Empty = Template.bind({});
 export const ThreeCourses = Template.bind({});
 export const ThreeCoursesWithInstallButton = Template.bind({});
+export const ThreeCoursesWithRosterButton = Template.bind({});
+export const ThreeCoursesWithInstallAndRosterButton = Template.bind({});
 
 Empty.args = {
   courses: [],
@@ -30,6 +32,23 @@ ThreeCourses.parameters = {};
 ThreeCoursesWithInstallButton.args = {
   courses: coursesFixtures.threeCourses,
   showInstallButton: true,
+  showRosterButton: false,
   storybook: true,
 };
 ThreeCoursesWithInstallButton.parameters = {};
+
+ThreeCoursesWithRosterButton.args = {
+  courses: coursesFixtures.threeCourses,
+  showInstallButton: false,
+  showRosterButton: true,
+  storybook: true,
+};
+ThreeCoursesWithRosterButton.parameters = {};
+
+ThreeCoursesWithInstallAndRosterButton.args = {
+  courses: coursesFixtures.threeCourses,
+  showInstallButton: true,
+  showRosterButton: true,
+  storybook: true,
+};
+ThreeCoursesWithInstallAndRosterButton.parameters = {};

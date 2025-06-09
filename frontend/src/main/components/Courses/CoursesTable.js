@@ -30,6 +30,7 @@ const columns = [
 export default function CoursesTable({
   courses,
   showInstallButton = false,
+  showRosterButton = false,
   storybook = false,
 }) {
   const installCallback = (cell) => {
@@ -41,8 +42,17 @@ export default function CoursesTable({
     window.location.href = url;
   };
 
-  const buttonColumns = [
-    ...columns,
+  const rosterCallback = (cell) => {
+    const courseId = cell.row.values.id;
+    const url = `/admin/courses/${courseId}/roster_students`;
+    if (storybook) {
+      window.alert(`would have navigated to: ${url}`);
+      return;
+    }
+    window.location.href = url;
+  };
+
+  const installColumns = [
     ButtonColumn(
       "Install Github App",
       "primary",
@@ -50,7 +60,17 @@ export default function CoursesTable({
       "CoursesTable",
     ),
   ];
-  const columnsToDisplay = showInstallButton ? buttonColumns : columns;
+
+  const rosterColumns = [
+    ButtonColumn("Roster Students", "primary", rosterCallback, "CoursesTable"),
+  ];
+
+  let columnsToDisplay = [...columns];
+
+  if (showInstallButton) columnsToDisplay.push(...installColumns);
+
+  if (showRosterButton) columnsToDisplay.push(...rosterColumns);
+
   return (
     <OurTable
       data={courses}

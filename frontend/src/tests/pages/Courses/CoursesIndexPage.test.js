@@ -103,6 +103,13 @@ describe("CoursesIndexPage tests", () => {
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Install Github App");
+
+    // expect that the button for "Roster Students" is present
+    const button2 = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-Roster Students-button",
+    );
+    expect(button2).toBeInTheDocument();
+    expect(button2).toHaveTextContent("Roster Students");
   });
 
   test("renders empty table when backend unavailable, admin only", async () => {
@@ -131,7 +138,7 @@ describe("CoursesIndexPage tests", () => {
     restoreConsole();
   });
 
-  test("no button to connect to Github App for non-admin user", async () => {
+  test("no button to connect to Github App or Roster Students for non-admin user", async () => {
     setupNonAdminUser();
     axiosMock
       .onGet("/api/courses/all")
@@ -156,5 +163,11 @@ describe("CoursesIndexPage tests", () => {
       "CoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).not.toBeInTheDocument();
+
+    // expect that the button for "Roster Students" is not present
+    const button2 = screen.queryByTestId(
+      "CoursesTable-cell-row-0-col-Roster Students-button",
+    );
+    expect(button2).not.toBeInTheDocument();
   });
 });
