@@ -30,6 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.util.List;
+import java.util.ArrayList;
+
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
@@ -43,6 +49,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,7 +72,9 @@ public class CoursesController extends ApiController {
     private RosterStudentRepository rosterStudentRepository;
 
     @Autowired
-    private OrganizationLinkerService linkerService;
+    private CourseStaffRepository courseStaffRepository;
+
+    @Autowired private OrganizationLinkerService linkerService;
 
     /**
      * This method creates a new Course.
@@ -222,6 +232,32 @@ public class CoursesController extends ApiController {
                     return response;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * student see what courses they appear as staff in
+     * 
+     * @param studentId the id of the student making request
+     * @return a list of all courses student is staff in
+     */
+    @Operation(summary= "Student see what courses they appear as staff in")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/staffCourses") 
+    public Iterable<Course> staffCourses() {
+        CurrentUser currentUser = getCurrentUser();
+        User user = currentUser.getUser();
+
+        String email = user.getEmail();
+
+        Iterable<CourseStaff> staffs = courseStaffRepository.findAllByEmail(email);
+        
+        List<Long> courseIds = new ArrayList<>();
+        for (CourseStaff staff : staffs) {
+            courseIds.add(staff.getCourse().getId());
+        }
+
+        Iterable<Course> courses = courseRepository.findAllById(courseIds);
+        return courses;
     }
 
 }

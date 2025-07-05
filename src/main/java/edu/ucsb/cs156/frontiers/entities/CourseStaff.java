@@ -19,6 +19,10 @@ public class CourseStaff {
     @ToString.Exclude
     private User user;
 
+    private String firstName;
+    private String lastName;
+    private String email;
+
     @ManyToOne
     @JoinColumn(name = "course_id")
     @ToString.Exclude
