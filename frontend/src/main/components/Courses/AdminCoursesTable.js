@@ -27,7 +27,7 @@ const columns = [
   },
 ];
 
-export default function CoursesTable({
+export default function AdminCoursesTable({
   courses,
   showInstallButton = false,
   storybook = false,

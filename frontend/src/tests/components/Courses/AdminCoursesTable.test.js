@@ -1,6 +1,6 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
-import CoursesTable from "main/components/Courses/CoursesTable";
+import AdminCoursesTable from "main/components/Courses/AdminCoursesTable";
 import { BrowserRouter } from "react-router-dom";
 
 window.alert = jest.fn();
@@ -9,7 +9,7 @@ describe("CoursesTable tests", () => {
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
-        <CoursesTable courses={coursesFixtures.threeCourses} />
+        <AdminCoursesTable courses={coursesFixtures.threeCourses} />
       </BrowserRouter>,
     );
 
@@ -67,7 +67,7 @@ describe("CoursesTable tests", () => {
   test("Calls the navigate callback when the button is pressed", () => {
     render(
       <BrowserRouter>
-        <CoursesTable
+        <AdminCoursesTable
           courses={coursesFixtures.threeCourses}
           showInstallButton={true}
         />
@@ -88,7 +88,7 @@ describe("CoursesTable tests", () => {
   test("Calls window.alert when the button is pressed on storybook", async () => {
     render(
       <BrowserRouter>
-        <CoursesTable
+        <AdminCoursesTable
           courses={coursesFixtures.threeCourses}
           showInstallButton={true}
           storybook={true}
@@ -114,7 +114,7 @@ describe("CoursesTable tests", () => {
   test("Tests that the default is to NOT show the buttons for installation", () => {
     render(
       <BrowserRouter>
-        <CoursesTable courses={coursesFixtures.threeCourses} />
+        <AdminCoursesTable courses={coursesFixtures.threeCourses} />
       </BrowserRouter>,
     );
 
@@ -130,7 +130,7 @@ describe("CoursesTable tests", () => {
   test("Tests that we don't see the buttons when we specify false", () => {
     render(
       <BrowserRouter>
-        <CoursesTable
+        <AdminCoursesTable
           courses={coursesFixtures.threeCourses}
           showInstallButton={false}
         />
@@ -149,7 +149,7 @@ describe("CoursesTable tests", () => {
   test("Tests that storybook is explictly false all still works as expected", async () => {
     render(
       <BrowserRouter>
-        <CoursesTable
+        <AdminCoursesTable
           courses={coursesFixtures.threeCourses}
           showInstallButton={true}
           storybook={false}

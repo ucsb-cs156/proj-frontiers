@@ -1,15 +1,15 @@
 import React from "react";
 
-import CoursesTable from "main/components/Courses/CoursesTable";
+import AdminCoursesTable from "main/components/Courses/AdminCoursesTable";
 import coursesFixtures from "fixtures/coursesFixtures";
 
 export default {
-  title: "components/Courses/CoursesTable",
-  component: CoursesTable,
+  title: "components/Courses/AdminCoursesTable",
+  component: AdminCoursesTable,
 };
 
 const Template = (args) => {
-  return <CoursesTable {...args} />;
+  return <AdminCoursesTable {...args} />;
 };
 
 export const Empty = Template.bind({});
