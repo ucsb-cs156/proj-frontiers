@@ -23,7 +23,7 @@ jest.mock("react-toastify", () => {
 describe("CoursesIndexPage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
 
-  const testId = "CoursesTable";
+  const testId = "AdminCoursesTable";
 
   const setupAdminUser = () => {
     axiosMock.reset();
@@ -99,7 +99,7 @@ describe("CoursesIndexPage tests", () => {
 
     // expect that the button for "Install Github App" is present
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Install Github App");
@@ -153,7 +153,7 @@ describe("CoursesIndexPage tests", () => {
 
     // expect that the button for "Install Github App" is not present
     const button = screen.queryByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).not.toBeInTheDocument();
   });

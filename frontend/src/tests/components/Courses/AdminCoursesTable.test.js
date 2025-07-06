@@ -5,7 +5,20 @@ import { BrowserRouter } from "react-router-dom";
 
 window.alert = jest.fn();
 
-describe("CoursesTable tests", () => {
+describe("AdminCoursesTable tests", () => {
+  const originalLocation = window.location;
+
+  beforeEach(() => {
+    // Remove window.location and mock it
+    delete window.location;
+    window.location = { href: "" }; // Minimal mock
+  });
+
+  afterEach(() => {
+    // Restore original window.location
+    window.location = originalLocation;
+  });
+
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
@@ -29,7 +42,7 @@ describe("CoursesTable tests", () => {
       "term",
       "school",
     ];
-    const testId = "CoursesTable";
+    const testId = "AdminCoursesTable";
 
     expectedHeaders.forEach((headerText) => {
       const header = screen.getByText(headerText);
@@ -75,7 +88,7 @@ describe("CoursesTable tests", () => {
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Install Github App");
@@ -97,7 +110,7 @@ describe("CoursesTable tests", () => {
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Install Github App");
@@ -120,7 +133,7 @@ describe("CoursesTable tests", () => {
 
     // Check that the button is NOT in the document
     const button = screen.queryByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).not.toBeInTheDocument();
     // expect that the mocked window.alert function is not called
@@ -139,7 +152,7 @@ describe("CoursesTable tests", () => {
 
     // Check that the button is NOT in the document
     const button = screen.queryByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).not.toBeInTheDocument();
     // expect that the mocked window.alert function is not called
@@ -159,7 +172,7 @@ describe("CoursesTable tests", () => {
 
     // Check that the button is NOT in the document
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Install Github App");
@@ -169,5 +182,7 @@ describe("CoursesTable tests", () => {
     await waitFor(() => {
       expect(window.alert).not.toHaveBeenCalled();
     });
+
+    expect(window.location.href).toBe("/api/courses/redirect?courseId=1");
   });
 });
