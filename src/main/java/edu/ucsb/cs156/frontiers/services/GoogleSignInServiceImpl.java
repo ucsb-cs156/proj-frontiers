@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,12 +21,12 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
 
     private final UserRepository userRepository;
 
-    @Value("${app.admin.emails}")
-    private final List<String> adminEmails = new ArrayList<>();
+    private final AdminRepository adminEmails;
 
     @Autowired
-    public GoogleSignInServiceImpl(UserRepository userRepository) {
+    public GoogleSignInServiceImpl(UserRepository userRepository, AdminRepository adminRepository) {
         this.userRepository = userRepository;
+        this.adminEmails = adminRepository;
     }
 
     @Override
@@ -42,7 +43,7 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
             User user = currentUser.get();
             if (user.getAdmin()) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-            } else if (adminEmails.contains(user.getEmail())) {
+            } else if (adminEmails.existsByEmail(user.getEmail())) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 user.setAdmin(true);
                 changed = true;
@@ -82,7 +83,7 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                     .givenName(oidcUser.getGivenName())
                     .pictureUrl(oidcUser.getPicture())
                     .build();
-            if (adminEmails.contains(oidcUser.getEmail())) {
+            if (adminEmails.existsByEmail(oidcUser.getEmail())) {
                 newUser.setAdmin(true);
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
             } else {
