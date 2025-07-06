@@ -15,4 +15,6 @@ public interface AdminRepository extends CrudRepository<Admin, String> {
    * @return Optional of Admin (empty if not found)
    */
   Optional<Admin> findByEmail(String email);
-} 
+
+    boolean existsByEmail(String email);
+}
