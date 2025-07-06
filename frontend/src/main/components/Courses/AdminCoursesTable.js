@@ -47,7 +47,7 @@ export default function AdminCoursesTable({
       "Install Github App",
       "primary",
       installCallback,
-      "CoursesTable",
+      "AdminCoursesTable",
     ),
   ];
   const columnsToDisplay = showInstallButton ? buttonColumns : columns;
@@ -55,7 +55,7 @@ export default function AdminCoursesTable({
     <OurTable
       data={courses}
       columns={columnsToDisplay}
-      testid={"CoursesTable"}
+      testid={"AdminCoursesTable"}
     />
   );
 }
