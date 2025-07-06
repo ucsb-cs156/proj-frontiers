@@ -63,6 +63,9 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                 user.setGivenName(oidcUser.getGivenName());
                 changed = true;
             }
+            if(!user.getFamilyName().equals(oidcUser.getFamilyName())) {
+                user.setFamilyName(oidcUser.getFamilyName());
+            }
             if (!user.getPictureUrl().equals(oidcUser.getPicture())) {
                 user.setPictureUrl(oidcUser.getPicture());
                 changed = true;

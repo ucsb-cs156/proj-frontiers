@@ -27,6 +27,7 @@ public class User {
   private String pictureUrl;
   private String fullName;
   private String givenName;
+  private String familyName;
   private boolean admin;
   private boolean professor;
   private int githubId;
