@@ -65,6 +65,7 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
             }
             if(!user.getFamilyName().equals(oidcUser.getFamilyName())) {
                 user.setFamilyName(oidcUser.getFamilyName());
+                changed = true;
             }
             if (!user.getPictureUrl().equals(oidcUser.getPicture())) {
                 user.setPictureUrl(oidcUser.getPicture());
@@ -83,6 +84,7 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                     .fullName(oidcUser.getFullName())
                     .email(oidcUser.getEmail())
                     .givenName(oidcUser.getGivenName())
+                    .familyName(oidcUser.getFamilyName())
                     .pictureUrl(oidcUser.getPicture())
                     .build();
             if (adminEmails.contains(oidcUser.getEmail())) {
