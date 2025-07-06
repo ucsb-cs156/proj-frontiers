@@ -6,14 +6,6 @@ const columns = [
     accessor: "id", // accessor is the "key" in the data
   },
   {
-    Header: "Installation Id",
-    accessor: "installationId",
-  },
-  {
-    Header: "Org Name",
-    accessor: "orgName",
-  },
-  {
     Header: "Course Name",
     accessor: "courseName",
   },
@@ -25,36 +17,31 @@ const columns = [
     Header: "School",
     accessor: "school",
   },
+  {
+    Header: "Status",
+    accessor: "status",
+  },
 ];
 
-export default function CoursesTable({
-  courses,
-  showInstallButton = false,
-  storybook = false,
-}) {
-  const installCallback = (cell) => {
-    const url = `/api/courses/redirect?courseId=${cell.row.values.id}`;
+export default function CoursesTable({ courses, storybook = false }) {
+  const joinCallback = (cell) => {
+    // TODO: Implement the join functionality here
     if (storybook) {
-      window.alert(`would have navigated to: ${url}`);
+      window.alert(
+        `Join callback invoked for course with id: ${cell.row.values.id}`,
+      );
       return;
     }
-    window.location.href = url;
   };
 
-  const buttonColumns = [
+  const columnsWithButtons = [
     ...columns,
-    ButtonColumn(
-      "Install Github App",
-      "primary",
-      installCallback,
-      "CoursesTable",
-    ),
+    ButtonColumn("Join Course", "primary", joinCallback, "CoursesTable"),
   ];
-  const columnsToDisplay = showInstallButton ? buttonColumns : columns;
   return (
     <OurTable
       data={courses}
-      columns={columnsToDisplay}
+      columns={columnsWithButtons}
       testid={"CoursesTable"}
     />
   );

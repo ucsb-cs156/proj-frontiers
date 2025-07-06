@@ -2,7 +2,7 @@ import React from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import CoursesTable from "main/components/Courses/CoursesTable";
+import AdminCoursesTable from "main/components/Courses/AdminCoursesTable";
 import { useCurrentUser, hasRole } from "main/utils/currentUser";
 
 export default function CoursesIndexPage() {
@@ -24,7 +24,7 @@ export default function CoursesIndexPage() {
     <BasicLayout>
       <div className="pt-2">
         <h1>Courses</h1>
-        <CoursesTable
+        <AdminCoursesTable
           courses={courses}
           showInstallButton={hasRole(currentUser, "ROLE_ADMIN")}
         />

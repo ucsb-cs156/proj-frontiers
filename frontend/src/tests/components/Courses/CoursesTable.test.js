@@ -9,26 +9,12 @@ describe("CoursesTable tests", () => {
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
-        <CoursesTable courses={coursesFixtures.threeCourses} />
+        <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
       </BrowserRouter>,
     );
 
-    const expectedHeaders = [
-      "id",
-      "Installation Id",
-      "Org Name",
-      "Course Name",
-      "Term",
-      "School",
-    ];
-    const expectedFields = [
-      "id",
-      "installationId",
-      "orgName",
-      "courseName",
-      "term",
-      "school",
-    ];
+    const expectedHeaders = ["id", "Course Name", "Term", "School", "Status"];
+    const expectedFields = ["id", "courseName", "term", "school", "status"];
     const testId = "CoursesTable";
 
     expectedHeaders.forEach((headerText) => {
@@ -45,12 +31,6 @@ describe("CoursesTable tests", () => {
       "1",
     );
     expect(
-      screen.getByTestId(`${testId}-cell-row-0-col-installationId`),
-    ).toHaveTextContent("123456");
-    expect(
-      screen.getByTestId(`${testId}-cell-row-0-col-orgName`),
-    ).toHaveTextContent("ucsb-cs156-s25");
-    expect(
       screen.getByTestId(`${testId}-cell-row-0-col-courseName`),
     ).toHaveTextContent("CMPSC 156");
     expect(
@@ -59,26 +39,26 @@ describe("CoursesTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-school`),
     ).toHaveTextContent("UCSB");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-status`),
+    ).toHaveTextContent("Pending");
 
     // expect that the mocked window.alert function is not called
     expect(window.alert).not.toHaveBeenCalled();
   });
 
-  test("Calls the navigate callback when the button is pressed", () => {
+  test("Does not call window.alert in default case", () => {
     render(
       <BrowserRouter>
-        <CoursesTable
-          courses={coursesFixtures.threeCourses}
-          showInstallButton={true}
-        />
+        <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
       </BrowserRouter>,
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "CoursesTable-cell-row-0-col-Join Course-button",
     );
     expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("Install Github App");
+    expect(button).toHaveTextContent("Join Course");
     expect(button).toHaveAttribute("class", "btn btn-primary");
 
     fireEvent.click(button);
@@ -89,85 +69,45 @@ describe("CoursesTable tests", () => {
     render(
       <BrowserRouter>
         <CoursesTable
-          courses={coursesFixtures.threeCourses}
-          showInstallButton={true}
+          courses={coursesFixtures.oneCourseWithEachStatus}
           storybook={true}
         />
       </BrowserRouter>,
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "CoursesTable-cell-row-0-col-Join Course-button",
     );
     expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("Install Github App");
+    expect(button).toHaveTextContent("Join Course");
     expect(button).toHaveAttribute("class", "btn btn-primary");
     fireEvent.click(button);
     await waitFor(() => {
       expect(window.alert).toHaveBeenCalledTimes(1);
     });
     expect(window.alert).toHaveBeenCalledWith(
-      "would have navigated to: /api/courses/redirect?courseId=1",
+      "Join callback invoked for course with id: 1",
     );
   });
 
-  test("Tests that the default is to NOT show the buttons for installation", () => {
-    render(
-      <BrowserRouter>
-        <CoursesTable courses={coursesFixtures.threeCourses} />
-      </BrowserRouter>,
-    );
-
-    // Check that the button is NOT in the document
-    const button = screen.queryByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
-    );
-    expect(button).not.toBeInTheDocument();
-    // expect that the mocked window.alert function is not called
-    expect(window.alert).not.toHaveBeenCalled();
-  });
-
-  test("Tests that we don't see the buttons when we specify false", () => {
+  test("Does not call window.alert when storybook is explicitly false", () => {
     render(
       <BrowserRouter>
         <CoursesTable
-          courses={coursesFixtures.threeCourses}
-          showInstallButton={false}
-        />
-      </BrowserRouter>,
-    );
-
-    // Check that the button is NOT in the document
-    const button = screen.queryByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
-    );
-    expect(button).not.toBeInTheDocument();
-    // expect that the mocked window.alert function is not called
-    expect(window.alert).not.toHaveBeenCalled();
-  });
-
-  test("Tests that storybook is explictly false all still works as expected", async () => {
-    render(
-      <BrowserRouter>
-        <CoursesTable
-          courses={coursesFixtures.threeCourses}
-          showInstallButton={true}
+          courses={coursesFixtures.oneCourseWithEachStatus}
           storybook={false}
         />
       </BrowserRouter>,
     );
 
-    // Check that the button is NOT in the document
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-0-col-Install Github App-button",
+      "CoursesTable-cell-row-0-col-Join Course-button",
     );
     expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("Install Github App");
+    expect(button).toHaveTextContent("Join Course");
     expect(button).toHaveAttribute("class", "btn btn-primary");
-    fireEvent.click(button);
 
-    await waitFor(() => {
-      expect(window.alert).not.toHaveBeenCalled();
-    });
+    fireEvent.click(button);
+    expect(window.alert).not.toHaveBeenCalled();
   });
 });
