@@ -127,7 +127,7 @@ public class CoursesController extends ApiController {
      *
      */
     @Operation(summary = "Authorize Frontiers to a Github Course")
-    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("/redirect")
     public ResponseEntity<Void> linkCourse(@Parameter Long courseId)
             throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -153,7 +153,7 @@ public class CoursesController extends ApiController {
      *         if the user is not the creator.
      */
     @Operation(summary = "Link a Course to a Github Course")
-    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("link")
     public ResponseEntity<Void> addInstallation(
             @Parameter(name = "installationId") @RequestParam Optional<String> installation_id,

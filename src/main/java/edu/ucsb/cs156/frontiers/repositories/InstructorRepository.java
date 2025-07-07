@@ -18,4 +18,6 @@ public interface InstructorRepository extends CrudRepository<Instructor, String>
    * @return Optional of Instructor (empty if not found)
    */
   Optional<Instructor> findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }
