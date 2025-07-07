@@ -90,4 +90,22 @@ public class RosterStudentDTOTests {
         assertEquals(OrgStatus.NONE, dto.getOrgStatus());
 
     }
+
+    @Test
+    public void test_no_arg_constructor() {
+        // Arrange
+        RosterStudentDTO dto = new RosterStudentDTO();
+
+        // Act & Assert
+        assertEquals(null, dto.getId());
+        assertEquals(null, dto.getCourseId());
+        assertEquals(null, dto.getStudentId());
+        assertEquals(null, dto.getFirstName());
+        assertEquals(null, dto.getLastName());
+        assertEquals(null, dto.getEmail());
+        assertEquals(0L, dto.getUserId());
+        assertEquals(null, dto.getUserGithubId());
+        assertEquals(null, dto.getUserGithubLogin());
+        assertEquals(null, dto.getOrgStatus());
+    }
 }

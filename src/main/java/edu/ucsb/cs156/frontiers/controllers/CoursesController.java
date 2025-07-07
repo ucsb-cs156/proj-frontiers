@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.checkerframework.checker.units.qual.Current;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
@@ -134,7 +135,7 @@ public class CoursesController extends ApiController {
      *
      */
     @Operation(summary = "Authorize Frontiers to a Github Course")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("/redirect")
     public ResponseEntity<Void> linkCourse(@Parameter Long courseId)
             throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -160,7 +161,7 @@ public class CoursesController extends ApiController {
      *         if the user is not the creator.
      */
     @Operation(summary = "Link a Course to a Github Course")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("link")
     public ResponseEntity<Void> addInstallation(
             @Parameter(name = "installationId") @RequestParam Optional<String> installation_id,
@@ -174,7 +175,7 @@ public class CoursesController extends ApiController {
         } else {
             Course course = courseRepository.findById(state)
                     .orElseThrow(() -> new EntityNotFoundException(Course.class, state));
-            if (!(course.getCreator().getId() == getCurrentUser().getUser().getId())) {
+            if (!isCurrentUserAdmin() && !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             } else {
                 String orgName = linkerService.getOrgName(installation_id.get());
