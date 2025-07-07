@@ -45,7 +45,7 @@ import java.util.Optional;
     * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
     */
     @PostMapping(&quot;/createRepos&quot;)
-    @PreAuthorize(&quot;hasRole('ROLE_PROFESSOR')&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
     public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional&lt;Boolean&gt; isPrivate) {
 <span class="fc" id="L50">        Course course = courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 <span class="fc bfc" id="L51" title="All 2 branches covered.">        if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {</span>

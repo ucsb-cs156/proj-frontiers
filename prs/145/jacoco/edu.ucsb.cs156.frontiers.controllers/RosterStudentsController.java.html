@@ -189,7 +189,7 @@ import org.springframework.transaction.annotation.Transactional;
         }
     }
 
-    @PreAuthorize(&quot;hasRole('ROLE_PROFESSOR')&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
     @PostMapping(&quot;/updateCourseMembership&quot;)
     public Job updateCourseMembership(
             @Parameter(name = &quot;courseId&quot;, description = &quot;Course ID&quot;) @RequestParam Long courseId)
