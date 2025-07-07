@@ -19,6 +19,9 @@ public class CourseStaff {
     @ToString.Exclude
     private User user;
 
+    // Note that firstName and lastName are redundant with the information in the
+    // user object; however the user object is not populated until the first time that user
+    // logs into the system.  That is why we store these redundantly.   
     private String firstName;
     private String lastName;
     private String email;
