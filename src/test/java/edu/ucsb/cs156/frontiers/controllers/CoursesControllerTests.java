@@ -72,12 +72,55 @@ public class CoursesControllerTests extends ControllerTestCase {
         @MockitoBean
         private RosterStudentRepository rosterStudentRepository;
 
+        @MockitoBean
+        private CourseStaffRepository courseStaffRepository;
+
+
         /**
-         * Test the POST endpoint
+         * Test that ROLE_ADMIN can create a course
          */
         @Test
         @WithMockUser(roles = { "ADMIN" })
-        public void testPostCourse() throws Exception {
+        public void testPostCourse_byAdmin() throws Exception {
+
+                User user = currentUserService.getCurrentUser().getUser();
+
+                // arrange
+                Course course = Course.builder()
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(user)
+                                .build();
+
+                when(courseRepository.save(any(Course.class))).thenReturn(course);
+
+                // act
+
+                MvcResult response = mockMvc.perform(post("/api/courses/post")
+                                .with(csrf())
+                                .param("courseName", "CS156")
+                                .param("term", "S25")
+                                .param("school", "UCSB"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+
+                verify(courseRepository, times(1)).save(eq(course));
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(course);
+                assertEquals(expectedJson, responseString);
+
+        }
+
+        /**
+         * Test that ROLE_INSTRUCTOR can create a course
+         */
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testPostCourse_byInstructor() throws Exception {
 
                 User user = currentUserService.getCurrentUser().getUser();
 
@@ -200,7 +243,6 @@ public class CoursesControllerTests extends ControllerTestCase {
                 assertEquals("/instructor/courses?success=True&course=1", responseUrl);
         }
 
-
         @Test
         @WithMockUser(roles = { "INSTRUCTOR" })
         public void testLinkCourseSuccessfullyProfessorCreator() throws Exception {
@@ -237,7 +279,6 @@ public class CoursesControllerTests extends ControllerTestCase {
                 verify(courseRepository, times(1)).save(eq(course2));
                 assertEquals("/admin/courses?success=True&course=1", responseUrl);
         }
-
 
         @Test
         @WithMockUser(roles = { "ADMIN" })
@@ -367,126 +408,121 @@ public class CoursesControllerTests extends ControllerTestCase {
                 assertEquals(expectedJson, responseString);
         }
 
-    @MockitoBean
-    private CourseStaffRepository courseStaffRepository;
+  
+        /**
+         * Test the POST endpoint
+         */
+        @Test
+        public void testListCoursesForCurrentUser() throws Exception {
+                String email = "student@example.com";
 
-    /**
-     * Test the POST endpoint
-     */
-    @Test
-    public void testListCoursesForCurrentUser() throws Exception {
-        String email = "student@example.com";
+                OAuth2User principal = Mockito.mock(OAuth2User.class);
+                when(principal.getAttribute("email")).thenReturn(email);
 
-        OAuth2User principal = Mockito.mock(OAuth2User.class);
-        when(principal.getAttribute("email")).thenReturn(email);
+                Authentication auth = new OAuth2AuthenticationToken(
+                                principal,
+                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+                                "test-client");
 
-        Authentication auth = new OAuth2AuthenticationToken(
-            principal,
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
-            "test-client"
-        );
+                User dbUser = User.builder()
+                                .email(email)
+                                .build();
+                when(userRepository.findByEmail(eq(email)))
+                                .thenReturn(Optional.of(dbUser));
 
-        User dbUser = User.builder()
-                         .email(email)
-                         .build();
-        when(userRepository.findByEmail(eq(email)))
-            .thenReturn(Optional.of(dbUser));
+                Course course = Course.builder()
+                                .id(55L)
+                                .installationId("inst-55")
+                                .orgName("Test Org")
+                                .courseName("Test Course")
+                                .term("S25")
+                                .school("Engineering")
+                                .build();
 
-        Course course = Course.builder()
-            .id(55L)
-            .installationId("inst-55")
-            .orgName("Test Org")
-            .courseName("Test Course")
-            .term("S25")
-            .school("Engineering")
-            .build();
+                RosterStudent rs = new RosterStudent();
+                rs.setId(123L);
+                rs.setCourse(course);
+                rs.setEmail(email);
+                rs.setOrgStatus(OrgStatus.MEMBER);
 
-        RosterStudent rs = new RosterStudent();
-        rs.setId(123L);
-        rs.setCourse(course);
-        rs.setEmail(email);
-        rs.setOrgStatus(OrgStatus.MEMBER);
+                when(rosterStudentRepository.findAllByEmail(eq(email)))
+                                .thenReturn(List.of(rs));
 
-        when(rosterStudentRepository.findAllByEmail(eq(email)))
-            .thenReturn(List.of(rs));
+                MvcResult result = mockMvc.perform(
+                                get("/api/courses/list")
+                                                .with(authentication(auth)))
+                                .andExpect(status().isOk())
+                                .andReturn();
 
-        MvcResult result = mockMvc.perform(
-                get("/api/courses/list")
-                .with(authentication(auth))
-            )
-            .andExpect(status().isOk())
-            .andReturn();
+                Map<String, Object> expected = new LinkedHashMap<>();
+                expected.put("id", course.getId());
+                expected.put("installationId", course.getInstallationId());
+                expected.put("orgName", course.getOrgName());
+                expected.put("courseName", course.getCourseName());
+                expected.put("term", course.getTerm());
+                expected.put("school", course.getSchool());
+                expected.put("studentStatus", RosterStudentDTO.from(rs).getOrgStatus());
 
-        Map<String,Object> expected = new LinkedHashMap<>();
-        expected.put("id", course.getId());
-        expected.put("installationId", course.getInstallationId());
-        expected.put("orgName", course.getOrgName());
-        expected.put("courseName", course.getCourseName());
-        expected.put("term", course.getTerm());
-        expected.put("school", course.getSchool());
-        expected.put("studentStatus", RosterStudentDTO.from(rs).getOrgStatus());
+                String expectedJson = mapper.writeValueAsString(List.of(expected));
+                assertEquals(expectedJson, result.getResponse().getContentAsString());
+        }
 
-        String expectedJson = mapper.writeValueAsString(List.of(expected));
-        assertEquals(expectedJson, result.getResponse().getContentAsString());
-    }
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testStudenIsStaffInCourse() throws Exception {
+                // arrange
+                User currentUser = User.builder()
+                                .id(123L)
+                                .email("user@example.org")
+                                .build();
 
-    @Test
-    @WithMockUser(roles = {"USER"})
-    public void testStudenIsStaffInCourse() throws Exception {
-        // arrange
-        User currentUser = User.builder()
-            .id(123L)
-            .email("user@example.org")
-            .build();
+                Course course1 = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .build();
 
-        Course course1 = Course.builder()
-                        .id(1L)
-                        .courseName("CS156")
-                        .orgName("ucsb-cs156-s25")
-                        .term("S25")
-                        .school("UCSB")
-                        .build();
+                Course course2 = Course.builder()
+                                .id(2L)
+                                .courseName("CS24")
+                                .orgName("ucsb-cs24-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .build();
 
-        Course course2 = Course.builder()
-                        .id(2L)
-                        .courseName("CS24")
-                        .orgName("ucsb-cs24-s25")
-                        .term("S25")
-                        .school("UCSB")
-                        .build();
+                CourseStaff cs1 = CourseStaff.builder()
+                                .firstName("Chris")
+                                .lastName("Gaucho")
+                                .email("user@example.org")
+                                .course(course1)
+                                .user(currentUser)
+                                .build();
 
-        
-        CourseStaff cs1 = CourseStaff.builder()
-                        .firstName("Chris")
-                        .lastName("Gaucho")
-                        .email("user@example.org")
-                        .course(course1)
-                        .user(currentUser)
-                        .build();
+                CourseStaff cs2 = CourseStaff.builder()
+                                .firstName("Chris")
+                                .lastName("Gaucho")
+                                .email("user@example.org")
+                                .course(course2)
+                                .user(currentUser)
+                                .build();
 
-        CourseStaff cs2 = CourseStaff.builder()
-                        .firstName("Chris")
-                        .lastName("Gaucho")
-                        .email("user@example.org")
-                        .course(course2)
-                        .user(currentUser)
-                        .build();
+                when(courseStaffRepository.findAllByEmail("user@example.org"))
+                                .thenReturn(List.of(cs1, cs2));
 
-        when(courseStaffRepository.findAllByEmail("user@example.org"))
-                .thenReturn(List.of(cs1, cs2));
+                when(courseRepository.findAllById(List.of(1L, 2L)))
+                                .thenReturn(List.of(course1, course2));
 
-        when(courseRepository.findAllById(List.of(1L, 2L)))
-                .thenReturn(List.of(course1, course2));
+                // act
+                MvcResult response = mockMvc.perform(get("/api/courses/staffCourses")
+                                .param("studentId", "123"))
+                                .andExpect(status().isOk())
+                                .andReturn();
 
-        // act
-        MvcResult response = mockMvc.perform(get("/api/courses/staffCourses")
-                        .param("studentId", "123"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // assert
-        String responseString = response.getResponse().getContentAsString();
-        String expectedJson = mapper.writeValueAsString(List.of(course1, course2));
-        assertEquals(expectedJson, responseString);
-    }
+                // assert
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(List.of(course1, course2));
+                assertEquals(expectedJson, responseString);
+        }
 }
