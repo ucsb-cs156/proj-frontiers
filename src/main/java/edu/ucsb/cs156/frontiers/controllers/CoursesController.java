@@ -79,7 +79,6 @@ public class CoursesController extends ApiController {
     /**
      * This method creates a new Course.
      * 
-     * @param orgName    the name of the organization
      * @param courseName the name of the course
      * @param term       the term of the course
      * @param school     the school of the course
@@ -90,14 +89,12 @@ public class CoursesController extends ApiController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/post")
     public Course postCourse(
-            @Parameter(name = "orgName") @RequestParam String orgName,
             @Parameter(name = "courseName") @RequestParam String courseName,
             @Parameter(name = "term") @RequestParam String term,
             @Parameter(name = "school") @RequestParam String school) {
         // get current date right now and set status to pending
         CurrentUser currentUser = getCurrentUser();
         Course course = Course.builder()
-                .orgName(orgName)
                 .courseName(courseName)
                 .term(term)
                 .school(school)
