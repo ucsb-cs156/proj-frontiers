@@ -202,7 +202,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
 
         @Test
-        @WithMockUser(roles = { "PROFESSOR" })
+        @WithMockUser(roles = { "INSTRUCTOR" })
         public void testLinkCourseSuccessfullyProfessorCreator() throws Exception {
                 User user = currentUserService.getCurrentUser().getUser();
                 Course course1 = Course.builder()
@@ -255,7 +255,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         }
 
         @Test
-        @WithMockUser(roles = { "PROFESSOR" })
+        @WithMockUser(roles = { "INSTRUCTOR" })
         public void testNotCreator() throws Exception {
                 User separateUser = User.builder().id(2L).build();
                 Course course1 = Course.builder()
