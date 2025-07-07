@@ -279,6 +279,45 @@ public class CoursesControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "ADMIN" })
+        public void testCourseLinkSuccessWhenAdminNotCreator() throws Exception {
+                User user = currentUserService.getCurrentUser().getUser();
+                Long userId = user.getId();
+                User separateUser = User.builder().id(userId + 1L).build();
+                Course courseBefore = Course.builder()
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(separateUser)
+                                .id(1L)
+                                .build();
+                Course courseAfter = Course.builder()
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(separateUser)
+                                .installationId("1234")
+                                .orgName("ucsb-cs156-s25")
+                                .id(1L)
+                                .build();
+
+                doReturn(Optional.of(courseBefore)).when(courseRepository).findById(eq(1L));
+                doReturn("ucsb-cs156-s25").when(linkerService).getOrgName("1234");
+                MvcResult response = mockMvc.perform(get("/api/courses/link")
+                                .param("installation_id", "1234")
+                                .param("setup_action", "install")
+                                .param("code", "abcdefg")
+                                .param("state", "1"))
+                                .andExpect(status().isMovedPermanently())
+                                .andReturn();
+
+                String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
+                verify(courseRepository, times(1)).save(eq(courseAfter));
+                assertEquals("/admin/courses?success=True&course=1", responseUrl);
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
         public void testCourseLinkNotFound() throws Exception {
 
                 doReturn(Optional.empty()).when(courseRepository).findById(eq(1L));
