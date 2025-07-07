@@ -13,23 +13,15 @@ const Template = (args) => {
 };
 
 export const Empty = Template.bind({});
-export const ThreeCourses = Template.bind({});
-export const ThreeCoursesWithInstallButton = Template.bind({});
+export const ManyCourses = Template.bind({});
 
 Empty.args = {
   courses: [],
 };
 Empty.parameters = {};
 
-ThreeCourses.args = {
-  courses: coursesFixtures.threeCourses,
-};
-ThreeCourses.parameters = {};
-
-// This story is for testing the install button
-ThreeCoursesWithInstallButton.args = {
-  courses: coursesFixtures.threeCourses,
-  showInstallButton: true,
+ManyCourses.args = {
+  courses: coursesFixtures.oneCourseWithEachStatus,
   storybook: true,
 };
-ThreeCoursesWithInstallButton.parameters = {};
+ManyCourses.parameters = {};

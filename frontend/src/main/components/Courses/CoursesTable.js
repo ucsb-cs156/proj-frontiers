@@ -1,17 +1,10 @@
-import OurTable, { ButtonColumn } from "main/components/OurTable";
+import OurTable from "main/components/OurTable";
+import { Button } from "react-bootstrap";
 
 const columns = [
   {
     Header: "id",
     accessor: "id", // accessor is the "key" in the data
-  },
-  {
-    Header: "Installation Id",
-    accessor: "installationId",
-  },
-  {
-    Header: "Org Name",
-    accessor: "orgName",
   },
   {
     Header: "Course Name",
@@ -27,34 +20,52 @@ const columns = [
   },
 ];
 
-export default function CoursesTable({
-  courses,
-  showInstallButton = false,
-  storybook = false,
-}) {
-  const installCallback = (cell) => {
-    const url = `/api/courses/redirect?courseId=${cell.row.values.id}`;
+export default function CoursesTable({ courses, storybook = false }) {
+  const joinCallback = (cell) => {
+    // TODO: Implement the join functionality here
     if (storybook) {
-      window.alert(`would have navigated to: ${url}`);
+      window.alert(
+        `Join callback invoked for course with id: ${cell.row.values.id}`,
+      );
       return;
     }
-    window.location.href = url;
   };
 
-  const buttonColumns = [
+  const columnsWithStatus = [
     ...columns,
-    ButtonColumn(
-      "Install Github App",
-      "primary",
-      installCallback,
-      "CoursesTable",
-    ),
+    {
+      Header: "Status",
+      accessor: "status",
+      Cell: ({ cell }) => {
+        if (cell.value === "Pending") {
+          return <span style={{ color: "orange" }}>{cell.value}</span>;
+        } else if (cell.value === "Join Course") {
+          return (
+            <Button
+              variant={"primary"}
+              onClick={() => joinCallback(cell)}
+              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+            >
+              Join Course
+            </Button>
+          );
+        } else if (cell.value === "Invited") {
+          return <span style={{ color: "green" }}>{cell.value}</span>;
+        } else if (cell.value === "Member") {
+          return <span style={{ color: "blue" }}>{cell.value}</span>;
+        } else if (cell.value === "Owner") {
+          return <span style={{ color: "purple" }}>{cell.value}</span>;
+        } else if (cell.value === "Error") {
+          return <span style={{ color: "red" }}>{cell.value}</span>;
+        }
+        return <span>{cell.value}</span>;
+      },
+    },
   ];
-  const columnsToDisplay = showInstallButton ? buttonColumns : columns;
   return (
     <OurTable
       data={courses}
-      columns={columnsToDisplay}
+      columns={columnsWithStatus}
       testid={"CoursesTable"}
     />
   );
