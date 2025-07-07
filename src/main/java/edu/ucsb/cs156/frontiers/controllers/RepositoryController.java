@@ -45,7 +45,7 @@ public class RepositoryController extends ApiController {
     * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
     */
     @PostMapping("/createRepos")
-    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional<Boolean> isPrivate) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
         if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {

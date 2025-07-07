@@ -28,8 +28,6 @@ public class User {
   private String fullName;
   private String givenName;
   private String familyName;
-  private boolean admin;
-  private boolean professor;
   private int githubId;
   private String githubLogin;
   private String studentId;

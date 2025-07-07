@@ -189,7 +189,7 @@ public class RosterStudentsController extends ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/updateCourseMembership")
     public Job updateCourseMembership(
             @Parameter(name = "courseId", description = "Course ID") @RequestParam Long courseId)
