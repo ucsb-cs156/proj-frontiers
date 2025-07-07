@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -33,6 +34,8 @@ public class CurrentUserServiceImpl extends CurrentUserService {
 
   @Autowired
   GrantedAuthoritiesService grantedAuthoritiesService;
+  @Autowired
+  private RoleHierarchy roleHierarchy;
 
   /**
    * This method returns the current user as a User object.
@@ -82,6 +85,6 @@ public class CurrentUserServiceImpl extends CurrentUserService {
    * @return a collection of roles
    */
   public Collection<? extends GrantedAuthority> getRoles() {
-   return grantedAuthoritiesService.getGrantedAuthorities();
+    return roleHierarchy.getReachableGrantedAuthorities(grantedAuthoritiesService.getGrantedAuthorities());
   }
 }
