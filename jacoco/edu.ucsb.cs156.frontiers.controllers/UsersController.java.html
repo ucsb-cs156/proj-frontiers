@@ -3,11 +3,11 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.models.UserDataDTO;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 
+import edu.ucsb.cs156.frontiers.services.UserDataDTOService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import java.util.List;
 
 /**
  * This is a REST controller for getting information about the users.
@@ -25,12 +27,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name=&quot;User information (admin only)&quot;)
 @RequestMapping(&quot;/api/admin/users&quot;)
 @RestController
-<span class="fc" id="L28">public class UsersController extends ApiController {</span>
+<span class="fc" id="L30">public class UsersController extends ApiController {</span>
     @Autowired
-    UserRepository userRepository;
+    private UserDataDTOService userDataDTOService;
 
-    @Autowired
-    ObjectMapper mapper;
 
     /**
      * This method returns a list of all users.  Accessible only to users with the role &quot;ROLE_ADMIN&quot;.
@@ -40,11 +40,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
     @Operation(summary= &quot;Get a list of all users&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
     @GetMapping(&quot;&quot;)
-    public ResponseEntity&lt;String&gt; users()
+    public List&lt;UserDataDTO&gt; users()
             throws JsonProcessingException {
-<span class="fc" id="L45">        Iterable&lt;User&gt; users = userRepository.findAll();</span>
-<span class="fc" id="L46">        String body = mapper.writeValueAsString(users);</span>
-<span class="fc" id="L47">        return ResponseEntity.ok().body(body);</span>
+<span class="fc" id="L45">        return userDataDTOService.getUserDataDTOs();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
