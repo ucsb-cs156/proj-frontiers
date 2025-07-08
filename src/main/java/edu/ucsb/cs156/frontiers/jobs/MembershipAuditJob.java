@@ -24,13 +24,15 @@ public class MembershipAuditJob implements JobContextConsumer {
         ctx.log("Auditing membership for each course with an attached GitHub Organization...");
         Iterable<Course> courses = courseRepository.findAll();
         for(Course course : courses){
-            Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
-            List<RosterStudent> rosterStudents = course.getRosterStudents();
-            for (OrgMember member : members) {
-                RosterStudent student = rosterStudents.stream().filter(s -> s.getGithubId().equals(member.getGithubId())).findFirst().orElse(null);
-                if (student!=null) {
-                    student.setOrgStatus(OrgStatus.MEMBER);
-                    rosterStudentRepository.save(student);
+            if (course.getOrgName() != null && course.getInstallationId() != null) {
+                Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
+                List<RosterStudent> rosterStudents = course.getRosterStudents();
+                for (OrgMember member : members) {
+                    RosterStudent student = rosterStudents.stream().filter(s -> s.getGithubId().equals(member.getGithubId())).findFirst().orElse(null);
+                    if (student != null) {
+                        student.setOrgStatus(OrgStatus.MEMBER);
+                        rosterStudentRepository.save(student);
+                    }
                 }
             }
         }
