@@ -5,9 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.TestJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +41,12 @@ public class JobsController extends ApiController {
   @Autowired private UpdateUserService updateUserService; 
   
   @Autowired ObjectMapper mapper;
+    @Autowired
+    private RosterStudentRepository rosterStudentRepository;
+    @Autowired
+    private CourseRepository courseRepository;
+    @Autowired
+    private OrganizationMemberService organizationMemberService;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -106,6 +116,19 @@ public class JobsController extends ApiController {
     UpdateAllJob job = 
         UpdateAllJob.builder()
             .updateUserService(updateUserService) 
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(summary = "Launch Audit All Courses Job")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/launch/auditAllCourses")
+  public Job launchAuditAllCoursesJob() {
+
+    MembershipAuditJob job = MembershipAuditJob.builder()
+            .rosterStudentRepository(rosterStudentRepository)
+            .courseRepository(courseRepository)
+            .organizationMemberService(organizationMemberService)
             .build();
     return jobService.runAsJob(job);
   }
