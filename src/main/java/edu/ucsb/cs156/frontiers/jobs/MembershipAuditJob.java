@@ -26,6 +26,7 @@ public class MembershipAuditJob implements JobContextConsumer {
         for(Course course : courses){
             if (course.getOrgName() != null && course.getInstallationId() != null) {
                 Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
+                ctx.log(members.toString());
                 List<RosterStudent> rosterStudents = course.getRosterStudents();
                 for (OrgMember member : members) {
                     RosterStudent student = rosterStudents.stream().filter(s -> s.getGithubId()!=null && s.getGithubId().equals(member.getGithubId())).findFirst().orElse(null);
