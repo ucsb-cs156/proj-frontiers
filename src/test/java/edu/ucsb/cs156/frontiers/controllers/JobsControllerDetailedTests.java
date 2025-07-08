@@ -21,6 +21,7 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 
@@ -71,6 +72,9 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
   @Autowired
   ObjectMapper objectMapper;
+
+  @MockitoBean
+  OrganizationMemberService organizationMemberService;
 
   @WithMockUser(roles = { "ADMIN" })
   @Test
