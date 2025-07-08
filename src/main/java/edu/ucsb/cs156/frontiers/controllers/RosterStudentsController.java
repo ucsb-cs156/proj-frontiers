@@ -104,7 +104,7 @@ public class RosterStudentsController extends ApiController {
                 .orgStatus(OrgStatus.NONE)
                 .build();
         RosterStudent savedRosterStudent = rosterStudentRepository.save(rosterStudent);
-
+        updateUserService.attachUserToRosterStudent(savedRosterStudent);
         return savedRosterStudent;
     }
 
@@ -213,7 +213,7 @@ public class RosterStudentsController extends ApiController {
     @PreAuthorize("hasRole('ROLE_USER')")
     @PutMapping("/linkGitHub")
     public ResponseEntity<String> linkGitHub(
-            @Parameter(name = "rosterStudentId", description = "Roster Student to be linked to") @RequestParam Long rosterStudentId) {
+            @Parameter(name = "rosterStudentId", description = "Roster Student to be linked to") @RequestParam Long rosterStudentId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         User currentUser = currentUserService.getUser();
         RosterStudent rosterStudent = rosterStudentRepository.findById(rosterStudentId)
                 .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, rosterStudentId));
@@ -228,8 +228,21 @@ public class RosterStudentsController extends ApiController {
 
         rosterStudent.setGithubId(currentUser.getGithubId());
         rosterStudent.setGithubLogin(currentUser.getGithubLogin());
-        rosterStudentRepository.save(rosterStudent);
-        return ResponseEntity.ok("Successfully linked GitHub account to roster student");
+        if(rosterStudent.getCourse().getOrgName() != null && rosterStudent.getCourse().getInstallationId() != null){
+            OrgStatus status = organizationMemberService.inviteOrganizationMember(rosterStudent);
+            rosterStudent.setOrgStatus(status);
+            rosterStudentRepository.save(rosterStudent);
+            if(status == OrgStatus.INVITED){
+                return ResponseEntity.accepted().body("Successfully invited student to Organization");
+            }else{
+                return ResponseEntity.internalServerError().body("Could not invite student to Organization");
+            }
+
+        }else{
+            rosterStudentRepository.save(rosterStudent);
+            return ResponseEntity.ok("Successfully linked GitHub account to roster student");
+        }
+
     }
 
     @Operation(summary = "Get Associated Roster Students with a User")

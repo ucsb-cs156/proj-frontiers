@@ -109,7 +109,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
                 when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rs1);
-
+                doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
                 // act
 
                 MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
@@ -126,6 +126,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 verify(courseRepository, times(1)).findById(eq(1L));
                 verify(rosterStudentRepository, times(1)).save(eq(rs1));
+                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1));
 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(rs1);
@@ -604,6 +605,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // Assert
                 verify(rosterStudentRepository).findById(eq(5L));
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+                verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
 
                 assertEquals("This roster student is already linked to a GitHub account", response.getResponse().getContentAsString());
         }
@@ -643,6 +645,61 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .build();
 
                 when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+                when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "3"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+                verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
+
+                assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void no_fire_on_no_org_name() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").courseName("course").creator(currentUser).build();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(123456789)  // Not linked yet
+                        .githubLogin(null)  // Not linked yet
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                RosterStudent rosterStudentUpdated = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act
                 MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
@@ -657,8 +714,119 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 // Verify the GitHub ID and login were set
                 verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+                verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
 
                 assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void test_fires_invite() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(123456789)  // Not linked yet
+                        .githubLogin(null)  // Not linked yet
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                RosterStudent rosterStudentUpdated = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.INVITED)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+                when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+                when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class))).thenReturn(OrgStatus.INVITED);
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "3"))
+                        .andExpect(status().isAccepted())
+                        .andReturn();
+
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+                assertEquals("Successfully invited student to Organization", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void cant_invite() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(123456789)  // Not linked yet
+                        .githubLogin(null)  // Not linked yet
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                RosterStudent rosterStudentUpdated = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.NONE)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+                when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+                when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class))).thenReturn(OrgStatus.NONE);
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                                .with(csrf())
+                                .param("rosterStudentId", "3"))
+                        .andExpect(status().isInternalServerError())
+                        .andReturn();
+
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+                assertEquals("Could not invite student to Organization", response.getResponse().getContentAsString());
         }
 
         @Test
