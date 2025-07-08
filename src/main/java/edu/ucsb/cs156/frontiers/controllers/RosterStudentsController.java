@@ -226,21 +226,19 @@ public class RosterStudentsController extends ApiController {
             return ResponseEntity.badRequest().body("This roster student is already linked to a GitHub account");
         }
 
+
+        if(rosterStudent.getCourse().getOrgName() == null || rosterStudent.getCourse().getInstallationId() == null) {
+            return ResponseEntity.badRequest().body("Course has not been set up. Please ask your instructor for help.");
+        }
         rosterStudent.setGithubId(currentUser.getGithubId());
         rosterStudent.setGithubLogin(currentUser.getGithubLogin());
-        if(rosterStudent.getCourse().getOrgName() != null && rosterStudent.getCourse().getInstallationId() != null){
-            OrgStatus status = organizationMemberService.inviteOrganizationMember(rosterStudent);
-            rosterStudent.setOrgStatus(status);
-            rosterStudentRepository.save(rosterStudent);
-            if(status == OrgStatus.INVITED){
-                return ResponseEntity.accepted().body("Successfully invited student to Organization");
-            }else{
-                return ResponseEntity.internalServerError().body("Could not invite student to Organization");
-            }
-
+        OrgStatus status = organizationMemberService.inviteOrganizationMember(rosterStudent);
+        rosterStudent.setOrgStatus(status);
+        rosterStudentRepository.save(rosterStudent);
+        if(status == OrgStatus.INVITED){
+            return ResponseEntity.accepted().body("Successfully invited student to Organization");
         }else{
-            rosterStudentRepository.save(rosterStudent);
-            return ResponseEntity.ok("Successfully linked GitHub account to roster student");
+            return ResponseEntity.internalServerError().body("Could not invite student to Organization");
         }
 
     }
