@@ -77,7 +77,7 @@ public class OrganizationMemberServiceTests {
         String jsonResponse = objectMapper.writeValueAsString(expectedMembers);
 
         // Setup mock server
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?role=member"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(header("Accept", "application/vnd.github+json"))
@@ -114,12 +114,12 @@ public class OrganizationMemberServiceTests {
         // Setup headers for pagination
         HttpHeaders firstPageHeaders = new HttpHeaders();
         firstPageHeaders.add("link", 
-            "<https://api.github.com/orgs/" + TEST_ORG + "/members?page=2>; rel=\"next\"");
+            "<https://api.github.com/orgs/" + TEST_ORG + "/members?page=2&role=member>; rel=\"next\"");
 
         HttpHeaders secondPageHeaders = new HttpHeaders();
         secondPageHeaders.add("link", "<https://api.github.com/orgs/" + TEST_ORG + "/members?page=1>; rel=\"previous\"");
         // Setup mock server for first page
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?role=member"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andRespond(withStatus(HttpStatus.OK)
@@ -128,7 +128,7 @@ public class OrganizationMemberServiceTests {
                         .body(firstPageJson));
 
         // Setup mock server for second page
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?page=2"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?page=2&role=member"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andRespond(withStatus(HttpStatus.OK)
@@ -147,7 +147,7 @@ public class OrganizationMemberServiceTests {
     @Test
     void testGetOrganizationMembers_EmptyResponse() throws Exception {
         // Setup mock server with empty response
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?role=member"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andRespond(withStatus(HttpStatus.OK)

@@ -1,0 +1,39 @@
+package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.models.OrgMember;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import lombok.Builder;
+
+import java.util.List;
+
+@Builder
+public class MembershipAuditJob implements JobContextConsumer {
+    CourseRepository courseRepository;
+    OrganizationMemberService organizationMemberService;
+    RosterStudentRepository rosterStudentRepository;
+
+    @Override
+    public void accept(JobContext ctx) throws Exception {
+        ctx.log("Auditing membership for each course with an attached GitHub Organization...");
+        Iterable<Course> courses = courseRepository.findAll();
+        for(Course course : courses){
+            Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
+            List<RosterStudent> rosterStudents = course.getRosterStudents();
+            for (OrgMember member : members) {
+                RosterStudent student = rosterStudents.stream().filter(s -> s.getGithubId().equals(member.getGithubId())).findFirst().orElse(null);
+                if (student!=null) {
+                    student.setOrgStatus(OrgStatus.MEMBER);
+                    rosterStudentRepository.save(student);
+                }
+            }
+        }
+        ctx.log("Done");
+    }
+}
