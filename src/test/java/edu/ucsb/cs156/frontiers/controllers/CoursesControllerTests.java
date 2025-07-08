@@ -84,7 +84,6 @@ public class CoursesControllerTests extends ControllerTestCase {
                 // arrange
                 Course course = Course.builder()
                                 .courseName("CS156")
-                                .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
                                 .creator(user)
@@ -96,7 +95,6 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 MvcResult response = mockMvc.perform(post("/api/courses/post")
                                 .with(csrf())
-                                .param("orgName", "ucsb-cs156-s25")
                                 .param("courseName", "CS156")
                                 .param("term", "S25")
                                 .param("school", "UCSB"))
@@ -124,14 +122,12 @@ public class CoursesControllerTests extends ControllerTestCase {
                 // arrange
                 Course course1 = Course.builder()
                                 .courseName("CS156")
-                                .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
                                 .build();
 
                 Course course2 = Course.builder()
                                 .courseName("CS148")
-                                .orgName("ucsb-cs148-s25")
                                 .term("S25")
                                 .school("UCSB")
                                 .build();
