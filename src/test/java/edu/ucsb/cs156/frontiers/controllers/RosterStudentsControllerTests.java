@@ -462,7 +462,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
          * Tests for the linkGitHub endpoint
          */
         @Test
-        @WithMockUser(roles = { "USER" })
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void testLinkGitHub_notFound() throws Exception {
                 // Arrange
                 when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
@@ -487,7 +487,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         }
 
         @Test
-        @WithMockUser(roles = { "USER" })
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void testLinkGitHub_unauthorized() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
@@ -521,7 +521,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         }
 
         @Test
-        @WithMockUser(roles = { "USER" })
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void testLinkGitHub_alreadyLinked() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
@@ -560,7 +560,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
 
         @Test
-        @WithMockUser(roles = { "USER" })
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void no_fire_on_no_org_name() throws Exception {
                 User currentUser = currentUserService.getUser();
 
@@ -614,7 +614,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         }
 
         @Test
-        @WithMockUser(roles = { "USER" })
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void no_fire_on_no_installation_id() throws Exception {
                 User currentUser = currentUserService.getUser();
 
@@ -666,7 +666,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         }
 
         @Test
-        @WithMockUser(roles = { "USER" })
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void test_fires_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 
@@ -721,7 +721,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         }
 
         @Test
-        @WithMockUser(roles = { "USER" })
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void cant_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 
