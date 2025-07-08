@@ -2,7 +2,10 @@ package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -45,6 +49,9 @@ public class OrganizationMemberServiceTests {
 
     @MockitoBean
     private WiremockService wiremockService;
+
+    @MockitoBean
+    private RosterStudentRepository rosterStudentRepository;
 
     private Course testCourse;
     private static final String TEST_TOKEN = "test-token";
@@ -155,4 +162,69 @@ public class OrganizationMemberServiceTests {
         assertEquals(result, List.of());
     }
 
+    @Test
+    void testInviteOrganizationMember_Success() throws Exception {
+        // Create test roster student
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .course(testCourse)
+                .build();
+
+        // Expected request body
+        Map<String, Object> expectedRequestBody = new HashMap<>();
+        expectedRequestBody.put("invitee_id", 12345);
+        expectedRequestBody.put("role", "direct_member");
+        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
+
+        // Setup mock server for successful response
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andExpect(content().json(expectedRequestBodyJson))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{}"));
+
+        // Execute test
+        OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
+
+        // Verify results
+        mockServer.verify();
+        assertEquals(OrgStatus.INVITED, result);
+    }
+
+    @Test
+    void testInviteOrganizationMember_Failure() throws Exception {
+        // Create test roster student
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .course(testCourse)
+                .build();
+
+        // Expected request body
+        Map<String, Object> expectedRequestBody = new HashMap<>();
+        expectedRequestBody.put("invitee_id", 12345);
+        expectedRequestBody.put("role", "direct_member");
+        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
+
+        // Setup mock server for failed response
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andExpect(content().json(expectedRequestBodyJson))
+                .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"message\": \"Error inviting member\"}"));
+
+        // Execute test
+        OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
+
+        // Verify results
+        mockServer.verify();
+        assertEquals(OrgStatus.NONE, result);
+    }
 }
