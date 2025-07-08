@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,17 +24,19 @@ import java.util.Map;
  * This is an abstract class that provides common functionality for all API controllers.
  */
 
-<span class="fc" id="L26">@Slf4j</span>
-<span class="fc" id="L27">public abstract class ApiController {</span>
+<span class="fc" id="L27">@Slf4j</span>
+<span class="fc" id="L28">public abstract class ApiController {</span>
   @Autowired
   private CurrentUserService currentUserService;
+
+  @Autowired RoleHierarchy roleHierarchy;
 
   /**
    * This method returns the current user.
    * @return the current user
    */
   protected CurrentUser getCurrentUser() {
-<span class="fc" id="L36">    return currentUserService.getCurrentUser();</span>
+<span class="fc" id="L39">    return currentUserService.getCurrentUser();</span>
   }
 
 /**
@@ -41,9 +44,16 @@ import java.util.Map;
    * @return true if the current user has the role, false otherwise
    * @param role the role to check
    */
-  protected boolean doesCurrentUserHaveRole(String roleToCheck) {  
-<span class="fc" id="L45">    return getCurrentUser().getRoles().stream()</span>
-<span class="fc" id="L46">        .anyMatch(role -&gt; role.getAuthority().equals(roleToCheck));</span>
+  protected boolean doesCurrentUserHaveRole(
+      String roleToCheck
+    ) {  
+<span class="fc" id="L50">    CurrentUser currentUser = getCurrentUser();    </span>
+<span class="fc" id="L51">    Collection&lt;? extends GrantedAuthority&gt; authorities = currentUser.getRoles();</span>
+
+<span class="fc" id="L53">    Collection&lt;? extends GrantedAuthority&gt; extendedAuthorities = roleHierarchy.getReachableGrantedAuthorities(authorities);</span>
+
+<span class="fc" id="L55">    return extendedAuthorities.stream()</span>
+<span class="fc" id="L56">         .anyMatch(role -&gt; role.getAuthority().equals(roleToCheck));</span>
   }
 
   /**
@@ -51,7 +61,7 @@ import java.util.Map;
    * @return true if the current user is an admin, false otherwise
    */
   protected boolean isCurrentUserAdmin() {  
-<span class="fc" id="L54">    return doesCurrentUserHaveRole(&quot;ROLE_ADMIN&quot;);</span>
+<span class="fc" id="L64">    return doesCurrentUserHaveRole(&quot;ROLE_ADMIN&quot;);</span>
   }
 
 
@@ -61,7 +71,7 @@ import java.util.Map;
    * @return a map with the message
    */
   protected Object genericMessage(String message) {
-<span class="fc" id="L64">    return Map.of(&quot;message&quot;, message);</span>
+<span class="fc" id="L74">    return Map.of(&quot;message&quot;, message);</span>
   }
 
   /**
@@ -72,9 +82,9 @@ import java.util.Map;
   @ExceptionHandler({ EntityNotFoundException.class })
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public Object handleEntityNotFoundException(Throwable e) {
-<span class="fc" id="L75">    return Map.of(</span>
-<span class="fc" id="L76">      &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L77">      &quot;message&quot;, e.getMessage()</span>
+<span class="fc" id="L85">    return Map.of(</span>
+<span class="fc" id="L86">      &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L87">      &quot;message&quot;, e.getMessage()</span>
     );
   }
 
@@ -86,9 +96,9 @@ import java.util.Map;
   @ExceptionHandler({ NoLinkedOrganizationException.class })
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleNoLinkedOrgException(Throwable e) {
-<span class="fc" id="L89">    return Map.of(</span>
-<span class="fc" id="L90">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L91">            &quot;message&quot;, e.getMessage()</span>
+<span class="fc" id="L99">    return Map.of(</span>
+<span class="fc" id="L100">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L101">            &quot;message&quot;, e.getMessage()</span>
     );
   }
 
@@ -99,8 +109,8 @@ import java.util.Map;
    */
     @ExceptionHandler(UnsupportedOperationException.class)
     public ResponseEntity&lt;Map&lt;String, String&gt;&gt; handleUnsupportedOperation(UnsupportedOperationException ex) {
-<span class="fc" id="L102">        return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
-<span class="fc" id="L103">                .body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
+<span class="fc" id="L112">        return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
+<span class="fc" id="L113">                .body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
