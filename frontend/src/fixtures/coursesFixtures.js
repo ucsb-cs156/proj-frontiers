@@ -66,6 +66,14 @@ const coursesFixtures = {
       orgName: "ucsb-cs148-s26",
       studentStatus: "OWNER",
     },
+    {
+      id: 6,
+      courseName: "CMPSC 148",
+      term: "Spring 2026",
+      school: "UCSB",
+      orgName: "ucsb-cs148-s26",
+      studentStatus: "Illegal status that will never occur",
+    },
   ],
 };
 

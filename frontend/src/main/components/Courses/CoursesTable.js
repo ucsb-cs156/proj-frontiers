@@ -78,9 +78,11 @@ export default function CoursesTable({ courses, storybook = false }) {
           );
         } else if (cell.value === "OWNER") {
           return <span style={{ color: "purple" }}>Owner</span>;
+        } else if (cell.value === "MEMBER") {
+          return <span style={{ color: "blue" }}>Member</span>;
         }
-        //otherwise cell.value == "MEMBER"
-        return <span style={{ color: "blue" }}>Member</span>;
+        return <span>{cell.value}</span>;
+        
       },
     },
   ];

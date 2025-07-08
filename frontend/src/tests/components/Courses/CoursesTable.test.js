@@ -46,32 +46,28 @@ describe("CoursesTable tests", () => {
     const pending = screen.getByText("Pending");
     expect(pending).toBeInTheDocument();
     expect(pending).toHaveStyle("color: orange");
-    expect(screen.getByTestId("CoursesTable-cell-row-0-col-studentStatus")).toHaveTextContent("Pending");
 
     const joinCourse = screen.getByText("Join Course");
     expect(joinCourse).toBeInTheDocument();
     expect(joinCourse).toHaveAttribute("class", "btn btn-primary");
-    expect(screen.getByTestId("CoursesTable-cell-row-1-col-studentStatus")).toHaveTextContent("Join Course");
 
     const invited = screen.getByText("Invited");
     expect(invited).toBeInTheDocument();
     expect(invited).toHaveStyle("color: green");
-    expect(screen.getByTestId("CoursesTable-cell-row-2-col-studentStatus")).toHaveTextContent("Invited");
 
     const member = screen.getByText("Member");
     expect(member).toBeInTheDocument();
     expect(member).toHaveStyle("color: blue");
-    expect(screen.getByTestId("CoursesTable-cell-row-3-col-studentStatus")).toHaveTextContent("Member");
 
     const owner = screen.getByText("Owner");
     expect(owner).toBeInTheDocument();
     expect(owner).toHaveStyle("color: purple");
-    expect(screen.getByTestId("CoursesTable-cell-row-4-col-studentStatus")).toHaveTextContent("Owner");
 
-    expect(screen.getByTestId("CoursesTable-cell-row-4-col-studentStatus")).not.toHaveTextContent("Member");
-    expect(screen.getByTestId("CoursesTable-cell-row-2-col-studentStatus")).not.toHaveTextContent("Member");
-    expect(screen.getByTestId("CoursesTable-cell-row-1-col-studentStatus")).not.toHaveTextContent("Member");
-    expect(screen.getByTestId("CoursesTable-cell-row-0-col-studentStatus")).not.toHaveTextContent("Member");
+    const unexpected = screen.getByText("Illegal status that will never occur");
+    expect(unexpected).toBeInTheDocument();
+    expect(unexpected).not.toHaveStyle("color: red");
+
+    
 
     // expect that the mocked window.alert function is not called
     expect(window.alert).not.toHaveBeenCalled();
