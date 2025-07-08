@@ -64,7 +64,7 @@ public class MembershipAuditJobTests {
         RosterStudent student3 = RosterStudent.builder().studentId("banana").githubLogin("division9").githubId(123455).course(course2).build();
         RosterStudent student4 = RosterStudent.builder().studentId("apple").githubLogin("division10").githubId(123454).course(course2).build();
         RosterStudent student5 = RosterStudent.builder().studentId("orange").githubLogin(null).githubId(null).course(course2).build();
-        course2.setRosterStudents(List.of(student3, student4));
+        course2.setRosterStudents(List.of(student3, student4, student5));
         RosterStudent student1Updated = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).orgStatus(OrgStatus.MEMBER).build();
         RosterStudent student2Updated = RosterStudent.builder().studentId("apple").githubLogin("division8").githubId(123457).course(course).orgStatus(OrgStatus.MEMBER).build();
         RosterStudent student3Updated = RosterStudent.builder().studentId("banana").githubLogin("division9").githubId(123455).course(course2).orgStatus(OrgStatus.MEMBER).build();

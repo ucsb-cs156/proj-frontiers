@@ -31,6 +31,7 @@ public class MembershipAuditJob implements JobContextConsumer {
                 for (OrgMember member : members) {
                     RosterStudent student = rosterStudents.stream().filter(s -> s.getGithubId()!=null && s.getGithubId().equals(member.getGithubId())).findFirst().orElse(null);
                     if (student != null) {
+                        ctx.log("Student found: " + student.toString());
                         student.setOrgStatus(OrgStatus.MEMBER);
                         rosterStudentRepository.save(student);
                     }
