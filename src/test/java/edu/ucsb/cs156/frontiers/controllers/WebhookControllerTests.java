@@ -190,7 +190,7 @@ public class WebhookControllerTests extends ControllerTestCase {
     public void successfulWebhook_memberInvited() throws Exception {
         Course course = Course.builder().installationId("1234").build();
         RosterStudent student = RosterStudent.builder().githubLogin("testLogin").course(course).build();
-        RosterStudent updated = RosterStudent.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.JOINCOURSE).build();
+        RosterStudent updated = RosterStudent.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.INVITED).build();
 
         // Create argument captor to capture the actual student being saved
         ArgumentCaptor<RosterStudent> studentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
@@ -223,7 +223,7 @@ public class WebhookControllerTests extends ControllerTestCase {
         verify(rosterStudentRepository, times(1)).save(any(RosterStudent.class));
         
         // Verify that the status was set to INVITED
-        assertEquals(OrgStatus.JOINCOURSE, studentCaptor.getValue().getOrgStatus());
+        assertEquals(OrgStatus.INVITED, studentCaptor.getValue().getOrgStatus());
         
         String actualBody = response.getResponse().getContentAsString();
         assertEquals(updated.toString(), actualBody);
