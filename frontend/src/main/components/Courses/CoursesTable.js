@@ -31,15 +31,29 @@ export default function CoursesTable({ courses, storybook = false }) {
     }
   };
 
+  const viewInviteCallback = (cell) => {
+    const organizationName = cell.row.original.orgName; 
+    const gitInvite = `https://github.com/${organizationName}/invitation`
+
+    if(storybook) {
+      window.alert(
+        `Join callback invoked for an invite to organization: ${organizationName}`,
+      ); 
+      return;
+    }
+
+    window.open(gitInvite, "_blank")
+  }
+
   const columnsWithStatus = [
     ...columns,
     {
       Header: "Status",
-      accessor: "status",
+      accessor: "studentStatus", 
       Cell: ({ cell }) => {
-        if (cell.value === "Pending") {
-          return <span style={{ color: "orange" }}>{cell.value}</span>;
-        } else if (cell.value === "Join Course") {
+        if (cell.value === "PENDING") {
+          return <span style={{ color: "orange" }}>Pending</span>; // Could provide context e.g "Pending. Come back later when the course has been completely set up."
+        } else if (cell.value === "JOINCOURSE") {
           return (
             <Button
               variant={"primary"}
@@ -49,16 +63,24 @@ export default function CoursesTable({ courses, storybook = false }) {
               Join Course
             </Button>
           );
-        } else if (cell.value === "Invited") {
-          return <span style={{ color: "green" }}>{cell.value}</span>;
-        } else if (cell.value === "Member") {
-          return <span style={{ color: "blue" }}>{cell.value}</span>;
-        } else if (cell.value === "Owner") {
-          return <span style={{ color: "purple" }}>{cell.value}</span>;
-        } else if (cell.value === "Error") {
-          return <span style={{ color: "red" }}>{cell.value}</span>;
+        } else if (cell.value === "INVITED") {
+          return (
+              <span style={{ color: "green" }}> Invited
+              <Button 
+                style={{marginLeft: "8px"}}
+                variant={"primary"}
+                onClick={() => viewInviteCallback(cell)}
+                data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+              >
+              View Invite
+              </Button>
+            </span>
+          );
+        } else if (cell.value === "OWNER") {
+          return <span style={{ color: "purple" }}>Owner</span>;
         }
-        return <span>{cell.value}</span>;
+        //otherwise cell.value == "MEMBER"
+        return <span style={{ color: "blue" }}>Member</span>;
       },
     },
   ];

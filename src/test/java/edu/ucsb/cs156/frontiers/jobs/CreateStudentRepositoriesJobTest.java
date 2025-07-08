@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -110,7 +111,7 @@ public class CreateStudentRepositoriesJobTest {
     @Test
     public void expectDoesntCallForNotMember() throws Exception {
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-        RosterStudent student = RosterStudent.builder().githubLogin("banana").orgStatus(OrgStatus.NONE).build();
+        RosterStudent student = RosterStudent.builder().githubLogin("banana").orgStatus(OrgStatus.PENDING).build();
         course.setRosterStudents(List.of(student));
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)

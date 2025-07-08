@@ -86,7 +86,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("cgaucho@example.org")
                         .course(course1)
                         .rosterStatus(RosterStatus.MANUAL)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
         RosterStudent rs2 = RosterStudent.builder()
@@ -97,7 +97,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("ldelplaya@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
         /**
@@ -248,7 +248,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("cgaucho@ucsb.edu")
                                 .course(course1)
                                 .rosterStatus(RosterStatus.MANUAL)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs1AfterWithId = RosterStudent.builder()
@@ -259,7 +259,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("cgaucho@ucsb.edu")
                                 .course(course1)
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs2BeforeWithId = RosterStudent.builder()
@@ -270,7 +270,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("ldelplaya@umail.ucsb.edu")
                                 .course(course1)
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs2AfterWithId = RosterStudent.builder()
@@ -281,7 +281,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("ldelplaya@ucsb.edu")
                                 .studentId("A987654")
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs3NoId = RosterStudent.builder()
@@ -291,7 +291,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("sabadotarde@ucsb.edu")
                                 .studentId("1234567")
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs3WithId = RosterStudent.builder()
@@ -302,7 +302,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("sabadotarde@ucsb.edu")
                                 .studentId("1234567")
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 MockMultipartFile file = new MockMultipartFile(
@@ -474,7 +474,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(0)  // Not linked yet
                         .githubLogin(null)  // Not linked yet
                         .user(currentUser)  // Current user owns this roster entry
@@ -488,7 +488,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(currentUser.getGithubId())
                         .githubLogin(currentUser.getGithubLogin())
                         .user(currentUser)
@@ -556,7 +556,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("otherstudent@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(differentUser)  // Belongs to a different user
                         .build();
 
@@ -586,7 +586,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("alreadylinked@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(98765)  // Already has a GitHub ID
                         .githubLogin("existinguser")  // Already has a GitHub login
                         .user(currentUser)  // Current user owns this roster entry
@@ -622,7 +622,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(123456789)  // Not linked yet
                         .githubLogin(null)  // Not linked yet
                         .user(currentUser)  // Current user owns this roster entry
@@ -636,7 +636,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(currentUser.getGithubId())
                         .githubLogin(currentUser.getGithubLogin())
                         .user(currentUser)
@@ -675,7 +675,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("cgaucho@example.org")
                         .course(course1)
                         .rosterStatus(RosterStatus.MANUAL)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(currentUser)
                         .build();
 
@@ -687,7 +687,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("ldelplaya@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(currentUser)
                         .build();
 
@@ -761,7 +761,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent updatedStudent = RosterStudent.builder()
@@ -772,7 +772,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -810,7 +810,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent otherStudent = RosterStudent.builder()
@@ -821,7 +821,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("other@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -896,7 +896,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent updatedStudent = RosterStudent.builder()
@@ -907,7 +907,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -947,7 +947,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent updatedStudent = RosterStudent.builder()
@@ -958,7 +958,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -1126,7 +1126,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("nouser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(null)  // No user associated
                         .build();
 
@@ -1156,7 +1156,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("partialgithub2@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(null)  // No GitHub ID
                         .githubLogin("somelogin")  // But has a GitHub login
                         .user(currentUser)  // Current user owns this roster entry
@@ -1170,7 +1170,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("partialgithub2@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(currentUser.getGithubId())
                         .githubLogin(currentUser.getGithubLogin())
                         .user(currentUser)
@@ -1204,7 +1204,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("test@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 List<RosterStudent> students = new ArrayList<>();

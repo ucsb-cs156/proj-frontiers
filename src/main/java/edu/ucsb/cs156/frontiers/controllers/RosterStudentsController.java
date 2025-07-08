@@ -101,7 +101,7 @@ public class RosterStudentsController extends ApiController {
                 .email(email)
                 .course(course)
                 .rosterStatus(RosterStatus.MANUAL)
-                .orgStatus(OrgStatus.NONE)
+                .orgStatus(OrgStatus.PENDING)
                 .build();
         RosterStudent savedRosterStudent = rosterStudentRepository.save(rosterStudent);
 
@@ -182,7 +182,7 @@ public class RosterStudentsController extends ApiController {
             student.setCourse(course);
             student.setEmail(convertedEmail);
             student.setRosterStatus(RosterStatus.ROSTER);
-            student.setOrgStatus(OrgStatus.NONE);
+            student.setOrgStatus(OrgStatus.PENDING);
             student = rosterStudentRepository.save(student);
             updateUserService.attachUserToRosterStudent(student);
             return InsertStatus.INSERTED;

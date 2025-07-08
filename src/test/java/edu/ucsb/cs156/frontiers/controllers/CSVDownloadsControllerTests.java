@@ -139,7 +139,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .userGithubId(12345)
             .userGithubLogin("cgaucho")
             .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.NONE)
+            .orgStatus(OrgStatus.PENDING)
             .build();
 
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
@@ -149,7 +149,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     String expectedResponse =  """
                 "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","STUDENTID","USERGITHUBID","USERGITHUBLOGIN","USERID"
-                "1","cgaucho@ucsb.edu","Chris","42","Gaucho","NONE","ROSTER","12345","12345","cgaucho","102"
+                "1","cgaucho@ucsb.edu","Chris","42","Gaucho","PENDING","ROSTER","12345","12345","cgaucho","102"
                 """;
 
     MvcResult response = mockMvc.perform(get("/api/csv/rosterstudents?courseId=1"))
