@@ -557,6 +557,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 assertEquals("This roster student is already linked to a GitHub account", response.getResponse().getContentAsString());
         }
 
+
+
         @Test
         @WithMockUser(roles = { "USER" })
         public void no_fire_on_no_org_name() throws Exception {
@@ -573,8 +575,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
                         .orgStatus(OrgStatus.NONE)
-                        .githubId(123456789)  // Not linked yet
-                        .githubLogin(null)  // Not linked yet
+                        .githubId(0)  // Not linked yet
+                        .githubLogin("login")  // Not linked yet
                         .user(currentUser)  // Current user owns this roster entry
                         .build();
 
