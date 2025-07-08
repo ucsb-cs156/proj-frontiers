@@ -100,7 +100,7 @@ public class JwtServiceTests {
                 }
                 """, expectedToken);
         Course course = Course.builder().installationId("03112004").orgName("ucsb-cs156").build();
-        String expectedURL = "https://api.github.com/app/installations/"+course.getOrgName()+"/access_tokens";
+        String expectedURL = "https://api.github.com/app/installations/"+course.getInstallationId()+"/access_tokens";
         mockRestServiceServer.expect(requestTo(expectedURL))
                 .andExpect(header("Accept", "application/vnd.github+json"))
                 .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))

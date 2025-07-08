@@ -85,7 +85,7 @@ public class JwtService {
             throw new NoLinkedOrganizationException(course.getCourseName());
         }else {
             String token = getJwt();
-            String ENDPOINT = "https://api.github.com/app/installations/" + course.getOrgName() + "/access_tokens";
+            String ENDPOINT = "https://api.github.com/app/installations/" + course.getInstallationId() + "/access_tokens";
             HttpHeaders headers = new HttpHeaders();
             headers.add("Authorization", "Bearer " + token);
             headers.add("Accept", "application/vnd.github+json");
