@@ -37,30 +37,34 @@ public class OrganizationMemberService {
 <span class="fc" id="L37">        this.restTemplate = builder.build();</span>
 <span class="fc" id="L38">    }</span>
 
+
+    /**
+    * This endpoint returns the list of **members**, not admins for the organization. This is so that the roles are known for the return values.
+    */
     public Iterable&lt;OrgMember&gt; getOrganizationMembers(Course course) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc" id="L41">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/members&quot;;</span>
+<span class="fc" id="L45">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/members?role=member&quot;;</span>
         //happily stolen directly from GitHub: https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28
-<span class="fc" id="L43">        Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
-<span class="fc" id="L44">        String token = jwtService.getInstallationToken(course);</span>
-<span class="fc" id="L45">        HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L46">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L47">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L48">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L49">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
-<span class="fc" id="L50">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L51">        List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
-<span class="fc" id="L52">        List&lt;OrgMember&gt; orgMembers = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L53" title="All 4 branches covered.">        while (!responseLinks.isEmpty()&amp;&amp;responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
-<span class="fc" id="L54">            orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference&lt;List&lt;OrgMember&gt;&gt;() {</span>
+<span class="fc" id="L47">        Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
+<span class="fc" id="L48">        String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L49">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L50">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L51">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L52">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L53">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L54">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L55">        List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L56">        List&lt;OrgMember&gt; orgMembers = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L57" title="All 4 branches covered.">        while (!responseLinks.isEmpty()&amp;&amp;responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
+<span class="fc" id="L58">            orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference&lt;List&lt;OrgMember&gt;&gt;() {</span>
             }));
-<span class="fc" id="L56">            Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
-<span class="fc" id="L57">            matcher.find();</span>
-<span class="fc" id="L58">            response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L59">            responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
-<span class="fc" id="L60">        }</span>
-<span class="fc" id="L61">        orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference&lt;List&lt;OrgMember&gt;&gt;() {</span>
+<span class="fc" id="L60">            Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
+<span class="fc" id="L61">            matcher.find();</span>
+<span class="fc" id="L62">            response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L63">            responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L64">        }</span>
+<span class="fc" id="L65">        orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference&lt;List&lt;OrgMember&gt;&gt;() {</span>
         }));
-<span class="fc" id="L63">        return orgMembers;</span>
+<span class="fc" id="L67">        return orgMembers;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
