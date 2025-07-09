@@ -112,9 +112,16 @@ public class CoursesController extends ApiController {
      * @return a list of all courses.
      */
     @Operation(summary = "List all courses")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("/all")
     public Iterable<Course> allCourses() {
+        if (!isCurrentUserAdmin()) {
+            // if the user is not an admin, return only the courses they created
+            CurrentUser currentUser = getCurrentUser();
+            Long userId = currentUser.getUser().getId();
+            List<Course> courses = courseRepository.findByCreatorId(userId);
+            return courses;
+        }
         Iterable<Course> courses = courseRepository.findAll();
         return courses;
     }
