@@ -3,6 +3,7 @@ Next, we'll set up the Github App. To do so, go to https://github.com/
 Then, click your profile icon. Click "Settings". Then, Click "Developer Settings", on the bottom of the toolbar on the left.
 
 Select "New Github App". Fill in an appropriate name, and write it down. You will need it later.
+
 ![image](https://github.com/user-attachments/assets/3d0fe501-318c-4907-a267-eff44f06f17a)
 
 
@@ -16,7 +17,8 @@ Next to the heading for `Identifying and authorizing users`, find the button "Ad
 
 You should now see two spaces to add Callback URLs, like this:
 
-<img width="1003" alt="image" src="https://github.com/user-attachments/assets/cf4532c0-8d28-47e7-af5f-d2bc009dbc67" />
+<img width="878" alt="image" src="https://github.com/user-attachments/assets/1f3bcf9b-113e-4d72-bc0f-f5687b63e172" />
+
 
 Fill in the two callback URLs with these values:
 ```
