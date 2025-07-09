@@ -160,7 +160,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "ADMIN" })
-        public void testAllCourses() throws Exception {
+        public void testAllCourses_ROLE_ADMIN() throws Exception {
 
                 // arrange
                 Course course1 = Course.builder()
@@ -187,6 +187,44 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(java.util.List.of(course1, course2));
+                assertEquals(expectedJson, responseString);
+        }
+
+                /**
+         * Test the GET endpoint
+         */
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testAllCourses_ROLE_INSTRUCTOR() throws Exception {
+
+                User user = currentUserService.getCurrentUser().getUser();
+
+                User separateUser = User.builder().id(user.getId()+1L).build();
+
+                // arrange
+                Course course1 = Course.builder()
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(user)
+                                .build();
+
+       
+
+                when(courseRepository.findByCreatorId(eq(user.getId()))).thenReturn(java.util.List.of(course1));
+
+                // act
+
+                MvcResult response = mockMvc.perform(get("/api/courses/all"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(java.util.List.of(course1));
+                verify(courseRepository, times(1)).findByCreatorId(eq(user.getId()));
                 assertEquals(expectedJson, responseString);
         }
 
