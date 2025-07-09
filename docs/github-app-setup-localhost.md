@@ -16,16 +16,15 @@ For the homepage url, fill in `http://localhost:8080`.
 
 ![image](https://github.com/user-attachments/assets/bec66087-ca4a-4fc4-af3d-9ad663c24eb2)
 
+Under `Identifying and authorizing users`, click the button "Add Callback URL"; this should make it so that you see two spaces in which you can add a Callback URL.
 
-For Callback URLs, select "Add Callback URL"
-
-
-In the first callback URL, fill in `http://localhost:8080/api/courses/link`. For the second URL, fill in `http://localhost:8080/login/oauth2/code/github`.
+Fill these in as follows:
+* First callback URL: `http://localhost:8080/api/courses/link`
+* Second callback URL: `http://localhost:8080/login/oauth2/code/github`
 
 Click the checkbox for "Request user authorization (OAuth) during installation"
 
 ![image](https://github.com/user-attachments/assets/a06af72c-e08d-4f47-bd6a-91b5d1aef65f)
-
 
 Scroll down to permissions, and under repository, set the following accesses:
 - Administration: Read and Write
