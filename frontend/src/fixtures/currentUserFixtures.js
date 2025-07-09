@@ -49,6 +49,56 @@ const apiCurrentUserFixtures = {
       },
     ],
   },
+  instructorUser: {
+    user: {
+      id: 3,
+      email: "diba@ucsb.edu",
+      googleSub: "115856948234298493497",
+      pictureUrl:
+        "https://lh3.googleusercontent.com/-bQynVrzVIrU/AAAAAAAAAAI/AAAAAAAAAAA/AMZuucmkGuVsELD1ZeV5iDUAUfe6_K-p8w/s96-c/photo.jpg",
+      fullName: "Diba Mirza",
+      givenName: "Diba",
+      familyName: "Mirza",
+      emailVerified: true,
+      locale: "en",
+      hostedDomain: "ucsb.edu",
+      admin: true,
+      githubId: 0,
+      githubLogin: null,
+    },
+    roles: [
+      {
+        authority: "ROLE_MEMBER",
+      },
+      {
+        authority: "SCOPE_openid",
+      },
+      {
+        authority: "SCOPE_https://www.googleapis.com/auth/userinfo.profile",
+      },
+      {
+        authority: "SCOPE_https://www.googleapis.com/auth/userinfo.email",
+      },
+      {
+        authority: "ROLE_USER",
+        attributes: {
+          sub: "115856948234298493497",
+          name: "Diba Mirza",
+          given_name: "Diba",
+          family_name: "Mirza",
+          picture:
+            "https://lh3.googleusercontent.com/a/AATXAJyxrU2gDahCiNe4ampVZlv5176Jo0F0PG3KyYgk=s96-c",
+          email: "diba@ucsb.edu",
+          email_verified: true,
+          locale: "en",
+          hd: "ucsb.edu",
+        },
+      },
+      {
+        authority: "ROLE_INSTRUCTOR",
+      },
+    ],
+  },
   userOnly: {
     user: {
       id: 2,
@@ -94,7 +144,7 @@ const apiCurrentUserFixtures = {
   },
   missingRolesToTestErrorHandling: {
     user: {
-      id: 2,
+      id: 4,
       email: "pconrad.cis@gmail.com",
       googleSub: "102656447703889917227",
       pictureUrl:
@@ -118,6 +168,13 @@ const apiCurrentUserFixturesWithGithub = {
       githubLogin: "phtcon-github", // Simulating a Github login
     },
   },
+  instructorUser: {
+    user: {
+      ...apiCurrentUserFixtures.instructorUser.user, // Reuse the admin user from above
+      githubId: 987654, // Adding a Github ID to simulate Github login
+      githubLogin: "dmirza-github", // Simulating a Github login
+    },
+  },
   userOnly: {
     user: {
       ...apiCurrentUserFixtures.userOnly.user, // Reuse the admin user from above
@@ -139,6 +196,21 @@ const currentUserFixtures = {
         "SCOPE_https://www.googleapis.com/auth/userinfo.email",
         "ROLE_USER",
         "ROLE_ADMIN",
+        "ROLE_INSTRUCTOR", // implied by ROLE_ADMIN
+      ],
+    },
+  },
+  instructorUser: {
+    loggedIn: true,
+    root: {
+      ...apiCurrentUserFixtures.instructorUser,
+      rolesList: [
+        "ROLE_MEMBER",
+        "SCOPE_openid",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.profile",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.email",
+        "ROLE_USER", // implied by ROLE_INSTRUCTOR
+        "ROLE_INSTRUCTOR",
       ],
     },
   },
@@ -172,6 +244,22 @@ const currentUserFixturesWithGithub = {
         "SCOPE_https://www.googleapis.com/auth/userinfo.email",
         "ROLE_USER",
         "ROLE_ADMIN",
+        "ROLE_INSTRUCTOR", // implied by ROLE_ADMIN
+        "ROLE_GITHUB",
+      ],
+    },
+  },
+  instructorUser: {
+    loggedIn: true,
+    root: {
+      ...apiCurrentUserFixturesWithGithub.adminUser,
+      rolesList: [
+        "ROLE_MEMBER",
+        "SCOPE_openid",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.profile",
+        "SCOPE_https://www.googleapis.com/auth/userinfo.email",
+        "ROLE_USER", // implied by ROLE_INSTRUCTOR
+        "ROLE_INSTRUCTOR",
         "ROLE_GITHUB",
       ],
     },

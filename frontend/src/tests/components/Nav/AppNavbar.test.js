@@ -39,6 +39,30 @@ describe("AppNavbar tests", () => {
     await screen.findByText("Welcome, phtcon@ucsb.edu");
     const adminMenu = screen.getByTestId("appnavbar-admin-dropdown");
     expect(adminMenu).toBeInTheDocument();
+
+    const instructorMenu = screen.getByTestId("appnavbar-instructor-dropdown");
+    expect(instructorMenu).toBeInTheDocument();
+  });
+
+  test("renders correctly for instructor user", async () => {
+    const currentUser = currentUserFixtures.instructorUser;
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppNavbar currentUser={currentUser} doLogin={doLogin} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Welcome, diba@ucsb.edu");
+    const instructorMenu = screen.getByTestId("appnavbar-instructor-dropdown");
+    expect(instructorMenu).toBeInTheDocument();
+
+    // Admin menu should not be present for instructor
+    const adminMenu = screen.queryByTestId("appnavbar-admin-dropdown");
+    expect(adminMenu).not.toBeInTheDocument();
   });
 
   test("renders H2Console and Swagger links correctly", async () => {

@@ -20,8 +20,13 @@ function App() {
         {hasRole(currentUser, "ROLE_ADMIN") && (
           <Route exact path="/admin/users" element={<AdminUsersPage />} />
         )}
-        {hasRole(currentUser, "ROLE_ADMIN") && (
-          <Route exact path="/admin/courses" element={<CoursesIndexPage />} />
+        {(hasRole(currentUser, "ROLE_ADMIN") ||
+          hasRole(currentUser, "ROLE_INSTRUCTOR")) && (
+          <Route
+            exact
+            path="/instructor/courses"
+            element={<CoursesIndexPage />}
+          />
         )}
       </Routes>
     </BrowserRouter>
