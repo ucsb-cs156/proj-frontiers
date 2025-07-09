@@ -12,6 +12,8 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import lombok.Builder;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 @Builder
 public class MembershipAuditJob implements JobContextConsumer {
@@ -26,14 +28,14 @@ public class MembershipAuditJob implements JobContextConsumer {
         for(Course course : courses){
             if (course.getOrgName() != null && course.getInstallationId() != null) {
                 Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
-                ctx.log(members.toString());
                 List<RosterStudent> rosterStudents = course.getRosterStudents();
-                for (OrgMember member : members) {
-                    RosterStudent student = rosterStudents.stream().filter(s -> s.getGithubId()!=null && s.getGithubId().equals(member.getGithubId())).findFirst().orElse(null);
-                    if (student != null) {
-                        ctx.log("Student found: " + student.toString());
-                        student.setOrgStatus(OrgStatus.MEMBER);
-                        rosterStudentRepository.save(student);
+                for (RosterStudent student : rosterStudents) {
+                    if(student.getGithubId() != null && student.getGithubLogin() != null){
+                        Optional<OrgMember> member = StreamSupport.stream(members.spliterator(), false).filter(s -> student.getGithubId().equals(s.getGithubId())).findFirst();
+                        if (member.isPresent()) {
+                            student.setOrgStatus(OrgStatus.MEMBER);
+                            rosterStudentRepository.save(student);
+                        }
                     }
                 }
             }

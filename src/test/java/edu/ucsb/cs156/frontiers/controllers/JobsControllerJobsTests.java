@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,6 +32,7 @@ import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.test.web.servlet.MvcResult;
 
 
 /**
@@ -119,19 +121,22 @@ public class JobsControllerJobsTests extends ControllerTestCase {
         .status("started")
         .build();
 
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
+
     when(jobService.runAsJob (any(MembershipAuditJob.class))).thenReturn(jobStarted);
 
 
     // act
-    mockMvc
+    MvcResult result = mockMvc
         .perform(post("/api/jobs/launch/auditAllCourses").with(csrf()))
         .andExpect(status().isOk())
         .andReturn();
 
     // assert
 
+    String response = result.getResponse().getContentAsString();
     verify(jobService, times(1)).runAsJob(any(MembershipAuditJob.class));
-
+      assertEquals(expectedResponse, response);
   }
 
 }

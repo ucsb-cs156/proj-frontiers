@@ -58,20 +58,23 @@ public class MembershipAuditJobTests {
         List<OrgMember> secondCourse = List.of(orgMember3, orgMember4);
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
         Course course2 = Course.builder().orgName("ucsb-cs156-f25").installationId("1235").build();
+        Course course3 = Course.builder().build();
+        Course course4 = Course.builder().orgName("ucsb-cs156-f25").build();
         RosterStudent student1 = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).build();
         RosterStudent student2 = RosterStudent.builder().studentId("apple").githubLogin("division8").githubId(123457).course(course).build();
         course.setRosterStudents(List.of(student1, student2));
         RosterStudent student3 = RosterStudent.builder().studentId("banana").githubLogin("division9").githubId(123455).course(course2).build();
         RosterStudent student4 = RosterStudent.builder().studentId("apple").githubLogin("division10").githubId(123454).course(course2).build();
         RosterStudent student5 = RosterStudent.builder().studentId("orange").githubLogin(null).githubId(null).course(course2).build();
-        course2.setRosterStudents(List.of(student3, student4, student5));
+        RosterStudent student6 = RosterStudent.builder().studentId("grape").githubLogin(null).githubId(123455).course(course3).build();
+        course2.setRosterStudents(List.of(student3, student4, student5, student6));
         RosterStudent student1Updated = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).orgStatus(OrgStatus.MEMBER).build();
         RosterStudent student2Updated = RosterStudent.builder().studentId("apple").githubLogin("division8").githubId(123457).course(course).orgStatus(OrgStatus.MEMBER).build();
         RosterStudent student3Updated = RosterStudent.builder().studentId("banana").githubLogin("division9").githubId(123455).course(course2).orgStatus(OrgStatus.MEMBER).build();
 
         doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
         doReturn(secondCourse).when(organizationMemberService).getOrganizationMembers(eq(course2));
-        doReturn(List.of(course, course2)).when(courseRepository).findAll();
+        doReturn(List.of(course, course2, course3, course4)).when(courseRepository).findAll();
 
         var matchJob = spy(MembershipAuditJob.builder()
                 .rosterStudentRepository(rosterStudentRepository)
@@ -90,24 +93,27 @@ public class MembershipAuditJobTests {
         verify(rosterStudentRepository, times(1)).save(eq(student3Updated));
     }
 
+
     @Test
-    public void no_roster_student() throws Exception {
-        OrgMember orgMember1 = OrgMember.builder().githubId(123456).githubLogin("division7").build();
-        List<OrgMember> orgMembers = List.of(orgMember1);
+    public void no_match_on_any_member() throws Exception{
+        OrgMember orgMember1 = OrgMember.builder().githubId(123455).githubLogin("unmatched-a").build();
+        OrgMember orgMember2 = OrgMember.builder().githubId(772).githubLogin("unmatched-b").build();
+        List<OrgMember> orgMembers = List.of(orgMember1, orgMember2);
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+        RosterStudent student1 = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).build();
+        course.setRosterStudents(List.of(student1));
+        when(organizationMemberService.getOrganizationMembers(course)).thenReturn(orgMembers);
+        when(courseRepository.findAll()).thenReturn(List.of(course));
 
-        doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
-        doReturn(Optional.empty()).when(rosterStudentRepository).findByCourseAndGithubId(eq(course), eq(123456));
-
-        var matchJob = spy(UpdateOrgMembershipJob.builder()
+        var matchJob = spy(MembershipAuditJob.builder()
                 .rosterStudentRepository(rosterStudentRepository)
                 .organizationMemberService(organizationMemberService)
-                .course(course)
+                .courseRepository(courseRepository)
                 .build());
 
         matchJob.accept(ctx);
         String expected = """
-                Processing...
+                Auditing membership for each course with an attached GitHub Organization...
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
