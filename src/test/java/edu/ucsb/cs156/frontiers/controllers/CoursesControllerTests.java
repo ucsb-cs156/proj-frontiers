@@ -197,7 +197,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
                 verify(courseRepository, times(1)).save(eq(course2));
-                assertEquals("/admin/courses?success=True&course=1", responseUrl);
+                assertEquals("/instructor/courses?success=True&course=1", responseUrl);
         }
 
         @Test

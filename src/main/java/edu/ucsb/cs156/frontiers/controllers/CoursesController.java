@@ -182,7 +182,7 @@ public class CoursesController extends ApiController {
                 course.setOrgName(orgName);
                 courseRepository.save(course);
                 return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
-                        .header(HttpHeaders.LOCATION, "/admin/courses?success=True&course=" + state).build();
+                        .header(HttpHeaders.LOCATION, "/instructor/courses?success=True&course=" + state).build();
             }
         }
     }
