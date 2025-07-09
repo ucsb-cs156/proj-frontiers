@@ -28,16 +28,24 @@ public class MembershipAuditJob implements JobContextConsumer {
         for(Course course : courses){
             if (course.getOrgName() != null && course.getInstallationId() != null) {
                 Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
+                Iterable<OrgMember> admins = organizationMemberService.getOrganizationAdmins(course);
                 List<RosterStudent> rosterStudents = course.getRosterStudents();
-                for (RosterStudent student : rosterStudents) {
-                    if(student.getGithubId() != null && student.getGithubLogin() != null){
-                        Optional<OrgMember> member = StreamSupport.stream(members.spliterator(), false).filter(s -> student.getGithubId().equals(s.getGithubId())).findFirst();
-                        if (member.isPresent()) {
-                            student.setOrgStatus(OrgStatus.MEMBER);
-                            rosterStudentRepository.save(student);
+                for (int i = 0; i < rosterStudents.size(); i++ ) {
+                    Integer studentGithubId = rosterStudents.get(i).getGithubId();
+                    String studentGithubLogin = rosterStudents.get(i).getGithubLogin();
+                    if(studentGithubId != null && studentGithubLogin != null){
+                        Optional<OrgMember> member = StreamSupport.stream(members.spliterator(), false).filter(s -> studentGithubId.equals(s.getGithubId())).findFirst();
+                        Optional<OrgMember> admin = StreamSupport.stream(admins.spliterator(), false).filter(s -> studentGithubId.equals(s.getGithubId())).findFirst();
+                        OrgStatus updatedStatus = OrgStatus.NONE;
+                        if (admin.isPresent()) {
+                            updatedStatus = OrgStatus.OWNER;
+                        } else if (member.isPresent()) {
+                            updatedStatus = OrgStatus.MEMBER;
                         }
+                        rosterStudents.get(i).setOrgStatus(updatedStatus);
                     }
                 }
+                rosterStudentRepository.saveAll(rosterStudents);
             }
         }
         ctx.log("Done");

@@ -162,6 +162,104 @@ public class OrganizationMemberServiceTests {
         assertEquals(result, List.of());
     }
 
+
+
+    @Test
+    void testGetOrganizationAdmins_SinglePage() throws Exception {
+        // Prepare test data
+        List<OrgMember> expectedAdmins = List.of(
+            OrgMember.builder().githubId(1).githubLogin("admin1").build(),
+            OrgMember.builder().githubId(2).githubLogin("admin2").build()
+        );
+        String jsonResponse = objectMapper.writeValueAsString(expectedAdmins);
+
+        // Setup mock server
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?role=admin"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(jsonResponse));
+
+        // Execute test
+        Iterable<OrgMember> result = organizationMemberService.getOrganizationAdmins(testCourse);
+
+        // Verify results
+        mockServer.verify();
+        assertIterableEquals(expectedAdmins, result);
+    }
+
+    @Test
+    void testGetOrganizationAdmins_MultiplePages() throws Exception {
+        // Prepare test data for two pages
+        OrgMember orgAdmin1 = OrgMember.builder().githubId(1).githubLogin("admin1").build();
+        OrgMember orgAdmin2 = OrgMember.builder().githubId(2).githubLogin("admin2").build();
+
+        List<OrgMember> firstPageAdmins = List.of(
+            orgAdmin1
+        );
+        List<OrgMember> secondPageAdmins = List.of(
+            orgAdmin2
+        );
+
+        String firstPageJson = objectMapper.writeValueAsString(firstPageAdmins);
+        String secondPageJson = objectMapper.writeValueAsString(secondPageAdmins);
+
+        List<OrgMember> expectedResults = List.of(orgAdmin1, orgAdmin2);
+        // Setup headers for pagination
+        HttpHeaders firstPageHeaders = new HttpHeaders();
+        firstPageHeaders.add("link",
+            "<https://api.github.com/orgs/" + TEST_ORG + "/members?page=2&role=admin>; rel=\"next\"");
+
+        HttpHeaders secondPageHeaders = new HttpHeaders();
+        secondPageHeaders.add("link", "<https://api.github.com/orgs/" + TEST_ORG + "/members?page=1>; rel=\"previous\"");
+        // Setup mock server for first page
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?role=admin"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .headers(firstPageHeaders)
+                        .body(firstPageJson));
+
+        // Setup mock server for second page
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?page=2&role=admin"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .headers(secondPageHeaders)
+                        .body(secondPageJson));
+
+        // Execute test
+        List<OrgMember> result = (List<OrgMember>) organizationMemberService.getOrganizationAdmins(testCourse);
+
+        // Verify results
+        mockServer.verify();
+        assertEquals(expectedResults, result);
+    }
+
+    @Test
+    void testGetOrganizationAdmins_EmptyResponse() throws Exception {
+        // Setup mock server with empty response
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members?role=admin"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("[]"));
+
+        // Execute test
+        Iterable<OrgMember> result = organizationMemberService.getOrganizationAdmins(testCourse);
+
+        // Verify results
+        mockServer.verify();
+        assertEquals(result, List.of());
+    }
+
+
     @Test
     void testInviteOrganizationMember_Success() throws Exception {
         // Create test roster student
