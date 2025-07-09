@@ -12,16 +12,24 @@ For the homepage url, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.ed
 
 
 
-For Callback URLs, select "Add Callback URL"
+Next to the heading for `Identifying and authorizing users`, find the button "Add Callback URL", and click it once.
 
+You should now see two spaces to add Callback URLs, like this:
 
-In the first callback URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/courses/link`. For the second URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github`, replacing appname with the name of your app, and dokku-number with your dokku installation.
+<img width="1003" alt="image" src="https://github.com/user-attachments/assets/cf4532c0-8d28-47e7-af5f-d2bc009dbc67" />
 
+Fill in the two callback URLs with these values:
+```
+https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/courses/link
+https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github
+```
+Replacing `<appname>` with the name of your app, and `<dokku-number>` with your dokku installation.
 
+Then, click the checkbox for "Request user authorization (OAuth) during installation"
 
-Click the checkbox for "Request user authorization (OAuth) during installation"
+As an example, when filled it, it might look like this:
 
-![image](https://github.com/user-attachments/assets/bd58b939-6c3f-481a-a7f5-a118f65acc1b)
+<img width="898" alt="image" src="https://github.com/user-attachments/assets/ee58c776-0e1d-4290-b278-8ea4d87884f0" />
 
 
 Scroll further and under webhooks, fill in the following url where *appname* is your appname and *xx* is your dokku server:
