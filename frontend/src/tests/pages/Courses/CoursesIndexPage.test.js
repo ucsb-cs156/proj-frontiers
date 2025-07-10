@@ -73,22 +73,6 @@ describe("CoursesIndexPage tests", () => {
     const orgName = screen.getByText("wsu-cpts489-fa20");
     expect(orgName).toBeInTheDocument();
 
-    // The org name should be present for the first two courses,
-
-    // const org1 = screen.getByTestId(
-    //   "InstructorCoursesTable-cell-row-0-col-orgName-span"
-    // );
-    // expect(org1).toBeInTheDocument();
-    // expect(org1).toHaveTextContent("ucsb-cs156-s25");
-
-    // const org2 = screen.getByTestId(
-    //   "InstructorCoursesTable-cell-row-1-col-orgName-span"
-    // );
-    // expect(org2).toBeInTheDocument();
-    // expect(org2).toHaveTextContent("wsu-cpts489-fa20");
-
-    // For an instructor user, the next courses should have a button
-    // because the instructor fixtures aligns with the creator of the course
     const button3 = screen.queryByTestId(
       "InstructorCoursesTable-cell-row-2-col-orgName-button",
     );

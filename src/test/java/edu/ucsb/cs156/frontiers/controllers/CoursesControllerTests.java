@@ -35,6 +35,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.controllers.CoursesController.InstructorCourseView;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
@@ -74,7 +75,6 @@ public class CoursesControllerTests extends ControllerTestCase {
 
         @MockitoBean
         private CourseStaffRepository courseStaffRepository;
-
 
         /**
          * Test that ROLE_ADMIN can create a course
@@ -155,7 +155,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         }
 
         /**
-         * Test the GET endpoint
+         * Test the GET all endpoint for courses
          */
 
         @Test
@@ -169,11 +169,14 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .school("UCSB")
                                 .build();
 
+                InstructorCourseView courseView1 = new InstructorCourseView(course1);
+
                 Course course2 = Course.builder()
                                 .courseName("CS148")
                                 .term("S25")
                                 .school("UCSB")
                                 .build();
+                InstructorCourseView courseView2 = new InstructorCourseView(course2);
 
                 when(courseRepository.findAll()).thenReturn(java.util.List.of(course1, course2));
 
@@ -186,11 +189,11 @@ public class CoursesControllerTests extends ControllerTestCase {
                 // assert
 
                 String responseString = response.getResponse().getContentAsString();
-                String expectedJson = mapper.writeValueAsString(java.util.List.of(course1, course2));
+                String expectedJson = mapper.writeValueAsString(java.util.List.of(courseView1, courseView2));
                 assertEquals(expectedJson, responseString);
         }
 
-                /**
+        /**
          * Test the GET endpoint
          */
 
@@ -200,8 +203,6 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 User user = currentUserService.getCurrentUser().getUser();
 
-                User separateUser = User.builder().id(user.getId()+1L).build();
-
                 // arrange
                 Course course1 = Course.builder()
                                 .courseName("CS156")
@@ -210,7 +211,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .creator(user)
                                 .build();
 
-       
+                InstructorCourseView courseView1 = new InstructorCourseView(course1);
 
                 when(courseRepository.findByCreatorId(eq(user.getId()))).thenReturn(java.util.List.of(course1));
 
@@ -223,7 +224,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                 // assert
 
                 String responseString = response.getResponse().getContentAsString();
-                String expectedJson = mapper.writeValueAsString(java.util.List.of(course1));
+                String expectedJson = mapper.writeValueAsString(java.util.List.of(courseView1));
                 verify(courseRepository, times(1)).findByCreatorId(eq(user.getId()));
                 assertEquals(expectedJson, responseString);
         }
@@ -315,7 +316,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
                 verify(courseRepository, times(1)).save(eq(course2));
-                assertEquals("/admin/courses?success=True&course=1", responseUrl);
+                assertEquals("/instructor/courses?success=True&course=1", responseUrl);
         }
 
         @Test
@@ -392,7 +393,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
                 verify(courseRepository, times(1)).save(eq(courseAfter));
-                assertEquals("/admin/courses?success=True&course=1", responseUrl);
+                assertEquals("/instructor/courses?success=True&course=1", responseUrl);
         }
 
         @Test
@@ -446,7 +447,6 @@ public class CoursesControllerTests extends ControllerTestCase {
                 assertEquals(expectedJson, responseString);
         }
 
-  
         /**
          * Test the POST endpoint
          */

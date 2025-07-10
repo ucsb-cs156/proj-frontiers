@@ -106,6 +106,37 @@ public class CoursesController extends ApiController {
         return savedCourse;
     }
 
+
+    /**
+     * Projection of Course entity with fields that are relevant for instructors
+     * and admins
+     */
+    public static record InstructorCourseView(
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            Long createdByUserId,
+            String createdByEmail) {
+
+        
+        // Creates view from Course entity and student email
+        public InstructorCourseView(Course c) {
+            this(
+                c.getId(),
+                c.getInstallationId(),
+                c.getOrgName(),
+                c.getCourseName(),
+                c.getTerm(),
+                c.getSchool(),
+                c.getCreator() != null ? c.getCreator().getId() : null,
+                c.getCreator() != null ? c.getCreator().getEmail() : null
+            );
+        }
+    }
+
     /**
      * This method returns a list of courses.
      * 
@@ -114,16 +145,26 @@ public class CoursesController extends ApiController {
     @Operation(summary = "List all courses")
     @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("/all")
-    public Iterable<Course> allCourses() {
+    public Iterable<InstructorCourseView> allCourses() {
+        List<Course> courses = null;
         if (!isCurrentUserAdmin()) {
             // if the user is not an admin, return only the courses they created
             CurrentUser currentUser = getCurrentUser();
             Long userId = currentUser.getUser().getId();
-            List<Course> courses = courseRepository.findByCreatorId(userId);
-            return courses;
+            courses = courseRepository.findByCreatorId(userId);
+            // Convert to InstructorCourseView
+            List<InstructorCourseView> courseViews = courses.stream()
+                    .map(InstructorCourseView::new)
+                    .collect(Collectors.toList());
+            // Return as Iterable
+            return courseViews;
+        } else {
+            courses = courseRepository.findAll();
         }
-        Iterable<Course> courses = courseRepository.findAll();
-        return courses;
+        List<InstructorCourseView> courseViews = courses.stream()
+                    .map(InstructorCourseView::new)
+                    .collect(Collectors.toList());
+        return courseViews;
     }
 
     /**
