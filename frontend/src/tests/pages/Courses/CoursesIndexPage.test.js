@@ -10,24 +10,26 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
-  return {
-    __esModule: true,
-    ...originalModule,
-    toast: (x) => mockToast(x),
-  };
-});
+let axiosMock = new AxiosMockAdapter(axios);
 
 describe("CoursesIndexPage tests", () => {
-  const axiosMock = new AxiosMockAdapter(axios);
+  const testId = "InstructorCoursesTable";
 
-  const testId = "AdminCoursesTable";
-
-  const setupAdminUser = () => {
+  beforeEach(() => {
     axiosMock.reset();
     axiosMock.resetHistory();
+  });
+
+  const setupInstructorUser = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.instructorUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupAdminUser = () => {
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.adminUser);
@@ -36,40 +38,13 @@ describe("CoursesIndexPage tests", () => {
       .reply(200, systemInfoFixtures.showingNeither);
   };
 
-  const setupNonAdminUser = () => {
-    axiosMock.reset();
-    axiosMock.resetHistory();
-    axiosMock
-      .onGet("/api/currentUser")
-      .reply(200, apiCurrentUserFixtures.userOnly);
-    axiosMock
-      .onGet("/api/systemInfo")
-      .reply(200, systemInfoFixtures.showingNeither);
-  };
   const queryClient = new QueryClient();
 
-  test("Renders for admin user", async () => {
-    setupAdminUser();
-    axiosMock.onGet("/api/courses/all").reply(200, []);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <CoursesIndexPage />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/Courses/)).toBeInTheDocument();
-    });
-  });
-
-  test("renders three courses correctly for admin user", async () => {
-    setupAdminUser();
+  test("renders correctly for instructor user", async () => {
+    setupInstructorUser();
     axiosMock
       .onGet("/api/courses/all")
-      .reply(200, coursesFixtures.threeCourses);
+      .reply(200, coursesFixtures.severalCourses);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -91,18 +66,82 @@ describe("CoursesIndexPage tests", () => {
       "3",
     );
 
-    const installationId = screen.getByText("654321");
-    expect(installationId).toBeInTheDocument();
+    const orgName = screen.getByText("wsu-cpts489-fa20");
+    expect(orgName).toBeInTheDocument();
+
+    const button3 = screen.queryByTestId(
+      "InstructorCoursesTable-cell-row-2-col-orgName-button",
+    );
+    expect(button3).toBeInTheDocument();
+    expect(button3).toHaveTextContent("Install Github App");
+
+    // This one should not have a button because the instructor is not
+    // the creator of the course
+    const span4 = screen.getByTestId(
+      "InstructorCoursesTable-cell-row-3-col-orgName",
+    );
+    expect(span4).toBeInTheDocument();
+    expect(span4).toHaveTextContent("");
+  });
+
+  test("Renders for admin user", async () => {
+    setupAdminUser();
+    axiosMock.onGet("/api/courses/all").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Courses/)).toBeInTheDocument();
+    });
+  });
+
+  test("renders correctly for admin user", async () => {
+    setupAdminUser();
+    axiosMock
+      .onGet("/api/courses/all")
+      .reply(200, coursesFixtures.severalCourses);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-id`),
+      ).toHaveTextContent("1");
+    });
+    expect(screen.getByTestId(`${testId}-cell-row-1-col-id`)).toHaveTextContent(
+      "2",
+    );
+    expect(screen.getByTestId(`${testId}-cell-row-2-col-id`)).toHaveTextContent(
+      "3",
+    );
 
     const orgName = screen.getByText("wsu-cpts489-fa20");
     expect(orgName).toBeInTheDocument();
 
-    // expect that the button for "Install Github App" is present
-    const button = screen.getByTestId(
-      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
+    // For an admin user, the next two courses should have a button, not an org name
+    const button3 = screen.queryByTestId(
+      "InstructorCoursesTable-cell-row-2-col-orgName-button",
     );
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("Install Github App");
+    expect(button3).toBeInTheDocument();
+    expect(button3).toHaveTextContent("Install Github App");
+
+    const button4 = screen.queryByTestId(
+      "InstructorCoursesTable-cell-row-3-col-orgName-button",
+    );
+    expect(button4).toBeInTheDocument();
+    expect(button4).toHaveTextContent("Install Github App");
   });
 
   test("renders empty table when backend unavailable, admin only", async () => {
@@ -129,32 +168,5 @@ describe("CoursesIndexPage tests", () => {
       "Error communicating with backend via GET on /api/courses/all",
     );
     restoreConsole();
-  });
-
-  test("no button to connect to Github App for non-admin user", async () => {
-    setupNonAdminUser();
-    axiosMock
-      .onGet("/api/courses/all")
-      .reply(200, coursesFixtures.threeCourses);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <CoursesIndexPage />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.getByTestId(`${testId}-cell-row-0-col-id`),
-      ).toHaveTextContent("1");
-    });
-
-    // expect that the button for "Install Github App" is not present
-    const button = screen.queryByTestId(
-      "AdminCoursesTable-cell-row-0-col-Install Github App-button",
-    );
-    expect(button).not.toBeInTheDocument();
   });
 });
