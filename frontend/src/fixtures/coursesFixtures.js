@@ -1,5 +1,5 @@
 const coursesFixtures = {
-  threeCourses: [
+  severalCourses: [
     {
       id: 1,
       installationId: "123456",
@@ -7,6 +7,8 @@ const coursesFixtures = {
       courseName: "CMPSC 156",
       term: "Spring 2025",
       school: "UCSB",
+      createdByUserId: 3,
+      createdByEmail: "diba@ucsb.edu",
     },
     {
       id: 2,
@@ -15,14 +17,24 @@ const coursesFixtures = {
       courseName: "CPTS 489",
       term: "Fall 2020",
       school: "WSU",
+      createdByUserId: 1,
+      createdByEmail: "phtcon@ucsb.edu",
     },
     {
       id: 3,
-      installationId: "789012",
-      orgName: "ucsb-cs156-f25",
       courseName: "CMPSC 156",
       term: "Fall 2025",
       school: "UCSB",
+      createdByUserId: 3,
+      createdByEmail: "diba@ucsb.edu",
+    },
+    {
+      id: 4,
+      courseName: "CMPSC 156",
+      term: "Spring 2026",
+      school: "UCSB",
+      createdByUserId: 1,
+      createdByEmail: "phtcon@ucsb.edu",
     },
   ],
   oneCourseWithEachStatus: [

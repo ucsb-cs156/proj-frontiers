@@ -62,7 +62,7 @@ const apiCurrentUserFixtures = {
       emailVerified: true,
       locale: "en",
       hostedDomain: "ucsb.edu",
-      admin: true,
+      admin: false,
       githubId: 0,
       githubLogin: null,
     },
@@ -252,7 +252,7 @@ const currentUserFixturesWithGithub = {
   instructorUser: {
     loggedIn: true,
     root: {
-      ...apiCurrentUserFixturesWithGithub.adminUser,
+      ...apiCurrentUserFixturesWithGithub.instructorUser,
       rolesList: [
         "ROLE_MEMBER",
         "SCOPE_openid",
