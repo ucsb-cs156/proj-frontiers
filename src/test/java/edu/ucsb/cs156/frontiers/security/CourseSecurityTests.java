@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.security;
 import edu.ucsb.cs156.frontiers.config.CourseSecurity;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
@@ -25,9 +26,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 
+import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -99,10 +101,24 @@ public class CourseSecurityTests {
         @Test
         @WithMockUser(setupBefore = TestExecutionEvent.TEST_EXECUTION, roles = {"INSTRUCTOR"})
         public void instructor_cant_load_non_owned_course() {
-            User user = User.builder().id(2L).build();
-            Course testCourse = Course.builder().id(1L).creator(user).build();
-            when(courseRepository.findById(1L)).thenReturn(java.util.Optional.of(testCourse));
             assertThrows(AccessDeniedException.class, () -> DummyCourseSecurity.loadCourse(1L));
         }
+    }
+
+    @Nested
+    public class NotFound {
+        @BeforeEach
+        public void setup(){
+            User user = User.builder().id(1L).build();
+            when(currentUserService.getCurrentUser()).thenReturn(CurrentUser.builder().user(user).roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))).build());
+            when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+        }
+
+        @Test
+        @WithMockUser(setupBefore = TestExecutionEvent.TEST_EXECUTION, roles = {"INSTRUCTOR"})
+        public void null_on_null() {
+            assertTrue(DummyCourseSecurity.nullTest(1L));
+        }
+
     }
 }

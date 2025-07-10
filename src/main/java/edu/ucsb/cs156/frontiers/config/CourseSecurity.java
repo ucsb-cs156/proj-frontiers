@@ -12,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Slf4j
 @Component("CourseSecurity")
@@ -32,12 +33,11 @@ public class CourseSecurity {
         if(authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"))){
             return true;
         }else {
-            Course course = courseRepository.findById(courseId).orElse(null);
-            if(course == null){
-                log.error("Should not enter here. Course not found with id: {}", courseId);
-                return null;
+            Optional<Course> course = courseRepository.findById(courseId);
+            if(course.isEmpty()){
+                return true;
             }
-            return currentUser.getUser().getId() == course.getCreator().getId();
+            return currentUser.getUser().getId() == course.get().getCreator().getId();
         }
     }
 }
