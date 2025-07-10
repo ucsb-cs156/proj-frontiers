@@ -10,19 +10,18 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
+let axiosMock = new AxiosMockAdapter(axios);
+
 describe("CoursesIndexPage tests", () => {
-  let axiosMock;
 
   const testId = "InstructorCoursesTable";
 
   beforeEach(() => {
-    axiosMock = new AxiosMockAdapter(axios);
-    jest.clearAllMocks();
+    axiosMock.reset();
+    axiosMock.resetHistory();
   });
 
   const setupInstructorUser = () => {
-    axiosMock.reset();
-    axiosMock.resetHistory();
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.instructorUser);
@@ -32,8 +31,6 @@ describe("CoursesIndexPage tests", () => {
   };
 
   const setupAdminUser = () => {
-    axiosMock.reset();
-    axiosMock.resetHistory();
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.adminUser);
