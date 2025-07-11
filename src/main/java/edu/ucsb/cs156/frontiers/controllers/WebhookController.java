@@ -113,7 +113,7 @@ public class WebhookController {
             updatedStudent.setOrgStatus(OrgStatus.MEMBER);
             log.info("Setting status to MEMBER");
         } else { // must be "member_invited" based on earlier check
-            updatedStudent.setOrgStatus(OrgStatus.INVITED); 
+            updatedStudent.setOrgStatus(OrgStatus.INVITED);
             log.info("Setting status to INVITED");
         }
         
