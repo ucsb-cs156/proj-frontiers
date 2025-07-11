@@ -66,7 +66,6 @@ export default function CoursesTable({ courses, storybook = false }) {
         } else if (cell.value === "INVITED") {
           return (
             <span style={{ color: "green" }}>
-              {" "}
               Invited
               <Button
                 style={{ marginLeft: "8px" }}

@@ -78,7 +78,7 @@ describe("CoursesTable tests", () => {
   });
 
   //tests for button 'Join Course'
-  test("Does not call window.alert in default case", () => {
+  test("Does not call window.alert in default case for button 'Join Course'", () => {
     render(
       <BrowserRouter>
         <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
@@ -96,7 +96,7 @@ describe("CoursesTable tests", () => {
     expect(window.alert).not.toHaveBeenCalled();
   });
 
-  test("Calls window.alert when the button is pressed on storybook", async () => {
+  test("Calls window.alert when the button is pressed on storybook for button 'Join Course'", async () => {
     render(
       <BrowserRouter>
         <CoursesTable
@@ -121,7 +121,7 @@ describe("CoursesTable tests", () => {
     );
   });
 
-  test("Does not call window.alert when storybook is explicitly false", () => {
+  test("Does not call window.alert when storybook is explicitly false for button 'Join Course'", () => {
     render(
       <BrowserRouter>
         <CoursesTable
@@ -143,7 +143,7 @@ describe("CoursesTable tests", () => {
   });
 
   //tests for button 'View Invite'
-  test("Does not call window.alert in default case", () => {
+  test("Does not call window.alert in default case for button'View Invite'", () => {
     render(
       <BrowserRouter>
         <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
@@ -161,7 +161,7 @@ describe("CoursesTable tests", () => {
     expect(window.alert).not.toHaveBeenCalled();
   });
 
-  test("Calls window.alert when the button is pressed on storybook", async () => {
+  test("Calls window.alert when the button is pressed on storybook for button 'View Invite'", async () => {
     render(
       <BrowserRouter>
         <CoursesTable
@@ -188,7 +188,7 @@ describe("CoursesTable tests", () => {
     );
   });
 
-  test("Does not call window.alert when storybook is explicitly false", () => {
+  test("Does not call window.alert when storybook is explicitly false for button 'View Invite'", () => {
     const openMock = jest.spyOn(window, "open").mockImplementation(() => {});
     render(
       <BrowserRouter>
