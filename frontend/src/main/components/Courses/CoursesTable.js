@@ -35,7 +35,6 @@ export default function CoursesTable({ courses, storybook = false }) {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/${organizationName}/invitation`;
 
-
     window.open(gitInvite, "_blank");
   };
 
@@ -46,7 +45,7 @@ export default function CoursesTable({ courses, storybook = false }) {
       accessor: "studentStatus",
       Cell: ({ cell }) => {
         if (cell.value === "PENDING") {
-          return <span style={{ color: "orange" }}>Pending</span>; // Could provide context e.g "Pending. Come back later when the course has been completely set up."
+          return <span style={{ color: "orange" }}>Pending</span>;
         } else if (cell.value === "JOINCOURSE") {
           return (
             <Button
@@ -59,14 +58,14 @@ export default function CoursesTable({ courses, storybook = false }) {
           );
         } else if (cell.value === "INVITED") {
           return (
-              <Button
-                style={{ marginLeft: "8px" }}
-                variant={"primary"}
-                onClick={() => viewInviteCallback(cell)}
-                data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
-              >
-                View Invite
-              </Button>
+            <Button
+              style={{ marginLeft: "8px" }}
+              variant={"primary"}
+              onClick={() => viewInviteCallback(cell)}
+              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+            >
+              View Invite
+            </Button>
           );
         } else if (cell.value === "OWNER") {
           return <span style={{ color: "purple" }}>Owner</span>;
