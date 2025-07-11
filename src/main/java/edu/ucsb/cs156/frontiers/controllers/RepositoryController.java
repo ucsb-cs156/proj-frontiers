@@ -45,10 +45,9 @@ public class RepositoryController extends ApiController {
     * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
     */
     @PostMapping("/createRepos")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
     public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional<Boolean> isPrivate) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-        if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {
             if (course.getOrgName() == null || course.getInstallationId() == null) {
                 throw new NoLinkedOrganizationException(course.getCourseName());
             } else {
@@ -60,8 +59,5 @@ public class RepositoryController extends ApiController {
                         .build();
                 return jobService.runAsJob(job);
             }
-        } else {
-            throw new AccessDeniedException("You do not have permission to create student repositories on this course");
         }
-    }
 }
