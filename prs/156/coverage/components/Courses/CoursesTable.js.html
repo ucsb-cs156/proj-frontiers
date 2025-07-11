@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>27/27</span>
+                <span class='fraction'>24/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>15/15</span>
+                <span class='fraction'>13/13</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>27/27</span>
+                <span class='fraction'>24/24</span>
             </div>
         
             
@@ -149,17 +149,7 @@
 <a name='L84'></a><a href='#L84'>84</a>
 <a name='L85'></a><a href='#L85'>85</a>
 <a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a>
-<a name='L88'></a><a href='#L88'>88</a>
-<a name='L89'></a><a href='#L89'>89</a>
-<a name='L90'></a><a href='#L90'>90</a>
-<a name='L91'></a><a href='#L91'>91</a>
-<a name='L92'></a><a href='#L92'>92</a>
-<a name='L93'></a><a href='#L93'>93</a>
-<a name='L94'></a><a href='#L94'>94</a>
-<a name='L95'></a><a href='#L95'>95</a>
-<a name='L96'></a><a href='#L96'>96</a>
-<a name='L97'></a><a href='#L97'>97</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L87'></a><a href='#L87'>87</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -193,15 +183,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -229,10 +212,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -292,13 +272,6 @@ export default function CoursesTable({ courses, storybook = false }) {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/${organizationName}/invitation`;
 &nbsp;
-    if (storybook) {
-      window.alert(
-        `Join callback invoked for an invite to organization: ${organizationName}`,
-      );
-      return;
-    }
-&nbsp;
     window.open(gitInvite, "_blank");
   };
 &nbsp;
@@ -322,17 +295,14 @@ export default function CoursesTable({ courses, storybook = false }) {
           );
         } else if (cell.value === "INVITED") {
           return (
-            &lt;span style={{ color: "green" }}&gt;
-              Invited
-              &lt;Button
-                style={{ marginLeft: "8px" }}
-                variant={"primary"}
-                onClick={() =&gt; viewInviteCallback(cell)}
-                data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
-              &gt;
-                View Invite
-              &lt;/Button&gt;
-            &lt;/span&gt;
+            &lt;Button
+              style={{ marginLeft: "8px" }}
+              variant={"primary"}
+              onClick={() =&gt; viewInviteCallback(cell)}
+              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+            &gt;
+              View Invite
+            &lt;/Button&gt;
           );
         } else if (cell.value === "OWNER") {
           return &lt;span style={{ color: "purple" }}&gt;Owner&lt;/span&gt;;
@@ -358,7 +328,7 @@ export default function CoursesTable({ courses, storybook = false }) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-11T17:24:53.936Z
+                at 2025-07-11T18:25:58.851Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
