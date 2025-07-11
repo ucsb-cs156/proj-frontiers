@@ -11,7 +11,7 @@ export default function RoleEmailTable({ data, deleteCallback }) {
   ];
 
   return <OurTable 
-      data={Array.isArray(items) ? items : []}
+      data={Array.isArray(data) ? data : []}
       columns={columns} 
       testid={"RoleEmailTable"} />;
 }
