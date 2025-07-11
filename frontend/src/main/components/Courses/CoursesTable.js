@@ -59,7 +59,6 @@ export default function CoursesTable({ courses, storybook = false }) {
         } else if (cell.value === "INVITED") {
           return (
             <Button
-              style={{ marginLeft: "8px" }}
               variant={"primary"}
               onClick={() => viewInviteCallback(cell)}
               data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}

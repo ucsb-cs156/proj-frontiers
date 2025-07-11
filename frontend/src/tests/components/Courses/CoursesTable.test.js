@@ -173,7 +173,6 @@ describe("CoursesTable tests", () => {
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("View Invite");
     expect(button).toHaveAttribute("class", "btn btn-primary");
-    expect(button).toHaveStyle("margin-left: 8px");
   });
 
   test("Does not call window.alert when storybook is explicitly false for button 'View Invite'", () => {
