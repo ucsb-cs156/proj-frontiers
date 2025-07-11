@@ -57,10 +57,6 @@ describe("CoursesTable tests", () => {
     expect(joinCourse).toBeInTheDocument();
     expect(joinCourse).toHaveAttribute("class", "btn btn-primary");
 
-    const invited = screen.getByText("Invited");
-    expect(invited).toBeInTheDocument();
-    expect(invited).toHaveStyle("color: green");
-
     const member = screen.getByText("Member");
     expect(member).toBeInTheDocument();
     expect(member).toHaveStyle("color: blue");
@@ -179,13 +175,6 @@ describe("CoursesTable tests", () => {
     expect(button).toHaveAttribute("class", "btn btn-primary");
     expect(button).toHaveStyle("margin-left: 8px");
 
-    fireEvent.click(button);
-    await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledTimes(1);
-    });
-    expect(window.alert).toHaveBeenCalledWith(
-      "Join callback invoked for an invite to organization: ucsb-cs156-f25",
-    );
   });
 
   test("Does not call window.alert when storybook is explicitly false for button 'View Invite'", () => {

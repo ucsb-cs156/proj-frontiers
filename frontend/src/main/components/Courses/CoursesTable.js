@@ -35,12 +35,6 @@ export default function CoursesTable({ courses, storybook = false }) {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/${organizationName}/invitation`;
 
-    if (storybook) {
-      window.alert(
-        `Join callback invoked for an invite to organization: ${organizationName}`,
-      );
-      return;
-    }
 
     window.open(gitInvite, "_blank");
   };
@@ -65,8 +59,6 @@ export default function CoursesTable({ courses, storybook = false }) {
           );
         } else if (cell.value === "INVITED") {
           return (
-            <span style={{ color: "green" }}>
-              Invited
               <Button
                 style={{ marginLeft: "8px" }}
                 variant={"primary"}
@@ -75,7 +67,6 @@ export default function CoursesTable({ courses, storybook = false }) {
               >
                 View Invite
               </Button>
-            </span>
           );
         } else if (cell.value === "OWNER") {
           return <span style={{ color: "purple" }}>Owner</span>;
