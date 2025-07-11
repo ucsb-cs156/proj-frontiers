@@ -14,7 +14,13 @@ describe("CoursesTable tests", () => {
     );
 
     const expectedHeaders = ["id", "Course Name", "Term", "School", "Status"];
-    const expectedFields = ["id", "courseName", "term", "school", "studentStatus"];
+    const expectedFields = [
+      "id",
+      "courseName",
+      "term",
+      "school",
+      "studentStatus",
+    ];
     const testId = "CoursesTable";
 
     expectedHeaders.forEach((headerText) => {
@@ -66,8 +72,6 @@ describe("CoursesTable tests", () => {
     const unexpected = screen.getByText("Illegal status that will never occur");
     expect(unexpected).toBeInTheDocument();
     expect(unexpected).not.toHaveStyle("color: red");
-
-    
 
     // expect that the mocked window.alert function is not called
     expect(window.alert).not.toHaveBeenCalled();
@@ -138,7 +142,6 @@ describe("CoursesTable tests", () => {
     expect(window.alert).not.toHaveBeenCalled();
   });
 
-  
   //tests for button 'View Invite'
   test("Does not call window.alert in default case", () => {
     render(
@@ -169,12 +172,12 @@ describe("CoursesTable tests", () => {
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-2-col-studentStatus-button", 
+      "CoursesTable-cell-row-2-col-studentStatus-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("View Invite");
     expect(button).toHaveAttribute("class", "btn btn-primary");
-    expect(button).toHaveStyle("margin-left: 8px")
+    expect(button).toHaveStyle("margin-left: 8px");
 
     fireEvent.click(button);
     await waitFor(() => {
@@ -208,7 +211,7 @@ describe("CoursesTable tests", () => {
 
     expect(openMock).toHaveBeenCalledWith(
       "https://github.com/ucsb-cs156-f25/invitation",
-      "_blank"
+      "_blank",
     );
   });
 });

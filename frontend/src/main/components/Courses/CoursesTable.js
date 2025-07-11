@@ -32,24 +32,24 @@ export default function CoursesTable({ courses, storybook = false }) {
   };
 
   const viewInviteCallback = (cell) => {
-    const organizationName = cell.row.original.orgName; 
-    const gitInvite = `https://github.com/${organizationName}/invitation`
+    const organizationName = cell.row.original.orgName;
+    const gitInvite = `https://github.com/${organizationName}/invitation`;
 
-    if(storybook) {
+    if (storybook) {
       window.alert(
         `Join callback invoked for an invite to organization: ${organizationName}`,
-      ); 
+      );
       return;
     }
 
-    window.open(gitInvite, "_blank")
-  }
+    window.open(gitInvite, "_blank");
+  };
 
   const columnsWithStatus = [
     ...columns,
     {
       Header: "Status",
-      accessor: "studentStatus", 
+      accessor: "studentStatus",
       Cell: ({ cell }) => {
         if (cell.value === "PENDING") {
           return <span style={{ color: "orange" }}>Pending</span>; // Could provide context e.g "Pending. Come back later when the course has been completely set up."
@@ -65,14 +65,16 @@ export default function CoursesTable({ courses, storybook = false }) {
           );
         } else if (cell.value === "INVITED") {
           return (
-              <span style={{ color: "green" }}> Invited
-              <Button 
-                style={{marginLeft: "8px"}}
+            <span style={{ color: "green" }}>
+              {" "}
+              Invited
+              <Button
+                style={{ marginLeft: "8px" }}
                 variant={"primary"}
                 onClick={() => viewInviteCallback(cell)}
                 data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
               >
-              View Invite
+                View Invite
               </Button>
             </span>
           );
@@ -82,7 +84,6 @@ export default function CoursesTable({ courses, storybook = false }) {
           return <span style={{ color: "blue" }}>Member</span>;
         }
         return <span>{cell.value}</span>;
-        
       },
     },
   ];
