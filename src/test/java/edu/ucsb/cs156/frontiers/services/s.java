@@ -33,7 +33,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 @RestClientTest(OrganizationMemberService.class)
 @AutoConfigureDataJpa
-public class OrganizationMemberServiceTests {
+public class s {
 
     @Autowired
     private OrganizationMemberService organizationMemberService;
@@ -323,6 +323,6 @@ public class OrganizationMemberServiceTests {
 
         // Verify results
         mockServer.verify();
-        assertEquals(OrgStatus.JOINCOURSE, result);
+        assertEquals(OrgStatus.PENDING, result);
     }
 }

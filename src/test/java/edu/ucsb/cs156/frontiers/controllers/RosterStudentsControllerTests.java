@@ -754,7 +754,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.JOINCOURSE)
                         .githubId(null)  // Not linked yet
                         .githubLogin(null)  // Not linked yet
                         .user(currentUser)  // Current user owns this roster entry
@@ -823,7 +823,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(currentUser.getGithubId())
                         .githubLogin(currentUser.getGithubLogin())
                         .user(currentUser)

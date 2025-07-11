@@ -109,7 +109,7 @@ public class OrganizationMemberService {
             ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);
         } catch (HttpClientErrorException e) {
             log.warn("Error while trying to invite member to organization: {}", e.getMessage());
-            return OrgStatus.NONE;
+            return OrgStatus.JOINCOURSE;
         }
         return OrgStatus.INVITED;
     }

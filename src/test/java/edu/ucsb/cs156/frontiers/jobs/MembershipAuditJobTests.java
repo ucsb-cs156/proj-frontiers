@@ -74,7 +74,7 @@ public class MembershipAuditJobTests {
         RosterStudent student1Updated = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).orgStatus(OrgStatus.MEMBER).build();
         RosterStudent student2Updated = RosterStudent.builder().studentId("apple").githubLogin("division8").githubId(123457).course(course).orgStatus(OrgStatus.MEMBER).build();
         RosterStudent student3Updated = RosterStudent.builder().studentId("banana").githubLogin("division9").githubId(123455).course(course2).orgStatus(OrgStatus.MEMBER).build();
-        RosterStudent student4Updated = RosterStudent.builder().studentId("apple").githubLogin("division10").githubId(123454).course(course2).orgStatus(OrgStatus.NONE).build();
+        RosterStudent student4Updated = RosterStudent.builder().studentId("apple").githubLogin("division10").githubId(123454).course(course2).orgStatus(OrgStatus.PENDING).build();
         RosterStudent student5Updated = RosterStudent.builder().studentId("orange").githubLogin(null).githubId(null).course(course2).build();
         RosterStudent student6Updated = RosterStudent.builder().studentId("grape").githubLogin(null).githubId(123455).course(course3).build();
 
@@ -114,7 +114,7 @@ public class MembershipAuditJobTests {
         Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
         RosterStudent student1 = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).build();
         course.setRosterStudents(List.of(student1));
-        RosterStudent student1Updated = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).orgStatus(OrgStatus.NONE).build();
+        RosterStudent student1Updated = RosterStudent.builder().studentId("banana").githubLogin("division7").githubId(123456).course(course).orgStatus(OrgStatus.PENDING).build();
         when(organizationMemberService.getOrganizationMembers(course)).thenReturn(orgMembers);
         when(organizationMemberService.getOrganizationAdmins(course)).thenReturn(emptyAdmins);
         when(courseRepository.findAll()).thenReturn(List.of(course));
