@@ -72,10 +72,11 @@ public class RosterStudentsController extends ApiController {
     @Autowired
     private CurrentUserService currentUserService;
 
+    public static record UpsertResponse(InsertStatus insertStatus,RosterStudent rosterStudent){}
+
     /**
      * This method creates a new RosterStudent.
-     * 
-     * 
+     * It is important to keep the code in this method consistent with the code for adding multiple roster students from a CSV
      * @return the created RosterStudent
      */
 
@@ -99,13 +100,11 @@ public class RosterStudentsController extends ApiController {
                 .firstName(firstName)
                 .lastName(lastName)
                 .email(email)
-                .course(course)
-                .rosterStatus(RosterStatus.MANUAL)
-                .orgStatus(OrgStatus.PENDING)
                 .build();
-        RosterStudent savedRosterStudent = rosterStudentRepository.save(rosterStudent);
 
-        return savedRosterStudent;
+        UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL); 
+
+        return upsertResponse.rosterStudent; 
     }
 
     /**
@@ -123,6 +122,16 @@ public class RosterStudentsController extends ApiController {
         return rosterStudents;
     }
 
+    /**
+     * Upload Roster students for Course in UCSB Egrades Format
+     * It is important to keep the code in this method consistent with the code for adding a single roster student
+     * @param courseId
+     * @param file
+     * @return
+     * @throws JsonProcessingException
+     * @throws IOException
+     * @throws CsvException
+     */
     @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(value = "/upload/egrades", consumes = { "multipart/form-data" })
@@ -143,7 +152,8 @@ public class RosterStudentsController extends ApiController {
             List<String[]> myEntries = csvReader.readAll();
             for (String[] row : myEntries) {
                 RosterStudent rosterStudent = fromEgradesCSVRow(row);
-                InsertStatus s = upsertStudent(rosterStudent, course);
+                UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
+                InsertStatus s = upsertResponse.insertStatus; 
                 counts[s.ordinal()]++;
             }
         }
@@ -163,13 +173,13 @@ public class RosterStudentsController extends ApiController {
                 .build();
     }
 
-    public InsertStatus upsertStudent(RosterStudent student, Course course) {
+    public UpsertResponse upsertStudent(RosterStudent student, Course course, RosterStatus rosterStatus) {
         Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),
                 student.getStudentId());
         String convertedEmail = student.getEmail().replace("@umail.ucsb.edu", "@ucsb.edu");
         if (existingStudent.isPresent()) {
             RosterStudent existingStudentObj = existingStudent.get();
-            existingStudentObj.setRosterStatus(RosterStatus.ROSTER);
+            existingStudentObj.setRosterStatus(rosterStatus);
             existingStudentObj.setFirstName(student.getFirstName());
             existingStudentObj.setLastName(student.getLastName());
             if (!existingStudentObj.getEmail().equals(convertedEmail)) {
@@ -177,15 +187,20 @@ public class RosterStudentsController extends ApiController {
             }
             existingStudentObj = rosterStudentRepository.save(existingStudentObj);
             updateUserService.attachUserToRosterStudent(existingStudentObj);
-            return InsertStatus.UPDATED;
+            return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
         } else {
             student.setCourse(course);
             student.setEmail(convertedEmail);
-            student.setRosterStatus(RosterStatus.ROSTER);
-            student.setOrgStatus(OrgStatus.PENDING);
+            student.setRosterStatus(rosterStatus);
+            //if an installationID exists, orgStatus should be set to JOINCOURSE. if it doesn't exist (null), set orgStatus to PENDING.
+            if(course.getInstallationId() != null) {
+                student.setOrgStatus(OrgStatus.JOINCOURSE);
+            } else {
+                student.setOrgStatus(OrgStatus.PENDING);
+            }
             student = rosterStudentRepository.save(student);
             updateUserService.attachUserToRosterStudent(student);
-            return InsertStatus.INSERTED;
+            return new UpsertResponse(InsertStatus.INSERTED, student);
         }
     }
 
@@ -209,27 +224,27 @@ public class RosterStudentsController extends ApiController {
         }
     }
 
-    @Operation(summary = "Link a Roster Student to a Github Account")
+    @Operation(summary = "Allow roster student to join a course by generating an invitation to the linked Github Org")
     @PreAuthorize("hasRole('ROLE_USER')")
-    @PutMapping("/linkGitHub")
-    public ResponseEntity<String> linkGitHub(
+    @PutMapping("/joinCourse")
+    public ResponseEntity<String> joinCourseOnGitHub(
             @Parameter(name = "rosterStudentId", description = "Roster Student to be linked to") @RequestParam Long rosterStudentId) {
         User currentUser = currentUserService.getUser();
         RosterStudent rosterStudent = rosterStudentRepository.findById(rosterStudentId)
                 .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, rosterStudentId));
 
         if (rosterStudent.getUser() == null || currentUser.getId() != rosterStudent.getUser().getId()) {
-            throw new AccessDeniedException("User not authorized to link this roster student");
+            throw new AccessDeniedException("User not authorized join the course as this roster student");
         }
 
         if ((rosterStudent.getGithubId() != null && rosterStudent.getGithubId() != 0) && rosterStudent.getGithubLogin() != null) {
-            return ResponseEntity.badRequest().body("This roster student is already linked to a GitHub account");
+            return ResponseEntity.badRequest().body("This roster student has already joined the course with a GitHub account.");
         }
 
         rosterStudent.setGithubId(currentUser.getGithubId());
         rosterStudent.setGithubLogin(currentUser.getGithubLogin());
         rosterStudentRepository.save(rosterStudent);
-        return ResponseEntity.ok("Successfully linked GitHub account to roster student");
+        return ResponseEntity.ok("Successfully joined the course with Github account.");
     }
 
     @Operation(summary = "Get Associated Roster Students with a User")

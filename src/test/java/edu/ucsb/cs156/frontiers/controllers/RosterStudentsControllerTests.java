@@ -79,6 +79,15 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .school("UCSB")
                         .build();
 
+        Course course2 = Course.builder()
+                        .id(2L)
+                        .courseName("CS156")
+                        .orgName("ucsb-cs156-s25")
+                        .term("S25")
+                        .school("UCSB")
+                        .installationId("12345")
+                        .build();
+
         RosterStudent rs1 = RosterStudent.builder()
                         .firstName("Chris")
                         .lastName("Gaucho")
@@ -99,7 +108,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .rosterStatus(RosterStatus.ROSTER)
                         .orgStatus(OrgStatus.PENDING)
                         .build();
-
         /**
          * Test the POST endpoint
          */
@@ -131,6 +139,72 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(rs1);
                 assertEquals(expectedJson, responseString);
 
+        }
+
+        /**
+         * Test the POST endpoint when installation ID is null. 
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testPostRosterStudentWithNoInstallationId() throws Exception {
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+
+                ArgumentCaptor<RosterStudent> rosterStudentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
+                when(rosterStudentRepository.save(any(RosterStudent.class))).thenAnswer(invocation -> invocation.getArgument(0)); 
+
+                // act
+        
+                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
+                        .with(csrf())
+                        .param("studentId", "A123456")
+                        .param("firstName", "Chris")
+                        .param("lastName", "Gaucho")
+                        .param("email", "cgaucho@example.org")
+                        .param("courseId", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // assert
+                verify(courseRepository, times(1)).findById(eq(1L));
+                verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor.capture());
+
+                RosterStudent rosterStudentSaved = rosterStudentCaptor.getValue(); 
+                assertEquals(OrgStatus.PENDING, rosterStudentSaved.getOrgStatus());
+        }
+
+         /**
+         * Test the POST endpoint when installation ID exists. 
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testPostRosterStudentWithInstallationId() throws Exception {
+
+                when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(course2));
+
+                ArgumentCaptor<RosterStudent> rosterStudentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
+                when(rosterStudentRepository.save(any(RosterStudent.class))).thenAnswer(invocation -> invocation.getArgument(0)); 
+
+                // act
+        
+                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
+                        .with(csrf())
+                        .param("studentId", "A123456")
+                        .param("firstName", "Chris")
+                        .param("lastName", "Gaucho")
+                        .param("email", "cgaucho@example.org")
+                        .param("courseId", "2"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // assert
+                verify(courseRepository, times(1)).findById(eq(2L));
+                verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor.capture());
+
+                RosterStudent rosterStudentSaved = rosterStudentCaptor.getValue(); 
+                assertEquals(OrgStatus.JOINCOURSE, rosterStudentSaved.getOrgStatus());
         }
 
         /**
@@ -458,11 +532,11 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         }
 
         /**
-         * Tests for the linkGitHub endpoint
+         * Tests for the joinCourseOnGitHub endpoint
          */
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_success() throws Exception {
+        public void testJoinCourseGitHub_success() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
 
@@ -475,9 +549,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
                         .orgStatus(OrgStatus.PENDING)
-                        .githubId(0)  // Not linked yet
-                        .githubLogin(null)  // Not linked yet
-                        .user(currentUser)  // Current user owns this roster entry
+                        .githubId(0)  
+                        .githubLogin(null) 
+                        .user(currentUser) 
                         .build();
 
                 RosterStudent rosterStudentUpdated = RosterStudent.builder()
@@ -497,7 +571,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "3"))
                         .andExpect(status().isOk())
@@ -510,17 +584,17 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // Verify the GitHub ID and login were set
                 verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
 
-                assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
+                assertEquals("Successfully joined the course with Github account.", response.getResponse().getContentAsString());
         }
 
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_notFound() throws Exception {
+        public void testJoinCourseOnGitHub_notFound() throws Exception {
                 // Arrange
                 when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "99"))
                         .andExpect(status().isNotFound())
@@ -540,7 +614,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_unauthorized() throws Exception {
+        public void testJoinCourseOnGitHub_unauthorized() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
 
@@ -563,7 +637,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(4L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act & Assert
-                mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "4"))
                         .andExpect(status().isForbidden());
@@ -574,7 +648,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_alreadyLinked() throws Exception {
+        public void testJoinCourseOnGitHub_alreadyJoined() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
 
@@ -595,7 +669,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(5L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "5"))
                         .andExpect(status().isBadRequest())
@@ -605,12 +679,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository).findById(eq(5L));
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
-                assertEquals("This roster student is already linked to a GitHub account", response.getResponse().getContentAsString());
+                assertEquals("This roster student has already joined the course with a GitHub account.", response.getResponse().getContentAsString());
         }
 
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_success_no_login_only() throws Exception {
+        public void testJoinCourseOnGitHub_success_no_login_only() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
 
@@ -623,9 +697,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
                         .orgStatus(OrgStatus.PENDING)
-                        .githubId(123456789)  // Not linked yet
-                        .githubLogin(null)  // Not linked yet
-                        .user(currentUser)  // Current user owns this roster entry
+                        .githubId(123456789)  
+                        .githubLogin(null) 
+                        .user(currentUser) 
                         .build();
 
                 RosterStudent rosterStudentUpdated = RosterStudent.builder()
@@ -645,7 +719,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "3"))
                         .andExpect(status().isOk())
@@ -658,7 +732,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // Verify the GitHub ID and login were set
                 verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
 
-                assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
+                assertEquals("Successfully joined the course with Github account.", response.getResponse().getContentAsString());
         }
 
         @Test
@@ -1116,7 +1190,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_nullUser() throws Exception {
+        public void testJoinCourseOnGitHub_nullUser() throws Exception {
                 // Arrange
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(6L)
@@ -1133,7 +1207,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(6L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act & Assert
-                mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "6"))
                         .andExpect(status().isForbidden());
@@ -1144,7 +1218,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_githubLoginNoId() throws Exception {
+        public void testJoinCourseOnGitHub_githubLoginNoId() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
 
@@ -1180,7 +1254,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "8"))
                         .andExpect(status().isOk())
@@ -1190,7 +1264,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository).findById(eq(8L));
                 verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
 
-                assertEquals("Successfully linked GitHub account to roster student", response.getResponse().getContentAsString());
+                assertEquals("Successfully joined the course with Github account.", response.getResponse().getContentAsString());
         }
 
         @Test
