@@ -57,7 +57,15 @@ export default function AppNavbar({
                   data-testid="appnavbar-admin-dropdown"
                 >
                   <NavDropdown.Item href="/admin/users">Users</NavDropdown.Item>
-                  <NavDropdown.Item href="/admin/courses">
+                </NavDropdown>
+              )}
+              {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
+                <NavDropdown
+                  title="Instructor"
+                  id="appnavbar-instructor-dropdown"
+                  data-testid="appnavbar-instructor-dropdown"
+                >
+                  <NavDropdown.Item href="/instructor/courses">
                     Courses
                   </NavDropdown.Item>
                 </NavDropdown>

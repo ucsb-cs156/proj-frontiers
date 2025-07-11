@@ -1,9 +1,10 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
+import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -20,12 +21,15 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
 
     private final UserRepository userRepository;
 
-    @Value("${app.admin.emails}")
-    private final List<String> adminEmails = new ArrayList<>();
+    private final AdminRepository adminEmails;
+
+    private final InstructorRepository instructorEmails;
 
     @Autowired
-    public GoogleSignInServiceImpl(UserRepository userRepository) {
+    public GoogleSignInServiceImpl(UserRepository userRepository, AdminRepository adminRepository, InstructorRepository instructorRepository) {
         this.userRepository = userRepository;
+        this.adminEmails = adminRepository;
+        this.instructorEmails = instructorRepository;
     }
 
     @Override
@@ -40,14 +44,10 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
         boolean changed = false;
         if (currentUser.isPresent()) {
             User user = currentUser.get();
-            if (user.getAdmin()) {
+            if(adminEmails.existsByEmail(user.getEmail())) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-            } else if (adminEmails.contains(user.getEmail())) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                user.setAdmin(true);
-                changed = true;
-            } else if (user.getProfessor()) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_PROFESSOR"));
+            } else if (instructorEmails.existsByEmail(user.getEmail())) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"));
             } else {
                 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
             }
@@ -61,6 +61,10 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
             }
             if (!user.getGivenName().equals(oidcUser.getGivenName())) {
                 user.setGivenName(oidcUser.getGivenName());
+                changed = true;
+            }
+            if(!user.getFamilyName().equals(oidcUser.getFamilyName())) {
+                user.setFamilyName(oidcUser.getFamilyName());
                 changed = true;
             }
             if (!user.getPictureUrl().equals(oidcUser.getPicture())) {
@@ -80,11 +84,13 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
                     .fullName(oidcUser.getFullName())
                     .email(oidcUser.getEmail())
                     .givenName(oidcUser.getGivenName())
+                    .familyName(oidcUser.getFamilyName())
                     .pictureUrl(oidcUser.getPicture())
                     .build();
-            if (adminEmails.contains(oidcUser.getEmail())) {
-                newUser.setAdmin(true);
+            if (adminEmails.existsByEmail(oidcUser.getEmail())) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            } else if (instructorEmails.existsByEmail(newUser.getEmail())) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"));
             } else {
                 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
             }

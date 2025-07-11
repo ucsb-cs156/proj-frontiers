@@ -103,7 +103,6 @@ public class RosterStudentsController extends ApiController {
                 .build();
 
         UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL); 
-
         return upsertResponse.rosterStudent; 
     }
 
@@ -204,7 +203,7 @@ public class RosterStudentsController extends ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/updateCourseMembership")
     public Job updateCourseMembership(
             @Parameter(name = "courseId", description = "Course ID") @RequestParam Long courseId)
@@ -226,9 +225,11 @@ public class RosterStudentsController extends ApiController {
 
     @Operation(summary = "Allow roster student to join a course by generating an invitation to the linked Github Org")
     @PreAuthorize("hasRole('ROLE_USER')")
+
     @PutMapping("/joinCourse")
     public ResponseEntity<String> joinCourseOnGitHub(
-            @Parameter(name = "rosterStudentId", description = "Roster Student to be linked to") @RequestParam Long rosterStudentId) {
+            @Parameter(name = "rosterStudentId", description = "Roster Student joining a course on GitHub") @RequestParam Long rosterStudentId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
         User currentUser = currentUserService.getUser();
         RosterStudent rosterStudent = rosterStudentRepository.findById(rosterStudentId)
                 .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, rosterStudentId));
@@ -241,10 +242,20 @@ public class RosterStudentsController extends ApiController {
             return ResponseEntity.badRequest().body("This roster student has already joined the course with a GitHub account.");
         }
 
+
+        if(rosterStudent.getCourse().getOrgName() == null || rosterStudent.getCourse().getInstallationId() == null) {
+            return ResponseEntity.badRequest().body("Course has not been set up. Please ask your instructor for help.");
+        }
         rosterStudent.setGithubId(currentUser.getGithubId());
         rosterStudent.setGithubLogin(currentUser.getGithubLogin());
+        OrgStatus status = organizationMemberService.inviteOrganizationMember(rosterStudent);
+        rosterStudent.setOrgStatus(status);
         rosterStudentRepository.save(rosterStudent);
-        return ResponseEntity.ok("Successfully joined the course with Github account.");
+        if(status == OrgStatus.INVITED){
+            return ResponseEntity.accepted().body("Successfully invited student to Organization");
+        }else{
+            return ResponseEntity.internalServerError().body("Could not invite student to Organization");
+        }
     }
 
     @Operation(summary = "Get Associated Roster Students with a User")

@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,12 +22,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.test.web.servlet.MvcResult;
 
 
 /**
@@ -54,6 +60,15 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
   @MockitoBean
   JobService jobService;
+
+  @MockitoBean
+  RosterStudentRepository rosterStudentRepository;
+
+  @MockitoBean
+  CourseRepository courseRepository;
+
+  @MockitoBean
+  OrganizationMemberService organizationMemberService;
 
   @Autowired
   ObjectMapper objectMapper;
@@ -87,7 +102,41 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     // assert
 
     verify(jobService, times(1)).runAsJob(any(UpdateAllJob.class));
-    
+
+  }
+
+  @WithMockUser(roles = { "ADMIN" })
+  @Test
+  public void admin_can_launch_auditAllCourses_job() throws Exception {
+
+    // arrange
+
+    User user = currentUserService.getUser();
+
+    Job jobStarted = Job.builder()
+        .id(0L)
+        .createdBy(user)
+        .createdAt(null)
+        .updatedAt(null)
+        .status("started")
+        .build();
+
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
+
+    when(jobService.runAsJob (any(MembershipAuditJob.class))).thenReturn(jobStarted);
+
+
+    // act
+    MvcResult result = mockMvc
+        .perform(post("/api/jobs/launch/auditAllCourses").with(csrf()))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    // assert
+
+    String response = result.getResponse().getContentAsString();
+    verify(jobService, times(1)).runAsJob(any(MembershipAuditJob.class));
+      assertEquals(expectedResponse, response);
   }
 
 }

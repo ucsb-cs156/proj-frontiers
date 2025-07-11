@@ -3,6 +3,7 @@ Next, we'll set up the Github App. To do so, go to https://github.com/
 Then, click your profile icon. Click "Settings". Then, Click "Developer Settings", on the bottom of the toolbar on the left.
 
 Select "New Github App". Fill in an appropriate name, and write it down. You will need it later.
+
 ![image](https://github.com/user-attachments/assets/3d0fe501-318c-4907-a267-eff44f06f17a)
 
 
@@ -12,16 +13,25 @@ For the homepage url, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.ed
 
 
 
-For Callback URLs, select "Add Callback URL"
+Next to the heading for `Identifying and authorizing users`, find the button "Add Callback URL", and click it once.
+
+You should now see two spaces to add Callback URLs, like this:
+
+<img width="878" alt="image" src="https://github.com/user-attachments/assets/1f3bcf9b-113e-4d72-bc0f-f5687b63e172" />
 
 
-In the first callback URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/courses/link`. For the second URL, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github`, replacing appname with the name of your app, and dokku-number with your dokku installation.
+Fill in the two callback URLs with these values:
+```
+https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/courses/link
+https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github
+```
+Replacing `<appname>` with the name of your app, and `<dokku-number>` with your dokku installation.
 
+Then, click the checkbox for "Request user authorization (OAuth) during installation"
 
+As an example, when filled it, it might look like this:
 
-Click the checkbox for "Request user authorization (OAuth) during installation"
-
-![image](https://github.com/user-attachments/assets/bd58b939-6c3f-481a-a7f5-a118f65acc1b)
+<img width="898" alt="image" src="https://github.com/user-attachments/assets/ee58c776-0e1d-4290-b278-8ea4d87884f0" />
 
 
 Scroll further and under webhooks, fill in the following url where *appname* is your appname and *xx* is your dokku server:

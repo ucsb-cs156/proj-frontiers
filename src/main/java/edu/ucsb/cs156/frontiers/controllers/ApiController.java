@@ -1,11 +1,15 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+
+import org.checkerframework.checker.units.qual.Current;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -13,6 +17,7 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -24,6 +29,8 @@ public abstract class ApiController {
   @Autowired
   private CurrentUserService currentUserService;
 
+  @Autowired RoleHierarchy roleHierarchy;
+
   /**
    * This method returns the current user.
    * @return the current user
@@ -31,6 +38,32 @@ public abstract class ApiController {
   protected CurrentUser getCurrentUser() {
     return currentUserService.getCurrentUser();
   }
+
+/**
+   * This method checks if the current user has the given role
+   * @return true if the current user has the role, false otherwise
+   * @param role the role to check
+   */
+  protected boolean doesCurrentUserHaveRole(
+      String roleToCheck
+    ) {  
+    CurrentUser currentUser = getCurrentUser();    
+    Collection<? extends GrantedAuthority> authorities = currentUser.getRoles();
+
+    Collection<? extends GrantedAuthority> extendedAuthorities = roleHierarchy.getReachableGrantedAuthorities(authorities);
+
+    return extendedAuthorities.stream()
+         .anyMatch(role -> role.getAuthority().equals(roleToCheck));
+  }
+
+  /**
+   * This method checks if the current user is an admin.
+   * @return true if the current user is an admin, false otherwise
+   */
+  protected boolean isCurrentUserAdmin() {  
+    return doesCurrentUserHaveRole("ROLE_ADMIN");
+  }
+
 
   /**
    * This method returns a generic message.

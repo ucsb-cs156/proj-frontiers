@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.checkerframework.checker.units.qual.Current;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +31,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.util.List;
+import java.util.ArrayList;
+
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
@@ -43,6 +50,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,12 +73,13 @@ public class CoursesController extends ApiController {
     private RosterStudentRepository rosterStudentRepository;
 
     @Autowired
-    private OrganizationLinkerService linkerService;
+    private CourseStaffRepository courseStaffRepository;
+
+    @Autowired private OrganizationLinkerService linkerService;
 
     /**
      * This method creates a new Course.
      * 
-     * @param orgName    the name of the organization
      * @param courseName the name of the course
      * @param term       the term of the course
      * @param school     the school of the course
@@ -77,17 +87,15 @@ public class CoursesController extends ApiController {
      */
 
     @Operation(summary = "Create a new course")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/post")
     public Course postCourse(
-            @Parameter(name = "orgName") @RequestParam String orgName,
             @Parameter(name = "courseName") @RequestParam String courseName,
             @Parameter(name = "term") @RequestParam String term,
             @Parameter(name = "school") @RequestParam String school) {
         // get current date right now and set status to pending
         CurrentUser currentUser = getCurrentUser();
         Course course = Course.builder()
-                .orgName(orgName)
                 .courseName(courseName)
                 .term(term)
                 .school(school)
@@ -98,17 +106,65 @@ public class CoursesController extends ApiController {
         return savedCourse;
     }
 
+
+    /**
+     * Projection of Course entity with fields that are relevant for instructors
+     * and admins
+     */
+    public static record InstructorCourseView(
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            Long createdByUserId,
+            String createdByEmail) {
+
+        
+        // Creates view from Course entity and student email
+        public InstructorCourseView(Course c) {
+            this(
+                c.getId(),
+                c.getInstallationId(),
+                c.getOrgName(),
+                c.getCourseName(),
+                c.getTerm(),
+                c.getSchool(),
+                c.getCreator() != null ? c.getCreator().getId() : null,
+                c.getCreator() != null ? c.getCreator().getEmail() : null
+            );
+        }
+    }
+
     /**
      * This method returns a list of courses.
      * 
      * @return a list of all courses.
      */
     @Operation(summary = "List all courses")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("/all")
-    public Iterable<Course> allCourses() {
-        Iterable<Course> courses = courseRepository.findAll();
-        return courses;
+    public Iterable<InstructorCourseView> allCourses() {
+        List<Course> courses = null;
+        if (!isCurrentUserAdmin()) {
+            // if the user is not an admin, return only the courses they created
+            CurrentUser currentUser = getCurrentUser();
+            Long userId = currentUser.getUser().getId();
+            courses = courseRepository.findByCreatorId(userId);
+            // Convert to InstructorCourseView
+            List<InstructorCourseView> courseViews = courses.stream()
+                    .map(InstructorCourseView::new)
+                    .collect(Collectors.toList());
+            // Return as Iterable
+            return courseViews;
+        } else {
+            courses = courseRepository.findAll();
+        }
+        List<InstructorCourseView> courseViews = courses.stream()
+                    .map(InstructorCourseView::new)
+                    .collect(Collectors.toList());
+        return courseViews;
     }
 
     /**
@@ -127,7 +183,7 @@ public class CoursesController extends ApiController {
      *
      */
     @Operation(summary = "Authorize Frontiers to a Github Course")
-    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("/redirect")
     public ResponseEntity<Void> linkCourse(@Parameter Long courseId)
             throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -152,8 +208,9 @@ public class CoursesController extends ApiController {
      *         install the application on GitHub. Alternately returns 403 Forbidden
      *         if the user is not the creator.
      */
+
     @Operation(summary = "Link a Course to a Github Organization by installing Github App")
-    @PreAuthorize("hasRole('ROLE_PROFESSOR')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("link")
     public ResponseEntity<Void> addInstallation(
             @Parameter(name = "installationId") @RequestParam Optional<String> installation_id,
@@ -167,7 +224,7 @@ public class CoursesController extends ApiController {
         } else {
             Course course = courseRepository.findById(state)
                     .orElseThrow(() -> new EntityNotFoundException(Course.class, state));
-            if (!(course.getCreator().getId() == getCurrentUser().getUser().getId())) {
+            if (!isCurrentUserAdmin() && !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             } else {
                 String orgName = linkerService.getOrgName(installation_id.get());
@@ -175,7 +232,7 @@ public class CoursesController extends ApiController {
                 course.setOrgName(orgName);
                 courseRepository.save(course);
                 return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
-                        .header(HttpHeaders.LOCATION, "/admin/courses?success=True&course=" + state).build();
+                        .header(HttpHeaders.LOCATION, "/instructor/courses?success=True&course=" + state).build();
             }
         }
     }
@@ -222,6 +279,32 @@ public class CoursesController extends ApiController {
                     return response;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * student see what courses they appear as staff in
+     * 
+     * @param studentId the id of the student making request
+     * @return a list of all courses student is staff in
+     */
+    @Operation(summary= "Student see what courses they appear as staff in")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/staffCourses") 
+    public Iterable<Course> staffCourses() {
+        CurrentUser currentUser = getCurrentUser();
+        User user = currentUser.getUser();
+
+        String email = user.getEmail();
+
+        Iterable<CourseStaff> staffs = courseStaffRepository.findAllByEmail(email);
+        
+        List<Long> courseIds = new ArrayList<>();
+        for (CourseStaff staff : staffs) {
+            courseIds.add(staff.getCourse().getId());
+        }
+
+        Iterable<Course> courses = courseRepository.findAllById(courseIds);
+        return courses;
     }
 
 }

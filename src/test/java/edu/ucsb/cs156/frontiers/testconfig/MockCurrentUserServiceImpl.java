@@ -18,7 +18,7 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
         String pictureUrl = "https://example.org/fake.jpg";
         String fullName = "Fake User";
         String givenName = "Fake";
-        boolean admin = false;
+        String familyName = "User";
 
         org.springframework.security.core.userdetails.User user = null;
 
@@ -30,7 +30,7 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
             pictureUrl = "https://example.org/" + user.getUsername() + ".jpg";
             fullName = "Fake " + user.getUsername();
             givenName = "Fake";
-            admin = (user.getUsername().equals("admin"));
+            familyName = user.getUsername();
         } else if (principal instanceof OAuth2User) {
             OAuth2User oAuth2User = (OAuth2User) principal;
             googleSub = oAuth2User.getAttribute("sub");
@@ -38,9 +38,7 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
             pictureUrl = oAuth2User.getAttribute("picture");
             fullName = oAuth2User.getAttribute("name");
             givenName = oAuth2User.getAttribute("givenname");
-            if (givenName !=null && givenName.equals("admin")) {
-                admin = true;
-            }
+            familyName = oAuth2User.getAttribute("familyname");
 
         }
 
@@ -50,7 +48,7 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
                 .pictureUrl(pictureUrl)
                 .fullName(fullName)
                 .givenName(givenName)
-                .admin(admin)
+                .familyName(familyName)
                 .githubLogin("fake_login")
                 .githubId(123456789)
                 .id(1L)

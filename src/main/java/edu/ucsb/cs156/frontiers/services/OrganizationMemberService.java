@@ -5,13 +5,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.NoSuchAlgorithmException;
@@ -23,22 +29,41 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class OrganizationMemberService {
 
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
+    private final RosterStudentRepository rosterStudentRepository;
 
-    public OrganizationMemberService(JwtService jwtService, ObjectMapper objectMapper, RestTemplateBuilder builder) {
+    public OrganizationMemberService(JwtService jwtService, ObjectMapper objectMapper, RestTemplateBuilder builder, RosterStudentRepository rosterStudentRepository) {
         this.jwtService = jwtService;
         this.objectMapper = objectMapper;
+        this.rosterStudentRepository = rosterStudentRepository;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.restTemplate = builder.build();
     }
 
+
+    /**
+    * This endpoint returns the list of **members**, not admins for the organization. This is so that the roles are known for the return values.
+    */
     public Iterable<OrgMember> getOrganizationMembers(Course course) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members";
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members?role=member";
+        return getOrganizationMembersWithRole(course, ENDPOINT);
+    }
+
+    /**
+    * This endpoint returns the list of **admins** for the organization. This is so that the roles are known for the return values.
+    */
+    public Iterable<OrgMember> getOrganizationAdmins(Course course) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members?role=admin";
+        return getOrganizationMembersWithRole(course, ENDPOINT);
+    }
+
+    private Iterable<OrgMember> getOrganizationMembersWithRole(Course course, String ENDPOINT) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         //happily stolen directly from GitHub: https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28
         Pattern pattern = Pattern.compile("(?<=<)([\\S]*)(?=>; rel=\"next\")");
         String token = jwtService.getInstallationToken(course);
@@ -61,5 +86,31 @@ public class OrganizationMemberService {
         orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference<List<OrgMember>>() {
         }));
         return orgMembers;
+    }
+
+    public OrgStatus inviteOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        Course course = student.getCourse();
+        return inviteMember(student.getGithubId(), course, "direct_member");
+    }
+
+    private OrgStatus inviteMember(int githubId, Course course, String role) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/invitations";
+        HttpHeaders headers = new HttpHeaders();
+        String token = jwtService.getInstallationToken(course);
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Accept", "application/vnd.github+json");
+        headers.add("X-GitHub-Api-Version", "2022-11-28");
+        Map<String, Object> body = new HashMap<>();
+        body.put("invitee_id", githubId);
+        body.put("role", role);
+        String bodyAsJson = objectMapper.writeValueAsString(body);
+        HttpEntity<String> entity = new HttpEntity<>(bodyAsJson, headers);
+        try{
+            ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);
+        } catch (HttpClientErrorException e) {
+            log.warn("Error while trying to invite member to organization: {}", e.getMessage());
+            return OrgStatus.NONE;
+        }
+        return OrgStatus.INVITED;
     }
 }

@@ -2,11 +2,11 @@ import React from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import AdminCoursesTable from "main/components/Courses/AdminCoursesTable";
-import { useCurrentUser, hasRole } from "main/utils/currentUser";
+import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
+import { useCurrentUser } from "main/utils/currentUser";
 
 export default function CoursesIndexPage() {
-  const currentUser = useCurrentUser();
+  const { data: currentUser } = useCurrentUser();
 
   const {
     data: courses,
@@ -24,10 +24,7 @@ export default function CoursesIndexPage() {
     <BasicLayout>
       <div className="pt-2">
         <h1>Courses</h1>
-        <AdminCoursesTable
-          courses={courses}
-          showInstallButton={hasRole(currentUser, "ROLE_ADMIN")}
-        />
+        <InstructorCoursesTable courses={courses} currentUser={currentUser} />
       </div>
     </BasicLayout>
   );

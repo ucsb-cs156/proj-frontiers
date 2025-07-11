@@ -35,9 +35,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.controllers.CoursesController.InstructorCourseView;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
@@ -46,6 +48,9 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -68,19 +73,21 @@ public class CoursesControllerTests extends ControllerTestCase {
         @MockitoBean
         private RosterStudentRepository rosterStudentRepository;
 
+        @MockitoBean
+        private CourseStaffRepository courseStaffRepository;
+
         /**
-         * Test the POST endpoint
+         * Test that ROLE_ADMIN can create a course
          */
         @Test
         @WithMockUser(roles = { "ADMIN" })
-        public void testPostCourse() throws Exception {
+        public void testPostCourse_byAdmin() throws Exception {
 
                 User user = currentUserService.getCurrentUser().getUser();
 
                 // arrange
                 Course course = Course.builder()
                                 .courseName("CS156")
-                                .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
                                 .creator(user)
@@ -92,7 +99,6 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 MvcResult response = mockMvc.perform(post("/api/courses/post")
                                 .with(csrf())
-                                .param("orgName", "ucsb-cs156-s25")
                                 .param("courseName", "CS156")
                                 .param("term", "S25")
                                 .param("school", "UCSB"))
@@ -110,27 +116,67 @@ public class CoursesControllerTests extends ControllerTestCase {
         }
 
         /**
-         * Test the GET endpoint
+         * Test that ROLE_INSTRUCTOR can create a course
+         */
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testPostCourse_byInstructor() throws Exception {
+
+                User user = currentUserService.getCurrentUser().getUser();
+
+                // arrange
+                Course course = Course.builder()
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(user)
+                                .build();
+
+                when(courseRepository.save(any(Course.class))).thenReturn(course);
+
+                // act
+
+                MvcResult response = mockMvc.perform(post("/api/courses/post")
+                                .with(csrf())
+                                .param("courseName", "CS156")
+                                .param("term", "S25")
+                                .param("school", "UCSB"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+
+                verify(courseRepository, times(1)).save(eq(course));
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(course);
+                assertEquals(expectedJson, responseString);
+
+        }
+
+        /**
+         * Test the GET all endpoint for courses
          */
 
         @Test
         @WithMockUser(roles = { "ADMIN" })
-        public void testAllCourses() throws Exception {
+        public void testAllCourses_ROLE_ADMIN() throws Exception {
 
                 // arrange
                 Course course1 = Course.builder()
                                 .courseName("CS156")
-                                .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
                                 .build();
 
+                InstructorCourseView courseView1 = new InstructorCourseView(course1);
+
                 Course course2 = Course.builder()
                                 .courseName("CS148")
-                                .orgName("ucsb-cs148-s25")
                                 .term("S25")
                                 .school("UCSB")
                                 .build();
+                InstructorCourseView courseView2 = new InstructorCourseView(course2);
 
                 when(courseRepository.findAll()).thenReturn(java.util.List.of(course1, course2));
 
@@ -143,7 +189,43 @@ public class CoursesControllerTests extends ControllerTestCase {
                 // assert
 
                 String responseString = response.getResponse().getContentAsString();
-                String expectedJson = mapper.writeValueAsString(java.util.List.of(course1, course2));
+                String expectedJson = mapper.writeValueAsString(java.util.List.of(courseView1, courseView2));
+                assertEquals(expectedJson, responseString);
+        }
+
+        /**
+         * Test the GET endpoint
+         */
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testAllCourses_ROLE_INSTRUCTOR() throws Exception {
+
+                User user = currentUserService.getCurrentUser().getUser();
+
+                // arrange
+                Course course1 = Course.builder()
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(user)
+                                .build();
+
+                InstructorCourseView courseView1 = new InstructorCourseView(course1);
+
+                when(courseRepository.findByCreatorId(eq(user.getId()))).thenReturn(java.util.List.of(course1));
+
+                // act
+
+                MvcResult response = mockMvc.perform(get("/api/courses/all"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(java.util.List.of(courseView1));
+                verify(courseRepository, times(1)).findByCreatorId(eq(user.getId()));
                 assertEquals(expectedJson, responseString);
         }
 
@@ -197,7 +279,44 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
                 verify(courseRepository, times(1)).save(eq(course2));
-                assertEquals("/admin/courses?success=True&course=1", responseUrl);
+                assertEquals("/instructor/courses?success=True&course=1", responseUrl);
+        }
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testLinkCourseSuccessfullyProfessorCreator() throws Exception {
+                User user = currentUserService.getCurrentUser().getUser();
+                Course course1 = Course.builder()
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(user)
+                                .id(1L)
+                                .build();
+                Course course2 = Course.builder()
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(user)
+                                .installationId("1234")
+                                .orgName("ucsb-cs156-s25")
+                                .id(1L)
+                                .build();
+
+                doReturn(Optional.of(course1)).when(courseRepository).findById(eq(1L));
+                doReturn("ucsb-cs156-s25").when(linkerService).getOrgName("1234");
+                MvcResult response = mockMvc.perform(get("/api/courses/link")
+                                .param("installation_id", "1234")
+                                .param("setup_action", "install")
+                                .param("code", "abcdefg")
+                                .param("state", "1"))
+                                .andExpect(status().isMovedPermanently())
+                                .andReturn();
+
+                String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
+                verify(courseRepository, times(1)).save(eq(course2));
+                assertEquals("/instructor/courses?success=True&course=1", responseUrl);
         }
 
         @Test
@@ -216,7 +335,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         }
 
         @Test
-        @WithMockUser(roles = { "ADMIN" })
+        @WithMockUser(roles = { "INSTRUCTOR" })
         public void testNotCreator() throws Exception {
                 User separateUser = User.builder().id(2L).build();
                 Course course1 = Course.builder()
@@ -236,6 +355,45 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .param("state", "1"))
                                 .andExpect(status().isForbidden())
                                 .andReturn();
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testCourseLinkSuccessWhenAdminNotCreator() throws Exception {
+                User user = currentUserService.getCurrentUser().getUser();
+                Long userId = user.getId();
+                User separateUser = User.builder().id(userId + 1L).build();
+                Course courseBefore = Course.builder()
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(separateUser)
+                                .id(1L)
+                                .build();
+                Course courseAfter = Course.builder()
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(separateUser)
+                                .installationId("1234")
+                                .orgName("ucsb-cs156-s25")
+                                .id(1L)
+                                .build();
+
+                doReturn(Optional.of(courseBefore)).when(courseRepository).findById(eq(1L));
+                doReturn("ucsb-cs156-s25").when(linkerService).getOrgName("1234");
+                MvcResult response = mockMvc.perform(get("/api/courses/link")
+                                .param("installation_id", "1234")
+                                .param("setup_action", "install")
+                                .param("code", "abcdefg")
+                                .param("state", "1"))
+                                .andExpect(status().isMovedPermanently())
+                                .andReturn();
+
+                String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
+                verify(courseRepository, times(1)).save(eq(courseAfter));
+                assertEquals("/instructor/courses?success=True&course=1", responseUrl);
         }
 
         @Test
@@ -289,60 +447,120 @@ public class CoursesControllerTests extends ControllerTestCase {
                 assertEquals(expectedJson, responseString);
         }
 
-    @Test
-    public void testListCoursesForCurrentUser() throws Exception {
-        String email = "student@example.com";
+        /**
+         * Test the POST endpoint
+         */
+        @Test
+        public void testListCoursesForCurrentUser() throws Exception {
+                String email = "student@example.com";
 
-        OAuth2User principal = Mockito.mock(OAuth2User.class);
-        when(principal.getAttribute("email")).thenReturn(email);
+                OAuth2User principal = Mockito.mock(OAuth2User.class);
+                when(principal.getAttribute("email")).thenReturn(email);
 
-        Authentication auth = new OAuth2AuthenticationToken(
-            principal,
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
-            "test-client"
-        );
+                Authentication auth = new OAuth2AuthenticationToken(
+                                principal,
+                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")),
+                                "test-client");
 
-        User dbUser = User.builder()
-                         .email(email)
-                         .build();
-        when(userRepository.findByEmail(eq(email)))
-            .thenReturn(Optional.of(dbUser));
+                User dbUser = User.builder()
+                                .email(email)
+                                .build();
+                when(userRepository.findByEmail(eq(email)))
+                                .thenReturn(Optional.of(dbUser));
 
-        Course course = Course.builder()
-            .id(55L)
-            .installationId("inst-55")
-            .orgName("Test Org")
-            .courseName("Test Course")
-            .term("S25")
-            .school("Engineering")
-            .build();
+                Course course = Course.builder()
+                                .id(55L)
+                                .installationId("inst-55")
+                                .orgName("Test Org")
+                                .courseName("Test Course")
+                                .term("S25")
+                                .school("Engineering")
+                                .build();
 
-        RosterStudent rs = new RosterStudent();
-        rs.setId(123L);
-        rs.setCourse(course);
-        rs.setEmail(email);
-        rs.setOrgStatus(OrgStatus.MEMBER);
+                RosterStudent rs = new RosterStudent();
+                rs.setId(123L);
+                rs.setCourse(course);
+                rs.setEmail(email);
+                rs.setOrgStatus(OrgStatus.MEMBER);
 
-        when(rosterStudentRepository.findAllByEmail(eq(email)))
-            .thenReturn(List.of(rs));
+                when(rosterStudentRepository.findAllByEmail(eq(email)))
+                                .thenReturn(List.of(rs));
 
-        MvcResult result = mockMvc.perform(
-                get("/api/courses/list")
-                .with(authentication(auth))
-            )
-            .andExpect(status().isOk())
-            .andReturn();
+                MvcResult result = mockMvc.perform(
+                                get("/api/courses/list")
+                                                .with(authentication(auth)))
+                                .andExpect(status().isOk())
+                                .andReturn();
 
-        Map<String,Object> expected = new LinkedHashMap<>();
-        expected.put("id", course.getId());
-        expected.put("installationId", course.getInstallationId());
-        expected.put("orgName", course.getOrgName());
-        expected.put("courseName", course.getCourseName());
-        expected.put("term", course.getTerm());
-        expected.put("school", course.getSchool());
-        expected.put("studentStatus", RosterStudentDTO.from(rs).getOrgStatus());
+                Map<String, Object> expected = new LinkedHashMap<>();
+                expected.put("id", course.getId());
+                expected.put("installationId", course.getInstallationId());
+                expected.put("orgName", course.getOrgName());
+                expected.put("courseName", course.getCourseName());
+                expected.put("term", course.getTerm());
+                expected.put("school", course.getSchool());
+                expected.put("studentStatus", RosterStudentDTO.from(rs).getOrgStatus());
 
-        String expectedJson = mapper.writeValueAsString(List.of(expected));
-        assertEquals(expectedJson, result.getResponse().getContentAsString());
-    }
+                String expectedJson = mapper.writeValueAsString(List.of(expected));
+                assertEquals(expectedJson, result.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER" })
+        public void testStudenIsStaffInCourse() throws Exception {
+                // arrange
+                User currentUser = User.builder()
+                                .id(123L)
+                                .email("user@example.org")
+                                .build();
+
+                Course course1 = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .build();
+
+                Course course2 = Course.builder()
+                                .id(2L)
+                                .courseName("CS24")
+                                .orgName("ucsb-cs24-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .build();
+
+                CourseStaff cs1 = CourseStaff.builder()
+                                .firstName("Chris")
+                                .lastName("Gaucho")
+                                .email("user@example.org")
+                                .course(course1)
+                                .user(currentUser)
+                                .build();
+
+                CourseStaff cs2 = CourseStaff.builder()
+                                .firstName("Chris")
+                                .lastName("Gaucho")
+                                .email("user@example.org")
+                                .course(course2)
+                                .user(currentUser)
+                                .build();
+
+                when(courseStaffRepository.findAllByEmail("user@example.org"))
+                                .thenReturn(List.of(cs1, cs2));
+
+                when(courseRepository.findAllById(List.of(1L, 2L)))
+                                .thenReturn(List.of(course1, course2));
+
+                // act
+                MvcResult response = mockMvc.perform(get("/api/courses/staffCourses")
+                                .param("studentId", "123"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(List.of(course1, course2));
+                assertEquals(expectedJson, responseString);
+        }
 }
