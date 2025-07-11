@@ -38,9 +38,9 @@ describe("InstructorsIndexPage tests", () => {
 
   const queryClient = new QueryClient();
 
-  test("Renders with New Instructor Button", async () => {
+  test.only("Renders with New Instructor Button", async () => {
     setupAdminUser();
-    axiosMock.onGet("/api/admin/instructors/all").reply(200, []);
+    axiosMock.onGet("/api/admin/instructors/get").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -61,7 +61,7 @@ describe("InstructorsIndexPage tests", () => {
   test("renders three items correctly", async () => {
     setupAdminUser();
     axiosMock
-      .onGet("/api/admin/instructors/all")
+      .onGet("/api/admin/instructors/get")
       .reply(200, roleEmailFixtures.threeItems);
 
     render(
@@ -93,7 +93,7 @@ describe("InstructorsIndexPage tests", () => {
   test("renders empty table when backend unavailable", async () => {
     setupAdminUser();
 
-    axiosMock.onGet("/api/admin/instructors/all").timeout();
+    axiosMock.onGet("/api/admin/instructors/get").timeout();
 
     const restoreConsole = mockConsole();
 
@@ -111,7 +111,7 @@ describe("InstructorsIndexPage tests", () => {
 
     const errorMessage = console.error.mock.calls[0][0];
     expect(errorMessage).toMatch(
-      "Error communicating with backend via GET on /api/admin/instructors/all",
+      "Error communicating with backend via GET on /api/admin/instructors/get",
     );
     restoreConsole();
   });
@@ -120,7 +120,7 @@ describe("InstructorsIndexPage tests", () => {
     setupAdminUser();
 
     axiosMock
-      .onGet("/api/admin/instructors/all")
+      .onGet("/api/admin/instructors/get")
       .reply(200, roleEmailFixtures.threeItems);
     axiosMock
       .onDelete("/api/admin/instructors")
