@@ -2,7 +2,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import mockConsole from "jest-mock-console";
 import coursesFixtures from "fixtures/coursesFixtures";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
