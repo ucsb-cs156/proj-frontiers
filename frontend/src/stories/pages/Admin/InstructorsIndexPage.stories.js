@@ -7,7 +7,7 @@ import { http, HttpResponse } from "msw";
 import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
 
 export default {
-  title: "pages/Instructors/InstructorsIndexPage",
+  title: "pages/Admins/InstructorsIndexPage",
   component: InstructorsIndexPage,
 };
 
