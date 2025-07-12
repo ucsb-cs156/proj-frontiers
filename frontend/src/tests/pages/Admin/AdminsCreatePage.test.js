@@ -68,7 +68,7 @@ describe("AdminsCreatePage tests", () => {
       email: "testemailone@ucsb.edu",
     };
 
-    axiosMock.onPost("/api/admin/admins/post").reply(202, admin);
+    axiosMock.onPost("/api/admin/post").reply(202, admin);
 
     render(
       <QueryClientProvider client={queryClient}>

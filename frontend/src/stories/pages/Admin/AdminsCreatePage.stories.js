@@ -27,7 +27,7 @@ Default.parameters = {
         status: 200,
       });
     }),
-    http.post("/api/admin/admins/post", () => {
+    http.post("/api/admin/post", () => {
       return HttpResponse.json(roleEmailFixtures.oneItem, {
         status: 200,
       });
