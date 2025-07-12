@@ -22,7 +22,7 @@ export default function InstructorsIndexPage() {
     return (
       <Button
         variant="primary"
-        href="/instructors/create"
+        href="/swagger-ui/index.html#/Instructors/postInstructor"
         style={{ float: "right" }}
       >
         New Instructor
