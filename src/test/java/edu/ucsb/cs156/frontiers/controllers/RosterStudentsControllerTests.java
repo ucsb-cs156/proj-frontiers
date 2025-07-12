@@ -1411,4 +1411,64 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
                 verify(courseRepository, never()).save(any(Course.class));
         }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpsertStudentWithDuplicateEmail() throws Exception {
+                // Arrange
+                RosterStudent existingStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Existing")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("cgaucho@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .build();
+                 RosterStudent newStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("New")
+                        .lastName("Student")
+                        .studentId("A123457")
+                        .email("cgaucho@umail.ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .build();
+                RosterStudent expectedSaved = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("New")
+                        .lastName("Student")
+                        .studentId("A123457")
+                        .email("cgaucho@umail.ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.MANUAL)
+                        .build();
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));                
+                when(rosterStudentRepository.findByCourseIdAndStudentId(eq(course1.getId()), eq(newStudent.getStudentId())))
+                        .thenReturn(Optional.empty());
+                when(rosterStudentRepository.findByCourseIdAndEmail(eq(course1.getId()), eq("cgaucho@ucsb.edu")))
+                        .thenReturn(Optional.of(existingStudent));   
+                doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+
+                // act
+
+                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
+                                .with(csrf())
+                                .param("studentId", "A123457")
+                                .param("firstName", "New")
+                                .param("lastName", "Student")
+                                .param("email", "cgaucho@umail.ucsb.edu")
+                                .param("courseId", "1"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+
+                verify(courseRepository, times(1)).findById(eq(1L));
+                verify(rosterStudentRepository, times(1)).findByCourseIdAndStudentId(eq(course1.getId()), eq(newStudent.getStudentId()));
+                verify(rosterStudentRepository, times(1)).findByCourseIdAndEmail(eq(course1.getId()), eq("cgaucho@ucsb.edu"));
+                verify(rosterStudentRepository, times(1)).save(any(RosterStudent.class));
+        }
+                
 }

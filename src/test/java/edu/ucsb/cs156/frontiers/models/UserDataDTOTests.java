@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class UserDataDTOTests {
 
@@ -60,4 +61,10 @@ public class UserDataDTOTests {
 
         assertEquals(translated, UserDataDTO.from(user, true, true) );
     }
+
+    @Test
+    public void noArgsConstructorTest() {
+        UserDataDTO userDataDTO = new UserDataDTO();
+        assertEquals(0, userDataDTO.getId());
+    }   
 }
