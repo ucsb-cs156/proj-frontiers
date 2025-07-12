@@ -11,7 +11,7 @@ import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GrantedAuthoritiesService;
 
 @TestConfiguration
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class})
 public class TestConfig {
 
     @Bean
