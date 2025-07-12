@@ -23,7 +23,7 @@ jest.mock("react-toastify", () => {
 describe("InstructorsIndexPage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
 
-  const testId = "RoleEmailTable";
+  const testId = "InstructorsIndexPage";
 
   const setupAdminUser = () => {
     axiosMock.reset();
@@ -38,7 +38,7 @@ describe("InstructorsIndexPage tests", () => {
 
   const queryClient = new QueryClient();
 
-  test.only("Renders with New Instructor Button", async () => {
+  test("Renders with New Instructor Button", async () => {
     setupAdminUser();
     axiosMock.onGet("/api/admin/instructors/get").reply(200, []);
 
@@ -86,7 +86,7 @@ describe("InstructorsIndexPage tests", () => {
 
     // delete button should be visible
     expect(
-      screen.getByTestId("RoleEmailTable-cell-row-0-col-Delete-button"),
+      screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`),
     ).toBeInTheDocument();
   });
 
@@ -123,7 +123,7 @@ describe("InstructorsIndexPage tests", () => {
       .onGet("/api/admin/instructors/get")
       .reply(200, roleEmailFixtures.threeItems);
     axiosMock
-      .onDelete("/api/admin/instructors")
+      .onDelete("/api/admin/instructors/delete")
       .reply(200, "first instructor deleted");
 
     render(
@@ -158,7 +158,9 @@ describe("InstructorsIndexPage tests", () => {
     await waitFor(() => {
       expect(axiosMock.history.delete.length).toBe(1);
     });
-    expect(axiosMock.history.delete[0].url).toBe("/api/admin/instructors");
+    expect(axiosMock.history.delete[0].url).toBe(
+      "/api/admin/instructors/delete",
+    );
     expect(axiosMock.history.delete[0].params).toEqual({
       email: "instructor1@example.com",
     });
