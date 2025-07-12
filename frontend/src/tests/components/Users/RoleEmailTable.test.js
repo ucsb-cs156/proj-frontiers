@@ -180,7 +180,7 @@ describe("RoleEmailTable", () => {
     expect(invalidateQueriesSpy).toHaveBeenCalledWith(["/api/admin/all"]);
   });
 
-  test("Check defaults for api endpoints", async () => {
+  test("Check that api endpoint overrides work", async () => {
     var axiosMock = new AxiosMockAdapter(axios);
 
     axiosMock.onDelete("/api/admin/instructor/delete").reply(200, {});
