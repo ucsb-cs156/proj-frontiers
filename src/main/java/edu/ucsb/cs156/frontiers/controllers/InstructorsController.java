@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.entities.Instructor;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,8 +48,9 @@ public class InstructorsController extends ApiController {
     @PostMapping("/post")
     public Instructor postInstructor(
             @RequestParam String email) {
+        String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);
         Instructor instructor = Instructor.builder()
-                .email(email)
+                .email(convertedEmail)
                 .build();
         instructorRepository.save(instructor);
         return instructor;

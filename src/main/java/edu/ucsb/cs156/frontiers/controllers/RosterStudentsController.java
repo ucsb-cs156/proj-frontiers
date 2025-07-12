@@ -17,7 +17,10 @@ import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.*;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+
 import org.apache.coyote.BadRequestException;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -175,7 +178,7 @@ public class RosterStudentsController extends ApiController {
     public UpsertResponse upsertStudent(RosterStudent student, Course course, RosterStatus rosterStatus) {
         Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),
                 student.getStudentId());
-        String convertedEmail = student.getEmail().replace("@umail.ucsb.edu", "@ucsb.edu");
+        String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
         if (existingStudent.isPresent()) {
             RosterStudent existingStudentObj = existingStudent.get();
             existingStudentObj.setRosterStatus(rosterStatus);
