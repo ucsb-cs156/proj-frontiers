@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import InstructorsIndexPage from "main/pages/Instructors/InstructorsIndexPage";
+import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import mockConsole from "jest-mock-console";
@@ -20,10 +20,13 @@ jest.mock("react-toastify", () => {
   };
 });
 
-describe("InstructorsIndexPage tests", () => {
+describe("AdminsIndexPage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
 
-  const testId = "InstructorsIndexPage";
+  const getEndpoint = "/api/admin/get";
+  const deleteEndpoint = "/api/admin/delete";
+
+  const testId = "AdminsIndexPage";
 
   const setupAdminUser = () => {
     axiosMock.reset();
@@ -38,36 +41,34 @@ describe("InstructorsIndexPage tests", () => {
 
   const queryClient = new QueryClient();
 
-  test("Renders with New Instructor Button", async () => {
+  test("Renders with New Admin Button", async () => {
     setupAdminUser();
-    axiosMock.onGet("/api/admin/instructors/get").reply(200, []);
+    axiosMock.onGet(getEndpoint).reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <InstructorsIndexPage />
+          <AdminsIndexPage />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/New Instructor/)).toBeInTheDocument();
+      expect(screen.getByText(/New Admin/)).toBeInTheDocument();
     });
-    const button = screen.getByText(/New Instructor/);
-    expect(button).toHaveAttribute("href", "/instructors/create");
+    const button = screen.getByText(/New Admin/);
+    expect(button).toHaveAttribute("href", "/admins/create");
     expect(button).toHaveAttribute("style", "float: right;");
   });
 
   test("renders three items correctly", async () => {
     setupAdminUser();
-    axiosMock
-      .onGet("/api/admin/instructors/get")
-      .reply(200, roleEmailFixtures.threeItems);
+    axiosMock.onGet(getEndpoint).reply(200, roleEmailFixtures.threeItems);
 
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <InstructorsIndexPage />
+          <AdminsIndexPage />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -93,14 +94,14 @@ describe("InstructorsIndexPage tests", () => {
   test("renders empty table when backend unavailable", async () => {
     setupAdminUser();
 
-    axiosMock.onGet("/api/admin/instructors/get").timeout();
+    axiosMock.onGet(getEndpoint).timeout();
 
     const restoreConsole = mockConsole();
 
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <InstructorsIndexPage />
+          <AdminsIndexPage />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -111,7 +112,7 @@ describe("InstructorsIndexPage tests", () => {
 
     const errorMessage = console.error.mock.calls[0][0];
     expect(errorMessage).toMatch(
-      "Error communicating with backend via GET on /api/admin/instructors/get",
+      `Error communicating with backend via GET on ${getEndpoint}`,
     );
     restoreConsole();
   });
@@ -119,17 +120,13 @@ describe("InstructorsIndexPage tests", () => {
   test("what happens when you click delete", async () => {
     setupAdminUser();
 
-    axiosMock
-      .onGet("/api/admin/instructors/get")
-      .reply(200, roleEmailFixtures.threeItems);
-    axiosMock
-      .onDelete("/api/admin/instructors/delete")
-      .reply(200, "first instructor deleted");
+    axiosMock.onGet(getEndpoint).reply(200, roleEmailFixtures.threeItems);
+    axiosMock.onDelete(deleteEndpoint).reply(200, "first instructor deleted");
 
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <InstructorsIndexPage />
+          <AdminsIndexPage />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -158,9 +155,7 @@ describe("InstructorsIndexPage tests", () => {
     await waitFor(() => {
       expect(axiosMock.history.delete.length).toBe(1);
     });
-    expect(axiosMock.history.delete[0].url).toBe(
-      "/api/admin/instructors/delete",
-    );
+    expect(axiosMock.history.delete[0].url).toBe(deleteEndpoint);
     expect(axiosMock.history.delete[0].params).toEqual({
       email: "instructor1@example.com",
     });

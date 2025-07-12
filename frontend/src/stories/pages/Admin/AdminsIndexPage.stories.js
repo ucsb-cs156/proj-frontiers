@@ -4,7 +4,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 import { http, HttpResponse } from "msw";
 
-import InstructorsIndexPage from "main/pages/Instructors/InstructorsIndexPage";
+import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
 
 export default {
   title: "pages/Instructors/InstructorsIndexPage",

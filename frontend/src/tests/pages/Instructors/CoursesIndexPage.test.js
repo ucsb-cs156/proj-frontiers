@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import CoursesIndexPage from "main/pages/Courses/CoursesIndexPage";
+import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import mockConsole from "jest-mock-console";

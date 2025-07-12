@@ -1,14 +1,15 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "main/pages/HomePage";
 import ProfilePage from "main/pages/ProfilePage";
-import AdminUsersPage from "main/pages/AdminUsersPage";
+import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 
 import { hasRole, useCurrentUser } from "main/utils/currentUser";
 
 import "bootstrap/dist/css/bootstrap.css";
 import "react-toastify/dist/ReactToastify.css";
-import CoursesIndexPage from "main/pages/Courses/CoursesIndexPage";
-import InstructorsIndexPage from "main/pages/Instructors/InstructorsIndexPage";
+import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
+import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
+import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 
 function App() {
   const { data: currentUser } = useCurrentUser();
