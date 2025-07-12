@@ -12,8 +12,10 @@ export default function GoogleLogin({ currentUser, systemInfo, doLogout }) {
           </Navbar.Text>
           <Button onClick={doLogout}>Log Out</Button>
         </>
-      ) : (
-        <Button href={oauthLogin}>Log In</Button>
+      ) : (<span>
+        <Button style={{margin: 10}} href={oauthLogin}>Log In</Button>
+        <Button style={{margin: 10}} href="/oauth2/authorization/azure-dev">Log In With Microsoft</Button>
+        </span>
       )}
     </>
   );
