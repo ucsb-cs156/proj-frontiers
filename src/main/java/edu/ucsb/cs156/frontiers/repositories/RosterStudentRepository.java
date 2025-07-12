@@ -15,6 +15,7 @@ public interface RosterStudentRepository extends JpaRepository<RosterStudent, Lo
     List<RosterStudent> findAllByEmail(String email);
     public Iterable<RosterStudent> findByCourseId(Long courseId);
     public Optional<RosterStudent> findByCourseIdAndStudentId(Long courseId, String studentId);
+    public Optional<RosterStudent> findByCourseIdAndEmail(Long courseId, String email);
 
     Optional<RosterStudent> findByCourseAndGithubId(Course course, int githubId);
 
