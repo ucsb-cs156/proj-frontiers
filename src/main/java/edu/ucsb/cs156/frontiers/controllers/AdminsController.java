@@ -4,8 +4,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 import edu.ucsb.cs156.frontiers.entities.Admin;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
-
-
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -60,8 +59,8 @@ public class AdminsController extends ApiController {
   public Admin postAdmin(
           @Parameter(name="email") @RequestParam String email)
       {
-      
-      Admin admin = new Admin(email);
+      String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);
+      Admin admin = new Admin(convertedEmail);
       Admin savedAdmin = adminRepository.save(admin);
       return savedAdmin;
   }
