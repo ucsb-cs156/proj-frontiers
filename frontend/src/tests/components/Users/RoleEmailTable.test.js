@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 
 const testData = [
   { email: "user1@example.org" },
@@ -69,6 +70,25 @@ describe("RoleEmailTable", () => {
 
     const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
     expect(deleteButtons.length).toBe(testData.length);
+  });
+
+  test("renders table with email data plus isInAdminEmails", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable
+            data={roleEmailFixtures.threeItemsWithIsInAdminEmailField}
+            deleteCallback={mockDeleteCallback}
+          />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Email")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("RoleEmailTable-cell-row-0-cannot-delete"),
+    ).toBeInTheDocument();
   });
 
   test("calls deleteCallback when Delete button clicked", () => {
@@ -147,7 +167,7 @@ describe("RoleEmailTable", () => {
       </QueryClientProvider>,
     );
     const deleteButton = screen.getByTestId(
-      "RoleEmailTable-cell-row-0-col-Delete-button",
+      "RoleEmailTable-cell-row-0-col-delete-button",
     );
     expect(deleteButton).toBeInTheDocument();
   });
@@ -165,7 +185,7 @@ describe("RoleEmailTable", () => {
       </QueryClientProvider>,
     );
     const deleteButton = screen.getByTestId(
-      "RoleEmailTable-cell-row-0-col-Delete-button",
+      "RoleEmailTable-cell-row-0-col-delete-button",
     );
     expect(deleteButton).toBeInTheDocument();
     fireEvent.click(deleteButton);
@@ -198,7 +218,7 @@ describe("RoleEmailTable", () => {
       </QueryClientProvider>,
     );
     const deleteButton = screen.getByTestId(
-      "RoleEmailTable-cell-row-0-col-Delete-button",
+      "RoleEmailTable-cell-row-0-col-delete-button",
     );
     expect(deleteButton).toBeInTheDocument();
     fireEvent.click(deleteButton);
