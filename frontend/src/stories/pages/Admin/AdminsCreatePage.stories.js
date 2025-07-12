@@ -3,7 +3,7 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { http, HttpResponse } from "msw";
 
-import AdminsCreatePage from "main/pages/Admins/AdminsCreatePage";
+import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 

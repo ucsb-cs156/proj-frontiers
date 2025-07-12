@@ -30,7 +30,7 @@ export default function InstructorsCreatePage({ storybook = false }) {
     mutation.mutate(data);
   };
 
-  if (isSuccess && !storybook) {
+  if (isSuccess & !storybook) {
     return <Navigate to="/admin/instructors" />;
   }
 

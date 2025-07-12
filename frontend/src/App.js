@@ -12,9 +12,9 @@ import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShow
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 
 import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
+import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
-
-import InstructorsCreatePage from "main/pages/Instructors/InstructorsCreatePage";
+import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
 function App() {
   const { data: currentUser } = useCurrentUser();
@@ -55,14 +55,12 @@ function App() {
               path="/admin/instructors/create"
               element={<InstructorsCreatePage />}
             />
+            <Route
+              exact
+              path="/admin/admins/create"
+              element={<AdminsCreatePage />}
+            />
           </>
-        )}
-        {hasRole(currentUser, "ROLE_ADMIN") && (
-          <Route
-            exact
-            path="/admin/admins/create"
-            element={<AdminsCreatePage />}
-          />
         )}
       </Routes>
     </BrowserRouter>

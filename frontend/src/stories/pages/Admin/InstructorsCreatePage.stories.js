@@ -3,12 +3,12 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { http, HttpResponse } from "msw";
 
-import InstructorsCreatePage from "main/pages/Instructors/InstructorsCreatePage";
+import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 
 export default {
-  title: "pages/Instructors/InstructorsCreatePage",
+  title: "pages/Admins/InstructorsCreatePage",
   component: InstructorsCreatePage,
 };
 
