@@ -4,14 +4,14 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 import { http, HttpResponse } from "msw";
 
-import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
+import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 
 export default {
-  title: "pages/Instructors/InstructorsIndexPage",
-  component: InstructorsIndexPage,
+  title: "pages/Admins/AdminsIndexPage",
+  component: AdminsIndexPage,
 };
 
-const Template = () => <InstructorsIndexPage storybook={true} />;
+const Template = () => <AdminsIndexPage storybook={true} />;
 
 export const Empty = Template.bind({});
 
@@ -27,7 +27,7 @@ Empty.parameters = {
         status: 200,
       });
     }),
-    http.get("/api/admin/instructors/get", () => {
+    http.get("/api/admin/get", () => {
       return HttpResponse.json([], { status: 200 });
     }),
   ],
@@ -43,10 +43,10 @@ ThreeItemsAdminUser.parameters = {
     http.get("/api/systemInfo", () => {
       return HttpResponse.json(systemInfoFixtures.showingNeither);
     }),
-    http.get("/api/admin/instructors/get", () => {
+    http.get("/api/admin/get", () => {
       return HttpResponse.json(roleEmailFixtures.threeItems);
     }),
-    http.delete("/api/admins/instructors/all", () => {
+    http.delete("/api/admins/delete", () => {
       return HttpResponse.json(
         { message: "Item deleted successfully" },
         { status: 200 },

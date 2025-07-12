@@ -27,11 +27,3 @@ ThreeItemsAdminUser.args = {
   },
 };
 
-export const Weird = Template.bind({});
-Weird.args = {
-  data: ["Stryker was here"],
-  customDeleteCallback: async (cell) => {
-    // Simulate a delete operation
-    window.alert(`Would invoke callback on ${cell.row.values.email}`);
-  },
-};
