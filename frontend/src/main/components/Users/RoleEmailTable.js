@@ -23,7 +23,6 @@ export default function RoleEmailTable({
   };
 
   const onDeleteSuccess = (message) => {
-    console.log(message);
     toast(message);
   };
 
@@ -47,7 +46,6 @@ export default function RoleEmailTable({
       Header: "Delete",
       accessor: "isInAdminEmails",
       Cell: ({ cell }) => {
-        console.log("cell.row.values", cell.row.values);
         if (
           !("isInAdminEmails" in cell.row.values) ||
           !cell.row.values.isInAdminEmails
@@ -64,7 +62,7 @@ export default function RoleEmailTable({
         }
         return (
           <span
-            data-testId={`${testIdPrefix}-cell-row-${cell.row.index}-cannot-delete`}
+            data-testid={`${testIdPrefix}-cell-row-${cell.row.index}-cannot-delete`}
           >
             In <code>ADMIN_EMAILS</code>
           </span>

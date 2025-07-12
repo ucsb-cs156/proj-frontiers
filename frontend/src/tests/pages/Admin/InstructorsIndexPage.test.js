@@ -89,7 +89,7 @@ describe("InstructorsIndexPage tests", () => {
 
     // delete button should be visible
     expect(
-      screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`),
+      screen.getByTestId(`${testId}-cell-row-0-col-delete-button`),
     ).toBeInTheDocument();
   });
 
@@ -148,7 +148,7 @@ describe("InstructorsIndexPage tests", () => {
     ).toHaveTextContent("instructor1@example.com");
 
     const deleteButton = screen.getByTestId(
-      `${testId}-cell-row-0-col-Delete-button`,
+      `${testId}-cell-row-0-col-delete-button`,
     );
     expect(deleteButton).toBeInTheDocument();
 
