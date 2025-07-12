@@ -14,6 +14,7 @@ import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -24,7 +25,8 @@ import org.springframework.test.context.ActiveProfiles;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 @ActiveProfiles("integration")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@ResourceLock("port-8080")
 public abstract class WebTestCase {
     @LocalServerPort
     private int port;
