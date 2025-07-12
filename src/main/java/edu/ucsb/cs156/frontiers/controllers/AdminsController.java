@@ -35,6 +35,7 @@ import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 
 /**
@@ -48,6 +49,22 @@ import java.util.List;
 public class AdminsController extends ApiController {
    @Autowired
    AdminRepository adminRepository;
+
+    @Value("#{'${app.admin.emails}'.split(',')}")
+    List<String> adminEmails;
+
+
+  public static record AdminDTO(
+          String email,
+          boolean isInAdminEmails
+  ) {
+      public AdminDTO(Admin admin, List<String> adminEmails) {
+          this(
+                  admin.getEmail(),
+                  adminEmails.contains(admin.getEmail())
+          );
+      }
+  }
 
    /**
    * Create a new admin
@@ -74,13 +91,14 @@ public class AdminsController extends ApiController {
     @Operation(summary= "List all admins")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/all")
-    public Iterable<Admin> allAdmins() {
+    public Iterable<AdminDTO> allAdmins() {
         Iterable<Admin> admins = adminRepository.findAll();
-        return admins;
-    }
+        List<AdminDTO> adminDTOs = StreamSupport.stream(admins.spliterator(), false)
+                .map(admin -> new AdminDTO(admin, adminEmails))
+                .toList();
 
-    @Value("#{'${app.admin.emails}'.split(',')}")
-    private List<String> adminEmails;
+        return adminDTOs;
+    }
 
     /**
     * Delete an Admin
