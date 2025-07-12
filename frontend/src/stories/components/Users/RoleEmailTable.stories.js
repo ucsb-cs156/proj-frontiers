@@ -1,24 +1,37 @@
 import React from "react";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
+import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 
 export default {
   title: "components/Users/RoleEmailTable",
   component: RoleEmailTable,
 };
 
-const sampleData = [
-  { email: "admin@example.com" },
-  { email: "user@example.org" },
-];
-
-const mockDeleteCallback = (cell) => {
-  console.log(`Delete clicked for: ${cell.row.values.email}`);
+const Template = (args) => {
+  return <RoleEmailTable {...args} />;
 };
 
-const Template = (args) => <RoleEmailTable {...args} />;
+export const Empty = Template.bind({});
 
-export const Default = Template.bind({});
-Default.args = {
-  data: sampleData,
-  deleteCallback: mockDeleteCallback,
+Empty.args = {
+  data: [],
+  role: "admin",
+};
+
+export const ThreeItems = Template.bind({});
+ThreeItems.args = {
+  data: roleEmailFixtures.threeItems,
+  customDeleteCallback: async (cell) => {
+    // Simulate a delete operation
+    window.alert(`Would invoke callback on ${cell.row.values.email}`);
+  },
+};
+
+export const ThreeItemsWithIsInAdminEmailsField = Template.bind({});
+ThreeItemsWithIsInAdminEmailsField.args = {
+  data: roleEmailFixtures.threeItemsWithIsInAdminEmailField,
+  customDeleteCallback: async (cell) => {
+    // Simulate a delete operation
+    window.alert(`Would invoke callback on ${cell.row.values.email}`);
+  },
 };
