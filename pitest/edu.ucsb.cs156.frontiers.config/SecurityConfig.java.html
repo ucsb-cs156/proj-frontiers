@@ -1,0 +1,2888 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>SecurityConfig.java</h1>
+
+<table class="src">
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package edu.ucsb.cs156.frontiers.config;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.services.GithubSignInService;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.services.GoogleSignInService;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import jakarta.servlet.FilterChain;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import jakarta.servlet.ServletException;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import jakarta.servlet.http.HttpServletRequest;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import jakarta.servlet.http.HttpServletResponse;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import lombok.extern.slf4j.Slf4j;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.beans.factory.annotation.Autowired;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.context.annotation.Bean;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.context.annotation.Configuration;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.context.annotation.Profile;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.access.hierarchicalroles.RoleHierarchy;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_16'/>
+16
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_16'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_17'/>
+17
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_17'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_18'/>
+18
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_18'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.config.annotation.web.builders.HttpSecurity;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_21'/>
+21
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_21'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_22'/>
+22
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_22'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.oauth2.core.OAuth2TokenValidator;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_23'/>
+23
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_23'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_24'/>
+24
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_24'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.oauth2.jwt.*;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_25'/>
+25
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_25'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.SecurityFilterChain;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_26'/>
+26
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_26'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_27'/>
+27
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_27'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_28'/>
+28
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_28'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.csrf.CookieCsrfTokenRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_29'/>
+29
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_29'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_30'/>
+30
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_30'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.csrf.CsrfTokenRequestHandler;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_31'/>
+31
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_31'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_32'/>
+32
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_32'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.csrf.CsrfToken;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_33'/>
+33
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_33'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.web.util.matcher.AntPathRequestMatcher;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_34'/>
+34
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_34'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.util.Assert;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_35'/>
+35
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_35'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.util.StringUtils;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_36'/>
+36
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_36'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.web.filter.OncePerRequestFilter;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_37'/>
+37
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_37'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_38'/>
+38
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_38'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_39'/>
+39
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_39'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_40'/>
+40
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_40'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_41'/>
+41
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_41'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.io.IOException;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_42'/>
+42
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_42'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.List;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_43'/>
+43
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_43'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.function.Predicate;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_44'/>
+44
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_44'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.function.Supplier;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_45'/>
+45
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_45'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_46'/>
+46
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_46'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>/**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_47'/>
+47
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_47'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * The `SecurityConfig` class in Java configures web security with OAuth2 login,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_48'/>
+48
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_48'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * CSRF protection, and</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_49'/>
+49
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_49'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * role-based authorization based on user email addresses.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_50'/>
+50
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_50'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_51'/>
+51
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_51'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@Configuration</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_52'/>
+52
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_52'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@EnableWebSecurity</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_53'/>
+53
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_53'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@EnableMethodSecurity</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_54'/>
+54
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_54'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@Slf4j</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_55'/>
+55
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_55'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>public class SecurityConfig {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_56'/>
+56
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_56'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_57'/>
+57
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_57'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Autowired</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_58'/>
+58
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_58'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private GoogleSignInService googleSignInService;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_59'/>
+59
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_59'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_60'/>
+60
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_60'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Autowired</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_61'/>
+61
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_61'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private GithubSignInService githubSignInService;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_62'/>
+62
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_62'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_63'/>
+63
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_63'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_64'/>
+64
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_64'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * The `filterChain` method in this Java code configures various security</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_65'/>
+65
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_65'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * settings for an HTTP request,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_66'/>
+66
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_66'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * including authorization, exception handling, OAuth2 login, CSRF protection,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_67'/>
+67
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_67'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * and logout behavior.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_68'/>
+68
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_68'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * </span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_69'/>
+69
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_69'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param http injected HttpSecurity object (injected by Spring framework)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_70'/>
+70
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_70'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *             //</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_71'/>
+71
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_71'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_72'/>
+72
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_72'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  // https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript-spa</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_73'/>
+73
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_73'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Bean</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_74'/>
+74
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_74'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_75'/>
+75
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_75'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    http</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_76'/>
+76
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_76'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        .exceptionHandling(handling -&#62; handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_77'/>
+77
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_77'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        .oauth2Login(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_78'/>
+78
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_78'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            oauth2 -&#62; oauth2.userInfoEndpoint(userInfo -&#62;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_79'/>
+79
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_79'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                    userInfo.oidcUserService(googleSignInService).userService(githubSignInService)))</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_80'/>
+80
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_80'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        .csrf(csrf -&#62; csrf</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_81'/>
+81
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_81'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_82'/>
+82
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_82'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()).ignoringRequestMatchers(&#34;/api/webhooks/github&#34;))</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_83'/>
+83
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_83'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_84'/>
+84
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_84'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        .authorizeHttpRequests(auth -&#62; auth.anyRequest().permitAll())</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_85'/>
+85
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_85'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        .logout(logout -&#62; logout.logoutRequestMatcher(new AntPathRequestMatcher(&#34;/logout&#34;)).logoutSuccessUrl(&#34;/&#34;));</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_86'/>
+86
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_86'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    return http.build();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_87'/>
+87
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_87'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_88'/>
+88
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_88'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_89'/>
+89
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_89'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * The `webSecurityCustomizer` method is used to configure web security in Java,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_90'/>
+90
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_90'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * specifically ignoring requests</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_91'/>
+91
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_91'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * to the &#34;/h2-console/**&#34; path.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_92'/>
+92
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_92'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_93'/>
+93
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_93'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Bean</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_94'/>
+94
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_94'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public WebSecurityCustomizer webSecurityCustomizer() {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_95'/>
+95
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_95'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    return web -&#62; web.ignoring().requestMatchers(antMatcher(&#34;/h2-console/**&#34;));</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_96'/>
+96
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_96'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_97'/>
+97
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_97'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_98'/>
+98
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_98'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Bean</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_99'/>
+99
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_99'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  static RoleHierarchy roleHierarchy() {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_100'/>
+100
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_100'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    return RoleHierarchyImpl.withDefaultRolePrefix()</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_101'/>
+101
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_101'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            .role(&#34;ADMIN&#34;).implies(&#34;INSTRUCTOR&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_102'/>
+102
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_102'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            .role(&#34;INSTRUCTOR&#34;).implies(&#34;USER&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_103'/>
+103
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_103'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>            .build();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_104'/>
+104
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_104'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_105'/>
+105
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_105'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_106'/>
+106
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_106'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_107'/>
+107
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_107'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Bean</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_108'/>
+108
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_108'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Profile(&#34;microsoft&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_109'/>
+109
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_109'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public OidcIdTokenDecoderFactory idTokenDecoderFactory() {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_110'/>
+110
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_110'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    OidcIdTokenDecoderFactory factory = new OidcIdTokenDecoderFactory();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_111'/>
+111
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_111'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_112'/>
+112
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_112'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    factory.setJwtValidatorFactory(clientRegistration -&#62; {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_113'/>
+113
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_113'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      // Different issuer validation based on client</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_114'/>
+114
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_114'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      return JwtValidators.createDefaultWithValidators(List.of(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_115'/>
+115
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_115'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>              new CustomIssuerValidator(clientRegistration.getProviderDetails().getIssuerUri())</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_116'/>
+116
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_116'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      ));</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_117'/>
+117
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_117'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    });</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_118'/>
+118
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_118'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_119'/>
+119
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_119'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    return factory;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_120'/>
+120
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_120'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_121'/>
+121
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_121'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_122'/>
+122
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_122'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  class CustomIssuerValidator implements OAuth2TokenValidator&#60;Jwt&#62;{</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_123'/>
+123
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_123'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    private final JwtClaimValidator&#60;Object&#62; validator;</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_124'/>
+124
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_124'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class=''>    public CustomIssuerValidator(String issuer){</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_125'/>
+125
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_125'>1</a>
+<span>
+1. &#60;init&#62; : removed call to org/springframework/util/Assert::notNull &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>      Assert.notNull(issuer, &#34;issuer cannot be null&#34;);</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_126'/>
+126
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_126'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class=''>      Predicate&#60;Object&#62; testClaimValue = (claimValue) -&#62;{</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_127'/>
+127
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_127'>2</a>
+<span>
+1. lambda$new$0 : negated conditional &rarr; NO_COVERAGE<br/>
+2. lambda$new$0 : negated conditional &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>        if(claimValue !=null &#38;&#38; issuer.startsWith(&#34;https://login.microsoftonline.com/&#34;)) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_128'/>
+128
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_128'>2</a>
+<span>
+1. lambda$new$0 : replaced boolean return with false for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::lambda$new$0 &rarr; NO_COVERAGE<br/>
+2. lambda$new$0 : replaced boolean return with true for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::lambda$new$0 &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>          return claimValue.toString().startsWith(&#34;https://login.microsoftonline.com/&#34;);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_129'/>
+129
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_129'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        }else{</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_130'/>
+130
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_130'>3</a>
+<span>
+1. lambda$new$0 : negated conditional &rarr; NO_COVERAGE<br/>
+2. lambda$new$0 : negated conditional &rarr; NO_COVERAGE<br/>
+3. lambda$new$0 : replaced boolean return with true for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::lambda$new$0 &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>          return claimValue != null &#38;&#38; issuer.equals(claimValue.toString());</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_131'/>
+131
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_131'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_132'/>
+132
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_132'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      };</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_133'/>
+133
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_133'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class=''>      this.validator = new JwtClaimValidator(&#34;iss&#34;, testClaimValue);</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_134'/>
+134
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_134'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_135'/>
+135
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_135'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_136'/>
+136
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_136'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public OAuth2TokenValidatorResult validate(Jwt token) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_137'/>
+137
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_137'>1</a>
+<span>
+1. validate : removed call to org/springframework/util/Assert::notNull &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>      Assert.notNull(token, &#34;token cannot be null&#34;);</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_138'/>
+138
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_138'>1</a>
+<span>
+1. validate : replaced return value with null for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::validate &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>      return this.validator.validate(token);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_139'/>
+139
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_139'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_140'/>
+140
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_140'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_141'/>
+141
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_141'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_142'/>
+142
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_142'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_143'/>
+143
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_143'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>final class SpaCsrfTokenRequestHandler extends CsrfTokenRequestAttributeHandler {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_144'/>
+144
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_144'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  private final CsrfTokenRequestHandler delegate = new XorCsrfTokenRequestAttributeHandler();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_145'/>
+145
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_145'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_146'/>
+146
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_146'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Override</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_147'/>
+147
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_147'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public void handle(HttpServletRequest request, HttpServletResponse response,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_148'/>
+148
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_148'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      Supplier&#60;CsrfToken&#62; deferredCsrfToken) {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_149'/>
+149
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_149'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /*</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_150'/>
+150
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_150'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * Always use XorCsrfTokenRequestAttributeHandler to provide BREACH protection</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_151'/>
+151
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_151'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * of</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_152'/>
+152
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_152'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * the CsrfToken when it is rendered in the response body.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_153'/>
+153
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_153'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_154'/>
+154
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_154'>1</a>
+<span>
+1. handle : removed call to org/springframework/security/web/csrf/CsrfTokenRequestHandler::handle &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    this.delegate.handle(request, response, deferredCsrfToken);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_155'/>
+155
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_155'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_156'/>
+156
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_156'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_157'/>
+157
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_157'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Override</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_158'/>
+158
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_158'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_159'/>
+159
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_159'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /*</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_160'/>
+160
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_160'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * If the request contains a request header, use</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_161'/>
+161
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_161'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * CsrfTokenRequestAttributeHandler</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_162'/>
+162
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_162'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * to resolve the CsrfToken. This applies when a single-page application</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_163'/>
+163
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_163'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * includes</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_164'/>
+164
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_164'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * the header value automatically, which was obtained via a cookie containing</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_165'/>
+165
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_165'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * the</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_166'/>
+166
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_166'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * raw CsrfToken.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_167'/>
+167
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_167'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_168'/>
+168
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_168'>1</a>
+<span>
+1. resolveCsrfTokenValue : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (StringUtils.hasText(request.getHeader(csrfToken.getHeaderName()))) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_169'/>
+169
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_169'>1</a>
+<span>
+1. resolveCsrfTokenValue : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/config/SecurityConfig$SpaCsrfTokenRequestHandler::resolveCsrfTokenValue &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>      return super.resolveCsrfTokenValue(request, csrfToken);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_170'/>
+170
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_170'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_171'/>
+171
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_171'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /*</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_172'/>
+172
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_172'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * In all other cases (e.g. if the request contains a request parameter), use</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_173'/>
+173
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_173'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * XorCsrfTokenRequestAttributeHandler to resolve the CsrfToken. This applies</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_174'/>
+174
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_174'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * when a server-side rendered form includes the _csrf request parameter as a</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_175'/>
+175
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_175'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * hidden input.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_176'/>
+176
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_176'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_177'/>
+177
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_177'>1</a>
+<span>
+1. resolveCsrfTokenValue : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/config/SecurityConfig$SpaCsrfTokenRequestHandler::resolveCsrfTokenValue &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return this.delegate.resolveCsrfTokenValue(request, csrfToken);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_178'/>
+178
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_178'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_179'/>
+179
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_179'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_180'/>
+180
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_180'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_181'/>
+181
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_181'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>final class CsrfCookieFilter extends OncePerRequestFilter {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_182'/>
+182
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_182'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_183'/>
+183
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_183'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Override</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_184'/>
+184
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_184'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_185'/>
+185
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_185'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      throws ServletException, IOException {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_186'/>
+186
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_186'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    CsrfToken csrfToken = (CsrfToken) request.getAttribute(&#34;_csrf&#34;);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_187'/>
+187
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_187'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    // Render the token value to a cookie by causing the deferred token to be loaded</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_188'/>
+188
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_188'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    csrfToken.getToken();</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_189'/>
+189
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_189'>1</a>
+<span>
+1. doFilterInternal : removed call to jakarta/servlet/FilterChain::doFilter &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    filterChain.doFilter(request, response);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_190'/>
+190
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_190'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_191'/>
+191
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_191'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_192'/>
+192
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_192'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_125'>125</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_125'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>&#60;init&#62;<br/><b>Killed by : </b>none</span></span> removed call to org/springframework/util/Assert::notNull &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_127'>127</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_127'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$new$0<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; NO_COVERAGE</span>
+</div> <p class='NO_COVERAGE'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$new$0<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_128'>128</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_128'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$new$0<br/><b>Killed by : </b>none</span></span> replaced boolean return with false for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::lambda$new$0 &rarr; NO_COVERAGE</span>
+</div> <p class='NO_COVERAGE'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$new$0<br/><b>Killed by : </b>none</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::lambda$new$0 &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_130'>130</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_130'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$new$0<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; NO_COVERAGE</span>
+</div> <p class='NO_COVERAGE'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$new$0<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; NO_COVERAGE</span>
+</div> <p class='NO_COVERAGE'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>lambda$new$0<br/><b>Killed by : </b>none</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::lambda$new$0 &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_137'>137</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_137'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validate<br/><b>Killed by : </b>none</span></span> removed call to org/springframework/util/Assert::notNull &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_138'>138</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_138'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validate<br/><b>Killed by : </b>none</span></span> replaced return value with null for edu/ucsb/cs156/frontiers/config/SecurityConfig$CustomIssuerValidator::validate &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_154'>154</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_154'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>handle<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_out_users_cannot_get()]</span></span> removed call to org/springframework/security/web/csrf/CsrfTokenRequestHandler::handle &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_168'>168</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_168'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>resolveCsrfTokenValue<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_delete_all_jobs()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_169'>169</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_169'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>resolveCsrfTokenValue<br/><b>Killed by : </b>none</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/config/SecurityConfig$SpaCsrfTokenRequestHandler::resolveCsrfTokenValue &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_177'>177</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_177'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>resolveCsrfTokenValue<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_delete_all_jobs()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/config/SecurityConfig$SpaCsrfTokenRequestHandler::resolveCsrfTokenValue &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@cccc9a0e_189'>189</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@cccc9a0e_189'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>doFilterInternal<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_out_users_cannot_get()]</span></span> removed call to jakarta/servlet/FilterChain::doFilter &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_in_users_cannot_delete()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_in_users_cannot_post()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_in_regular_users_cannot_post()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_out_users_cannot_get()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_out_users_cannot_delete()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_out_users_cannot_delete()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.UsersControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.UsersControllerTests]/[method:users__user_logged_in()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_in_users_cannot_get_all()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_in_users_cannot_get()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testNoPerms()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:test_getJobLogs_admin_can_get_empty_log()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingLoginField()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testRedirect()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.ApiControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.ApiControllerTests]/[method:test_that_dummy_controller_returns_Exception_when_1_is_not_passed()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:no_action()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingUserField()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:testMemberRemoved_withValidFields()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_delete_all_jobs()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingUserField()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:action_wrong()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_gets_reasonable_error_when_deleting_non_existing_job()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:testNullGithubLoginAndInstallationId()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_delete_specific_job()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_out_users_cannot_post()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:testUnrecognizedAction_withValidFields()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:admin_try_to_delete_a_instructor_not_found()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testCourseLinkNotFound()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingMembershipField()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_in_regular_users_cannot_delete()] (10 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingInstallationField()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:api_getJobLogById__admin_logged_in__returns_not_found_for_missing_job()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CSVDownloadsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CSVDownloadsControllerTests]/[method:test_no_such_course()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:test_getJobLogs_admin_can_get_job_log()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingInstallationIdField()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_in_admin_can_get_all()] (10 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:admin_tries_to_delete_non_existant_admin_and_gets_right_error_message()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingInstallationIdField()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_get_all_jobs()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_in_admins_can_get()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingLoginField()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_in_admins_can_post()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.ApiControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.ApiControllerTests]/[method:test_dummy_controller_returns_no_linked_org()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_in_admins_can_delete()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_unauthorized()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_out_users_cannot_get_all()] (14 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_emptyFields()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:noCourse()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testDeleteRosterStudent_unauthorized()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_emptyFirstName()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests]/[method:notFound()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests]/[method:test_AdminCannotPostCourseStaffForCourseThatDoesNotExist()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_nullLastName()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_nullFields()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_emptyLastName()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:notFound()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:admin_tries_to_delete_an_ADMIN_EMAIL_and_gets_right_error_message()] (10 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_emptyStudentId()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerJobsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerJobsTests]/[method:admin_can_launch_updateAll_job()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testRosterStudentsByCourse()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingInstallationField()] (13 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_nullFirstName()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests]/[method:not_the_creator()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:logged_in_admin_can_get_all_admins()] (14 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.UserInfoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.UserInfoControllerTests]/[method:currentUser__logged_in()] (10 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:admin_cannot_upload_students_for_a_course_that_does_not_exist()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testLinkGitHub_notFound()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_notFound()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests]/[method:just_no_install_id()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:test_AdminCannotPostRosterStudentForCourseThatDoesNotExist()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testLinkGitHub_nullUser()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests]/[method:testCourseStaffByCourse()] (14 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_duplicateStudentId()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_sameStudentIdWithWhitespace()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_nullStudentId()] (17 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:no_fire_on_no_org_name()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.UsersControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.UsersControllerTests]/[method:users__admin_logged_in()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_launch_updateAll_job()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testGetAssociatedRosterStudents_noStudentsFound()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testNotCreator()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_newStudentIdNotExists()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:admin_can_get_roster_students_for_a_non_existing_course()] (17 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testPostRosterStudent()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:no_fire_on_no_installation_id()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests]/[method:job_actually_fires()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testNotOrganization()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testAllCourses_ROLE_ADMIN()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testLinkCourseSuccessfully()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:successfulWebhook()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests]/[method:testPostCourseStaff()] (14 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testDeleteRosterStudent_notFound()] (17 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:successfulWebhook_memberInvited()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testAllCourses_ROLE_INSTRUCTOR()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testPostCourse_byInstructor()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testLinkCourseSuccessfullyProfessorCreator()] (8 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:just_no_org_name()] (18 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testCourseLinkSuccessWhenAdminNotCreator()] (11 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:test_fires_invite()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:cant_invite()] (7 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.UsersControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.UsersControllerTests]/[method:users__logged_out()] (19 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testPostCourse_byAdmin()] (12 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testLinkGitHub_alreadyLinked()] (20 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.InstructorsControllerTests]/[method:logged_out_users_cannot_post()] (18 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testGetAssociatedRosterStudents()] (15 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.ApiControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.ApiControllerTests]/[method:test_that_dummy_controller_returns_String1_when_1_is_passed()] (31 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CSRFControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CSRFControllerTests]/[method:csrf_returns_ok()] (30 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:api_getJobLogById__admin_logged_in__returns_job_by_id()] (19 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.SystemInfoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.SystemInfoControllerTests]/[method:systemInfo__admin_logged_in()] (31 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CourseStaffControllerTests]/[method:admin_can_get_course_staff_for_a_non_existing_course()] (19 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testLinkGitHub_unauthorized()] (15 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:not_registered_org()] (35 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_success()] (34 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:an_admin_user_can_post_a_new_admin()] (48 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RepositoryControllerTests]/[method:not_registered_org()] (18 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.UserInfoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.UserInfoControllerTests]/[method:currentUser__logged_out()] (41 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CSVDownloadsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CSVDownloadsControllerTests]/[method:test_csv_exception()] (36 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:noStudent()] (36 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testStudenIsStaffInCourse()] (18 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:job_actually_fires()] (46 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerJobsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerJobsTests]/[method:admin_can_launch_auditAllCourses_job()] (39 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CoursesControllerTests]/[method:testListCoursesForCurrentUser()] (43 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:admin_can_upload_students_for_an_existing_course()] (53 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.AdminsControllerTests]/[method:admin_can_delete_an_admin()] (204 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testDeleteRosterStudent_success()] (867 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CSVDownloadsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CSVDownloadsControllerTests]/[method:mockMvcSRBTest()] (1284 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_launch_test_job()] (2027 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.JobsControllerDetailedTests]/[method:admin_can_launch_test_job_that_fails()] (4082 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.17.0
+
+</body>
+</html>
