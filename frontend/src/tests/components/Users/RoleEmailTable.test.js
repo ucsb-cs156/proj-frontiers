@@ -1,27 +1,71 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { MemoryRouter } from "react-router-dom";
+import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
 
 const testData = [
-  { email: "admin@example.com" },
-  { email: "user@example.org" },
+  { email: "user1@example.org" },
+  { email: "user2@example.org" },
 ];
 
 const mockDeleteCallback = jest.fn();
 
 describe("RoleEmailTable", () => {
+  let queryClient;
+  let invalidateQueriesSpy;
+  const axiosMock = new AxiosMockAdapter(axios);
+
   beforeEach(() => {
-    mockDeleteCallback.mockClear();
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          refetchOnWindowFocus: false,
+        },
+      },
+    });
+    invalidateQueriesSpy = jest.spyOn(queryClient, "invalidateQueries");
+  });
+
+  // After each test, restore the original axios implementation and clean up.
+  afterEach(() => {
+    invalidateQueriesSpy.mockRestore(); // Restore original implementation of the spy
+    axiosMock.restore(); // Restore axios to its original state (remove mocks)
+    queryClient.clear(); // Clear the React Query cache
+  });
+
+  test("renders empty table correctly when data is null", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable data={null} deleteCallback={mockDeleteCallback} />,
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Email")).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("RoleEmailTable-cell-row-0-col-email"),
+    ).not.toBeInTheDocument();
   });
 
   test("renders table with email data", () => {
     render(
-      <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByText("Email")).toBeInTheDocument();
-    expect(screen.getByText("admin@example.com")).toBeInTheDocument();
-    expect(screen.getByText("user@example.org")).toBeInTheDocument();
+    expect(screen.getByText("user1@example.org")).toBeInTheDocument();
+    expect(screen.getByText("user2@example.org")).toBeInTheDocument();
 
     const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
     expect(deleteButtons.length).toBe(testData.length);
@@ -29,7 +73,15 @@ describe("RoleEmailTable", () => {
 
   test("calls deleteCallback when Delete button clicked", () => {
     render(
-      <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable
+            data={testData}
+            customDeleteCallback={mockDeleteCallback}
+          />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     const buttons = screen.getAllByRole("button");
@@ -42,7 +94,12 @@ describe("RoleEmailTable", () => {
 
   test("renders Delete button with correct label", () => {
     render(
-      <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
     const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
     expect(deleteButtons.length).toBe(testData.length);
@@ -53,7 +110,12 @@ describe("RoleEmailTable", () => {
 
   test("renders table with correct testid", () => {
     render(
-      <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
     expect(
       screen.getByTestId("RoleEmailTable-header-email"),
@@ -62,7 +124,12 @@ describe("RoleEmailTable", () => {
 
   test("Delete button has correct Bootstrap class", () => {
     render(
-      <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
     const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
     deleteButtons.forEach((btn) => {
@@ -72,11 +139,82 @@ describe("RoleEmailTable", () => {
 
   test("Delete button has correct data-testid using table ID prefix", () => {
     render(
-      <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable data={testData} deleteCallback={mockDeleteCallback} />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
     const deleteButton = screen.getByTestId(
       "RoleEmailTable-cell-row-0-col-Delete-button",
     );
     expect(deleteButton).toBeInTheDocument();
+  });
+
+  test("Check defaults for api endpoints", async () => {
+    var axiosMock = new AxiosMockAdapter(axios);
+
+    axiosMock.onDelete("/api/admin/delete").reply(200, {});
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable data={testData} />,
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    const deleteButton = screen.getByTestId(
+      "RoleEmailTable-cell-row-0-col-Delete-button",
+    );
+    expect(deleteButton).toBeInTheDocument();
+    fireEvent.click(deleteButton);
+    await waitFor(() => {
+      expect(axiosMock.history.delete.length).toBe(1);
+    });
+    expect(axiosMock.history.delete[0].url).toBe("/api/admin/delete");
+    expect(axiosMock.history.delete[0].params).toEqual({
+      email: "user1@example.org",
+    });
+    expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith(["/api/admin/all"]);
+  });
+
+  test("Check defaults for api endpoints", async () => {
+    var axiosMock = new AxiosMockAdapter(axios);
+
+    axiosMock.onDelete("/api/admin/instructor/delete").reply(200, {});
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RoleEmailTable
+            data={testData}
+            deleteEndpoint="/api/admin/instructor/delete"
+            getEndpoint="/api/admin/instructor/all"
+          />
+          ,
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    const deleteButton = screen.getByTestId(
+      "RoleEmailTable-cell-row-0-col-Delete-button",
+    );
+    expect(deleteButton).toBeInTheDocument();
+    fireEvent.click(deleteButton);
+    await waitFor(() => {
+      expect(axiosMock.history.delete.length).toBe(1);
+    });
+    expect(axiosMock.history.delete[0].url).toBe(
+      "/api/admin/instructor/delete",
+    );
+    expect(axiosMock.history.delete[0].params).toEqual({
+      email: "user1@example.org",
+    });
+
+    expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith([
+      "/api/admin/instructor/all",
+    ]);
   });
 });

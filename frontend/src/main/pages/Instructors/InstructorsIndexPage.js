@@ -3,12 +3,9 @@ import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
-import { useCurrentUser } from "main/utils/currentUser";
 import { Button } from "react-bootstrap";
 
 export default function InstructorsIndexPage() {
-  const currentUser = useCurrentUser();
-
   const {
     data: instructors,
     error: _error,
@@ -39,9 +36,10 @@ export default function InstructorsIndexPage() {
         {createButton()}
         <h1>Instructors</h1>
         <RoleEmailTable
-          items={instructors}
-          currentUser={currentUser}
-          role="instructors"
+          data={instructors}
+          deleteEndpoint="/api/admin/instructors/delete"
+          getEndpoint="/api/admin/instructors/get"
+          testIdPrefix="InstructorsIndexPage"
         />
       </div>
     </BasicLayout>
