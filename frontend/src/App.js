@@ -32,7 +32,7 @@ function App() {
             />
           </>
         )}
-        {hasRole(currentUser, "ROLE_ADMIN") && (
+        {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
           <Route
             exact
             path="/instructor/courses"
