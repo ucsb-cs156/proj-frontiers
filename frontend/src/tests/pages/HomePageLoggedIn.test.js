@@ -6,6 +6,8 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import coursesFixtures from "fixtures/coursesFixtures";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
+import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
+import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 
 let axiosMock = new AxiosMockAdapter(axios);
 
@@ -17,7 +19,18 @@ describe("HomePageLoggedIn tests", () => {
 
   const queryClient = new QueryClient();
 
+    const setUpUserOnly = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+
   test("tables render correctly", async () => {
+    setUpUserOnly(); 
     axiosMock
       .onGet("/api/courses/staffCourses")
       .reply(200, coursesFixtures.oneCourseWithEachStatus);
