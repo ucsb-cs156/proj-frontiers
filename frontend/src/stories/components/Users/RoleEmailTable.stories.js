@@ -26,4 +26,3 @@ ThreeItemsAdminUser.args = {
     window.alert(`Would invoke callback on ${cell.row.values.email}`);
   },
 };
-
