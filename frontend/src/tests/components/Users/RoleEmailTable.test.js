@@ -86,6 +86,11 @@ describe("RoleEmailTable", () => {
     );
 
     expect(screen.getByText("Email")).toBeInTheDocument();
+    const deleteHeader = screen.getByTestId(
+      "RoleEmailTable-header-isInAdminEmails",
+    );
+    expect(deleteHeader).toBeInTheDocument();
+    expect(deleteHeader).toHaveTextContent("Delete");
     expect(
       screen.getByTestId("RoleEmailTable-cell-row-0-cannot-delete"),
     ).toBeInTheDocument();

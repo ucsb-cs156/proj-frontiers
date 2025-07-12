@@ -42,8 +42,8 @@ export default function AdminsIndexPage() {
           testIdPrefix="AdminsIndexPage"
         />
         <p>
-          Note: Initial admins that are set in the <code>ADMIN_EMAILS</code>&nbsp;
-          configuration cannot be deleted through the application.
+          Note: Initial admins that are set in the <code>ADMIN_EMAILS</code>
+          &nbsp; configuration cannot be deleted through the application.
         </p>
       </div>
     </BasicLayout>

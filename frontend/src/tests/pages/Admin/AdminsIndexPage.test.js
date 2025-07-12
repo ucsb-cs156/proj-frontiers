@@ -93,12 +93,11 @@ describe("AdminsIndexPage tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-delete-button`),
     ).toBeInTheDocument();
 
-    // Write a test to find the   
+    // Write a test to find the
     //    <p>
     //      Note: Initial admins that are set in the <code>ADMIN_EMAILS</code>{" "}
     //      configuration cannot be deleted through the application.
     //    </p>
-
 
     // const partialText = /Note: Initial admins that are set in the/i;
     // const adminNotePartialElement = screen.getByText(partialText);
@@ -106,15 +105,18 @@ describe("AdminsIndexPage tests", () => {
 
     // Method 3: Checking for specific parts of the text if the full string is too long or dynamic
     // You can combine multiple assertions.
-    expect(screen.getByText(/Note: Initial admins that are set in the /i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Note: Initial admins that are set in the /i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/ADMIN_EMAILS/i)).toBeInTheDocument();
-    expect(screen.getByText(/ configuration cannot be deleted through the application/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        / configuration cannot be deleted through the application/i,
+      ),
+    ).toBeInTheDocument();
 
     // You can also check for the presence of the <code> tag if needed
-    expect(screen.getByText('ADMIN_EMAILS').tagName).toBe('CODE');
-
-
-
+    expect(screen.getByText("ADMIN_EMAILS").tagName).toBe("CODE");
   });
 
   test("renders empty table when backend unavailable", async () => {
