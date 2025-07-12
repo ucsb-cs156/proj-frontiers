@@ -181,5 +181,10 @@ describe("AppNavbar tests", () => {
       "href",
       "/oauth2/authorization/google",
     );
+    expect(screen.getByText("Log In With Microsoft")).toHaveAttribute("href", '/oauth2/authorization/azure-dev');
+    expect(screen.getByText("Log In")).toHaveStyle("margin: 10px")
+    expect(screen.getByText("Log In With Microsoft")).toHaveAttribute("href", '/oauth2/authorization/azure-dev');
+    expect(screen.getByText("Log In With Microsoft")).toHaveStyle("margin: 10px")
+
   });
 });

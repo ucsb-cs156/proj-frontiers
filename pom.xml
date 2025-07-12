@@ -52,7 +52,19 @@
     <app.packagePath>edu/ucsb/cs156/frontiers</app.packagePath>
     <targetClasses>${targetClasses:edu.ucsb.cs156.*}</targetClasses>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+    <spring-cloud-azure.version>5.22.0</spring-cloud-azure.version>
   </properties>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.azure.spring</groupId>
+        <artifactId>spring-cloud-azure-dependencies</artifactId>
+        <version>${spring-cloud-azure.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <!-- (22) <dependencyManagement/> -->
   <!-- (23) <dependencies/> -->
@@ -182,7 +194,6 @@
       <version>0.12.3</version>
       <scope>runtime</scope>
     </dependency>
-
   </dependencies>
 
   <!-- (24) <repositories/> -->
