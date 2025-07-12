@@ -63,6 +63,14 @@ public class OrganizationMemberService {
         return getOrganizationMembersWithRole(course, ENDPOINT);
     }
 
+    /**
+    * This endpoint returns the list of users who have been **invited** to the organization but have not yet accepted.
+    */
+    public Iterable<OrgMember> getOrganizationInvitees(Course course) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/invitations";
+        return getOrganizationMembersWithRole(course, ENDPOINT);
+    }
+
     private Iterable<OrgMember> getOrganizationMembersWithRole(Course course, String ENDPOINT) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         //happily stolen directly from GitHub: https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28
         Pattern pattern = Pattern.compile("(?<=<)([\\S]*)(?=>; rel=\"next\")");
