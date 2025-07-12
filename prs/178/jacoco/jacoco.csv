@@ -42,6 +42,6 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,47,0,4,0,11,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentRepositoriesJob,0,37,0,6,0,7,0,4,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,TestJob,0,22,0,2,0,7,0,2,0,1
-frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,11,0,0,0,4,0,2,0,2
+frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,17,0,0,0,5,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,45,0,2,0,14,0,2,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,UserDataDTO,0,30,0,0,0,12,0,1,0,1
