@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 
 export default function AdminsCreatePage({ storybook = false }) {
   const objectToAxiosParams = (admin) => ({
-    url: "/api/admin/admins/post",
+    url: "/api/admin/post",
     method: "POST",
     params: {
       email: admin.email,
@@ -21,7 +21,7 @@ export default function AdminsCreatePage({ storybook = false }) {
     objectToAxiosParams,
     { onSuccess },
     // Stryker disable next-line all : hard to set up test for caching
-    ["/api/admin/admins/all"], // mutation makes this key stale so that pages relying on it reload
+    ["/api/admin/all"], // mutation makes this key stale so that pages relying on it reload
   );
 
   const { isSuccess } = mutation;
