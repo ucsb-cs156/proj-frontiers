@@ -29,6 +29,7 @@ public class MembershipAuditJob implements JobContextConsumer {
             if (course.getOrgName() != null && course.getInstallationId() != null) {
                 Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
                 Iterable<OrgMember> admins = organizationMemberService.getOrganizationAdmins(course);
+                Iterable<OrgMember> invitees = organizationMemberService.getOrganizationInvitees(course);
                 List<RosterStudent> rosterStudents = course.getRosterStudents();
                 for (int i = 0; i < rosterStudents.size(); i++ ) {
                     Integer studentGithubId = rosterStudents.get(i).getGithubId();
@@ -36,11 +37,16 @@ public class MembershipAuditJob implements JobContextConsumer {
                     if(studentGithubId != null && studentGithubLogin != null){
                         Optional<OrgMember> member = StreamSupport.stream(members.spliterator(), false).filter(s -> studentGithubId.equals(s.getGithubId())).findFirst();
                         Optional<OrgMember> admin = StreamSupport.stream(admins.spliterator(), false).filter(s -> studentGithubId.equals(s.getGithubId())).findFirst();
+                        Optional<OrgMember> invitee = StreamSupport.stream(invitees.spliterator(), false).filter(s -> studentGithubId.equals(s.getGithubId())).findFirst();
+
                         OrgStatus updatedStatus = OrgStatus.PENDING;
+
                         if (admin.isPresent()) {
                             updatedStatus = OrgStatus.OWNER;
                         } else if (member.isPresent()) {
                             updatedStatus = OrgStatus.MEMBER;
+                        } else if (invitee.isPresent()) {
+                            updatedStatus = OrgStatus.INVITED;
                         }
                         rosterStudents.get(i).setOrgStatus(updatedStatus);
                     }

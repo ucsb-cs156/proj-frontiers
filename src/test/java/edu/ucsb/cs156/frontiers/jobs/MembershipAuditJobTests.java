@@ -98,7 +98,6 @@ public class MembershipAuditJobTests {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        // Verify that saveAll was called twice (once for each course with an org)
         verify(rosterStudentRepository, atLeastOnce()).saveAll(eq(List.of(student1Updated, student2Updated)));
         verify(rosterStudentRepository, atLeastOnce()).saveAll(eq(List.of(student3Updated, student4Updated, student5Updated, student6Updated)));
         verify(rosterStudentRepository, times(2)).saveAll(any());
@@ -167,5 +166,68 @@ public class MembershipAuditJobTests {
         assertEquals(expected, jobStarted.getLog());
 
         verify(rosterStudentRepository, times(1)).saveAll(eq(List.of(student2Updated, student3Updated)));
+    }
+    @Test
+    public void match_invited_students_correctly() throws Exception {
+        List<OrgMember> emptyMembers = List.of();
+        List<OrgMember> emptyAdmins = List.of();
+        OrgMember invitee = OrgMember.builder().githubId(123456).githubLogin("division7").build();
+        List<OrgMember> orgInvitees = List.of(invitee);
+
+        Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+        RosterStudent student = RosterStudent.builder()
+            .studentId("banana")
+            .githubLogin("division7")
+            .githubId(123456)
+            .course(course)
+            .orgStatus(OrgStatus.MEMBER)
+            .build();
+
+        RosterStudent student2 = RosterStudent.builder()
+                .studentId("banana")
+                .githubLogin("division11")
+                .githubId(241789)
+                .course(course)
+                .orgStatus(OrgStatus.PENDING)
+                .build();
+
+        course.setRosterStudents(List.of(student, student2));
+
+        RosterStudent studentUpdated = RosterStudent.builder()
+            .studentId("banana")
+            .githubLogin("division7")
+            .githubId(123456)
+            .course(course)
+            .orgStatus(OrgStatus.INVITED)
+            .build();
+
+        RosterStudent student2NotUpdated = RosterStudent.builder()
+                .studentId("banana")
+                .githubLogin("division11")
+                .githubId(241789)
+                .course(course)
+                .orgStatus(OrgStatus.PENDING)
+                .build();
+
+        doReturn(emptyMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
+        doReturn(emptyAdmins).when(organizationMemberService).getOrganizationAdmins(eq(course));
+        doReturn(orgInvitees).when(organizationMemberService).getOrganizationInvitees(eq(course));
+        doReturn(List.of(course)).when(courseRepository).findAll();
+
+        var matchJob = spy(MembershipAuditJob.builder()
+                .rosterStudentRepository(rosterStudentRepository)
+                .organizationMemberService(organizationMemberService)
+                .courseRepository(courseRepository)
+                .build());
+
+        matchJob.accept(ctx);
+
+        String expected = """
+                Auditing membership for each course with an attached GitHub Organization...
+                Done""";
+        assertEquals(expected, jobStarted.getLog());
+
+        verify(rosterStudentRepository, times(1)).saveAll(eq(List.of(studentUpdated, student2NotUpdated)));
     }
 }
