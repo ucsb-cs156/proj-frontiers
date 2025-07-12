@@ -41,6 +41,10 @@ export default function AdminsIndexPage() {
           getEndpoint="/api/admin/all"
           testIdPrefix="AdminsIndexPage"
         />
+        <p>
+          Note: Initial admins that are set in the <code>ADMIN_EMAILS</code>{" "}
+          configuration cannot be deleted through the application.
+        </p>
       </div>
     </BasicLayout>
   );
