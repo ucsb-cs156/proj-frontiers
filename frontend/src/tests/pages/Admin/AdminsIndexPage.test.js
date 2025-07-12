@@ -59,7 +59,7 @@ describe("AdminsIndexPage tests", () => {
     const button = screen.getByText(/New Admin/);
     expect(button).toHaveAttribute(
       "href",
-      "/swagger-ui/index.html#/Admin/postAdmin",
+      "/admin/admins/create",
     );
     expect(button).toHaveAttribute("style", "float: right;");
   });

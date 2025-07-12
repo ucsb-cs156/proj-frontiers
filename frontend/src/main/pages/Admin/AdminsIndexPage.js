@@ -22,7 +22,7 @@ export default function AdminsIndexPage() {
     return (
       <Button
         variant="primary"
-        href="/swagger-ui/index.html#/Admin/postAdmin"
+        href="/admin/admins/create"
         style={{ float: "right" }}
       >
         New Admin
