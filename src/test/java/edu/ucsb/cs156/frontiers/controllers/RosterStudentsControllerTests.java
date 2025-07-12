@@ -79,6 +79,15 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .school("UCSB")
                         .build();
 
+        Course course2 = Course.builder()
+                        .id(2L)
+                        .courseName("CS156")
+                        .orgName("ucsb-cs156-s25")
+                        .term("S25")
+                        .school("UCSB")
+                        .installationId("12345")
+                        .build();
+
         RosterStudent rs1 = RosterStudent.builder()
                         .firstName("Chris")
                         .lastName("Gaucho")
@@ -86,7 +95,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("cgaucho@example.org")
                         .course(course1)
                         .rosterStatus(RosterStatus.MANUAL)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
         RosterStudent rs2 = RosterStudent.builder()
@@ -97,9 +106,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("ldelplaya@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
-
         /**
          * Test the POST endpoint
          */
@@ -132,6 +140,72 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(rs1);
                 assertEquals(expectedJson, responseString);
 
+        }
+
+        /**
+         * Test the POST endpoint when installation ID is null. 
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testPostRosterStudentWithNoInstallationId() throws Exception {
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+
+                ArgumentCaptor<RosterStudent> rosterStudentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
+                when(rosterStudentRepository.save(any(RosterStudent.class))).thenAnswer(invocation -> invocation.getArgument(0)); 
+
+                // act
+        
+                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
+                        .with(csrf())
+                        .param("studentId", "A123456")
+                        .param("firstName", "Chris")
+                        .param("lastName", "Gaucho")
+                        .param("email", "cgaucho@example.org")
+                        .param("courseId", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // assert
+                verify(courseRepository, times(1)).findById(eq(1L));
+                verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor.capture());
+
+                RosterStudent rosterStudentSaved = rosterStudentCaptor.getValue(); 
+                assertEquals(OrgStatus.PENDING, rosterStudentSaved.getOrgStatus());
+        }
+
+         /**
+         * Test the POST endpoint when installation ID exists. 
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testPostRosterStudentWithInstallationId() throws Exception {
+
+                when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(course2));
+
+                ArgumentCaptor<RosterStudent> rosterStudentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
+                when(rosterStudentRepository.save(any(RosterStudent.class))).thenAnswer(invocation -> invocation.getArgument(0)); 
+
+                // act
+        
+                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
+                        .with(csrf())
+                        .param("studentId", "A123456")
+                        .param("firstName", "Chris")
+                        .param("lastName", "Gaucho")
+                        .param("email", "cgaucho@example.org")
+                        .param("courseId", "2"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // assert
+                verify(courseRepository, times(1)).findById(eq(2L));
+                verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor.capture());
+
+                RosterStudent rosterStudentSaved = rosterStudentCaptor.getValue(); 
+                assertEquals(OrgStatus.JOINCOURSE, rosterStudentSaved.getOrgStatus());
         }
 
         /**
@@ -249,7 +323,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("cgaucho@ucsb.edu")
                                 .course(course1)
                                 .rosterStatus(RosterStatus.MANUAL)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs1AfterWithId = RosterStudent.builder()
@@ -260,7 +334,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("cgaucho@ucsb.edu")
                                 .course(course1)
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs2BeforeWithId = RosterStudent.builder()
@@ -271,7 +345,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("ldelplaya@umail.ucsb.edu")
                                 .course(course1)
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs2AfterWithId = RosterStudent.builder()
@@ -282,7 +356,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("ldelplaya@ucsb.edu")
                                 .studentId("A987654")
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs3NoId = RosterStudent.builder()
@@ -292,7 +366,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("sabadotarde@ucsb.edu")
                                 .studentId("1234567")
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 RosterStudent rs3WithId = RosterStudent.builder()
@@ -303,7 +377,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                                 .email("sabadotarde@ucsb.edu")
                                 .studentId("1234567")
                                 .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.NONE)
+                                .orgStatus(OrgStatus.PENDING)
                                 .build();
 
                 MockMultipartFile file = new MockMultipartFile(
@@ -459,7 +533,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         }
 
         /**
-         * Tests for the linkGitHub endpoint
+         * Tests for the joinCourseOnGitHub endpoint
          */
         @Test
         @WithMockUser(roles = { "USER", "GITHUB"})
@@ -468,7 +542,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "99"))
                         .andExpect(status().isNotFound())
@@ -488,7 +562,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER", "GITHUB"})
-        public void testLinkGitHub_unauthorized() throws Exception {
+        public void testJoinCourseOnGitHub_unauthorized() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
 
@@ -504,14 +578,14 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("otherstudent@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(differentUser)  // Belongs to a different user
                         .build();
 
                 when(rosterStudentRepository.findById(eq(4L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act & Assert
-                mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "4"))
                         .andExpect(status().isForbidden());
@@ -522,7 +596,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER", "GITHUB"})
-        public void testLinkGitHub_alreadyLinked() throws Exception {
+        public void testJoinCourseOnGitHub_alreadyJoined() throws Exception {
                 // Arrange
                 User currentUser = currentUserService.getUser();
 
@@ -534,7 +608,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("alreadylinked@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(98765)  // Already has a GitHub ID
                         .githubLogin("existinguser")  // Already has a GitHub login
                         .user(currentUser)  // Current user owns this roster entry
@@ -543,7 +617,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(5L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "5"))
                         .andExpect(status().isBadRequest())
@@ -554,7 +628,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
                 verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
 
-                assertEquals("This roster student is already linked to a GitHub account", response.getResponse().getContentAsString());
+                assertEquals("This roster student has already joined the course with a GitHub account.", response.getResponse().getContentAsString());
         }
 
 
@@ -574,7 +648,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(0)  // Not linked yet
                         .githubLogin("login")  // Not linked yet
                         .user(currentUser)  // Current user owns this roster entry
@@ -588,7 +662,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(currentUser.getGithubId())
                         .githubLogin(currentUser.getGithubLogin())
                         .user(currentUser)
@@ -597,7 +671,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "3"))
                         .andExpect(status().isBadRequest())
@@ -626,10 +700,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
-                        .githubId(123456789)  // Not linked yet
-                        .githubLogin(null)  // Not linked yet
-                        .user(currentUser)  // Current user owns this roster entry
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(123456789)  
+                        .githubLogin(null) 
+                        .user(currentUser) 
                         .build();
 
                 RosterStudent rosterStudentUpdated = RosterStudent.builder()
@@ -640,7 +714,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(currentUser.getGithubId())
                         .githubLogin(currentUser.getGithubLogin())
                         .user(currentUser)
@@ -649,7 +723,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "3"))
                         .andExpect(status().isBadRequest())
@@ -680,7 +754,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.JOINCOURSE)
                         .githubId(null)  // Not linked yet
                         .githubLogin(null)  // Not linked yet
                         .user(currentUser)  // Current user owns this roster entry
@@ -705,7 +779,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class))).thenReturn(OrgStatus.INVITED);
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "3"))
                         .andExpect(status().isAccepted())
@@ -735,7 +809,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(123456789)  // Not linked yet
                         .githubLogin(null)  // Not linked yet
                         .user(currentUser)  // Current user owns this roster entry
@@ -749,7 +823,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("testuser@ucsb.edu")
                         .course(course2)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .githubId(currentUser.getGithubId())
                         .githubLogin(currentUser.getGithubLogin())
                         .user(currentUser)
@@ -757,10 +831,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
                 when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
-                when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class))).thenReturn(OrgStatus.NONE);
+                when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class))).thenReturn(OrgStatus.PENDING);
 
                 // Act
-                MvcResult response = mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "3"))
                         .andExpect(status().isInternalServerError())
@@ -789,7 +863,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("cgaucho@example.org")
                         .course(course1)
                         .rosterStatus(RosterStatus.MANUAL)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(currentUser)
                         .build();
 
@@ -801,7 +875,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("ldelplaya@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(currentUser)
                         .build();
 
@@ -875,7 +949,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent updatedStudent = RosterStudent.builder()
@@ -886,7 +960,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -924,7 +998,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent otherStudent = RosterStudent.builder()
@@ -935,7 +1009,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("other@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -1010,7 +1084,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent updatedStudent = RosterStudent.builder()
@@ -1021,7 +1095,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -1061,7 +1135,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 RosterStudent updatedStudent = RosterStudent.builder()
@@ -1072,7 +1146,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("old@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
@@ -1230,7 +1304,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER" })
-        public void testLinkGitHub_nullUser() throws Exception {
+        public void testJoinCourseOnGitHub_nullUser() throws Exception {
                 // Arrange
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(6L)
@@ -1240,14 +1314,14 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("nouser@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .user(null)  // No user associated
                         .build();
 
                 when(rosterStudentRepository.findById(eq(6L))).thenReturn(Optional.of(rosterStudent));
 
                 // Act & Assert
-                mockMvc.perform(put("/api/rosterstudents/linkGitHub")
+                mockMvc.perform(put("/api/rosterstudents/joinCourse")
                                 .with(csrf())
                                 .param("rosterStudentId", "6"))
                         .andExpect(status().isForbidden());
@@ -1267,7 +1341,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("test@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.NONE)
+                        .orgStatus(OrgStatus.PENDING)
                         .build();
 
                 List<RosterStudent> students = new ArrayList<>();

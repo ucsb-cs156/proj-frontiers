@@ -208,7 +208,8 @@ public class CoursesController extends ApiController {
      *         install the application on GitHub. Alternately returns 403 Forbidden
      *         if the user is not the creator.
      */
-    @Operation(summary = "Link a Course to a Github Course")
+
+    @Operation(summary = "Link a Course to a Github Organization by installing Github App")
     @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @GetMapping("link")
     public ResponseEntity<Void> addInstallation(

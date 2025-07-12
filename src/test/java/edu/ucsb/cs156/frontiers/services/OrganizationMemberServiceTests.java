@@ -323,6 +323,6 @@ public class OrganizationMemberServiceTests {
 
         // Verify results
         mockServer.verify();
-        assertEquals(OrgStatus.NONE, result);
+        assertEquals(OrgStatus.JOINCOURSE, result);
     }
 }

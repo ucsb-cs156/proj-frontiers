@@ -34,7 +34,7 @@ public class RosterStudentDTOTests {
         rosterStudent.setEmail("johndoe@example.com");
         rosterStudent.setUser(user);
         rosterStudent.setRosterStatus(RosterStatus.ROSTER);
-        rosterStudent.setOrgStatus(OrgStatus.NONE);
+        rosterStudent.setOrgStatus(OrgStatus.PENDING);
 
         // Act
 
@@ -51,7 +51,7 @@ public class RosterStudentDTOTests {
         assertEquals(12345, dto.getUserGithubId());
         assertEquals("testuser", dto.getUserGithubLogin());
         assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
-        assertEquals(OrgStatus.NONE, dto.getOrgStatus());
+        assertEquals(OrgStatus.PENDING, dto.getOrgStatus());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class RosterStudentDTOTests {
         rosterStudent.setGithubLogin("testuser");
         rosterStudent.setUser(null);
         rosterStudent.setRosterStatus(RosterStatus.ROSTER);
-        rosterStudent.setOrgStatus(OrgStatus.NONE);
+        rosterStudent.setOrgStatus(OrgStatus.PENDING);
 
         // Act
         RosterStudentDTO dto = RosterStudentDTO.from(rosterStudent);
@@ -87,7 +87,7 @@ public class RosterStudentDTOTests {
         assertEquals(12345, dto.getUserGithubId());
         assertEquals("testuser", dto.getUserGithubLogin());
         assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
-        assertEquals(OrgStatus.NONE, dto.getOrgStatus());
+        assertEquals(OrgStatus.PENDING, dto.getOrgStatus());
 
     }
 

@@ -55,7 +55,7 @@ public class RosterStudentDTOServiceTests {
         rosterStudent.setGithubLogin("testuser");
         rosterStudent.setUser(user);
         rosterStudent.setRosterStatus(RosterStatus.ROSTER);
-        rosterStudent.setOrgStatus(OrgStatus.NONE);
+        rosterStudent.setOrgStatus(OrgStatus.PENDING);
 
         when(rosterStudentRepository.findByCourseId(1L)).thenReturn(List.of(rosterStudent));
 
@@ -74,7 +74,7 @@ public class RosterStudentDTOServiceTests {
         assertEquals(12345, dto.getUserGithubId());
         assertEquals("testuser", dto.getUserGithubLogin());
         assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
-        assertEquals(OrgStatus.NONE, dto.getOrgStatus());
+        assertEquals(OrgStatus.PENDING, dto.getOrgStatus());
     }
 
   

@@ -14,7 +14,13 @@ describe("CoursesTable tests", () => {
     );
 
     const expectedHeaders = ["id", "Course Name", "Term", "School", "Status"];
-    const expectedFields = ["id", "courseName", "term", "school", "status"];
+    const expectedFields = [
+      "id",
+      "courseName",
+      "term",
+      "school",
+      "studentStatus",
+    ];
     const testId = "CoursesTable";
 
     expectedHeaders.forEach((headerText) => {
@@ -40,7 +46,7 @@ describe("CoursesTable tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-school`),
     ).toHaveTextContent("UCSB");
     expect(
-      screen.getByTestId(`${testId}-cell-row-0-col-status`),
+      screen.getByTestId(`${testId}-cell-row-0-col-studentStatus`),
     ).toHaveTextContent("Pending");
 
     const pending = screen.getByText("Pending");
@@ -51,10 +57,6 @@ describe("CoursesTable tests", () => {
     expect(joinCourse).toBeInTheDocument();
     expect(joinCourse).toHaveAttribute("class", "btn btn-primary");
 
-    const invited = screen.getByText("Invited");
-    expect(invited).toBeInTheDocument();
-    expect(invited).toHaveStyle("color: green");
-
     const member = screen.getByText("Member");
     expect(member).toBeInTheDocument();
     expect(member).toHaveStyle("color: blue");
@@ -63,19 +65,16 @@ describe("CoursesTable tests", () => {
     expect(owner).toBeInTheDocument();
     expect(owner).toHaveStyle("color: purple");
 
-    const error = screen.getByText("Error");
-    expect(error).toBeInTheDocument();
-    expect(error).toHaveStyle("color: red");
-
-    const unknownStatus = screen.getByText("Unknown Status");
-    expect(unknownStatus).toBeInTheDocument();
-    expect(unknownStatus).not.toHaveStyle("color: red");
+    const unexpected = screen.getByText("Illegal status that will never occur");
+    expect(unexpected).toBeInTheDocument();
+    expect(unexpected).not.toHaveStyle("color: red");
 
     // expect that the mocked window.alert function is not called
     expect(window.alert).not.toHaveBeenCalled();
   });
 
-  test("Does not call window.alert in default case", () => {
+  //tests for button 'Join Course'
+  test("Does not call window.alert in default case for button 'Join Course'", () => {
     render(
       <BrowserRouter>
         <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
@@ -83,7 +82,7 @@ describe("CoursesTable tests", () => {
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-1-col-status-button",
+      "CoursesTable-cell-row-1-col-studentStatus-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Join Course");
@@ -93,7 +92,7 @@ describe("CoursesTable tests", () => {
     expect(window.alert).not.toHaveBeenCalled();
   });
 
-  test("Calls window.alert when the button is pressed on storybook", async () => {
+  test("Calls window.alert when the button is pressed on storybook for button 'Join Course'", async () => {
     render(
       <BrowserRouter>
         <CoursesTable
@@ -104,7 +103,7 @@ describe("CoursesTable tests", () => {
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-1-col-status-button",
+      "CoursesTable-cell-row-1-col-studentStatus-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Join Course");
@@ -118,7 +117,7 @@ describe("CoursesTable tests", () => {
     );
   });
 
-  test("Does not call window.alert when storybook is explicitly false", () => {
+  test("Does not call window.alert when storybook is explicitly false for button 'Join Course'", () => {
     render(
       <BrowserRouter>
         <CoursesTable
@@ -129,7 +128,7 @@ describe("CoursesTable tests", () => {
     );
 
     const button = screen.getByTestId(
-      "CoursesTable-cell-row-1-col-status-button",
+      "CoursesTable-cell-row-1-col-studentStatus-button",
     );
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent("Join Course");
@@ -137,5 +136,69 @@ describe("CoursesTable tests", () => {
 
     fireEvent.click(button);
     expect(window.alert).not.toHaveBeenCalled();
+  });
+
+  //tests for button 'View Invite'
+  test("Does not call window.alert in default case for button'View Invite'", () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
+      </BrowserRouter>,
+    );
+
+    const button = screen.getByTestId(
+      "CoursesTable-cell-row-2-col-studentStatus-button",
+    );
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent("View Invite");
+    expect(button).toHaveAttribute("class", "btn btn-primary");
+
+    fireEvent.click(button);
+    expect(window.alert).not.toHaveBeenCalled();
+  });
+
+  test("Calls window.alert when the button is pressed on storybook for button 'View Invite'", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const button = screen.getByTestId(
+      "CoursesTable-cell-row-2-col-studentStatus-button",
+    );
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent("View Invite");
+    expect(button).toHaveAttribute("class", "btn btn-primary");
+  });
+
+  test("Does not call window.alert when storybook is explicitly false for button 'View Invite'", () => {
+    const openMock = jest.spyOn(window, "open").mockImplementation(() => {});
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const button = screen.getByTestId(
+      "CoursesTable-cell-row-2-col-studentStatus-button",
+    );
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent("View Invite");
+    expect(button).toHaveAttribute("class", "btn btn-primary");
+
+    fireEvent.click(button);
+    expect(window.alert).not.toHaveBeenCalled();
+
+    expect(openMock).toHaveBeenCalledWith(
+      "https://github.com/ucsb-cs156-f25/invitation",
+      "_blank",
+    );
   });
 });
