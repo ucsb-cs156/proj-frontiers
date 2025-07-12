@@ -99,12 +99,6 @@ describe("AdminsIndexPage tests", () => {
     //      configuration cannot be deleted through the application.
     //    </p>
 
-    // const partialText = /Note: Initial admins that are set in the/i;
-    // const adminNotePartialElement = screen.getByText(partialText);
-    // expect(adminNotePartialElement).toBeInTheDocument();
-
-    // Method 3: Checking for specific parts of the text if the full string is too long or dynamic
-    // You can combine multiple assertions.
     expect(
       screen.getByText(/Note: Initial admins that are set in the /i),
     ).toBeInTheDocument();
@@ -115,7 +109,6 @@ describe("AdminsIndexPage tests", () => {
       ),
     ).toBeInTheDocument();
 
-    // You can also check for the presence of the <code> tag if needed
     expect(screen.getByText("ADMIN_EMAILS").tagName).toBe("CODE");
   });
 
