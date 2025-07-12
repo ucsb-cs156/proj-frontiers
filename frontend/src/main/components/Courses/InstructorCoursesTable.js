@@ -10,6 +10,16 @@ const columns = [
   {
     Header: "Course Name",
     accessor: "courseName",
+    Cell: ({ cell }) => {
+      return (
+        <a
+          href={`/instructor/courses/${cell.row.values.id}`}
+          data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+        >
+          {cell.value}
+        </a>
+      );
+    },
   },
   {
     Header: "Term",
@@ -25,6 +35,7 @@ export default function InstructorCoursesTable({
   courses,
   storybook = false,
   currentUser,
+  testId = "InstructorCoursesTable",
 }) {
   const installCallback = (cell) => {
     const url = `/api/courses/redirect?courseId=${cell.row.values.id}`;
@@ -64,7 +75,7 @@ export default function InstructorCoursesTable({
             <Button
               variant={"primary"}
               onClick={() => installCallback(cell)}
-              data-testid={`InstructorCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
               data-reason={result.reason}
             >
               Install Github App
@@ -73,7 +84,7 @@ export default function InstructorCoursesTable({
         } else {
           return (
             <span
-              data-testid={`InstructorCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-cannot-install-${result.reason}`}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-cannot-install-${result.reason}`}
             >
               {cell.value}
             </span>
@@ -88,10 +99,6 @@ export default function InstructorCoursesTable({
   ];
 
   return (
-    <OurTable
-      data={courses}
-      columns={columnsWithInstall}
-      testid={"InstructorCoursesTable"}
-    />
+    <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
   );
 }
