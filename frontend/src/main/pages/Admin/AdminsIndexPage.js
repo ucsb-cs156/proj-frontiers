@@ -12,8 +12,8 @@ export default function AdminsIndexPage() {
     status: _status,
   } = useBackend(
     // Stryker disable next-line all : don't test internal caching of React Query
-    ["/api/admin/delete"],
-    { method: "GET", url: "/api/admin/get" },
+    ["/api/admin/all"],
+    { method: "GET", url: "/api/admin/all" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
   );
@@ -34,11 +34,11 @@ export default function AdminsIndexPage() {
     <BasicLayout>
       <div className="pt-2">
         {createButton()}
-        <h1>Instructors</h1>
+        <h1>Admins</h1>
         <RoleEmailTable
           data={instructors}
           deleteEndpoint="/api/admin/delete"
-          getEndpoint="/api/admin/get"
+          getEndpoint="/api/admin/all"
           testIdPrefix="AdminsIndexPage"
         />
       </div>
