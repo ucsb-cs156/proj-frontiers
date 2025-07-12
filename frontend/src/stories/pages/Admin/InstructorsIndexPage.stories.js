@@ -46,7 +46,7 @@ ThreeItemsAdminUser.parameters = {
     http.get("/api/admin/instructors/get", () => {
       return HttpResponse.json(roleEmailFixtures.threeItems);
     }),
-    http.delete("/api/admins/instructors/all", () => {
+    http.delete("/api/admin/instructors/delete", () => {
       return HttpResponse.json(
         { message: "Item deleted successfully" },
         { status: 200 },

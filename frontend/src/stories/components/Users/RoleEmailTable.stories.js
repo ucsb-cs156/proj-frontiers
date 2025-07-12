@@ -15,7 +15,6 @@ export const Empty = Template.bind({});
 
 Empty.args = {
   data: [],
-  role: "admin",
 };
 
 export const ThreeItems = Template.bind({});

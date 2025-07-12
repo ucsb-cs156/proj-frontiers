@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import AdminsCreatePage from "main/pages/Admins/AdminsCreatePage";
+import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 
@@ -32,7 +32,7 @@ jest.mock("react-router-dom", () => {
   };
 });
 
-describe("AdminsCreatePage tests", () => {
+describe("InstructorsCreatePage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
 
   beforeEach(() => {
@@ -52,7 +52,7 @@ describe("AdminsCreatePage tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <AdminsCreatePage />
+          <InstructorsCreatePage />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -62,18 +62,18 @@ describe("AdminsCreatePage tests", () => {
     });
   });
 
-  test("on submit, makes request to backend, and redirects to /admin/admins", async () => {
+  test("on submit, makes request to backend, and redirects to /admin/instructors", async () => {
     const queryClient = new QueryClient();
-    const admin = {
+    const instructor = {
       email: "testemailone@ucsb.edu",
     };
 
-    axiosMock.onPost("/api/admin/admins/post").reply(202, admin);
+    axiosMock.onPost("/api/admin/instructors/post").reply(202, instructor);
 
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <AdminsCreatePage />
+          <InstructorsCreatePage />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -85,14 +85,14 @@ describe("AdminsCreatePage tests", () => {
     const emailInput = screen.getByLabelText("Email");
     expect(emailInput).toBeInTheDocument();
 
-    const AddButton = screen.getByText("Add Email");
-    expect(AddButton).toBeInTheDocument();
+    const createButton = screen.getByText("Create");
+    expect(createButton).toBeInTheDocument();
 
     fireEvent.change(emailInput, {
       target: { value: "testemailone@ucsb.edu" },
     });
 
-    fireEvent.click(AddButton);
+    fireEvent.click(createButton);
 
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
 
@@ -102,10 +102,15 @@ describe("AdminsCreatePage tests", () => {
 
     // assert - check that the toast was called with the expected message
     expect(mockToast).toHaveBeenCalledWith(
-      "New admin added - email: testemailone@ucsb.edu",
+      "New instructor added - email: testemailone@ucsb.edu",
     );
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: "/admin/instructors",
+      });
+    });
     expect(mockNavigate).toHaveBeenCalledWith({
-      to: "/admin/admins",
+      to: "/admin/instructors",
     });
   });
 });

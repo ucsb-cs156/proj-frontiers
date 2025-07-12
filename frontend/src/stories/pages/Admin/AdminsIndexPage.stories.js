@@ -48,7 +48,7 @@ ThreeItemsAdminUser.parameters = {
         roleEmailFixtures.threeItemsWithIsInAdminEmailField,
       );
     }),
-    http.delete("/api/admins/delete", () => {
+    http.delete("/api/admin/delete", () => {
       return HttpResponse.json(
         { message: "Item deleted successfully" },
         { status: 200 },
