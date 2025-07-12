@@ -57,6 +57,12 @@ export default function AppNavbar({
                   data-testid="appnavbar-admin-dropdown"
                 >
                   <NavDropdown.Item href="/admin/users">Users</NavDropdown.Item>
+                  <NavDropdown.Item href="/admin/admins">
+                    Admins
+                  </NavDropdown.Item>
+                  <NavDropdown.Item href="/admin/instructors">
+                    Instructors
+                  </NavDropdown.Item>
                 </NavDropdown>
               )}
               {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
@@ -67,12 +73,6 @@ export default function AppNavbar({
                 >
                   <NavDropdown.Item href="/instructor/courses">
                     Courses
-                  </NavDropdown.Item>
-                  <NavDropdown.Item href="/admin/admins">
-                    Admins
-                  </NavDropdown.Item>
-                  <NavDropdown.Item href="/admin/instructors">
-                    Instructors
                   </NavDropdown.Item>
                 </NavDropdown>
               )}
