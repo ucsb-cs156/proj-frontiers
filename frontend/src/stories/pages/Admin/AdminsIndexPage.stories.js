@@ -44,7 +44,9 @@ ThreeItemsAdminUser.parameters = {
       return HttpResponse.json(systemInfoFixtures.showingNeither);
     }),
     http.get("/api/admin/all", () => {
-      return HttpResponse.json(roleEmailFixtures.threeItems);
+      return HttpResponse.json(
+        roleEmailFixtures.threeItemsWithIsInAdminEmailField,
+      );
     }),
     http.delete("/api/admins/delete", () => {
       return HttpResponse.json(
