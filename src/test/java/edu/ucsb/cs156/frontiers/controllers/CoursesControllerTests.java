@@ -8,16 +8,17 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.List;
-import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -25,32 +26,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.core.Authentication;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.controllers.CoursesController.InstructorCourseView;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
-import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -563,4 +563,118 @@ public class CoursesControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(List.of(course1, course2));
                 assertEquals(expectedJson, responseString);
         }
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testGetCourseById() throws Exception {
+                // arrange
+                User user = currentUserService.getCurrentUser().getUser();
+                Course course = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(user)
+                                .build();
+
+                CoursesController.InstructorCourseView courseView = new CoursesController.InstructorCourseView(course);
+
+                when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+                // act
+                MvcResult response = mockMvc.perform(get("/api/courses/1"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(courseView);
+                assertEquals(expectedJson, responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testGetCourseById_courseDoesNotExist() throws Exception {
+               
+                when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+                // act
+                MvcResult response = mockMvc.perform(get("/api/courses/1"))
+                                .andExpect(status().isNotFound())
+                                .andReturn();
+
+                // assert
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                                "type", "EntityNotFoundException",
+                                "message", "Course with id 1 not found");
+                Map<String, String> actualMap = mapper.readValue(responseString, new TypeReference<Map<String, String>>() {});
+                assertEquals(expectedMap, actualMap);
+        }
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testGetCourseById_instructorCannotGetCourseCreatedBySomeoneElse() throws Exception {
+                // arrange
+                User user = currentUserService.getCurrentUser().getUser();
+                User otherInstructorUser = User.builder()
+                                .id(user.getId() + 1L)
+                                .email("not_" + user.getEmail())
+                                .build();
+
+                Course course = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(otherInstructorUser)
+                                .build();
+
+                when(courseRepository.findById(1L)).thenReturn(Optional.of(course));    
+                
+                 // act
+                MvcResult response = mockMvc.perform(get("/api/courses/1"))
+                                .andExpect(status().isNotFound())
+                                .andReturn();
+
+                // assert
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                                "type", "EntityNotFoundException",
+                                "message", "Course with id 1 not found");
+                Map<String, String> actualMap = mapper.readValue(responseString, new TypeReference<Map<String, String>>() {});
+                assertEquals(expectedMap, actualMap);
+        }
+       
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testGetCourseById_AdminCanGetCourseCreatedBySomeoneElse() throws Exception {
+                // arrange
+                User user = currentUserService.getCurrentUser().getUser();
+                User otherInstructorUser = User.builder()
+                                .id(user.getId() + 1L)
+                                .email("not_" + user.getEmail())
+                                .build();
+
+                Course course = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .orgName("ucsb-cs156-s25")
+                                .term("S25")
+                                .school("UCSB")
+                                .creator(otherInstructorUser)
+                                .build();
+
+                when(courseRepository.findById(1L)).thenReturn(Optional.of(course));    
+                
+                 // act
+                MvcResult response = mockMvc.perform(get("/api/courses/1"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+        }
 }
+
+
