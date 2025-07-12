@@ -1,8 +1,9 @@
 import React from "react";
-import OurTable, { ButtonColumn } from "main/components/OurTable";
+import OurTable from "main/components/OurTable";
 
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
+import { Button } from "react-bootstrap";
 
 export default function RoleEmailTable({
   data,
@@ -42,7 +43,34 @@ export default function RoleEmailTable({
       Header: "Email",
       accessor: "email", // accessor is the "key" in the data
     },
-    ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
+    {
+      Header: "Delete",
+      accessor: "isInAdminEmails",
+      Cell: ({ cell }) => {
+        console.log("cell.row.values", cell.row.values);
+        if (
+          !("isInAdminEmails" in cell.row.values) ||
+          !cell.row.values.isInAdminEmails
+        ) {
+          return (
+            <Button
+              className="btn btn-danger"
+              onClick={() => deleteCallback(cell)}
+              data-testid={`${testIdPrefix}-cell-row-${cell.row.index}-col-delete-button`}
+            >
+              Delete
+            </Button>
+          );
+        }
+        return (
+          <span
+            data-testId={`${testIdPrefix}-cell-row-${cell.row.index}-cannot-delete`}
+          >
+            In <code>ADMIN_EMAILS</code>
+          </span>
+        );
+      },
+    },
   ];
 
   return (
