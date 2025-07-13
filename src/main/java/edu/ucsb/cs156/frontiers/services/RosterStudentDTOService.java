@@ -35,7 +35,7 @@ public class RosterStudentDTOService {
         Iterable<RosterStudent> matchedStudents = rosterStudentRepository.findByCourseId(courseId);
         
         return StreamSupport.stream(matchedStudents.spliterator(), false)
-            .map(RosterStudentDTO::from)
+            .map(RosterStudentDTO::new)
             .collect(Collectors.toList());
 
     }

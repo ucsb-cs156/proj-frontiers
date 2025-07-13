@@ -38,20 +38,20 @@ public class RosterStudentDTOTests {
 
         // Act
 
-        RosterStudentDTO dto = RosterStudentDTO.from(rosterStudent);
+        RosterStudentDTO dto = new RosterStudentDTO(rosterStudent);
         // Assert
 
-        assertEquals(3L, dto.getId());
-        assertEquals(1L, dto.getCourseId());
-        assertEquals("U123456", dto.getStudentId());
-        assertEquals("John", dto.getFirstName());
-        assertEquals("Doe", dto.getLastName());
-        assertEquals("johndoe@example.com", dto.getEmail());
-        assertEquals(2L, dto.getUserId());
-        assertEquals(12345, dto.getUserGithubId());
-        assertEquals("testuser", dto.getUserGithubLogin());
-        assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
-        assertEquals(OrgStatus.PENDING, dto.getOrgStatus());
+        assertEquals(3L, dto.id());
+        assertEquals(1L, dto.courseId());
+        assertEquals("U123456", dto.studentId());
+        assertEquals("John", dto.firstName());
+        assertEquals("Doe", dto.lastName());
+        assertEquals("johndoe@example.com", dto.email());
+        assertEquals(2L, dto.userId());
+        assertEquals(12345, dto.userGithubId());
+        assertEquals("testuser", dto.userGithubLogin());
+        assertEquals(RosterStatus.ROSTER, dto.rosterStatus());
+        assertEquals(OrgStatus.PENDING, dto.orgStatus());
     }
 
     @Test
@@ -74,38 +74,20 @@ public class RosterStudentDTOTests {
         rosterStudent.setOrgStatus(OrgStatus.PENDING);
 
         // Act
-        RosterStudentDTO dto = RosterStudentDTO.from(rosterStudent);
+        RosterStudentDTO dto = new RosterStudentDTO(rosterStudent);
 
         // Assert
-        assertEquals(3L, dto.getId());
-        assertEquals(1L, dto.getCourseId());
-        assertEquals("U123456", dto.getStudentId());
-        assertEquals("John", dto.getFirstName());
-        assertEquals("Doe", dto.getLastName());
-        assertEquals("johndoe@example.com", dto.getEmail());
-        assertEquals(0, dto.getUserId());
-        assertEquals(12345, dto.getUserGithubId());
-        assertEquals("testuser", dto.getUserGithubLogin());
-        assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
-        assertEquals(OrgStatus.PENDING, dto.getOrgStatus());
+        assertEquals(3L, dto.id());
+        assertEquals(1L, dto.courseId());
+        assertEquals("U123456", dto.studentId());
+        assertEquals("John", dto.firstName());
+        assertEquals("Doe", dto.lastName());
+        assertEquals("johndoe@example.com", dto.email());
+        assertEquals(0L, dto.userId());
+        assertEquals(12345, dto.userGithubId());
+        assertEquals("testuser", dto.userGithubLogin());
+        assertEquals(RosterStatus.ROSTER, dto.rosterStatus());
+        assertEquals(OrgStatus.PENDING, dto.orgStatus());
 
-    }
-
-    @Test
-    public void test_no_arg_constructor() {
-        // Arrange
-        RosterStudentDTO dto = new RosterStudentDTO();
-
-        // Act & Assert
-        assertEquals(null, dto.getId());
-        assertEquals(null, dto.getCourseId());
-        assertEquals(null, dto.getStudentId());
-        assertEquals(null, dto.getFirstName());
-        assertEquals(null, dto.getLastName());
-        assertEquals(null, dto.getEmail());
-        assertEquals(0L, dto.getUserId());
-        assertEquals(null, dto.getUserGithubId());
-        assertEquals(null, dto.getUserGithubLogin());
-        assertEquals(null, dto.getOrgStatus());
     }
 }

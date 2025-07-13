@@ -128,25 +128,23 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .school("UCSB")
             .build();
 
-    RosterStudentDTO rosterStudentDTO = RosterStudentDTO.builder()
-            .id(42L)
-            .courseId(course.getId())
-            .studentId("12345")
-            .firstName("Chris")
-            .lastName("Gaucho")
-            .email("cgaucho@ucsb.edu")
-            .userId(102L)
-            .userGithubId(12345)
-            .userGithubLogin("cgaucho")
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
+    RosterStudentDTO rosterStudentDTO = new RosterStudentDTO(
+            42L,
+            course.getId(),
+            "12345",
+            "Chris",
+            "Gaucho",
+            "cgaucho@ucsb.edu",
+            102L,
+            12345,
+            "cgaucho",
+            RosterStatus.ROSTER,
+            OrgStatus.PENDING
+    );
+              
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
     doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
     
-
-
     String expectedResponse =  """
                 "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","STUDENTID","USERGITHUBID","USERGITHUBLOGIN","USERID"
                 "1","cgaucho@ucsb.edu","Chris","42","Gaucho","PENDING","ROSTER","12345","12345","cgaucho","102"

@@ -499,7 +499,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                 expected.put("courseName", course.getCourseName());
                 expected.put("term", course.getTerm());
                 expected.put("school", course.getSchool());
-                expected.put("studentStatus", RosterStudentDTO.from(rs).getOrgStatus());
+                expected.put("studentStatus", new RosterStudentDTO(rs).orgStatus());
 
                 String expectedJson = mapper.writeValueAsString(List.of(expected));
                 assertEquals(expectedJson, result.getResponse().getContentAsString());

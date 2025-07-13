@@ -64,17 +64,17 @@ public class RosterStudentDTOServiceTests {
         // Assert
         assertEquals(1, dtos.size());
         RosterStudentDTO dto = dtos.get(0);
-        assertEquals(3L, dto.getId());
-        assertEquals(1L, dto.getCourseId());
-        assertEquals("U123456", dto.getStudentId());
-        assertEquals("John", dto.getFirstName());
-        assertEquals("Doe", dto.getLastName());
-        assertEquals("johndoe@example.com", dto.getEmail());
-        assertEquals(2L, dto.getUserId());
-        assertEquals(12345, dto.getUserGithubId());
-        assertEquals("testuser", dto.getUserGithubLogin());
-        assertEquals(RosterStatus.ROSTER, dto.getRosterStatus());
-        assertEquals(OrgStatus.PENDING, dto.getOrgStatus());
+        assertEquals(3L, dto.id());
+        assertEquals(1L, dto.courseId());
+        assertEquals("U123456", dto.studentId());
+        assertEquals("John", dto.firstName());
+        assertEquals("Doe", dto.lastName());
+        assertEquals("johndoe@example.com", dto.email());
+        assertEquals(2L, dto.userId());
+        assertEquals(12345, dto.userGithubId());
+        assertEquals("testuser", dto.userGithubLogin());
+        assertEquals(RosterStatus.ROSTER, dto.rosterStatus());
+        assertEquals(OrgStatus.PENDING, dto.orgStatus());
     }
 
   

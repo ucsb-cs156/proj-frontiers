@@ -4,59 +4,38 @@ package edu.ucsb.cs156.frontiers.models;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 
 /**
  * This is a DTO class that represents a student in the roster.
  * It is used to transfer data between the server and the client.
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class RosterStudentDTO {
- 
-    private Long id;
 
-    private Long courseId;
-    
-    private String studentId;
-    private String firstName;
-    private String lastName;
-    private String email;
+public record RosterStudentDTO(
+        Long id,
+        Long courseId,
+        String studentId,
+        String firstName,
+        String lastName,
+        String email,
+        long userId,
+        Integer userGithubId,
+        String userGithubLogin,
+        RosterStatus rosterStatus,
+        OrgStatus orgStatus) {
 
-    private long userId;
-    private Integer userGithubId;
-    private String userGithubLogin;
-
-    @Enumerated(EnumType.STRING)
-    private RosterStatus rosterStatus;
-
-    @Enumerated(EnumType.STRING)
-    private OrgStatus orgStatus;
-
-
-    public static RosterStudentDTO from(RosterStudent student) {
-        long userId = student.getUser() != null ? student.getUser().getId() : 0;
-        
-        return RosterStudentDTO.builder()
-                .id(student.getId())
-                .courseId(student.getCourse().getId())
-                .studentId(student.getStudentId())
-                .firstName(student.getFirstName())
-                .lastName(student.getLastName())
-                .email(student.getEmail())
-                .userId(userId)
-                .userGithubId(student.getGithubId())
-                .userGithubLogin(student.getGithubLogin())
-                .rosterStatus(student.getRosterStatus())
-                .orgStatus(student.getOrgStatus())
-                .build();
+    public RosterStudentDTO(RosterStudent rosterStudent)  {
+        this(
+                rosterStudent.getId(),
+                rosterStudent.getCourse().getId(),
+                rosterStudent.getStudentId(),
+                rosterStudent.getFirstName(),
+                rosterStudent.getLastName(),
+                rosterStudent.getEmail(),
+                rosterStudent.getUser() != null ? rosterStudent.getUser().getId() : 0,
+                rosterStudent.getGithubId(),
+                rosterStudent.getGithubLogin(),
+                rosterStudent.getRosterStatus(),
+                rosterStudent.getOrgStatus()
+        );
     }
 }
