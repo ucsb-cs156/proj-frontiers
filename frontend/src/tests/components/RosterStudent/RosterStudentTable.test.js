@@ -28,12 +28,23 @@ describe("RosterStudentTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <RosterStudentTable students={[]} currentUser={currentUser} />
+          <RosterStudentTable
+            students={[]}
+            currentUser={currentUser}
+            courseId="7"
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
     // assert
+
+    const courseIdHiddenElement = screen.getByTestId(`${testId}-courseId`);
+    expect(courseIdHiddenElement).toBeInTheDocument();
+    expect(courseIdHiddenElement).toHaveAttribute("data-course-id", "7");
+    // Expect it to have style display:none
+    expect(courseIdHiddenElement).toHaveStyle("display: none");
+
     expectedHeaders.forEach((headerText) => {
       const header = screen.getByText(headerText);
       expect(header).toBeInTheDocument();
