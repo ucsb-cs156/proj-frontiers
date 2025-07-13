@@ -24,7 +24,7 @@ Note that you may need to modify:
 
 ```
 dokku apps:create frontiers
-dokku git:set appname keep-git-dir true
+dokku git:set frontiers keep-git-dir true
 dokku config:set --no-restart frontiers PRODUCTION=true
 dokku config:set --no-restart frontiers SOURCE_REPO=https://github.com/ucsb-cs156/proj-frontiers
 dokku postgres:create frontiers-db
