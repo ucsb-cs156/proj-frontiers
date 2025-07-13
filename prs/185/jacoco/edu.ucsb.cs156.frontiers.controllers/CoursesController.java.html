@@ -272,7 +272,7 @@ import lombok.extern.slf4j.Slf4j;
 <span class="fc" id="L272">        return rosterStudents.stream()</span>
 <span class="fc" id="L273">                .map(rs -&gt; {</span>
 <span class="fc" id="L274">                    Course course = rs.getCourse();</span>
-<span class="fc" id="L275">                    RosterStudentDTO rsDto = RosterStudentDTO.from(rs);</span>
+<span class="fc" id="L275">                    RosterStudentDTO rsDto = new RosterStudentDTO(rs);</span>
 <span class="fc" id="L276">                    Map&lt;String, Object&gt; response = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc" id="L277">                    response.put(&quot;id&quot;, course.getId());</span>
 <span class="fc" id="L278">                    response.put(&quot;installationId&quot;, course.getInstallationId());</span>
@@ -280,7 +280,7 @@ import lombok.extern.slf4j.Slf4j;
 <span class="fc" id="L280">                    response.put(&quot;courseName&quot;, course.getCourseName());</span>
 <span class="fc" id="L281">                    response.put(&quot;term&quot;, course.getTerm());</span>
 <span class="fc" id="L282">                    response.put(&quot;school&quot;, course.getSchool());</span>
-<span class="fc" id="L283">                    response.put(&quot;studentStatus&quot;, rsDto.getOrgStatus());</span>
+<span class="fc" id="L283">                    response.put(&quot;studentStatus&quot;, rsDto.orgStatus());</span>
 <span class="fc" id="L284">                    return response;</span>
                 })
 <span class="fc" id="L286">                .collect(Collectors.toList());</span>
