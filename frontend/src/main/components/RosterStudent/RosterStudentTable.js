@@ -67,5 +67,14 @@ export default function RosterStudentTable({
     );
   }
 
-  return <OurTable data={students} columns={columns} testid={testIdPrefix} />;
+  return (
+    <>
+      <OurTable data={students} columns={columns} testid={testIdPrefix} />
+      <div
+        style={{ display: "none" }}
+        data-testid={`${testIdPrefix}-courseId`}
+        data-course-id={`${courseId}`}
+      />
+    </>
+  );
 }
