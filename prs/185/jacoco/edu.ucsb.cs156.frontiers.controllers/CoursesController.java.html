@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CoursesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">CoursesController.java</span></div><h1>CoursesController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.models.CurrentUser;
+import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+
+@Tag(name = &quot;Course&quot;)
+@RequestMapping(&quot;/api/courses&quot;)
+@RestController
+<span class="fc" id="L49">@Slf4j</span>
+<span class="fc" id="L50">public class CoursesController extends ApiController {</span>
+
+    @Autowired
+    private CourseRepository courseRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RosterStudentRepository rosterStudentRepository;
+
+    @Autowired
+    private CourseStaffRepository courseStaffRepository;
+
+    @Autowired private OrganizationLinkerService linkerService;
+
+    /**
+     * This method creates a new Course.
+     * 
+     * @param courseName the name of the course
+     * @param term       the term of the course
+     * @param school     the school of the course
+     * @return the created course
+     */
+
+    @Operation(summary = &quot;Create a new course&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @PostMapping(&quot;/post&quot;)
+    public Course postCourse(
+            @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
+            @Parameter(name = &quot;term&quot;) @RequestParam String term,
+            @Parameter(name = &quot;school&quot;) @RequestParam String school) {
+        // get current date right now and set status to pending
+<span class="fc" id="L83">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L84">        Course course = Course.builder()</span>
+<span class="fc" id="L85">                .courseName(courseName)</span>
+<span class="fc" id="L86">                .term(term)</span>
+<span class="fc" id="L87">                .school(school)</span>
+<span class="fc" id="L88">                .creator(currentUser.getUser())</span>
+<span class="fc" id="L89">                .build();</span>
+<span class="fc" id="L90">        Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L92">        return savedCourse;</span>
+    }
+
+
+    /**
+     * Projection of Course entity with fields that are relevant for instructors
+     * and admins
+     */
+<span class="fc" id="L100">    public static record InstructorCourseView(</span>
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            Long createdByUserId,
+            String createdByEmail) {
+
+        
+        // Creates view from Course entity and student email
+        public InstructorCourseView(Course c) {
+<span class="fc" id="L113">            this(</span>
+<span class="fc" id="L114">                c.getId(),</span>
+<span class="fc" id="L115">                c.getInstallationId(),</span>
+<span class="fc" id="L116">                c.getOrgName(),</span>
+<span class="fc" id="L117">                c.getCourseName(),</span>
+<span class="fc" id="L118">                c.getTerm(),</span>
+<span class="fc" id="L119">                c.getSchool(),</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                c.getCreator() != null ? c.getCreator().getId() : null,</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                c.getCreator() != null ? c.getCreator().getEmail() : null</span>
+            );
+<span class="fc" id="L123">        }</span>
+    }
+
+    /**
+     * This method returns a list of courses.
+     * 
+     * @return a list of all courses.
+     */
+    @Operation(summary = &quot;List all courses&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;/all&quot;)
+    public Iterable&lt;InstructorCourseView&gt; allCourses() {
+<span class="fc" id="L135">        List&lt;Course&gt; courses = null;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (!isCurrentUserAdmin()) {</span>
+            // if the user is not an admin, return only the courses they created
+<span class="fc" id="L138">            CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L139">            Long userId = currentUser.getUser().getId();</span>
+<span class="fc" id="L140">            courses = courseRepository.findByCreatorId(userId);</span>
+            // Convert to InstructorCourseView
+<span class="fc" id="L142">            List&lt;InstructorCourseView&gt; courseViews = courses.stream()</span>
+<span class="fc" id="L143">                    .map(InstructorCourseView::new)</span>
+<span class="fc" id="L144">                    .collect(Collectors.toList());</span>
+            // Return as Iterable
+<span class="fc" id="L146">            return courseViews;</span>
+        } else {
+<span class="fc" id="L148">            courses = courseRepository.findAll();</span>
+        }
+<span class="fc" id="L150">        List&lt;InstructorCourseView&gt; courseViews = courses.stream()</span>
+<span class="fc" id="L151">                    .map(InstructorCourseView::new)</span>
+<span class="fc" id="L152">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L153">        return courseViews;</span>
+    }
+
+    /**
+     * This method returns single course by its id
+     * 
+     * @return a course
+     */
+    @Operation(summary = &quot;Get course by id&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public InstructorCourseView getCourseById(@Parameter(name = &quot;id&quot;) @PathVariable Long id) {
+<span class="fc" id="L165">        Course course = courseRepository.findById(id)</span>
+<span class="fc" id="L166">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, id));</span>
+<span class="fc bfc" id="L167" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L168">            throw new EntityNotFoundException(Course.class, id);</span>
+        }
+        // Convert to InstructorCourseView
+<span class="fc" id="L171">        InstructorCourseView courseView = new InstructorCourseView(course);</span>
+<span class="fc" id="L172">        return courseView;</span>
+    }
+
+    /**
+     * &lt;p&gt;
+     * This is the outgoing method, redirecting from Frontiers to GitHub to allow a
+     * Course to be linked to a GitHub Organization.
+     * It redirects from Frontiers to the GitHub app installation process, and will
+     * return with the {@link #addInstallation(Optional, String, String, Long)
+     * addInstallation()} endpoint
+     * &lt;/p&gt;
+     * 
+     * @param courseId id of the course to be linked to
+     * @return dynamically loaded url to install Frontiers to a Github Organization,
+     *         with the courseId marked as the state parameter, which GitHub will
+     *         return.
+     *
+     */
+    @Operation(summary = &quot;Authorize Frontiers to a Github Course&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;/redirect&quot;)
+    public ResponseEntity&lt;Void&gt; linkCourse(@Parameter Long courseId)
+            throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L195">        String newUrl = linkerService.getRedirectUrl();</span>
+<span class="fc" id="L196">        newUrl += &quot;/installations/new?state=&quot; + courseId;</span>
+        // found this convenient solution here:
+        // https://stackoverflow.com/questions/29085295/spring-mvc-restcontroller-and-redirect
+<span class="fc" id="L199">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, newUrl).build();</span>
+    }
+
+    /**
+     *
+     * @param installation_id id of the incoming GitHub Organization installation
+     * @param setup_action    whether the permissions are installed or updated.
+     *                        Required RequestParam but not used by the method.
+     * @param code            token to be exchanged with GitHub to ensure the
+     *                        request is legitimate and not spoofed.
+     * @param state           id of the Course to be linked with the GitHub
+     *                        installation.
+     * @return ResponseEntity, returning /success if the course was successfully
+     *         linked or /noperms if the user does not have the permission to
+     *         install the application on GitHub. Alternately returns 403 Forbidden
+     *         if the user is not the creator.
+     */
+
+    @Operation(summary = &quot;Link a Course to a Github Organization by installing Github App&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;link&quot;)
+    public ResponseEntity&lt;Void&gt; addInstallation(
+            @Parameter(name = &quot;installationId&quot;) @RequestParam Optional&lt;String&gt; installation_id,
+            @Parameter(name = &quot;setupAction&quot;) @RequestParam String setup_action,
+            @Parameter(name = &quot;code&quot;) @RequestParam String code,
+            @Parameter(name = &quot;state&quot;) @RequestParam Long state)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if (installation_id.isEmpty()) {</span>
+<span class="fc" id="L227">            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L228">                    .header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;).build();</span>
+        } else {
+<span class="fc" id="L230">            Course course = courseRepository.findById(state)</span>
+<span class="fc" id="L231">                    .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
+<span class="fc bfc" id="L232" title="All 4 branches covered.">            if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L233">                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
+            } else {
+<span class="fc" id="L235">                String orgName = linkerService.getOrgName(installation_id.get());</span>
+<span class="fc" id="L236">                course.setInstallationId(installation_id.get());</span>
+<span class="fc" id="L237">                course.setOrgName(orgName);</span>
+<span class="fc" id="L238">                courseRepository.save(course);</span>
+<span class="fc" id="L239">                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L240">                        .header(HttpHeaders.LOCATION, &quot;/instructor/courses?success=True&amp;course=&quot; + state).build();</span>
+            }
+        }
+    }
+
+    /**
+     * This method handles the InvalidInstallationTypeException.
+     * 
+     * @param e the exception
+     * @return a map with the type and message of the exception
+     */
+    @ExceptionHandler({ InvalidInstallationTypeException.class })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Object handleInvalidInstallationType(Throwable e) {
+<span class="fc" id="L254">        return Map.of(</span>
+<span class="fc" id="L255">                &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L256">                &quot;message&quot;, e.getMessage());</span>
+    }
+
+    /**
+     * This method returns a list of courses that the current user is enrolled.
+     * 
+     * @return a list of courses in the DTO form along with the student status in the organization.
+     */
+    @Operation(summary = &quot;List all courses for the current student, including their org status&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+    @GetMapping(&quot;/list&quot;)
+    public List&lt;Map&lt;String, Object&gt;&gt; listCoursesForCurrentUser() {
+<span class="fc" id="L268">        String email = getCurrentUser().getUser().getEmail();</span>
+<span class="fc" id="L269">        Iterable&lt;RosterStudent&gt; rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);</span>
+<span class="fc" id="L270">        List&lt;RosterStudent&gt; rosterStudents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L271">        rosterStudentsIterable.forEach(rosterStudents::add);</span>
+<span class="fc" id="L272">        return rosterStudents.stream()</span>
+<span class="fc" id="L273">                .map(rs -&gt; {</span>
+<span class="fc" id="L274">                    Course course = rs.getCourse();</span>
+<span class="fc" id="L275">                    RosterStudentDTO rsDto = RosterStudentDTO.from(rs);</span>
+<span class="fc" id="L276">                    Map&lt;String, Object&gt; response = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L277">                    response.put(&quot;id&quot;, course.getId());</span>
+<span class="fc" id="L278">                    response.put(&quot;installationId&quot;, course.getInstallationId());</span>
+<span class="fc" id="L279">                    response.put(&quot;orgName&quot;, course.getOrgName());</span>
+<span class="fc" id="L280">                    response.put(&quot;courseName&quot;, course.getCourseName());</span>
+<span class="fc" id="L281">                    response.put(&quot;term&quot;, course.getTerm());</span>
+<span class="fc" id="L282">                    response.put(&quot;school&quot;, course.getSchool());</span>
+<span class="fc" id="L283">                    response.put(&quot;studentStatus&quot;, rsDto.getOrgStatus());</span>
+<span class="fc" id="L284">                    return response;</span>
+                })
+<span class="fc" id="L286">                .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * student see what courses they appear as staff in
+     * 
+     * @param studentId the id of the student making request
+     * @return a list of all courses student is staff in
+     */
+    @Operation(summary= &quot;Student see what courses they appear as staff in&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+    @GetMapping(&quot;/staffCourses&quot;) 
+    public Iterable&lt;Course&gt; staffCourses() {
+<span class="fc" id="L299">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L300">        User user = currentUser.getUser();</span>
+
+<span class="fc" id="L302">        String email = user.getEmail();</span>
+
+<span class="fc" id="L304">        Iterable&lt;CourseStaff&gt; staffs = courseStaffRepository.findAllByEmail(email);</span>
+        
+<span class="fc" id="L306">        List&lt;Long&gt; courseIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        for (CourseStaff staff : staffs) {</span>
+<span class="fc" id="L308">            courseIds.add(staff.getCourse().getId());</span>
+<span class="fc" id="L309">        }</span>
+
+<span class="fc" id="L311">        Iterable&lt;Course&gt; courses = courseRepository.findAllById(courseIds);</span>
+<span class="fc" id="L312">        return courses;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
