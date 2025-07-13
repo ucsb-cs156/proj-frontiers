@@ -267,7 +267,7 @@ public class CoursesController extends ApiController {
         return rosterStudents.stream()
                 .map(rs -> {
                     Course course = rs.getCourse();
-                    RosterStudentDTO rsDto = RosterStudentDTO.from(rs);
+                    RosterStudentDTO rsDto = new RosterStudentDTO(rs);
                     Map<String, Object> response = new LinkedHashMap<>();
                     response.put("id", course.getId());
                     response.put("installationId", course.getInstallationId());
@@ -275,7 +275,7 @@ public class CoursesController extends ApiController {
                     response.put("courseName", course.getCourseName());
                     response.put("term", course.getTerm());
                     response.put("school", course.getSchool());
-                    response.put("studentStatus", rsDto.getOrgStatus());
+                    response.put("studentStatus", rsDto.orgStatus());
                     return response;
                 })
                 .collect(Collectors.toList());
