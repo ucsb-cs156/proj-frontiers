@@ -9,6 +9,7 @@ import {
 
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import coursesFixtures from "fixtures/coursesFixtures";
+import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -32,11 +33,13 @@ const exampleCourse = {
   createdByEmail: "phtcon@ucsb.edu",
 };
 
-export const ExampleCourse = Template.bind({});
-ExampleCourse.args = {
+const rosterStudents = rosterStudentFixtures.threeStudents;
+
+export const ExampleCourseNoStudents = Template.bind({});
+ExampleCourseNoStudents.args = {
   suppressMemoryRouter: true,
 };
-ExampleCourse.parameters = {
+ExampleCourseNoStudents.parameters = {
   msw: {
     handlers: [
       http.get("/api/currentUser", () => {
@@ -52,6 +55,56 @@ ExampleCourse.parameters = {
         return HttpResponse.json(exampleCourse, {
           status: 200,
         });
+      }),
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json([], {
+          status: 200,
+        });
+      }),
+    ],
+  },
+};
+
+export const ExampleCourseThreeStudents = Template.bind({});
+ExampleCourseThreeStudents.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseThreeStudents.parameters = {
+  msw: {
+    handlers: [
+      http.get("/api/currentUser", () => {
+        return HttpResponse.json(apiCurrentUserFixtures.adminUser);
+      }),
+      http.get("/api/currentUser", () => {
+        return HttpResponse.json(apiCurrentUserFixtures.adminUser);
+      }),
+      http.get("/api/systemInfo", () => {
+        return HttpResponse.json(systemInfoFixtures.showingNeither);
+      }),
+      http.get("/api/courses/7", () => {
+        return HttpResponse.json(exampleCourse, {
+          status: 200,
+        });
+      }),
+      http.get("/api/rosterstudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.delete("/api/rosterstudents/delete", ({ request }) => {
+        const url = new URL(request.url);
+        window.alert(
+          "Invoked delete with URL: " +
+            url +
+            " and params: " +
+            JSON.stringify(Object.fromEntries(url.searchParams)),
+        );
+        return HttpResponse.json(
+          {},
+          {
+            status: 200,
+          },
+        );
       }),
     ],
   },

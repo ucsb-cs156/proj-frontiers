@@ -6,26 +6,27 @@ import {
   cellToAxiosParamsDelete,
   onDeleteSuccess,
 } from "main/utils/rosterStudentUtils";
-import { useNavigate } from "react-router-dom";
 import { hasRole } from "main/utils/currentUser";
 
 export default function RosterStudentTable({
   students,
   currentUser,
+  courseId,
   testIdPrefix = "RosterStudentTable",
 }) {
-  const navigate = useNavigate();
-
   const editCallback = (cell) => {
-    navigate(`/rosterstudents/edit/${cell.row.values.studentId}`);
+    const url = `/rosterstudents/edit/${cell.row.values.id}`;
+    window.alert(
+      "Edit not implemented yet, but would have navigated to: " + url,
+    );
+    // Future implementation: navigate(url);
   };
 
   // Stryker disable all : hard to test for query caching
-
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
-    ["/api/rosterstudents/all"],
+    [`/api/rosterstudents/course/${courseId}`],
   );
   // Stryker restore all
 
@@ -36,8 +37,13 @@ export default function RosterStudentTable({
 
   const columns = [
     {
+      Header: "id",
+      accessor: "id",
+    },
+
+    {
       Header: "Student Id",
-      accessor: "studentId", // accessor is the "key" in the data
+      accessor: "studentId",
     },
 
     {

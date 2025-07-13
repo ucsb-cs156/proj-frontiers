@@ -40,6 +40,7 @@ describe("InstructorCourseShowPage tests", () => {
       createdByEmail: "phtcon@ucsb.edu",
     };
     axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+    axiosMock.onGet("/api/rosterstudents/course/1").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -69,6 +70,8 @@ describe("InstructorCourseShowPage tests", () => {
     const queryClient = new QueryClient();
 
     axiosMock.onGet("/api/courses/7").reply(200, "");
+
+    axiosMock.onGet("/api/rosterstudents/course/7").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>

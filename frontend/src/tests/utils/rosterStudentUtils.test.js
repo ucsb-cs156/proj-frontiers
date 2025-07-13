@@ -35,16 +35,16 @@ describe("rosterStudentUtils", () => {
   describe("cellToAxiosParamsDelete", () => {
     test("It returns the correct params", () => {
       // arrange
-      const cell = { row: { values: { studentId: 2 } } };
+      const cell = { row: { values: { id: 2 } } };
 
       // act
       const result = cellToAxiosParamsDelete(cell);
 
       // assert
       expect(result).toEqual({
-        url: "/api/rosterstudents",
+        url: "/api/rosterstudents/delete",
         method: "DELETE",
-        params: { studentId: 2 },
+        params: { id: 2 },
       });
     });
   });

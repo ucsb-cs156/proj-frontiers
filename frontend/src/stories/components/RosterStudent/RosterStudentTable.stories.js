@@ -17,6 +17,7 @@ export const Empty = Template.bind({});
 
 Empty.args = {
   students: [],
+  courseId: "",
   currentUser: currentUserFixtures.userOnly,
 };
 
@@ -25,20 +26,31 @@ export const ThreeItemsOrdinaryUser = Template.bind({});
 ThreeItemsOrdinaryUser.args = {
   students: rosterStudentFixtures.threeStudents,
   currentUser: currentUserFixtures.userOnly,
+  courseId: "1",
 };
 
 export const ThreeItemsAdminUser = Template.bind({});
 ThreeItemsAdminUser.args = {
   students: rosterStudentFixtures.threeStudents,
   currentUser: currentUserFixtures.adminUser,
+  courseId: "1",
 };
 
 ThreeItemsAdminUser.parameters = {
   msw: [
-    http.delete("/api/rosterstudents", () => {
+    http.delete("/api/rosterstudents/delete", ({ request }) => {
+      const url = new URL(request.url);
+      window.alert(
+        "Invoked delete with URL: " +
+          url +
+          " and params: " +
+          JSON.stringify(Object.fromEntries(url.searchParams)),
+      );
       return HttpResponse.json(
-        { message: "Student deleted successfully" },
-        { status: 200 },
+        {},
+        {
+          status: 200,
+        },
       );
     }),
   ],
