@@ -4,8 +4,7 @@
 import edu.ucsb.cs156.frontiers.entities.Admin;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
-
-
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,9 +43,9 @@ import java.util.stream.StreamSupport;
 @Tag(name = &quot;Admin&quot;)
 @RequestMapping(&quot;/api/admin&quot;)
 @RestController
-<span class="fc" id="L47">@Slf4j</span>
+<span class="fc" id="L46">@Slf4j</span>
 
-<span class="fc" id="L49">public class AdminsController extends ApiController {</span>
+<span class="fc" id="L48">public class AdminsController extends ApiController {</span>
    @Autowired
    AdminRepository adminRepository;
 
@@ -54,16 +53,16 @@ import java.util.stream.StreamSupport;
     List&lt;String&gt; adminEmails;
 
 
-<span class="fc" id="L57">  public static record AdminDTO(</span>
+<span class="fc" id="L56">  public static record AdminDTO(</span>
           String email,
           boolean isInAdminEmails
   ) {
       public AdminDTO(Admin admin, List&lt;String&gt; adminEmails) {
-<span class="fc" id="L62">          this(</span>
-<span class="fc" id="L63">                  admin.getEmail(),</span>
-<span class="fc" id="L64">                  adminEmails.contains(admin.getEmail())</span>
+<span class="fc" id="L61">          this(</span>
+<span class="fc" id="L62">                  admin.getEmail(),</span>
+<span class="fc" id="L63">                  adminEmails.contains(admin.getEmail())</span>
           );
-<span class="fc" id="L66">      }</span>
+<span class="fc" id="L65">      }</span>
   }
 
    /**
@@ -77,10 +76,10 @@ import java.util.stream.StreamSupport;
   public Admin postAdmin(
           @Parameter(name=&quot;email&quot;) @RequestParam String email)
       {
-      
-<span class="fc" id="L81">      Admin admin = new Admin(email);</span>
-<span class="fc" id="L82">      Admin savedAdmin = adminRepository.save(admin);</span>
-<span class="fc" id="L83">      return savedAdmin;</span>
+<span class="fc" id="L79">      String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);</span>
+<span class="fc" id="L80">      Admin admin = new Admin(convertedEmail);</span>
+<span class="fc" id="L81">      Admin savedAdmin = adminRepository.save(admin);</span>
+<span class="fc" id="L82">      return savedAdmin;</span>
   }
 
   /**
@@ -92,12 +91,12 @@ import java.util.stream.StreamSupport;
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
     @GetMapping(&quot;/all&quot;)
     public Iterable&lt;AdminDTO&gt; allAdmins() {
-<span class="fc" id="L95">        Iterable&lt;Admin&gt; admins = adminRepository.findAll();</span>
-<span class="fc" id="L96">        List&lt;AdminDTO&gt; adminDTOs = StreamSupport.stream(admins.spliterator(), false)</span>
-<span class="fc" id="L97">                .map(admin -&gt; new AdminDTO(admin, adminEmails))</span>
-<span class="fc" id="L98">                .toList();</span>
+<span class="fc" id="L94">        Iterable&lt;Admin&gt; admins = adminRepository.findAll();</span>
+<span class="fc" id="L95">        List&lt;AdminDTO&gt; adminDTOs = StreamSupport.stream(admins.spliterator(), false)</span>
+<span class="fc" id="L96">                .map(admin -&gt; new AdminDTO(admin, adminEmails))</span>
+<span class="fc" id="L97">                .toList();</span>
 
-<span class="fc" id="L100">        return adminDTOs;</span>
+<span class="fc" id="L99">        return adminDTOs;</span>
     }
 
     /**
@@ -111,13 +110,13 @@ import java.util.stream.StreamSupport;
    @DeleteMapping(&quot;/delete&quot;)
    public Object deleteAdmin(
            @Parameter(name=&quot;email&quot;) @RequestParam String email) {
-<span class="fc" id="L114">       Admin admin = adminRepository.findByEmail(email)</span>
-<span class="fc" id="L115">               .orElseThrow(() -&gt; new EntityNotFoundException(Admin.class, email));</span>
-<span class="fc bfc" id="L116" title="All 2 branches covered.">      if (adminEmails.contains(email)) {</span>
-<span class="fc" id="L117">        throw new UnsupportedOperationException(&quot;Forbidden to delete an admin from ADMIN_EMAILS list&quot;);</span>
+<span class="fc" id="L113">       Admin admin = adminRepository.findByEmail(email)</span>
+<span class="fc" id="L114">               .orElseThrow(() -&gt; new EntityNotFoundException(Admin.class, email));</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">      if (adminEmails.contains(email)) {</span>
+<span class="fc" id="L116">        throw new UnsupportedOperationException(&quot;Forbidden to delete an admin from ADMIN_EMAILS list&quot;);</span>
       }
-<span class="fc" id="L119">       adminRepository.delete(admin);</span>
-<span class="fc" id="L120">       return genericMessage(&quot;Admin with id %s deleted&quot;.formatted(email));</span>
+<span class="fc" id="L118">       adminRepository.delete(admin);</span>
+<span class="fc" id="L119">       return genericMessage(&quot;Admin with id %s deleted&quot;.formatted(email));</span>
    }
 
 }
