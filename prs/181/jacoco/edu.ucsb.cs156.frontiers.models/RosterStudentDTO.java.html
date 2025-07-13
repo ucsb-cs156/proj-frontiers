@@ -4,60 +4,39 @@
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 
 /**
  * This is a DTO class that represents a student in the roster.
  * It is used to transfer data between the server and the client.
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class RosterStudentDTO {
- 
-    private Long id;
 
-    private Long courseId;
-    
-    private String studentId;
-    private String firstName;
-    private String lastName;
-    private String email;
+<span class="fc" id="L13">public record RosterStudentDTO(</span>
+        Long id,
+        Long courseId,
+        String studentId,
+        String firstName,
+        String lastName,
+        String email,
+        long userId,
+        Integer userGithubId,
+        String userGithubLogin,
+        RosterStatus rosterStatus,
+        OrgStatus orgStatus) {
 
-    private long userId;
-    private Integer userGithubId;
-    private String userGithubLogin;
-
-    @Enumerated(EnumType.STRING)
-    private RosterStatus rosterStatus;
-
-    @Enumerated(EnumType.STRING)
-    private OrgStatus orgStatus;
-
-
-    public static RosterStudentDTO from(RosterStudent student) {
-<span class="fc bfc" id="L46" title="All 2 branches covered.">        long userId = student.getUser() != null ? student.getUser().getId() : 0;</span>
-        
-<span class="fc" id="L48">        return RosterStudentDTO.builder()</span>
-<span class="fc" id="L49">                .id(student.getId())</span>
-<span class="fc" id="L50">                .courseId(student.getCourse().getId())</span>
-<span class="fc" id="L51">                .studentId(student.getStudentId())</span>
-<span class="fc" id="L52">                .firstName(student.getFirstName())</span>
-<span class="fc" id="L53">                .lastName(student.getLastName())</span>
-<span class="fc" id="L54">                .email(student.getEmail())</span>
-<span class="fc" id="L55">                .userId(userId)</span>
-<span class="fc" id="L56">                .userGithubId(student.getGithubId())</span>
-<span class="fc" id="L57">                .userGithubLogin(student.getGithubLogin())</span>
-<span class="fc" id="L58">                .rosterStatus(student.getRosterStatus())</span>
-<span class="fc" id="L59">                .orgStatus(student.getOrgStatus())</span>
-<span class="fc" id="L60">                .build();</span>
-    }
+    public RosterStudentDTO(RosterStudent rosterStudent)  {
+<span class="fc" id="L27">        this(</span>
+<span class="fc" id="L28">                rosterStudent.getId(),</span>
+<span class="fc" id="L29">                rosterStudent.getCourse().getId(),</span>
+<span class="fc" id="L30">                rosterStudent.getStudentId(),</span>
+<span class="fc" id="L31">                rosterStudent.getFirstName(),</span>
+<span class="fc" id="L32">                rosterStudent.getLastName(),</span>
+<span class="fc" id="L33">                rosterStudent.getEmail(),</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">                rosterStudent.getUser() != null ? rosterStudent.getUser().getId() : 0,</span>
+<span class="fc" id="L35">                rosterStudent.getGithubId(),</span>
+<span class="fc" id="L36">                rosterStudent.getGithubLogin(),</span>
+<span class="fc" id="L37">                rosterStudent.getRosterStatus(),</span>
+<span class="fc" id="L38">                rosterStudent.getOrgStatus()</span>
+        );
+<span class="fc" id="L40">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

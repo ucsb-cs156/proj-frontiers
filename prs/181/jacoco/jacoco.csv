@@ -26,7 +26,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,558,0,46,0,113,0,42,0,19
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,0,21,0,5,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.InsertStatus,0,15,0,0,0,2,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,308,0,10,0,72,0,16,0,11
+frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,310,0,10,0,72,0,16,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.InstructorCourseView,0,59,0,4,0,11,0,4,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,65,0,6,0,13,0,6,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffController,0,62,0,0,0,15,0,6,0,6
@@ -43,5 +43,5 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentRepositoriesJob,0,37,0,6,0,
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,TestJob,0,22,0,2,0,7,0,2,0,1
 frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,11,0,0,0,4,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,45,0,2,0,14,0,2,0,1
+frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,68,0,2,0,14,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,UserDataDTO,0,30,0,0,0,12,0,1,0,1
