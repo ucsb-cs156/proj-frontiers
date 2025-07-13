@@ -30,7 +30,7 @@ dokku config:set --no-restart frontiers SOURCE_REPO=https://github.com/ucsb-cs15
 dokku postgres:create frontiers-db
 dokku postgres:link frontiers-db frontiers
 dokku git:sync frontiers https://github.com/ucsb-cs156/proj-frontiers main
-dokku ps:deploy frontiers
+dokku ps:rebuild frontiers
 dokku letsencrypt:set frontiers email yourEmail@ucsb.edu
 dokku letsencrypt:enable frontiers
 dokku config:set frontiers --no-restart GOOGLE_CLIENT_ID=get-value-from-google
