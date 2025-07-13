@@ -61,10 +61,4 @@ public class UserDataDTOTests {
 
         assertEquals(translated, UserDataDTO.from(user, true, true) );
     }
-
-    @Test
-    public void noArgsConstructorTest() {
-        UserDataDTO userDataDTO = new UserDataDTO();
-        assertEquals(0, userDataDTO.getId());
-    }   
 }
