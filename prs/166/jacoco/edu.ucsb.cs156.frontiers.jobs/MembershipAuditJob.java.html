@@ -36,7 +36,7 @@ public class MembershipAuditJob implements JobContextConsumer {
 <span class="fc bfc" id="L36" title="All 4 branches covered.">                    if(studentGithubId != null &amp;&amp; studentGithubLogin != null){</span>
 <span class="fc" id="L37">                        Optional&lt;OrgMember&gt; member = StreamSupport.stream(members.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
 <span class="fc" id="L38">                        Optional&lt;OrgMember&gt; admin = StreamSupport.stream(admins.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
-<span class="fc" id="L39">                        OrgStatus updatedStatus = OrgStatus.NONE;</span>
+<span class="fc" id="L39">                        OrgStatus updatedStatus = OrgStatus.PENDING;</span>
 <span class="fc bfc" id="L40" title="All 2 branches covered.">                        if (admin.isPresent()) {</span>
 <span class="fc" id="L41">                            updatedStatus = OrgStatus.OWNER;</span>
 <span class="fc bfc" id="L42" title="All 2 branches covered.">                        } else if (member.isPresent()) {</span>
