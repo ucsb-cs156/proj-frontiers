@@ -10,43 +10,46 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
-import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
-import edu.ucsb.cs156.frontiers.repositories.UserRepository;
-import edu.ucsb.cs156.frontiers.services.*;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
-
-import org.apache.coyote.BadRequestException;
-import org.checkerframework.checker.units.qual.C;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
-import org.springframework.transaction.annotation.Transactional;
 
 @Tag(name = "RosterStudents")
 @RequestMapping("/api/rosterstudents")
@@ -86,7 +89,7 @@ public class RosterStudentsController extends ApiController {
     @Operation(summary = "Create a new roster student")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/post")
-    public RosterStudent postRosterStudent(
+    public UpsertResponse postRosterStudent(
             @Parameter(name = "studentId") @RequestParam String studentId,
             @Parameter(name = "firstName") @RequestParam String firstName,
             @Parameter(name = "lastName") @RequestParam String lastName,
@@ -106,7 +109,7 @@ public class RosterStudentsController extends ApiController {
                 .build();
 
         UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL); 
-        return upsertResponse.rosterStudent; 
+        return upsertResponse; 
     }
 
     /**
@@ -176,17 +179,18 @@ public class RosterStudentsController extends ApiController {
     }
 
     public UpsertResponse upsertStudent(RosterStudent student, Course course, RosterStatus rosterStatus) {
+        String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
         Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),
                 student.getStudentId());
-        String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
-        if (existingStudent.isPresent()) {
-            RosterStudent existingStudentObj = existingStudent.get();
+        Optional<RosterStudent> existingStudentByEmail = rosterStudentRepository.findByCourseIdAndEmail(course.getId(),
+                convertedEmail);
+        if (existingStudent.isPresent() || existingStudentByEmail.isPresent()) {
+            RosterStudent existingStudentObj = existingStudent.isPresent() ? existingStudent.get() : existingStudentByEmail.get();
             existingStudentObj.setRosterStatus(rosterStatus);
             existingStudentObj.setFirstName(student.getFirstName());
             existingStudentObj.setLastName(student.getLastName());
-            if (!existingStudentObj.getEmail().equals(convertedEmail)) {
-                existingStudentObj.setEmail(convertedEmail);
-            }
+            existingStudentObj.setEmail(convertedEmail);
+            existingStudentObj.setStudentId(student.getStudentId());
             existingStudentObj = rosterStudentRepository.save(existingStudentObj);
             updateUserService.attachUserToRosterStudent(existingStudentObj);
             return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
