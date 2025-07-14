@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrganizationMemberService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">OrganizationMemberService.java</span></div><h1>OrganizationMemberService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.models.OrgMember;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+<span class="fc" id="L32">@Slf4j</span>
+@Service
+public class OrganizationMemberService {
+
+    private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
+    private final RestTemplate restTemplate;
+    private final RosterStudentRepository rosterStudentRepository;
+
+<span class="fc" id="L41">    public OrganizationMemberService(JwtService jwtService, ObjectMapper objectMapper, RestTemplateBuilder builder, RosterStudentRepository rosterStudentRepository) {</span>
+<span class="fc" id="L42">        this.jwtService = jwtService;</span>
+<span class="fc" id="L43">        this.objectMapper = objectMapper;</span>
+<span class="fc" id="L44">        this.rosterStudentRepository = rosterStudentRepository;</span>
+<span class="fc" id="L45">        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L46">        this.restTemplate = builder.build();</span>
+<span class="fc" id="L47">    }</span>
+
+
+    /**
+    * This endpoint returns the list of **members**, not admins for the organization. This is so that the roles are known for the return values.
+    */
+    public Iterable&lt;OrgMember&gt; getOrganizationMembers(Course course) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L54">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/members?role=member&quot;;</span>
+<span class="fc" id="L55">        return getOrganizationMembersWithRole(course, ENDPOINT);</span>
+    }
+
+    /**
+    * This endpoint returns the list of **admins** for the organization. This is so that the roles are known for the return values.
+    */
+    public Iterable&lt;OrgMember&gt; getOrganizationAdmins(Course course) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L62">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/members?role=admin&quot;;</span>
+<span class="fc" id="L63">        return getOrganizationMembersWithRole(course, ENDPOINT);</span>
+    }
+
+    private Iterable&lt;OrgMember&gt; getOrganizationMembersWithRole(Course course, String ENDPOINT) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        //happily stolen directly from GitHub: https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28
+<span class="fc" id="L68">        Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
+<span class="fc" id="L69">        String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L70">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L71">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L72">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L73">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L74">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L75">        ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L76">        List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L77">        List&lt;OrgMember&gt; orgMembers = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L78" title="All 4 branches covered.">        while (!responseLinks.isEmpty()&amp;&amp;responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
+<span class="fc" id="L79">            orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference&lt;List&lt;OrgMember&gt;&gt;() {</span>
+            }));
+<span class="fc" id="L81">            Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
+<span class="fc" id="L82">            matcher.find();</span>
+<span class="fc" id="L83">            response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L84">            responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L85">        }</span>
+<span class="fc" id="L86">        orgMembers.addAll(objectMapper.convertValue(objectMapper.readTree(response.getBody()), new TypeReference&lt;List&lt;OrgMember&gt;&gt;() {</span>
+        }));
+<span class="fc" id="L88">        return orgMembers;</span>
+    }
+
+    public OrgStatus inviteOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L92">        Course course = student.getCourse();</span>
+<span class="fc" id="L93">        return inviteMember(student.getGithubId(), course, &quot;direct_member&quot;);</span>
+    }
+
+    private OrgStatus inviteMember(int githubId, Course course, String role) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L97">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/invitations&quot;;</span>
+<span class="fc" id="L98">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L99">        String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L100">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L101">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L102">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L103">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L104">        body.put(&quot;invitee_id&quot;, githubId);</span>
+<span class="fc" id="L105">        body.put(&quot;role&quot;, role);</span>
+<span class="fc" id="L106">        String bodyAsJson = objectMapper.writeValueAsString(body);</span>
+<span class="fc" id="L107">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(bodyAsJson, headers);</span>
+        try{
+<span class="fc" id="L109">            ResponseEntity&lt;String&gt; response = restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);</span>
+<span class="fc" id="L110">        } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L111">            log.warn(&quot;Error while trying to invite member to organization: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L112">            return OrgStatus.JOINCOURSE;</span>
+<span class="fc" id="L113">        }</span>
+<span class="fc" id="L114">        return OrgStatus.INVITED;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
