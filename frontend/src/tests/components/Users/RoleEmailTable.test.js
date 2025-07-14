@@ -19,7 +19,6 @@ let invalidateQueriesSpy;
 const axiosMock = new AxiosMockAdapter(axios);
 
 describe("RoleEmailTable", () => {
-
   beforeEach(() => {
     queryClient = new QueryClient({
       defaultOptions: {

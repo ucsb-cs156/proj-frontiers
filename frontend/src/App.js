@@ -13,7 +13,6 @@ import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 
-
 function App() {
   const { data: currentUser } = useCurrentUser();
 
@@ -23,32 +22,26 @@ function App() {
         <Route exact path="/" element={<HomePage />} />
         <Route exact path="/profile" element={<ProfilePage />} />
         {hasRole(currentUser, "ROLE_ADMIN") && (
-          <Route
-            exact
-            path="/admin/users"
-            element={<AdminUsersPage />} />
+          <Route exact path="/admin/users" element={<AdminUsersPage />} />
         )}
         {(hasRole(currentUser, "ROLE_ADMIN") ||
           hasRole(currentUser, "ROLE_INSTRUCTOR")) && (
-            <>
-              <Route
-                exact
-                path="/instructor/courses"
-                element={<CoursesIndexPage />}
-              />
-              <Route
-                exact
-                path="/instructor/courses/:id"
-                element={<InstructorCourseShowPage />}
-              />
-            </>
-        )}
-        {hasRole(currentUser, "ROLE_ADMIN") && (
           <>
             <Route
               exact
-              path="/admin/admins"
-              element={<AdminsIndexPage />} />
+              path="/instructor/courses"
+              element={<CoursesIndexPage />}
+            />
+            <Route
+              exact
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </>
+        )}
+        {hasRole(currentUser, "ROLE_ADMIN") && (
+          <>
+            <Route exact path="/admin/admins" element={<AdminsIndexPage />} />
             <Route
               exact
               path="/admin/instructors"
