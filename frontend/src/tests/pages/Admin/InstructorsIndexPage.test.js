@@ -20,9 +20,9 @@ jest.mock("react-toastify", () => {
   };
 });
 
-describe("InstructorsIndexPage tests", () => {
-  const axiosMock = new AxiosMockAdapter(axios);
+const axiosMock = new AxiosMockAdapter(axios);
 
+describe("InstructorsIndexPage tests", () => {
   const testId = "InstructorsIndexPage";
 
   const setupAdminUser = () => {
