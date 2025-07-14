@@ -35,7 +35,7 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 <span class="fc" id="L35">        Iterable&lt;RosterStudent&gt; matchedStudents = rosterStudentRepository.findByCourseId(courseId);</span>
         
 <span class="fc" id="L37">        return StreamSupport.stream(matchedStudents.spliterator(), false)</span>
-<span class="fc" id="L38">            .map(RosterStudentDTO::from)</span>
+<span class="fc" id="L38">            .map(RosterStudentDTO::new)</span>
 <span class="fc" id="L39">            .collect(Collectors.toList());</span>
 
     }

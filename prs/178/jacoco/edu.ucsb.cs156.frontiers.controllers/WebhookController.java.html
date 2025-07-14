@@ -60,66 +60,73 @@ public class WebhookController {
         // Extract GitHub login based on payload structure
 <span class="fc" id="L61">        String githubLogin = null;</span>
 <span class="fc" id="L62">        String installationId = null;</span>
+<span class="fc" id="L63">        OrgStatus role = null;</span>
         
         // For member_added events, the structure is different
-<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (action.equals(&quot;member_added&quot;)) {</span>
-<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (!jsonBody.has(&quot;membership&quot;) || </span>
-<span class="fc bfc" id="L67" title="All 2 branches covered.">                !jsonBody.get(&quot;membership&quot;).has(&quot;user&quot;) || </span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">                !jsonBody.get(&quot;membership&quot;).get(&quot;user&quot;).has(&quot;login&quot;) ||</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">                !jsonBody.has(&quot;installation&quot;) || </span>
-<span class="fc bfc" id="L70" title="All 2 branches covered.">                !jsonBody.get(&quot;installation&quot;).has(&quot;id&quot;)) {</span>
-<span class="fc" id="L71">                return ResponseEntity.ok().body(&quot;success&quot;);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (action.equals(&quot;member_added&quot;)) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (!jsonBody.has(&quot;membership&quot;) ||</span>
+<span class="fc bfc" id="L68" title="All 4 branches covered.">                !jsonBody.get(&quot;membership&quot;).has(&quot;user&quot;) || !jsonBody.get(&quot;membership&quot;).has(&quot;role&quot;) ||</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                !jsonBody.get(&quot;membership&quot;).get(&quot;user&quot;).has(&quot;login&quot;) ||</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                !jsonBody.has(&quot;installation&quot;) || </span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                !jsonBody.get(&quot;installation&quot;).has(&quot;id&quot;)) {</span>
+<span class="fc" id="L72">                return ResponseEntity.ok().body(&quot;success&quot;);</span>
             }
             
-<span class="fc" id="L74">            githubLogin = jsonBody.get(&quot;membership&quot;).get(&quot;user&quot;).get(&quot;login&quot;).asText();</span>
-<span class="fc" id="L75">            installationId = jsonBody.get(&quot;installation&quot;).get(&quot;id&quot;).asText();</span>
-        } 
+<span class="fc" id="L75">            githubLogin = jsonBody.get(&quot;membership&quot;).get(&quot;user&quot;).get(&quot;login&quot;).asText();</span>
+<span class="fc" id="L76">            installationId = jsonBody.get(&quot;installation&quot;).get(&quot;id&quot;).asText();</span>
+<span class="fc" id="L77">            String textRole = jsonBody.get(&quot;membership&quot;).get(&quot;role&quot;).asText();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if(textRole.equals(&quot;admin&quot;)){</span>
+<span class="fc" id="L79">                role = OrgStatus.OWNER;</span>
+            }else{
+<span class="fc" id="L81">                role = OrgStatus.MEMBER;</span>
+            }
+<span class="fc" id="L83">        } </span>
         // For member_invited events, use the original structure
         else { // must be &quot;member_invited&quot; based on earlier check
-<span class="fc bfc" id="L79" title="All 2 branches covered.">            if (!jsonBody.has(&quot;user&quot;) || </span>
-<span class="fc bfc" id="L80" title="All 2 branches covered.">                !jsonBody.get(&quot;user&quot;).has(&quot;login&quot;) || </span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">                !jsonBody.has(&quot;installation&quot;) || </span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">                !jsonBody.get(&quot;installation&quot;).has(&quot;id&quot;)) {</span>
-<span class="fc" id="L83">                return ResponseEntity.ok().body(&quot;success&quot;);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (!jsonBody.has(&quot;user&quot;) || </span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">                !jsonBody.get(&quot;user&quot;).has(&quot;login&quot;) || </span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                !jsonBody.has(&quot;installation&quot;) || </span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">                !jsonBody.get(&quot;installation&quot;).has(&quot;id&quot;)) {</span>
+<span class="fc" id="L90">                return ResponseEntity.ok().body(&quot;success&quot;);</span>
             }
             
-<span class="fc" id="L86">            githubLogin = jsonBody.get(&quot;user&quot;).get(&quot;login&quot;).asText();</span>
-<span class="fc" id="L87">            installationId = jsonBody.get(&quot;installation&quot;).get(&quot;id&quot;).asText();</span>
+<span class="fc" id="L93">            githubLogin = jsonBody.get(&quot;user&quot;).get(&quot;login&quot;).asText();</span>
+<span class="fc" id="L94">            installationId = jsonBody.get(&quot;installation&quot;).get(&quot;id&quot;).asText();</span>
         }
         
-<span class="fc" id="L90">        log.info(&quot;GitHub login: {}, Installation ID: {}&quot;, githubLogin, installationId);</span>
+<span class="fc" id="L97">        log.info(&quot;GitHub login: {}, Installation ID: {}&quot;, githubLogin, installationId);</span>
         
-<span class="fc" id="L92">        Optional&lt;Course&gt; course = courseRepository.findByInstallationId(installationId);</span>
-<span class="fc" id="L93">        log.info(&quot;Course found: {}&quot;, course.isPresent());</span>
+<span class="fc" id="L99">        Optional&lt;Course&gt; course = courseRepository.findByInstallationId(installationId);</span>
+<span class="fc" id="L100">        log.info(&quot;Course found: {}&quot;, course.isPresent());</span>
         
-<span class="fc bfc" id="L95" title="All 2 branches covered.">        if(!course.isPresent()){</span>
-<span class="fc" id="L96">            log.warn(&quot;No course found with installation ID: {}&quot;, installationId);</span>
-<span class="fc" id="L97">            return ResponseEntity.ok().body(&quot;success&quot;);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if(!course.isPresent()){</span>
+<span class="fc" id="L103">            log.warn(&quot;No course found with installation ID: {}&quot;, installationId);</span>
+<span class="fc" id="L104">            return ResponseEntity.ok().body(&quot;success&quot;);</span>
         }
         
-<span class="fc" id="L100">        Optional&lt;RosterStudent&gt; student = rosterStudentRepository.findByCourseAndGithubLogin(course.get(), githubLogin);</span>
-<span class="fc" id="L101">        log.info(&quot;Student found: {}&quot;, student.isPresent());</span>
+<span class="fc" id="L107">        Optional&lt;RosterStudent&gt; student = rosterStudentRepository.findByCourseAndGithubLogin(course.get(), githubLogin);</span>
+<span class="fc" id="L108">        log.info(&quot;Student found: {}&quot;, student.isPresent());</span>
         
-<span class="fc bfc" id="L103" title="All 2 branches covered.">        if(!student.isPresent()){</span>
-<span class="fc" id="L104">            log.warn(&quot;No student found with GitHub login: {} in course: {}&quot;, githubLogin, course.get().getCourseName());</span>
-<span class="fc" id="L105">            return ResponseEntity.ok().body(&quot;success&quot;);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if(!student.isPresent()){</span>
+<span class="fc" id="L111">            log.warn(&quot;No student found with GitHub login: {} in course: {}&quot;, githubLogin, course.get().getCourseName());</span>
+<span class="fc" id="L112">            return ResponseEntity.ok().body(&quot;success&quot;);</span>
         }
         
-<span class="fc" id="L108">        RosterStudent updatedStudent = student.get();</span>
-<span class="fc" id="L109">        log.info(&quot;Current student org status: {}&quot;, updatedStudent.getOrgStatus());</span>
+<span class="fc" id="L115">        RosterStudent updatedStudent = student.get();</span>
+<span class="fc" id="L116">        log.info(&quot;Current student org status: {}&quot;, updatedStudent.getOrgStatus());</span>
         
         // Update status based on action
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        if(action.equals(&quot;member_added&quot;)) {</span>
-<span class="fc" id="L113">            updatedStudent.setOrgStatus(OrgStatus.MEMBER);</span>
-<span class="fc" id="L114">            log.info(&quot;Setting status to MEMBER&quot;);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if(action.equals(&quot;member_added&quot;)) {</span>
+<span class="fc" id="L120">            updatedStudent.setOrgStatus(role);</span>
+<span class="fc" id="L121">            log.info(&quot;Setting status to {}&quot; , role.toString());</span>
         } else { // must be &quot;member_invited&quot; based on earlier check
-<span class="fc" id="L116">            updatedStudent.setOrgStatus(OrgStatus.INVITED);</span>
-<span class="fc" id="L117">            log.info(&quot;Setting status to INVITED&quot;);</span>
+<span class="fc" id="L123">            updatedStudent.setOrgStatus(OrgStatus.INVITED);</span>
+<span class="fc" id="L124">            log.info(&quot;Setting status to INVITED&quot;);</span>
         }
         
-<span class="fc" id="L120">        rosterStudentRepository.save(updatedStudent);</span>
-<span class="fc" id="L121">        log.info(&quot;Student saved with new org status: {}&quot;, updatedStudent.getOrgStatus());</span>
-<span class="fc" id="L122">        return ResponseEntity.ok(updatedStudent.toString());</span>
+<span class="fc" id="L127">        rosterStudentRepository.save(updatedStudent);</span>
+<span class="fc" id="L128">        log.info(&quot;Student saved with new org status: {}&quot;, updatedStudent.getOrgStatus());</span>
+<span class="fc" id="L129">        return ResponseEntity.ok(updatedStudent.toString());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
