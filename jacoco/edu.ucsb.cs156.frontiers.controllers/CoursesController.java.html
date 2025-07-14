@@ -2,27 +2,21 @@
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
 
-import org.checkerframework.checker.units.qual.Current;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,27 +25,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.util.List;
-import java.util.ArrayList;
-
-import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.entities.RosterStudent;
-import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.enums.OrgStatus;
-import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
-import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -60,8 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = &quot;Course&quot;)
 @RequestMapping(&quot;/api/courses&quot;)
 @RestController
-<span class="fc" id="L63">@Slf4j</span>
-<span class="fc" id="L64">public class CoursesController extends ApiController {</span>
+<span class="fc" id="L49">@Slf4j</span>
+<span class="fc" id="L50">public class CoursesController extends ApiController {</span>
 
     @Autowired
     private CourseRepository courseRepository;
@@ -94,16 +80,16 @@ import lombok.extern.slf4j.Slf4j;
             @Parameter(name = &quot;term&quot;) @RequestParam String term,
             @Parameter(name = &quot;school&quot;) @RequestParam String school) {
         // get current date right now and set status to pending
-<span class="fc" id="L97">        CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L98">        Course course = Course.builder()</span>
-<span class="fc" id="L99">                .courseName(courseName)</span>
-<span class="fc" id="L100">                .term(term)</span>
-<span class="fc" id="L101">                .school(school)</span>
-<span class="fc" id="L102">                .creator(currentUser.getUser())</span>
-<span class="fc" id="L103">                .build();</span>
-<span class="fc" id="L104">        Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L83">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L84">        Course course = Course.builder()</span>
+<span class="fc" id="L85">                .courseName(courseName)</span>
+<span class="fc" id="L86">                .term(term)</span>
+<span class="fc" id="L87">                .school(school)</span>
+<span class="fc" id="L88">                .creator(currentUser.getUser())</span>
+<span class="fc" id="L89">                .build();</span>
+<span class="fc" id="L90">        Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L106">        return savedCourse;</span>
+<span class="fc" id="L92">        return savedCourse;</span>
     }
 
 
@@ -111,7 +97,7 @@ import lombok.extern.slf4j.Slf4j;
      * Projection of Course entity with fields that are relevant for instructors
      * and admins
      */
-<span class="fc" id="L114">    public static record InstructorCourseView(</span>
+<span class="fc" id="L100">    public static record InstructorCourseView(</span>
             Long id,
             String installationId,
             String orgName,
@@ -124,17 +110,17 @@ import lombok.extern.slf4j.Slf4j;
         
         // Creates view from Course entity and student email
         public InstructorCourseView(Course c) {
-<span class="fc" id="L127">            this(</span>
-<span class="fc" id="L128">                c.getId(),</span>
-<span class="fc" id="L129">                c.getInstallationId(),</span>
-<span class="fc" id="L130">                c.getOrgName(),</span>
-<span class="fc" id="L131">                c.getCourseName(),</span>
-<span class="fc" id="L132">                c.getTerm(),</span>
-<span class="fc" id="L133">                c.getSchool(),</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">                c.getCreator() != null ? c.getCreator().getId() : null,</span>
-<span class="fc bfc" id="L135" title="All 2 branches covered.">                c.getCreator() != null ? c.getCreator().getEmail() : null</span>
+<span class="fc" id="L113">            this(</span>
+<span class="fc" id="L114">                c.getId(),</span>
+<span class="fc" id="L115">                c.getInstallationId(),</span>
+<span class="fc" id="L116">                c.getOrgName(),</span>
+<span class="fc" id="L117">                c.getCourseName(),</span>
+<span class="fc" id="L118">                c.getTerm(),</span>
+<span class="fc" id="L119">                c.getSchool(),</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                c.getCreator() != null ? c.getCreator().getId() : null,</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                c.getCreator() != null ? c.getCreator().getEmail() : null</span>
             );
-<span class="fc" id="L137">        }</span>
+<span class="fc" id="L123">        }</span>
     }
 
     /**
@@ -146,25 +132,44 @@ import lombok.extern.slf4j.Slf4j;
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
     @GetMapping(&quot;/all&quot;)
     public Iterable&lt;InstructorCourseView&gt; allCourses() {
-<span class="fc" id="L149">        List&lt;Course&gt; courses = null;</span>
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (!isCurrentUserAdmin()) {</span>
+<span class="fc" id="L135">        List&lt;Course&gt; courses = null;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (!isCurrentUserAdmin()) {</span>
             // if the user is not an admin, return only the courses they created
-<span class="fc" id="L152">            CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L153">            Long userId = currentUser.getUser().getId();</span>
-<span class="fc" id="L154">            courses = courseRepository.findByCreatorId(userId);</span>
+<span class="fc" id="L138">            CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L139">            Long userId = currentUser.getUser().getId();</span>
+<span class="fc" id="L140">            courses = courseRepository.findByCreatorId(userId);</span>
             // Convert to InstructorCourseView
-<span class="fc" id="L156">            List&lt;InstructorCourseView&gt; courseViews = courses.stream()</span>
-<span class="fc" id="L157">                    .map(InstructorCourseView::new)</span>
-<span class="fc" id="L158">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L142">            List&lt;InstructorCourseView&gt; courseViews = courses.stream()</span>
+<span class="fc" id="L143">                    .map(InstructorCourseView::new)</span>
+<span class="fc" id="L144">                    .collect(Collectors.toList());</span>
             // Return as Iterable
-<span class="fc" id="L160">            return courseViews;</span>
+<span class="fc" id="L146">            return courseViews;</span>
         } else {
-<span class="fc" id="L162">            courses = courseRepository.findAll();</span>
+<span class="fc" id="L148">            courses = courseRepository.findAll();</span>
         }
-<span class="fc" id="L164">        List&lt;InstructorCourseView&gt; courseViews = courses.stream()</span>
-<span class="fc" id="L165">                    .map(InstructorCourseView::new)</span>
-<span class="fc" id="L166">                    .collect(Collectors.toList());</span>
-<span class="fc" id="L167">        return courseViews;</span>
+<span class="fc" id="L150">        List&lt;InstructorCourseView&gt; courseViews = courses.stream()</span>
+<span class="fc" id="L151">                    .map(InstructorCourseView::new)</span>
+<span class="fc" id="L152">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L153">        return courseViews;</span>
+    }
+
+    /**
+     * This method returns single course by its id
+     * 
+     * @return a course
+     */
+    @Operation(summary = &quot;Get course by id&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public InstructorCourseView getCourseById(@Parameter(name = &quot;id&quot;) @PathVariable Long id) {
+<span class="fc" id="L165">        Course course = courseRepository.findById(id)</span>
+<span class="fc" id="L166">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, id));</span>
+<span class="fc bfc" id="L167" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L168">            throw new EntityNotFoundException(Course.class, id);</span>
+        }
+        // Convert to InstructorCourseView
+<span class="fc" id="L171">        InstructorCourseView courseView = new InstructorCourseView(course);</span>
+<span class="fc" id="L172">        return courseView;</span>
     }
 
     /**
@@ -187,11 +192,11 @@ import lombok.extern.slf4j.Slf4j;
     @GetMapping(&quot;/redirect&quot;)
     public ResponseEntity&lt;Void&gt; linkCourse(@Parameter Long courseId)
             throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc" id="L190">        String newUrl = linkerService.getRedirectUrl();</span>
-<span class="fc" id="L191">        newUrl += &quot;/installations/new?state=&quot; + courseId;</span>
+<span class="fc" id="L195">        String newUrl = linkerService.getRedirectUrl();</span>
+<span class="fc" id="L196">        newUrl += &quot;/installations/new?state=&quot; + courseId;</span>
         // found this convenient solution here:
         // https://stackoverflow.com/questions/29085295/spring-mvc-restcontroller-and-redirect
-<span class="fc" id="L194">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, newUrl).build();</span>
+<span class="fc" id="L199">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).header(HttpHeaders.LOCATION, newUrl).build();</span>
     }
 
     /**
@@ -218,21 +223,21 @@ import lombok.extern.slf4j.Slf4j;
             @Parameter(name = &quot;code&quot;) @RequestParam String code,
             @Parameter(name = &quot;state&quot;) @RequestParam Long state)
             throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (installation_id.isEmpty()) {</span>
-<span class="fc" id="L222">            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
-<span class="fc" id="L223">                    .header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;).build();</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if (installation_id.isEmpty()) {</span>
+<span class="fc" id="L227">            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L228">                    .header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;).build();</span>
         } else {
-<span class="fc" id="L225">            Course course = courseRepository.findById(state)</span>
-<span class="fc" id="L226">                    .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
-<span class="fc bfc" id="L227" title="All 4 branches covered.">            if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
-<span class="fc" id="L228">                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
+<span class="fc" id="L230">            Course course = courseRepository.findById(state)</span>
+<span class="fc" id="L231">                    .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
+<span class="fc bfc" id="L232" title="All 4 branches covered.">            if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L233">                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
             } else {
-<span class="fc" id="L230">                String orgName = linkerService.getOrgName(installation_id.get());</span>
-<span class="fc" id="L231">                course.setInstallationId(installation_id.get());</span>
-<span class="fc" id="L232">                course.setOrgName(orgName);</span>
-<span class="fc" id="L233">                courseRepository.save(course);</span>
-<span class="fc" id="L234">                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
-<span class="fc" id="L235">                        .header(HttpHeaders.LOCATION, &quot;/instructor/courses?success=True&amp;course=&quot; + state).build();</span>
+<span class="fc" id="L235">                String orgName = linkerService.getOrgName(installation_id.get());</span>
+<span class="fc" id="L236">                course.setInstallationId(installation_id.get());</span>
+<span class="fc" id="L237">                course.setOrgName(orgName);</span>
+<span class="fc" id="L238">                courseRepository.save(course);</span>
+<span class="fc" id="L239">                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L240">                        .header(HttpHeaders.LOCATION, &quot;/instructor/courses?success=True&amp;course=&quot; + state).build();</span>
             }
         }
     }
@@ -246,9 +251,9 @@ import lombok.extern.slf4j.Slf4j;
     @ExceptionHandler({ InvalidInstallationTypeException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Object handleInvalidInstallationType(Throwable e) {
-<span class="fc" id="L249">        return Map.of(</span>
-<span class="fc" id="L250">                &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L251">                &quot;message&quot;, e.getMessage());</span>
+<span class="fc" id="L254">        return Map.of(</span>
+<span class="fc" id="L255">                &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L256">                &quot;message&quot;, e.getMessage());</span>
     }
 
     /**
@@ -260,25 +265,25 @@ import lombok.extern.slf4j.Slf4j;
     @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
     @GetMapping(&quot;/list&quot;)
     public List&lt;Map&lt;String, Object&gt;&gt; listCoursesForCurrentUser() {
-<span class="fc" id="L263">        String email = getCurrentUser().getUser().getEmail();</span>
-<span class="fc" id="L264">        Iterable&lt;RosterStudent&gt; rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);</span>
-<span class="fc" id="L265">        List&lt;RosterStudent&gt; rosterStudents = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L266">        rosterStudentsIterable.forEach(rosterStudents::add);</span>
-<span class="fc" id="L267">        return rosterStudents.stream()</span>
-<span class="fc" id="L268">                .map(rs -&gt; {</span>
-<span class="fc" id="L269">                    Course course = rs.getCourse();</span>
-<span class="fc" id="L270">                    RosterStudentDTO rsDto = new RosterStudentDTO(rs);</span>
-<span class="fc" id="L271">                    Map&lt;String, Object&gt; response = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L272">                    response.put(&quot;id&quot;, course.getId());</span>
-<span class="fc" id="L273">                    response.put(&quot;installationId&quot;, course.getInstallationId());</span>
-<span class="fc" id="L274">                    response.put(&quot;orgName&quot;, course.getOrgName());</span>
-<span class="fc" id="L275">                    response.put(&quot;courseName&quot;, course.getCourseName());</span>
-<span class="fc" id="L276">                    response.put(&quot;term&quot;, course.getTerm());</span>
-<span class="fc" id="L277">                    response.put(&quot;school&quot;, course.getSchool());</span>
-<span class="fc" id="L278">                    response.put(&quot;studentStatus&quot;, rsDto.orgStatus());</span>
-<span class="fc" id="L279">                    return response;</span>
+<span class="fc" id="L268">        String email = getCurrentUser().getUser().getEmail();</span>
+<span class="fc" id="L269">        Iterable&lt;RosterStudent&gt; rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);</span>
+<span class="fc" id="L270">        List&lt;RosterStudent&gt; rosterStudents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L271">        rosterStudentsIterable.forEach(rosterStudents::add);</span>
+<span class="fc" id="L272">        return rosterStudents.stream()</span>
+<span class="fc" id="L273">                .map(rs -&gt; {</span>
+<span class="fc" id="L274">                    Course course = rs.getCourse();</span>
+<span class="fc" id="L275">                    RosterStudentDTO rsDto = new RosterStudentDTO(rs);</span>
+<span class="fc" id="L276">                    Map&lt;String, Object&gt; response = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L277">                    response.put(&quot;id&quot;, course.getId());</span>
+<span class="fc" id="L278">                    response.put(&quot;installationId&quot;, course.getInstallationId());</span>
+<span class="fc" id="L279">                    response.put(&quot;orgName&quot;, course.getOrgName());</span>
+<span class="fc" id="L280">                    response.put(&quot;courseName&quot;, course.getCourseName());</span>
+<span class="fc" id="L281">                    response.put(&quot;term&quot;, course.getTerm());</span>
+<span class="fc" id="L282">                    response.put(&quot;school&quot;, course.getSchool());</span>
+<span class="fc" id="L283">                    response.put(&quot;studentStatus&quot;, rsDto.orgStatus());</span>
+<span class="fc" id="L284">                    return response;</span>
                 })
-<span class="fc" id="L281">                .collect(Collectors.toList());</span>
+<span class="fc" id="L286">                .collect(Collectors.toList());</span>
     }
 
     /**
@@ -291,20 +296,20 @@ import lombok.extern.slf4j.Slf4j;
     @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
     @GetMapping(&quot;/staffCourses&quot;) 
     public Iterable&lt;Course&gt; staffCourses() {
-<span class="fc" id="L294">        CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L295">        User user = currentUser.getUser();</span>
+<span class="fc" id="L299">        CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L300">        User user = currentUser.getUser();</span>
 
-<span class="fc" id="L297">        String email = user.getEmail();</span>
+<span class="fc" id="L302">        String email = user.getEmail();</span>
 
-<span class="fc" id="L299">        Iterable&lt;CourseStaff&gt; staffs = courseStaffRepository.findAllByEmail(email);</span>
+<span class="fc" id="L304">        Iterable&lt;CourseStaff&gt; staffs = courseStaffRepository.findAllByEmail(email);</span>
         
-<span class="fc" id="L301">        List&lt;Long&gt; courseIds = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L302" title="All 2 branches covered.">        for (CourseStaff staff : staffs) {</span>
-<span class="fc" id="L303">            courseIds.add(staff.getCourse().getId());</span>
-<span class="fc" id="L304">        }</span>
+<span class="fc" id="L306">        List&lt;Long&gt; courseIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        for (CourseStaff staff : staffs) {</span>
+<span class="fc" id="L308">            courseIds.add(staff.getCourse().getId());</span>
+<span class="fc" id="L309">        }</span>
 
-<span class="fc" id="L306">        Iterable&lt;Course&gt; courses = courseRepository.findAllById(courseIds);</span>
-<span class="fc" id="L307">        return courses;</span>
+<span class="fc" id="L311">        Iterable&lt;Course&gt; courses = courseRepository.findAllById(courseIds);</span>
+<span class="fc" id="L312">        return courses;</span>
     }
 
 }
