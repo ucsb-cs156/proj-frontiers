@@ -34,7 +34,7 @@ public class WebhookControllerTests extends ControllerTestCase {
     CourseRepository  courseRepository;
 
     @Test
-    public void successfulWebhook() throws Exception {
+    public void successfulWebhook_member() throws Exception {
         Course course = Course.builder().installationId("1234").build();
         RosterStudent student = RosterStudent.builder().githubLogin("testLogin").course(course).build();
         RosterStudent updated = RosterStudent.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.MEMBER).build();
@@ -47,6 +47,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 {
                 "action" : "member_added",
                 "membership": {
+                    "role": "direct_member",
                     "user": {
                         "login": "testLogin"
                     }
@@ -70,6 +71,43 @@ public class WebhookControllerTests extends ControllerTestCase {
     }
 
     @Test
+    public void successfulWebhook_admin() throws Exception {
+        Course course = Course.builder().installationId("1234").build();
+        RosterStudent student = RosterStudent.builder().githubLogin("testLogin").course(course).build();
+        RosterStudent updated = RosterStudent.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.OWNER).build();
+
+        doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
+        doReturn(Optional.of(student)).when(rosterStudentRepository).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        doReturn(updated).when(rosterStudentRepository).save(eq(updated));
+
+        String sendBody = """
+                {
+                "action" : "member_added",
+                "membership": {
+                    "role": "admin",
+                    "user": {
+                        "login": "testLogin"
+                    }
+                },
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+        MvcResult response = mockMvc.perform(post("/api/webhooks/github")
+                        .content(sendBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        verify(rosterStudentRepository, times(1)).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
+        verify(rosterStudentRepository, times(1)).save(eq(updated));
+        String actualBody = response.getResponse().getContentAsString();
+        assertEquals(updated.toString(), actualBody);
+    }
+
+    @Test
     public void noStudent() throws Exception {
         Course course = Course.builder().installationId("1234").build();
         doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
@@ -79,6 +117,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 {
                 "action" : "member_added",
                 "membership": {
+                    "role": "direct_member",
                     "user": {
                         "login": "testLogin"
                     }
@@ -109,6 +148,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 {
                 "action" : "member_added",
                 "membership": {
+                    "role": "direct_member",
                     "user": {
                         "login": "testLogin"
                     }
@@ -258,6 +298,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 {
                 "action" : "member_added",
                 "membership": {
+                    "role": "direct_member"
                 },
                 "installation":{
                     "id": "1234"
@@ -283,6 +324,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 {
                 "action" : "member_added",
                 "membership": {
+                    "role": "direct_member",
                     "user": {
                     }
                 },
@@ -310,6 +352,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 {
                 "action" : "member_added",
                 "membership": {
+                    "role": "direct_member",
                     "user": {
                         "login": "testLogin"
                     }
@@ -335,6 +378,7 @@ public class WebhookControllerTests extends ControllerTestCase {
                 {
                 "action" : "member_added",
                 "membership": {
+                    "role": "direct_member",
                     "user": {
                         "login": "testLogin"
                     }

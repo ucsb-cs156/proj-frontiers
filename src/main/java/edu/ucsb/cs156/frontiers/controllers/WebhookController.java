@@ -60,11 +60,12 @@ public class WebhookController {
         // Extract GitHub login based on payload structure
         String githubLogin = null;
         String installationId = null;
+        OrgStatus role = null;
         
         // For member_added events, the structure is different
         if (action.equals("member_added")) {
-            if (!jsonBody.has("membership") || 
-                !jsonBody.get("membership").has("user") || 
+            if (!jsonBody.has("membership") ||
+                !jsonBody.get("membership").has("user") || !jsonBody.get("membership").has("role") ||
                 !jsonBody.get("membership").get("user").has("login") ||
                 !jsonBody.has("installation") || 
                 !jsonBody.get("installation").has("id")) {
@@ -73,6 +74,12 @@ public class WebhookController {
             
             githubLogin = jsonBody.get("membership").get("user").get("login").asText();
             installationId = jsonBody.get("installation").get("id").asText();
+            String textRole = jsonBody.get("membership").get("role").asText();
+            if(textRole.equals("admin")){
+                role = OrgStatus.OWNER;
+            }else{
+                role = OrgStatus.MEMBER;
+            }
         } 
         // For member_invited events, use the original structure
         else { // must be "member_invited" based on earlier check
@@ -110,8 +117,8 @@ public class WebhookController {
         
         // Update status based on action
         if(action.equals("member_added")) {
-            updatedStudent.setOrgStatus(OrgStatus.MEMBER);
-            log.info("Setting status to MEMBER");
+            updatedStudent.setOrgStatus(role);
+            log.info("Setting status to {}" , role.toString());
         } else { // must be "member_invited" based on earlier check
             updatedStudent.setOrgStatus(OrgStatus.INVITED);
             log.info("Setting status to INVITED");
