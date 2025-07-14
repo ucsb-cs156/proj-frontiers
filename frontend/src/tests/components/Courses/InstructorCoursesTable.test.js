@@ -102,6 +102,11 @@ describe("InstructorCoursesTable tests", () => {
     // This span should be empty since the course has no orgName
     expect(span4).toBeEmptyDOMElement();
 
+    const firstCourseLink = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-courseName-link",
+    );
+    expect(firstCourseLink).toHaveAttribute("href", "/instructor/courses/1");
+
     // Make sure that the callback is called when the button is clicked
     fireEvent.click(button3);
     await waitFor(() => {
