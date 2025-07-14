@@ -1,6 +1,8 @@
 package edu.ucsb.cs156.frontiers.utiltiies;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import org.junit.jupiter.api.Test;
@@ -21,9 +23,19 @@ public class CanonicalFormConverterTests {
      * constructor of CanonicalFormConverter is called, even though
      * it does not have any logic in it.
      */
-     @Test
+    @Test
     public void test_coverage_for_constructor() {
         CanonicalFormConverter converter = new CanonicalFormConverter();
         assertInstanceOf(CanonicalFormConverter.class, converter);
     }
+
+    /**
+     * Test the areEquivalentEmails method
+     */
+    @Test
+    public void testAreEquivalentEmails() {
+        assertTrue(CanonicalFormConverter.areEquivalentEmails("foo@umail.ucsb.edu", "foo@ucsb.edu"));
+        assertFalse(CanonicalFormConverter.areEquivalentEmails("bar@ucsb.edu", "foo@ucsb.edu"));
+    }
+
 }

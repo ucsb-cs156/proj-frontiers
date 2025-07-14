@@ -21,4 +21,13 @@ public class CanonicalFormConverter {
                                     .toLowerCase();
        return canonicalEmail;
     }
+
+    /** Check whether two emails are equivalent in their canonical form
+     * @param email1
+     * @param email2
+     * @return true if the canonical forms of the two emails are equal, false otherwise
+     */
+    public static boolean areEquivalentEmails(String email1, String email2) {
+        return convertToValidEmail(email1).equals(convertToValidEmail(email2));
+    }
 }
