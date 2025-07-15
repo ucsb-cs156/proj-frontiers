@@ -34,6 +34,7 @@ import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 
 /**
@@ -91,7 +92,7 @@ public class AdminsController extends ApiController {
     @GetMapping("/all")
     public Iterable<AdminDTO> allAdmins() {
         Iterable<Admin> admins = adminRepository.findAll();
-        Iterable<AdminDTO> adminDTOs = ((List<Admin>) admins).stream()
+        List<AdminDTO> adminDTOs = StreamSupport.stream(admins.spliterator(), false)
                 .map(admin -> new AdminDTO(admin, adminEmails))
                 .toList();
 

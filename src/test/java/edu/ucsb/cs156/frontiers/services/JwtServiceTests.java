@@ -56,17 +56,12 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 
 @TestPropertySource(locations = "/testproperties.properties")
 @RestClientTest(JwtService.class)
-@AutoConfigureDataJpa
+@Import({TestConfig.class})
 public class JwtServiceTests {
-
-
     @Autowired private MockRestServiceServer mockRestServiceServer;
 
     @Autowired
     private JwtService jwtService;
-
-    @MockitoBean
-    private WiremockService wiremockService;
 
     @Value("${app.public.key:no-key-present}")
     private String publicKey;

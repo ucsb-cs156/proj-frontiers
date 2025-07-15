@@ -1,10 +1,12 @@
 package edu.ucsb.cs156.frontiers.web;
 
+import edu.ucsb.cs156.frontiers.testconfig.IntegrationConfig;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -24,7 +26,8 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@Import(TestConfig.class)
+@ResourceLock("port-8080")
+@Import(IntegrationConfig.class)
 @ActiveProfiles("integration")
 public class SwaggerWebIT {
     @Value("${app.playwright.headless:true}")

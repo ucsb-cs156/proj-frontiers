@@ -45,7 +45,6 @@ import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 
 @WebMvcTest(controllers = {CSVDownloadsController.class})
 @Import(TestConfig.class)
-@AutoConfigureDataJpa
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @MockitoBean(answers = Answers.CALLS_REAL_METHODS) RosterStudentDTOService rosterStudentDTOService;

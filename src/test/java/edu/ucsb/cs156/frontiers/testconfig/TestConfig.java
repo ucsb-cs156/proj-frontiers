@@ -9,12 +9,14 @@ import org.springframework.context.annotation.Import;
 import edu.ucsb.cs156.frontiers.config.SecurityConfig;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GrantedAuthoritiesService;
+import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.ActiveProfiles;
 
 @TestConfiguration
-@Import(SecurityConfig.class)
 public class TestConfig {
 
     @Bean
+    @Primary
     public CurrentUserService currentUserService() {
         return new MockCurrentUserServiceImpl();
     }

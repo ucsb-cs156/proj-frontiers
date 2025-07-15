@@ -45,7 +45,6 @@ import org.springframework.http.MediaType;
 
 @Slf4j
 @WebMvcTest(controllers = CourseStaffController.class)
-@AutoConfigureDataJpa
 public class CourseStaffControllerTests extends ControllerTestCase {
 
         @MockitoBean

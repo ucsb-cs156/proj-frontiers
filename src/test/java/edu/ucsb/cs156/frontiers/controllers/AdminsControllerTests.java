@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -45,8 +44,6 @@ public class AdminsControllerTests extends ControllerTestCase {
         @MockitoBean
         AdminRepository adminRepository;
 
-
-        
         @MockitoBean
         UserRepository userRepository;
 
@@ -57,7 +54,7 @@ public class AdminsControllerTests extends ControllerTestCase {
                 mockMvc.perform(post("/api/admin/post"))
                                 .andExpect(status().is(403));
         }
-        
+
         @WithMockUser(roles = { "USER" })
         @Test
         public void logged_in_regular_users_cannot_post() throws Exception {
