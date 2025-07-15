@@ -48,6 +48,22 @@ public class AdminsController extends ApiController {
    @Autowired
    AdminRepository adminRepository;
 
+    @Value("#{'${app.admin.emails}'.split(',')}")
+    List<String> adminEmails;
+
+
+  public static record AdminDTO(
+          String email,
+          boolean isInAdminEmails
+  ) {
+      public AdminDTO(Admin admin, List<String> adminEmails) {
+          this(
+                  admin.getEmail(),
+                  adminEmails.contains(admin.getEmail())
+          );
+      }
+  }
+
    /**
    * Create a new admin
    * @param adminEmail       the email in typical email format
@@ -73,13 +89,14 @@ public class AdminsController extends ApiController {
     @Operation(summary= "List all admins")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/all")
-    public Iterable<Admin> allAdmins() {
+    public Iterable<AdminDTO> allAdmins() {
         Iterable<Admin> admins = adminRepository.findAll();
-        return admins;
-    }
+        Iterable<AdminDTO> adminDTOs = ((List<Admin>) admins).stream()
+                .map(admin -> new AdminDTO(admin, adminEmails))
+                .toList();
 
-    @Value("#{'${app.admin.emails}'.split(',')}")
-    private List<String> adminEmails;
+        return adminDTOs;
+    }
 
     /**
     * Delete an Admin
