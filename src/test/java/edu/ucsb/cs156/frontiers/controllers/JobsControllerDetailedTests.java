@@ -19,7 +19,9 @@ import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -55,7 +57,6 @@ import org.springframework.test.web.servlet.MvcResult;
 @Slf4j
 @WebMvcTest(controllers = JobsController.class)
 @Import(JobService.class)
-@AutoConfigureDataJpa
 public class JobsControllerDetailedTests extends ControllerTestCase {
 
   @MockitoBean
@@ -63,6 +64,12 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
   @MockitoBean
   UserRepository userRepository;
+
+  @MockitoBean
+  RosterStudentRepository rosterStudentRepository;
+
+  @MockitoBean
+  CourseRepository courseRepository;
 
   @MockitoBean
   UpdateUserService updateUserService; // This will be used in the UpdateAllJob to call the GithubSignInService

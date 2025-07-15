@@ -3,11 +3,15 @@ package edu.ucsb.cs156.frontiers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import edu.ucsb.cs156.frontiers.config.SecurityConfig;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -27,8 +31,7 @@ import java.util.Map;
  */
 
 @ActiveProfiles("test")
-@Import(TestConfig.class)
-@AutoConfigureDataJpa
+@Import({TestConfig.class, SecurityConfig.class})
 public abstract class ControllerTestCase {
   @Autowired
   public CurrentUserService currentUserService;
@@ -41,9 +44,6 @@ public abstract class ControllerTestCase {
 
   @Autowired
   public ObjectMapper mapper;
-
-  @MockBean
-  WiremockService mockWiremockService;
 
   protected Map<String, Object> responseToJson(MvcResult result) throws UnsupportedEncodingException, JsonProcessingException {
     String responseString = result.getResponse().getContentAsString();

@@ -54,7 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @WebMvcTest(controllers = {RosterStudentsController.class})
-@AutoConfigureDataJpa
 public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @MockitoBean

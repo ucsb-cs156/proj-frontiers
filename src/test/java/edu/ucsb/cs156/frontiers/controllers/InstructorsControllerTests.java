@@ -18,9 +18,9 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
@@ -33,9 +33,9 @@ import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 @Import(TestConfig.class)
 public class InstructorsControllerTests extends ControllerTestCase {
 
-        @MockBean
+        @MockitoBean
         InstructorRepository instructorRepository;
-        @MockBean
+        @MockitoBean
         UserRepository userRepository;
 
         // Tests for the POST endpoint

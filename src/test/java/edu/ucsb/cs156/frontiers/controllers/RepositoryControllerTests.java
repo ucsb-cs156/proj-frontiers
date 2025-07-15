@@ -33,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Slf4j
 @WebMvcTest(controllers = RepositoryController.class)
-@AutoConfigureDataJpa
 public class RepositoryControllerTests extends ControllerTestCase {
     @MockitoBean
     private CourseRepository  courseRepository;
