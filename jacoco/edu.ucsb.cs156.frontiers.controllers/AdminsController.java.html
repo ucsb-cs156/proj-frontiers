@@ -48,6 +48,22 @@ import java.util.List;
    @Autowired
    AdminRepository adminRepository;
 
+    @Value(&quot;#{'${app.admin.emails}'.split(',')}&quot;)
+    List&lt;String&gt; adminEmails;
+
+
+<span class="fc" id="L55">  public static record AdminDTO(</span>
+          String email,
+          boolean isInAdminEmails
+  ) {
+      public AdminDTO(Admin admin, List&lt;String&gt; adminEmails) {
+<span class="fc" id="L60">          this(</span>
+<span class="fc" id="L61">                  admin.getEmail(),</span>
+<span class="fc" id="L62">                  adminEmails.contains(admin.getEmail())</span>
+          );
+<span class="fc" id="L64">      }</span>
+  }
+
    /**
    * Create a new admin
    * @param adminEmail       the email in typical email format
@@ -59,10 +75,10 @@ import java.util.List;
   public Admin postAdmin(
           @Parameter(name=&quot;email&quot;) @RequestParam String email)
       {
-<span class="fc" id="L62">      String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);</span>
-<span class="fc" id="L63">      Admin admin = new Admin(convertedEmail);</span>
-<span class="fc" id="L64">      Admin savedAdmin = adminRepository.save(admin);</span>
-<span class="fc" id="L65">      return savedAdmin;</span>
+<span class="fc" id="L78">      String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);</span>
+<span class="fc" id="L79">      Admin admin = new Admin(convertedEmail);</span>
+<span class="fc" id="L80">      Admin savedAdmin = adminRepository.save(admin);</span>
+<span class="fc" id="L81">      return savedAdmin;</span>
   }
 
   /**
@@ -73,13 +89,14 @@ import java.util.List;
     @Operation(summary= &quot;List all admins&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
     @GetMapping(&quot;/all&quot;)
-    public Iterable&lt;Admin&gt; allAdmins() {
-<span class="fc" id="L77">        Iterable&lt;Admin&gt; admins = adminRepository.findAll();</span>
-<span class="fc" id="L78">        return admins;</span>
-    }
+    public Iterable&lt;AdminDTO&gt; allAdmins() {
+<span class="fc" id="L93">        Iterable&lt;Admin&gt; admins = adminRepository.findAll();</span>
+<span class="fc" id="L94">        Iterable&lt;AdminDTO&gt; adminDTOs = ((List&lt;Admin&gt;) admins).stream()</span>
+<span class="fc" id="L95">                .map(admin -&gt; new AdminDTO(admin, adminEmails))</span>
+<span class="fc" id="L96">                .toList();</span>
 
-    @Value(&quot;#{'${app.admin.emails}'.split(',')}&quot;)
-    private List&lt;String&gt; adminEmails;
+<span class="fc" id="L98">        return adminDTOs;</span>
+    }
 
     /**
     * Delete an Admin
@@ -92,13 +109,13 @@ import java.util.List;
    @DeleteMapping(&quot;/delete&quot;)
    public Object deleteAdmin(
            @Parameter(name=&quot;email&quot;) @RequestParam String email) {
-<span class="fc" id="L95">       Admin admin = adminRepository.findByEmail(email)</span>
-<span class="fc" id="L96">               .orElseThrow(() -&gt; new EntityNotFoundException(Admin.class, email));</span>
-<span class="fc bfc" id="L97" title="All 2 branches covered.">      if (adminEmails.contains(email)) {</span>
-<span class="fc" id="L98">        throw new UnsupportedOperationException(&quot;Forbidden to delete an admin from ADMIN_EMAILS list&quot;);</span>
+<span class="fc" id="L112">       Admin admin = adminRepository.findByEmail(email)</span>
+<span class="fc" id="L113">               .orElseThrow(() -&gt; new EntityNotFoundException(Admin.class, email));</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">      if (adminEmails.contains(email)) {</span>
+<span class="fc" id="L115">        throw new UnsupportedOperationException(&quot;Forbidden to delete an admin from ADMIN_EMAILS list&quot;);</span>
       }
-<span class="fc" id="L100">       adminRepository.delete(admin);</span>
-<span class="fc" id="L101">       return genericMessage(&quot;Admin with id %s deleted&quot;.formatted(email));</span>
+<span class="fc" id="L117">       adminRepository.delete(admin);</span>
+<span class="fc" id="L118">       return genericMessage(&quot;Admin with id %s deleted&quot;.formatted(email));</span>
    }
 
 }
