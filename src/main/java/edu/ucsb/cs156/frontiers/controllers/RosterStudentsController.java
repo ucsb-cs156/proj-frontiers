@@ -90,7 +90,7 @@ public class RosterStudentsController extends ApiController {
     @Operation(summary = "Create a new roster student")
     @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/post")
-    public RosterStudent postRosterStudent(
+    public UpsertResponse postRosterStudent(
             @Parameter(name = "studentId") @RequestParam String studentId,
             @Parameter(name = "firstName") @RequestParam String firstName,
             @Parameter(name = "lastName") @RequestParam String lastName,
@@ -110,7 +110,7 @@ public class RosterStudentsController extends ApiController {
                 .build();
 
         UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL); 
-        return upsertResponse.rosterStudent; 
+        return upsertResponse; 
     }
 
     /**
@@ -180,17 +180,18 @@ public class RosterStudentsController extends ApiController {
     }
 
     public UpsertResponse upsertStudent(RosterStudent student, Course course, RosterStatus rosterStatus) {
+        String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
         Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),
                 student.getStudentId());
-        String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
-        if (existingStudent.isPresent()) {
-            RosterStudent existingStudentObj = existingStudent.get();
+        Optional<RosterStudent> existingStudentByEmail = rosterStudentRepository.findByCourseIdAndEmail(course.getId(),
+                convertedEmail);
+        if (existingStudent.isPresent() || existingStudentByEmail.isPresent()) {
+            RosterStudent existingStudentObj = existingStudent.isPresent() ? existingStudent.get() : existingStudentByEmail.get();
             existingStudentObj.setRosterStatus(rosterStatus);
             existingStudentObj.setFirstName(student.getFirstName());
             existingStudentObj.setLastName(student.getLastName());
-            if (!existingStudentObj.getEmail().equals(convertedEmail)) {
-                existingStudentObj.setEmail(convertedEmail);
-            }
+            existingStudentObj.setEmail(convertedEmail);
+            existingStudentObj.setStudentId(student.getStudentId());
             existingStudentObj = rosterStudentRepository.save(existingStudentObj);
             updateUserService.attachUserToRosterStudent(existingStudentObj);
             return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);

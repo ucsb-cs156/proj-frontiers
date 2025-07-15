@@ -3,7 +3,7 @@
 * Prod: <https://frontiers.dokku-00.cs.ucsb.edu>
 * QA: <https://frontiers-qa.dokku-00.cs.ucsb.edu>
 
-### Sprint Planning Doc for S25: 
+### Product Planning Doc: 
 - <https://docs.google.com/document/d/1IXxmD4hBvDq6uSnpSukdV30o4xyaIAgiRt_Mpqv51yw/edit?usp=sharing>
 
 # Versions
