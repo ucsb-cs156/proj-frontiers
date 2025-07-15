@@ -18,7 +18,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,OrganizationLinkerService,0,133,0,2,
 frontiers,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,84,0,2,0,17,0,8,0,7
+frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,85,0,2,0,17,0,8,0,7
 frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,115,0,2,0,26,0,12,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,66,0,2,0,16,0,6,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
@@ -38,6 +38,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,264,0,36,0,57
 frontiers,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,7,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersStartup,0,33,0,0,0,11,0,4,0,4
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersApplicationRunner,0,14,0,0,0,5,0,3,0,3
+frontiers,edu.ucsb.cs156.frontiers.startup,WiremockApplicationRunner,0,17,0,0,0,6,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,119,0,16,0,23,0,11,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,47,0,4,0,11,0,3,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentRepositoriesJob,0,37,0,6,0,7,0,4,0,1
