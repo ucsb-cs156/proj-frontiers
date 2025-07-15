@@ -123,3 +123,8 @@ xxxxxxxxxxxxxxxxxxxxxxxxx
 
 If you haven't yet done so, do the other steps listed in [/docs/dokku.md](dokku.md).
 
+For example, you'll need to do this command in order for
+the new config variables to take effect:
+
+
+`dokku ps:rebuild frontiers`
