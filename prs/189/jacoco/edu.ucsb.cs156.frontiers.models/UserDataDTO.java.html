@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class UserDataDTO {
     private long id;
@@ -22,18 +21,18 @@ public class UserDataDTO {
     private boolean instructor;
 
     public static UserDataDTO from(User user, boolean isAdmin, boolean isInstructor) {
-<span class="fc" id="L25">        UserDataDTO dto = UserDataDTO.builder()</span>
-<span class="fc" id="L26">                .id(user.getId())</span>
-<span class="fc" id="L27">                .email(user.getEmail())</span>
-<span class="fc" id="L28">                .googleSub(user.getGoogleSub())</span>
-<span class="fc" id="L29">                .pictureUrl(user.getPictureUrl())</span>
-<span class="fc" id="L30">                .fullName(user.getFullName())</span>
-<span class="fc" id="L31">                .givenName(user.getGivenName())</span>
-<span class="fc" id="L32">                .familyName(user.getFamilyName())</span>
-<span class="fc" id="L33">                .admin(isAdmin)</span>
-<span class="fc" id="L34">                .instructor(isInstructor)</span>
-<span class="fc" id="L35">                .build();</span>
-<span class="fc" id="L36">        return dto;</span>
+<span class="fc" id="L24">        UserDataDTO dto = UserDataDTO.builder()</span>
+<span class="fc" id="L25">                .id(user.getId())</span>
+<span class="fc" id="L26">                .email(user.getEmail())</span>
+<span class="fc" id="L27">                .googleSub(user.getGoogleSub())</span>
+<span class="fc" id="L28">                .pictureUrl(user.getPictureUrl())</span>
+<span class="fc" id="L29">                .fullName(user.getFullName())</span>
+<span class="fc" id="L30">                .givenName(user.getGivenName())</span>
+<span class="fc" id="L31">                .familyName(user.getFamilyName())</span>
+<span class="fc" id="L32">                .admin(isAdmin)</span>
+<span class="fc" id="L33">                .instructor(isInstructor)</span>
+<span class="fc" id="L34">                .build();</span>
+<span class="fc" id="L35">        return dto;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
