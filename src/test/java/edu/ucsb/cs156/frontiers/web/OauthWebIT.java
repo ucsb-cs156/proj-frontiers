@@ -1,8 +1,10 @@
 package edu.ucsb.cs156.frontiers.web;
 
+import edu.ucsb.cs156.frontiers.testconfig.IntegrationConfig;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
@@ -19,7 +21,8 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.setDefaul
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@Import(TestConfig.class)
+@ResourceLock("port-8080")
+@Import(IntegrationConfig.class)
 public class OauthWebIT extends WebTestCase {
     @Test
     public void regular_user_can_login_logout() throws Exception {
