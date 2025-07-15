@@ -20,9 +20,9 @@ jest.mock("react-toastify", () => {
   };
 });
 
-describe("AdminsIndexPage tests", () => {
-  const axiosMock = new AxiosMockAdapter(axios);
+const axiosMock = new AxiosMockAdapter(axios);
 
+describe("AdminsIndexPage tests", () => {
   const getEndpoint = "/api/admin/all";
   const deleteEndpoint = "/api/admin/delete";
 
