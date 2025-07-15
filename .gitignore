@@ -57,5 +57,6 @@ build/
 ### Local Configuration ###
 .env
 secrets.yaml
+secrets.yaml.backup
 .DS_Store
 

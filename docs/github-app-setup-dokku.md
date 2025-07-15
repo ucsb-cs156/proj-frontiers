@@ -1,4 +1,6 @@
-Next, we'll set up the Github App. To do so, go to https://github.com/
+# Setting up the Github App for Frontiers running on Dokku
+
+Go to https://github.com/
 
 Then, click your profile icon. Click "Settings". Then, Click "Developer Settings", on the bottom of the toolbar on the left.
 
@@ -61,37 +63,10 @@ Then, scroll further and under "Where can this Github App be installed?" select 
 
 Click "Create".
 
-Now, Select "Generate Client Secret". Copy this client secret to a safe location, you will use it in a few minutes. Copy the Client ID as well.
+Now, Select "Generate Client Secret". 
 
 ![image](https://github.com/user-attachments/assets/856cf882-b6f3-44a5-b70b-115531bb8cae)
 
-
-Scroll down to "Private Keys" and select "Generate a Private Key"
-
-![image](https://github.com/user-attachments/assets/7c2b958a-f912-4972-af63-9ff2c30339cd)
-
-
-Though we will now start using other applications, keep this Github window open. You'll need it later.
-
-This will download a private key to your computer.
-
-Next, we will switch the standard of the key we just downloaded so Java can understand it.
-
-Copy the key from wherever it downloaded to the root of the frontiers project.
-To do so, open a terminal in the folder the key is in, and run the following command, replacing `<file-name>` with the name of the key.
-```bash
-./keyconvert.sh <file-name>
-```
-
-Next, we're going to take the output of this newly created file and set it as an environmental variable on Dokku. To do so, output the file into your terminal with the following command:
-```bash
-cat pkcs8.key
-```
-
-Copy the output from this command and connect to your Dokku installation. As this is a multiline variable, it will need to be between a set of quotes. Make sure that you paste it between the quotes, otherwise the variable will only be set to the first line of the key. Use the following command, replacing <appname> with your app name and <file-output> with the copied output from the previous step:
-```bash
-dokku config:set --no-restart <appname> app_private_key="<file-output>"
-```
 
 Then, set your Github Client ID and Github Client Secret with the following commands respectively:
 ```bash
@@ -99,20 +74,57 @@ dokku config:set --no-restart <appname> GITHUB_CLIENT_ID=<client-id>
 dokku config:set --no-restart <appname> GITHUB_CLIENT_SECRET=<client-secret>
 ```
 
-Then, set your Google Cloud Credentials from earlier with the following commands:
-```bash
-dokku config:set --no-restart <appname> GOOGLE_CLIENT_ID=<client-id>
-dokku config:set --no-restart <appname> GOOGLE_CLIENT_SECRET=<client-secret>
+## Generating a value for `app_private_key`
+
+Scroll down to "Private Keys" and select "Generate a Private Key"
+
+![image](https://github.com/user-attachments/assets/7c2b958a-f912-4972-af63-9ff2c30339cd)
+
+
+This will download a private key file (with file name ending `.private-key.pem` to your computer, probably into your default `Downloads` directory.  We'll need this file in the next step.
+
+Note that the file has the current date in the filename; this will help you be sure you have the correct file.  We'll use this file in the next step.
+
+## Converting the private key file.
+
+Next, we will run a script that converts this private key 
+into a `dokku config:set ...` command.
+
+Copy the key from wherever it downloaded to the *root of the frontiers project*, i.e. the directory where you cloned the repo.
+
+For example, if `~/Downloads` is the directory where files are downloaded, then this command will copy all files ending in `.private-key.pem` to your current directory.
+
+```
+cp ~/Downloads/*.private-key.pem .
 ```
 
-Next, set up a Postgres database for your app. A separate set of directions for this step are listed [here](https://ucsb-cs156.github.io/topics/dokku/postgres_database.html#postgres-database---how-to-deploy-a-postgres-database).
+Note that you *must not commit* this private key to the Github Repo! The `.gitignore` should handle this, but be careful in any case.
 
-Next, sync the app with the repository.
-```bash
-dokku git:sync <appname> https://github.com/ucsb-cs156/proj-frontiers main
+Now run this script: 
+```
+./keyconvert.sh
 ```
 
-Next, start your app.
+* If there is only one file ending in `private-key.pem` in the current directory, it will be selected automatically. Otherwise, you'll be asked to choose one.
+* The script will then prompt you for the name of your dokku app (e.g. `frontiers`, `frontiers-qa`, etc.)
+
+The script will then output the command that you should copy to the dokku command line
+
+As this is a multiline variable, it will need to be between a set of quotes. Make sure that you paste it between the quotes, otherwise the variable will only be set to the first line of the key. Use the following command, replacing <appname> with your app name and <file-output> with the copied output from the previous step:
 ```bash
-dokku ps:rebuild <appname>
+dokku config:set frontiers --no-restart app_private_key="-----BEGIN PRIVATE KEY-----
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxx
+-----END PRIVATE KEY-----"
 ```
+
+## Other steps you may need to do
+
+If you haven't yet done so, do the other steps listed in [/docs/dokku.md](dokku.md).
+
+For example, you'll need to do this command in order for
+the new config variables to take effect:
+
+
+`dokku ps:rebuild frontiers`
