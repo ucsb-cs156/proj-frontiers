@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseStaffController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">CourseStaffController.java</span></div><h1>CourseStaffController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.*;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import org.apache.coyote.BadRequestException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
+
+@Tag(name = &quot;CourseStaff&quot;)
+@RequestMapping(&quot;/api/coursestaff&quot;)
+@RestController
+<span class="fc" id="L48">@Slf4j</span>
+<span class="fc" id="L49">public class CourseStaffController extends ApiController {</span>
+
+    @Autowired
+    private JobService jobService;
+    @Autowired
+    private OrganizationMemberService organizationMemberService;
+
+    @Autowired
+    private CourseStaffRepository courseStaffRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
+    @Autowired
+    private UpdateUserService updateUserService;
+
+    @Autowired
+    private CurrentUserService currentUserService;
+
+    /**
+     * This method creates a new CourseStaff.
+     * 
+     * 
+     * @return the created CourseStaff
+     */
+
+    @Operation(summary = &quot;Create a new course staff&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @PostMapping(&quot;/post&quot;)
+    public CourseStaff postCourseStaff(
+            @Parameter(name = &quot;firstName&quot;) @RequestParam String firstName,
+            @Parameter(name = &quot;lastName&quot;) @RequestParam String lastName,
+            @Parameter(name = &quot;email&quot;) @RequestParam String email,
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
+
+        // Get Course or else throw an error
+
+<span class="fc" id="L86">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L87">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L89">        CourseStaff courseStaff = CourseStaff.builder()</span>
+<span class="fc" id="L90">                .firstName(firstName)</span>
+<span class="fc" id="L91">                .lastName(lastName)</span>
+<span class="fc" id="L92">                .email(email)</span>
+<span class="fc" id="L93">                .course(course)</span>
+<span class="fc" id="L94">                .build();</span>
+<span class="fc" id="L95">        CourseStaff savedCourseStaff = courseStaffRepository.save(courseStaff);</span>
+
+<span class="fc" id="L97">        return savedCourseStaff;</span>
+    }
+
+    /**
+     * This method returns a list of course staff for a given course.
+     * 
+     * @return a list of all courses.
+     */
+    @Operation(summary = &quot;List all course staff for a course&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @GetMapping(&quot;/course&quot;)
+    public Iterable&lt;CourseStaff&gt; courseStaffForCourse(
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
+<span class="fc" id="L110">        courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L111">        Iterable&lt;CourseStaff&gt; courseStaffs = courseStaffRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L112">        return courseStaffs;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
