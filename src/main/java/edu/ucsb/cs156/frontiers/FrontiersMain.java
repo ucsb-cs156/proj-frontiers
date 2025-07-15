@@ -28,26 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EnableAsync // for @Async annotation for JobsService
 @EnableScheduling // for @Scheduled annotation for JobsService
-@EnableJpaAuditing(dateTimeProviderRef = "utcDateTimeProvider")
 // enables automatic population of @CreatedDate and @LastModifiedDate
 public class FrontiersMain {
-
-  @Autowired
-  WiremockService wiremockService;
-
-  /**
-   * When using the wiremock profile, this method will call the code needed to set
-   * up the wiremock services
-   */
-  @Profile("wiremock")
-  @Bean
-  public ApplicationRunner wiremockApplicationRunner() {
-    return arg -> {
-      log.info("wiremock mode");
-      wiremockService.init();
-      log.info("wiremockApplicationRunner completed");
-    };
-  }
 
   /**
    * Hook that can be used to set up any services needed for development
@@ -71,19 +53,6 @@ public class FrontiersMain {
     SpringApplication.run(FrontiersMain.class, args);
   }
 
-  /**
-   * This method provides a DateTimeProvider that always returns the current
-   * UTC time.
-   * This is used to ensure that all timestamps in the database are in UTC.
-   * @return a DateTimeProvider that always returns the current UTC time
-   */
-  @Bean
-  public DateTimeProvider utcDateTimeProvider() {
-    return () -> {
-      ZonedDateTime now = ZonedDateTime.now();
-      return Optional.of(now);
-    };
-  }
   /** 
    *  See: https://www.baeldung.com/spring-git-information
    *  @return a propertySourcePlaceholderConfigurer for git.properties
