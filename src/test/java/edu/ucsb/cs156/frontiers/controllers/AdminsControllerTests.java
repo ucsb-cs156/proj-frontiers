@@ -44,8 +44,6 @@ public class AdminsControllerTests extends ControllerTestCase {
         @MockitoBean
         AdminRepository adminRepository;
 
-
-        
         @MockitoBean
         UserRepository userRepository;
 
@@ -56,7 +54,7 @@ public class AdminsControllerTests extends ControllerTestCase {
                 mockMvc.perform(post("/api/admin/post"))
                                 .andExpect(status().is(403));
         }
-        
+
         @WithMockUser(roles = { "USER" })
         @Test
         public void logged_in_regular_users_cannot_post() throws Exception {

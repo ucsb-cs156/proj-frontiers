@@ -14,11 +14,12 @@ const testData = [
 
 const mockDeleteCallback = jest.fn();
 
-let queryClient;
-let invalidateQueriesSpy;
 const axiosMock = new AxiosMockAdapter(axios);
 
 describe("RoleEmailTable", () => {
+  let queryClient;
+  let invalidateQueriesSpy;
+
   beforeEach(() => {
     queryClient = new QueryClient({
       defaultOptions: {
