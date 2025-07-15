@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
@@ -91,6 +92,25 @@ public class RepositoryControllerTests extends ControllerTestCase {
         Map<String, Object> json = responseToJson(response);
         assertEquals("NoLinkedOrganizationException", json.get("type"));
         assertEquals("No linked GitHub Organization to course. Please link a GitHub Organization first.", json.get("message"));
+    }
+
+    @Test
+    @WithInstructorCoursePermissions
+    public void job_actually_fires_with_instructor() throws Exception {
+        Course course = Course.builder().id(2L).orgName("ucsb-cs156").installationId("1234").courseName("course").creator(currentUserService.getUser()).build();
+        doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+        Job job = Job.builder().status("processing").build();
+        doReturn(job).when(service).runAsJob(any(CreateStudentRepositoriesJob.class));
+        MvcResult response = mockMvc.perform(post("/api/repos/createRepos")
+                        .with(csrf())
+                        .param("courseId", "2")
+                        .param("repoPrefix", "repo1")
+                ).andExpect(status().isOk())
+                .andReturn();
+
+        String expectedJson = objectMapper.writeValueAsString(job);
+        String actualJson = response.getResponse().getContentAsString();
+        assertEquals(expectedJson, actualJson);
     }
 
     @Test
