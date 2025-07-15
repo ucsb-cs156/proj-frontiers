@@ -12,6 +12,6 @@ import java.lang.annotation.RetentionPolicy;
  * It cannot be combined with <i>@WithMockUser</i>.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@WithMockUser(authorities = {"COURSE_PERMISSION","ROLE_ADMIN"})
+@WithMockUser(authorities = {"COURSE_PERMISSION","ROLE_INSTRUCTOR"})
 public @interface WithInstructorCoursePermissions {
 }
