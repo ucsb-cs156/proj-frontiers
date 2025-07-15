@@ -1,14 +1,19 @@
 package edu.ucsb.cs156.frontiers.testconfig;
 
+import edu.ucsb.cs156.frontiers.models.CurrentUser;
+import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.services.CurrentUserServiceImpl;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
+
+import java.util.Collection;
+
+public class MockCurrentUserServiceImpl extends CurrentUserService {
 
     public User getMockUser(SecurityContext securityContext, Authentication authentication) {
         Object principal = authentication.getPrincipal();
@@ -66,6 +71,21 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
         }
 
         return null;
+    }
+
+    @Override
+    public CurrentUser getCurrentUser() {
+        return CurrentUser.builder()
+                .user(this.getUser())
+                .roles(this.getRoles())
+                .build();
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getRoles() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Authentication authentication = securityContext.getAuthentication();
+        return authentication.getAuthorities();
     }
 
 }
