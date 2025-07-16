@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.config.SecurityConfig;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.testconfig.TestCourseSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -31,7 +32,7 @@ import java.util.Map;
  */
 
 @ActiveProfiles("test")
-@Import({TestConfig.class, SecurityConfig.class})
+@Import({TestConfig.class, SecurityConfig.class, TestCourseSecurity.class})
 public abstract class ControllerTestCase {
   @Autowired
   public CurrentUserService currentUserService;
