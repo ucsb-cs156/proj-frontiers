@@ -27,7 +27,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,557,0,46,0,113,0,42,0,19
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,0,21,0,5,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.InsertStatus,0,15,0,0,0,2,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,350,0,14,0,78,0,20,0,13
+frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,353,0,14,0,78,0,20,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.InstructorCourseView,0,59,0,4,0,11,0,4,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,65,0,6,0,13,0,6,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffController,0,62,0,0,0,15,0,6,0,6

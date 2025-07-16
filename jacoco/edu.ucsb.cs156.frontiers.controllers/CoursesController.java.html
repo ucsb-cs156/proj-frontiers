@@ -75,7 +75,7 @@ import lombok.extern.slf4j.Slf4j;
     @Operation(summary = &quot;Create a new course&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
     @PostMapping(&quot;/post&quot;)
-    public Course postCourse(
+    public InstructorCourseView postCourse(
             @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
             @Parameter(name = &quot;term&quot;) @RequestParam String term,
             @Parameter(name = &quot;school&quot;) @RequestParam String school) {
@@ -89,7 +89,7 @@ import lombok.extern.slf4j.Slf4j;
 <span class="fc" id="L89">                .build();</span>
 <span class="fc" id="L90">        Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L92">        return savedCourse;</span>
+<span class="fc" id="L92">        return new InstructorCourseView(savedCourse);</span>
     }
 
 
