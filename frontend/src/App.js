@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import HomePage from "main/pages/HomePage";
+import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
 import ProfilePage from "main/pages/ProfilePage";
 import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 
@@ -23,7 +23,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route exact path="/" element={<HomePage />} />
+        <Route exact path="/" element={<HomePageLoggedOut />} />
         <Route exact path="/profile" element={<ProfilePage />} />
         {hasRole(currentUser, "ROLE_ADMIN") && (
           <Route exact path="/admin/users" element={<AdminUsersPage />} />

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import HomePage from "main/pages/HomePage";
+import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 
@@ -8,7 +8,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
-describe("HomePage tests", () => {
+describe("HomePageLoggedOut tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
   axiosMock
     .onGet("/api/currentUser")
@@ -22,10 +22,10 @@ describe("HomePage tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <HomePage />
+          <HomePageLoggedOut />
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    await screen.findByText(/Hello, world!/);
+    await screen.findByText(/Welcome to Frontiers!/);
   });
 });
