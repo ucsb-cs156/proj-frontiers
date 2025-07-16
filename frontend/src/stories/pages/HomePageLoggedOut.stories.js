@@ -2,14 +2,14 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { http, HttpResponse } from "msw";
 
-import HomePage from "main/pages/HomePage";
+import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
 
 export default {
-  title: "pages/HomePage",
-  component: HomePage,
+  title: "pages/HomePageLoggedOut",
+  component: HomePageLoggedOut,
 };
 
-const Template = () => <HomePage />;
+const Template = () => <HomePageLoggedOut />;
 
 export const LoggedOut = Template.bind({});
 LoggedOut.parameters = {
