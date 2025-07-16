@@ -7,18 +7,17 @@ import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
-const mockedNavigate = jest.fn();
-
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
-  useNavigate: () => mockedNavigate,
-}));
-
 describe("RosterStudentTable tests", () => {
   const queryClient = new QueryClient();
 
-  const expectedHeaders = ["Student Id", "First Name", "Last Name", "Email"];
-  const expectedFields = ["studentId", "firstName", "lastName", "email"];
+  const expectedHeaders = [
+    "id",
+    "Student Id",
+    "First Name",
+    "Last Name",
+    "Email",
+  ];
+  const expectedFields = ["id", "studentId", "firstName", "lastName", "email"];
   const testId = "RosterStudentTable";
 
   test("renders empty table correctly", () => {
@@ -29,12 +28,23 @@ describe("RosterStudentTable tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <RosterStudentTable students={[]} currentUser={currentUser} />
+          <RosterStudentTable
+            students={[]}
+            currentUser={currentUser}
+            courseId="7"
+          />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
     // assert
+
+    const courseIdHiddenElement = screen.getByTestId(`${testId}-courseId`);
+    expect(courseIdHiddenElement).toBeInTheDocument();
+    expect(courseIdHiddenElement).toHaveAttribute("data-course-id", "7");
+    // Expect it to have style display:none
+    expect(courseIdHiddenElement).toHaveStyle("display: none");
+
     expectedHeaders.forEach((headerText) => {
       const header = screen.getByText(headerText);
       expect(header).toBeInTheDocument();
@@ -75,9 +85,13 @@ describe("RosterStudentTable tests", () => {
       expect(header).toBeInTheDocument();
     });
 
+    expect(screen.getByTestId(`${testId}-cell-row-0-col-id`)).toHaveTextContent(
+      "3",
+    );
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
-    ).toHaveTextContent("2");
+    ).toHaveTextContent("A123456");
+
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-firstName`),
     ).toHaveTextContent("Alice");
@@ -149,6 +163,9 @@ describe("RosterStudentTable tests", () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
 
+    // Mock window.alert
+    jest.spyOn(window, "alert").mockImplementation(() => {});
+
     // act - render the component
     render(
       <QueryClientProvider client={queryClient}>
@@ -176,7 +193,9 @@ describe("RosterStudentTable tests", () => {
 
     // assert - check that the navigate function was called with the expected path
     await waitFor(() =>
-      expect(mockedNavigate).toHaveBeenCalledWith("/rosterstudents/edit/2"),
+      expect(window.alert).toHaveBeenCalledWith(
+        "Edit not implemented yet, but would have navigated to: /rosterstudents/edit/3",
+      ),
     );
   });
 
@@ -186,7 +205,7 @@ describe("RosterStudentTable tests", () => {
 
     const axiosMock = new AxiosMockAdapter(axios);
     axiosMock
-      .onDelete("/api/rosterstudents")
+      .onDelete("/api/rosterstudents/delete")
       .reply(200, { message: "Student deleted" });
 
     // act - render the component
@@ -217,6 +236,6 @@ describe("RosterStudentTable tests", () => {
     // assert - check that the delete endpoint was called
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].params).toEqual({ studentId: 2 });
+    expect(axiosMock.history.delete[0].params).toEqual({ id: 3 });
   });
 });

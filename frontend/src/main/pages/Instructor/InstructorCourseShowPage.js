@@ -6,19 +6,34 @@ import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTab
 import { useCurrentUser } from "main/utils/currentUser";
 import { useParams } from "react-router-dom";
 
+import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
+
 export default function InstructorCourseShowPage() {
   const { data: currentUser } = useCurrentUser();
   const courseId = useParams().id;
 
   const {
     data: course,
-    error: _error,
-    status: _status,
+    error: _errorCourses,
+    status: _statusCourses,
   } = useBackend(
     // Stryker disable next-line all : don't test internal caching of React Query
     ["/api/courses/all"],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     { method: "GET", url: `/api/courses/${courseId}` },
+    // Stryker disable next-line all : don't test default value of empty list
+    null,
+  );
+
+  const {
+    data: rosterStudents,
+    error: _errorRosterStudents,
+    status: _statusRosterStudents,
+  } = useBackend(
+    // Stryker disable next-line all : don't test internal caching of React Query
+    [`/api/rosterstudents/course/${courseId}`],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: `/api/rosterstudents/course/${courseId}` },
     // Stryker disable next-line all : don't test default value of empty list
     null,
   );
@@ -34,7 +49,13 @@ export default function InstructorCourseShowPage() {
           testId={testId}
         />
         <h2>Roster Students</h2>
-        <p>Coming soon: Roster Students for this course will appear here.</p>
+        <RosterStudentTable
+          // Stryker disable next-line ArrayDeclaration : checking for ["Stryker was here"] is tough
+          students={rosterStudents || []}
+          currentUser={currentUser}
+          courseId={course ? course.id : ""}
+          testIdPrefix={`${testId}-RosterStudentTable`}
+        />
       </div>
     </BasicLayout>
   );

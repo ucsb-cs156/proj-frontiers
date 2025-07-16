@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -87,7 +88,7 @@ public class RosterStudentsController extends ApiController {
      */
 
     @Operation(summary = "Create a new roster student")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/post")
     public UpsertResponse postRosterStudent(
             @Parameter(name = "studentId") @RequestParam String studentId,
@@ -118,10 +119,10 @@ public class RosterStudentsController extends ApiController {
      * @return a list of all courses.
      */
     @Operation(summary = "List all roster students for a course")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/course")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @GetMapping("/course/{courseId}")
     public Iterable<RosterStudent> rosterStudentForCourse(
-            @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException {
+            @Parameter(name = "courseId") @PathVariable Long courseId) throws EntityNotFoundException {
         courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
         Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
         return rosterStudents;
@@ -138,7 +139,7 @@ public class RosterStudentsController extends ApiController {
      * @throws CsvException
      */
     @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping(value = "/upload/egrades", consumes = { "multipart/form-data" })
     public Map<String, String> uploadRosterStudents(
             @Parameter(name = "courseId") @RequestParam Long courseId,
@@ -275,7 +276,7 @@ public class RosterStudentsController extends ApiController {
     }
 
     @Operation(summary = "Update a roster student")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PutMapping("/update")
     public RosterStudent updateRosterStudent(
             @Parameter(name = "id") @RequestParam Long id,
@@ -307,7 +308,7 @@ public class RosterStudentsController extends ApiController {
     }
 
     @Operation(summary = "Delete a roster student")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @DeleteMapping("/delete")
     @Transactional
     public ResponseEntity<String> deleteRosterStudent(@Parameter(name = "id") @RequestParam Long id) throws EntityNotFoundException{
