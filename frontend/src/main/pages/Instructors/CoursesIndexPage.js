@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import CourseModal from "main/components/Courses/CourseModal";
 
 export default function CoursesIndexPage() {
-  const { data: currentUser } = useCurrentUser();
+  const currentUser = useCurrentUser();
 
   const {
     data: courses,
