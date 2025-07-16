@@ -6,7 +6,7 @@ import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTab
 import { useCurrentUser } from "main/utils/currentUser";
 
 export default function CoursesIndexPage() {
-  const { data: currentUser } = useCurrentUser();
+  const currentUser = useCurrentUser();
 
   const {
     data: courses,

@@ -9,7 +9,7 @@ import { useParams } from "react-router-dom";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 
 export default function InstructorCourseShowPage() {
-  const { data: currentUser } = useCurrentUser();
+  const currentUser = useCurrentUser();
   const courseId = useParams().id;
 
   const {
