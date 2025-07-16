@@ -45,7 +45,6 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @Slf4j
 @WebMvcTest(controllers = JobsController.class)
-@Import(JobService.class)
 public class JobsControllerJobsTests extends ControllerTestCase {
 
   @MockitoBean
