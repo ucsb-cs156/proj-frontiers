@@ -3,15 +3,10 @@ package edu.ucsb.cs156.frontiers.controllers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
@@ -20,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -673,6 +669,44 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .andExpect(status().isOk())
                                 .andReturn();
 
+        }
+
+        @Test
+        @WithInstructorCoursePermissions
+        public void delete_not_found_returns_not_found() throws Exception {
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+                MvcResult response = mockMvc.perform(delete("/api/courses")
+                        .param("courseId", "1")
+                        .with(csrf()))
+                        .andExpect(status().isNotFound())
+                        .andReturn();
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "Course with id 1 not found");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
+                verify(courseRepository).findById(eq(1L));
+                verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+        }
+
+        @Test
+        @WithInstructorCoursePermissions
+        public void delete_success_returns_ok() throws Exception {
+                Course course = Course.builder().id(1L).build();
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+                MvcResult response = mockMvc.perform(delete("/api/courses")
+                        .param("courseId", "1")
+                        .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andReturn();
+                verify(linkerService).unenrollOrganization(eq(course));
+                verify(courseRepository).findById(eq(1L));
+                verify(courseRepository).delete(eq(course));
+                verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+                String expectedJson = mapper.writeValueAsString(Map.of("message", "Course with id 1 deleted"));
+                String responseString = response.getResponse().getContentAsString();
+                assertEquals(expectedJson, responseString);
         }
 }
 
