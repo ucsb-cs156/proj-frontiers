@@ -5,7 +5,7 @@ import { useCurrentUser, useLogout } from "main/utils/currentUser";
 import { useSystemInfo } from "main/utils/systemInfo";
 
 export default function BasicLayout({ children }) {
-  const { data: currentUser } = useCurrentUser();
+  const currentUser = useCurrentUser();
   const { data: systemInfo } = useSystemInfo();
 
   const doLogout = useLogout().mutate;
