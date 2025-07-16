@@ -109,7 +109,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                 verify(courseRepository, times(1)).save(eq(course));
 
                 String responseString = response.getResponse().getContentAsString();
-                String expectedJson = mapper.writeValueAsString(course);
+                String expectedJson = mapper.writeValueAsString(new InstructorCourseView(course));
                 assertEquals(expectedJson, responseString);
 
         }
@@ -148,7 +148,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                 verify(courseRepository, times(1)).save(eq(course));
 
                 String responseString = response.getResponse().getContentAsString();
-                String expectedJson = mapper.writeValueAsString(course);
+                String expectedJson = mapper.writeValueAsString(new InstructorCourseView(course));
                 assertEquals(expectedJson, responseString);
 
         }
