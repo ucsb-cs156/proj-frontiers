@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
@@ -12,12 +12,24 @@ import AxiosMockAdapter from "axios-mock-adapter";
 
 let axiosMock = new AxiosMockAdapter(axios);
 
+const mockToast = jest.fn();
+
+jest.mock("react-toastify", () => {
+  const originalModule = jest.requireActual("react-toastify");
+  return {
+    __esModule: true,
+    ...originalModule,
+    toast: (x) => mockToast(x),
+  };
+});
+
 describe("CoursesIndexPage tests", () => {
   const testId = "InstructorCoursesTable";
 
   beforeEach(() => {
     axiosMock.reset();
     axiosMock.resetHistory();
+    queryClient.clear();
   });
 
   const setupInstructorUser = () => {
@@ -168,5 +180,49 @@ describe("CoursesIndexPage tests", () => {
       "Error communicating with backend via GET on /api/courses/all",
     );
     restoreConsole();
+  });
+
+  test("Can submit new course", async () => {
+    setupAdminUser();
+    axiosMock
+      .onPost("/api/courses/post")
+      .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock
+      .onGet("/api/courses/all")
+      .reply(200, coursesFixtures.severalCourses);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const createCourse = screen.getByText("Create Course");
+    expect(createCourse).toHaveClass("btn btn-primary");
+    expect(createCourse).toHaveStyle("float: right; margin-bottom: 10px;");
+    fireEvent.click(createCourse);
+
+    await screen.findByLabelText("Course Name");
+    const courseName = screen.getByLabelText("Course Name");
+    const courseTerm = screen.getByLabelText("Term");
+    const school = screen.getByLabelText("School");
+    fireEvent.change(courseName, { target: { value: "CMPSC 156" } });
+    fireEvent.change(courseTerm, { target: { value: "Spring 2025" } });
+    fireEvent.change(school, { target: { value: "UCSB" } });
+    fireEvent.click(screen.getByText("Create"));
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].url).toBe("/api/courses/post");
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseName: "CMPSC 156",
+      term: "Spring 2025",
+      school: "UCSB",
+    });
+    await waitFor(() =>
+      expect(mockToast).toBeCalledWith("Course CMPSC 156 created"),
+    );
+    expect(queryClient.getQueryState("/api/courses/all")).toBeTruthy();
+    expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
   });
 });

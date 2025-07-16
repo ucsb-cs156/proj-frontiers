@@ -75,7 +75,7 @@ public class CoursesController extends ApiController {
     @Operation(summary = "Create a new course")
     @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/post")
-    public Course postCourse(
+    public InstructorCourseView postCourse(
             @Parameter(name = "courseName") @RequestParam String courseName,
             @Parameter(name = "term") @RequestParam String term,
             @Parameter(name = "school") @RequestParam String school) {
@@ -89,7 +89,7 @@ public class CoursesController extends ApiController {
                 .build();
         Course savedCourse = courseRepository.save(course);
 
-        return savedCourse;
+        return new InstructorCourseView(savedCourse);
     }
 
 
