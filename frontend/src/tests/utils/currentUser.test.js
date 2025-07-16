@@ -34,9 +34,13 @@ describe("utils/currentUser tests", () => {
       const restoreConsole = mockConsole();
 
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() =>
+        expect(queryClient.getQueryState("current user").status).toBe(
+          "success",
+        ),
+      );
 
-      expect(result.current.data).toEqual({
+      expect(result.current).toEqual({
         loggedIn: false,
         root: null,
         initialData: true,
@@ -71,9 +75,13 @@ describe("utils/currentUser tests", () => {
 
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
 
-      await waitFor(() => result.current.isFetched);
+      await waitFor(() =>
+        expect(queryClient.getQueryState("current user").status).toBe(
+          "success",
+        ),
+      );
 
-      expect(result.current.data).toEqual(currentUserFixtures.userOnly);
+      expect(result.current).toEqual(currentUserFixtures.userOnly);
       queryClient.clear();
     });
 
@@ -91,13 +99,17 @@ describe("utils/currentUser tests", () => {
       const restoreConsole = mockConsole();
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
 
-      await waitFor(() => result.current.isFetched);
+      await waitFor(() =>
+        expect(queryClient.getQueryState("current user").status).toBe(
+          "success",
+        ),
+      );
       expect(console.error).toHaveBeenCalled();
       const errorMessage = console.error.mock.calls[0][0];
       expect(errorMessage).toMatch(/Error invoking axios.get:/);
       restoreConsole();
 
-      expect(result.current.data).toEqual({
+      expect(result.current).toEqual({
         initialData: true,
         loggedIn: false,
         root: null,
@@ -120,7 +132,11 @@ describe("utils/currentUser tests", () => {
       const restoreConsole = mockConsole();
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
 
-      await waitFor(() => result.current.isFetched);
+      await waitFor(() =>
+        expect(queryClient.getQueryState("current user").status).toBe(
+          "success",
+        ),
+      );
       expect(console.error).toHaveBeenCalled();
       const errorMessage = console.error.mock.calls[0][0];
       expect(errorMessage).toMatch(/Error getting roles: /);
@@ -130,7 +146,7 @@ describe("utils/currentUser tests", () => {
         loggedIn: true,
         root: { ...apiResult, rolesList: ["ERROR_GETTING_ROLES"] },
       };
-      expect(result.current.data).toEqual(expectedResult);
+      expect(result.current).toEqual(expectedResult);
       queryClient.clear();
     });
   });
@@ -216,25 +232,5 @@ describe("utils/currentUser tests", () => {
         ),
       ).toBeTruthy();
     });
-
-    test("hasRole returns correct values when data is in currentUser", async () => {
-      const currentUser = { data: { root: { rolesList: ["ROLE_USER"] } } };
-      expect(hasRole(currentUser, "ROLE_USER")).toBeTruthy();
-      expect(hasRole(currentUser, "ROLE_ADMIN")).toBeFalsy();
-    });
-
-    test("hasRole falls back correctly with various data missing", async () => {
-      expect(hasRole(null, "ROLE_USER")).toBeFalsy();
-      expect(hasRole({}, "ROLE_USER")).toBeFalsy();
-      expect(hasRole({ data: null }, "ROLE_USER")).toBeFalsy();
-      expect(hasRole({ data: { root: null } }, "ROLE_USER")).toBeFalsy();
-      expect(
-        hasRole({ data: { root: { rolesList: null } } }, "ROLE_USER"),
-      ).toBeFalsy();
-      expect(
-        hasRole({ data: { root: { rolesList: [] } } }, "ROLE_USER"),
-      ).toBeFalsy();
-    });
-    expect(hasRole({ root: { rolesList: null } })).toBeFalsy();
   });
 });

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export function useCurrentUser() {
   let rolesList = ["ERROR_GETTING_ROLES"];
-  return useQuery(
+  const queryResults = useQuery(
     "current user",
     async () => {
       try {
@@ -24,6 +24,7 @@ export function useCurrentUser() {
       initialData: { loggedIn: false, root: null, initialData: true },
     },
   );
+  return queryResults.data;
 }
 
 export function useLogout() {
@@ -38,17 +39,7 @@ export function useLogout() {
 }
 
 export function hasRole(currentUser, role) {
-  // The following hack is because there is some bug in terms of the
-  // shape of the data returned by useCurrentUser.  Is there a separate
-  // data level, or not?
-
-  // We will file an issue to track that down and then remove this hack
-
   if (currentUser == null) return false;
-
-  if (currentUser.data?.root?.rolesList) {
-    return currentUser.data.root.rolesList.includes(role);
-  }
 
   return currentUser.root?.rolesList?.includes(role);
 }
