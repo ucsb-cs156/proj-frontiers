@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.NoSuchAlgorithmException;
@@ -72,5 +74,29 @@ public class OrganizationLinkerService {
         }
         String orgName = responseJson.get("account").get("login").asText();
         return orgName;
+    }
+
+
+    /**
+     * Removes the Frontiers installation from the linked GitHub org
+     *
+     * @param course The entity for the course about to be deleted
+     */
+    public void unenrollOrganization(Course course) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        if(course.getOrgName() == null || course.getInstallationId() == null){
+            return;
+        }
+        String token = jwtService.getJwt();
+        String ENDPOINT = "https://api.github.com/app/installations/" + course.getInstallationId();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Accept", "application/vnd.github+json");
+        headers.add("X-GitHub-Api-Version", "2022-11-28");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);
+        }catch(HttpClientErrorException ignored){
+
+        }
     }
 }
