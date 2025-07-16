@@ -56,7 +56,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 @Slf4j
 @WebMvcTest(controllers = JobsController.class)
-@Import(JobService.class)
 public class JobsControllerDetailedTests extends ControllerTestCase {
 
   @MockitoBean
@@ -74,7 +73,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
   @MockitoBean
   UpdateUserService updateUserService; // This will be used in the UpdateAllJob to call the GithubSignInService
 
-  @Autowired
+  @MockitoBean
   JobService jobService;
 
   @Autowired
@@ -177,9 +176,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
     // Arrange
     Long jobId = 1L;
     String jobLog = "This is a job log";
-    Job job = Job.builder().build();
-    job.setLog(jobLog);
-    when(jobsRepository.findById(jobId)).thenReturn(Optional.of(job));
+    when(jobService.getJobLogs(eq(jobId))).thenReturn(jobLog);
 
     // Act & Assert
     mockMvc
@@ -193,9 +190,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
   public void test_getJobLogs_admin_can_get_empty_log() throws Exception {
     // Arrange
     Long jobId = 2L;
-    Job job = Job.builder().build();
-    job.setLog("");
-    when(jobsRepository.findById(jobId)).thenReturn(Optional.of(job));
+    when(jobService.getJobLogs(eq(jobId))).thenReturn("");
 
     // Act & Assert
     mockMvc
@@ -249,101 +244,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = { "ADMIN" })
-  @Test
-  public void admin_can_launch_test_job() throws Exception {
 
-    // arrange
-
-    User user = currentUserService.getUser();
-
-    Job jobStarted = Job.builder()
-        .id(0L)
-        .createdBy(user)
-        .createdAt(null)
-        .updatedAt(null)
-        .status("running")
-        .log("Hello World! from test job!")
-        .build();
-
-    Job jobCompleted = Job.builder()
-        .id(0L)
-        .createdBy(user)
-        .createdAt(null)
-        .updatedAt(null)
-        .status("complete")
-        .log("Hello World! from test job!\nGoodbye from test job!")
-        .build();
-
-    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobCompleted);
-
-    // act
-    MvcResult response = mockMvc
-        .perform(post("/api/jobs/launch/testjob?fail=false&sleepMs=2000").with(csrf()))
-        .andExpect(status().isOk())
-        .andReturn();
-
-    // assert
-    String responseString = response.getResponse().getContentAsString();
-    Job jobReturned = objectMapper.readValue(responseString, Job.class);
-
-    assertEquals("running", jobReturned.getStatus());
-
-    await()
-        .atMost(1, SECONDS)
-        .untilAsserted(() -> verify(jobsRepository, times(2)).save(eq(jobStarted)));
-    await()
-        .atMost(10, SECONDS)
-        .untilAsserted(() -> verify(jobsRepository, times(4)).save(eq(jobCompleted)));
-  }
-
-  @WithMockUser(roles = { "ADMIN" })
-  @Test
-  public void admin_can_launch_test_job_that_fails() throws Exception {
-
-    // arrange
-
-    User user = currentUserService.getUser();
-
-    Job jobStarted = Job.builder()
-        .id(0L)
-        .createdBy(user)
-        .createdAt(null)
-        .updatedAt(null)
-        .status("running")
-        .log("Hello World! from test job!")
-        .build();
-
-    Job jobFailed = Job.builder()
-        .id(0L)
-        .createdBy(user)
-        .createdAt(null)
-        .updatedAt(null)
-        .status("error")
-        .log("Hello World! from test job!\nFail!")
-        .build();
-
-    when(jobsRepository.save(any(Job.class))).thenReturn(jobStarted).thenReturn(jobFailed);
-
-    // act
-    MvcResult response = mockMvc
-        .perform(post("/api/jobs/launch/testjob?fail=true&sleepMs=4000").with(csrf()))
-        .andExpect(status().isOk())
-        .andReturn();
-
-    String responseString = response.getResponse().getContentAsString();
-    Job jobReturned = objectMapper.readValue(responseString, Job.class);
-
-    assertEquals("running", jobReturned.getStatus());
-
-    await()
-        .atMost(1, SECONDS)
-        .untilAsserted(() -> verify(jobsRepository, times(2)).save(eq(jobStarted)));
-
-    await()
-        .atMost(10, SECONDS)
-        .untilAsserted(() -> verify(jobsRepository, times(3)).save(eq(jobFailed)));
-  }
 
   @WithMockUser(roles = { "ADMIN" })
   @Test
@@ -361,18 +262,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
         .status("started")
         .build();
 
-    Job jobRunning = Job.builder()
-        .id(0L)
-        .createdBy(user)
-        .createdAt(null)
-        .updatedAt(null)
-        .status("running")
-        .log("Processing...\n")
-        .build();
-
-    doReturn(jobStarted, jobRunning).when(jobsRepository).save(any(Job.class));
-
-    doNothing().when(updateUserService).attachRosterStudentsAllUsers();
+    when(jobService.runAsJob(any(UpdateAllJob.class))).thenReturn(jobStarted);
 
     // act
     MvcResult response = mockMvc
@@ -380,9 +270,10 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
         .andExpect(status().isOk())
         .andReturn();
 
+    verify(jobService).runAsJob(any(UpdateAllJob.class));
     // assert
     String responseString = response.getResponse().getContentAsString();
-    Job jobReturned = objectMapper.readValue(responseString, Job.class);
-    MatcherAssert.assertThat(jobReturned.getStatus(), Matchers.anyOf(Matchers.is("complete"), Matchers.is("running")));
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
+    assertEquals(expectedResponse, responseString);
   }
 }

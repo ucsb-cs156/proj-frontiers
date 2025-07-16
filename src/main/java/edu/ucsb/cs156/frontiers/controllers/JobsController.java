@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
-import edu.ucsb.cs156.frontiers.jobs.TestJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
@@ -88,16 +87,6 @@ public class JobsController extends ApiController {
     return Map.of("message", String.format("Job with id %d deleted", id));
   }
 
-  @Operation(summary = "Launch Test Job (click fail if you want to test exception handling)")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-  @PostMapping("/launch/testjob")
-  public Job launchTestJob(
-      @Parameter(name = "fail") @RequestParam Boolean fail,
-      @Parameter(name = "sleepMs") @RequestParam Integer sleepMs) {
-
-    TestJob testJob = TestJob.builder().fail(fail).sleepMs(sleepMs).build();
-    return jobService.runAsJob(testJob);
-  }
 
 
   @Operation(summary = "Get long job logs")
