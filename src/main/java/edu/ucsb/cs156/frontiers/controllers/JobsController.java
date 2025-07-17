@@ -8,6 +8,7 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
@@ -46,6 +47,8 @@ public class JobsController extends ApiController {
     private CourseRepository courseRepository;
     @Autowired
     private OrganizationMemberService organizationMemberService;
+    @Autowired
+    private CourseStaffRepository courseStaffRepository;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -118,6 +121,7 @@ public class JobsController extends ApiController {
             .rosterStudentRepository(rosterStudentRepository)
             .courseRepository(courseRepository)
             .organizationMemberService(organizationMemberService)
+            .courseStaffRepository(courseStaffRepository)
             .build();
     return jobService.runAsJob(job);
   }
