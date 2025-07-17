@@ -288,7 +288,7 @@ public class OrganizationMemberServiceTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"message\": \"Error inviting member\"}"));
 
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members/" + "banana"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(header("Accept", "application/vnd.github+json"))
@@ -326,7 +326,7 @@ public class OrganizationMemberServiceTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"message\": \"Error inviting member\"}"));
 
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members/" + "banana"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(header("Accept", "application/vnd.github+json"))
@@ -364,7 +364,7 @@ public class OrganizationMemberServiceTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"message\": \"Error inviting member\"}"));
 
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members/" + "banana"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(header("Accept", "application/vnd.github+json"))
@@ -402,7 +402,7 @@ public class OrganizationMemberServiceTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"message\": \"Error inviting member\"}"));
 
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members/" + "banana"))
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
                 .andExpect(header("Accept", "application/vnd.github+json"))
