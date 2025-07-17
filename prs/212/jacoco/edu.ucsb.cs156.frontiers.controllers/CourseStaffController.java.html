@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseStaffController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">CourseStaffController.java</span></div><h1>CourseStaffController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+import edu.ucsb.cs156.frontiers.entities.*;
+import edu.ucsb.cs156.frontiers.services.*;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+
+@Tag(name = &quot;CourseStaff&quot;)
+@RequestMapping(&quot;/api/coursestaff&quot;)
+@RestController
+<span class="fc" id="L29">@Slf4j</span>
+<span class="fc" id="L30">public class CourseStaffController extends ApiController {</span>
+
+    @Autowired
+    private JobService jobService;
+    @Autowired
+    private OrganizationMemberService organizationMemberService;
+
+    @Autowired
+    private CourseStaffRepository courseStaffRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
+    @Autowired
+    private UpdateUserService updateUserService;
+
+    @Autowired
+    private CurrentUserService currentUserService;
+
+    /**
+     * This method creates a new CourseStaff.
+     * 
+     * 
+     * @return the created CourseStaff
+     */
+
+    @Operation(summary = &quot;Create a new course staff&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @PostMapping(&quot;/post&quot;)
+    public CourseStaff postCourseStaff(
+            @Parameter(name = &quot;firstName&quot;) @RequestParam String firstName,
+            @Parameter(name = &quot;lastName&quot;) @RequestParam String lastName,
+            @Parameter(name = &quot;email&quot;) @RequestParam String email,
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
+
+        // Get Course or else throw an error
+
+<span class="fc" id="L67">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L68">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L70">        CourseStaff courseStaff = CourseStaff.builder()</span>
+<span class="fc" id="L71">                .firstName(firstName)</span>
+<span class="fc" id="L72">                .lastName(lastName)</span>
+<span class="fc" id="L73">                .email(email)</span>
+<span class="fc" id="L74">                .course(course)</span>
+<span class="fc" id="L75">                .build();</span>
+<span class="fc" id="L76">        CourseStaff savedCourseStaff = courseStaffRepository.save(courseStaff);</span>
+
+<span class="fc" id="L78">        updateUserService.attachUserToCourseStaff(savedCourseStaff);</span>
+
+<span class="fc" id="L80">        return savedCourseStaff;</span>
+    }
+
+    /**
+     * This method returns a list of course staff for a given course.
+     * 
+     * @return a list of all courses.
+     */
+    @Operation(summary = &quot;List all course staff for a course&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @GetMapping(&quot;/course&quot;)
+    public Iterable&lt;CourseStaff&gt; courseStaffForCourse(
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
+<span class="fc" id="L93">        courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L94">        Iterable&lt;CourseStaff&gt; courseStaffs = courseStaffRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L95">        return courseStaffs;</span>
+    }
+
+    @Operation(summary = &quot;Allow roster student to join a course by generating an invitation to the linked Github Org&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+    @PutMapping(&quot;/joinCourse&quot;)
+    public ResponseEntity&lt;String&gt; joinCourseOnGitHub(
+            @Parameter(name = &quot;courseStaffId&quot;, description = &quot;Staff Member joining a course on GitHub&quot;) @RequestParam Long courseStaffId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+<span class="fc" id="L104">        User currentUser = currentUserService.getUser();</span>
+<span class="fc" id="L105">        CourseStaff courseStaff = courseStaffRepository.findById(courseStaffId)</span>
+<span class="fc" id="L106">                .orElseThrow(() -&gt; new EntityNotFoundException(CourseStaff.class, courseStaffId));</span>
+
+<span class="fc bfc" id="L108" title="All 4 branches covered.">        if (courseStaff.getUser() == null || currentUser.getId() != courseStaff.getUser().getId()) {</span>
+<span class="fc" id="L109">            throw new AccessDeniedException(&quot;User not authorized join the course as this staff member&quot;);</span>
+        }
+
+<span class="fc bfc" id="L112" title="All 6 branches covered.">        if ((courseStaff.getGithubId() != null &amp;&amp; courseStaff.getGithubId() != 0) &amp;&amp; courseStaff.getGithubLogin() != null) {</span>
+<span class="fc" id="L113">            return ResponseEntity.badRequest().body(&quot;This course staff has already joined the course with a GitHub account.&quot;);</span>
+        }
+
+
+<span class="fc bfc" id="L117" title="All 4 branches covered.">        if(courseStaff.getCourse().getOrgName() == null || courseStaff.getCourse().getInstallationId() == null) {</span>
+<span class="fc" id="L118">            return ResponseEntity.badRequest().body(&quot;Course has not been set up. Please ask your instructor for help.&quot;);</span>
+        }
+<span class="fc" id="L120">        courseStaff.setGithubId(currentUser.getGithubId());</span>
+<span class="fc" id="L121">        courseStaff.setGithubLogin(currentUser.getGithubLogin());</span>
+<span class="fc" id="L122">        OrgStatus status = organizationMemberService.inviteOrganizationOwner(courseStaff);</span>
+<span class="fc" id="L123">        courseStaff.setOrgStatus(status);</span>
+<span class="fc" id="L124">        courseStaffRepository.save(courseStaff);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if(status == OrgStatus.INVITED){</span>
+<span class="fc" id="L126">            return ResponseEntity.accepted().body(&quot;Successfully invited staff member to Organization&quot;);</span>
+        }else{
+<span class="fc" id="L128">            return ResponseEntity.internalServerError().body(&quot;Could not invite staff member to Organization&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
