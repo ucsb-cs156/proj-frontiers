@@ -28,7 +28,7 @@ public class User {
   private String fullName;
   private String givenName;
   private String familyName;
-  private int githubId;
+  private Integer githubId;
   private String githubLogin;
   private String studentId;
 
@@ -41,5 +41,6 @@ public class User {
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
   @ToString.Exclude
+  @JsonIgnore
   private List<CourseStaff> roles;
 }

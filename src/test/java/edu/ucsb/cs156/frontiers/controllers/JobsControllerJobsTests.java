@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import edu.ucsb.cs156.frontiers.repositories.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
@@ -24,10 +25,6 @@ import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
-import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
-import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
-import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
-import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -67,6 +64,9 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
   @MockitoBean
   OrganizationMemberService organizationMemberService;
+
+  @MockitoBean
+  CourseStaffRepository courseStaffRepository;
 
   @Autowired
   ObjectMapper objectMapper;

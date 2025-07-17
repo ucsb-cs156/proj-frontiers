@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
 
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +26,10 @@ public class CourseStaff {
     private String firstName;
     private String lastName;
     private String email;
+
+    private OrgStatus orgStatus;
+    private Integer githubId;
+    private String githubLogin;
 
     @ManyToOne
     @JoinColumn(name = "course_id")
