@@ -1,0 +1,472 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "Admin-0",
+      "author": "Division7 (generated)",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "ADMINS_PK"
+                  },
+                  "name": "EMAIL",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+            ,
+            "tableName": "ADMINS"
+          }
+        }
+      ]
+      
+    }
+  },
+  
+  {
+    "changeSet": {
+      "id": "Course-0",
+      "author": "Division7 (generated)",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "COURSES_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "INSTALLATION_ID",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "ORG_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_USER_ID",
+                    "referencedTableName": "USERS",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "USER_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "COURSE_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "TERM",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "SCHOOL",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+            ,
+            "tableName": "COURSE"
+          }
+        }
+      ]
+      
+    }
+  },
+  
+  {
+    "changeSet": {
+      "id": "CourseStaff-0",
+      "author": "Division7 (generated)",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "COURSE_STAFF_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_COURSE_ID",
+                    "referencedTableName": "COURSE",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "COURSE_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "USER_ID",
+                  "type": "BIGINT",
+                  "constraints": {
+                    "foreignKeyName": "FK_USER_ID",
+                    "referencedTableName": "USERS",
+                    "referencedColumnName": "ID"
+                  }
+                }
+              },
+              {
+                "column": {
+                  "name": "ROLE",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "FIRST_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "LAST_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "EMAIL",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "GITHUB_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "GITHUB_LOGIN",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+            ,
+            "tableName": "COURSE_STAFF"
+          }
+        }
+      ]
+      
+    }
+  },
+  
+  {
+    "changeSet": {
+      "id": "Instructors-0",
+      "author": "Division7 (generated)",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "INSTRUCTORS_PK"
+                  },
+                  "name": "EMAIL",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+            ,
+            "tableName": "INSTRUCTORS"
+          }
+        }
+      ]
+      
+    }
+  },
+  
+  {
+    "changeSet": {
+      "id": "Jobs-0",
+      "author": "Division7 (generated)",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "JOB_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "CREATED_BY_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "CREATED_AT",
+                  "type": "TIMESTAMP"
+                }
+              },
+              {
+                "column": {
+                  "name": "UPDATED_AT",
+                  "type": "TIMESTAMP"
+                }
+              },
+              {
+                "column": {
+                  "name": "STATUS",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "LOG",
+                  "type": "VARCHAR(1048576)"
+                }
+              }
+            ]
+            ,
+            "tableName": "JOBS"
+          }
+        }
+      ]
+      
+    }
+  },
+  
+  {
+    "changeSet": {
+      "id": "RosterStudent-0",
+      "author": "Division7 (generated)",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "ROSTER_STUDENT_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_COURSE_ID",
+                    "referencedTableName": "COURSE",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "COURSE_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "STUDENT_ID",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "FIRST_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "LAST_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "EMAIL",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "USER_ID",
+                  "type": "BIGINT",
+                  "constraints": {
+                    "foreignKeyName": "FK_USER_ID",
+                    "referencedTableName": "USERS",
+                    "referencedColumnName": "ID"
+                  }
+                }
+              },
+              {
+                "column": {
+                  "name": "ROSTER_STATUS",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "GITHUB_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "GITHUB_LOGIN",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+            ,
+            "tableName": "ROSTER_STUDENT"
+          }
+        }
+      ]
+      
+    }
+  },
+  
+  {
+    "changeSet": {
+      "id": "Users-0",
+      "author": "Division7 (generated)",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "USERS_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "EMAIL",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "FULL_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "GIVEN_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "GOOGLE_SUB",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "PICTURE_URL",
+                  "type": "VARCHAR(500)"
+                }
+              },
+              {
+                "column": {
+                  "name": "GITHUB_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "GITHUB_LOGIN",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "STUDENT_ID",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "FAMILY_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+            ,
+            "tableName": "USERS"
+          }
+        }
+      ]
+      
+    }
+  }
+  
+]}
