@@ -75,6 +75,8 @@ public class CourseStaffController extends ApiController {
                 .build();
         CourseStaff savedCourseStaff = courseStaffRepository.save(courseStaff);
 
+        updateUserService.attachUserToCourseStaff(savedCourseStaff);
+
         return savedCourseStaff;
     }
 
