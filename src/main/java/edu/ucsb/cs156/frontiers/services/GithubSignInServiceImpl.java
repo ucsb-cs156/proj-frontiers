@@ -62,6 +62,7 @@ public class GithubSignInServiceImpl extends DefaultOAuth2UserService implements
                 currentLocalUser.setGithubId((Integer) oAuth2User.getAttributes().get("id"));
                 currentLocalUser.setGithubLogin((String) oAuth2User.getAttributes().get("login"));
                 updateUserService.attachRosterStudents(currentLocalUser);
+                updateUserService.attachCourseStaff(currentLocalUser);
                 userRepository.save(currentLocalUser);
             }
             authorities.add(new SimpleGrantedAuthority("ROLE_GITHUB"));

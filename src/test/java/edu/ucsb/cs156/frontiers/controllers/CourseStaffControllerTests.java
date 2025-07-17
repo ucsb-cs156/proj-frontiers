@@ -114,6 +114,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
                 verify(courseRepository, times(1)).findById(eq(1L));
                 verify(courseStaffRepository, times(1)).save(eq(cs1));
 
+                verify(updateUserService).attachUserToCourseStaff(any(CourseStaff.class));
+
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(cs1);
                 assertEquals(expectedJson, responseString);
