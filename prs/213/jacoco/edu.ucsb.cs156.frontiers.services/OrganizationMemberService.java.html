@@ -128,7 +128,7 @@ public class OrganizationMemberService {
     }
 
     private OrgStatus getMemberStatus(String githubLogin, Course course) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc" id="L131">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/members/&quot; + githubLogin;</span>
+<span class="fc" id="L131">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/memberships/&quot; + githubLogin;</span>
 <span class="fc" id="L132">        HttpHeaders headers = new HttpHeaders();</span>
 <span class="fc" id="L133">        String token = jwtService.getInstallationToken(course);</span>
 <span class="fc" id="L134">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
