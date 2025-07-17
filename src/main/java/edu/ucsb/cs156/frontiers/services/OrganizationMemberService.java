@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
@@ -99,6 +100,11 @@ public class OrganizationMemberService {
     public OrgStatus inviteOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         Course course = student.getCourse();
         return inviteMember(student.getGithubId(), course, "direct_member");
+    }
+
+    public OrgStatus inviteOrganizationOwner(CourseStaff staff) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        Course course = staff.getCourse();
+        return inviteMember(staff.getGithubId(), course, "admin");
     }
 
     private OrgStatus inviteMember(int githubId, Course course, String role) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
