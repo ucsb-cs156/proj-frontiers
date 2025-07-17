@@ -9,9 +9,9 @@ describe("CoursesTable tests", () => {
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
-        <CoursesTable
-          courses={coursesFixtures.oneCourseWithEachStatus}
-          testId={"CoursesTable"}
+        <CoursesTable 
+        courses={coursesFixtures.oneCourseWithEachStatus} 
+        testId={"CoursesTable"}
         />
       </BrowserRouter>,
     );
@@ -80,9 +80,9 @@ describe("CoursesTable tests", () => {
   test("Does not call window.alert in default case for button 'Join Course'", () => {
     render(
       <BrowserRouter>
-        <CoursesTable
-          courses={coursesFixtures.oneCourseWithEachStatus}
-          testId={"CoursesTable"}
+        <CoursesTable 
+        courses={coursesFixtures.oneCourseWithEachStatus} 
+        testId={"CoursesTable"}
         />
       </BrowserRouter>,
     );
@@ -150,9 +150,9 @@ describe("CoursesTable tests", () => {
   test("Does not call window.alert in default case for button'View Invite'", () => {
     render(
       <BrowserRouter>
-        <CoursesTable
-          courses={coursesFixtures.oneCourseWithEachStatus}
-          testId={"CoursesTable"}
+        <CoursesTable 
+        courses={coursesFixtures.oneCourseWithEachStatus} 
+        testId={"CoursesTable"}
         />
       </BrowserRouter>,
     );

@@ -95,3 +95,4 @@ describe("HomePageLoggedIn tests", () => {
     ).toHaveTextContent("Pending");
   });
 });
+

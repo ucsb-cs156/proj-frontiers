@@ -20,7 +20,8 @@ const columns = [
   },
 ];
 
-export default function CoursesTable({ courses, testId, storybook = false }) {
+
+export default function CoursesTable({ courses, testId, storybook = false}) {
   const joinCallback = (cell) => {
     // TODO: Implement the join functionality here
     if (storybook) {
@@ -75,6 +76,10 @@ export default function CoursesTable({ courses, testId, storybook = false }) {
     },
   ];
   return (
-    <OurTable data={courses} columns={columnsWithStatus} testid={testId} />
+    <OurTable
+      data={courses}
+      columns={columnsWithStatus}
+      testid={testId}
+    />
   );
 }
