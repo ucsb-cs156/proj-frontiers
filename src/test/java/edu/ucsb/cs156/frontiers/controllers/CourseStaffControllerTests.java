@@ -486,6 +486,102 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER", "GITHUB"})
+        public void test_already_part_is_member() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.JOINCOURSE)
+                        .githubId(null)
+                        .githubLogin(null)
+                        .user(currentUser)
+                        .build();
+
+                CourseStaff courseStaffUpdated = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.MEMBER)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
+                when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+                when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class))).thenReturn(OrgStatus.MEMBER);
+
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "3"))
+                        .andExpect(status().isAccepted())
+                        .andReturn();
+
+
+                verify(courseStaffRepository).findById(eq(3L));
+
+                verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+                assertEquals("Already in organization - set status to MEMBER", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void test_already_part_is_owner() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.JOINCOURSE)
+                        .githubId(null)
+                        .githubLogin(null)
+                        .user(currentUser)
+                        .build();
+
+                CourseStaff courseStaffUpdated = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.OWNER)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
+                when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+                when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class))).thenReturn(OrgStatus.OWNER);
+
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "3"))
+                        .andExpect(status().isAccepted())
+                        .andReturn();
+
+
+                verify(courseStaffRepository).findById(eq(3L));
+
+                verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+                assertEquals("Already in organization - set status to OWNER", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void cant_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 

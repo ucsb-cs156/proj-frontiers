@@ -806,6 +806,116 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "USER", "GITHUB"})
+        public void test_already_part_is_member() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.JOINCOURSE)
+                        .githubId(null)  // Not linked yet
+                        .githubLogin(null)  // Not linked yet
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                RosterStudent rosterStudentUpdated = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.MEMBER)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+                when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+                when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class))).thenReturn(OrgStatus.MEMBER);
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
+                                .with(csrf())
+                                .param("rosterStudentId", "3"))
+                        .andExpect(status().isAccepted())
+                        .andReturn();
+
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+                assertEquals("Already in organization - set status to MEMBER", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void test_already_part_is_owner() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.JOINCOURSE)
+                        .githubId(null)  // Not linked yet
+                        .githubLogin(null)  // Not linked yet
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                RosterStudent rosterStudentUpdated = RosterStudent.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .studentId("A555555")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.OWNER)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+                when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+                when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class))).thenReturn(OrgStatus.OWNER);
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
+                                .with(csrf())
+                                .param("rosterStudentId", "3"))
+                        .andExpect(status().isAccepted())
+                        .andReturn();
+
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+                assertEquals("Already in organization - set status to OWNER", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
         public void cant_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 

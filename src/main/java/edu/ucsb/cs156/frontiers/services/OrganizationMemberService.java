@@ -19,7 +19,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.NoSuchAlgorithmException;
@@ -100,15 +99,15 @@ public class OrganizationMemberService {
 
     public OrgStatus inviteOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         Course course = student.getCourse();
-        return inviteMember(student.getGithubId(), course, "direct_member");
+        return inviteMember(student.getGithubId(), course, "direct_member", student.getGithubLogin());
     }
 
     public OrgStatus inviteOrganizationOwner(CourseStaff staff) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         Course course = staff.getCourse();
-        return inviteMember(staff.getGithubId(), course, "admin");
+        return inviteMember(staff.getGithubId(), course, "admin", staff.getGithubLogin());
     }
 
-    private OrgStatus inviteMember(int githubId, Course course, String role) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    private OrgStatus inviteMember(int githubId, Course course, String role, String githubLogin) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
         String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/invitations";
         HttpHeaders headers = new HttpHeaders();
         String token = jwtService.getInstallationToken(course);
@@ -123,13 +122,13 @@ public class OrganizationMemberService {
         try{
             restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);
         } catch (HttpClientErrorException e) {
-            return getMemberStatus(githubId, course);
+            return getMemberStatus(githubLogin, course);
         }
         return OrgStatus.INVITED;
     }
 
-    private OrgStatus getMemberStatus(int githubId, Course course) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members/" + githubId;
+    private OrgStatus getMemberStatus(String githubLogin, Course course) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members/" + githubLogin;
         HttpHeaders headers = new HttpHeaders();
         String token = jwtService.getInstallationToken(course);
         headers.add("Authorization", "Bearer " + token);
