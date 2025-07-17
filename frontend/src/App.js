@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
+import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import ProfilePage from "main/pages/ProfilePage";
 import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 
