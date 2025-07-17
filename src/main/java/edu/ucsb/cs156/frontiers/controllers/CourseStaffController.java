@@ -1,36 +1,20 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
-import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
-import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.entities.*;
 import edu.ucsb.cs156.frontiers.services.*;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
-import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
@@ -38,9 +22,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 
 @Tag(name = "CourseStaff")
 @RequestMapping("/api/coursestaff")
@@ -110,5 +91,39 @@ public class CourseStaffController extends ApiController {
         courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
         Iterable<CourseStaff> courseStaffs = courseStaffRepository.findByCourseId(courseId);
         return courseStaffs;
+    }
+
+    @Operation(summary = "Allow roster student to join a course by generating an invitation to the linked Github Org")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @PutMapping("/joinCourse")
+    public ResponseEntity<String> joinCourseOnGitHub(
+            @Parameter(name = "courseStaffId", description = "Staff Member joining a course on GitHub") @RequestParam Long courseStaffId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+        User currentUser = currentUserService.getUser();
+        CourseStaff courseStaff = courseStaffRepository.findById(courseStaffId)
+                .orElseThrow(() -> new EntityNotFoundException(CourseStaff.class, courseStaffId));
+
+        if (courseStaff.getUser() == null || currentUser.getId() != courseStaff.getUser().getId()) {
+            throw new AccessDeniedException("User not authorized join the course as this staff member");
+        }
+
+        if ((courseStaff.getGithubId() != null && courseStaff.getGithubId() != 0) && courseStaff.getGithubLogin() != null) {
+            return ResponseEntity.badRequest().body("This course staff has already joined the course with a GitHub account.");
+        }
+
+
+        if(courseStaff.getCourse().getOrgName() == null || courseStaff.getCourse().getInstallationId() == null) {
+            return ResponseEntity.badRequest().body("Course has not been set up. Please ask your instructor for help.");
+        }
+        courseStaff.setGithubId(currentUser.getGithubId());
+        courseStaff.setGithubLogin(currentUser.getGithubLogin());
+        OrgStatus status = organizationMemberService.inviteOrganizationOwner(courseStaff);
+        courseStaff.setOrgStatus(status);
+        courseStaffRepository.save(courseStaff);
+        if(status == OrgStatus.INVITED){
+            return ResponseEntity.accepted().body("Successfully invited staff member to Organization");
+        }else{
+            return ResponseEntity.internalServerError().body("Could not invite staff member to Organization");
+        }
     }
 }

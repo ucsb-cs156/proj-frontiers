@@ -1,8 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.entities.*;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -16,8 +15,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
-import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -211,5 +208,313 @@ public class CourseStaffControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(expectedMap);
                 assertEquals(expectedJson, responseString);
 
+        }
+
+        /**
+         * Tests for the joinCourseOnGitHub endpoint
+         */
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void testLinkGitHub_notFound() throws Exception {
+                // Arrange
+                when(courseStaffRepository.findById(eq(99L))).thenReturn(Optional.empty());
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "99"))
+                        .andExpect(status().isNotFound())
+                        .andReturn();
+
+                // Assert
+                verify(courseStaffRepository).findById(eq(99L));
+
+                // Verify correct error response
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "CourseStaff with id 99 not found");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void testJoinCourseOnGitHub_unauthorized() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                User differentUser = User.builder()
+                        .id(24L)
+                        .build();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(4L)
+                        .firstName("Other")
+                        .lastName("Student")
+                        .email("otherstudent@ucsb.edu")
+                        .course(course1)
+                        .orgStatus(OrgStatus.PENDING)
+                        .user(differentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(4L))).thenReturn(Optional.of(courseStaff));
+
+                mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "4"))
+                        .andExpect(status().isForbidden());
+
+                verify(courseStaffRepository, never()).save(any(CourseStaff.class));
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void test_null_user_on_join() throws Exception {
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(4L)
+                        .firstName("Other")
+                        .lastName("Student")
+                        .email("otherstudent@ucsb.edu")
+                        .course(course1)
+                        .orgStatus(OrgStatus.PENDING)
+                        .user(null)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(4L))).thenReturn(Optional.of(courseStaff));
+
+                mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "4"))
+                        .andExpect(status().isForbidden());
+
+                verify(courseStaffRepository, never()).save(any(CourseStaff.class));
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void testJoinCourseOnGitHub_alreadyJoined() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(5L)
+                        .firstName("Already")
+                        .lastName("Linked")
+                        .email("alreadylinked@ucsb.edu")
+                        .course(course1)
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(98765)
+                        .githubLogin("existinguser")
+                        .user(currentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(5L))).thenReturn(Optional.of(courseStaff));
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "5"))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+
+                // Assert
+                verify(courseStaffRepository).findById(eq(5L));
+                verify(courseStaffRepository, never()).save(any(CourseStaff.class));
+                verify(organizationMemberService, times(0)).inviteOrganizationOwner(any(CourseStaff.class));
+
+                assertEquals("This course staff has already joined the course with a GitHub account.", response.getResponse().getContentAsString());
+        }
+
+
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void no_fire_on_no_org_name() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").courseName("course").creator(currentUser).build();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(0)
+                        .githubLogin("login")
+                        .user(currentUser)
+                        .build();
+
+                CourseStaff courseStaffUpdated = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
+
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "3"))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+
+                verify(courseStaffRepository).findById(eq(3L));
+
+                verify(courseStaffRepository, times(0)).save(eq(courseStaffUpdated));
+                verify(organizationMemberService, times(0)).inviteOrganizationOwner(any(CourseStaff.class));
+
+                assertEquals("Course has not been set up. Please ask your instructor for help.", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void no_fire_on_no_installation_id() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course1)
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(123456789)
+                        .githubLogin(null)
+                        .user(currentUser)
+                        .build();
+
+                CourseStaff courseStaffUpdated = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course1)
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "3"))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+
+                verify(courseStaffRepository).findById(eq(3L));
+
+                verifyNoMoreInteractions(courseStaffRepository, organizationMemberService);
+
+                assertEquals("Course has not been set up. Please ask your instructor for help.", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void test_fires_invite() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.JOINCOURSE)
+                        .githubId(null)
+                        .githubLogin(null)
+                        .user(currentUser)
+                        .build();
+
+                CourseStaff courseStaffUpdated = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.INVITED)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
+                when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+                when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class))).thenReturn(OrgStatus.INVITED);
+
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "3"))
+                        .andExpect(status().isAccepted())
+                        .andReturn();
+
+
+                verify(courseStaffRepository).findById(eq(3L));
+
+                verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+                assertEquals("Successfully invited staff member to Organization", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void cant_invite() throws Exception {
+                User currentUser = currentUserService.getUser();
+
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+
+                CourseStaff courseStaff = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(123456789)
+                        .githubLogin(null)
+                        .user(currentUser)
+                        .build();
+
+                CourseStaff courseStaffUpdated = CourseStaff.builder()
+                        .id(3L)
+                        .firstName("Test")
+                        .lastName("User")
+                        .email("testuser@ucsb.edu")
+                        .course(course2)
+                        .orgStatus(OrgStatus.PENDING)
+                        .githubId(currentUser.getGithubId())
+                        .githubLogin(currentUser.getGithubLogin())
+                        .user(currentUser)
+                        .build();
+
+                when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
+                when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+                when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class))).thenReturn(OrgStatus.PENDING);
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
+                                .with(csrf())
+                                .param("courseStaffId", "3"))
+                        .andExpect(status().isInternalServerError())
+                        .andReturn();
+
+
+                // Assert
+                verify(courseStaffRepository).findById(eq(3L));
+
+                // Verify the GitHub ID and login were set
+                verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+                assertEquals("Could not invite staff member to Organization", response.getResponse().getContentAsString());
         }
 }
