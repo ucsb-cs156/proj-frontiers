@@ -23,4 +23,3 @@ LoggedOut.parameters = {
     ],
   },
 };
-

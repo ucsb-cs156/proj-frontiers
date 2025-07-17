@@ -22,66 +22,53 @@ function App() {
 
   const userRoutes = hasRole(currentUser, "ROLE_USER") ? (
     <>
-    <Route exact path="/profile" element={<ProfilePage />} />
+      <Route exact path="/profile" element={<ProfilePage />} />
     </>
-  ) : null; 
+  ) : null;
 
-  const adminRoutes = hasRole(currentUser, "ROLE_ADMIN") ?(
+  const adminRoutes = hasRole(currentUser, "ROLE_ADMIN") ? (
     <>
       <Route exact path="/admin/users" element={<AdminUsersPage />} />
       <Route exact path="/admin/admins" element={<AdminsIndexPage />} />
+      <Route exact path="/instructor/courses" element={<CoursesIndexPage />} />
       <Route
-          exact
-          path="/instructor/courses"
-          element={<CoursesIndexPage />}
+        exact
+        path="/instructor/courses/:id"
+        element={<InstructorCourseShowPage />}
       />
       <Route
-          exact
-          path="/instructor/courses/:id"
-          element={<InstructorCourseShowPage />}
+        exact
+        path="/admin/instructors"
+        element={<InstructorsIndexPage />}
       />
+      <Route exact path="/admin/admins/create" element={<AdminsCreatePage />} />
       <Route
-          exact
-          path="/admin/instructors"
-          element={<InstructorsIndexPage />}
-      />
-      <Route
-          exact
-          path="/admin/admins/create"
-          element={<AdminsCreatePage />}
-      />
-      <Route
-          exact
-          path="/admin/instructors/create"
-          element={<InstructorsCreatePage />}
+        exact
+        path="/admin/instructors/create"
+        element={<InstructorsCreatePage />}
       />
     </>
-  ) : null; 
+  ) : null;
 
-  const instructorRoutes = hasRole(currentUser, "ROLE_ADMIN") ?(
+  const instructorRoutes = hasRole(currentUser, "ROLE_ADMIN") ? (
     <>
-      <Route
-          exact
-          path="/instructor/courses"
-          element={<CoursesIndexPage />}
-      />
+      <Route exact path="/instructor/courses" element={<CoursesIndexPage />} />
       <Route
         exact
         path="/instructor/courses/:id"
         element={<InstructorCourseShowPage />}
       />
     </>
-  ) : null; 
+  ) : null;
 
-  const homeRoutes =
-    currentUser?.loggedIn ?  (
-        <Route path="/" element={<HomePageLoggedIn />} />
-    ) : (
-        <Route path="/" element={<HomePageLoggedOut />} />
-    ); 
-    
+  const homeRoutes = currentUser?.loggedIn ? (
+    <Route path="/" element={<HomePageLoggedIn />} />
+  ) : (
+    <Route path="/" element={<HomePageLoggedOut />} />
+  );
+
   return (
-    <BrowserRouter> 
+    <BrowserRouter>
       <Routes>
         {userRoutes}
         {adminRoutes}
