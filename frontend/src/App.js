@@ -16,6 +16,7 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
+import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 
 function App() {
   const { data: currentUser } = useCurrentUser();
