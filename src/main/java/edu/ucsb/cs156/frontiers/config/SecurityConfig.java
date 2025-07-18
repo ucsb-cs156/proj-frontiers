@@ -8,16 +8,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -27,6 +31,7 @@ import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -34,6 +39,8 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 
 
 import java.io.IOException;
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -58,7 +65,7 @@ public class SecurityConfig {
    * settings for an HTTP request,
    * including authorization, exception handling, OAuth2 login, CSRF protection,
    * and logout behavior.
-   * 
+   *
    * @param http injected HttpSecurity object (injected by Spring framework)
    *             //
    */
@@ -94,6 +101,42 @@ public class SecurityConfig {
             .role("ADMIN").implies("INSTRUCTOR")
             .role("INSTRUCTOR").implies("USER")
             .build();
+  }
+
+
+  @Bean
+  @Profile("microsoft")
+  public OidcIdTokenDecoderFactory idTokenDecoderFactory() {
+    OidcIdTokenDecoderFactory factory = new OidcIdTokenDecoderFactory();
+
+    factory.setJwtValidatorFactory(clientRegistration -> {
+      // Different issuer validation based on client
+      return JwtValidators.createDefaultWithValidators(List.of(
+              new CustomIssuerValidator(clientRegistration.getProviderDetails().getIssuerUri())
+      ));
+    });
+
+    return factory;
+  }
+
+  class CustomIssuerValidator implements OAuth2TokenValidator<Jwt>{
+    private final JwtClaimValidator<Object> validator;
+    public CustomIssuerValidator(String issuer){
+      Assert.notNull(issuer, "issuer cannot be null");
+      Predicate<Object> testClaimValue = (claimValue) ->{
+        if(claimValue !=null && issuer.startsWith("https://login.microsoftonline.com/")) {
+          return claimValue.toString().startsWith("https://login.microsoftonline.com/");
+        }else{
+          return claimValue != null && issuer.equals(claimValue.toString());
+        }
+      };
+      this.validator = new JwtClaimValidator("iss", testClaimValue);
+    }
+
+    public OAuth2TokenValidatorResult validate(Jwt token) {
+      Assert.notNull(token, "token cannot be null");
+      return this.validator.validate(token);
+    }
   }
 }
 
