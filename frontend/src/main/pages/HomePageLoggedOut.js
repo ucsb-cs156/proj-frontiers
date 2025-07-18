@@ -1,25 +1,14 @@
-import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
-import { http, HttpResponse } from "msw";
+import React from "react";
 
-import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
+import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
-export default {
-  title: "pages/HomePageLoggedOut",
-  component: HomePageLoggedOut,
-};
-
-const Template = () => <HomePageLoggedOut />;
-
-export const LoggedOut = Template.bind({});
-LoggedOut.parameters = {
-  msw: {
-    handlers: [
-      http.get("/api/currentUser", () => {
-        return HttpResponse.json(null, { status: 403 });
-      }),
-      http.get("/api/systemInfo", () => {
-        return HttpResponse.json(systemInfoFixtures.showingNeither);
-      }),
-    ],
-  },
-};
+export default function HomePageLoggedOut() {
+  return (
+    <BasicLayout>
+      <div className="pt-2">
+        <h1>Welcome to Frontiers!</h1>
+        <p>This is the MVP for the Frontiers Project.</p>
+      </div>
+    </BasicLayout>
+  );
+}

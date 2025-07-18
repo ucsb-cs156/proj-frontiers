@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
-import {  MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
@@ -19,7 +19,7 @@ describe("HomePageLoggedIn tests", () => {
 
   const queryClient = new QueryClient();
 
-   const setupUserOnly = () => {
+  const setupUserOnly = () => {
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.userOnly);
