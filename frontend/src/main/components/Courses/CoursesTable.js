@@ -20,7 +20,7 @@ const columns = [
   },
 ];
 
-export default function CoursesTable({ courses, storybook = false }) {
+export default function CoursesTable({ courses, testId, storybook = false }) {
   const joinCallback = (cell) => {
     // TODO: Implement the join functionality here
     if (storybook) {
@@ -34,7 +34,6 @@ export default function CoursesTable({ courses, storybook = false }) {
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/${organizationName}/invitation`;
-
     window.open(gitInvite, "_blank");
   };
 
@@ -51,7 +50,7 @@ export default function CoursesTable({ courses, storybook = false }) {
             <Button
               variant={"primary"}
               onClick={() => joinCallback(cell)}
-              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
             >
               Join Course
             </Button>
@@ -61,7 +60,7 @@ export default function CoursesTable({ courses, storybook = false }) {
             <Button
               variant={"primary"}
               onClick={() => viewInviteCallback(cell)}
-              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
             >
               View Invite
             </Button>
@@ -76,10 +75,6 @@ export default function CoursesTable({ courses, storybook = false }) {
     },
   ];
   return (
-    <OurTable
-      data={courses}
-      columns={columnsWithStatus}
-      testid={"CoursesTable"}
-    />
+    <OurTable data={courses} columns={columnsWithStatus} testid={testId} />
   );
 }

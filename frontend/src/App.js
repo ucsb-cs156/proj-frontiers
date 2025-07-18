@@ -18,51 +18,62 @@ import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 
 function App() {
-  const currentUser = useCurrentUser();
+  const { data: currentUser } = useCurrentUser();
+
+  const userRoutes = hasRole(currentUser, "ROLE_USER") ? (
+    <>
+      <Route exact path="/profile" element={<ProfilePage />} />
+    </>
+  ) : null;
+
+  const adminRoutes = hasRole(currentUser, "ROLE_ADMIN") ? (
+    <>
+      <Route exact path="/admin/users" element={<AdminUsersPage />} />
+      <Route exact path="/admin/admins" element={<AdminsIndexPage />} />
+      <Route exact path="/instructor/courses" element={<CoursesIndexPage />} />
+      <Route
+        exact
+        path="/instructor/courses/:id"
+        element={<InstructorCourseShowPage />}
+      />
+      <Route
+        exact
+        path="/admin/instructors"
+        element={<InstructorsIndexPage />}
+      />
+      <Route exact path="/admin/admins/create" element={<AdminsCreatePage />} />
+      <Route
+        exact
+        path="/admin/instructors/create"
+        element={<InstructorsCreatePage />}
+      />
+    </>
+  ) : null;
+
+  const instructorRoutes = hasRole(currentUser, "ROLE_ADMIN") ? (
+    <>
+      <Route exact path="/instructor/courses" element={<CoursesIndexPage />} />
+      <Route
+        exact
+        path="/instructor/courses/:id"
+        element={<InstructorCourseShowPage />}
+      />
+    </>
+  ) : null;
+
+  const homeRoutes = currentUser?.loggedIn ? (
+    <Route path="/" element={<HomePageLoggedIn />} />
+  ) : (
+    <Route path="/" element={<HomePageLoggedOut />} />
+  );
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route exact path="/" element={<HomePageLoggedOut />} />
-        <Route exact path="/profile" element={<ProfilePage />} />
-        {hasRole(currentUser, "ROLE_ADMIN") && (
-          <Route exact path="/admin/users" element={<AdminUsersPage />} />
-        )}
-        {(hasRole(currentUser, "ROLE_ADMIN") ||
-          hasRole(currentUser, "ROLE_INSTRUCTOR")) && (
-          <>
-            <Route
-              exact
-              path="/instructor/courses"
-              element={<CoursesIndexPage />}
-            />
-            <Route
-              exact
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
-            />
-          </>
-        )}
-        {hasRole(currentUser, "ROLE_ADMIN") && (
-          <>
-            <Route exact path="/admin/admins" element={<AdminsIndexPage />} />
-            <Route
-              exact
-              path="/admin/instructors"
-              element={<InstructorsIndexPage />}
-            />
-            <Route
-              exact
-              path="/admin/admins/create"
-              element={<AdminsCreatePage />}
-            />
-            <Route
-              exact
-              path="/admin/instructors/create"
-              element={<InstructorsCreatePage />}
-            />
-          </>
-        )}
+        {userRoutes}
+        {adminRoutes}
+        {instructorRoutes}
+        {homeRoutes}
       </Routes>
     </BrowserRouter>
   );

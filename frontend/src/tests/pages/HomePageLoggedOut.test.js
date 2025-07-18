@@ -29,3 +29,4 @@ describe("HomePageLoggedOut tests", () => {
     await screen.findByText(/Welcome to Frontiers!/);
   });
 });
+
