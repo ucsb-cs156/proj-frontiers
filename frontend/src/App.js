@@ -20,7 +20,21 @@ import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import LoadingPage from "main/pages/LoadingPage";
 
 function App() {
-  const { data: currentUser } = useCurrentUser();
+  const currentUserData = useCurrentUser();
+
+  // when useCurrentUser returns undefined (throws error), be directed to homepage.
+  if (!currentUserData) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePageLoggedOut />} />
+          <Route path="*" element={<HomePageLoggedOut />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
+  const { data: currentUser } = currentUserData;
 
   if (!currentUser || currentUser?.initialData) {
     return (
