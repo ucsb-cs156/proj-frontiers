@@ -19,7 +19,7 @@ import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShow
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 
 function App() {
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser } = useCurrentUser() || {};
 
   const userRoutes = hasRole(currentUser, "ROLE_USER") ? (
     <>
