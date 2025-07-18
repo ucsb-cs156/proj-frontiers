@@ -19,7 +19,9 @@ describe("HomePageLoggedIn tests", () => {
 
   const queryClient = new QueryClient();
 
-    const setUpUserOnly = () => {
+  const setupUserOnly = () => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.userOnly);
@@ -28,9 +30,8 @@ describe("HomePageLoggedIn tests", () => {
       .reply(200, systemInfoFixtures.showingNeither);
   };
 
-
   test("tables render correctly", async () => {
-    setUpUserOnly(); 
+    setupUserOnly();
     axiosMock
       .onGet("/api/courses/staffCourses")
       .reply(200, coursesFixtures.oneCourseWithEachStatus);
