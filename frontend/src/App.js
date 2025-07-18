@@ -43,7 +43,7 @@ function App() {
     );
   }
 
-   if (!currentUserData.loggedIn) {
+  if (!currentUserData.loggedIn) {
     return (
       <BrowserRouter>
         <Routes>
@@ -90,7 +90,7 @@ function App() {
     </>
   ) : null;
 
-    const homeRoutes =
+  const homeRoutes =
     hasRole(currentUser, "ROLE_ADMIN") ||
     hasRole(currentUser, "ROLE_INSTRUCTOR") ||
     hasRole(currentUser, "ROLE_USER") ? (
