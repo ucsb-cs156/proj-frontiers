@@ -1,5 +1,5 @@
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { hasRole } from "main/utils/currentUser";
 import AppNavbarLocalhost from "main/components/Nav/AppNavbarLocalhost";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
@@ -11,6 +11,10 @@ export default function AppNavbar({
   doLogout,
   currentUrl = window.location.href,
 }) {
+  const navigation = useNavigate();
+  const handleSignIn = () => {
+    navigation("/login");
+  };
   return (
     <>
       {(currentUrl.startsWith("http://localhost:3000") ||
@@ -83,7 +87,7 @@ export default function AppNavbar({
             <Nav className="ml-auto">
               <GoogleLogin
                 currentUser={currentUser}
-                systemInfo={systemInfo}
+                handleLogin={handleSignIn}
                 doLogout={doLogout}
               />
             </Nav>

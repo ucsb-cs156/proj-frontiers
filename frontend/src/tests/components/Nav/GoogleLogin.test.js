@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
@@ -22,7 +22,7 @@ describe("GoogleLogin tests", () => {
           <GoogleLogin
             currentUser={currentUser}
             systemInfo={systemInfo}
-            doLogin={doLogin}
+            handleLogin={doLogin}
           />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -41,7 +41,7 @@ describe("GoogleLogin tests", () => {
           <GoogleLogin
             currentUser={currentUser}
             systemInfo={systemInfo}
-            doLogin={doLogin}
+            handleLogin={doLogin}
           />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -60,7 +60,7 @@ describe("GoogleLogin tests", () => {
           <GoogleLogin
             currentUser={currentUser}
             systemInfo={systemInfo}
-            doLogin={doLogin}
+            handleLogin={doLogin}
           />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -68,7 +68,9 @@ describe("GoogleLogin tests", () => {
 
     // Check for the login button
     const loginButton = screen.getByText("Log In");
-    expect(loginButton).toBeInTheDocument();
-    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/google");
+    fireEvent.click(loginButton);
+    await waitFor(() => {
+      expect(doLogin).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -1,8 +1,7 @@
 import { Button, Navbar } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-export default function GoogleLogin({ currentUser, systemInfo, doLogout }) {
-  var oauthLogin = systemInfo?.oauthLogin || "/oauth2/authorization/google";
+export default function GoogleLogin({ currentUser, handleLogin, doLogout }) {
   return (
     <>
       {currentUser && currentUser.loggedIn ? (
@@ -13,7 +12,7 @@ export default function GoogleLogin({ currentUser, systemInfo, doLogout }) {
           <Button onClick={doLogout}>Log Out</Button>
         </>
       ) : (
-        <Button href={oauthLogin}>Log In</Button>
+        <Button onClick={handleLogin}>Log In</Button>
       )}
     </>
   );
