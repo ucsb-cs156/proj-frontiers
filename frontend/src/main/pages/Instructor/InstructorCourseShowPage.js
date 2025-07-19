@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { useCurrentUser } from "main/utils/currentUser";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 
@@ -14,29 +14,56 @@ export default function InstructorCourseShowPage() {
 
   const {
     data: course,
-    error: _errorCourses,
-    status: _statusCourses,
+    error: _errorCourse,
+    status: _statusCourse,
+    failureCount: courseBackendFailureCount,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
-    ["/api/courses/all"],
+    [`/api/courses/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     { method: "GET", url: `/api/courses/${courseId}` },
-    // Stryker disable next-line all : don't test default value of empty list
     null,
+    true,
   );
+
+  const getCourseFailed = courseBackendFailureCount > 0;
 
   const {
     data: rosterStudents,
     error: _errorRosterStudents,
     status: _statusRosterStudents,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
     [`/api/rosterstudents/course/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     { method: "GET", url: `/api/rosterstudents/course/${courseId}` },
-    // Stryker disable next-line all : don't test default value of empty list
     null,
+    true,
   );
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (getCourseFailed) {
+      const timer = setTimeout(() => {
+        navigate("/instructor/courses", { replace: true });
+      }, 3000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [getCourseFailed, navigate]);
+
+  if (getCourseFailed) {
+    return (
+      <BasicLayout>
+        <div className="pt-2">
+          <h1>Course</h1>
+          <p>
+            Course not found. You will be returned to the course list in 3
+            seconds.
+          </p>
+        </div>
+      </BasicLayout>
+    );
+  }
 
   const testId = "InstructorCourseShowPage";
   return (
