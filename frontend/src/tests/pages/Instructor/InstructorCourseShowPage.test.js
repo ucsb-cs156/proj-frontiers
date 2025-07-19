@@ -101,6 +101,7 @@ describe("InstructorCourseShowPage tests", () => {
     expect(studentId0).toHaveTextContent(
       rosterStudentFixtures.threeStudents[0].studentId,
     );
+    expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
 
     jest.advanceTimersByTime(3000);
     expect(mockedNavigate).not.toHaveBeenCalled();
@@ -252,7 +253,12 @@ describe("InstructorCourseShowPage tests", () => {
       "Course not found. You will be returned to the course list in 3 seconds.",
     );
     expect(mockToast).not.toHaveBeenCalled();
-    expect(screen.getByText("Course")).toBeInTheDocument();
+    expect(screen.getByText("Course Not Found")).toBeInTheDocument();
+    expect(screen.getByText("Close")).toHaveClass("btn-primary");
+    fireEvent.click(screen.getByText("Close"));
+    await waitFor(() =>
+      expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument(),
+    );
     act(() => {
       jest.advanceTimersByTime(5000);
     });
@@ -287,11 +293,16 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText(
       "Course not found. You will be returned to the course list in 3 seconds.",
     );
+    fireEvent.keyPress(screen.getByText("Course Not Found"), {
+      key: "Escape",
+      code: 27,
+      charCode: 27,
+    });
     fireEvent.click(
       within(screen.getByRole("navigation")).getByText("Frontiers"),
     );
     await waitFor(() =>
-      expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(6),
+      expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(8),
     );
     setTimeoutSpy.mockRestore();
     clearTimeoutSpy.mockRestore();

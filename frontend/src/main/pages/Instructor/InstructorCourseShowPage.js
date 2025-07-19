@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
@@ -7,10 +7,13 @@ import { useCurrentUser } from "main/utils/currentUser";
 import { useNavigate, useParams } from "react-router-dom";
 
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
+import Modal from "react-bootstrap/Modal";
+import { Button } from "react-bootstrap";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const {
     data: course,
@@ -42,6 +45,7 @@ export default function InstructorCourseShowPage() {
   const navigate = useNavigate();
   useEffect(() => {
     if (getCourseFailed) {
+      setShowErrorModal(true);
       const timer = setTimeout(() => {
         navigate("/instructor/courses", { replace: true });
       }, 3000);
@@ -51,23 +55,23 @@ export default function InstructorCourseShowPage() {
     }
   }, [getCourseFailed, navigate]);
 
-  if (getCourseFailed) {
-    return (
-      <BasicLayout>
-        <div className="pt-2">
-          <h1>Course</h1>
-          <p>
-            Course not found. You will be returned to the course list in 3
-            seconds.
-          </p>
-        </div>
-      </BasicLayout>
-    );
-  }
-
   const testId = "InstructorCourseShowPage";
   return (
     <BasicLayout>
+      <Modal show={showErrorModal}>
+        <Modal.Header>
+          <Modal.Title>Course Not Found</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Course not found. You will be returned to the course list in 3
+          seconds.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={() => setShowErrorModal(false)} variant={"primary"}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
       <div className="pt-2">
         <h1>Course</h1>
         <InstructorCoursesTable
