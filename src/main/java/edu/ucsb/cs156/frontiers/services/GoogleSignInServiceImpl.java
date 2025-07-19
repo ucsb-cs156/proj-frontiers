@@ -39,7 +39,7 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
     }
 
     private OidcUser managePrimarySignIn(OidcUser oidcUser) {
-        Optional<User> currentUser = userRepository.findByGoogleSub(oidcUser.getSubject());
+        Optional<User> currentUser = userRepository.findByEmail(oidcUser.getEmail());
         Set<GrantedAuthority> authorities = new HashSet<>();
         boolean changed = false;
         if (currentUser.isPresent()) {

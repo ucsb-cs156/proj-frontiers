@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.test.context.NestedTestConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -20,6 +22,7 @@ import edu.ucsb.cs156.frontiers.services.SystemInfoServiceImpl;
 
 @ExtendWith(SpringExtension.class)
 @EnableConfigurationProperties(value = SystemInfoServiceImpl.class)
+@NestedTestConfiguration(NestedTestConfiguration.EnclosingConfiguration.INHERIT)
 @TestPropertySource("classpath:application-development.properties")
 class SystemInfoServiceImplTests {
 
@@ -45,5 +48,19 @@ class SystemInfoServiceImplTests {
     assertNull(SystemInfoServiceImpl.githubUrl(null, null));
     assertNull(SystemInfoServiceImpl.githubUrl("x", null));
     assertNull(SystemInfoServiceImpl.githubUrl(null, "x"));
+  }
+
+  @Nested
+  @TestPropertySource(properties = "spring.security.oauth2.client.registration.azure-dev.provider=azure")
+  class MicrosoftEnabledInfoServiceTests{
+
+    @Autowired
+    private SystemInfoService secondaryLoadedService;
+
+    @Test
+    public void displaysMicrosoftProvider() {
+      SystemInfo si = secondaryLoadedService.getSystemInfo();
+      assertEquals("/oauth2/authorization/azure-dev", si.getActiveDirectoryUrl());
+    }
   }
 }
