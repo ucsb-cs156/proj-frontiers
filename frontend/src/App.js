@@ -16,6 +16,7 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
+import SignInPage from "main/pages/Auth/SignInPage";
 
 function App() {
   const currentUser = useCurrentUser();
@@ -25,6 +26,7 @@ function App() {
       <Routes>
         <Route exact path="/" element={<HomePageLoggedOut />} />
         <Route exact path="/profile" element={<ProfilePage />} />
+        <Route exact path="/login" element={<SignInPage />} />
         {hasRole(currentUser, "ROLE_ADMIN") && (
           <Route exact path="/admin/users" element={<AdminUsersPage />} />
         )}

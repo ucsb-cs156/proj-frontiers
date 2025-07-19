@@ -1,10 +1,17 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 
 import AppNavbar from "main/components/Nav/AppNavbar";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+
+const mockedNavigate = jest.fn();
+
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: () => mockedNavigate,
+}));
 
 describe("AppNavbar tests", () => {
   const queryClient = new QueryClient();
@@ -164,7 +171,7 @@ describe("AppNavbar tests", () => {
     expect(screen.queryByTestId(/AppNavbarLocalhost/i)).toBeNull();
   });
 
-  test("when oauthlogin undefined, default value is used", async () => {
+  test("onclick navigates to login", async () => {
     const currentUser = currentUserFixtures.notLoggedIn;
     const systemInfo = systemInfoFixtures.oauthLoginUndefined;
 
@@ -177,9 +184,7 @@ describe("AppNavbar tests", () => {
     );
 
     await screen.findByText("Log In");
-    expect(screen.getByText("Log In")).toHaveAttribute(
-      "href",
-      "/oauth2/authorization/google",
-    );
+    fireEvent.click(screen.getByText("Log In"));
+    await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith("/login"));
   });
 });

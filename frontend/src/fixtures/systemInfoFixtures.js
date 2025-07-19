@@ -13,6 +13,17 @@ const systemInfoFixtures = {
     springH2ConsoleEnabled: false,
     showSwaggerUILink: false,
   },
+  withActiveDirectory: {
+    springH2ConsoleEnabled: false,
+    showSwaggerUILink: false,
+    activeDirectoryUrl: "/oauth2/authorization/azure-dev",
+  },
+  withActiveDirectoryAndGoogle: {
+    springH2ConsoleEnabled: false,
+    showSwaggerUILink: false,
+    oauthLogin: "/oauth2/authorization/google",
+    activeDirectoryUrl: "/oauth2/authorization/azure-dev",
+  },
 };
 
 export { systemInfoFixtures };
