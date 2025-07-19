@@ -18,6 +18,7 @@ import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import LoadingPage from "main/pages/LoadingPage";
+import SignInPage from "main/pages/Auth/SignInPage";
 
 function App() {
   const currentUserData = useCurrentUser();
@@ -28,6 +29,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePageLoggedOut />} />
           <Route path="*" element={<HomePageLoggedOut />} />
+          <Route exact path="/login" element={<SignInPage />} />
         </Routes>
       </BrowserRouter>
     );
@@ -38,6 +40,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="*" element={<LoadingPage />} />
+          <Route exact path="/login" element={<SignInPage />} />
         </Routes>
       </BrowserRouter>
     );
@@ -49,6 +52,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePageLoggedOut />} />
           <Route path="*" element={<HomePageLoggedOut />} />
+          <Route exact path="/login" element={<SignInPage />} />
         </Routes>
       </BrowserRouter>
     );
@@ -59,6 +63,7 @@ function App() {
   const userRoutes = hasRole(currentUser, "ROLE_USER") ? (
     <>
       <Route path="/profile" element={<ProfilePage />} />
+      <Route exact path="/login" element={<SignInPage />} />
     </>
   ) : null;
 
