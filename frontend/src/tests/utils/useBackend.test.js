@@ -66,6 +66,50 @@ describe("utils/useBackend tests", () => {
       expect(errorMessage).toMatch(
         "Error communicating with backend via GET on /api/admin/users",
       );
+      expect(mockToast).toHaveBeenCalledWith(
+        "Error communicating with backend via GET on /api/admin/users",
+      );
+    });
+    test("useBackend handles error correctly with suppressed toast", async () => {
+      // See: https://react-query.tanstack.com/guides/testing#turn-off-retries
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: {
+            // ✅ turns retries off
+            retry: false,
+          },
+        },
+      });
+      const wrapper = ({ children }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+
+      var axiosMock = new AxiosMockAdapter(axios);
+
+      axiosMock.onGet("/api/admin/users").reply(404, {});
+
+      const { result } = renderHook(
+        () =>
+          useBackend(
+            ["/api/admin/users"],
+            { method: "GET", url: "/api/admin/users" },
+            ["initialData"],
+            true,
+          ),
+        { wrapper },
+      );
+
+      await waitFor(() => result.current.isError);
+
+      expect(result.current.data).toEqual(["initialData"]);
+      await waitFor(() => expect(console.error).toHaveBeenCalled());
+      const errorMessage = console.error.mock.calls[0][0];
+      expect(errorMessage).toMatch(
+        "Error communicating with backend via GET on /api/admin/users",
+      );
+      expect(mockToast).not.toHaveBeenCalled();
     });
   });
   describe("utils/useBackend useBackendMutation tests", () => {
