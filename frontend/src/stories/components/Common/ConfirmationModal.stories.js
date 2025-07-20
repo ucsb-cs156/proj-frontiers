@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Button } from "react-bootstrap";
-import SanityCheckModal from "main/components/Common/SanityCheckModal";
+import ConfirmationModal from "main/components/Common/ConfirmationModal";
 
 export default {
-  title: "components/Common/SanityCheckModal",
-  component: SanityCheckModal,
+  title: "components/Common/ConfirmationModal",
+  component: ConfirmationModal,
 };
 
 const Template = (args) => {
@@ -12,13 +12,13 @@ const Template = (args) => {
   return (
     <div>
       <Button onClick={() => setModalState(true)}>Open Modal</Button>
-      <SanityCheckModal
+      <ConfirmationModal
         showModal={modal}
         setShowModal={setModalState}
         {...args}
       >
         <p>Any child will be placed in the body of the modal.</p>
-      </SanityCheckModal>
+      </ConfirmationModal>
     </div>
   );
 };

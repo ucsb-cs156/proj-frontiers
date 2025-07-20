@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import SanityCheckModal from "main/components/Common/SanityCheckModal";
+import ConfirmationModal from "main/components/Common/ConfirmationModal";
 
 test("Sanity Check Modal works as designed", async () => {
   const mockSubmit = jest.fn();
@@ -10,13 +10,13 @@ test("Sanity Check Modal works as designed", async () => {
       className="modal show"
       style={{ display: "block", position: "initial" }}
     >
-      <SanityCheckModal
+      <ConfirmationModal
         showModal={showModal}
         setShowModal={(x) => toggleShowModal(x)}
         onYes={mockSubmit}
       >
         <p>renders child!</p>
-      </SanityCheckModal>
+      </ConfirmationModal>
     </div>,
   );
 
@@ -34,10 +34,10 @@ test("Sanity Check Modal works as designed", async () => {
   fireEvent.click(screen.getByText("No, take me back"));
   await waitFor(() => expect(toggleShowModal).toHaveBeenCalledTimes(2));
   expect(toggleShowModal).toHaveBeenCalledWith(false);
-  expect(screen.getByTestId("SanityCheckModal-closeButton")).toHaveClass(
+  expect(screen.getByTestId("ConfirmationModal-closeButton")).toHaveClass(
     "btn-close",
   );
-  expect(screen.getByTestId("SanityCheckModal-base")).toHaveClass(
+  expect(screen.getByTestId("ConfirmationModal-base")).toHaveClass(
     "modal-dialog-centered",
   );
 });

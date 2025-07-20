@@ -1,7 +1,7 @@
 import Modal from "react-bootstrap/Modal";
 import { Button } from "react-bootstrap";
 
-export default function SanityCheckModal({
+export default function ConfirmationModal({
   children,
   showModal,
   setShowModal,
@@ -15,13 +15,13 @@ export default function SanityCheckModal({
       show={showModal}
       onHide={closeModal}
       centered={true}
-      data-testid={"SanityCheckModal-base"}
+      data-testid={"ConfirmationModal-base"}
     >
       <Modal.Header>
         <Modal.Title>Are You Sure?</Modal.Title>
         <Button
           className="btn-close"
-          data-testid={"SanityCheckModal-closeButton"}
+          data-testid={"ConfirmationModal-closeButton"}
           onClick={closeModal}
         ></Button>
       </Modal.Header>
