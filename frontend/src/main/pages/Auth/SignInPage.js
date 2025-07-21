@@ -29,7 +29,7 @@ export default function SignInPage() {
       <Row
         xs={1}
         md={2}
-        className={"g-5 justify-content-center align-items-center"}
+        className={"g-5 d-flex gap-5 justify-content-center align-items-center"}
         data-testid={"SignInPage-cardDisplay"}
       >
         {systemInfo.oauthLogin && (

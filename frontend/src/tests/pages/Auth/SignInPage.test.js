@@ -87,6 +87,8 @@ describe("SignInPage Tests", () => {
 
     expect(screen.getByTestId("SignInPage-cardDisplay")).toHaveClass(
       "g-5 justify-content-center align-items-center",
+      "d-flex",
+      "gap-5",
     );
   });
 });
