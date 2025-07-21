@@ -23,12 +23,8 @@ const columns = [
 export default function CoursesTable({ courses, testId, storybook = false }) {
   const joinCallback = (cell) => {
     // TODO: Implement the join functionality here
-    if (storybook) {
-      window.alert(
-        `Join callback invoked for course with id: ${cell.row.values.id}`,
-      );
-      return;
-    }
+    window.alert(`Join not yet implemented.`);
+    return;
   };
 
   const viewInviteCallback = (cell) => {
