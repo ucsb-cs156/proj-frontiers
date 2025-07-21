@@ -37,7 +37,7 @@ export default function SignInPage() {
             Icon={googleIcon}
             title={"Sign in with Google"}
             description={
-              "If you are a University of California-Santa Barbara student, sign in with your NetID."
+              "If you have University of California-Santa Barbara login credentials, sign in with Google"
             }
             url={systemInfo.oauthLogin}
             testid={"google"}
@@ -48,7 +48,7 @@ export default function SignInPage() {
             Icon={microsoftIcon}
             title={"Sign in with Microsoft"}
             description={
-              "If you are an Oregon State University student, sign in with your ONID."
+              "If you have Oregon State University login credentials, sign in with Microsoft."
             }
             url={systemInfo.activeDirectoryUrl}
             testid={"microsoft"}
