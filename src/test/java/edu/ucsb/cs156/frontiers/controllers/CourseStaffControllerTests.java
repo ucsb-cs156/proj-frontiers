@@ -95,8 +95,25 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         @WithMockUser(roles = { "ADMIN" })
         public void testPostCourseStaff() throws Exception {
 
-                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-                when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(cs1);
+                Course course2 = Course.builder()
+                        .id(1L)
+                        .courseName("CS156")
+                        .orgName("ucsb-cs156-s25")
+                        .term("S25")
+                        .school("UCSB")
+                        .build();
+
+                CourseStaff cs2 = CourseStaff.builder()
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .email("cgaucho@example.org")
+                        .course(course2)
+                        .orgStatus(OrgStatus.PENDING)
+                        .build();
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course2));
+                when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(cs2);
+
 
                 // act
 
@@ -112,12 +129,62 @@ public class CourseStaffControllerTests extends ControllerTestCase {
                 // assert
 
                 verify(courseRepository, times(1)).findById(eq(1L));
-                verify(courseStaffRepository, times(1)).save(eq(cs1));
+                verify(courseStaffRepository, times(1)).save(eq(cs2));
 
                 verify(updateUserService).attachUserToCourseStaff(any(CourseStaff.class));
 
                 String responseString = response.getResponse().getContentAsString();
-                String expectedJson = mapper.writeValueAsString(cs1);
+                String expectedJson = mapper.writeValueAsString(cs2);
+                assertEquals(expectedJson, responseString);
+
+        }
+
+        /**
+         * Test the POST endpoint
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void test_post_course_staff_join_course_status() throws Exception {
+
+                Course course2 = Course.builder()
+                        .id(1L)
+                        .courseName("CS156")
+                        .orgName("ucsb-cs156-s25")
+                        .installationId("12345")
+                        .term("S25")
+                        .school("UCSB")
+                        .build();
+
+                CourseStaff cs2 = CourseStaff.builder()
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .email("cgaucho@example.org")
+                        .course(course2)
+                        .orgStatus(OrgStatus.JOINCOURSE)
+                        .build();
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course2));
+                when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(cs2);
+
+
+                // act
+
+                MvcResult response = mockMvc.perform(post("/api/coursestaff/post")
+                                .with(csrf())
+                                .param("firstName", "Chris")
+                                .param("lastName", "Gaucho")
+                                .param("email", "cgaucho@example.org")
+                                .param("courseId", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                // assert
+
+                verify(courseRepository, times(1)).findById(eq(1L));
+                verify(courseStaffRepository, times(1)).save(eq(cs2));
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(cs2);
                 assertEquals(expectedJson, responseString);
 
         }
