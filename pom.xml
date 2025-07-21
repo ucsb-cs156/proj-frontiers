@@ -247,6 +247,7 @@
             <exclude>**/${app.packagePath}/services/GithubSignInServiceImpl.*</exclude>
             <exclude>**/${app.packagePath}/services/GoogleSignInServiceImpl.*</exclude>
             <exclude>**/${app.packagePath}/errors/NotAuthenticatedWithGoogleException.*</exclude>
+            <exclude>**/${app.packagePath}/startup/AzureProfileEnabler.*</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -333,9 +334,11 @@
             <param>${app.package}.services.CurrentUserServiceImpl</param>
             <param>${app.package}.FrontiersMain</param>
             <param>${app.package}.config.SecurityConfig</param>
+            <param>${app.package}.config.SecurityConfig$CustomIssuerValidator</param>
             <param>${app.package}.config.SpaCsrfTokenRequestHandler</param>
             <param>${app.package}.config.CsrfCookieFilter</param>
             <param>${app.package}.config.JpaAuditingConfig</param>
+            <param>${app.package}.startup.AzureProfileEnabler</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockService</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceDummy</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceImpl</param>

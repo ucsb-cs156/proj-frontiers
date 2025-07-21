@@ -26,6 +26,9 @@ public class SystemInfoServiceImpl extends SystemInfoService {
   @Value("${app.showSwaggerUILink:false}")
   private boolean showSwaggerUILink;
 
+  @Value("${spring.security.oauth2.client.registration.azure-dev.provider:#{null}}")
+  private String microsoftEnabled;
+
   @Value("${app.oauth.login:/oauth2/authorization/google}")
   private String oauthLogin;
 
@@ -58,6 +61,10 @@ public class SystemInfoServiceImpl extends SystemInfoService {
         .commitId(this.commitId)
         .githubUrl(githubUrl(this.sourceRepo, this.commitId))
         .build();
+
+    if (this.microsoftEnabled != null) {
+      si.setActiveDirectoryUrl("/oauth2/authorization/azure-dev");
+    }
     log.info("getSystemInfo returns {}", si);
     return si;
   }

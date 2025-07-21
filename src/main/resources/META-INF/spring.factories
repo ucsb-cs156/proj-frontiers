@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=edu.ucsb.cs156.frontiers.startup.AzureProfileEnabler
