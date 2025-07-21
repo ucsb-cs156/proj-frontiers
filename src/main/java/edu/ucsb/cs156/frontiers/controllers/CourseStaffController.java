@@ -92,6 +92,13 @@ public class CourseStaffController extends ApiController {
                 .email(email)
                 .course(course)
                 .build();
+
+        if(course.getInstallationId() != null) {
+            courseStaff.setOrgStatus(OrgStatus.JOINCOURSE);
+        } else {
+            courseStaff.setOrgStatus(OrgStatus.PENDING);
+        }
+
         CourseStaff savedCourseStaff = courseStaffRepository.save(courseStaff);
 
         return savedCourseStaff;
