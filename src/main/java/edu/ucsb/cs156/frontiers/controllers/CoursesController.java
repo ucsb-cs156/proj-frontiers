@@ -22,6 +22,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -54,7 +55,8 @@ public class CoursesController extends ApiController {
     @Autowired
     private CourseStaffRepository courseStaffRepository;
 
-    @Autowired private OrganizationLinkerService linkerService;
+    @Autowired
+    private OrganizationLinkerService linkerService;
 
     /**
      * This method creates a new Course.
@@ -85,7 +87,6 @@ public class CoursesController extends ApiController {
         return new InstructorCourseView(savedCourse);
     }
 
-
     /**
      * Projection of Course entity with fields that are relevant for instructors
      * and admins
@@ -100,19 +101,17 @@ public class CoursesController extends ApiController {
             Long createdByUserId,
             String createdByEmail) {
 
-        
         // Creates view from Course entity and student email
         public InstructorCourseView(Course c) {
             this(
-                c.getId(),
-                c.getInstallationId(),
-                c.getOrgName(),
-                c.getCourseName(),
-                c.getTerm(),
-                c.getSchool(),
-                c.getCreator() != null ? c.getCreator().getId() : null,
-                c.getCreator() != null ? c.getCreator().getEmail() : null
-            );
+                    c.getId(),
+                    c.getInstallationId(),
+                    c.getOrgName(),
+                    c.getCourseName(),
+                    c.getTerm(),
+                    c.getSchool(),
+                    c.getCreator() != null ? c.getCreator().getId() : null,
+                    c.getCreator() != null ? c.getCreator().getEmail() : null);
         }
     }
 
@@ -141,8 +140,8 @@ public class CoursesController extends ApiController {
             courses = courseRepository.findAll();
         }
         List<InstructorCourseView> courseViews = courses.stream()
-                    .map(InstructorCourseView::new)
-                    .collect(Collectors.toList());
+                .map(InstructorCourseView::new)
+                .collect(Collectors.toList());
         return courseViews;
     }
 
@@ -249,15 +248,27 @@ public class CoursesController extends ApiController {
                 "message", e.getMessage());
     }
 
+    public record RosterStudentCoursesDTO(
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            OrgStatus studentStatus,
+            Long rosterStudentId) {
+    }
+
     /**
      * This method returns a list of courses that the current user is enrolled.
      * 
-     * @return a list of courses in the DTO form along with the student status in the organization.
+     * @return a list of courses in the DTO form along with the student status in
+     *         the organization.
      */
     @Operation(summary = "List all courses for the current student, including their org status")
     @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/list")
-    public List<Map<String, Object>> listCoursesForCurrentUser() {
+    public List<RosterStudentCoursesDTO> listCoursesForCurrentUser() {
         String email = getCurrentUser().getUser().getEmail();
         Iterable<RosterStudent> rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);
         List<RosterStudent> rosterStudents = new ArrayList<>();
@@ -265,18 +276,29 @@ public class CoursesController extends ApiController {
         return rosterStudents.stream()
                 .map(rs -> {
                     Course course = rs.getCourse();
-                    RosterStudentDTO rsDto = new RosterStudentDTO(rs);
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("id", course.getId());
-                    response.put("installationId", course.getInstallationId());
-                    response.put("orgName", course.getOrgName());
-                    response.put("courseName", course.getCourseName());
-                    response.put("term", course.getTerm());
-                    response.put("school", course.getSchool());
-                    response.put("studentStatus", rsDto.orgStatus());
-                    return response;
+                    RosterStudentCoursesDTO rsDto = new RosterStudentCoursesDTO(
+                            course.getId(),
+                            course.getInstallationId(),
+                            course.getOrgName(),
+                            course.getCourseName(),
+                            course.getTerm(),
+                            course.getSchool(),
+                            rs.getOrgStatus(),
+                            rs.getId());
+                    return rsDto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public record StaffCoursesDTO(
+            Long id,
+            String installationId,
+            String orgName,
+            String courseName,
+            String term,
+            String school,
+            OrgStatus studentStatus,
+            Long staffId) {
     }
 
     /**
@@ -285,24 +307,31 @@ public class CoursesController extends ApiController {
      * @param studentId the id of the student making request
      * @return a list of all courses student is staff in
      */
-    @Operation(summary= "Student see what courses they appear as staff in")
+    @Operation(summary = "Student see what courses they appear as staff in")
     @PreAuthorize("hasRole('ROLE_USER')")
-    @GetMapping("/staffCourses") 
-    public Iterable<Course> staffCourses() {
+    @GetMapping("/staffCourses")
+    public List<StaffCoursesDTO> staffCourses() {
         CurrentUser currentUser = getCurrentUser();
         User user = currentUser.getUser();
 
         String email = user.getEmail();
 
-        Iterable<CourseStaff> staffs = courseStaffRepository.findAllByEmail(email);
-        
-        List<Long> courseIds = new ArrayList<>();
-        for (CourseStaff staff : staffs) {
-            courseIds.add(staff.getCourse().getId());
-        }
-
-        Iterable<Course> courses = courseRepository.findAllById(courseIds);
-        return courses;
+        List<CourseStaff> staffMembers = courseStaffRepository.findAllByEmail(email);
+        return staffMembers.stream()
+                .map(s -> {
+                    Course course = s.getCourse();
+                    StaffCoursesDTO sDto = new StaffCoursesDTO(
+                            course.getId(),
+                            course.getInstallationId(),
+                            course.getOrgName(),
+                            course.getCourseName(),
+                            course.getTerm(),
+                            course.getSchool(),
+                            s.getOrgStatus(),
+                            s.getId());
+                    return sDto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Operation(summary = "Delete a course")

@@ -34,6 +34,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.controllers.CoursesController.InstructorCourseView;
+import edu.ucsb.cs156.frontiers.controllers.CoursesController.StaffCoursesDTO;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
@@ -495,6 +496,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                 expected.put("term", course.getTerm());
                 expected.put("school", course.getSchool());
                 expected.put("studentStatus", new RosterStudentDTO(rs).orgStatus());
+                expected.put("rosterStudentId", rs.getId());
 
                 String expectedJson = mapper.writeValueAsString(List.of(expected));
                 assertEquals(expectedJson, result.getResponse().getContentAsString());
@@ -531,6 +533,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .email("user@example.org")
                                 .course(course1)
                                 .user(currentUser)
+                                .id(37L)
                                 .build();
 
                 CourseStaff cs2 = CourseStaff.builder()
@@ -539,7 +542,28 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .email("user@example.org")
                                 .course(course2)
                                 .user(currentUser)
+                                .id(42L)
                                 .build();
+
+                StaffCoursesDTO staffCourse1 = new StaffCoursesDTO(
+                                course1.getId(),
+                                course1.getInstallationId(),
+                                course1.getOrgName(),
+                                course1.getCourseName(),
+                                course1.getTerm(),
+                                course1.getSchool(),
+                                cs1.getOrgStatus(),
+                                cs1.getId());
+
+                StaffCoursesDTO staffCourse2 = new StaffCoursesDTO(
+                                course2.getId(),
+                                course2.getInstallationId(),
+                                course2.getOrgName(),
+                                course2.getCourseName(),
+                                course2.getTerm(),
+                                course2.getSchool(),
+                                cs2.getOrgStatus(),
+                                cs2.getId());
 
                 when(courseStaffRepository.findAllByEmail("user@example.org"))
                                 .thenReturn(List.of(cs1, cs2));
@@ -555,7 +579,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 // assert
                 String responseString = response.getResponse().getContentAsString();
-                String expectedJson = mapper.writeValueAsString(List.of(course1, course2));
+                String expectedJson = mapper.writeValueAsString(List.of(staffCourse1, staffCourse2));
                 assertEquals(expectedJson, responseString);
         }
 
