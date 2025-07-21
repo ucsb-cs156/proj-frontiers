@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GitHubGraphQLService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">GitHubGraphQLService.java</span></div><h1>GitHubGraphQLService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import org.springframework.graphql.client.HttpGraphQlClient;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class GitHubGraphQLService {
+
+    private final HttpGraphQlClient graphQlClient;
+
+    // Refactored constructor to accept HttpGraphQlClient directly
+    // This makes the class much easier to unit test.
+    public GitHubGraphQLService(HttpGraphQlClient.Builder&lt;?&gt; graphQlClientBuilder,
+<span class="fc" id="L15">                                 @org.springframework.beans.factory.annotation.Value(&quot;${github.graphql.token}&quot;) String githubToken) {</span>
+        // Configure WebClient and build HttpGraphQlClient
+<span class="fc" id="L17">        this.graphQlClient = graphQlClientBuilder</span>
+<span class="fc" id="L18">                .webClient(builder -&gt; builder</span>
+<span class="fc" id="L19">                        .baseUrl(&quot;https://api.github.com/graphql&quot;)</span>
+<span class="fc" id="L20">                        .defaultHeader(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken))</span>
+<span class="fc" id="L21">                .build();</span>
+<span class="fc" id="L22">    }</span>
+
+    /**
+     * Retrieves the name of the default branch for a given GitHub repository.
+     *
+     * @param owner The owner (username or organization) of the repository.
+     * @param repo  The name of the repository.
+     * @return A Mono emitting the default branch name, or an empty Mono if not found.
+     */
+    public Mono&lt;String&gt; getDefaultBranchName(String owner, String repo) {
+<span class="fc" id="L32">        String query = &quot;&quot;&quot;</span>
+            query getDefaultBranch($owner: String!, $repo: String!) {
+              repository(owner: $owner, name: $repo) {
+                defaultBranchRef {
+                  name
+                }
+              }
+            }
+            &quot;&quot;&quot;;
+
+<span class="fc" id="L42">        return graphQlClient.document(query)</span>
+<span class="fc" id="L43">                .variable(&quot;owner&quot;, owner)</span>
+<span class="fc" id="L44">                .variable(&quot;repo&quot;, repo)</span>
+<span class="fc" id="L45">                .retrieve(&quot;repository.defaultBranchRef.name&quot;)</span>
+<span class="fc" id="L46">                .toEntity(String.class);</span>
+    }
+}
+
+
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RosterStudentsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">RosterStudentsController.java</span></div><h1>RosterStudentsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+
+@Tag(name = &quot;RosterStudents&quot;)
+@RequestMapping(&quot;/api/rosterstudents&quot;)
+@RestController
+<span class="fc" id="L58">@Slf4j</span>
+<span class="fc" id="L59">public class RosterStudentsController extends ApiController {</span>
+
+    @Autowired
+    private JobService jobService;
+    @Autowired
+    private OrganizationMemberService organizationMemberService;
+
+<span class="fc" id="L66">    public enum InsertStatus {</span>
+<span class="fc" id="L67">        INSERTED, UPDATED</span>
+    };
+
+    @Autowired
+    private RosterStudentRepository rosterStudentRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
+    @Autowired
+    private UpdateUserService updateUserService;
+
+    @Autowired
+    private CurrentUserService currentUserService;
+
+<span class="fc" id="L82">    public static record UpsertResponse(InsertStatus insertStatus,RosterStudent rosterStudent){}</span>
+
+    /**
+     * This method creates a new RosterStudent.
+     * It is important to keep the code in this method consistent with the code for adding multiple roster students from a CSV
+     * @return the created RosterStudent
+     */
+
+    @Operation(summary = &quot;Create a new roster student&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+    @PostMapping(&quot;/post&quot;)
+    public UpsertResponse postRosterStudent(
+            @Parameter(name = &quot;studentId&quot;) @RequestParam String studentId,
+            @Parameter(name = &quot;firstName&quot;) @RequestParam String firstName,
+            @Parameter(name = &quot;lastName&quot;) @RequestParam String lastName,
+            @Parameter(name = &quot;email&quot;) @RequestParam String email,
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
+
+        // Get Course or else throw an error
+
+<span class="fc" id="L102">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L103">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L105">        RosterStudent rosterStudent = RosterStudent.builder()</span>
+<span class="fc" id="L106">                .studentId(studentId)</span>
+<span class="fc" id="L107">                .firstName(firstName)</span>
+<span class="fc" id="L108">                .lastName(lastName)</span>
+<span class="fc" id="L109">                .email(email)</span>
+<span class="fc" id="L110">                .build();</span>
+
+<span class="fc" id="L112">        UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL); </span>
+<span class="fc" id="L113">        return upsertResponse; </span>
+    }
+
+    /**
+     * This method returns a list of roster students for a given course.
+     * 
+     * @return a list of all courses.
+     */
+    @Operation(summary = &quot;List all roster students for a course&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;/course/{courseId}&quot;)
+    public Iterable&lt;RosterStudent&gt; rosterStudentForCourse(
+            @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId) throws EntityNotFoundException {
+<span class="fc" id="L126">        courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L127">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L128">        return rosterStudents;</span>
+    }
+
+    /**
+     * Upload Roster students for Course in UCSB Egrades Format
+     * It is important to keep the code in this method consistent with the code for adding a single roster student
+     * @param courseId
+     * @param file
+     * @return
+     * @throws JsonProcessingException
+     * @throws IOException
+     * @throws CsvException
+     */
+    @Operation(summary = &quot;Upload Roster students for Course in UCSB Egrades Format&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+    @PostMapping(value = &quot;/upload/egrades&quot;, consumes = { &quot;multipart/form-data&quot; })
+    public Map&lt;String, String&gt; uploadRosterStudents(
+            @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+            @Parameter(name = &quot;file&quot;) @RequestParam(&quot;file&quot;) MultipartFile file)
+            throws JsonProcessingException, IOException, CsvException {
+
+<span class="fc" id="L149">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L150">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
+
+<span class="fc" id="L152">        int counts[] = { 0, 0 };</span>
+
+<span class="fc" id="L154">        try (InputStream inputStream = new BufferedInputStream(file.getInputStream());</span>
+<span class="fc" id="L155">                InputStreamReader reader = new InputStreamReader(inputStream);</span>
+<span class="fc" id="L156">                CSVReader csvReader = new CSVReader(reader);) {</span>
+<span class="fc" id="L157">            csvReader.skip(2);</span>
+<span class="fc" id="L158">            List&lt;String[]&gt; myEntries = csvReader.readAll();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">            for (String[] row : myEntries) {</span>
+<span class="fc" id="L160">                RosterStudent rosterStudent = fromEgradesCSVRow(row);</span>
+<span class="fc" id="L161">                UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);</span>
+<span class="fc" id="L162">                InsertStatus s = upsertResponse.insertStatus; </span>
+<span class="fc" id="L163">                counts[s.ordinal()]++;</span>
+<span class="fc" id="L164">            }</span>
+        }
+<span class="fc" id="L166">        return Map.of(</span>
+<span class="fc" id="L167">                &quot;filename&quot;, file.getOriginalFilename(),</span>
+<span class="fc" id="L168">                &quot;message&quot;, String.format(&quot;Inserted %d new students, Updated %d students&quot;,</span>
+<span class="fc" id="L169">                        counts[InsertStatus.INSERTED.ordinal()], counts[InsertStatus.UPDATED.ordinal()]));</span>
+
+    }
+
+    public RosterStudent fromEgradesCSVRow(String[] row) {
+<span class="fc" id="L174">        return RosterStudent.builder()</span>
+<span class="fc" id="L175">                .firstName(row[5])</span>
+<span class="fc" id="L176">                .lastName(row[4])</span>
+<span class="fc" id="L177">                .studentId(row[1])</span>
+<span class="fc" id="L178">                .email(row[10])</span>
+<span class="fc" id="L179">                .build();</span>
+    }
+
+    public UpsertResponse upsertStudent(RosterStudent student, Course course, RosterStatus rosterStatus) {
+<span class="fc" id="L183">        String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());</span>
+<span class="fc" id="L184">        Optional&lt;RosterStudent&gt; existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),</span>
+<span class="fc" id="L185">                student.getStudentId());</span>
+<span class="fc" id="L186">        Optional&lt;RosterStudent&gt; existingStudentByEmail = rosterStudentRepository.findByCourseIdAndEmail(course.getId(),</span>
+                convertedEmail);
+<span class="fc bfc" id="L188" title="All 4 branches covered.">        if (existingStudent.isPresent() || existingStudentByEmail.isPresent()) {</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">            RosterStudent existingStudentObj = existingStudent.isPresent() ? existingStudent.get() : existingStudentByEmail.get();</span>
+<span class="fc" id="L190">            existingStudentObj.setRosterStatus(rosterStatus);</span>
+<span class="fc" id="L191">            existingStudentObj.setFirstName(student.getFirstName());</span>
+<span class="fc" id="L192">            existingStudentObj.setLastName(student.getLastName());</span>
+<span class="fc" id="L193">            existingStudentObj.setEmail(convertedEmail);</span>
+<span class="fc" id="L194">            existingStudentObj.setStudentId(student.getStudentId());</span>
+<span class="fc" id="L195">            existingStudentObj = rosterStudentRepository.save(existingStudentObj);</span>
+<span class="fc" id="L196">            updateUserService.attachUserToRosterStudent(existingStudentObj);</span>
+<span class="fc" id="L197">            return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);</span>
+        } else {
+<span class="fc" id="L199">            student.setCourse(course);</span>
+<span class="fc" id="L200">            student.setEmail(convertedEmail);</span>
+<span class="fc" id="L201">            student.setRosterStatus(rosterStatus);</span>
+            //if an installationID exists, orgStatus should be set to JOINCOURSE. if it doesn't exist (null), set orgStatus to PENDING.
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            if(course.getInstallationId() != null) {</span>
+<span class="fc" id="L204">                student.setOrgStatus(OrgStatus.JOINCOURSE);</span>
+            } else {
+<span class="fc" id="L206">                student.setOrgStatus(OrgStatus.PENDING);</span>
+            }
+<span class="fc" id="L208">            student = rosterStudentRepository.save(student);</span>
+<span class="fc" id="L209">            updateUserService.attachUserToRosterStudent(student);</span>
+<span class="fc" id="L210">            return new UpsertResponse(InsertStatus.INSERTED, student);</span>
+        }
+    }
+
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+    @PostMapping(&quot;/updateCourseMembership&quot;)
+    public Job updateCourseMembership(
+            @Parameter(name = &quot;courseId&quot;, description = &quot;Course ID&quot;) @RequestParam Long courseId)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L219">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L220">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L221" title="All 4 branches covered.">        if (course.getInstallationId() == null || course.getOrgName() == null) {</span>
+<span class="fc" id="L222">            throw new NoLinkedOrganizationException(course.getCourseName());</span>
+        } else {
+<span class="fc" id="L224">            UpdateOrgMembershipJob job = UpdateOrgMembershipJob.builder()</span>
+<span class="fc" id="L225">                    .rosterStudentRepository(rosterStudentRepository)</span>
+<span class="fc" id="L226">                    .organizationMemberService(organizationMemberService)</span>
+<span class="fc" id="L227">                    .course(course)</span>
+<span class="fc" id="L228">                    .build();</span>
+
+<span class="fc" id="L230">            return jobService.runAsJob(job);</span>
+        }
+    }
+
+    @Operation(summary = &quot;Allow roster student to join a course by generating an invitation to the linked Github Org&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+
+    @PutMapping(&quot;/joinCourse&quot;)
+    public ResponseEntity&lt;String&gt; joinCourseOnGitHub(
+            @Parameter(name = &quot;rosterStudentId&quot;, description = &quot;Roster Student joining a course on GitHub&quot;) @RequestParam Long rosterStudentId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+<span class="fc" id="L241">        User currentUser = currentUserService.getUser();</span>
+<span class="fc" id="L242">        RosterStudent rosterStudent = rosterStudentRepository.findById(rosterStudentId)</span>
+<span class="fc" id="L243">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, rosterStudentId));</span>
+
+<span class="fc bfc" id="L245" title="All 4 branches covered.">        if (rosterStudent.getUser() == null || currentUser.getId() != rosterStudent.getUser().getId()) {</span>
+<span class="fc" id="L246">            throw new AccessDeniedException(&quot;User not authorized join the course as this roster student&quot;);</span>
+        }
+
+<span class="fc bfc" id="L249" title="All 6 branches covered.">        if ((rosterStudent.getGithubId() != null &amp;&amp; rosterStudent.getGithubId() != 0) &amp;&amp; rosterStudent.getGithubLogin() != null) {</span>
+<span class="fc" id="L250">            return ResponseEntity.badRequest().body(&quot;This roster student has already joined the course with a GitHub account.&quot;);</span>
+        }
+
+
+<span class="fc bfc" id="L254" title="All 4 branches covered.">        if(rosterStudent.getCourse().getOrgName() == null || rosterStudent.getCourse().getInstallationId() == null) {</span>
+<span class="fc" id="L255">            return ResponseEntity.badRequest().body(&quot;Course has not been set up. Please ask your instructor for help.&quot;);</span>
+        }
+<span class="fc" id="L257">        rosterStudent.setGithubId(currentUser.getGithubId());</span>
+<span class="fc" id="L258">        rosterStudent.setGithubLogin(currentUser.getGithubLogin());</span>
+<span class="fc" id="L259">        OrgStatus status = organizationMemberService.inviteOrganizationMember(rosterStudent);</span>
+<span class="fc" id="L260">        rosterStudent.setOrgStatus(status);</span>
+<span class="fc" id="L261">        rosterStudentRepository.save(rosterStudent);</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">        if(status == OrgStatus.INVITED){</span>
+<span class="fc" id="L263">            return ResponseEntity.accepted().body(&quot;Successfully invited student to Organization&quot;);</span>
+        }else{
+<span class="fc" id="L265">            return ResponseEntity.internalServerError().body(&quot;Could not invite student to Organization&quot;);</span>
+        }
+    }
+
+    @Operation(summary = &quot;Get Associated Roster Students with a User&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+    @GetMapping(&quot;/associatedRosterStudents&quot;)
+    public Iterable&lt;RosterStudent&gt; getAssociatedRosterStudents() {
+<span class="fc" id="L273">        User currentUser = currentUserService.getUser();</span>
+<span class="fc" id="L274">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findAllByUser((currentUser));</span>
+<span class="fc" id="L275">        return rosterStudents;</span>
+    }
+
+    @Operation(summary = &quot;Update a roster student&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+    @PutMapping(&quot;/update&quot;)
+    public RosterStudent updateRosterStudent(
+            @Parameter(name = &quot;id&quot;) @RequestParam Long id,
+            @Parameter(name = &quot;firstName&quot;) @RequestParam(required = false) String firstName,
+            @Parameter(name = &quot;lastName&quot;) @RequestParam(required = false) String lastName,
+            @Parameter(name = &quot;studentId&quot;) @RequestParam(required = false) String studentId) throws EntityNotFoundException {
+        
+<span class="fc bfc" id="L287" title="All 6 branches covered.">        if(firstName == null || lastName == null || studentId == null ||</span>
+<span class="fc bfc" id="L288" title="All 6 branches covered.">            firstName.trim().isEmpty() || lastName.trim().isEmpty() || studentId.trim().isEmpty()){</span>
+<span class="fc" id="L289">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Required fields cannot be empty&quot;);</span>
+        }
+
+<span class="fc" id="L292">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
+<span class="fc" id="L293">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        if(!rosterStudent.getStudentId().trim().equals(studentId.trim())){</span>
+<span class="fc" id="L296">            Optional&lt;RosterStudent&gt; existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(</span>
+<span class="fc" id="L297">                    rosterStudent.getCourse().getId(), studentId.trim());</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">            if (existingStudent.isPresent()){</span>
+<span class="fc" id="L299">                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Student ID already exists in this course&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L303">        rosterStudent.setFirstName(firstName.trim());</span>
+<span class="fc" id="L304">        rosterStudent.setLastName(lastName.trim());</span>
+<span class="fc" id="L305">        rosterStudent.setStudentId(studentId.trim());</span>
+
+<span class="fc" id="L307">        return rosterStudentRepository.save(rosterStudent);</span>
+    }
+
+    @Operation(summary = &quot;Delete a roster student&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+    @DeleteMapping(&quot;/delete&quot;)
+    @Transactional
+    public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id) throws EntityNotFoundException{
+<span class="fc" id="L315">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
+<span class="fc" id="L316">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+<span class="fc" id="L317">        Course course = rosterStudent.getCourse();</span>
+<span class="fc" id="L318">        course.getRosterStudents().remove(rosterStudent);</span>
+<span class="fc" id="L319">        rosterStudentRepository.delete(rosterStudent);</span>
+<span class="fc" id="L320">        courseRepository.save(course);</span>
+<span class="fc" id="L321">        return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
