@@ -1,8 +1,11 @@
 package edu.ucsb.cs156.frontiers.services;
 
 
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +31,9 @@ public class UpdateUserServiceTests {
 
     @Mock
     private RosterStudentRepository rosterStudentRepository;
+
+    @Mock
+    private CourseStaffRepository courseStaffRepository;
 
     @InjectMocks
     private UpdateUserService updateUserService;
@@ -127,5 +133,66 @@ public class UpdateUserServiceTests {
         verify(userRepository, times(1)).findByEmail(email);
         verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
         assertNull(rosterStudent.getUser());
-    }        
+    }
+
+    @Test
+    public void testAttachUserToCourseStaff_userExists() {
+        // Arrange
+        String email = "test@example.com";
+        User user = User.builder().email(email).build();
+
+        CourseStaff courseStaff = new CourseStaff();
+        courseStaff.setEmail(email);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        // Act
+        updateUserService.attachUserToCourseStaff(courseStaff);
+
+        // Assert
+        verify(userRepository, times(1)).findByEmail(email);
+        verify(courseStaffRepository, times(1)).save(courseStaff);
+        assertEquals(courseStaff.getUser(), user);
+    }
+
+    @Test
+    public void testAttachUserToCourseStaff_userDoesNotExist() {
+        // Arrange
+        String email = "test@example.com";
+        CourseStaff courseStaff = new CourseStaff();
+        courseStaff.setEmail(email);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        // Act
+        updateUserService.attachUserToCourseStaff(courseStaff);
+
+        // Assert
+        verify(userRepository, times(1)).findByEmail(email);
+        verifyNoInteractions(courseStaffRepository);
+        assertNull(courseStaff.getUser());
+    }
+
+    @Test
+    public void testAttachCourseStaff() {
+        // Arrange
+        User user = User.builder().email("test@example.com").build();
+
+        CourseStaff staff1 = new CourseStaff();
+        CourseStaff staff2 = new CourseStaff();
+
+        List<CourseStaff> matchedStaff = Arrays.asList(staff1, staff2);
+
+        when(courseStaffRepository.findAllByEmail("test@example.com")).thenReturn(matchedStaff);
+
+        // Act
+        updateUserService.attachCourseStaff(user);
+
+        // Assert
+        verify(courseStaffRepository, times(1)).findAllByEmail("test@example.com");
+        verify(courseStaffRepository, times(1)).saveAll(matchedStaff);
+
+        assertEquals(user, staff1.getUser());
+        assertEquals(user, staff2.getUser());
+    }
 }

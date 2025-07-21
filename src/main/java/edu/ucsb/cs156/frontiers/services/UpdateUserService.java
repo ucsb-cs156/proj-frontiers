@@ -3,6 +3,8 @@ package edu.ucsb.cs156.frontiers.services;
 import java.util.List;
 import java.util.Optional;
 
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,8 @@ public class UpdateUserService {
 
     @Autowired
     private RosterStudentRepository rosterStudentRepository;
+    @Autowired
+    private CourseStaffRepository courseStaffRepository;
 
     /**
      * This method attaches the RosterStudents to the User based on their email.
@@ -32,6 +36,20 @@ public class UpdateUserService {
             matchedStudent.setUser(user);
         }
         rosterStudentRepository.saveAll(matchedStudents);
+
+    }
+
+    /**
+     * This method attaches the CourseStaff to the User based on their email.
+     *
+     * @param user The user to whom the RosterStudents will be attached
+     */
+    public void attachCourseStaff(User user) {
+        List<CourseStaff> matchedStaff = courseStaffRepository.findAllByEmail(user.getEmail());
+        for (CourseStaff matched : matchedStaff) {
+            matched.setUser(user);
+        }
+        courseStaffRepository.saveAll(matchedStaff);
 
     }
 
@@ -53,6 +71,19 @@ public class UpdateUserService {
             User matchedUser = optionalUser.get();
             rosterStudent.setUser(matchedUser);
             rosterStudentRepository.save(rosterStudent);
+        }
+    }
+
+    /**
+     * This method attaches a SingleRoster student to the User based on their email.
+     */
+    public void attachUserToCourseStaff(CourseStaff courseStaff) {
+        String email = courseStaff.getEmail();
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isPresent()) {
+            User matchedUser = optionalUser.get();
+            courseStaff.setUser(matchedUser);
+            courseStaffRepository.save(courseStaff);
         }
     }
 }

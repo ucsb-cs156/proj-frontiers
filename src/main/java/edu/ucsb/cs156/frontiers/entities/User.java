@@ -41,5 +41,6 @@ public class User {
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
   @ToString.Exclude
+  @JsonIgnore
   private List<CourseStaff> roles;
 }
