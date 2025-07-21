@@ -18,7 +18,7 @@ Google.args = {
   },
   title: "Sign in with Google",
   description:
-    "If you have a University of California-Santa Barbara login credentials, sign in with Google",
+    "If you have University of California-Santa Barbara login credentials, sign in with Google",
 };
 
 export const Microsoft = Template.bind({});
