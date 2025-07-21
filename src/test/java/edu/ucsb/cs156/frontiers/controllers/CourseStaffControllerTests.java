@@ -261,11 +261,18 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
                 when(courseStaffRepository.findById(eq(4L))).thenReturn(Optional.of(courseStaff));
 
-                mockMvc.perform(put("/api/coursestaff/joinCourse")
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
                                 .with(csrf())
                                 .param("courseStaffId", "4"))
-                        .andExpect(status().isForbidden());
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
 
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "IllegalArgumentException",
+                        "message", "This operation is restricted to the user associated with staff member with id 4");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
                 verify(courseStaffRepository, never()).save(any(CourseStaff.class));
         }
 
@@ -285,11 +292,19 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
                 when(courseStaffRepository.findById(eq(4L))).thenReturn(Optional.of(courseStaff));
 
-                mockMvc.perform(put("/api/coursestaff/joinCourse")
+                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
                                 .with(csrf())
                                 .param("courseStaffId", "4"))
-                        .andExpect(status().isForbidden());
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
 
+
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "IllegalArgumentException",
+                        "message", "This operation is restricted to the user associated with staff member with id 4");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
                 verify(courseStaffRepository, never()).save(any(CourseStaff.class));
         }
 

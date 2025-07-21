@@ -29,4 +29,8 @@ public class DummyController extends ApiController {
     public String noOrg(@RequestParam String courseName) throws EntityNotFoundException {
         throw new NoLinkedOrganizationException(courseName);
     }
+    @GetMapping("/illegalargument")
+    public String illegalArgument(@RequestParam String courseName) {
+        throw new IllegalArgumentException(courseName);
+    }
 }

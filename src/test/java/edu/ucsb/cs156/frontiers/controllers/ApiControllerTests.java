@@ -95,5 +95,18 @@ public class ApiControllerTests extends ControllerTestCase {
                 assertFalse( dummyController.isCurrentUserAdmin());
         }
 
+        @Test
+        public void test_dummy_controller_returns_illegal_argument() throws Exception {
+                // act
+                MvcResult response = mockMvc.perform(get("/dummycontroller/illegalargument?courseName=course"))
+                        .andExpect(status().isBadRequest()).andReturn();
+
+                // assert
+
+                Map<String, Object> json = responseToJson(response);
+                assertEquals("IllegalArgumentException", json.get("type"));
+                assertEquals("course", json.get("message"));
+        }
+
 }
 

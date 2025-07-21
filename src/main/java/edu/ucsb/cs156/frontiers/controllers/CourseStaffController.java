@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.server.ResponseStatusException;
 
 @Tag(name = "CourseStaff")
 @RequestMapping("/api/coursestaff")
@@ -95,7 +96,7 @@ public class CourseStaffController extends ApiController {
         return courseStaffs;
     }
 
-    @Operation(summary = "Allow roster student to join a course by generating an invitation to the linked Github Org")
+    @Operation(summary = "Allow staff member to join a course by generating an invitation to the linked Github Org")
     @PreAuthorize("hasRole('ROLE_USER')")
     @PutMapping("/joinCourse")
     public ResponseEntity<String> joinCourseOnGitHub(
@@ -106,7 +107,7 @@ public class CourseStaffController extends ApiController {
                 .orElseThrow(() -> new EntityNotFoundException(CourseStaff.class, courseStaffId));
 
         if (courseStaff.getUser() == null || currentUser.getId() != courseStaff.getUser().getId()) {
-            throw new AccessDeniedException("User not authorized join the course as this staff member");
+            throw new IllegalArgumentException(String.format("This operation is restricted to the user associated with staff member with id %d", courseStaff.getId()));
         }
 
         if ((courseStaff.getGithubId() != null && courseStaff.getGithubId() != 0) && courseStaff.getGithubLogin() != null) {

@@ -112,4 +112,18 @@ public abstract class ApiController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("message", ex.getMessage()));
     }
+
+  /**
+   * This method handles the NoLinkedOrganizationException.
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({ IllegalArgumentException.class })
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Object handleIllegalArgument(Throwable e) {
+    return Map.of(
+            "type", e.getClass().getSimpleName(),
+            "message", e.getMessage()
+    );
+  }
 }
