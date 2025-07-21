@@ -20,7 +20,7 @@ const columns = [
   },
 ];
 
-export default function CoursesTable({ courses, testId}) {
+export default function CoursesTable({ courses, testId }) {
   const joinCallback = (_cell) => {
     // TODO: Implement the join functionality here
     window.alert(`Join not yet implemented.`);
