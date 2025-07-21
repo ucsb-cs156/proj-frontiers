@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Users/RoleEmailForm.js</title>
+    <title>Code coverage report for components/Common/ConfirmationModal.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Users</a> RoleEmailForm.js</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Common</a> ConfirmationModal.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -110,15 +110,7 @@
 <a name='L45'></a><a href='#L45'>45</a>
 <a name='L46'></a><a href='#L46'>46</a>
 <a name='L47'></a><a href='#L47'>47</a>
-<a name='L48'></a><a href='#L48'>48</a>
-<a name='L49'></a><a href='#L49'>49</a>
-<a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a>
-<a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L48'></a><a href='#L48'>48</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -127,19 +119,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -164,6 +147,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -173,61 +157,53 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Button, Form } from "react-bootstrap";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import Modal from "react-bootstrap/Modal";
+import { Button } from "react-bootstrap";
 &nbsp;
-function RoleEmailForm({ submitAction, buttonLabel = "Create" }) {
-  // Stryker disable all
-  const {
-    register,
-    formState: { errors },
-    handleSubmit,
-  } = useForm();
-  // Stryker restore all
-&nbsp;
-  const navigate = useNavigate();
-&nbsp;
-  const testIdPrefix = "RoleEmailForm";
-&nbsp;
-  // Stryker disable next-line Regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-&nbsp;
+export default function ConfirmationModal({
+  children,
+  showModal,
+  setShowModal,
+  onYes,
+}) {
+  const closeModal = () =&gt; {
+    setShowModal(false);
+  };
   return (
-    &lt;Form onSubmit={handleSubmit(submitAction)}&gt;
-      &lt;Form.Group className="mb-3"&gt;
-        &lt;Form.Label htmlFor="email"&gt;Email&lt;/Form.Label&gt;
-        &lt;Form.Control
-          // Stryker disable next-line all
-          data-testid={testIdPrefix + "-email"}
-          id="email"
-          type="text"
-          isInvalid={Boolean(errors.email)}
-          {...register("email", {
-            required: "Email is required.",
-            pattern: emailRegex,
-          })}
-        /&gt;
-        &lt;Form.Control.Feedback type="invalid"&gt;
-          {errors.email &amp;&amp; "A valid email is required."}
-        &lt;/Form.Control.Feedback&gt;
-      &lt;/Form.Group&gt;
-&nbsp;
-      &lt;Button type="submit" data-testid={testIdPrefix + "-submit"}&gt;
-        {buttonLabel}
-      &lt;/Button&gt;
-      &lt;Button
-        variant="Secondary"
-        onClick={() =&gt; navigate(-1)}
-        data-testid={testIdPrefix + "-cancel"}
-      &gt;
-        Cancel
-      &lt;/Button&gt;
-    &lt;/Form&gt;
+    &lt;Modal
+      show={showModal}
+      onHide={closeModal}
+      centered={true}
+      data-testid={"ConfirmationModal-base"}
+    &gt;
+      &lt;Modal.Header&gt;
+        &lt;Modal.Title&gt;Are You Sure?&lt;/Modal.Title&gt;
+        &lt;Button
+          className="btn-close"
+          data-testid={"ConfirmationModal-closeButton"}
+          onClick={closeModal}
+        &gt;&lt;/Button&gt;
+      &lt;/Modal.Header&gt;
+      &lt;Modal.Body&gt;{children}&lt;/Modal.Body&gt;
+      &lt;Modal.Footer&gt;
+        &lt;Button type="button" onClick={closeModal}&gt;
+          No, take me back
+        &lt;/Button&gt;
+        &lt;Button
+          type="button"
+          className="ms-auto"
+          onClick={() =&gt; {
+            onYes();
+            closeModal();
+          }}
+          variant={"danger"}
+        &gt;
+          Yes, I'd like to do this
+        &lt;/Button&gt;
+      &lt;/Modal.Footer&gt;
+    &lt;/Modal&gt;
   );
 }
-&nbsp;
-export default RoleEmailForm;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
