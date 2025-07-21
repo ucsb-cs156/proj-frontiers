@@ -112,5 +112,19 @@ import java.util.Map;
 <span class="fc" id="L112">        return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
 <span class="fc" id="L113">                .body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
     }
+
+  /**
+   * This method handles the NoLinkedOrganizationException.
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({ IllegalArgumentException.class })
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Object handleIllegalArgument(Throwable e) {
+<span class="fc" id="L124">    return Map.of(</span>
+<span class="fc" id="L125">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L126">            &quot;message&quot;, e.getMessage()</span>
+    );
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
