@@ -30,5 +30,5 @@ Microsoft.args = {
   },
   title: "Sign in with Microsoft",
   description:
-    "If you are an Oregon State University student, sign in with your ONID.",
+    "If you have Oregon State University login credentials, sign in with Microsoft.",
 };
