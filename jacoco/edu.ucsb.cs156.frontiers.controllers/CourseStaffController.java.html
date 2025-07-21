@@ -74,11 +74,18 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L74">                .email(email)</span>
 <span class="fc" id="L75">                .course(course)</span>
 <span class="fc" id="L76">                .build();</span>
-<span class="fc" id="L77">        CourseStaff savedCourseStaff = courseStaffRepository.save(courseStaff);</span>
 
-<span class="fc" id="L79">        updateUserService.attachUserToCourseStaff(savedCourseStaff);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if(course.getInstallationId() != null) {</span>
+<span class="fc" id="L79">            courseStaff.setOrgStatus(OrgStatus.JOINCOURSE);</span>
+        } else {
+<span class="fc" id="L81">            courseStaff.setOrgStatus(OrgStatus.PENDING);</span>
+        }
 
-<span class="fc" id="L81">        return savedCourseStaff;</span>
+<span class="fc" id="L84">        CourseStaff savedCourseStaff = courseStaffRepository.save(courseStaff);</span>
+
+<span class="fc" id="L86">        updateUserService.attachUserToCourseStaff(savedCourseStaff);</span>
+
+<span class="fc" id="L88">        return savedCourseStaff;</span>
     }
 
     /**
@@ -91,9 +98,9 @@ import org.springframework.web.server.ResponseStatusException;
     @GetMapping(&quot;/course&quot;)
     public Iterable&lt;CourseStaff&gt; courseStaffForCourse(
             @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
-<span class="fc" id="L94">        courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L95">        Iterable&lt;CourseStaff&gt; courseStaffs = courseStaffRepository.findByCourseId(courseId);</span>
-<span class="fc" id="L96">        return courseStaffs;</span>
+<span class="fc" id="L101">        courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L102">        Iterable&lt;CourseStaff&gt; courseStaffs = courseStaffRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L103">        return courseStaffs;</span>
     }
 
     @Operation(summary = &quot;Allow staff member to join a course by generating an invitation to the linked Github Org&quot;)
@@ -102,31 +109,31 @@ import org.springframework.web.server.ResponseStatusException;
     public ResponseEntity&lt;String&gt; joinCourseOnGitHub(
             @Parameter(name = &quot;courseStaffId&quot;, description = &quot;Staff Member joining a course on GitHub&quot;) @RequestParam Long courseStaffId) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
-<span class="fc" id="L105">        User currentUser = currentUserService.getUser();</span>
-<span class="fc" id="L106">        CourseStaff courseStaff = courseStaffRepository.findById(courseStaffId)</span>
-<span class="fc" id="L107">                .orElseThrow(() -&gt; new EntityNotFoundException(CourseStaff.class, courseStaffId));</span>
+<span class="fc" id="L112">        User currentUser = currentUserService.getUser();</span>
+<span class="fc" id="L113">        CourseStaff courseStaff = courseStaffRepository.findById(courseStaffId)</span>
+<span class="fc" id="L114">                .orElseThrow(() -&gt; new EntityNotFoundException(CourseStaff.class, courseStaffId));</span>
 
-<span class="fc bfc" id="L109" title="All 4 branches covered.">        if (courseStaff.getUser() == null || currentUser.getId() != courseStaff.getUser().getId()) {</span>
-<span class="fc" id="L110">            throw new IllegalArgumentException(String.format(&quot;This operation is restricted to the user associated with staff member with id %d&quot;, courseStaff.getId()));</span>
+<span class="fc bfc" id="L116" title="All 4 branches covered.">        if (courseStaff.getUser() == null || currentUser.getId() != courseStaff.getUser().getId()) {</span>
+<span class="fc" id="L117">            throw new IllegalArgumentException(String.format(&quot;This operation is restricted to the user associated with staff member with id %d&quot;, courseStaff.getId()));</span>
         }
 
-<span class="fc bfc" id="L113" title="All 6 branches covered.">        if ((courseStaff.getGithubId() != null &amp;&amp; courseStaff.getGithubId() != 0) &amp;&amp; courseStaff.getGithubLogin() != null) {</span>
-<span class="fc" id="L114">            return ResponseEntity.badRequest().body(&quot;This course staff has already joined the course with a GitHub account.&quot;);</span>
+<span class="fc bfc" id="L120" title="All 6 branches covered.">        if ((courseStaff.getGithubId() != null &amp;&amp; courseStaff.getGithubId() != 0) &amp;&amp; courseStaff.getGithubLogin() != null) {</span>
+<span class="fc" id="L121">            return ResponseEntity.badRequest().body(&quot;This course staff has already joined the course with a GitHub account.&quot;);</span>
         }
 
 
-<span class="fc bfc" id="L118" title="All 4 branches covered.">        if(courseStaff.getCourse().getOrgName() == null || courseStaff.getCourse().getInstallationId() == null) {</span>
-<span class="fc" id="L119">            return ResponseEntity.badRequest().body(&quot;Course has not been set up. Please ask your instructor for help.&quot;);</span>
+<span class="fc bfc" id="L125" title="All 4 branches covered.">        if(courseStaff.getCourse().getOrgName() == null || courseStaff.getCourse().getInstallationId() == null) {</span>
+<span class="fc" id="L126">            return ResponseEntity.badRequest().body(&quot;Course has not been set up. Please ask your instructor for help.&quot;);</span>
         }
-<span class="fc" id="L121">        courseStaff.setGithubId(currentUser.getGithubId());</span>
-<span class="fc" id="L122">        courseStaff.setGithubLogin(currentUser.getGithubLogin());</span>
-<span class="fc" id="L123">        OrgStatus status = organizationMemberService.inviteOrganizationOwner(courseStaff);</span>
-<span class="fc" id="L124">        courseStaff.setOrgStatus(status);</span>
-<span class="fc" id="L125">        courseStaffRepository.save(courseStaff);</span>
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        if(status == OrgStatus.INVITED){</span>
-<span class="fc" id="L127">            return ResponseEntity.accepted().body(&quot;Successfully invited staff member to Organization&quot;);</span>
+<span class="fc" id="L128">        courseStaff.setGithubId(currentUser.getGithubId());</span>
+<span class="fc" id="L129">        courseStaff.setGithubLogin(currentUser.getGithubLogin());</span>
+<span class="fc" id="L130">        OrgStatus status = organizationMemberService.inviteOrganizationOwner(courseStaff);</span>
+<span class="fc" id="L131">        courseStaff.setOrgStatus(status);</span>
+<span class="fc" id="L132">        courseStaffRepository.save(courseStaff);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if(status == OrgStatus.INVITED){</span>
+<span class="fc" id="L134">            return ResponseEntity.accepted().body(&quot;Successfully invited staff member to Organization&quot;);</span>
         }else{
-<span class="fc" id="L129">            return ResponseEntity.internalServerError().body(&quot;Could not invite staff member to Organization&quot;);</span>
+<span class="fc" id="L136">            return ResponseEntity.internalServerError().body(&quot;Could not invite staff member to Organization&quot;);</span>
         }
     }
 }
