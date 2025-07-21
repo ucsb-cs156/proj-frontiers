@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
@@ -287,6 +288,62 @@ public class OrganizationMemberServiceTests {
                         .body("{\"message\": \"Error inviting member\"}"));
 
         OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertEquals(OrgStatus.JOINCOURSE, result);
+    }
+
+    @Test
+    void testInviteOrganizationOwner_Success() throws Exception {
+        CourseStaff testStaff = CourseStaff.builder()
+                .githubId(12345)
+                .course(testCourse)
+                .build();
+
+        Map<String, Object> expectedRequestBody = new HashMap<>();
+        expectedRequestBody.put("invitee_id", 12345);
+        expectedRequestBody.put("role", "admin");
+        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andExpect(content().json(expectedRequestBodyJson))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{}"));
+
+        OrgStatus result = organizationMemberService.inviteOrganizationOwner(testStaff);
+
+        mockServer.verify();
+        assertEquals(OrgStatus.INVITED, result);
+    }
+
+    @Test
+    void testInviteOrganizationOwner_Failure() throws Exception {
+        CourseStaff testStaff = CourseStaff.builder()
+                .githubId(12345)
+                .course(testCourse)
+                .build();
+
+        Map<String, Object> expectedRequestBody = new HashMap<>();
+        expectedRequestBody.put("invitee_id", 12345);
+        expectedRequestBody.put("role", "admin");
+        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andExpect(content().json(expectedRequestBodyJson))
+                .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"message\": \"Error inviting member\"}"));
+
+        OrgStatus result = organizationMemberService.inviteOrganizationOwner(testStaff);
 
         mockServer.verify();
         assertEquals(OrgStatus.JOINCOURSE, result);
