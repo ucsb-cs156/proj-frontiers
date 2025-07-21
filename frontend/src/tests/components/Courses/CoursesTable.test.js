@@ -9,7 +9,10 @@ describe("CoursesTable tests", () => {
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
-        <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+        />
       </BrowserRouter>,
     );
 
@@ -74,10 +77,13 @@ describe("CoursesTable tests", () => {
   });
 
   //tests for button 'Join Course'
-  test("Does not call window.alert in default case for button 'Join Course'", () => {
+  test("Does not call window.alert in default case for button 'Join Course'", async () => {
     render(
       <BrowserRouter>
-        <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+        />
       </BrowserRouter>,
     );
 
@@ -89,7 +95,10 @@ describe("CoursesTable tests", () => {
     expect(button).toHaveAttribute("class", "btn btn-primary");
 
     fireEvent.click(button);
-    expect(window.alert).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalled();
+    });
+    expect(window.alert).toHaveBeenCalledWith("Join not yet implemented.");
   });
 
   test("Calls window.alert when the button is pressed on storybook for button 'Join Course'", async () => {
@@ -98,6 +107,7 @@ describe("CoursesTable tests", () => {
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
           storybook={true}
+          testId={"CoursesTable"}
         />
       </BrowserRouter>,
     );
@@ -112,9 +122,7 @@ describe("CoursesTable tests", () => {
     await waitFor(() => {
       expect(window.alert).toHaveBeenCalledTimes(1);
     });
-    expect(window.alert).toHaveBeenCalledWith(
-      "Join callback invoked for course with id: 2",
-    );
+    expect(window.alert).toHaveBeenCalledWith("Join not yet implemented.");
   });
 
   test("Does not call window.alert when storybook is explicitly false for button 'Join Course'", () => {
@@ -123,6 +131,7 @@ describe("CoursesTable tests", () => {
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
           storybook={false}
+          testId={"CoursesTable"}
         />
       </BrowserRouter>,
     );
@@ -135,14 +144,18 @@ describe("CoursesTable tests", () => {
     expect(button).toHaveAttribute("class", "btn btn-primary");
 
     fireEvent.click(button);
-    expect(window.alert).not.toHaveBeenCalled();
+    expect(window.alert).toHaveBeenCalled();
+    expect(window.alert).toHaveBeenCalledWith("Join not yet implemented.");
   });
 
   //tests for button 'View Invite'
   test("Does not call window.alert in default case for button'View Invite'", () => {
     render(
       <BrowserRouter>
-        <CoursesTable courses={coursesFixtures.oneCourseWithEachStatus} />
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+        />
       </BrowserRouter>,
     );
 
@@ -163,6 +176,7 @@ describe("CoursesTable tests", () => {
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
           storybook={true}
+          testId={"CoursesTable"}
         />
       </BrowserRouter>,
     );
@@ -182,6 +196,7 @@ describe("CoursesTable tests", () => {
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
           storybook={false}
+          testId={"CoursesTable"}
         />
       </BrowserRouter>,
     );
