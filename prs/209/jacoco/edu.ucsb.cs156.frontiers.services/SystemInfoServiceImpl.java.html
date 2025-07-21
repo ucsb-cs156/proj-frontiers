@@ -26,6 +26,9 @@ import edu.ucsb.cs156.frontiers.models.SystemInfo;
   @Value(&quot;${app.showSwaggerUILink:false}&quot;)
   private boolean showSwaggerUILink;
 
+  @Value(&quot;${spring.security.oauth2.client.registration.azure-dev.provider:#{null}}&quot;)
+  private String microsoftEnabled;
+
   @Value(&quot;${app.oauth.login:/oauth2/authorization/google}&quot;)
   private String oauthLogin;
 
@@ -39,7 +42,7 @@ import edu.ucsb.cs156.frontiers.models.SystemInfo;
   private String commitId;
 
   public static String githubUrl(String repo, String commit) {
-<span class="fc bfc" id="L42" title="All 4 branches covered.">    return commit != null &amp;&amp; repo != null ? repo + &quot;/commit/&quot; + commit : null;</span>
+<span class="fc bfc" id="L45" title="All 4 branches covered.">    return commit != null &amp;&amp; repo != null ? repo + &quot;/commit/&quot; + commit : null;</span>
   }
 
   /**
@@ -49,17 +52,21 @@ import edu.ucsb.cs156.frontiers.models.SystemInfo;
    * @return the system information
    */
   public SystemInfo getSystemInfo() {
-<span class="fc" id="L52">    SystemInfo si = SystemInfo.builder()</span>
-<span class="fc" id="L53">        .springH2ConsoleEnabled(this.springH2ConsoleEnabled)</span>
-<span class="fc" id="L54">        .showSwaggerUILink(this.showSwaggerUILink)</span>
-<span class="fc" id="L55">        .oauthLogin(this.oauthLogin)</span>
-<span class="fc" id="L56">        .sourceRepo(this.sourceRepo)</span>
-<span class="fc" id="L57">        .commitMessage(this.commitMessage)</span>
-<span class="fc" id="L58">        .commitId(this.commitId)</span>
-<span class="fc" id="L59">        .githubUrl(githubUrl(this.sourceRepo, this.commitId))</span>
-<span class="fc" id="L60">        .build();</span>
-<span class="fc" id="L61">    log.info(&quot;getSystemInfo returns {}&quot;, si);</span>
-<span class="fc" id="L62">    return si;</span>
+<span class="fc" id="L55">    SystemInfo si = SystemInfo.builder()</span>
+<span class="fc" id="L56">        .springH2ConsoleEnabled(this.springH2ConsoleEnabled)</span>
+<span class="fc" id="L57">        .showSwaggerUILink(this.showSwaggerUILink)</span>
+<span class="fc" id="L58">        .oauthLogin(this.oauthLogin)</span>
+<span class="fc" id="L59">        .sourceRepo(this.sourceRepo)</span>
+<span class="fc" id="L60">        .commitMessage(this.commitMessage)</span>
+<span class="fc" id="L61">        .commitId(this.commitId)</span>
+<span class="fc" id="L62">        .githubUrl(githubUrl(this.sourceRepo, this.commitId))</span>
+<span class="fc" id="L63">        .build();</span>
+
+<span class="fc bfc" id="L65" title="All 2 branches covered.">    if (this.microsoftEnabled != null) {</span>
+<span class="fc" id="L66">      si.setActiveDirectoryUrl(&quot;/oauth2/authorization/azure-dev&quot;);</span>
+    }
+<span class="fc" id="L68">    log.info(&quot;getSystemInfo returns {}&quot;, si);</span>
+<span class="fc" id="L69">    return si;</span>
   }
 
 }
