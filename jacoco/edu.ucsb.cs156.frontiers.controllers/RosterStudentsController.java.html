@@ -246,8 +246,8 @@ import lombok.extern.slf4j.Slf4j;
 <span class="fc" id="L246">            throw new AccessDeniedException(&quot;User not authorized join the course as this roster student&quot;);</span>
         }
 
-<span class="fc bfc" id="L249" title="All 6 branches covered.">        if ((rosterStudent.getGithubId() != null &amp;&amp; rosterStudent.getGithubId() != 0) &amp;&amp; rosterStudent.getGithubLogin() != null) {</span>
-<span class="fc" id="L250">            return ResponseEntity.badRequest().body(&quot;This roster student has already joined the course with a GitHub account.&quot;);</span>
+<span class="fc bfc" id="L249" title="All 8 branches covered.">        if (rosterStudent.getGithubId() != null &amp;&amp; rosterStudent.getGithubLogin() != null &amp;&amp; (rosterStudent.getOrgStatus() == OrgStatus.MEMBER || rosterStudent.getOrgStatus() == OrgStatus.OWNER)) {</span>
+<span class="fc" id="L250">            return ResponseEntity.badRequest().body(&quot;This user has already linked a Github account to this course.&quot;);</span>
         }
 
 

@@ -117,8 +117,8 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L117">            throw new IllegalArgumentException(String.format(&quot;This operation is restricted to the user associated with staff member with id %d&quot;, courseStaff.getId()));</span>
         }
 
-<span class="fc bfc" id="L120" title="All 6 branches covered.">        if ((courseStaff.getGithubId() != null &amp;&amp; courseStaff.getGithubId() != 0) &amp;&amp; courseStaff.getGithubLogin() != null) {</span>
-<span class="fc" id="L121">            return ResponseEntity.badRequest().body(&quot;This course staff has already joined the course with a GitHub account.&quot;);</span>
+<span class="fc bfc" id="L120" title="All 8 branches covered.">        if (courseStaff.getGithubId() != null &amp;&amp; courseStaff.getGithubLogin() != null &amp;&amp; (courseStaff.getOrgStatus() == OrgStatus.MEMBER || courseStaff.getOrgStatus() == OrgStatus.OWNER)) {</span>
+<span class="fc" id="L121">            return ResponseEntity.badRequest().body(&quot;You have already linked a Github account to this course.&quot;);</span>
         }
 
 
