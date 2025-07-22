@@ -50,12 +50,7 @@ public class GitHubGraphQLService {
 
 <span class="nc" id="L51">    log.info(&quot;githubToken: {}&quot;, githubToken);</span>
 
-<span class="nc" id="L53">    this.graphQlClient.mutate()</span>
-<span class="nc" id="L54">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
-<span class="nc" id="L55">        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Second header</span>
-<span class="nc" id="L56">        .build();</span>
-
-<span class="nc" id="L58">    String query = &quot;&quot;&quot;</span>
+<span class="nc" id="L53">    String query = &quot;&quot;&quot;</span>
         query getDefaultBranch($owner: String!, $repo: String!) {
           repository(owner: $owner, name: $repo) {
             defaultBranchRef {
@@ -65,11 +60,15 @@ public class GitHubGraphQLService {
         }
         &quot;&quot;&quot;;
 
-<span class="nc" id="L68">    return graphQlClient.document(query)</span>
-<span class="nc" id="L69">        .variable(&quot;owner&quot;, owner)</span>
-<span class="nc" id="L70">        .variable(&quot;repo&quot;, repo)</span>
-<span class="nc" id="L71">        .retrieve(&quot;repository.defaultBranchRef.name&quot;)</span>
-<span class="nc" id="L72">        .toEntity(String.class);</span>
+<span class="nc" id="L63">    return graphQlClient.mutate()</span>
+<span class="nc" id="L64">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
+<span class="nc" id="L65">        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="nc" id="L66">        .build()</span>
+<span class="nc" id="L67">        .document(query)</span>
+<span class="nc" id="L68">        .variable(&quot;owner&quot;, owner)</span>
+<span class="nc" id="L69">        .variable(&quot;repo&quot;, repo)</span>
+<span class="nc" id="L70">        .retrieve(&quot;repository.defaultBranchRef.name&quot;)</span>
+<span class="nc" id="L71">        .toEntity(String.class);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
