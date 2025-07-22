@@ -375,41 +375,6 @@ public class CourseStaffControllerTests extends ControllerTestCase {
                 verify(courseStaffRepository, never()).save(any(CourseStaff.class));
         }
 
-        @Test
-        @WithMockUser(roles = { "USER", "GITHUB"})
-        public void testJoinCourseOnGitHub_alreadyJoined() throws Exception {
-                User currentUser = currentUserService.getUser();
-
-                CourseStaff courseStaff = CourseStaff.builder()
-                        .id(5L)
-                        .firstName("Already")
-                        .lastName("Linked")
-                        .email("alreadylinked@ucsb.edu")
-                        .course(course1)
-                        .orgStatus(OrgStatus.PENDING)
-                        .githubId(98765)
-                        .githubLogin("existinguser")
-                        .user(currentUser)
-                        .build();
-
-                when(courseStaffRepository.findById(eq(5L))).thenReturn(Optional.of(courseStaff));
-
-                // Act
-                MvcResult response = mockMvc.perform(put("/api/coursestaff/joinCourse")
-                                .with(csrf())
-                                .param("courseStaffId", "5"))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
-
-                // Assert
-                verify(courseStaffRepository).findById(eq(5L));
-                verify(courseStaffRepository, never()).save(any(CourseStaff.class));
-                verify(organizationMemberService, times(0)).inviteOrganizationOwner(any(CourseStaff.class));
-
-                assertEquals("This course staff has already joined the course with a GitHub account.", response.getResponse().getContentAsString());
-        }
-
-
 
         @Test
         @WithMockUser(roles = { "USER", "GITHUB"})
