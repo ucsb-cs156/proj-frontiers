@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GithubGraphQLController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">GithubGraphQLController.java</span></div><h1>GithubGraphQLController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.services.GitHubGraphQLService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+
+
+@Tag(name = &quot;Course&quot;)
+@RequestMapping(&quot;/api/github/graphql/&quot;)
+@RestController
+<span class="nc" id="L23">@Slf4j</span>
+public class GithubGraphQLController extends ApiController {
+
+    private final GitHubGraphQLService gitHubGraphQLService;
+    private final CourseRepository courseRepository;
+
+    public GithubGraphQLController(
+            @Autowired GitHubGraphQLService gitHubGraphQLService,
+<span class="nc" id="L31">            @Autowired CourseRepository courseRepository) {</span>
+<span class="nc" id="L32">        this.gitHubGraphQLService = gitHubGraphQLService;</span>
+<span class="nc" id="L33">        this.courseRepository = courseRepository;</span>
+<span class="nc" id="L34">    }</span>
+
+    /**
+     * Return default branch name for a given repository.
+     * @param courseId the id of the course whose installation is being used for credentails
+     * @param owner the owner of the repository
+     * @param repo the name of the repository
+     * @return the default branch name
+     */
+
+    @Operation(summary = &quot;Get course by id&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;/{id}&quot;)
+    public String getDefaultBranchName(
+       @Parameter Long courseId,
+       @Parameter String owner,
+       @Parameter String repo) throws Exception {
+<span class="nc" id="L51">        Course course = courseRepository.findById(courseId)</span>
+<span class="nc" id="L52">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="nc bnc" id="L54" title="All 4 branches missed.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="nc" id="L55">            throw new EntityNotFoundException(Course.class, courseId);</span>
+        }
+  
+<span class="nc" id="L58">        Mono&lt;String&gt; result = this.gitHubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
+
+<span class="nc" id="L60">        return result.blockOptional()</span>
+<span class="nc" id="L61">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Default branch not found for repository: &quot; + owner + &quot;/&quot; + repo));</span>
+
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
