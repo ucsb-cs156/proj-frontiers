@@ -108,6 +108,7 @@ describe("CoursesTable tests", () => {
     const determineLoading = (cell) => {
       return cell.row.index === 1;
     };
+
     render(
       <BrowserRouter>
         <CoursesTable
@@ -127,7 +128,7 @@ describe("CoursesTable tests", () => {
       "spinner-grow-sm",
     );
   });
-
+  //tests for button 'Join Course'
   test("Calls joinCallback when the button is pressed", async () => {
     render(
       <BrowserRouter>
@@ -151,30 +152,6 @@ describe("CoursesTable tests", () => {
       expect(joinCallback).toHaveBeenCalledTimes(1);
     });
   });
-
-  test("Does not call joinCallback when storybook is explicitly false for button 'Join Course'", () => {
-    render(
-      <BrowserRouter>
-        <CoursesTable
-          courses={coursesFixtures.oneCourseWithEachStatus}
-          testId={"CoursesTable"}
-          joinCallback={joinCallback}
-          isLoading={isLoading}
-        />
-      </BrowserRouter>,
-    );
-
-    const button = screen.getByTestId(
-      "CoursesTable-cell-row-1-col-studentStatus-button",
-    );
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("Join Course");
-    expect(button).toHaveAttribute("class", "btn btn-primary");
-
-    fireEvent.click(button);
-    expect(joinCallback).toHaveBeenCalled();
-  });
-
   //tests for button 'View Invite'
   test("Does not call joinCallback in default case for button'View Invite'", () => {
     render(
@@ -198,27 +175,6 @@ describe("CoursesTable tests", () => {
     fireEvent.click(button);
     expect(joinCallback).not.toHaveBeenCalled();
   });
-
-  test("Calls joinCallback when the button is pressed on storybook for button 'View Invite'", async () => {
-    render(
-      <BrowserRouter>
-        <CoursesTable
-          courses={coursesFixtures.oneCourseWithEachStatus}
-          testId={"CoursesTable"}
-          joinCallback={joinCallback}
-          isLoading={isLoading}
-        />
-      </BrowserRouter>,
-    );
-
-    const button = screen.getByTestId(
-      "CoursesTable-cell-row-2-col-studentStatus-button",
-    );
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("View Invite");
-    expect(button).toHaveAttribute("class", "btn btn-primary");
-  });
-
   test("Does not call joinCallback when storybook is explicitly false for button 'View Invite'", () => {
     const openMock = jest.fn();
     window.open = (a, b) => openMock(a, b);
@@ -247,5 +203,152 @@ describe("CoursesTable tests", () => {
       "https://github.com/orgs/ucsb-cs156-f25/invitation",
       "_blank",
     );
+  });
+  test("tooltips for PENDING status", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("Pending"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "This course has not been completely set up by your instructor yet.",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+  test("tooltips for JOINCOURSE status", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("Join Course"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Clicking this button will generate an invitation to the GitHub organization associated with this course.",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+  test("tooltips for INVITED status", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("View Invite"));
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "You have been invited to the GitHub organization associated with this course, but you still need to accept or decline the invitation. Please accept it if you plan to stay enrolled, and decline only if you plan to withdraw from the course.",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+  test("tooltips for OWNER status", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("Owner"));
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "You are an owner of the GitHub organization associated with this course.",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+  test("tooltips for MEMBER status", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("Member"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "You are a member of the GitHub organization associated with this course.",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+  test("tooltips for an illegal status", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(
+      screen.getByText("Illegal status that will never occur"),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Tooltip for illegal status that will never occur"),
+      ).toBeInTheDocument();
+    });
+  });
+  test("expect the correct tooltip ID", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("Member"));
+
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveAttribute("id", "member-tooltip");
   });
 });
