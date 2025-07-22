@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 
-@Tag(name = &quot;Course&quot;)
+@Tag(name = &quot;GithubGraphQL&quot;)
 @RequestMapping(&quot;/api/github/graphql/&quot;)
 @RestController
 <span class="nc" id="L23">@Slf4j</span>
@@ -41,9 +41,9 @@ public class GithubGraphQLController extends ApiController {
      * @return the default branch name
      */
 
-    @Operation(summary = &quot;Get course by id&quot;)
+    @Operation(summary = &quot;Get default branch name&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
-    @GetMapping(&quot;/{id}&quot;)
+    @GetMapping(&quot;defaultBranchName&quot;)
     public String getDefaultBranchName(
        @Parameter Long courseId,
        @Parameter String owner,

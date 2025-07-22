@@ -5,6 +5,8 @@ import java.security.spec.InvalidKeySpecException;
 
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.graphql.client.HttpGraphQlClient;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,15 +24,15 @@ public class GitHubGraphQLService {
 
 
   public GitHubGraphQLService(HttpGraphQlClient.Builder&lt;?&gt; graphQlClientBuilder,
-<span class="nc" id="L25">      JwtService jwtService) {</span>
-<span class="nc" id="L26">    this.jwtService = jwtService;</span>
+<span class="nc" id="L27">      JwtService jwtService) {</span>
+<span class="nc" id="L28">    this.jwtService = jwtService;</span>
 
     // Configure WebClient and build HttpGraphQlClient
-<span class="nc" id="L29">    this.graphQlClient = graphQlClientBuilder</span>
-<span class="nc" id="L30">        .webClient(builder -&gt; builder</span>
-<span class="nc" id="L31">            .baseUrl(&quot;https://api.github.com/graphql&quot;))</span>
-<span class="nc" id="L32">        .build();</span>
-<span class="nc" id="L33">  }</span>
+<span class="nc" id="L31">    this.graphQlClient = graphQlClientBuilder</span>
+<span class="nc" id="L32">        .webClient(builder -&gt; builder</span>
+<span class="nc" id="L33">            .baseUrl(&quot;https://api.github.com/graphql&quot;))</span>
+<span class="nc" id="L34">        .build();</span>
+<span class="nc" id="L35">  }</span>
 
   /**
    * Retrieves the name of the default branch for a given GitHub repository.
@@ -41,13 +43,14 @@ public class GitHubGraphQLService {
    *         found.
    */
   public Mono&lt;String&gt; getDefaultBranchName(Course course, String owner, String repo) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException, NoLinkedOrganizationException{
-<span class="nc" id="L44">    String githubToken = jwtService.getInstallationToken(course);</span>
+<span class="nc" id="L46">    String githubToken = jwtService.getInstallationToken(course);</span>
 
-<span class="nc" id="L46">    this.graphQlClient.mutate()</span>
-<span class="nc" id="L47">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
-<span class="nc" id="L48">        .build();</span>
+<span class="nc" id="L48">    this.graphQlClient.mutate()</span>
+<span class="nc" id="L49">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
+<span class="nc" id="L50">        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Second header</span>
+<span class="nc" id="L51">        .build();</span>
 
-<span class="nc" id="L50">    String query = &quot;&quot;&quot;</span>
+<span class="nc" id="L53">    String query = &quot;&quot;&quot;</span>
         query getDefaultBranch($owner: String!, $repo: String!) {
           repository(owner: $owner, name: $repo) {
             defaultBranchRef {
@@ -57,11 +60,11 @@ public class GitHubGraphQLService {
         }
         &quot;&quot;&quot;;
 
-<span class="nc" id="L60">    return graphQlClient.document(query)</span>
-<span class="nc" id="L61">        .variable(&quot;owner&quot;, owner)</span>
-<span class="nc" id="L62">        .variable(&quot;repo&quot;, repo)</span>
-<span class="nc" id="L63">        .retrieve(&quot;repository.defaultBranchRef.name&quot;)</span>
-<span class="nc" id="L64">        .toEntity(String.class);</span>
+<span class="nc" id="L63">    return graphQlClient.document(query)</span>
+<span class="nc" id="L64">        .variable(&quot;owner&quot;, owner)</span>
+<span class="nc" id="L65">        .variable(&quot;repo&quot;, repo)</span>
+<span class="nc" id="L66">        .retrieve(&quot;repository.defaultBranchRef.name&quot;)</span>
+<span class="nc" id="L67">        .toEntity(String.class);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
