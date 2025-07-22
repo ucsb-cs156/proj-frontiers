@@ -1,5 +1,5 @@
 import OurTable from "main/components/OurTable";
-import { Button, Spinner } from "react-bootstrap";
+import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
 
 const columns = [
   {
@@ -32,6 +32,41 @@ export default function CoursesTable({
     window.open(gitInvite, "_blank");
   };
 
+  const renderTooltip = (studentStatus) => (props) => {
+    let set_message;
+
+    switch (studentStatus) {
+      case "PENDING":
+        set_message =
+          "This course has not been completely set up by your instructor yet.";
+        break;
+      case "JOINCOURSE":
+        set_message =
+          "Clicking this button will generate an invitation to the GitHub organization associated with this course.";
+        break;
+      case "INVITED":
+        set_message =
+          "You have been invited to the GitHub organization associated with this course, but you still need to accept or decline the invitation. Please accept it if you plan to stay enrolled, and decline only if you plan to withdraw from the course.";
+        break;
+      case "OWNER":
+        set_message =
+          "You are an owner of the GitHub organization associated with this course.";
+        break;
+      case "MEMBER":
+        set_message =
+          "You are a member of the GitHub organization associated with this course.";
+        break;
+      default:
+        set_message = "Tooltip for illegal status that will never occur";
+        break;
+    }
+    return (
+      <Tooltip id={`${studentStatus.toLowerCase()}-tooltip`} {...props}>
+        {set_message}
+      </Tooltip>
+    );
+  };
+
   const columnsWithStatus = [
     ...columns,
     {
@@ -39,42 +74,80 @@ export default function CoursesTable({
       accessor: "studentStatus",
       Cell: ({ cell }) => {
         if (cell.value === "PENDING") {
-          return <span style={{ color: "orange" }}>Pending</span>;
+          return (
+            <OverlayTrigger
+              placement="right"
+              overlay={renderTooltip("PENDING")}
+            >
+              <span style={{ color: "orange" }}>Pending</span>
+            </OverlayTrigger>
+          );
         } else if (cell.value === "JOINCOURSE") {
           const cellIsLoading = isLoading(cell);
           return (
-            <Button
-              variant={"primary"}
-              onClick={() => joinCallback(cell)}
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
-              disabled={cellIsLoading}
+            <OverlayTrigger
+              placement="right"
+              overlay={renderTooltip("JOINCOURSE")}
             >
-              {cellIsLoading ? (
-                <>
-                  <Spinner as="span" animation="grow" size="sm" role="status" />
-                  Joining...
-                </>
-              ) : (
-                <>Join Course</>
-              )}
-            </Button>
+              <span>
+                <Button
+                  variant={"primary"}
+                  onClick={() => joinCallback(cell)}
+                  data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+                  disabled={cellIsLoading}
+                >
+                  {cellIsLoading ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="grow"
+                        size="sm"
+                        role="status"
+                      />
+                      Joining...
+                    </>
+                  ) : (
+                    <>Join Course</>
+                  )}
+                </Button>
+              </span>
+            </OverlayTrigger>
           );
         } else if (cell.value === "INVITED") {
           return (
-            <Button
-              variant={"primary"}
-              onClick={() => viewInviteCallback(cell)}
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+            <OverlayTrigger
+              placement="right"
+              overlay={renderTooltip("INVITED")}
             >
-              View Invite
-            </Button>
+              <span>
+                <Button
+                  variant={"primary"}
+                  onClick={() => viewInviteCallback(cell)}
+                  data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+                >
+                  View Invite
+                </Button>
+              </span>
+            </OverlayTrigger>
           );
         } else if (cell.value === "OWNER") {
-          return <span style={{ color: "purple" }}>Owner</span>;
+          return (
+            <OverlayTrigger placement="right" overlay={renderTooltip("OWNER")}>
+              <span style={{ color: "purple" }}>Owner</span>
+            </OverlayTrigger>
+          );
         } else if (cell.value === "MEMBER") {
-          return <span style={{ color: "blue" }}>Member</span>;
+          return (
+            <OverlayTrigger placement="right" overlay={renderTooltip("MEMBER")}>
+              <span style={{ color: "blue" }}>Member</span>
+            </OverlayTrigger>
+          );
         }
-        return <span>{cell.value}</span>;
+        return (
+          <OverlayTrigger placement="right" overlay={renderTooltip(cell.value)}>
+            <span>{cell.value}</span>
+          </OverlayTrigger>
+        );
       },
     },
   ];
