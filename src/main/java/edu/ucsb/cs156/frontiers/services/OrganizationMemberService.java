@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
@@ -18,7 +19,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.NoSuchAlgorithmException;
@@ -99,15 +99,15 @@ public class OrganizationMemberService {
 
     public OrgStatus inviteOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         Course course = student.getCourse();
-        return inviteMember(student.getGithubId(), course, "direct_member");
+        return inviteMember(student.getGithubId(), course, "direct_member", student.getGithubLogin());
     }
 
     public OrgStatus inviteOrganizationOwner(CourseStaff staff) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         Course course = staff.getCourse();
-        return inviteMember(staff.getGithubId(), course, "admin");
+        return inviteMember(staff.getGithubId(), course, "admin", staff.getGithubLogin());
     }
 
-    private OrgStatus inviteMember(int githubId, Course course, String role) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    private OrgStatus inviteMember(int githubId, Course course, String role, String githubLogin) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
         String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/invitations";
         HttpHeaders headers = new HttpHeaders();
         String token = jwtService.getInstallationToken(course);
@@ -120,11 +120,36 @@ public class OrganizationMemberService {
         String bodyAsJson = objectMapper.writeValueAsString(body);
         HttpEntity<String> entity = new HttpEntity<>(bodyAsJson, headers);
         try{
-            ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);
+            restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);
         } catch (HttpClientErrorException e) {
-            log.warn("Error while trying to invite member to organization: {}", e.getMessage());
-            return OrgStatus.JOINCOURSE;
+            return getMemberStatus(githubLogin, course);
         }
         return OrgStatus.INVITED;
+    }
+
+    private OrgStatus getMemberStatus(String githubLogin, Course course) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/memberships/" + githubLogin;
+        HttpHeaders headers = new HttpHeaders();
+        String token = jwtService.getInstallationToken(course);
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Accept", "application/vnd.github+json");
+        headers.add("X-GitHub-Api-Version", "2022-11-28");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        try{
+            ResponseEntity<String> response = restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, String.class);
+            JsonNode responseJson = objectMapper.readTree(response.getBody());
+            if(responseJson.get("role").asText().equalsIgnoreCase("admin")){
+                return OrgStatus.OWNER;
+            }else if (responseJson.get("role").asText().equalsIgnoreCase("direct_member")){
+                return OrgStatus.MEMBER;
+            }else{
+                log.warn("Unexpected role {} used in course {}", responseJson.get("role").asText(), course.getCourseName());
+                return OrgStatus.JOINCOURSE;
+            }
+        }catch (HttpClientErrorException e){
+            log.warn("Error while trying to get member status: {}", e.getMessage());
+            return OrgStatus.JOINCOURSE;
+        }
+
     }
 }

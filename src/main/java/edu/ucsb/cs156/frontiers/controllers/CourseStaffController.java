@@ -132,7 +132,10 @@ public class CourseStaffController extends ApiController {
         courseStaffRepository.save(courseStaff);
         if(status == OrgStatus.INVITED){
             return ResponseEntity.accepted().body("Successfully invited staff member to Organization");
-        }else{
+        } else if (status == OrgStatus.MEMBER || status == OrgStatus.OWNER) {
+            return ResponseEntity.accepted().body("Already in organization - set status to %s".formatted(status.toString()));
+        }else
+        {
             return ResponseEntity.internalServerError().body("Could not invite staff member to Organization");
         }
     }

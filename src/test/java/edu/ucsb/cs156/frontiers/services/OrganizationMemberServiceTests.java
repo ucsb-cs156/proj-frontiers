@@ -266,9 +266,10 @@ public class OrganizationMemberServiceTests {
     }
 
     @Test
-    void testInviteOrganizationMember_Failure() throws Exception {
+    void testInviteOrganizationMember_failure_is_member() throws Exception {
         RosterStudent testStudent = RosterStudent.builder()
                 .githubId(12345)
+                .githubLogin("banana")
                 .course(testCourse)
                 .build();
 
@@ -286,6 +287,127 @@ public class OrganizationMemberServiceTests {
                 .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"message\": \"Error inviting member\"}"));
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{ \"role\": \"direct_member\" }"));
+
+        OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertEquals(OrgStatus.MEMBER, result);
+    }
+
+    @Test
+    void testInviteOrganizationMember_failure_is_owner() throws Exception {
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin("banana")
+                .course(testCourse)
+                .build();
+
+        Map<String, Object> expectedRequestBody = new HashMap<>();
+        expectedRequestBody.put("invitee_id", 12345);
+        expectedRequestBody.put("role", "direct_member");
+        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andExpect(content().json(expectedRequestBodyJson))
+                .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"message\": \"Error inviting member\"}"));
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{ \"role\": \"admin\" }"));
+
+        OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertEquals(OrgStatus.OWNER, result);
+    }
+
+    @Test
+    void testInviteOrganizationMember_failure_is_unexpected_role() throws Exception {
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin("banana")
+                .course(testCourse)
+                .build();
+
+        Map<String, Object> expectedRequestBody = new HashMap<>();
+        expectedRequestBody.put("invitee_id", 12345);
+        expectedRequestBody.put("role", "direct_member");
+        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andExpect(content().json(expectedRequestBodyJson))
+                .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"message\": \"Error inviting member\"}"));
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{ \"role\": \"billing_manager\" }"));
+
+        OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertEquals(OrgStatus.JOINCOURSE, result);
+    }
+
+    @Test
+    void testInviteOrganizationMember_failure_is_not_found() throws Exception {
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin("banana")
+                .course(testCourse)
+                .build();
+
+        Map<String, Object> expectedRequestBody = new HashMap<>();
+        expectedRequestBody.put("invitee_id", 12345);
+        expectedRequestBody.put("role", "direct_member");
+        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andExpect(content().json(expectedRequestBodyJson))
+                .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"message\": \"Error inviting member\"}"));
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/memberships/" + "banana"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
 
         OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
 
@@ -319,34 +441,6 @@ public class OrganizationMemberServiceTests {
 
         mockServer.verify();
         assertEquals(OrgStatus.INVITED, result);
-    }
-
-    @Test
-    void testInviteOrganizationOwner_Failure() throws Exception {
-        CourseStaff testStaff = CourseStaff.builder()
-                .githubId(12345)
-                .course(testCourse)
-                .build();
-
-        Map<String, Object> expectedRequestBody = new HashMap<>();
-        expectedRequestBody.put("invitee_id", 12345);
-        expectedRequestBody.put("role", "admin");
-        String expectedRequestBodyJson = objectMapper.writeValueAsString(expectedRequestBody);
-
-        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/invitations"))
-                .andExpect(method(HttpMethod.POST))
-                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
-                .andExpect(header("Accept", "application/vnd.github+json"))
-                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
-                .andExpect(content().json(expectedRequestBodyJson))
-                .andRespond(withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body("{\"message\": \"Error inviting member\"}"));
-
-        OrgStatus result = organizationMemberService.inviteOrganizationOwner(testStaff);
-
-        mockServer.verify();
-        assertEquals(OrgStatus.JOINCOURSE, result);
     }
 
     @Test
