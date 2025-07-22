@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import edu.ucsb.cs156.frontiers.errors.CourseNotAuthorized;
+
 
 @Tag(name = "GithubGraphQL")
 @RequestMapping("/api/github/graphql/")
@@ -55,7 +57,7 @@ public class GithubGraphQLController extends ApiController {
         log.info("Found course: {}", course);
 
         if (!isCurrentUserAdmin() && !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {
-            throw new EntityNotFoundException(Course.class, courseId);
+            throw new CourseNotAuthorized(courseId);
         }
   
         log.info("Current user is authorized to access course: {}", course.getId());

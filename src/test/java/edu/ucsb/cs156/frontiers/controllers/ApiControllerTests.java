@@ -1,28 +1,22 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import edu.ucsb.cs156.frontiers.ControllerTestCase;
-import edu.ucsb.cs156.frontiers.controllers.ApiController;
-import edu.ucsb.cs156.frontiers.repositories.UserRepository;
-import edu.ucsb.cs156.frontiers.services.CurrentUserService;
-import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
-import lombok.With;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 
 @WebMvcTest(controllers = DummyController.class)
 public class ApiControllerTests extends ControllerTestCase {
