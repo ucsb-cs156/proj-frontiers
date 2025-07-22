@@ -295,7 +295,7 @@ public class OrganizationMemberServiceTests {
                 .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body("{ \"role\": \"direct_member\" }"));
+                        .body("{ \"role\": \"member\" }"));
 
         OrgStatus result = organizationMemberService.inviteOrganizationMember(testStudent);
 

@@ -140,7 +140,7 @@ public class OrganizationMemberService {
             JsonNode responseJson = objectMapper.readTree(response.getBody());
             if(responseJson.get("role").asText().equalsIgnoreCase("admin")){
                 return OrgStatus.OWNER;
-            }else if (responseJson.get("role").asText().equalsIgnoreCase("direct_member")){
+            }else if (responseJson.get("role").asText().equalsIgnoreCase("member")){
                 return OrgStatus.MEMBER;
             }else{
                 log.warn("Unexpected role {} used in course {}", responseJson.get("role").asText(), course.getCourseName());
