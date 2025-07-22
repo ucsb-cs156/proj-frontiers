@@ -13,9 +13,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Service
+<span class="nc" id="L20">@Slf4j</span>
 public class GitHubGraphQLService {
 
   private final HttpGraphQlClient graphQlClient;
@@ -24,15 +26,15 @@ public class GitHubGraphQLService {
 
 
   public GitHubGraphQLService(HttpGraphQlClient.Builder&lt;?&gt; graphQlClientBuilder,
-<span class="nc" id="L27">      JwtService jwtService) {</span>
-<span class="nc" id="L28">    this.jwtService = jwtService;</span>
+<span class="nc" id="L29">      JwtService jwtService) {</span>
+<span class="nc" id="L30">    this.jwtService = jwtService;</span>
 
     // Configure WebClient and build HttpGraphQlClient
-<span class="nc" id="L31">    this.graphQlClient = graphQlClientBuilder</span>
-<span class="nc" id="L32">        .webClient(builder -&gt; builder</span>
-<span class="nc" id="L33">            .baseUrl(&quot;https://api.github.com/graphql&quot;))</span>
-<span class="nc" id="L34">        .build();</span>
-<span class="nc" id="L35">  }</span>
+<span class="nc" id="L33">    this.graphQlClient = graphQlClientBuilder</span>
+<span class="nc" id="L34">        .webClient(builder -&gt; builder</span>
+<span class="nc" id="L35">            .baseUrl(&quot;https://api.github.com/graphql&quot;))</span>
+<span class="nc" id="L36">        .build();</span>
+<span class="nc" id="L37">  }</span>
 
   /**
    * Retrieves the name of the default branch for a given GitHub repository.
@@ -43,14 +45,17 @@ public class GitHubGraphQLService {
    *         found.
    */
   public Mono&lt;String&gt; getDefaultBranchName(Course course, String owner, String repo) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException, NoLinkedOrganizationException{
-<span class="nc" id="L46">    String githubToken = jwtService.getInstallationToken(course);</span>
+<span class="nc" id="L48">    log.info(&quot;getDefaultBranchName called with course.getId(): {} owner: {}, repo: {}&quot;, course.getId(), owner, repo);</span>
+<span class="nc" id="L49">    String githubToken = jwtService.getInstallationToken(course);</span>
 
-<span class="nc" id="L48">    this.graphQlClient.mutate()</span>
-<span class="nc" id="L49">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
-<span class="nc" id="L50">        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Second header</span>
-<span class="nc" id="L51">        .build();</span>
+<span class="nc" id="L51">    log.info(&quot;githubToken: {}&quot;, githubToken);</span>
 
-<span class="nc" id="L53">    String query = &quot;&quot;&quot;</span>
+<span class="nc" id="L53">    this.graphQlClient.mutate()</span>
+<span class="nc" id="L54">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
+<span class="nc" id="L55">        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // Second header</span>
+<span class="nc" id="L56">        .build();</span>
+
+<span class="nc" id="L58">    String query = &quot;&quot;&quot;</span>
         query getDefaultBranch($owner: String!, $repo: String!) {
           repository(owner: $owner, name: $repo) {
             defaultBranchRef {
@@ -60,11 +65,11 @@ public class GitHubGraphQLService {
         }
         &quot;&quot;&quot;;
 
-<span class="nc" id="L63">    return graphQlClient.document(query)</span>
-<span class="nc" id="L64">        .variable(&quot;owner&quot;, owner)</span>
-<span class="nc" id="L65">        .variable(&quot;repo&quot;, repo)</span>
-<span class="nc" id="L66">        .retrieve(&quot;repository.defaultBranchRef.name&quot;)</span>
-<span class="nc" id="L67">        .toEntity(String.class);</span>
+<span class="nc" id="L68">    return graphQlClient.document(query)</span>
+<span class="nc" id="L69">        .variable(&quot;owner&quot;, owner)</span>
+<span class="nc" id="L70">        .variable(&quot;repo&quot;, repo)</span>
+<span class="nc" id="L71">        .retrieve(&quot;repository.defaultBranchRef.name&quot;)</span>
+<span class="nc" id="L72">        .toEntity(String.class);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

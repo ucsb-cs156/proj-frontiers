@@ -48,17 +48,24 @@ public class GithubGraphQLController extends ApiController {
        @Parameter Long courseId,
        @Parameter String owner,
        @Parameter String repo) throws Exception {
-<span class="nc" id="L51">        Course course = courseRepository.findById(courseId)</span>
-<span class="nc" id="L52">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="nc" id="L51">        log.info(&quot;getDefaultBranchName called with courseId: {}, owner: {}, repo: {}&quot;, courseId, owner, repo);</span>
+<span class="nc" id="L52">        Course course = courseRepository.findById(courseId)</span>
+<span class="nc" id="L53">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="nc bnc" id="L54" title="All 4 branches missed.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
-<span class="nc" id="L55">            throw new EntityNotFoundException(Course.class, courseId);</span>
+<span class="nc" id="L55">        log.info(&quot;Found course: {}&quot;, course);</span>
+
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="nc" id="L58">            throw new EntityNotFoundException(Course.class, courseId);</span>
         }
   
-<span class="nc" id="L58">        Mono&lt;String&gt; result = this.gitHubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
+<span class="nc" id="L61">        log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
 
-<span class="nc" id="L60">        return result.blockOptional()</span>
-<span class="nc" id="L61">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Default branch not found for repository: &quot; + owner + &quot;/&quot; + repo));</span>
+<span class="nc" id="L63">        Mono&lt;String&gt; result = this.gitHubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
+
+<span class="nc" id="L65">        log.info(&quot;Result from getDefaultBranchName: {}&quot;, result);</span>
+        
+<span class="nc" id="L67">        return result.blockOptional()</span>
+<span class="nc" id="L68">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Default branch not found for repository: &quot; + owner + &quot;/&quot; + repo));</span>
 
     }
 
