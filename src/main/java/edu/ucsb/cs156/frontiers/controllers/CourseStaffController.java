@@ -117,8 +117,8 @@ public class CourseStaffController extends ApiController {
             throw new IllegalArgumentException(String.format("This operation is restricted to the user associated with staff member with id %d", courseStaff.getId()));
         }
 
-        if ((courseStaff.getGithubId() != null && courseStaff.getGithubId() != 0) && courseStaff.getGithubLogin() != null) {
-            return ResponseEntity.badRequest().body("This course staff has already joined the course with a GitHub account.");
+        if (courseStaff.getGithubId() != null && courseStaff.getGithubLogin() != null && (courseStaff.getOrgStatus() == OrgStatus.MEMBER || courseStaff.getOrgStatus() == OrgStatus.OWNER)) {
+            return ResponseEntity.badRequest().body("You have already linked a Github account to this course.");
         }
 
 

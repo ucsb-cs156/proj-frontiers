@@ -246,8 +246,8 @@ public class RosterStudentsController extends ApiController {
             throw new AccessDeniedException("User not authorized join the course as this roster student");
         }
 
-        if ((rosterStudent.getGithubId() != null && rosterStudent.getGithubId() != 0) && rosterStudent.getGithubLogin() != null) {
-            return ResponseEntity.badRequest().body("This roster student has already joined the course with a GitHub account.");
+        if (rosterStudent.getGithubId() != null && rosterStudent.getGithubLogin() != null && (rosterStudent.getOrgStatus() == OrgStatus.MEMBER || rosterStudent.getOrgStatus() == OrgStatus.OWNER)) {
+            return ResponseEntity.badRequest().body("This user has already linked a Github account to this course.");
         }
 
 

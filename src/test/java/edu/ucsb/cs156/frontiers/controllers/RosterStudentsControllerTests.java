@@ -618,7 +618,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         .email("alreadylinked@ucsb.edu")
                         .course(course1)
                         .rosterStatus(RosterStatus.ROSTER)
-                        .orgStatus(OrgStatus.PENDING)
+                        .orgStatus(OrgStatus.MEMBER)
                         .githubId(98765)  // Already has a GitHub ID
                         .githubLogin("existinguser")  // Already has a GitHub login
                         .user(currentUser)  // Current user owns this roster entry
@@ -638,7 +638,44 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
                 verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
 
-                assertEquals("This roster student has already joined the course with a GitHub account.", response.getResponse().getContentAsString());
+                assertEquals("This user has already linked a Github account to this course.", response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "USER", "GITHUB"})
+        public void testJoinCourseOnGitHub_alreadyJoined_Owner() throws Exception {
+                // Arrange
+                User currentUser = currentUserService.getUser();
+
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(5L)
+                        .firstName("Already")
+                        .lastName("Linked")
+                        .studentId("A777777")
+                        .email("alreadylinked@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.OWNER)
+                        .githubId(98765)  // Already has a GitHub ID
+                        .githubLogin("existinguser")  // Already has a GitHub login
+                        .user(currentUser)  // Current user owns this roster entry
+                        .build();
+
+                when(rosterStudentRepository.findById(eq(5L))).thenReturn(Optional.of(rosterStudent));
+
+                // Act
+                MvcResult response = mockMvc.perform(put("/api/rosterstudents/joinCourse")
+                                .with(csrf())
+                                .param("rosterStudentId", "5"))
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
+
+                // Assert
+                verify(rosterStudentRepository).findById(eq(5L));
+                verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+                verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
+
+                assertEquals("This user has already linked a Github account to this course.", response.getResponse().getContentAsString());
         }
 
 
