@@ -261,8 +261,11 @@ import lombok.extern.slf4j.Slf4j;
 <span class="fc" id="L261">        rosterStudentRepository.save(rosterStudent);</span>
 <span class="fc bfc" id="L262" title="All 2 branches covered.">        if(status == OrgStatus.INVITED){</span>
 <span class="fc" id="L263">            return ResponseEntity.accepted().body(&quot;Successfully invited student to Organization&quot;);</span>
-        }else{
-<span class="fc" id="L265">            return ResponseEntity.internalServerError().body(&quot;Could not invite student to Organization&quot;);</span>
+<span class="fc bfc" id="L264" title="All 4 branches covered.">        }else if (status == OrgStatus.MEMBER || status == OrgStatus.OWNER) {</span>
+<span class="fc" id="L265">            return ResponseEntity.accepted().body(&quot;Already in organization - set status to %s&quot;.formatted(status.toString()));</span>
+        }else
+        {
+<span class="fc" id="L268">            return ResponseEntity.internalServerError().body(&quot;Could not invite student to Organization&quot;);</span>
         }
     }
 
@@ -270,9 +273,9 @@ import lombok.extern.slf4j.Slf4j;
     @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
     @GetMapping(&quot;/associatedRosterStudents&quot;)
     public Iterable&lt;RosterStudent&gt; getAssociatedRosterStudents() {
-<span class="fc" id="L273">        User currentUser = currentUserService.getUser();</span>
-<span class="fc" id="L274">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findAllByUser((currentUser));</span>
-<span class="fc" id="L275">        return rosterStudents;</span>
+<span class="fc" id="L276">        User currentUser = currentUserService.getUser();</span>
+<span class="fc" id="L277">        Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findAllByUser((currentUser));</span>
+<span class="fc" id="L278">        return rosterStudents;</span>
     }
 
     @Operation(summary = &quot;Update a roster student&quot;)
@@ -284,27 +287,27 @@ import lombok.extern.slf4j.Slf4j;
             @Parameter(name = &quot;lastName&quot;) @RequestParam(required = false) String lastName,
             @Parameter(name = &quot;studentId&quot;) @RequestParam(required = false) String studentId) throws EntityNotFoundException {
         
-<span class="fc bfc" id="L287" title="All 6 branches covered.">        if(firstName == null || lastName == null || studentId == null ||</span>
-<span class="fc bfc" id="L288" title="All 6 branches covered.">            firstName.trim().isEmpty() || lastName.trim().isEmpty() || studentId.trim().isEmpty()){</span>
-<span class="fc" id="L289">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Required fields cannot be empty&quot;);</span>
+<span class="fc bfc" id="L290" title="All 6 branches covered.">        if(firstName == null || lastName == null || studentId == null ||</span>
+<span class="fc bfc" id="L291" title="All 6 branches covered.">            firstName.trim().isEmpty() || lastName.trim().isEmpty() || studentId.trim().isEmpty()){</span>
+<span class="fc" id="L292">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Required fields cannot be empty&quot;);</span>
         }
 
-<span class="fc" id="L292">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
-<span class="fc" id="L293">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+<span class="fc" id="L295">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
+<span class="fc" id="L296">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
 
-<span class="fc bfc" id="L295" title="All 2 branches covered.">        if(!rosterStudent.getStudentId().trim().equals(studentId.trim())){</span>
-<span class="fc" id="L296">            Optional&lt;RosterStudent&gt; existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(</span>
-<span class="fc" id="L297">                    rosterStudent.getCourse().getId(), studentId.trim());</span>
-<span class="fc bfc" id="L298" title="All 2 branches covered.">            if (existingStudent.isPresent()){</span>
-<span class="fc" id="L299">                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Student ID already exists in this course&quot;);</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">        if(!rosterStudent.getStudentId().trim().equals(studentId.trim())){</span>
+<span class="fc" id="L299">            Optional&lt;RosterStudent&gt; existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(</span>
+<span class="fc" id="L300">                    rosterStudent.getCourse().getId(), studentId.trim());</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">            if (existingStudent.isPresent()){</span>
+<span class="fc" id="L302">                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Student ID already exists in this course&quot;);</span>
             }
         }
 
-<span class="fc" id="L303">        rosterStudent.setFirstName(firstName.trim());</span>
-<span class="fc" id="L304">        rosterStudent.setLastName(lastName.trim());</span>
-<span class="fc" id="L305">        rosterStudent.setStudentId(studentId.trim());</span>
+<span class="fc" id="L306">        rosterStudent.setFirstName(firstName.trim());</span>
+<span class="fc" id="L307">        rosterStudent.setLastName(lastName.trim());</span>
+<span class="fc" id="L308">        rosterStudent.setStudentId(studentId.trim());</span>
 
-<span class="fc" id="L307">        return rosterStudentRepository.save(rosterStudent);</span>
+<span class="fc" id="L310">        return rosterStudentRepository.save(rosterStudent);</span>
     }
 
     @Operation(summary = &quot;Delete a roster student&quot;)
@@ -312,13 +315,13 @@ import lombok.extern.slf4j.Slf4j;
     @DeleteMapping(&quot;/delete&quot;)
     @Transactional
     public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id) throws EntityNotFoundException{
-<span class="fc" id="L315">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
-<span class="fc" id="L316">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
-<span class="fc" id="L317">        Course course = rosterStudent.getCourse();</span>
-<span class="fc" id="L318">        course.getRosterStudents().remove(rosterStudent);</span>
-<span class="fc" id="L319">        rosterStudentRepository.delete(rosterStudent);</span>
-<span class="fc" id="L320">        courseRepository.save(course);</span>
-<span class="fc" id="L321">        return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list&quot;);</span>
+<span class="fc" id="L318">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
+<span class="fc" id="L319">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+<span class="fc" id="L320">        Course course = rosterStudent.getCourse();</span>
+<span class="fc" id="L321">        course.getRosterStudents().remove(rosterStudent);</span>
+<span class="fc" id="L322">        rosterStudentRepository.delete(rosterStudent);</span>
+<span class="fc" id="L323">        courseRepository.save(course);</span>
+<span class="fc" id="L324">        return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
