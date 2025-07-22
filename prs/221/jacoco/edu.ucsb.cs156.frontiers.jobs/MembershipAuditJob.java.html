@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MembershipAuditJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">MembershipAuditJob.java</span></div><h1>MembershipAuditJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
@@ -20,41 +22,65 @@ public class MembershipAuditJob implements JobContextConsumer {
     CourseRepository courseRepository;
     OrganizationMemberService organizationMemberService;
     RosterStudentRepository rosterStudentRepository;
+    CourseStaffRepository courseStaffRepository;
 
     @Override
     public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L26">        ctx.log(&quot;Auditing membership for each course with an attached GitHub Organization...&quot;);</span>
-<span class="fc" id="L27">        Iterable&lt;Course&gt; courses = courseRepository.findAll();</span>
-<span class="fc bfc" id="L28" title="All 2 branches covered.">        for(Course course : courses){</span>
-<span class="fc bfc" id="L29" title="All 4 branches covered.">            if (course.getOrgName() != null &amp;&amp; course.getInstallationId() != null) {</span>
-<span class="fc" id="L30">                Iterable&lt;OrgMember&gt; members = organizationMemberService.getOrganizationMembers(course);</span>
-<span class="fc" id="L31">                Iterable&lt;OrgMember&gt; admins = organizationMemberService.getOrganizationAdmins(course);</span>
-<span class="fc" id="L32">                Iterable&lt;OrgMember&gt; invitees = organizationMemberService.getOrganizationInvitees(course);</span>
-<span class="fc" id="L33">                List&lt;RosterStudent&gt; rosterStudents = course.getRosterStudents();</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">                for (int i = 0; i &lt; rosterStudents.size(); i++ ) {</span>
-<span class="fc" id="L35">                    Integer studentGithubId = rosterStudents.get(i).getGithubId();</span>
-<span class="fc" id="L36">                    String studentGithubLogin = rosterStudents.get(i).getGithubLogin();</span>
-<span class="fc bfc" id="L37" title="All 4 branches covered.">                    if(studentGithubId != null &amp;&amp; studentGithubLogin != null){</span>
-<span class="fc" id="L38">                        Optional&lt;OrgMember&gt; member = StreamSupport.stream(members.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
-<span class="fc" id="L39">                        Optional&lt;OrgMember&gt; admin = StreamSupport.stream(admins.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
-<span class="fc" id="L40">                        Optional&lt;OrgMember&gt; invitee = StreamSupport.stream(invitees.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
+<span class="fc" id="L29">        ctx.log(&quot;Auditing membership for each course with an attached GitHub Organization...&quot;);</span>
+<span class="fc" id="L30">        Iterable&lt;Course&gt; courses = courseRepository.findAll();</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        for(Course course : courses){</span>
+<span class="fc bfc" id="L32" title="All 4 branches covered.">            if (course.getOrgName() != null &amp;&amp; course.getInstallationId() != null) {</span>
+<span class="fc" id="L33">                Iterable&lt;OrgMember&gt; members = organizationMemberService.getOrganizationMembers(course);</span>
+<span class="fc" id="L34">                Iterable&lt;OrgMember&gt; admins = organizationMemberService.getOrganizationAdmins(course);</span>
+<span class="fc" id="L35">                Iterable&lt;OrgMember&gt; invitees = organizationMemberService.getOrganizationInvitees(course);</span>
+<span class="fc" id="L36">                List&lt;RosterStudent&gt; rosterStudents = course.getRosterStudents();</span>
+<span class="fc" id="L37">                List&lt;CourseStaff&gt; courseStaff = course.getCourseStaff();</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">                for (int i = 0; i &lt; rosterStudents.size(); i++ ) {</span>
+<span class="fc" id="L39">                    Integer studentGithubId = rosterStudents.get(i).getGithubId();</span>
+<span class="fc" id="L40">                    String studentGithubLogin = rosterStudents.get(i).getGithubLogin();</span>
+<span class="fc bfc" id="L41" title="All 4 branches covered.">                    if(studentGithubId != null &amp;&amp; studentGithubLogin != null){</span>
+<span class="fc" id="L42">                        Optional&lt;OrgMember&gt; member = StreamSupport.stream(members.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
+<span class="fc" id="L43">                        Optional&lt;OrgMember&gt; admin = StreamSupport.stream(admins.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
+<span class="fc" id="L44">                        Optional&lt;OrgMember&gt; invitee = StreamSupport.stream(invitees.spliterator(), false).filter(s -&gt; studentGithubId.equals(s.getGithubId())).findFirst();</span>
 
-<span class="fc" id="L42">                        OrgStatus updatedStatus = OrgStatus.PENDING;</span>
+<span class="fc" id="L46">                        OrgStatus updatedStatus = OrgStatus.JOINCOURSE;</span>
 
-<span class="fc bfc" id="L44" title="All 2 branches covered.">                        if (admin.isPresent()) {</span>
-<span class="fc" id="L45">                            updatedStatus = OrgStatus.OWNER;</span>
-<span class="fc bfc" id="L46" title="All 2 branches covered.">                        } else if (member.isPresent()) {</span>
-<span class="fc" id="L47">                            updatedStatus = OrgStatus.MEMBER;</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">                        } else if (invitee.isPresent()) {</span>
-<span class="fc" id="L49">                            updatedStatus = OrgStatus.INVITED;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">                        if (admin.isPresent()) {</span>
+<span class="fc" id="L49">                            updatedStatus = OrgStatus.OWNER;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">                        } else if (member.isPresent()) {</span>
+<span class="fc" id="L51">                            updatedStatus = OrgStatus.MEMBER;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">                        } else if (invitee.isPresent()) {</span>
+<span class="fc" id="L53">                            updatedStatus = OrgStatus.INVITED;</span>
                         }
-<span class="fc" id="L51">                        rosterStudents.get(i).setOrgStatus(updatedStatus);</span>
+<span class="fc" id="L55">                        rosterStudents.get(i).setOrgStatus(updatedStatus);</span>
                     }
                 }
-<span class="fc" id="L54">                rosterStudentRepository.saveAll(rosterStudents);</span>
+<span class="fc" id="L58">                rosterStudentRepository.saveAll(rosterStudents);</span>
+
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                for(int i = 0; i &lt; courseStaff.size(); i++){</span>
+<span class="fc" id="L61">                    Integer staffGithubId = courseStaff.get(i).getGithubId();</span>
+<span class="fc" id="L62">                    String staffGithubLogin = courseStaff.get(i).getGithubLogin();</span>
+<span class="fc bfc" id="L63" title="All 4 branches covered.">                    if(staffGithubId != null &amp;&amp; staffGithubLogin != null){</span>
+<span class="fc" id="L64">                        Optional&lt;OrgMember&gt; member = StreamSupport.stream(members.spliterator(), false).filter(s -&gt; staffGithubId.equals(s.getGithubId())).findFirst();</span>
+<span class="fc" id="L65">                        Optional&lt;OrgMember&gt; admin = StreamSupport.stream(admins.spliterator(), false).filter(s -&gt; staffGithubId.equals(s.getGithubId())).findFirst();</span>
+<span class="fc" id="L66">                        Optional&lt;OrgMember&gt; invitee = StreamSupport.stream(invitees.spliterator(), false).filter(s -&gt; staffGithubId.equals(s.getGithubId())).findFirst();</span>
+
+<span class="fc" id="L68">                        OrgStatus updatedStatus = OrgStatus.JOINCOURSE;</span>
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                        if (admin.isPresent()) {</span>
+<span class="fc" id="L71">                            updatedStatus = OrgStatus.OWNER;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                        } else if (member.isPresent()) {</span>
+<span class="fc" id="L73">                            updatedStatus = OrgStatus.MEMBER;</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                        } else if (invitee.isPresent()) {</span>
+<span class="fc" id="L75">                            updatedStatus = OrgStatus.INVITED;</span>
+                        }
+<span class="fc" id="L77">                        courseStaff.get(i).setOrgStatus(updatedStatus);</span>
+                    }
+                }
+<span class="fc" id="L80">                courseStaffRepository.saveAll(courseStaff);</span>
             }
-<span class="fc" id="L56">        }</span>
-<span class="fc" id="L57">        ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L82">        }</span>
+<span class="fc" id="L83">        ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L84">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
