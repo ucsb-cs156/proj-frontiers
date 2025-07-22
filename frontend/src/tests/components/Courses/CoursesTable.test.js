@@ -217,7 +217,7 @@ describe("CoursesTable tests", () => {
     expect(joinCallback).not.toHaveBeenCalled();
 
     expect(openMock).toHaveBeenCalledWith(
-      "https://github.com/ucsb-cs156-f25/invitation",
+      "https://github.com/orgs/ucsb-cs156-f25/invitation",
       "_blank",
     );
   });
