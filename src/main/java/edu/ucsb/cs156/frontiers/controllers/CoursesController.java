@@ -227,6 +227,12 @@ public class CoursesController extends ApiController {
                 String orgName = linkerService.getOrgName(installation_id.get());
                 course.setInstallationId(installation_id.get());
                 course.setOrgName(orgName);
+                course.getRosterStudents().forEach(rs -> {
+                    rs.setOrgStatus(OrgStatus.JOINCOURSE);
+                });
+                course.getCourseStaff().forEach(cs -> {
+                    cs.setOrgStatus(OrgStatus.JOINCOURSE);
+                });
                 courseRepository.save(course);
                 return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
                         .header(HttpHeaders.LOCATION, "/instructor/courses?success=True&course=" + state).build();

@@ -252,6 +252,15 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .creator(user)
                                 .id(1L)
                                 .build();
+
+                CourseStaff courseStaff1 = CourseStaff.builder().orgStatus(OrgStatus.PENDING).build();
+                RosterStudent rs1 = RosterStudent.builder().orgStatus(OrgStatus.PENDING).build();
+
+                course1.setCourseStaff(List.of(courseStaff1));
+                course1.setRosterStudents(List.of(rs1));
+
+                CourseStaff courseStaff1Updated = CourseStaff.builder().orgStatus(OrgStatus.JOINCOURSE).build();
+                RosterStudent rs1Updated = RosterStudent.builder().orgStatus(OrgStatus.JOINCOURSE).build();
                 Course course2 = Course.builder()
                                 .courseName("CS156")
                                 .orgName("ucsb-cs156-s25")
@@ -262,6 +271,9 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .orgName("ucsb-cs156-s25")
                                 .id(1L)
                                 .build();
+
+                course2.setCourseStaff(List.of(courseStaff1Updated));
+                course2.setRosterStudents(List.of(rs1Updated));
 
                 doReturn(Optional.of(course1)).when(courseRepository).findById(eq(1L));
                 doReturn("ucsb-cs156-s25").when(linkerService).getOrgName("1234");
@@ -287,6 +299,8 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .term("S25")
                                 .school("UCSB")
                                 .creator(user)
+                                .courseStaff(List.of())
+                                .rosterStudents(List.of())
                                 .id(1L)
                                 .build();
                 Course course2 = Course.builder()
@@ -298,6 +312,8 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .installationId("1234")
                                 .orgName("ucsb-cs156-s25")
                                 .id(1L)
+                                .courseStaff(List.of())
+                                .rosterStudents(List.of())
                                 .build();
 
                 doReturn(Optional.of(course1)).when(courseRepository).findById(eq(1L));
@@ -364,6 +380,8 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .term("S25")
                                 .school("UCSB")
                                 .creator(separateUser)
+                                .courseStaff(List.of())
+                                .rosterStudents(List.of())
                                 .id(1L)
                                 .build();
                 Course courseAfter = Course.builder()
@@ -374,6 +392,8 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .creator(separateUser)
                                 .installationId("1234")
                                 .orgName("ucsb-cs156-s25")
+                                .courseStaff(List.of())
+                                .rosterStudents(List.of())
                                 .id(1L)
                                 .build();
 
