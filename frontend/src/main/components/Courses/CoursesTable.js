@@ -23,7 +23,7 @@ const columns = [
 export default function CoursesTable({ courses, testId, joinCallback }) {
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
-    const gitInvite = `https://github.com/${organizationName}/invitation`;
+    const gitInvite = `https://github.com/orgs/${organizationName}/invitation`;
     window.open(gitInvite, "_blank");
   };
 
