@@ -9,7 +9,18 @@ export default {
 };
 
 const Template = (args) => {
-  return <CoursesTable {...args} />;
+  let [loading, setLoading] = React.useState(false);
+  let joinCallback = () => {
+    window.alert("Join button pressed!");
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+  };
+  const isLoading = () => loading;
+  return (
+    <CoursesTable isLoading={isLoading} joinCallback={joinCallback} {...args} />
+  );
 };
 
 export const Empty = Template.bind({});
@@ -22,6 +33,5 @@ Empty.parameters = {};
 
 ManyCourses.args = {
   courses: coursesFixtures.oneCourseWithEachStatus,
-  storybook: true,
 };
 ManyCourses.parameters = {};
