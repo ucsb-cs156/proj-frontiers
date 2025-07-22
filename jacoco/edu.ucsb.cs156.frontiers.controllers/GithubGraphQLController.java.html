@@ -16,11 +16,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import edu.ucsb.cs156.frontiers.errors.CourseNotAuthorized;
+
 
 @Tag(name = &quot;GithubGraphQL&quot;)
 @RequestMapping(&quot;/api/github/graphql/&quot;)
 @RestController
-<span class="nc" id="L23">@Slf4j</span>
+<span class="fc" id="L25">@Slf4j</span>
 public class GithubGraphQLController extends ApiController {
 
     private final GitHubGraphQLService gitHubGraphQLService;
@@ -28,10 +30,10 @@ public class GithubGraphQLController extends ApiController {
 
     public GithubGraphQLController(
             @Autowired GitHubGraphQLService gitHubGraphQLService,
-<span class="nc" id="L31">            @Autowired CourseRepository courseRepository) {</span>
-<span class="nc" id="L32">        this.gitHubGraphQLService = gitHubGraphQLService;</span>
-<span class="nc" id="L33">        this.courseRepository = courseRepository;</span>
-<span class="nc" id="L34">    }</span>
+<span class="fc" id="L33">            @Autowired CourseRepository courseRepository) {</span>
+<span class="fc" id="L34">        this.gitHubGraphQLService = gitHubGraphQLService;</span>
+<span class="fc" id="L35">        this.courseRepository = courseRepository;</span>
+<span class="fc" id="L36">    }</span>
 
     /**
      * Return default branch name for a given repository.
@@ -48,24 +50,24 @@ public class GithubGraphQLController extends ApiController {
        @Parameter Long courseId,
        @Parameter String owner,
        @Parameter String repo) throws Exception {
-<span class="nc" id="L51">        log.info(&quot;getDefaultBranchName called with courseId: {}, owner: {}, repo: {}&quot;, courseId, owner, repo);</span>
-<span class="nc" id="L52">        Course course = courseRepository.findById(courseId)</span>
-<span class="nc" id="L53">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L53">        log.info(&quot;getDefaultBranchName called with courseId: {}, owner: {}, repo: {}&quot;, courseId, owner, repo);</span>
+<span class="fc" id="L54">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L55">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="nc" id="L55">        log.info(&quot;Found course: {}&quot;, course);</span>
+<span class="fc" id="L57">        log.info(&quot;Found course: {}&quot;, course);</span>
 
-<span class="nc bnc" id="L57" title="All 4 branches missed.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
-<span class="nc" id="L58">            throw new EntityNotFoundException(Course.class, courseId);</span>
+<span class="fc bfc" id="L59" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L60">            throw new CourseNotAuthorized(courseId);</span>
         }
   
-<span class="nc" id="L61">        log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
+<span class="fc" id="L63">        log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
 
-<span class="nc" id="L63">        Mono&lt;String&gt; result = this.gitHubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
+<span class="fc" id="L65">        Mono&lt;String&gt; result = this.gitHubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
 
-<span class="nc" id="L65">        log.info(&quot;Result from getDefaultBranchName: {}&quot;, result);</span>
+<span class="fc" id="L67">        log.info(&quot;Result from getDefaultBranchName: {}&quot;, result);</span>
         
-<span class="nc" id="L67">        return result.blockOptional()</span>
-<span class="nc" id="L68">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Default branch not found for repository: &quot; + owner + &quot;/&quot; + repo));</span>
+<span class="fc" id="L69">        return result.blockOptional()</span>
+<span class="fc" id="L70">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Default branch not found for repository: &quot; + owner + &quot;/&quot; + repo));</span>
 
     }
 
