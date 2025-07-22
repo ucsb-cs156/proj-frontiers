@@ -136,7 +136,7 @@ describe("HomePageLoggedIn tests", () => {
     fireEvent.click(studentJoinButton);
     await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
     expect(axiosMock.history.put[0].url).toBe("/api/rosterstudents/joinCourse");
-    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 2 });
+    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 22 });
     await waitFor(() => {
       expect(mockToast).toBeCalledWith(
         "Successfully invited student to Organization",
@@ -150,7 +150,7 @@ describe("HomePageLoggedIn tests", () => {
     fireEvent.click(courseStaffJoinButton);
     await waitFor(() => expect(axiosMock.history.put.length).toBe(2));
     expect(axiosMock.history.put[1].url).toBe("/api/coursestaff/joinCourse");
-    expect(axiosMock.history.put[1].params).toEqual({ courseStaffId: 2 });
+    expect(axiosMock.history.put[1].params).toEqual({ courseStaffId: 32 });
     await waitFor(() => {
       expect(mockToast).toBeCalledWith(
         "Successfully invited staff member to Organization",
@@ -195,7 +195,7 @@ describe("HomePageLoggedIn tests", () => {
     fireEvent.click(studentJoinButton);
     await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
     expect(axiosMock.history.put[0].url).toBe("/api/rosterstudents/joinCourse");
-    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 2 });
+    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 22 });
     await waitFor(() => {
       expect(mockToast).toBeCalledWith(
         "Course has not been set up. Please ask your instructor for help.",
@@ -228,9 +228,109 @@ describe("HomePageLoggedIn tests", () => {
     fireEvent.click(studentJoinButton);
     await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
     expect(axiosMock.history.put[0].url).toBe("/api/rosterstudents/joinCourse");
-    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 2 });
+    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 22 });
     await waitFor(() => {
       expect(mockToast).toBeCalledWith("Request failed with status code 404");
     });
+  });
+
+  test("Loading message renders, student", async () => {
+    setupUserOnly();
+    axiosMock.onGet("/api/courses/staffCourses").reply(200, [
+      ...coursesFixtures.oneStaffMemberWithEachStatus,
+      {
+        id: 7,
+        staffId: 36,
+        courseName: "CMPSC 130B",
+        term: "Spring 2026",
+        school: "UCSB",
+        orgName: "ucsb-cs130b-s26",
+        studentStatus: "JOINCOURSE",
+      },
+    ]);
+    axiosMock.onGet("/api/courses/list").reply(200, [
+      ...coursesFixtures.oneRosterStudentWithEachStatus,
+      {
+        id: 7,
+        rosterStudentId: 26,
+        courseName: "CMPSC 130B",
+        term: "Spring 2026",
+        school: "UCSB",
+        orgName: "ucsb-cs130b-s26",
+        studentStatus: "JOINCOURSE",
+      },
+    ]);
+    axiosMock
+      .onPut("/api/rosterstudents/joinCourse")
+      .withDelayInMs(5000)
+      .reply(202, "Successfully invited student to Organization");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await screen.findAllByText("Join Course");
+    const studentJoinButton = screen.getByTestId(
+      "CoursesTable-cell-row-1-col-studentStatus-button",
+    );
+    fireEvent.click(studentJoinButton);
+    await screen.findByText("Joining...");
+    expect(
+      screen.getByTestId("CoursesTable-cell-row-6-col-studentStatus-button"),
+    ).toHaveTextContent("Join Course");
+  });
+
+  test("Loading message renders, staff", async () => {
+    setupUserOnly();
+    axiosMock.onGet("/api/courses/staffCourses").reply(200, [
+      ...coursesFixtures.oneStaffMemberWithEachStatus,
+      {
+        id: 7,
+        staffId: 36,
+        courseName: "CMPSC 130B",
+        term: "Spring 2026",
+        school: "UCSB",
+        orgName: "ucsb-cs130b-s26",
+        studentStatus: "JOINCOURSE",
+      },
+    ]);
+    axiosMock.onGet("/api/courses/list").reply(200, [
+      ...coursesFixtures.oneRosterStudentWithEachStatus,
+      {
+        id: 7,
+        rosterStudentId: 26,
+        courseName: "CMPSC 130B",
+        term: "Spring 2026",
+        school: "UCSB",
+        orgName: "ucsb-cs130b-s26",
+        studentStatus: "JOINCOURSE",
+      },
+    ]);
+    axiosMock
+      .onPut("/api/coursestaff/joinCourse")
+      .withDelayInMs(5000)
+      .reply(202, "Successfully invited staff member to Organization");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await screen.findAllByText("Join Course");
+    const studentJoinButton = screen.getByTestId(
+      "StaffCoursesTable-cell-row-1-col-studentStatus-button",
+    );
+    fireEvent.click(studentJoinButton);
+    await screen.findByText("Joining...");
+    expect(
+      screen.getByTestId(
+        "StaffCoursesTable-cell-row-6-col-studentStatus-button",
+      ),
+    ).toHaveTextContent("Join Course");
   });
 });

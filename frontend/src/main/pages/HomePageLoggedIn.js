@@ -75,6 +75,20 @@ export default function HomePageLoggedIn() {
     staffJoinMutation.mutate(cell);
   };
 
+  const isStudentJoining = (cell) => {
+    return (
+      studentJoinMutation.isLoading &&
+      studentJoinMutation.variables.row.index === cell.row.index
+    );
+  };
+
+  const isStaffJoining = (cell) => {
+    return (
+      staffJoinMutation.isLoading &&
+      staffJoinMutation.variables.row.index === cell.row.index
+    );
+  };
+
   return (
     <BasicLayout>
       <div className="pt-2">
@@ -83,12 +97,14 @@ export default function HomePageLoggedIn() {
           courses={courses}
           testId={"CoursesTable"}
           joinCallback={joinStudentCourseCallback}
+          isLoading={isStudentJoining}
         />
         <h1>Your Staff Courses</h1>
         <CoursesTable
           courses={staffCourses}
           testId={"StaffCoursesTable"}
           joinCallback={joinStaffCourseCallback}
+          isLoading={isStaffJoining}
         />
       </div>
     </BasicLayout>

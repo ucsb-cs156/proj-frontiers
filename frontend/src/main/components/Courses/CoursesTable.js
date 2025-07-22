@@ -1,5 +1,5 @@
 import OurTable from "main/components/OurTable";
-import { Button } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 
 const columns = [
   {
@@ -20,7 +20,12 @@ const columns = [
   },
 ];
 
-export default function CoursesTable({ courses, testId, joinCallback }) {
+export default function CoursesTable({
+  courses,
+  testId,
+  joinCallback,
+  isLoading,
+}) {
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/orgs/${organizationName}/invitation`;
@@ -36,13 +41,22 @@ export default function CoursesTable({ courses, testId, joinCallback }) {
         if (cell.value === "PENDING") {
           return <span style={{ color: "orange" }}>Pending</span>;
         } else if (cell.value === "JOINCOURSE") {
+          const cellIsLoading = isLoading(cell);
           return (
             <Button
               variant={"primary"}
               onClick={() => joinCallback(cell)}
               data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+              disabled={cellIsLoading}
             >
-              Join Course
+              {cellIsLoading ? (
+                <>
+                  <Spinner as="span" animation="grow" size="sm" role="status" />
+                  Joining...
+                </>
+              ) : (
+                <>Join Course</>
+              )}
             </Button>
           );
         } else if (cell.value === "INVITED") {

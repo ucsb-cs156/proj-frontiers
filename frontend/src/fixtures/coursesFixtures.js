@@ -90,7 +90,7 @@ const coursesFixtures = {
   oneRosterStudentWithEachStatus: [
     {
       id: 1,
-      rosterStudentId: 1,
+      rosterStudentId: 21,
       courseName: "CMPSC 156",
       term: "Spring 2025",
       school: "UCSB",
@@ -99,7 +99,7 @@ const coursesFixtures = {
     },
     {
       id: 2,
-      rosterStudentId: 2,
+      rosterStudentId: 22,
       courseName: "CPTS 489",
       term: "Fall 2020",
       school: "WSU",
@@ -108,7 +108,7 @@ const coursesFixtures = {
     },
     {
       id: 3,
-      rosterStudentId: 3,
+      rosterStudentId: 23,
       courseName: "CMPSC 156",
       term: "Fall 2025",
       school: "UCSB",
@@ -117,7 +117,7 @@ const coursesFixtures = {
     },
     {
       id: 4,
-      rosterStudentId: 4,
+      rosterStudentId: 24,
       courseName: "CMPSC 156",
       term: "Spring 2026",
       school: "UCSB",
@@ -126,7 +126,7 @@ const coursesFixtures = {
     },
     {
       id: 5,
-      rosterStudentId: 5,
+      rosterStudentId: 25,
       courseName: "CMPSC 148",
       term: "Spring 2026",
       school: "UCSB",
@@ -135,7 +135,7 @@ const coursesFixtures = {
     },
     {
       id: 6,
-      rosterStudentId: 6,
+      rosterStudentId: 26,
       courseName: "CMPSC 148",
       term: "Spring 2026",
       school: "UCSB",
@@ -146,7 +146,7 @@ const coursesFixtures = {
   oneStaffMemberWithEachStatus: [
     {
       id: 1,
-      staffId: 1,
+      staffId: 31,
       courseName: "CMPSC 156",
       term: "Spring 2025",
       school: "UCSB",
@@ -155,7 +155,7 @@ const coursesFixtures = {
     },
     {
       id: 2,
-      staffId: 2,
+      staffId: 32,
       courseName: "CPTS 489",
       term: "Fall 2020",
       school: "WSU",
@@ -164,7 +164,7 @@ const coursesFixtures = {
     },
     {
       id: 3,
-      staffId: 3,
+      staffId: 33,
       courseName: "CMPSC 156",
       term: "Fall 2025",
       school: "UCSB",
@@ -173,7 +173,7 @@ const coursesFixtures = {
     },
     {
       id: 4,
-      staffId: 4,
+      staffId: 34,
       courseName: "CMPSC 156",
       term: "Spring 2026",
       school: "UCSB",
@@ -182,7 +182,7 @@ const coursesFixtures = {
     },
     {
       id: 5,
-      staffId: 5,
+      staffId: 35,
       courseName: "CMPSC 148",
       term: "Spring 2026",
       school: "UCSB",
@@ -191,7 +191,7 @@ const coursesFixtures = {
     },
     {
       id: 6,
-      staffId: 6,
+      staffId: 36,
       courseName: "CMPSC 148",
       term: "Spring 2026",
       school: "UCSB",

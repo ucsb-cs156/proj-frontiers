@@ -1,9 +1,16 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  within,
+} from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import CoursesTable from "main/components/Courses/CoursesTable";
 import { BrowserRouter } from "react-router-dom";
 
 const joinCallback = jest.fn();
+const isLoading = jest.fn(() => false);
 
 describe("CoursesTable tests", () => {
   test("Has the expected column headers and content", () => {
@@ -13,6 +20,7 @@ describe("CoursesTable tests", () => {
           courses={coursesFixtures.oneCourseWithEachStatus}
           testId={"CoursesTable"}
           joinCallback={joinCallback}
+          isLoading={isLoading}
         />
       </BrowserRouter>,
     );
@@ -77,39 +85,57 @@ describe("CoursesTable tests", () => {
     expect(joinCallback).not.toHaveBeenCalled();
   });
 
-  //tests for button 'Join Course'
-  test("Does not call joinCallback in default case for button 'Join Course'", async () => {
+  test("the loading render", async () => {
+    const loadingMocks = [
+      {
+        id: 1,
+        courseName: "CMPSC 156",
+        term: "Spring 2025",
+        school: "UCSB",
+        orgName: "ucsb-cs156-s25",
+        studentStatus: "JOINCOURSE",
+      },
+      {
+        id: 2,
+        courseName: "CPTS 489",
+        term: "Fall 2020",
+        school: "WSU",
+        orgName: "wsu-cpts489-f20",
+        studentStatus: "JOINCOURSE",
+      },
+    ];
+
+    const determineLoading = (cell) => {
+      return cell.row.index === 1;
+    };
     render(
       <BrowserRouter>
         <CoursesTable
-          courses={coursesFixtures.oneCourseWithEachStatus}
+          courses={loadingMocks}
           testId={"CoursesTable"}
           joinCallback={joinCallback}
+          isLoading={determineLoading}
         />
       </BrowserRouter>,
     );
 
-    const button = screen.getByTestId(
-      "CoursesTable-cell-row-1-col-studentStatus-button",
-    );
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("Join Course");
+    const button = screen.getByText("Join Course");
     expect(button).toHaveAttribute("class", "btn btn-primary");
-
-    fireEvent.click(button);
-    await waitFor(() => {
-      expect(joinCallback).toHaveBeenCalled();
-    });
+    const loadingButton = screen.getByText("Joining...");
+    expect(within(loadingButton).getByRole("status")).toHaveClass(
+      "spinner-grow",
+      "spinner-grow-sm",
+    );
   });
 
-  test("Calls joinCallback when the button is pressed on storybook for button 'Join Course'", async () => {
+  test("Calls joinCallback when the button is pressed", async () => {
     render(
       <BrowserRouter>
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
-          storybook={true}
           testId={"CoursesTable"}
           joinCallback={joinCallback}
+          isLoading={isLoading}
         />
       </BrowserRouter>,
     );
@@ -131,9 +157,9 @@ describe("CoursesTable tests", () => {
       <BrowserRouter>
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
-          storybook={false}
           testId={"CoursesTable"}
           joinCallback={joinCallback}
+          isLoading={isLoading}
         />
       </BrowserRouter>,
     );
@@ -157,6 +183,7 @@ describe("CoursesTable tests", () => {
           courses={coursesFixtures.oneCourseWithEachStatus}
           testId={"CoursesTable"}
           joinCallback={joinCallback}
+          isLoading={isLoading}
         />
       </BrowserRouter>,
     );
@@ -177,9 +204,9 @@ describe("CoursesTable tests", () => {
       <BrowserRouter>
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
-          storybook={true}
           testId={"CoursesTable"}
           joinCallback={joinCallback}
+          isLoading={isLoading}
         />
       </BrowserRouter>,
     );
@@ -199,9 +226,9 @@ describe("CoursesTable tests", () => {
       <BrowserRouter>
         <CoursesTable
           courses={coursesFixtures.oneCourseWithEachStatus}
-          storybook={false}
           testId={"CoursesTable"}
           joinCallback={joinCallback}
+          isLoading={isLoading}
         />
       </BrowserRouter>,
     );
