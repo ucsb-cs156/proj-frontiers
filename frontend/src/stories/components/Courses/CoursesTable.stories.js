@@ -17,11 +17,16 @@ export const ManyCourses = Template.bind({});
 
 Empty.args = {
   courses: [],
+  joinCallback: () => {
+    "Join button pressed!";
+  },
 };
 Empty.parameters = {};
 
 ManyCourses.args = {
   courses: coursesFixtures.oneCourseWithEachStatus,
-  storybook: true,
+  joinCallback: () => {
+    "Join button pressed!";
+  },
 };
 ManyCourses.parameters = {};
