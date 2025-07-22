@@ -13,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import edu.ucsb.cs156.frontiers.errors.CourseNotAuthorized;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -20,12 +21,14 @@ import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import java.util.Collection;
 import java.util.Map;
 
+
+
 /**
  * This is an abstract class that provides common functionality for all API controllers.
  */
 
-<span class="fc" id="L27">@Slf4j</span>
-<span class="fc" id="L28">public abstract class ApiController {</span>
+<span class="fc" id="L30">@Slf4j</span>
+<span class="fc" id="L31">public abstract class ApiController {</span>
   @Autowired
   private CurrentUserService currentUserService;
 
@@ -36,7 +39,7 @@ import java.util.Map;
    * @return the current user
    */
   protected CurrentUser getCurrentUser() {
-<span class="fc" id="L39">    return currentUserService.getCurrentUser();</span>
+<span class="fc" id="L42">    return currentUserService.getCurrentUser();</span>
   }
 
 /**
@@ -47,13 +50,13 @@ import java.util.Map;
   protected boolean doesCurrentUserHaveRole(
       String roleToCheck
     ) {  
-<span class="fc" id="L50">    CurrentUser currentUser = getCurrentUser();    </span>
-<span class="fc" id="L51">    Collection&lt;? extends GrantedAuthority&gt; authorities = currentUser.getRoles();</span>
+<span class="fc" id="L53">    CurrentUser currentUser = getCurrentUser();    </span>
+<span class="fc" id="L54">    Collection&lt;? extends GrantedAuthority&gt; authorities = currentUser.getRoles();</span>
 
-<span class="fc" id="L53">    Collection&lt;? extends GrantedAuthority&gt; extendedAuthorities = roleHierarchy.getReachableGrantedAuthorities(authorities);</span>
+<span class="fc" id="L56">    Collection&lt;? extends GrantedAuthority&gt; extendedAuthorities = roleHierarchy.getReachableGrantedAuthorities(authorities);</span>
 
-<span class="fc" id="L55">    return extendedAuthorities.stream()</span>
-<span class="fc" id="L56">         .anyMatch(role -&gt; role.getAuthority().equals(roleToCheck));</span>
+<span class="fc" id="L58">    return extendedAuthorities.stream()</span>
+<span class="fc" id="L59">         .anyMatch(role -&gt; role.getAuthority().equals(roleToCheck));</span>
   }
 
   /**
@@ -61,7 +64,7 @@ import java.util.Map;
    * @return true if the current user is an admin, false otherwise
    */
   protected boolean isCurrentUserAdmin() {  
-<span class="fc" id="L64">    return doesCurrentUserHaveRole(&quot;ROLE_ADMIN&quot;);</span>
+<span class="fc" id="L67">    return doesCurrentUserHaveRole(&quot;ROLE_ADMIN&quot;);</span>
   }
 
 
@@ -71,7 +74,7 @@ import java.util.Map;
    * @return a map with the message
    */
   protected Object genericMessage(String message) {
-<span class="fc" id="L74">    return Map.of(&quot;message&quot;, message);</span>
+<span class="fc" id="L77">    return Map.of(&quot;message&quot;, message);</span>
   }
 
   /**
@@ -82,9 +85,9 @@ import java.util.Map;
   @ExceptionHandler({ EntityNotFoundException.class })
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public Object handleEntityNotFoundException(Throwable e) {
-<span class="fc" id="L85">    return Map.of(</span>
-<span class="fc" id="L86">      &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L87">      &quot;message&quot;, e.getMessage()</span>
+<span class="fc" id="L88">    return Map.of(</span>
+<span class="fc" id="L89">      &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L90">      &quot;message&quot;, e.getMessage()</span>
     );
   }
 
@@ -96,9 +99,9 @@ import java.util.Map;
   @ExceptionHandler({ NoLinkedOrganizationException.class })
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleNoLinkedOrgException(Throwable e) {
-<span class="fc" id="L99">    return Map.of(</span>
-<span class="fc" id="L100">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L101">            &quot;message&quot;, e.getMessage()</span>
+<span class="fc" id="L102">    return Map.of(</span>
+<span class="fc" id="L103">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L104">            &quot;message&quot;, e.getMessage()</span>
     );
   }
 
@@ -109,8 +112,8 @@ import java.util.Map;
    */
     @ExceptionHandler(UnsupportedOperationException.class)
     public ResponseEntity&lt;Map&lt;String, String&gt;&gt; handleUnsupportedOperation(UnsupportedOperationException ex) {
-<span class="fc" id="L112">        return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
-<span class="fc" id="L113">                .body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
+<span class="fc" id="L115">        return ResponseEntity.status(HttpStatus.FORBIDDEN)</span>
+<span class="fc" id="L116">                .body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
     }
 
   /**
@@ -121,9 +124,23 @@ import java.util.Map;
   @ExceptionHandler({ IllegalArgumentException.class })
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleIllegalArgument(Throwable e) {
-<span class="fc" id="L124">    return Map.of(</span>
-<span class="fc" id="L125">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L126">            &quot;message&quot;, e.getMessage()</span>
+<span class="fc" id="L127">    return Map.of(</span>
+<span class="fc" id="L128">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L129">            &quot;message&quot;, e.getMessage()</span>
+    );
+  }
+
+  /**
+   * This method handles the NoLinkedOrganizationException.
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({ CourseNotAuthorized.class })
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public Object handleCourseNotAuthorized(Throwable e) {
+<span class="fc" id="L141">    return Map.of(</span>
+<span class="fc" id="L142">            &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L143">            &quot;message&quot;, e.getMessage()</span>
     );
   }
 }
