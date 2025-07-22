@@ -1,5 +1,4 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-frontiers,edu.ucsb.cs156.frontiers.errors,CourseNotAuthorized,0,12,0,0,0,2,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.errors,NoLinkedOrganizationException,0,5,0,0,0,2,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.errors,EntityNotFoundException,0,17,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.errors,InvalidInstallationTypeException,0,5,0,0,0,2,0,1,0,1
@@ -10,7 +9,6 @@ frontiers,edu.ucsb.cs156.frontiers.services.jobs,JobService,0,73,0,2,0,20,0,6,0,
 frontiers,edu.ucsb.cs156.frontiers.services.jobs,JobContextFactory,0,13,0,0,0,4,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.services,UpdateUserService,0,124,0,10,0,32,0,11,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,0,7,0,4
-frontiers,edu.ucsb.cs156.frontiers.services,GitHubGraphQLService,82,4,0,0,20,1,3,1,3,1
 frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,74,0,2,0,15,0,5,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,JwtService,0,152,0,4,0,35,0,7,0,5
@@ -33,11 +31,10 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.InsertStatus,0,15,0,0,0,2,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,362,0,12,0,91,0,22,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.InstructorCourseView,0,59,0,4,0,11,0,4,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,97,0,4,0,16,0,7,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,65,0,6,0,13,0,6,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffController,0,198,0,24,0,38,0,20,0,8
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.UpsertResponse,0,9,0,0,0,1,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,ApiController,0,85,0,0,0,24,0,12,0,12
+frontiers,edu.ucsb.cs156.frontiers.controllers,ApiController,0,76,0,0,0,21,0,11,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,UsersController,0,7,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController.AdminDTO,0,18,0,0,0,5,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,264,0,36,0,57,0,21,0,3

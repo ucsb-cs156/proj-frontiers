@@ -140,7 +140,7 @@ public class OrganizationMemberService {
 <span class="fc" id="L140">            JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
 <span class="fc bfc" id="L141" title="All 2 branches covered.">            if(responseJson.get(&quot;role&quot;).asText().equalsIgnoreCase(&quot;admin&quot;)){</span>
 <span class="fc" id="L142">                return OrgStatus.OWNER;</span>
-<span class="fc bfc" id="L143" title="All 2 branches covered.">            }else if (responseJson.get(&quot;role&quot;).asText().equalsIgnoreCase(&quot;direct_member&quot;)){</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            }else if (responseJson.get(&quot;role&quot;).asText().equalsIgnoreCase(&quot;member&quot;)){</span>
 <span class="fc" id="L144">                return OrgStatus.MEMBER;</span>
             }else{
 <span class="fc" id="L146">                log.warn(&quot;Unexpected role {} used in course {}&quot;, responseJson.get(&quot;role&quot;).asText(), course.getCourseName());</span>
