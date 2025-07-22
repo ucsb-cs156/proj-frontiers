@@ -1,11 +1,9 @@
 import CoursesTable from "main/components/Courses/CoursesTable";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import { useBackend } from "main/utils/useBackend";
-import { useCurrentUser } from "main/utils/currentUser";
+import { useBackend, useBackendMutation } from "main/utils/useBackend";
+import { toast } from "react-toastify";
 
 export default function HomePageLoggedIn() {
-  const { data: currentUser } = useCurrentUser();
-
   const {
     data: courses,
     error: _error,
@@ -31,6 +29,52 @@ export default function HomePageLoggedIn() {
     [],
   );
 
+  const onJoinSuccess = (message) => {
+    toast(message);
+  };
+
+  const onJoinFail = (result) => {
+    toast(result.response.data ? result.response.data : result.message);
+  };
+
+  const cellToAxiosParamsStudent = (cell) => {
+    return {
+      url: `/api/rosterstudents/joinCourse`,
+      method: "PUT",
+      params: {
+        rosterStudentId: cell.row.original.rosterStudentId,
+      },
+    };
+  };
+
+  const cellToAxiosParamsStaff = (cell) => ({
+    url: `/api/coursestaff/joinCourse`,
+    method: "PUT",
+    params: {
+      courseStaffId: cell.row.original.staffId,
+    },
+  });
+
+  const studentJoinMutation = useBackendMutation(
+    cellToAxiosParamsStudent,
+    { onSuccess: onJoinSuccess, onError: onJoinFail },
+    [`/api/courses/list`],
+  );
+
+  const staffJoinMutation = useBackendMutation(
+    cellToAxiosParamsStaff,
+    { onSuccess: onJoinSuccess, onError: onJoinFail },
+    [`/api/courses/staffCourses`],
+  );
+
+  const joinStudentCourseCallback = async (cell) => {
+    studentJoinMutation.mutate(cell);
+  };
+
+  const joinStaffCourseCallback = async (cell) => {
+    staffJoinMutation.mutate(cell);
+  };
+
   return (
     <BasicLayout>
       <div className="pt-2">
@@ -38,13 +82,13 @@ export default function HomePageLoggedIn() {
         <CoursesTable
           courses={courses}
           testId={"CoursesTable"}
-          currentUser={currentUser}
+          joinCallback={joinStudentCourseCallback}
         />
         <h1>Your Staff Courses</h1>
         <CoursesTable
           courses={staffCourses}
           testId={"StaffCoursesTable"}
-          currentUser={currentUser}
+          joinCallback={joinStaffCourseCallback}
         />
       </div>
     </BasicLayout>

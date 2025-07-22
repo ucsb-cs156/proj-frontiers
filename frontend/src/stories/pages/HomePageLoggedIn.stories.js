@@ -46,10 +46,22 @@ LoggedInRegularUser.parameters = {
         return HttpResponse.json(systemInfoFixtures.showingNeither);
       }),
       http.get("/api/courses/list", () => {
-        return HttpResponse.json(coursesFixtures.oneCourseWithEachStatus);
+        return HttpResponse.json(
+          coursesFixtures.oneRosterStudentWithEachStatus,
+        );
       }),
       http.get("/api/courses/staffCourses", () => {
-        return HttpResponse.json(coursesFixtures.oneCourseWithEachStatus);
+        return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
+      }),
+      http.get("/api/coursestaff/joinCourse", () => {
+        return HttpResponse.json("Joining course successful", {
+          status: 202,
+        });
+      }),
+      http.get("/api/rosterstudents/joinCourse", () => {
+        return HttpResponse.json("Joining course successful", {
+          status: 202,
+        });
       }),
     ],
   },
@@ -66,10 +78,22 @@ LoggedInAdminUserShowingSwaggerAndH2Console.parameters = {
         return HttpResponse.json(systemInfoFixtures.showingBoth);
       }),
       http.get("/api/courses/list", () => {
-        return HttpResponse.json(coursesFixtures.oneCourseWithEachStatus);
+        return HttpResponse.json(
+          coursesFixtures.oneRosterStudentWithEachStatus,
+        );
       }),
       http.get("/api/courses/staffCourses", () => {
-        return HttpResponse.json(coursesFixtures.oneCourseWithEachStatus);
+        return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
+      }),
+      http.get("/api/coursestaff/joinCourse", () => {
+        return HttpResponse.json("Joining course successful", {
+          status: 202,
+        });
+      }),
+      http.get("/api/rosterstudents/joinCourse", () => {
+        return HttpResponse.json("Joining course successful", {
+          status: 202,
+        });
       }),
     ],
   },

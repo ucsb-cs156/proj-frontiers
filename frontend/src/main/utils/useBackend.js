@@ -55,21 +55,10 @@ export function useBackend(
 // const wrappedParams = async (params) =>
 //   await ( await axios(params)).data;
 
-const reportAxiosError = (error) => {
-  console.error("Axios Error:", error);
-  toast(`Axios Error: ${error}`);
-  return null;
-};
-
 const wrappedParams = async (params) => {
-  try {
-    return await (
-      await axios(params)
-    ).data;
-  } catch (rejectedValue) {
-    reportAxiosError(rejectedValue);
-    throw rejectedValue;
-  }
+  return await (
+    await axios(params)
+  ).data;
 };
 
 export function useBackendMutation(

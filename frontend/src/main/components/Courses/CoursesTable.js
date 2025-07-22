@@ -20,13 +20,7 @@ const columns = [
   },
 ];
 
-export default function CoursesTable({ courses, testId }) {
-  const joinCallback = (_cell) => {
-    // TODO: Implement the join functionality here
-    window.alert(`Join not yet implemented.`);
-    return;
-  };
-
+export default function CoursesTable({ courses, testId, joinCallback }) {
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/${organizationName}/invitation`;
