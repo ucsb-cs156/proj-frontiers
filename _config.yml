@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-schedule-update-job","number":244,"title":"pc - schedule the MembershipAuditJob to run once per day on prod, once every 10 minutes on dev","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/244"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-issue-191","number":245,"title":"pc - add links to course org and course org installation settings","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/245"},{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-schedule-update-job","number":244,"title":"pc - schedule the MembershipAuditJob to run once per day on prod, once every 10 minutes on dev","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/244"}]
