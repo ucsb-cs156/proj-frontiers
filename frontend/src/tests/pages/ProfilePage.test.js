@@ -92,10 +92,10 @@ describe("ProfilePage tests", () => {
       .reply(200, systemInfoFixtures.showingNeither);
     axiosMock
       .onDelete("/api/github/disconnect")
-      .reply(
-        200,
-        "Disconnected from GitHub. You may now log in with a different account.",
-      );
+      .reply(200, {
+        message:
+          "Disconnected from GitHub. You may now log in with a different account.",
+      });
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>

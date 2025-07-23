@@ -11,8 +11,8 @@ import ConfirmationModal from "main/components/Common/ConfirmationModal";
 
 const ProfilePage = () => {
   const currentUser = useCurrentUser();
-  const onSuccess = (message) => {
-    toast(message);
+  const onSuccess = (response) => {
+    toast(response.message);
   };
 
   const disconnectGithub = useBackendMutation(
