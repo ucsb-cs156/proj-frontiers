@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-enableEditButton","number":239,"title":"Enabling the Roster Student Edit Button","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/239"},{"author":{"id":"MDQ6VXNlcjI2MzQ3ODk3","is_bot":false,"login":"Division7","name":"Daniel Jensen"},"headRefName":"dj-addCSVFormToPage","number":238,"title":"Allowing Roster Changes via CSV","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/238"},{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-rosterStudentCreate","number":232,"title":"pc - WIP on creating roster students","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/232"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-rosterStudentCreate","number":232,"title":"pc - WIP on creating roster students","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/232"}]
