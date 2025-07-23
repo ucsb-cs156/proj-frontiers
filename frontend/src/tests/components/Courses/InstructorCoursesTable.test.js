@@ -82,10 +82,21 @@ describe("InstructorCoursesTable tests", () => {
     ).toHaveTextContent("ucsb-cs156-s25");
 
     const row0_already_installed = screen.getByTestId(
-      `${testId}-cell-row-0-col-orgName-cannot-install-already-installed`,
+      `${testId}-cell-row-0-col-orgName-github-link`,
     );
     expect(row0_already_installed).toBeInTheDocument();
     expect(row0_already_installed).toHaveTextContent("ucsb-cs156-s25");
+    expect(row0_already_installed).toHaveAttribute(
+      "href",
+      "https://github.com/ucsb-cs156-s25",
+    );
+
+    const div0 = screen.getByTestId(`${testId}-cell-row-0-col-orgName-div`);
+    expect(div0).toBeInTheDocument();
+    expect(div0).toHaveAttribute(
+      "style",
+      "display: flex; justify-content: space-between; width: 100%;",
+    );
 
     const button3 = screen.getByTestId(
       `${testId}-cell-row-2-col-orgName-button`,
@@ -93,14 +104,12 @@ describe("InstructorCoursesTable tests", () => {
     expect(button3).toBeInTheDocument();
     expect(button3).toHaveTextContent("Install Github App");
     expect(button3).toHaveAttribute("class", "btn btn-primary");
-    expect(button3).toHaveAttribute("data-reason", "instructor-created-course");
 
-    const span4 = screen.getByTestId(
-      `${testId}-cell-row-3-col-orgName-cannot-install-not-authorized`,
+    const noOrgSpan = screen.getByTestId(
+      `${testId}-cell-row-3-col-orgName-no-org`,
     );
-    expect(span4).toBeInTheDocument();
-    // This span should be empty since the course has no orgName
-    expect(span4).toBeEmptyDOMElement();
+    expect(noOrgSpan).toBeInTheDocument();
+    expect(noOrgSpan).toBeEmptyDOMElement();
 
     const firstCourseLink = screen.getByTestId(
       "CoursesTable-cell-row-0-col-courseName-link",
@@ -131,7 +140,6 @@ describe("InstructorCoursesTable tests", () => {
     expect(button3).toBeInTheDocument();
     expect(button3).toHaveTextContent("Install Github App");
     expect(button3).toHaveAttribute("class", "btn btn-primary");
-    expect(button3).toHaveAttribute("data-reason", "admin");
 
     const button4 = screen.getByTestId(
       `${testId}-cell-row-3-col-orgName-button`,
@@ -139,7 +147,6 @@ describe("InstructorCoursesTable tests", () => {
     expect(button4).toBeInTheDocument();
     expect(button4).toHaveTextContent("Install Github App");
     expect(button4).toHaveAttribute("class", "btn btn-primary");
-    expect(button4).toHaveAttribute("data-reason", "admin");
   });
 
   test("Calls window.alert when the button is pressed on storybook", async () => {
@@ -193,6 +200,34 @@ describe("InstructorCoursesTable tests", () => {
     });
 
     expect(window.location.href).toBe("/api/courses/redirect?courseId=3");
+  });
+
+  test("Tests for Github link and icon", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const githubIcon = screen.getByTestId(
+      `CoursesTable-cell-row-0-col-orgName-github-icon`,
+    );
+    expect(githubIcon).toBeInTheDocument();
+    expect(githubIcon).toHaveAttribute("height", "1.5em");
+    expect(githubIcon).toHaveAttribute("width", "1.5em");
+
+    const githubLink = screen.getByTestId(
+      `CoursesTable-cell-row-0-col-orgName-github-settings-link`,
+    );
+    expect(githubLink).toBeInTheDocument();
+    expect(githubLink).toHaveAttribute(
+      "href",
+      "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
+    );
   });
 
   test("Tests that when storybook is false by default all works as expected", async () => {

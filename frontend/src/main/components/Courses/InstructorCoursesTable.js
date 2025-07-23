@@ -1,6 +1,7 @@
 import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Button } from "react-bootstrap";
+import { FaGithub } from "react-icons/fa";
 
 const columns = [
   {
@@ -48,19 +49,19 @@ export default function InstructorCoursesTable({
 
   const canInstall = (row) => {
     if ("orgName" in row.values && row.values.orgName) {
-      return { canInstall: false, reason: "already-installed" };
+      return false;
     }
     if (hasRole(currentUser, "ROLE_ADMIN")) {
-      return { canInstall: true, reason: "admin" };
+      return true;
     }
     if (
       hasRole(currentUser, "ROLE_INSTRUCTOR") &&
       row.values.createdByEmail === currentUser.root.user.email
     ) {
-      return { canInstall: true, reason: "instructor-created-course" };
+      return true;
     }
 
-    return { canInstall: false, reason: "not-authorized" };
+    return false;
   };
 
   const columnsWithInstall = [
@@ -70,24 +71,56 @@ export default function InstructorCoursesTable({
       accessor: "orgName",
       Cell: ({ cell }) => {
         const result = canInstall(cell.row);
-        if (result.canInstall) {
+        if (result) {
           return (
             <Button
               variant={"primary"}
               onClick={() => installCallback(cell)}
               data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
-              data-reason={result.reason}
             >
               Install Github App
             </Button>
           );
-        } else {
+        } else if (!cell.value) {
           return (
             <span
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-cannot-install-${result.reason}`}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-no-org`}
+            ></span>
+          );
+        } else {
+          return (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
             >
-              {cell.value}
-            </span>
+              <span>
+                <a
+                  href={`https://github.com/${cell.value}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-github-link`}
+                >
+                  {cell.value}
+                </a>
+              </span>
+              <span>
+                <a
+                  href={`https://github.com/organizations/${cell.value}/settings/installations/${cell.row.original.installationId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
+                >
+                  <FaGithub
+                    size={"1.5em"}
+                    data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
+                  />
+                </a>
+              </span>
+            </div>
           );
         }
       },
