@@ -7,6 +7,9 @@ import {
   onDeleteSuccess,
 } from "main/utils/rosterStudentUtils";
 import { hasRole } from "main/utils/currentUser";
+import Modal from "react-bootstrap/Modal";
+import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
+import { toast } from "react-toastify";
 
 export default function RosterStudentTable({
   students,
@@ -14,13 +17,8 @@ export default function RosterStudentTable({
   courseId,
   testIdPrefix = "RosterStudentTable",
 }) {
-  const editCallback = (cell) => {
-    const url = `/rosterstudents/edit/${cell.row.values.id}`;
-    window.alert(
-      "Edit not implemented yet, but would have navigated to: " + url,
-    );
-    // Future implementation: navigate(url);
-  };
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [editStudent, setEditStudent] = React.useState(null);
 
   // Stryker disable all : hard to test for query caching
   const deleteMutation = useBackendMutation(
@@ -30,9 +28,44 @@ export default function RosterStudentTable({
   );
   // Stryker restore all
 
+  const cellToAxiosParamsEdit = (formData) => ({
+    url: `/api/rosterstudents/update`,
+    method: "PUT",
+    params: {
+      studentId: formData.studentId,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      id: formData.id,
+    },
+  });
+
+  const hideModal = () => {
+    setShowEditModal(false);
+  };
+
+  const onEditSuccess = () => {
+    toast("Student updated successfully.");
+    hideModal();
+  };
+
   // Stryker disable next-line all
   const deleteCallback = async (cell) => {
     deleteMutation.mutate(cell);
+  };
+
+  const editMutation = useBackendMutation(
+    cellToAxiosParamsEdit,
+    { onSuccess: onEditSuccess },
+    [`/api/rosterstudents/course/${courseId}`],
+  );
+
+  const editCallback = (cell) => {
+    setEditStudent(cell.row.values);
+    setShowEditModal(true);
+  };
+
+  const submitEditForm = (data) => {
+    editMutation.mutate(data);
   };
 
   const columns = [
@@ -60,7 +93,7 @@ export default function RosterStudentTable({
     },
   ];
 
-  if (hasRole(currentUser, "ROLE_ADMIN")) {
+  if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
       ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
@@ -69,6 +102,22 @@ export default function RosterStudentTable({
 
   return (
     <>
+      <Modal show={showEditModal} onHide={hideModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Student</Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          className={"pb-3"}
+          data-testid={`${testIdPrefix}-modal-body`}
+        >
+          <RosterStudentForm
+            initialContents={editStudent}
+            submitAction={submitEditForm}
+            buttonLabel={"Update"}
+            cancelDisabled={true}
+          />
+        </Modal.Body>
+      </Modal>
       <OurTable data={students} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}
