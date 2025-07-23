@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
@@ -16,7 +17,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import edu.ucsb.cs156.frontiers.errors.CourseNotAuthorized;
-
 
 @Tag(name = &quot;GithubGraphQL&quot;)
 @RequestMapping(&quot;/api/github/graphql/&quot;)
@@ -36,9 +36,11 @@ public class GithubGraphQLController extends ApiController {
 
     /**
      * Return default branch name for a given repository.
-     * @param courseId the id of the course whose installation is being used for credentails
-     * @param owner the owner of the repository
-     * @param repo the name of the repository
+     * 
+     * @param courseId the id of the course whose installation is being used for
+     *                 credentails
+     * @param owner    the owner of the repository
+     * @param repo     the name of the repository
      * @return the default branch name
      */
 
@@ -46,29 +48,69 @@ public class GithubGraphQLController extends ApiController {
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
     @GetMapping(&quot;defaultBranchName&quot;)
     public String getDefaultBranchName(
-       @Parameter Long courseId,
-       @Parameter String owner,
-       @Parameter String repo) throws Exception {
-<span class="fc" id="L52">        log.info(&quot;getDefaultBranchName called with courseId: {}, owner: {}, repo: {}&quot;, courseId, owner, repo);</span>
-<span class="fc" id="L53">        Course course = courseRepository.findById(courseId)</span>
-<span class="fc" id="L54">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+            @Parameter Long courseId,
+            @Parameter String owner,
+            @Parameter String repo) throws Exception {
+<span class="fc" id="L54">        log.info(&quot;getDefaultBranchName called with courseId: {}, owner: {}, repo: {}&quot;, courseId, owner, repo);</span>
+<span class="fc" id="L55">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L56">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L56">        log.info(&quot;Found course: {}&quot;, course);</span>
+<span class="fc" id="L58">        log.info(&quot;Found course: {}&quot;, course);</span>
 
-<span class="fc bfc" id="L58" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
-<span class="fc" id="L59">            throw new CourseNotAuthorized(courseId);</span>
+<span class="fc bfc" id="L60" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L61">            throw new CourseNotAuthorized(courseId);</span>
         }
-  
-<span class="fc" id="L62">        log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
 
-<span class="fc" id="L64">        String result = this.githubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
+<span class="fc" id="L64">        log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
 
-<span class="fc" id="L66">        log.info(&quot;Result from getDefaultBranchName: {}&quot;, result);</span>
-        
-<span class="fc" id="L68">        return result;</span>
+<span class="fc" id="L66">        String result = this.githubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
+
+<span class="fc" id="L68">        log.info(&quot;Result from getDefaultBranchName: {}&quot;, result);</span>
+
+<span class="fc" id="L70">        return result;</span>
 
     }
 
+    /**
+     * Return default branch name for a given repository.
+     * 
+     * @param courseId the id of the course whose installation is being used for
+     *                 credentails
+     * @param owner    the owner of the repository
+     * @param repo     the name of the repository
+     * @return the default branch name
+     */
+
+    @Operation(summary = &quot;Get commits&quot;)
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+    @GetMapping(&quot;commits&quot;)
+    public String getCommits(
+            @Parameter Long courseId,
+            @Parameter String owner,
+            @Parameter String repo,
+            @Parameter String branch,
+            @Parameter Integer first,
+            @RequestParam(name = &quot;after&quot;, required = false) @Parameter String after) throws Exception {
+<span class="fc" id="L94">        log.info(&quot;getCommits called with courseId: {}, owner: {}, repo: {}, branch: {}, first: {}, after: {} &quot;,</span>
+                courseId, owner, repo, branch, first, after);
+<span class="fc" id="L96">        Course course = courseRepository.findById(courseId)</span>
+<span class="fc" id="L97">                .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L99">        log.info(&quot;Found course: {}&quot;, course);</span>
+
+<span class="fc bfc" id="L101" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc" id="L102">            throw new CourseNotAuthorized(courseId);</span>
+        }
+
+<span class="fc" id="L105">        log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
+
+<span class="fc" id="L107">        String result = this.githubGraphQLService.getCommits(course, owner, repo, branch, first, after);</span>
+
+<span class="fc" id="L109">        log.info(&quot;Result from getCommits: {}&quot;, result);</span>
+
+<span class="fc" id="L111">        return result;</span>
+
+    }
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -2,69 +2,140 @@
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Map;
 
+import org.springframework.graphql.GraphQlResponse;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
-import org.springframework.graphql.client.HttpSyncGraphQlClient.Builder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-<span class="fc" id="L19">@Slf4j</span>
+<span class="fc" id="L21">@Slf4j</span>
 public class GithubGraphQLService {
 
-    private final HttpSyncGraphQlClient graphQlClient;
+        private final HttpSyncGraphQlClient graphQlClient;
 
-    private final JwtService jwtService;
+        private final JwtService jwtService;
 
-    public GithubGraphQLService(
-            HttpSyncGraphQlClient graphQlClient,
-<span class="fc" id="L28">            JwtService jwtService) {</span>
-<span class="fc" id="L29">        this.jwtService = jwtService;</span>
-<span class="fc" id="L30">        this.graphQlClient = graphQlClient;</span>
-<span class="fc" id="L31">    }</span>
+        public GithubGraphQLService(
+                        HttpSyncGraphQlClient graphQlClient,
+<span class="fc" id="L30">                        JwtService jwtService) {</span>
+<span class="fc" id="L31">                this.jwtService = jwtService;</span>
+<span class="fc" id="L32">                this.graphQlClient = graphQlClient;</span>
+<span class="fc" id="L33">        }</span>
 
-    /**
-     * Retrieves the name of the default branch for a given GitHub repository.
-     *
-     * @param owner The owner (username or organization) of the repository.
-     * @param repo  The name of the repository.
-     * @return A Mono emitting the default branch name, or an empty Mono if not
-     *         found.
-     */
-    public String getDefaultBranchName(Course course, String owner, String repo) throws JsonProcessingException,
-            NoSuchAlgorithmException, InvalidKeySpecException, NoLinkedOrganizationException {
-<span class="fc" id="L43">        log.info(&quot;getDefaultBranchName called with course.getId(): {} owner: {}, repo: {}&quot;, course.getId(), owner,</span>
-                repo);
-<span class="fc" id="L45">        String githubToken = jwtService.getInstallationToken(course);</span>
+        /**
+         * Retrieves the name of the default branch for a given GitHub repository.
+         *
+         * @param owner The owner (username or organization) of the repository.
+         * @param repo  The name of the repository.
+         * @return A Mono emitting the default branch name, or an empty Mono if not
+         *         found.
+         */
+        public String getDefaultBranchName(Course course, String owner, String repo) throws JsonProcessingException,
+                        NoSuchAlgorithmException, InvalidKeySpecException, NoLinkedOrganizationException {
+<span class="fc" id="L45">                log.info(&quot;getDefaultBranchName called with course.getId(): {} owner: {}, repo: {}&quot;, course.getId(),</span>
+                                owner,
+                                repo);
+<span class="fc" id="L48">                String githubToken = jwtService.getInstallationToken(course);</span>
 
-<span class="fc" id="L47">        log.info(&quot;githubToken: {}&quot;, githubToken);</span>
+<span class="fc" id="L50">                log.info(&quot;githubToken: {}&quot;, githubToken);</span>
 
-<span class="fc" id="L49">        String query = &quot;&quot;&quot;</span>
-                query getDefaultBranch($owner: String!, $repo: String!) {
-                  repository(owner: $owner, name: $repo) {
-                    defaultBranchRef {
-                      name
+<span class="fc" id="L52">                String query = &quot;&quot;&quot;</span>
+                                query getDefaultBranch($owner: String!, $repo: String!) {
+                                  repository(owner: $owner, name: $repo) {
+                                    defaultBranchRef {
+                                      name
+                                    }
+                                  }
+                                }
+                                &quot;&quot;&quot;;
+
+<span class="fc" id="L62">                return graphQlClient.mutate()</span>
+<span class="fc" id="L63">                                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
+<span class="fc" id="L64">                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="fc" id="L65">                                .build()</span>
+<span class="fc" id="L66">                                .document(query)</span>
+<span class="fc" id="L67">                                .variable(&quot;owner&quot;, owner)</span>
+<span class="fc" id="L68">                                .variable(&quot;repo&quot;, repo)</span>
+<span class="fc" id="L69">                                .retrieveSync(&quot;repository.defaultBranchRef.name&quot;)</span>
+<span class="fc" id="L70">                                .toEntity(String.class);</span>
+        }
+
+    public String getCommits(Course course, String owner, String repo, String branch, int first, String after)
+            throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException,
+            NoLinkedOrganizationException {
+<span class="fc" id="L76">        log.info(&quot;getCommits called with course.getId(): {} owner: {}, repo: {}, branch: {}, first: {}, after: {}&quot;, course.getId(), owner,</span>
+<span class="fc" id="L77">                repo, branch, first, after);</span>
+<span class="fc" id="L78">        String githubToken = jwtService.getInstallationToken(course);</span>
+
+<span class="fc" id="L80">        log.info(&quot;githubToken: {}&quot;, githubToken);</span>
+
+<span class="fc" id="L82">        String query = &quot;&quot;&quot;</span>
+            query GetBranchCommits($owner: String!, $repo: String!, $branch: String!, $first: Int!, $after: String) {
+              repository(owner: $owner, name: $repo) {
+                ref(qualifiedName: $branch) {
+                  target {
+                    ... on Commit {
+                      history(first: $first, after: $after) {
+                        pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                        edges {
+                          node {
+                            oid
+                            url
+                            messageHeadline
+                            committedDate
+                            author {
+                              name
+                              email
+                              user {
+                                login
+                              }
+                            }
+                            committer {
+                              name
+                              email
+                              user {
+                                login
+                              }
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
-                &quot;&quot;&quot;;
+              }
+            }
+            &quot;&quot;&quot;;
 
-<span class="fc" id="L59">        return graphQlClient.mutate()</span>
-<span class="fc" id="L60">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
-<span class="fc" id="L61">                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
-<span class="fc" id="L62">                .build()</span>
-<span class="fc" id="L63">                .document(query)</span>
-<span class="fc" id="L64">                .variable(&quot;owner&quot;, owner)</span>
-<span class="fc" id="L65">                .variable(&quot;repo&quot;, repo)</span>
-<span class="fc" id="L66">                .retrieveSync(&quot;repository.defaultBranchRef.name&quot;)</span>
-<span class="fc" id="L67">                .toEntity(String.class);</span>
+
+<span class="fc" id="L124">         GraphQlResponse response = graphQlClient.mutate()</span>
+<span class="fc" id="L125">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
+<span class="fc" id="L126">                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="fc" id="L127">                .build()</span>
+<span class="fc" id="L128">                .document(query)</span>
+<span class="fc" id="L129">                .variable(&quot;owner&quot;, owner)</span>
+<span class="fc" id="L130">                .variable(&quot;repo&quot;, repo)</span>
+<span class="fc" id="L131">                .variable(&quot;branch&quot;, branch)</span>
+<span class="fc" id="L132">                .variable(&quot;first&quot;, first)</span>
+<span class="fc" id="L133">                .variable(&quot;after&quot;, after)</span>
+<span class="fc" id="L134">                .executeSync();</span>
+
+<span class="fc" id="L136">        Map&lt;String, Object&gt; data = response.getData();</span>
+<span class="fc" id="L137">        String jsonData = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data);</span>
+<span class="fc" id="L138">        return jsonData;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
