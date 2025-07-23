@@ -67,7 +67,6 @@ const ProfilePage = () => {
         <h2>Advanced Features</h2>
         {hasRole(currentUser, "ROLE_GITHUB") && (
           <>
-            {" "}
             <Col md={2}>
               <Button variant={"danger"} onClick={() => setViewModal(true)}>
                 Disconnect GitHub
