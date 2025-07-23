@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useBackend } from "main/utils/useBackend";
+import { useBackend, useBackendMutation } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
@@ -9,6 +9,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
 import { Button, Card, Col, Row, Tab, Tabs } from "react-bootstrap";
+import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
+import { toast } from "react-toastify";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -55,6 +57,33 @@ export default function InstructorCourseShowPage() {
     }
   }, [getCourseFailed, navigate]);
 
+  const objectToAxiosParamsCSV = (formData) => {
+    const file = new FormData();
+    file.append("file", formData.upload[0]);
+    return {
+      url: `/api/rosterstudents/upload/egrades`,
+      data: file,
+      params: {
+        courseId: courseId,
+      },
+      method: "POST",
+    };
+  };
+
+  const onSuccess = () => {
+    toast("Roster successfully updated.");
+  };
+
+  const rosterCsvMutation = useBackendMutation(
+    objectToAxiosParamsCSV,
+    { onSuccess: onSuccess },
+    [`/api/rosterstudents/course/${courseId}`],
+  );
+
+  const handleCsvSubmit = (formData) => {
+    rosterCsvMutation.mutate(formData);
+  };
+
   const testId = "InstructorCourseShowPage";
   return (
     <BasicLayout>
@@ -86,7 +115,7 @@ export default function InstructorCourseShowPage() {
             <Col>
               <Card>
                 <Card.Body>
-                  Temporary Text For Uploading Roster Students
+                  <RosterStudentCSVUploadForm submitAction={handleCsvSubmit} />
                 </Card.Body>
               </Card>
             </Col>
