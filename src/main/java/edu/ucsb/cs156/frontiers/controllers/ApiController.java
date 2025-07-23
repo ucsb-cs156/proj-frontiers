@@ -1,11 +1,9 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import java.util.Collection;
+import java.util.Map;
 
-import org.checkerframework.checker.units.qual.Current;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -13,12 +11,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import edu.ucsb.cs156.frontiers.errors.CourseNotAuthorized;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * This is an abstract class that provides common functionality for all API controllers.
@@ -75,7 +74,7 @@ public abstract class ApiController {
   }
 
   /**
-   * This method handles the EntityNotFoundException.
+   * This method handles the EntityNotFoundException.  This maps to a 404/Not Found.
    * @param e the exception
    * @return a map with the type and message of the exception
    */
@@ -89,7 +88,7 @@ public abstract class ApiController {
   }
 
   /**
-   * This method handles the NoLinkedOrganizationException.
+   * This method handles the NoLinkedOrganizationException.  This maps to a 400/Bad Request.
    * @param e the exception
    * @return a map with the type and message of the exception
    */
@@ -103,7 +102,7 @@ public abstract class ApiController {
   }
 
   /**
-   * This method handles the UnsupportedOperationException.
+   * This method handles the UnsupportedOperationException.  This maps to a 403/Forbidden.
    * @param e the exception
    * @return a map with the type and message of the exception
    */
@@ -114,13 +113,27 @@ public abstract class ApiController {
     }
 
   /**
-   * This method handles the NoLinkedOrganizationException.
+   * This method handles the IllegalArgumentException.  This maps to a 400/Bad Request.
    * @param e the exception
    * @return a map with the type and message of the exception
    */
   @ExceptionHandler({ IllegalArgumentException.class })
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleIllegalArgument(Throwable e) {
+    return Map.of(
+            "type", e.getClass().getSimpleName(),
+            "message", e.getMessage()
+    );
+  }
+
+  /**
+   * This method handles the CourseNotAuthorized exception.  It maps to a 403/Forbidden.
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({ CourseNotAuthorized.class })
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public Object handleCourseNotAuthorized(Throwable e) {
     return Map.of(
             "type", e.getClass().getSimpleName(),
             "message", e.getMessage()
