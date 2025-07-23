@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -156,35 +156,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -215,7 +212,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -238,15 +238,15 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import ConfirmationModal from "main/components/Common/ConfirmationModal";
 &nbsp;
-const ProfilePage = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-  const currentUser = <span class="cstat-no" title="statement not covered" >useCurrentUser();</span>
-  const onSuccess = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(r</span>esponse) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    toast(response.message);</span>
+const ProfilePage = () =&gt; {
+  const currentUser = useCurrentUser();
+  const onSuccess = (response) =&gt; {
+    toast(response.message);
   };
 &nbsp;
-  const disconnectGithub = <span class="cstat-no" title="statement not covered" >useBackendMutation(</span>
-<span class="fstat-no" title="function not covered" >    ()</span> =&gt; {
-<span class="cstat-no" title="statement not covered" >      return {</span>
+  const disconnectGithub = useBackendMutation(
+    () =&gt; {
+      return {
         url: "/api/github/disconnect",
         method: "DELETE",
       };
@@ -255,15 +255,15 @@ const ProfilePage = <span class="cstat-no" title="statement not covered" ><span 
     ["current user"],
   );
 &nbsp;
-  const [viewModal, setViewModal] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
+  const [viewModal, setViewModal] = useState(false);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (!currentUser.loggedIn) {</span>
-<span class="cstat-no" title="statement not covered" >    return &lt;p&gt;Not logged in.&lt;/p&gt;;</span>
+  if (!currentUser.loggedIn) {
+    return &lt;p&gt;Not logged in.&lt;/p&gt;;
   }
 &nbsp;
-  const { email, pictureUrl, fullName } = <span class="cstat-no" title="statement not covered" >currentUser.root.user;</span>
+  const { email, pictureUrl, fullName } = currentUser.root.user;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;BasicLayout&gt;
       &lt;ConfirmationModal
         onYes={disconnectGithub.mutate}
@@ -297,7 +297,7 @@ const ProfilePage = <span class="cstat-no" title="statement not covered" ><span 
         {hasRole(currentUser, "ROLE_GITHUB") &amp;&amp; (
           &lt;&gt;
             &lt;Col md={2}&gt;
-              &lt;Button variant={"danger"} onClick={<span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >setViewModal(true)}</span>&gt;
+              &lt;Button variant={"danger"} onClick={() =&gt; setViewModal(true)}&gt;
                 Disconnect GitHub
               &lt;/Button&gt;
             &lt;/Col&gt;
@@ -316,7 +316,7 @@ export default ProfilePage;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-23T22:21:32.537Z
+                at 2025-07-23T22:31:53.077Z
             </div>
         <script src="../prettify.js"></script>
         <script>

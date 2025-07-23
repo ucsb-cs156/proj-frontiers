@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/22</span>
+                <span class='fraction'>22/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -113,90 +113,90 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">129x</span>
+<span class="cline-any cline-yes">129x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">49x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">221x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">128x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">265x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">249x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useMutation, useQuery, useQueryClient } from "react-query";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >useCurrentUser(</span>) {
-  let rolesList = <span class="cstat-no" title="statement not covered" >["ERROR_GETTING_ROLES"];</span>
-  const queryResults = <span class="cstat-no" title="statement not covered" >useQuery(</span>
+export function useCurrentUser() {
+  let rolesList = ["ERROR_GETTING_ROLES"];
+  const queryResults = useQuery(
     "current user",
-<span class="fstat-no" title="function not covered" >    as</span>ync () =&gt; {
-<span class="cstat-no" title="statement not covered" >      try {</span>
-        const response = <span class="cstat-no" title="statement not covered" >await axios.get("/api/currentUser");</span>
-<span class="cstat-no" title="statement not covered" >        try {</span>
-<span class="cstat-no" title="statement not covered" >          rolesList = response.data.roles.map(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.authority)</span>;</span>
+    async () =&gt; {
+      try {
+        const response = await axios.get("/api/currentUser");
+        try {
+          rolesList = response.data.roles.map((r) =&gt; r.authority);
         } catch (e) {
-<span class="cstat-no" title="statement not covered" >          console.error("Error getting roles: ", e);</span>
+          console.error("Error getting roles: ", e);
         }
-<span class="cstat-no" title="statement not covered" >        response.data = { ...response.data, rolesList: rolesList };</span>
-<span class="cstat-no" title="statement not covered" >        return { loggedIn: true, root: response.data };</span>
+        response.data = { ...response.data, rolesList: rolesList };
+        return { loggedIn: true, root: response.data };
       } catch (e) {
-<span class="cstat-no" title="statement not covered" >        console.error("Error invoking axios.get: ", e);</span>
+        console.error("Error invoking axios.get: ", e);
       }
     },
     {
       initialData: { loggedIn: false, root: null, initialData: true },
     },
   );
-<span class="cstat-no" title="statement not covered" >  return queryResults.data;</span>
+  return queryResults.data;
 }
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >useLogout(</span>) {
-  const queryClient = <span class="cstat-no" title="statement not covered" >useQueryClient();</span>
-  const navigate = <span class="cstat-no" title="statement not covered" >useNavigate();</span>
-  const mutation = <span class="cstat-no" title="statement not covered" >useMutation(<span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    await axios.post("/logout");</span>
-<span class="cstat-no" title="statement not covered" >    await queryClient.resetQueries("current user", { exact: true });</span>
-<span class="cstat-no" title="statement not covered" >    navigate("/");</span>
+export function useLogout() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const mutation = useMutation(async () =&gt; {
+    await axios.post("/logout");
+    await queryClient.resetQueries("current user", { exact: true });
+    navigate("/");
   });
-<span class="cstat-no" title="statement not covered" >  return mutation;</span>
+  return mutation;
 }
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >hasRole(</span>currentUser, role) {
-<span class="cstat-no" title="statement not covered" >  if (currentUser == null) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+export function hasRole(currentUser, role) {
+  if (currentUser == null) return false;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return currentUser.root?.rolesList?.includes(role);</span>
+  return currentUser.root?.rolesList?.includes(role);
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -205,7 +205,7 @@ export function <span class="fstat-no" title="function not covered" >hasRole(</s
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-23T22:21:32.537Z
+                at 2025-07-23T22:31:53.077Z
             </div>
         <script src="../prettify.js"></script>
         <script>
