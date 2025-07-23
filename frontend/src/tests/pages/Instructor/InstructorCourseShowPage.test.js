@@ -16,6 +16,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import userEvent from "@testing-library/user-event";
 
 const mockedNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
@@ -351,10 +352,74 @@ describe("InstructorCourseShowPage tests", () => {
     const changeTabs = screen.getByText("Enrollment");
     fireEvent.click(changeTabs);
     expect(
-      screen.getByText("Temporary Text For Uploading Roster Students"),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText("Temporary Text for Manually Adding Student"),
     ).toBeInTheDocument();
+  });
+
+  test("Successfully makes a call to the backend on submit", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    const file = new File(["there"], "egrades.csv", { type: "text/csv" });
+    setupInstructorUser();
+    const theCourse = {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+
+    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    axiosMock.onPost("/api/rosterstudents/upload/egrades").reply(200);
+
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await screen.findByTestId("RosterStudentCSVUploadForm-upload");
+
+    const alternateUpdateCount =
+      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount;
+    const updateCountStudent = queryClientSpecific.getQueryState(
+      "/api/rosterstudents/course/7",
+    ).dataUpdateCount;
+    const upload = screen.getByTestId("RosterStudentCSVUploadForm-upload");
+    const submitButton = screen.getByTestId(
+      "RosterStudentCSVUploadForm-submit",
+    );
+    await user.upload(upload, file);
+    fireEvent.click(submitButton);
+    await waitFor(() => {
+      expect(axiosMock.history.post[0].params).toEqual({
+        courseId: "7",
+      });
+    });
+    expect(axiosMock.history.post[0].data.get("file")).toEqual(file);
+    expect(mockToast).toBeCalledWith("Roster successfully updated.");
+    expect(
+      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount,
+    ).toEqual(alternateUpdateCount);
+    expect(
+      queryClientSpecific.getQueryState("/api/rosterstudents/course/7")
+        .dataUpdateCount,
+    ).toEqual(updateCountStudent + 1);
   });
 });
