@@ -167,6 +167,10 @@ const apiCurrentUserFixturesWithGithub = {
       githubId: 123456, // Adding a Github ID to simulate Github login
       githubLogin: "phtcon-github", // Simulating a Github login
     },
+    roles: [
+      ...apiCurrentUserFixtures.adminUser.roles,
+      { authority: "ROLE_GITHUB" },
+    ],
   },
   instructorUser: {
     user: {
@@ -174,6 +178,10 @@ const apiCurrentUserFixturesWithGithub = {
       githubId: 987654, // Adding a Github ID to simulate Github login
       githubLogin: "dmirza-github", // Simulating a Github login
     },
+    roles: [
+      ...apiCurrentUserFixtures.instructorUser.roles,
+      { authority: "ROLE_GITHUB" },
+    ],
   },
   userOnly: {
     user: {
@@ -181,6 +189,10 @@ const apiCurrentUserFixturesWithGithub = {
       githubId: 654321, // Adding a Github ID to simulate Github login
       githubLogin: "cgaucho-github", // Simulating a Github login
     },
+    roles: [
+      ...apiCurrentUserFixtures.userOnly.roles,
+      { authority: "ROLE_GITHUB" },
+    ],
   },
 };
 
