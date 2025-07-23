@@ -7,7 +7,6 @@ const config = {
     "@storybook/addon-links",
     "@chromatic-com/storybook",
     "storybook-addon-remix-react-router",
-    "@storybook/addon-queryparams",
     "@storybook/addon-docs"
   ],
   framework: {
