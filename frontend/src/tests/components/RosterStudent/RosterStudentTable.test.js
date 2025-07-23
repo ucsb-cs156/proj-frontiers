@@ -7,9 +7,18 @@ import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
+const queryClient = new QueryClient();
+const axiosMock = new AxiosMockAdapter(axios);
+const mockToast = jest.fn();
+jest.mock("react-toastify", () => {
+  const originalModule = jest.requireActual("react-toastify");
+  return {
+    __esModule: true,
+    ...originalModule,
+    toast: (x) => mockToast(x),
+  };
+});
 describe("RosterStudentTable tests", () => {
-  const queryClient = new QueryClient();
-
   const expectedHeaders = [
     "id",
     "Student Id",
@@ -20,6 +29,11 @@ describe("RosterStudentTable tests", () => {
   const expectedFields = ["id", "studentId", "firstName", "lastName", "email"];
   const testId = "RosterStudentTable";
 
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    queryClient.clear();
+  });
   test("renders empty table correctly", () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
@@ -79,6 +93,8 @@ describe("RosterStudentTable tests", () => {
       const header = screen.getByText(headerText);
       expect(header).toBeInTheDocument();
     });
+
+    expect(screen.queryByText("Edit Student")).not.toBeInTheDocument();
 
     expectedFields.forEach((field) => {
       const header = screen.getByTestId(`${testId}-cell-row-0-col-${field}`);
@@ -160,43 +176,60 @@ describe("RosterStudentTable tests", () => {
   });
 
   test("Edit button navigates to the edit page", async () => {
-    // arrange
     const currentUser = currentUserFixtures.adminUser;
-
-    // Mock window.alert
-    jest.spyOn(window, "alert").mockImplementation(() => {});
-
-    // act - render the component
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    queryClientSpecific.setQueryData(
+      ["/api/rosterstudents/course/7"],
+      rosterStudentFixtures.threeStudents,
+    );
+    queryClientSpecific.setQueryData(["mock queryData"], null);
+    axiosMock.onPut("/api/rosterstudents/update").reply(200);
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClientSpecific}>
         <MemoryRouter>
           <RosterStudentTable
             students={rosterStudentFixtures.threeStudents}
             currentUser={currentUser}
+            courseId={7}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    // assert - check that the expected content is rendered
-    expect(
-      await screen.findByTestId(`${testId}-cell-row-0-col-studentId`),
-    ).toHaveTextContent(2);
-
     const editButton = screen.getByTestId(
-      `${testId}-cell-row-0-col-Edit-button`,
+      "RosterStudentTable-cell-row-0-col-Edit-button",
     );
-    expect(editButton).toBeInTheDocument();
-
-    // act - click the edit button
     fireEvent.click(editButton);
-
-    // assert - check that the navigate function was called with the expected path
-    await waitFor(() =>
-      expect(window.alert).toHaveBeenCalledWith(
-        "Edit not implemented yet, but would have navigated to: /rosterstudents/edit/3",
-      ),
+    await screen.findByText("Edit Student");
+    expect(screen.getByTestId("RosterStudentTable-modal-body")).toHaveClass(
+      "pb-3",
     );
+    expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Update"));
+    await waitFor(() => axiosMock.history.put.length === 1);
+    expect(axiosMock.history.put[0].params).toEqual({
+      firstName: "Alice",
+      id: 3,
+      lastName: "Brown",
+      studentId: "A123456",
+    });
+    await waitFor(() =>
+      expect(screen.queryByText("Edit Student")).not.toBeInTheDocument(),
+    );
+    expect(mockToast).toBeCalledWith("Student updated successfully.");
+    expect(
+      queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
+        .isInvalidated,
+    ).toBe(true);
+    expect(
+      queryClientSpecific.getQueryState(["mock queryData"]).isInvalidated,
+    ).toBe(false);
   });
 
   test("Delete button calls delete callback", async () => {

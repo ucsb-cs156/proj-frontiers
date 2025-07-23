@@ -6,6 +6,7 @@ function RosterStudentForm({
   initialContents,
   submitAction,
   buttonLabel = "Create",
+  cancelDisabled = false,
 }) {
   // Stryker disable all
   const {
@@ -103,13 +104,15 @@ function RosterStudentForm({
       <Button type="submit" data-testid={testIdPrefix + "-submit"}>
         {buttonLabel}
       </Button>
-      <Button
-        variant="Secondary"
-        onClick={() => navigate(-1)}
-        data-testid={testIdPrefix + "-cancel"}
-      >
-        Cancel
-      </Button>
+      {!cancelDisabled && (
+        <Button
+          variant="Secondary"
+          onClick={() => navigate(-1)}
+          data-testid={testIdPrefix + "-cancel"}
+        >
+          Cancel
+        </Button>
+      )}
     </Form>
   );
 }
