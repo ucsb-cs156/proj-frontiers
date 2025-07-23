@@ -80,6 +80,21 @@ describe("InstructorCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
+    const testId = "InstructorCourseShowPage";
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-title`)).toBeInTheDocument();
+    });
+
+    const courseName = screen.getByTestId(`${testId}-title`);
+    expect(courseName).toHaveTextContent("Course: Loading...");
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
+        "Course: CMPSC 156 (1)",
+      );
+    });
+
     const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
 
     await waitFor(() => {
