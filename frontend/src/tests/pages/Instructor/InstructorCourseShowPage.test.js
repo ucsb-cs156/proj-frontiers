@@ -308,4 +308,53 @@ describe("InstructorCourseShowPage tests", () => {
     clearTimeoutSpy.mockRestore();
     jest.useRealTimers();
   });
+
+  test("Tab assertions", () => {
+    setupInstructorUser();
+
+    const theCourse = {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+
+    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText("Management")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "default",
+    );
+    expect(screen.getByText("Enrollment")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "enrollment",
+    );
+    expect(screen.getByText("Management")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    const changeTabs = screen.getByText("Enrollment");
+    fireEvent.click(changeTabs);
+    expect(
+      screen.getByText("Temporary Text For Uploading Roster Students"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Temporary Text for Manually Adding Student"),
+    ).toBeInTheDocument();
+  });
 });

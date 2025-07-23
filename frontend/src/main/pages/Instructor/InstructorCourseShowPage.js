@@ -8,7 +8,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
-import { Button } from "react-bootstrap";
+import { Button, Card, Col, Row, Tab, Tabs } from "react-bootstrap";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -72,22 +72,43 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <div className="pt-2">
-        <h1>Course</h1>
-        <InstructorCoursesTable
-          courses={course ? [course] : []}
-          currentUser={currentUser}
-          testId={testId}
-        />
-        <h2>Roster Students</h2>
-        <RosterStudentTable
-          // Stryker disable next-line ArrayDeclaration : checking for ["Stryker was here"] is tough
-          students={rosterStudents || []}
-          currentUser={currentUser}
-          courseId={course ? course.id : ""}
-          testIdPrefix={`${testId}-RosterStudentTable`}
-        />
-      </div>
+      <Tabs defaultActiveKey={"default"}>
+        <Tab eventKey={"default"} title={"Management"} className="pt-2">
+          <h1>Course</h1>
+          <InstructorCoursesTable
+            courses={course ? [course] : []}
+            currentUser={currentUser}
+            testId={testId}
+          />
+        </Tab>
+        <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
+          <Row md={2} className="g-3 p-3">
+            <Col>
+              <Card>
+                <Card.Body>
+                  Temporary Text For Uploading Roster Students
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col>
+              <Card>
+                <Card.Body>
+                  Temporary Text for Manually Adding Student
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <Row>
+            <RosterStudentTable
+              // Stryker disable next-line ArrayDeclaration : checking for ["Stryker was here"] is tough
+              students={rosterStudents || []}
+              currentUser={currentUser}
+              courseId={course ? course.id : ""}
+              testIdPrefix={`${testId}-RosterStudentTable`}
+            />
+          </Row>
+        </Tab>
+      </Tabs>
     </BasicLayout>
   );
 }
