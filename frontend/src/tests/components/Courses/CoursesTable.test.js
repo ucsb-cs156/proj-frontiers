@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import CoursesTable from "main/components/Courses/CoursesTable";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 
 const joinCallback = jest.fn();
 const isLoading = jest.fn(() => false);
