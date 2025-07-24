@@ -8,9 +8,10 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
-import { Button, Card, Col, Row, Tab, Tabs } from "react-bootstrap";
+import { Accordion, Button, Row, Tab, Tabs } from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import { toast } from "react-toastify";
+import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -70,9 +71,27 @@ export default function InstructorCourseShowPage() {
     };
   };
 
+  const objectToAxiosParamsPost = (student) => ({
+    url: `/api/rosterstudents/post`,
+    method: "POST",
+    params: {
+      courseId: courseId,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      studentId: student.studentId,
+      email: student.email,
+    },
+  });
+
   const onSuccess = () => {
     toast("Roster successfully updated.");
   };
+
+  const rosterPostMutation = useBackendMutation(
+    objectToAxiosParamsPost,
+    { onSuccess: onSuccess },
+    [`/api/rosterstudents/course/${courseId}`],
+  );
 
   const rosterCsvMutation = useBackendMutation(
     objectToAxiosParamsCSV,
@@ -82,6 +101,10 @@ export default function InstructorCourseShowPage() {
 
   const handleCsvSubmit = (formData) => {
     rosterCsvMutation.mutate(formData);
+  };
+
+  const handlePostSubmit = (student) => {
+    rosterPostMutation.mutate(student);
   };
 
   const testId = "InstructorCourseShowPage";
@@ -113,21 +136,24 @@ export default function InstructorCourseShowPage() {
           />
         </Tab>
         <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
-          <Row md={2} className="g-3 p-3">
-            <Col>
-              <Card>
-                <Card.Body>
+          <Row className="py-3">
+            <Accordion defaultActiveKey="upload">
+              <Accordion.Item eventKey="upload">
+                <Accordion.Header>Upload Roster</Accordion.Header>
+                <Accordion.Body>
                   <RosterStudentCSVUploadForm submitAction={handleCsvSubmit} />
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col>
-              <Card>
-                <Card.Body>
-                  Temporary Text for Manually Adding Student
-                </Card.Body>
-              </Card>
-            </Col>
+                </Accordion.Body>
+              </Accordion.Item>
+              <Accordion.Item eventKey="individual">
+                <Accordion.Header>Add Individual Student</Accordion.Header>
+                <Accordion.Body>
+                  <RosterStudentForm
+                    submitAction={handlePostSubmit}
+                    cancelDisabled={true}
+                  />
+                </Accordion.Body>
+              </Accordion.Item>
+            </Accordion>
           </Row>
           <Row>
             <RosterStudentTable

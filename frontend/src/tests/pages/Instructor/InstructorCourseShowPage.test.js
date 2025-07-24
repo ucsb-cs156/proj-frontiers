@@ -156,9 +156,11 @@ describe("InstructorCourseShowPage tests", () => {
     const expectedFields = ["studentId", "firstName", "lastName", "email"];
 
     // assert
-    expectedHeaders.forEach((headerText) => {
-      const header = screen.getByText(headerText);
-      expect(header).toBeInTheDocument();
+    expectedHeaders.forEach((headerText, index) => {
+      const header = screen.getByTestId(
+        `InstructorCourseShowPage-RosterStudentTable-header-${expectedFields[index]}`,
+      );
+      expect(header).toHaveTextContent(headerText);
     });
 
     expectedFields.forEach((field) => {
@@ -200,9 +202,11 @@ describe("InstructorCourseShowPage tests", () => {
     const expectedFields = ["studentId", "firstName", "lastName", "email"];
 
     // assert
-    expectedHeaders.forEach((headerText) => {
-      const header = screen.getByText(headerText);
-      expect(header).toBeInTheDocument();
+    expectedHeaders.forEach((headerText, index) => {
+      const header = screen.getByTestId(
+        `InstructorCourseShowPage-RosterStudentTable-header-${expectedFields[index]}`,
+      );
+      expect(header).toHaveTextContent(headerText);
     });
 
     expectedFields.forEach((field) => {
@@ -364,11 +368,16 @@ describe("InstructorCourseShowPage tests", () => {
       "aria-selected",
       "true",
     );
+    expect(screen.getByText("Upload Roster")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByText("Add Individual Student")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
     const changeTabs = screen.getByText("Enrollment");
     fireEvent.click(changeTabs);
-    expect(
-      screen.getByText("Temporary Text for Manually Adding Student"),
-    ).toBeInTheDocument();
   });
 
   test("Successfully makes a call to the backend on submit", async () => {
@@ -428,6 +437,81 @@ describe("InstructorCourseShowPage tests", () => {
       });
     });
     expect(axiosMock.history.post[0].data.get("file")).toEqual(file);
+    expect(mockToast).toBeCalledWith("Roster successfully updated.");
+    expect(
+      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount,
+    ).toEqual(alternateUpdateCount);
+    expect(
+      queryClientSpecific.getQueryState("/api/rosterstudents/course/7")
+        .dataUpdateCount,
+    ).toEqual(updateCountStudent + 1);
+  });
+
+  test("RosterStudentForm submit works", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    setupInstructorUser();
+    const theCourse = {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+
+    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    axiosMock.onPost("/api/rosterstudents/post").reply(200);
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findAllByText("Student Id");
+    const alternateUpdateCount =
+      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount;
+    const updateCountStudent = queryClientSpecific.getQueryState(
+      "/api/rosterstudents/course/7",
+    ).dataUpdateCount;
+    expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Student Id"), {
+      target: { value: "123456789" },
+    });
+    fireEvent.change(screen.getByLabelText("First Name"), {
+      target: { value: "Chris" },
+    });
+    fireEvent.change(screen.getByLabelText("Last Name"), {
+      target: { value: "Gaucho" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "cgaucho@ucsb.edu" },
+    });
+    fireEvent.click(screen.getByText("Create"));
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: "7",
+      studentId: "123456789",
+      firstName: "Chris",
+      lastName: "Gaucho",
+      email: "cgaucho@ucsb.edu",
+    });
+    await waitFor(() => expect(mockToast).toBeCalled());
     expect(mockToast).toBeCalledWith("Roster successfully updated.");
     expect(
       queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount,
