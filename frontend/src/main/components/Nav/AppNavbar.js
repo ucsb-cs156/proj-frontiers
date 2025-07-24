@@ -81,9 +81,14 @@ export default function AppNavbar({
                 </NavDropdown>
               )}
             </Nav>
-            <Nav className="ml-auto">
-              <GithubLogin currentUser={currentUser} systemInfo={systemInfo} />
-            </Nav>
+            {hasRole(currentUser, "ROLE_GITHUB") && (
+              <Nav className="ml-auto">
+                <GithubLogin
+                  currentUser={currentUser}
+                  systemInfo={systemInfo}
+                />
+              </Nav>
+            )}
             <Nav className="ml-auto">
               <GoogleLogin
                 currentUser={currentUser}

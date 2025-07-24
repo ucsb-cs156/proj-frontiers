@@ -19,6 +19,7 @@ import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShow
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import LoadingPage from "main/pages/LoadingPage";
 import SignInPage from "main/pages/Auth/SignInPage";
+import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
 
 function App() {
   const currentUserData = useCurrentUser();
@@ -53,6 +54,19 @@ function App() {
           <Route path="/" element={<HomePageLoggedOut />} />
           <Route path="*" element={<HomePageLoggedOut />} />
           <Route exact path="/login" element={<SignInPage />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
+  //if you reach here, the user is logged in BUT does not have a github connected.. lead to page to connect github
+  //the existing checks in Githublogin.js and signinpage.js (?) are not neccessary since those checks are done above
+  if (!currentUserData.githubLogin) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePageConnectGithub />} />
+          <Route path="*" element={<HomePageConnectGithub />} />
         </Routes>
       </BrowserRouter>
     );
