@@ -2,7 +2,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 
 window.alert = jest.fn();
 

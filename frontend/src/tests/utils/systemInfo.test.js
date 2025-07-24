@@ -9,8 +9,8 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 
-jest.mock("react-router-dom");
-const { _MemoryRouter } = jest.requireActual("react-router-dom");
+jest.mock("react-router");
+const { _MemoryRouter } = jest.requireActual("react-router");
 
 describe("utils/systemInfo tests", () => {
   describe("useSystemInfo tests", () => {

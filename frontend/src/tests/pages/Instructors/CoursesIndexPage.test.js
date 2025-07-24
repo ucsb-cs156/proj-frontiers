@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import mockConsole from "jest-mock-console";
 import coursesFixtures from "fixtures/coursesFixtures";
 

@@ -1,7 +1,7 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import mockConsole from "jest-mock-console";
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 

@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor, screen } from "@testing-library/react";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";

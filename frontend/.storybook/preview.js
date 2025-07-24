@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { initialize, mswLoader } from 'msw-storybook-addon'
 
 import { QueryClient, QueryClientProvider } from "react-query";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router";
 import { ToastContainer, toast } from "react-toastify";
 import { useEffect } from "react";
 
@@ -53,7 +53,7 @@ export const decorators = [
 ];
 
 
-/** @type { import('@storybook/react').Preview } */
+/** @type { import('@storybook/react-webpack5').Preview } */
 const preview = {
   parameters: {
     controls: {

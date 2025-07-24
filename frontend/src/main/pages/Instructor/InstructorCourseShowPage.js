@@ -4,7 +4,7 @@ import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { useCurrentUser } from "main/utils/currentUser";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
