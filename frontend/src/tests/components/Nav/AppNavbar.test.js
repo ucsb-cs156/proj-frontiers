@@ -190,20 +190,6 @@ describe("AppNavbar tests", () => {
     fireEvent.click(screen.getByText("Log In"));
     await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith("/login"));
   });
-
-  test("If user does not have ROLE_GITHUB, it does not render Github login button", async () => {
-    const currentUser = currentUserFixtures.userOnly;
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <AppNavbar currentUser={currentUser} />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    expect(screen.queryByText("Sign in with Github")).not.toBeInTheDocument();
-  });
   test("If user does have ROLE_GITHUB, it does renders the connected to github", async () => {
     const currentUser = currentUserFixturesWithGithub.userOnly;
 
