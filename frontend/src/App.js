@@ -59,8 +59,6 @@ function App() {
     );
   }
 
-  //if you reach here, the user is logged in BUT does not have a github connected.. lead to page to connect github
-  //the existing checks in Githublogin.js and signinpage.js (?) are not neccessary since those checks are done above
   if (!currentUserData.githubLogin) {
     return (
       <BrowserRouter>
