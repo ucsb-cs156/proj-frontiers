@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
-import { currentUserFixtures } from "fixtures/currentUserFixtures";
+import {
+  currentUserFixtures,
+  currentUserFixturesWithGithub,
+} from "fixtures/currentUserFixtures";
 
 import AppNavbar from "main/components/Nav/AppNavbar";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
@@ -186,5 +189,18 @@ describe("AppNavbar tests", () => {
     await screen.findByText("Log In");
     fireEvent.click(screen.getByText("Log In"));
     await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith("/login"));
+  });
+  test("If user does have ROLE_GITHUB, it does renders the connected to github", async () => {
+    const currentUser = currentUserFixturesWithGithub.userOnly;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppNavbar currentUser={currentUser} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Github: cgaucho-github")).toBeInTheDocument();
   });
 });

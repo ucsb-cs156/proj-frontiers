@@ -3,8 +3,6 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { http, HttpResponse } from "msw";
 import { QueryClient, QueryClientProvider } from "react-query";
 
-// import { useCurrentUser } from "main/utils/currentUser";
-
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import coursesFixtures from "fixtures/coursesFixtures";
 

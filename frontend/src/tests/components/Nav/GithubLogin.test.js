@@ -174,4 +174,25 @@ describe("GithubLogin tests", () => {
 
     await screen.findByText("Github: phtcon-github");
   });
+  test("If systemInfo is not available, use the default githubOauthLogin", async () => {
+    const currentUser = currentUserFixtures.userOnly;
+    const doLogin = jest.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <GithubLogin
+            currentUser={currentUser}
+            systemInfo={undefined}
+            doLogin={doLogin}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const loginButton = await screen.findByRole("button", {
+      name: "Connect Github",
+    });
+    expect(loginButton).toBeInTheDocument();
+    expect(loginButton).toHaveAttribute("href", "/oauth2/authorization/github");
+  });
 });

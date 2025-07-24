@@ -19,6 +19,7 @@ import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShow
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import LoadingPage from "main/pages/LoadingPage";
 import SignInPage from "main/pages/Auth/SignInPage";
+import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
 
 function App() {
   const currentUserData = useCurrentUser();
@@ -59,6 +60,17 @@ function App() {
   }
 
   const currentUser = currentUserData;
+
+  if (!hasRole(currentUser, "ROLE_GITHUB")) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePageConnectGithub />} />
+          <Route path="*" element={<HomePageConnectGithub />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
 
   const userRoutes = hasRole(currentUser, "ROLE_USER") ? (
     <>
