@@ -101,9 +101,11 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
+      <h1 data-testid={`${testId}-title`}>
+        Course: {course ? `${course.courseName} (${course.id})` : "Loading..."}
+      </h1>
       <Tabs defaultActiveKey={"default"}>
         <Tab eventKey={"default"} title={"Management"} className="pt-2">
-          <h1>Course</h1>
           <InstructorCoursesTable
             courses={course ? [course] : []}
             currentUser={currentUser}
