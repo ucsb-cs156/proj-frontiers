@@ -59,7 +59,9 @@ function App() {
     );
   }
 
-  if (!currentUserData.githubLogin) {
+  const currentUser = currentUserData;
+
+  if (!hasRole(currentUser, "ROLE_GITHUB")) {
     return (
       <BrowserRouter>
         <Routes>
@@ -69,8 +71,6 @@ function App() {
       </BrowserRouter>
     );
   }
-
-  const currentUser = currentUserData;
 
   const userRoutes = hasRole(currentUser, "ROLE_USER") ? (
     <>
