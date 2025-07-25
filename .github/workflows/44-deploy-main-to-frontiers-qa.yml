@@ -1,0 +1,22 @@
+name: 44-deploy-main-to-frontiers-qa.yml
+on:
+  workflow_dispatch
+
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT }}
+
+jobs:
+  has_deploy_label:
+    name: Launch Frontiers Deploy for QA
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Launch frontiers deploy for qa"
+        run: |
+            gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/ucsb-cs156-s25/dokku-sync/actions/workflows/00-sync-frontiers-qa.yml/dispatches \
+            -f ref='main' 
+     
+          
