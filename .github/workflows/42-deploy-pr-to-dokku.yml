@@ -1,4 +1,4 @@
-name: 42-deploy-dokku.yml
+name: 42-deploy-pr-to-dokku.yml
 on:
   pull_request:
     types: [labeled]

@@ -1,0 +1,22 @@
+name: 43-deploy-main-to-frontiers-prod.yml
+on:
+  workflow_dispatch
+
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT }}
+
+jobs:
+  has_deploy_label:
+    name: Launch Frontiers Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Launch frontiers deploy"
+        run: |
+            gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/ucsb-cs156-s25/dokku-sync/actions/workflows/00-sync-frontiers.yml/dispatches \
+            -f ref='main' 
+     
+          
