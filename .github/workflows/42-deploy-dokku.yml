@@ -26,7 +26,7 @@ jobs:
     needs: has_deploy_label
     if: needs.has_deploy_label.outputs.has-label == 'true'
     env:
-      PR_URL: ${{ github.event.label.pull_request.html_url }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
     steps:
       - name: "Deploy on Dokku"
         id: send_workflow_call
