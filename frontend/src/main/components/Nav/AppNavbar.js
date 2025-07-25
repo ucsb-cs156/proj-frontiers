@@ -22,7 +22,7 @@ export default function AppNavbar({
         <AppNavbarLocalhost url={currentUrl} />
       )}
       <Navbar
-        expand="xl"
+        expand="md"
         variant="dark"
         bg="dark"
         sticky="top"
@@ -35,25 +35,22 @@ export default function AppNavbar({
 
           <Navbar.Toggle />
 
-          <Nav className="me-auto">
-            {systemInfo?.springH2ConsoleEnabled && (
-              <>
-                <Nav.Link href="/h2-console">H2Console</Nav.Link>
-              </>
-            )}
-            {systemInfo?.showSwaggerUILink && (
-              <>
-                <Nav.Link href="/swagger-ui/index.html">Swagger</Nav.Link>
-              </>
-            )}
-          </Nav>
-
           <>
             {/* be sure that each NavDropdown has a unique id and data-testid  */}
           </>
 
           <Navbar.Collapse className="justify-content-between">
             <Nav className="mr-auto">
+              {systemInfo?.showSwaggerUILink && (
+                <>
+                  <Nav.Link href="/swagger-ui/index.html">Swagger</Nav.Link>
+                </>
+              )}
+              {systemInfo?.springH2ConsoleEnabled && (
+                <>
+                  <Nav.Link href="/h2-console">H2Console</Nav.Link>
+                </>
+              )}
               {hasRole(currentUser, "ROLE_ADMIN") && (
                 <NavDropdown
                   title="Admin"
