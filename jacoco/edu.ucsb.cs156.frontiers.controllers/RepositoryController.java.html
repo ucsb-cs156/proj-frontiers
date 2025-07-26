@@ -48,20 +48,16 @@ import java.util.Optional;
     @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
     public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional&lt;Boolean&gt; isPrivate) {
 <span class="fc" id="L50">        Course course = courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {</span>
-<span class="fc bfc" id="L52" title="All 4 branches covered.">            if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L53">                throw new NoLinkedOrganizationException(course.getCourseName());</span>
+<span class="fc bfc" id="L51" title="All 4 branches covered.">            if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L52">                throw new NoLinkedOrganizationException(course.getCourseName());</span>
             } else {
-<span class="fc" id="L55">                CreateStudentRepositoriesJob job = CreateStudentRepositoriesJob.builder()</span>
-<span class="fc" id="L56">                        .repositoryPrefix(repoPrefix)</span>
-<span class="fc" id="L57">                        .isPrivate(isPrivate.orElse(false))</span>
-<span class="fc" id="L58">                        .repositoryService(repositoryService)</span>
-<span class="fc" id="L59">                        .course(course)</span>
-<span class="fc" id="L60">                        .build();</span>
-<span class="fc" id="L61">                return jobService.runAsJob(job);</span>
-            }
-        } else {
-<span class="fc" id="L64">            throw new AccessDeniedException(&quot;You do not have permission to create student repositories on this course&quot;);</span>
+<span class="fc" id="L54">                CreateStudentRepositoriesJob job = CreateStudentRepositoriesJob.builder()</span>
+<span class="fc" id="L55">                        .repositoryPrefix(repoPrefix)</span>
+<span class="fc" id="L56">                        .isPrivate(isPrivate.orElse(false))</span>
+<span class="fc" id="L57">                        .repositoryService(repositoryService)</span>
+<span class="fc" id="L58">                        .course(course)</span>
+<span class="fc" id="L59">                        .build();</span>
+<span class="fc" id="L60">                return jobService.runAsJob(job);</span>
         }
     }
 }
