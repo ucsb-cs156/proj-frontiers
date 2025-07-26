@@ -50,7 +50,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
     private ObjectMapper objectMapper;
 
     @Test
-    @WithMockUser(roles = {"ADMIN"})
+    @WithMockUser(roles = {"INSTRUCTOR"})
     public void not_the_creator() throws Exception {
         Course course = Course.builder().creator(User.builder().build()).build();
         doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
