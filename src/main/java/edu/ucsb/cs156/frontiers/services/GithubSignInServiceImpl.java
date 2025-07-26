@@ -1,7 +1,10 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.EventType;
 import edu.ucsb.cs156.frontiers.errors.NotAuthenticatedWithGoogleException;
+import edu.ucsb.cs156.frontiers.queue.Event;
+import edu.ucsb.cs156.frontiers.queue.EventManager;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 
@@ -29,14 +32,13 @@ public class GithubSignInServiceImpl extends DefaultOAuth2UserService implements
     private final UserRepository userRepository;
 
     private final CurrentUserService currentUserService;
-    private final RosterStudentRepository rosterStudentRepository;
-    private final UpdateUserService updateUserService;
+    private final EventManager eventManager;
 
-    public GithubSignInServiceImpl(@Autowired UserRepository userRepository, @Autowired CurrentUserService currentUserService, @Autowired RosterStudentRepository rosterStudentRepository, @Autowired UpdateUserService updateUserService) {
+
+    public GithubSignInServiceImpl(@Autowired UserRepository userRepository, @Autowired CurrentUserService currentUserService, @Autowired RosterStudentRepository rosterStudentRepository, @Autowired UpdateUserService updateUserService, EventManager eventManager) {
         this.userRepository = userRepository;
         this.currentUserService = currentUserService;
-        this.rosterStudentRepository = rosterStudentRepository;
-        this.updateUserService = updateUserService;
+        this.eventManager = eventManager;
     }
 
     @Override
@@ -61,9 +63,8 @@ public class GithubSignInServiceImpl extends DefaultOAuth2UserService implements
             if (currentLocalUser != null) {
                 currentLocalUser.setGithubId((Integer) oAuth2User.getAttributes().get("id"));
                 currentLocalUser.setGithubLogin((String) oAuth2User.getAttributes().get("login"));
-                updateUserService.attachRosterStudents(currentLocalUser);
-                updateUserService.attachCourseStaff(currentLocalUser);
                 userRepository.save(currentLocalUser);
+                eventManager.fireEvent(new Event(currentLocalUser, EventType.LINK_GITHUB));
             }
             authorities.add(new SimpleGrantedAuthority("ROLE_GITHUB"));
             authorities.addAll(currentUser.getAuthorities());
