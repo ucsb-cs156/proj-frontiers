@@ -117,7 +117,7 @@ public class WebhookController {
             log.warn("No student or staff found with GitHub login: {} in course: {}", githubLogin, course.get().getCourseName());
             return ResponseEntity.ok().body("success");
         }
-
+        StringBuilder response = new StringBuilder();
         if(student.isPresent()){
             RosterStudent updatedStudent = student.get();
             log.info("Current student org status: {}", updatedStudent.getOrgStatus());
@@ -133,11 +133,11 @@ public class WebhookController {
 
             rosterStudentRepository.save(updatedStudent);
             log.info("Student saved with new org status: {}", updatedStudent.getOrgStatus());
-            return ResponseEntity.ok(updatedStudent.toString());
+            response.append(updatedStudent);
         }
-        else {
+        if(staff.isPresent()) {
             CourseStaff updatedStaff = staff.get();
-            log.info("Current student org status: {}", updatedStaff.getOrgStatus());
+            log.info("Current course staff member org status: {}", updatedStaff.getOrgStatus());
 
             // Update status based on action
             if (action.equals("member_added")) {
@@ -150,7 +150,8 @@ public class WebhookController {
 
             courseStaffRepository.save(updatedStaff);
             log.info("Course staff member saved with new org status: {}", updatedStaff.getOrgStatus());
-            return ResponseEntity.ok(updatedStaff.toString());
+            response.append(updatedStaff);
         }
+        return ResponseEntity.ok().body(response.toString());
     }
 }
