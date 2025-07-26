@@ -48,7 +48,6 @@ public class RepositoryController extends ApiController {
     @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
     public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional<Boolean> isPrivate) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-        if (getCurrentUser().getUser().getId() == course.getCreator().getId()) {
             if (course.getOrgName() == null || course.getInstallationId() == null) {
                 throw new NoLinkedOrganizationException(course.getCourseName());
             } else {
@@ -59,9 +58,6 @@ public class RepositoryController extends ApiController {
                         .course(course)
                         .build();
                 return jobService.runAsJob(job);
-            }
-        } else {
-            throw new AccessDeniedException("You do not have permission to create student repositories on this course");
         }
     }
 }
