@@ -1,57 +1,94 @@
-import { useTable, useSortBy } from "react-table";
-import { Table, Button } from "react-bootstrap";
+import React, { useMemo } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper, // Optional, but good practice for defining columns
+  getSortedRowModel,
+} from "@tanstack/react-table";
+import { Button } from "react-bootstrap";
+import SortCaret from "main/components/Common/SortCaret";
 
-export default function OurTable({ columns, data, testid = "testid" }) {
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable({ columns, data }, useSortBy);
+export function convertOldStyleColumnsToNewStyle(oldStyleColumns) {
+  const result = [];
+  for (const col of oldStyleColumns) {
+    const newCol = {
+      id: col.accessor || col.accessorKey, // Use accessor or accessorKey as id
+      header: col.Header || col.header, // Use Header or header for the column title
+      accessorKey: col.accessor || col.accessorKey, // Use accessor or accessorKey
+      ...col,
+    };
+    result.push({ ...newCol });
+  }
+  return result;
+}
+
+function OurTable({ data, columns, testid = "testid" }) {
+  const newColumns = convertOldStyleColumnsToNewStyle(columns);
+  const memoizedData = useMemo(() => data, [data]);
+  const memoizedColumns = useMemo(() => newColumns, [newColumns]);
+
+  const table = useReactTable({
+    data: memoizedData,
+    columns: memoizedColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   return (
-    <Table {...getTableProps()} striped bordered hover>
+    <table className="table table-striped table-bordered" data-testid={testid}>
       <thead>
-        {headerGroups.map((headerGroup, i) => (
+        {table.getHeaderGroups().map((headerGroup, i) => (
           <tr
-            {...headerGroup.getHeaderGroupProps()}
             data-testid={`${testid}-header-group-${i}`}
             // Stryker disable next-line StringLiteral : React key property not exposed in dom
             key={`${testid}-header-group-${i}`}
           >
-            {headerGroup.headers.map((column) => (
+            {headerGroup.headers.map((header) => (
               <th
-                {...column.getHeaderProps(column.getSortByToggleProps())}
-                data-testid={`${testid}-header-${column.id}`}
-                // Stryker disable next-line StringLiteral : React key property not exposed in dom
-                key={`${testid}-header-${column.id}`}
+                data-testid={`${testid}-header-${header.column.id}`}
+                key={`${testid}-header-${header.column.id}`}
+                colSpan={header.colSpan}
               >
-                {column.render("Header")}
-                <span data-testid={`${testid}-header-${column.id}-sort-carets`}>
-                  {column.isSorted ? (column.isSortedDesc ? " 🔽" : " 🔼") : ""}
-                </span>
+                {header.isPlaceholder ? null : (
+                  <div
+                    // Add onClick handler for sorting if the column is sortable
+                    {...(header.column.getCanSort() && {
+                      onClick: header.column.getToggleSortingHandler(),
+                      style: { cursor: "pointer" }, // Add cursor style for visual cue
+                    })}
+                    data-testid={`${testid}-header-${header.column.id}-sort-header`}
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                    <SortCaret header={header} testId={testid} />
+                  </div>
+                )}
               </th>
             ))}
           </tr>
         ))}
       </thead>
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row) => {
-          prepareRow(row);
+      <tbody>
+        {table.getRowModel().rows.map((row) => {
           const rowTestId = `${testid}-row-${row.index}`;
           return (
             <tr
-              {...row.getRowProps()}
               data-testid={rowTestId}
               // Stryker disable next-line StringLiteral : React key property not exposed in dom
               key={rowTestId}
             >
-              {row.cells.map((cell, _index) => {
+              {row.getVisibleCells().map((cell) => {
                 const testId = `${testid}-cell-row-${cell.row.index}-col-${cell.column.id}`;
                 return (
                   <td
-                    {...cell.getCellProps()}
                     data-testid={testId}
                     // Stryker disable next-line StringLiteral : React key property not exposed in dom
                     key={testId}
                   >
-                    {cell.render("Cell")}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 );
               })}
@@ -59,40 +96,19 @@ export default function OurTable({ columns, data, testid = "testid" }) {
           );
         })}
       </tbody>
-    </Table>
+    </table>
   );
 }
 
-// The callback function for ButtonColumn should have the form
-// (cell) => { doSomethingWith(cell); }
-// The fields in cell are:
-//   ["column","row","value","getCellProps","render"]
-// Documented here: https://react-table.tanstack.com/docs/api/useTable#cell-properties
-// Typically, you want cell.row.values, which is where you can get the individual
-//   fields of the object representing the row in the table.
-// Example:
-//   const deleteCallback = (cell) =>
-//      toast(`Delete Callback called on id: ${cell.row.values.id} name: ${cell.row.values.name}`);
-
-// Add it to table like this:
-// const columns = [
-//   {
-//       Header: 'id',
-//       accessor: 'id', // accessor is the "key" in the data
-//   },
-//   {
-//       Header: 'Name',
-//       accessor: 'name',
-//   },
-//   ButtonColumn("Edit", "primary", editCallback),
-//   ButtonColumn("Delete", "danger", deleteCallback)
-// ];
+export default OurTable;
 
 export function ButtonColumn(label, variant, callback, testid) {
-  const column = {
-    Header: label,
-    id: label,
-    Cell: ({ cell }) => (
+  const columnHelper = createColumnHelper();
+
+  const buttonColumn = columnHelper.display({
+    id: label, // Unique ID for display columns
+    header: label,
+    cell: ({ cell }) => (
       <Button
         variant={variant}
         onClick={() => callback(cell)}
@@ -101,6 +117,6 @@ export function ButtonColumn(label, variant, callback, testid) {
         {label}
       </Button>
     ),
-  };
-  return column;
+  });
+  return buttonColumn;
 }

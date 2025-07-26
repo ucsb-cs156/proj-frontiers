@@ -22,7 +22,7 @@ ThreeItems.args = {
   data: roleEmailFixtures.threeItems,
   customDeleteCallback: async (cell) => {
     // Simulate a delete operation
-    window.alert(`Would invoke callback on ${cell.row.values.email}`);
+    window.alert(`Would invoke callback on ${cell.row.original.email}`);
   },
 };
 
@@ -31,6 +31,6 @@ ThreeItemsWithIsInAdminEmailsField.args = {
   data: roleEmailFixtures.threeItemsWithIsInAdminEmailField,
   customDeleteCallback: async (cell) => {
     // Simulate a delete operation
-    window.alert(`Would invoke callback on ${cell.row.values.email}`);
+    window.alert(`Would invoke callback on ${cell.row.original.email}`);
   },
 };

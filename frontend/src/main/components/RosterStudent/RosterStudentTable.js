@@ -60,7 +60,7 @@ export default function RosterStudentTable({
   );
 
   const editCallback = (cell) => {
-    setEditStudent(cell.row.values);
+    setEditStudent(cell.row.original);
     setShowEditModal(true);
   };
 
@@ -70,26 +70,27 @@ export default function RosterStudentTable({
 
   const columns = [
     {
-      Header: "id",
-      accessor: "id",
+      header: "id",
+      accessorKey: "id",
+      id: "id",
     },
 
     {
-      Header: "Student Id",
-      accessor: "studentId",
+      header: "Student Id",
+      accessorKey: "studentId",
     },
 
     {
-      Header: "First Name",
-      accessor: "firstName",
+      header: "First Name",
+      accessorKey: "firstName",
     },
     {
-      Header: "Last Name",
-      accessor: "lastName",
+      header: "Last Name",
+      accessorKey: "lastName",
     },
     {
-      Header: "Email",
-      accessor: "email",
+      header: "Email",
+      accessorKey: "email",
     },
   ];
 

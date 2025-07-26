@@ -211,6 +211,7 @@ describe("RosterStudentTable tests", () => {
       "pb-3",
     );
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
+    expect(screen.getByText("Update")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Update"));
     await waitFor(() => axiosMock.history.put.length === 1);
     expect(axiosMock.history.put[0].params).toEqual({
