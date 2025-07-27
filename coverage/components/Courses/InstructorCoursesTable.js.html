@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>18/18</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
@@ -214,7 +214,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">58x</span>
+<span class="cline-any cline-yes">50x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -250,14 +250,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">58x</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-yes">26x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
@@ -272,9 +272,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">58x</span>
-<span class="cline-any cline-yes">58x</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
@@ -283,14 +283,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">33x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-yes">26x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -344,30 +344,30 @@ import { FaGithub } from "react-icons/fa";
 &nbsp;
 const columns = [
   {
-    Header: "id",
-    accessor: "id", // accessor is the "key" in the data
+    header: "id",
+    accessorKey: "id", // accessor is the "key" in the data
   },
   {
-    Header: "Course Name",
-    accessor: "courseName",
-    Cell: ({ cell }) =&gt; {
+    header: "Course Name",
+    id: "courseName",
+    cell: ({ cell }) =&gt; {
       return (
         &lt;a
-          href={`/instructor/courses/${cell.row.values.id}`}
+          href={`/instructor/courses/${cell.row.original.id}`}
           data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
         &gt;
-          {cell.value}
+          {cell.row.original.courseName}
         &lt;/a&gt;
       );
     },
   },
   {
-    Header: "Term",
-    accessor: "term",
+    header: "Term",
+    accessorKey: "term",
   },
   {
-    Header: "School",
-    accessor: "school",
+    header: "School",
+    accessorKey: "school",
   },
 ];
 &nbsp;
@@ -378,7 +378,7 @@ export default function InstructorCoursesTable({
   testId = "InstructorCoursesTable",
 }) {
   const installCallback = (cell) =&gt; {
-    const url = `/api/courses/redirect?courseId=${cell.row.values.id}`;
+    const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;
     if (storybook) {
       window.alert(`would have navigated to: ${url}`);
       return;
@@ -387,7 +387,7 @@ export default function InstructorCoursesTable({
   };
 &nbsp;
   const canInstall = (row) =&gt; {
-    if ("orgName" in row.values &amp;&amp; row.values.orgName) {
+    if (row.original.orgName) {
       return false;
     }
     if (hasRole(currentUser, "ROLE_ADMIN")) {
@@ -395,7 +395,7 @@ export default function InstructorCoursesTable({
     }
     if (
       hasRole(currentUser, "ROLE_INSTRUCTOR") &amp;&amp;
-      row.values.createdByEmail === currentUser.root.user.email
+      row.original.createdByEmail === currentUser.root.user.email
     ) {
       return true;
     }
@@ -406,9 +406,9 @@ export default function InstructorCoursesTable({
   const columnsWithInstall = [
     ...columns,
     {
-      Header: "Github Org",
-      accessor: "orgName",
-      Cell: ({ cell }) =&gt; {
+      header: "Github Org",
+      id: "orgName",
+      cell: ({ cell }) =&gt; {
         const result = canInstall(cell.row);
         if (result) {
           return (
@@ -420,7 +420,7 @@ export default function InstructorCoursesTable({
               Install Github App
             &lt;/Button&gt;
           );
-        } else if (!cell.value) {
+        } else if (!cell.row.original.orgName) {
           return (
             &lt;span
               data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-no-org`}
@@ -438,17 +438,17 @@ export default function InstructorCoursesTable({
             &gt;
               &lt;span&gt;
                 &lt;a
-                  href={`https://github.com/${cell.value}`}
+                  href={`https://github.com/${cell.row.original.orgName}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-github-link`}
                 &gt;
-                  {cell.value}
+                  {cell.row.original.orgName}
                 &lt;/a&gt;
               &lt;/span&gt;
               &lt;span&gt;
                 &lt;a
-                  href={`https://github.com/organizations/${cell.value}/settings/installations/${cell.row.original.installationId}`}
+                  href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
@@ -465,8 +465,8 @@ export default function InstructorCoursesTable({
       },
     },
     {
-      Header: "Created By",
-      accessor: "createdByEmail",
+      header: "Created By",
+      accessorKey: "createdByEmail",
     },
   ];
 &nbsp;
@@ -481,7 +481,7 @@ export default function InstructorCoursesTable({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-25T17:52:23.696Z
+                at 2025-07-27T02:16:10.088Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
