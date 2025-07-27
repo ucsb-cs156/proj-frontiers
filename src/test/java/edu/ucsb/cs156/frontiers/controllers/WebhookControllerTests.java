@@ -2,10 +2,12 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
@@ -34,6 +36,9 @@ public class WebhookControllerTests extends ControllerTestCase {
 
     @MockitoBean
     CourseRepository  courseRepository;
+
+    @MockitoBean
+    CourseStaffRepository courseStaffRepository;
 
     @Test
     public void successfulWebhook_member() throws Exception {
@@ -586,4 +591,116 @@ public class WebhookControllerTests extends ControllerTestCase {
         String actualBody = response.getResponse().getContentAsString();
         assertEquals("success", actualBody);
     }
+
+    @Test
+    public void courseStaffInvited() throws Exception {
+        Course course = Course.builder().installationId("1234").build();
+        CourseStaff staff = CourseStaff.builder().githubLogin("testLogin").course(course).build();
+        CourseStaff updated = CourseStaff.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.INVITED).build();
+
+        doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
+        doReturn(Optional.of(staff)).when(courseStaffRepository).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        String sendBody = """
+            {
+            "action" : "member_invited",
+            "user": {
+                "login": "testLogin"
+            },
+            "installation":{
+                "id": "1234"
+            }
+            }
+            """;
+
+        MvcResult response = mockMvc.perform(post("/api/webhooks/github")
+                        .content(sendBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        verify(courseStaffRepository, times(1)).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
+        verify(courseStaffRepository, times(1)).save(eq(updated));
+        verifyNoMoreInteractions(courseStaffRepository, courseStaffRepository);
+        verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+
+        String actualBody = response.getResponse().getContentAsString();
+        assertEquals(updated.toString(), actualBody);
+    }
+
+    @Test
+    public void successfulWebhook_member_course_staff() throws Exception {
+        Course course = Course.builder().installationId("1234").build();
+        CourseStaff staff = CourseStaff.builder().githubLogin("testLogin").course(course).build();
+        CourseStaff updated = CourseStaff.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.MEMBER).build();
+
+        doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
+        doReturn(Optional.of(staff)).when(courseStaffRepository).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        doReturn(updated).when(courseStaffRepository).save(eq(updated));
+
+        String sendBody = """
+                {
+                "action" : "member_added",
+                "membership": {
+                    "role": "direct_member",
+                    "user": {
+                        "login": "testLogin"
+                    }
+                },
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+        MvcResult response = mockMvc.perform(post("/api/webhooks/github")
+                        .content(sendBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        verify(courseStaffRepository, times(1)).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
+        verify(courseStaffRepository, times(1)).save(eq(updated));
+        String actualBody = response.getResponse().getContentAsString();
+        assertEquals(updated.toString(), actualBody);
+    }
+
+    @Test
+    public void successfulWebhook_admin_course_staff() throws Exception {
+        Course course = Course.builder().installationId("1234").build();
+        CourseStaff staff = CourseStaff.builder().githubLogin("testLogin").course(course).build();
+        CourseStaff updated = CourseStaff.builder().githubLogin("testLogin").course(course).orgStatus(OrgStatus.OWNER).build();
+
+        doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
+        doReturn(Optional.of(staff)).when(courseStaffRepository).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        doReturn(updated).when(courseStaffRepository).save(eq(updated));
+
+        String sendBody = """
+                {
+                "action" : "member_added",
+                "membership": {
+                    "role": "admin",
+                    "user": {
+                        "login": "testLogin"
+                    }
+                },
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+        MvcResult response = mockMvc.perform(post("/api/webhooks/github")
+                        .content(sendBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        verify(courseStaffRepository, times(1)).findByCourseAndGithubLogin(eq(course), contains("testLogin"));
+        verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
+        verify(courseStaffRepository, times(1)).save(eq(updated));
+        String actualBody = response.getResponse().getContentAsString();
+        assertEquals(updated.toString(), actualBody);
+    }
+
+
 }

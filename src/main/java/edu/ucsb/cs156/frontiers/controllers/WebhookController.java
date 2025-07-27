@@ -4,10 +4,12 @@ package edu.ucsb.cs156.frontiers.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,10 +31,12 @@ public class WebhookController {
 
     private final CourseRepository courseRepository;
     private final RosterStudentRepository rosterStudentRepository;
+    private final CourseStaffRepository courseStaffRepository;
 
-    public WebhookController(CourseRepository courseRepository, RosterStudentRepository rosterStudentRepository) {
+    public WebhookController(CourseRepository courseRepository, RosterStudentRepository rosterStudentRepository, CourseStaffRepository courseStaffRepository) {
         this.courseRepository = courseRepository;
         this.rosterStudentRepository = rosterStudentRepository;
+        this.courseStaffRepository = courseStaffRepository;
     }
 
     /**
@@ -105,27 +109,49 @@ public class WebhookController {
         }
         
         Optional<RosterStudent> student = rosterStudentRepository.findByCourseAndGithubLogin(course.get(), githubLogin);
+        Optional<CourseStaff> staff = courseStaffRepository.findByCourseAndGithubLogin(course.get(), githubLogin);
         log.info("Student found: {}", student.isPresent());
+        log.info("Staff found: {}", staff.isPresent());
         
-        if(!student.isPresent()){
-            log.warn("No student found with GitHub login: {} in course: {}", githubLogin, course.get().getCourseName());
+        if(!student.isPresent() && !staff.isPresent()){
+            log.warn("No student or staff found with GitHub login: {} in course: {}", githubLogin, course.get().getCourseName());
             return ResponseEntity.ok().body("success");
         }
-        
-        RosterStudent updatedStudent = student.get();
-        log.info("Current student org status: {}", updatedStudent.getOrgStatus());
-        
-        // Update status based on action
-        if(action.equals("member_added")) {
-            updatedStudent.setOrgStatus(role);
-            log.info("Setting status to {}" , role.toString());
-        } else { // must be "member_invited" based on earlier check
-            updatedStudent.setOrgStatus(OrgStatus.INVITED);
-            log.info("Setting status to INVITED");
+        StringBuilder response = new StringBuilder();
+        if(student.isPresent()){
+            RosterStudent updatedStudent = student.get();
+            log.info("Current student org status: {}", updatedStudent.getOrgStatus());
+
+            // Update status based on action
+            if (action.equals("member_added")) {
+                updatedStudent.setOrgStatus(role);
+                log.info("Setting status to {}", role.toString());
+            } else { // must be "member_invited" based on earlier check
+                updatedStudent.setOrgStatus(OrgStatus.INVITED);
+                log.info("Setting status to INVITED");
+            }
+
+            rosterStudentRepository.save(updatedStudent);
+            log.info("Student saved with new org status: {}", updatedStudent.getOrgStatus());
+            response.append(updatedStudent);
         }
-        
-        rosterStudentRepository.save(updatedStudent);
-        log.info("Student saved with new org status: {}", updatedStudent.getOrgStatus());
-        return ResponseEntity.ok(updatedStudent.toString());
+        if(staff.isPresent()) {
+            CourseStaff updatedStaff = staff.get();
+            log.info("Current course staff member org status: {}", updatedStaff.getOrgStatus());
+
+            // Update status based on action
+            if (action.equals("member_added")) {
+                updatedStaff.setOrgStatus(role);
+                log.info("Setting status to {}", role.toString());
+            } else { // must be "member_invited" based on earlier check
+                updatedStaff.setOrgStatus(OrgStatus.INVITED);
+                log.info("Setting status to INVITED");
+            }
+
+            courseStaffRepository.save(updatedStaff);
+            log.info("Course staff member saved with new org status: {}", updatedStaff.getOrgStatus());
+            response.append(updatedStaff);
+        }
+        return ResponseEntity.ok().body(response.toString());
     }
 }
