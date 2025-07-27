@@ -35,7 +35,7 @@ describe("rosterStudentUtils", () => {
   describe("cellToAxiosParamsDelete", () => {
     test("It returns the correct params", () => {
       // arrange
-      const cell = { row: { values: { id: 2 } } };
+      const cell = { row: { original: { id: 2 } } };
 
       // act
       const result = cellToAxiosParamsDelete(cell);

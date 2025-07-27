@@ -6,21 +6,24 @@ const columns = [
     accessor: "id", // accessor is the "key" in the data
   },
   {
-    Header: "First Name",
-    accessor: "givenName",
+    header: "First Name",
+    accessorKey: "givenName",
   },
   {
-    Header: "Last Name",
-    accessor: "familyName",
+    header: "Last Name",
+    accessorKey: "familyName",
   },
   {
-    Header: "Email",
-    accessor: "email",
+    header: "Email",
+    accessorKey: "email",
   },
   {
-    Header: "Admin",
+    header: "Admin",
     id: "admin",
-    accessor: (row, _rowIndex) => String(row.admin), // hack needed for boolean values to show up
+    accessorKey: "admin",
+    cell: ({ cell }) => {
+      return String(cell.getValue());
+    }, // convert boolean to string for display
   },
 ];
 

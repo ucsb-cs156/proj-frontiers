@@ -5,30 +5,30 @@ import { FaGithub } from "react-icons/fa";
 
 const columns = [
   {
-    Header: "id",
-    accessor: "id", // accessor is the "key" in the data
+    header: "id",
+    accessorKey: "id", // accessor is the "key" in the data
   },
   {
-    Header: "Course Name",
-    accessor: "courseName",
-    Cell: ({ cell }) => {
+    header: "Course Name",
+    id: "courseName",
+    cell: ({ cell }) => {
       return (
         <a
-          href={`/instructor/courses/${cell.row.values.id}`}
+          href={`/instructor/courses/${cell.row.original.id}`}
           data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
         >
-          {cell.value}
+          {cell.row.original.courseName}
         </a>
       );
     },
   },
   {
-    Header: "Term",
-    accessor: "term",
+    header: "Term",
+    accessorKey: "term",
   },
   {
-    Header: "School",
-    accessor: "school",
+    header: "School",
+    accessorKey: "school",
   },
 ];
 
@@ -39,7 +39,7 @@ export default function InstructorCoursesTable({
   testId = "InstructorCoursesTable",
 }) {
   const installCallback = (cell) => {
-    const url = `/api/courses/redirect?courseId=${cell.row.values.id}`;
+    const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;
     if (storybook) {
       window.alert(`would have navigated to: ${url}`);
       return;
@@ -48,7 +48,7 @@ export default function InstructorCoursesTable({
   };
 
   const canInstall = (row) => {
-    if ("orgName" in row.values && row.values.orgName) {
+    if (row.original.orgName) {
       return false;
     }
     if (hasRole(currentUser, "ROLE_ADMIN")) {
@@ -56,7 +56,7 @@ export default function InstructorCoursesTable({
     }
     if (
       hasRole(currentUser, "ROLE_INSTRUCTOR") &&
-      row.values.createdByEmail === currentUser.root.user.email
+      row.original.createdByEmail === currentUser.root.user.email
     ) {
       return true;
     }
@@ -67,9 +67,9 @@ export default function InstructorCoursesTable({
   const columnsWithInstall = [
     ...columns,
     {
-      Header: "Github Org",
-      accessor: "orgName",
-      Cell: ({ cell }) => {
+      header: "Github Org",
+      id: "orgName",
+      cell: ({ cell }) => {
         const result = canInstall(cell.row);
         if (result) {
           return (
@@ -81,7 +81,7 @@ export default function InstructorCoursesTable({
               Install Github App
             </Button>
           );
-        } else if (!cell.value) {
+        } else if (!cell.row.original.orgName) {
           return (
             <span
               data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-no-org`}
@@ -99,17 +99,17 @@ export default function InstructorCoursesTable({
             >
               <span>
                 <a
-                  href={`https://github.com/${cell.value}`}
+                  href={`https://github.com/${cell.row.original.orgName}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-github-link`}
                 >
-                  {cell.value}
+                  {cell.row.original.orgName}
                 </a>
               </span>
               <span>
                 <a
-                  href={`https://github.com/organizations/${cell.value}/settings/installations/${cell.row.original.installationId}`}
+                  href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
@@ -126,8 +126,8 @@ export default function InstructorCoursesTable({
       },
     },
     {
-      Header: "Created By",
-      accessor: "createdByEmail",
+      header: "Created By",
+      accessorKey: "createdByEmail",
     },
   ];
 

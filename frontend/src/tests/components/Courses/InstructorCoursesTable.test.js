@@ -77,6 +77,7 @@ describe("InstructorCoursesTable tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-createdByEmail`),
     ).toHaveTextContent("diba@ucsb.edu");
 
+    expect(screen.getByText("ucsb-cs156-s25")).toBeInTheDocument();
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-orgName`),
     ).toHaveTextContent("ucsb-cs156-s25");

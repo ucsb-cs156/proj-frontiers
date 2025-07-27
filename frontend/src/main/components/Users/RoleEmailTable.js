@@ -17,7 +17,7 @@ export default function RoleEmailTable({
       url: deleteEndpoint,
       method: "DELETE",
       params: {
-        email: cell.row.values.email,
+        email: cell.row.original.email,
       },
     };
   };
@@ -39,17 +39,14 @@ export default function RoleEmailTable({
 
   const columns = [
     {
-      Header: "Email",
-      accessor: "email", // accessor is the "key" in the data
+      header: "Email",
+      accessorKey: "email", // accessor is the "key" in the data
     },
     {
-      Header: "Delete",
-      accessor: "isInAdminEmails",
-      Cell: ({ cell }) => {
-        if (
-          !("isInAdminEmails" in cell.row.values) ||
-          !cell.row.values.isInAdminEmails
-        ) {
+      header: "Delete",
+      accessorKey: "isInAdminEmails",
+      cell: ({ cell }) => {
+        if (!cell.row.original.isInAdminEmails) {
           return (
             <Button
               className="btn btn-danger"

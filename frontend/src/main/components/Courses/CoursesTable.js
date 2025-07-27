@@ -3,20 +3,20 @@ import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
 
 const columns = [
   {
-    Header: "id",
-    accessor: "id", // accessor is the "key" in the data
+    header: "id",
+    accessorKey: "id", // accessor is the "key" in the data
   },
   {
-    Header: "Course Name",
-    accessor: "courseName",
+    header: "Course Name",
+    accessorKey: "courseName",
   },
   {
-    Header: "Term",
-    accessor: "term",
+    header: "Term",
+    accessorKey: "term",
   },
   {
-    Header: "School",
-    accessor: "school",
+    header: "School",
+    accessorKey: "school",
   },
 ];
 
@@ -70,10 +70,11 @@ export default function CoursesTable({
   const columnsWithStatus = [
     ...columns,
     {
-      Header: "Status",
-      accessor: "studentStatus",
-      Cell: ({ cell }) => {
-        if (cell.value === "PENDING") {
+      header: "Status",
+      accessorKey: "studentStatus",
+      cell: ({ cell }) => {
+        const status = cell.row.original.studentStatus;
+        if (status === "PENDING") {
           return (
             <OverlayTrigger
               placement="right"
@@ -82,7 +83,7 @@ export default function CoursesTable({
               <span style={{ color: "orange" }}>Pending</span>
             </OverlayTrigger>
           );
-        } else if (cell.value === "JOINCOURSE") {
+        } else if (status === "JOINCOURSE") {
           const cellIsLoading = isLoading(cell);
           return (
             <OverlayTrigger
@@ -113,7 +114,7 @@ export default function CoursesTable({
               </span>
             </OverlayTrigger>
           );
-        } else if (cell.value === "INVITED") {
+        } else if (status === "INVITED") {
           return (
             <OverlayTrigger
               placement="right"
@@ -130,13 +131,13 @@ export default function CoursesTable({
               </span>
             </OverlayTrigger>
           );
-        } else if (cell.value === "OWNER") {
+        } else if (status === "OWNER") {
           return (
             <OverlayTrigger placement="right" overlay={renderTooltip("OWNER")}>
               <span style={{ color: "purple" }}>Owner</span>
             </OverlayTrigger>
           );
-        } else if (cell.value === "MEMBER") {
+        } else if (status === "MEMBER") {
           return (
             <OverlayTrigger placement="right" overlay={renderTooltip("MEMBER")}>
               <span style={{ color: "blue" }}>Member</span>
@@ -144,8 +145,11 @@ export default function CoursesTable({
           );
         }
         return (
-          <OverlayTrigger placement="right" overlay={renderTooltip(cell.value)}>
-            <span>{cell.value}</span>
+          <OverlayTrigger
+            placement="right"
+            overlay={renderTooltip(cell.row.original.studentStatus)}
+          >
+            <span>{status}</span>
           </OverlayTrigger>
         );
       },
