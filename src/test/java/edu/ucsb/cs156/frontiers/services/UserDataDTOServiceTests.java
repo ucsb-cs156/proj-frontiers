@@ -12,12 +12,16 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class UserDataDTOServiceTests {
@@ -61,11 +65,15 @@ public class UserDataDTOServiceTests {
         userDTOS.add(UserDataDTO.from(u2, false, true));
         userDTOS.add(UserDataDTO.from(u3, false, false));
 
-        when(userRepository.findAll()).thenReturn(expectedUsers);
+        PageImpl<User> page = new PageImpl<>(expectedUsers);
+
+        Pageable pageable = Pageable.unpaged();
+
+        when(userRepository.findAll(eq(pageable))).thenReturn(page);
         when(adminRepository.findAll()).thenReturn(expectedAdmins);
         when(instructorRepository.findAll()).thenReturn(expectedInstructors);
 
-        assertEquals(userDTOS, userDataService.getUserDataDTOs());
+        assertEquals(userDTOS, userDataService.getUserDataDTOs(pageable).getContent());
 
     }
 }

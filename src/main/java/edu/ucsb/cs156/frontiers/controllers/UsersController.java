@@ -8,6 +8,8 @@ import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 
 import edu.ucsb.cs156.frontiers.services.UserDataDTOService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This is a REST controller for getting information about the users.
@@ -40,8 +43,8 @@ public class UsersController extends ApiController {
     @Operation(summary= "Get a list of all users")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("")
-    public List<UserDataDTO> users()
+    public Page<UserDataDTO> users(Pageable pageable)
             throws JsonProcessingException {
-        return userDataDTOService.getUserDataDTOs();
+        return userDataDTOService.getUserDataDTOs(pageable);
     }
 }
