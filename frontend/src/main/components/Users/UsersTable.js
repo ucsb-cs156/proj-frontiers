@@ -25,6 +25,14 @@ const columns = [
       return String(cell.getValue());
     }, // convert boolean to string for display
   },
+  {
+    header: "Instructor",
+    id: "instructor",
+    accessorKey: "instructor",
+    cell: ({ cell }) => {
+      return String(cell.getValue());
+    }, // convert boolean to string for display
+  },
 ];
 
 export default function UsersTable({ users }) {
