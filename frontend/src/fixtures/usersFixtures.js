@@ -10,6 +10,7 @@ const usersFixtures = {
       givenName: "Phill",
       familyName: "Conrad",
       admin: true,
+      instructor: false,
     },
     {
       id: 2,
@@ -21,6 +22,7 @@ const usersFixtures = {
       givenName: "Phillip",
       familyName: "Conrad",
       admin: false,
+      instructor: false,
     },
     {
       id: 3,
@@ -32,6 +34,7 @@ const usersFixtures = {
       givenName: "Craig",
       familyName: "Zzyxx",
       admin: false,
+      instructor: true,
     },
   ],
 };
