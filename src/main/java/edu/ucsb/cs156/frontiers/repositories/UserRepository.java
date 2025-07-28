@@ -1,11 +1,12 @@
 package edu.ucsb.cs156.frontiers.repositories;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import edu.ucsb.cs156.frontiers.entities.User;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 /**
@@ -19,6 +20,8 @@ public interface UserRepository extends CrudRepository<User, Long> {
    * @return Optional of User (empty if not found)
    */
   Optional<User> findByEmail(String email);
+
+  Page<User> findAll(Pageable pageable);
 
   Optional<User> findByGoogleSub(String googleSub);
 
