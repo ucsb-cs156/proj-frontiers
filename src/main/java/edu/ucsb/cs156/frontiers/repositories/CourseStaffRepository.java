@@ -30,4 +30,6 @@ public interface CourseStaffRepository extends JpaRepository<CourseStaff,Long>
      * @return Optional of CourseStaff (empty if not found)
      */
     Optional<CourseStaff> findByEmailAndCourse(String email, Course course);
+
+    Optional<CourseStaff> findByCourseAndGithubLogin(Course course, String githubLogin);
 }
