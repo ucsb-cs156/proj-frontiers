@@ -8,6 +8,8 @@ import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 
 import edu.ucsb.cs156.frontiers.services.UserDataDTOService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This is a REST controller for getting information about the users.
@@ -27,7 +30,7 @@ import java.util.List;
 @Tag(name=&quot;User information (admin only)&quot;)
 @RequestMapping(&quot;/api/admin/users&quot;)
 @RestController
-<span class="fc" id="L30">public class UsersController extends ApiController {</span>
+<span class="fc" id="L33">public class UsersController extends ApiController {</span>
     @Autowired
     private UserDataDTOService userDataDTOService;
 
@@ -40,9 +43,9 @@ import java.util.List;
     @Operation(summary= &quot;Get a list of all users&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
     @GetMapping(&quot;&quot;)
-    public List&lt;UserDataDTO&gt; users()
+    public Page&lt;UserDataDTO&gt; users(Pageable pageable)
             throws JsonProcessingException {
-<span class="fc" id="L45">        return userDataDTOService.getUserDataDTOs();</span>
+<span class="fc" id="L48">        return userDataDTOService.getUserDataDTOs(pageable);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
