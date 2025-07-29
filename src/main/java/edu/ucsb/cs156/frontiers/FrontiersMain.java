@@ -15,11 +15,14 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ClassPathResource;
 
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
 import lombok.extern.slf4j.Slf4j;
+
+import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
 
 /**
  * The FrontiersMain class is the main entry point for the application.
@@ -29,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @EnableAsync // for @Async annotation for JobsService
 @EnableScheduling // for @Scheduled annotation for JobsService
 // enables automatic population of @CreatedDate and @LastModifiedDate
+@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO) //Replaces PageImpl instances with a permanent type PagedModel that is not subject to change
+//See https://docs.spring.io/spring-data/commons/reference/repositories/core-extensions.html#core.web.page
 public class FrontiersMain {
 
   /**

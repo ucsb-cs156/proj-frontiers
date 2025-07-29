@@ -28,7 +28,12 @@ describe("AdminUsersPage tests", () => {
 
   test("renders without crashing on three users", async () => {
     const queryClient = new QueryClient();
-    axiosMock.onGet("/api/admin/users").reply(200, usersFixtures.threeUsers);
+    axiosMock
+      .onGet("/api/admin/users", { params: { page: 0, size: 50, sort: "id" } })
+      .reply(200, {
+        content: usersFixtures.threeUsers,
+        page: { totalPages: 2 },
+      });
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -38,6 +43,17 @@ describe("AdminUsersPage tests", () => {
       </QueryClientProvider>,
     );
     await screen.findByText("Users");
+    await screen.findByTestId("OurPagination-2");
+    const filteredMockHistory = axiosMock.history.get.filter(({ url }) =>
+      url.includes("/api/admin/users"),
+    );
+    expect(filteredMockHistory.length).toBe(1);
+    expect(filteredMockHistory[0].url).toBe("/api/admin/users");
+    expect(filteredMockHistory[0].params).toEqual({
+      page: 0,
+      size: 50,
+      sort: "id",
+    });
   });
 
   test("renders empty table when backend unavailable", async () => {
@@ -67,5 +83,8 @@ describe("AdminUsersPage tests", () => {
     expect(
       screen.queryByTestId(`${testId}-cell-row-0-col-id`),
     ).not.toBeInTheDocument();
+
+    expect(screen.getByTestId("OurPagination-1")).toBeInTheDocument();
+    expect(screen.queryByTestId("OurPagination-2")).not.toBeInTheDocument();
   });
 });
