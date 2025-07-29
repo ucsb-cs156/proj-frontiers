@@ -20,6 +20,7 @@ import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import LoadingPage from "main/pages/LoadingPage";
 import SignInPage from "main/pages/Auth/SignInPage";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
+import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 function App() {
   const currentUserData = useCurrentUser();
@@ -76,6 +77,7 @@ function App() {
     <>
       <Route path="/profile" element={<ProfilePage />} />
       <Route exact path="/login" element={<SignInPage />} />
+      <Route path="/login/success" element={<SignInSuccessPage />} />
     </>
   ) : null;
 

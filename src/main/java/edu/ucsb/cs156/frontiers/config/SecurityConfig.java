@@ -76,7 +76,7 @@ public class SecurityConfig {
         .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
         .oauth2Login(
             oauth2 -> oauth2.userInfoEndpoint(userInfo ->
-                    userInfo.oidcUserService(googleSignInService).userService(githubSignInService)))
+                    userInfo.oidcUserService(googleSignInService).userService(githubSignInService)).defaultSuccessUrl("/login/success"))
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()).ignoringRequestMatchers("/api/webhooks/github"))
