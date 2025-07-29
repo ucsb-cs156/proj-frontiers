@@ -9,6 +9,9 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,23 +24,24 @@ public class UserDataDTOService {
     private final InstructorRepository instructorRepository;
 
     @Autowired
-<span class="fc" id="L24">    public UserDataDTOService(UserRepository userRepository, AdminRepository adminRepository, InstructorRepository instructorRepository){</span>
-<span class="fc" id="L25">        this.userRepository = userRepository;</span>
-<span class="fc" id="L26">        this.adminRepository = adminRepository;</span>
-<span class="fc" id="L27">        this.instructorRepository = instructorRepository;</span>
-<span class="fc" id="L28">    }</span>
+<span class="fc" id="L27">    public UserDataDTOService(UserRepository userRepository, AdminRepository adminRepository, InstructorRepository instructorRepository){</span>
+<span class="fc" id="L28">        this.userRepository = userRepository;</span>
+<span class="fc" id="L29">        this.adminRepository = adminRepository;</span>
+<span class="fc" id="L30">        this.instructorRepository = instructorRepository;</span>
+<span class="fc" id="L31">    }</span>
 
-    public List&lt;UserDataDTO&gt; getUserDataDTOs() {
-<span class="fc" id="L31">        List&lt;Admin&gt; admins = Lists.newArrayList(adminRepository.findAll());</span>
-<span class="fc" id="L32">        List&lt;Instructor&gt; instructors = Lists.newArrayList(instructorRepository.findAll());</span>
-<span class="fc" id="L33">        Iterable&lt;User&gt; users = userRepository.findAll();</span>
-<span class="fc" id="L34">        List&lt;UserDataDTO&gt; userDTOs = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">        for(User user : users){</span>
-<span class="fc" id="L36">            boolean isAdmin = admins.stream().anyMatch(a -&gt; a.getEmail().equals(user.getEmail()));</span>
-<span class="fc" id="L37">            boolean isInstructor = instructors.stream().anyMatch(i -&gt; i.getEmail().equals(user.getEmail()));</span>
-<span class="fc" id="L38">            userDTOs.add(UserDataDTO.from(user, isAdmin, isInstructor));</span>
-<span class="fc" id="L39">        }</span>
-<span class="fc" id="L40">        return userDTOs;</span>
+    public Page&lt;UserDataDTO&gt; getUserDataDTOs(Pageable pageable) {
+<span class="fc" id="L34">        Page&lt;User&gt; users = userRepository.findAll(pageable);</span>
+<span class="fc" id="L35">        List&lt;Admin&gt; admins = Lists.newArrayList(adminRepository.findAll());</span>
+<span class="fc" id="L36">        List&lt;Instructor&gt; instructors = Lists.newArrayList(instructorRepository.findAll());</span>
+
+<span class="fc" id="L38">        List&lt;UserDataDTO&gt; userDTOs = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        for(User user : users){</span>
+<span class="fc" id="L40">            boolean isAdmin = admins.stream().anyMatch(a -&gt; a.getEmail().equals(user.getEmail()));</span>
+<span class="fc" id="L41">            boolean isInstructor = instructors.stream().anyMatch(i -&gt; i.getEmail().equals(user.getEmail()));</span>
+<span class="fc" id="L42">            userDTOs.add(UserDataDTO.from(user, isAdmin, isInstructor));</span>
+<span class="fc" id="L43">        }</span>
+<span class="fc" id="L44">        return new PageImpl&lt;UserDataDTO&gt;(userDTOs, pageable, users.getTotalElements());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
