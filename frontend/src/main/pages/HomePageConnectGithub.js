@@ -4,7 +4,6 @@ import { useSystemInfo } from "main/utils/systemInfo";
 import { Row } from "react-bootstrap";
 import SignInCard from "main/components/Auth/SignInCard";
 import { useLocation } from "react-router-dom";
-// import { useCurrentUser } from "main/utils/currentUser";
 
 export default function HomePageConnectGithub() {
   const githubIcon = () => {
