@@ -256,4 +256,93 @@ describe("InstructorCoursesTable tests", () => {
 
     expect(window.location.href).toBe("/api/courses/redirect?courseId=3");
   });
+  test("expect the correct tooltip ID for the courseName tooltips", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("CPTS 489"));
+
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveAttribute("id", "tooltip-coursename-1");
+  });
+  test("expect the correct tooltip ID for the orgName tooltips", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("wsu-cpts489-fa20"));
+
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveAttribute("id", "tooltip-orgname-1");
+  });
+  test("the correct tooltip renders for courseName", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("CPTS 489"));
+
+    await waitFor(() => {
+      expect(screen.getByText("View course details")).toBeInTheDocument();
+    });
+  });
+  test("the correct tooltip renders for orgName when a GitHub organization exists for the course", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("wsu-cpts489-fa20"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("View Github organization: wsu-cpts489-fa20"),
+      ).toBeInTheDocument();
+    });
+  });
+  test("the correct tooltip renders for orgName when a GitHub organization does NOT exist for the course", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("Install Github App"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Click to install the GitHub app for the course: CMPSC 156",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
 });

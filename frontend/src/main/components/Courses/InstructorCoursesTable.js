@@ -1,6 +1,6 @@
 import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
-import { Button } from "react-bootstrap";
+import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
 import { FaGithub } from "react-icons/fa";
 
 const columns = [
@@ -13,12 +13,21 @@ const columns = [
     id: "courseName",
     cell: ({ cell }) => {
       return (
-        <a
-          href={`/instructor/courses/${cell.row.original.id}`}
-          data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+        <OverlayTrigger
+          placement="right"
+          overlay={
+            <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
+              View course details
+            </Tooltip>
+          }
         >
-          {cell.row.original.courseName}
-        </a>
+          <a
+            href={`/instructor/courses/${cell.row.original.id}`}
+            data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+          >
+            {cell.row.original.courseName}
+          </a>
+        </OverlayTrigger>
       );
     },
   },
@@ -64,6 +73,19 @@ export default function InstructorCoursesTable({
     return false;
   };
 
+  const renderTooltip = (cell) => {
+    let set_message;
+    const result = canInstall(cell.row);
+    if (result) {
+      set_message = `Click to install the GitHub app for the course: ${cell.row.original.courseName}`;
+    } else {
+      set_message = `View Github organization: ${cell.row.original.orgName}`;
+    }
+    return (
+      <Tooltip id={`tooltip-orgname-${cell.row.index}`}>{set_message}</Tooltip>
+    );
+  };
+
   const columnsWithInstall = [
     ...columns,
     {
@@ -73,13 +95,17 @@ export default function InstructorCoursesTable({
         const result = canInstall(cell.row);
         if (result) {
           return (
-            <Button
-              variant={"primary"}
-              onClick={() => installCallback(cell)}
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
-            >
-              Install Github App
-            </Button>
+            <OverlayTrigger placement="right" overlay={renderTooltip(cell)}>
+              <span>
+                <Button
+                  variant={"primary"}
+                  onClick={() => installCallback(cell)}
+                  data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+                >
+                  Install Github App
+                </Button>
+              </span>
+            </OverlayTrigger>
           );
         } else if (!cell.row.original.orgName) {
           return (
@@ -89,38 +115,40 @@ export default function InstructorCoursesTable({
           );
         } else {
           return (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                width: "100%",
-              }}
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
-            >
-              <span>
-                <a
-                  href={`https://github.com/${cell.row.original.orgName}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-github-link`}
-                >
-                  {cell.row.original.orgName}
-                </a>
-              </span>
-              <span>
-                <a
-                  href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
-                >
-                  <FaGithub
-                    size={"1.5em"}
-                    data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
-                  />
-                </a>
-              </span>
-            </div>
+            <OverlayTrigger placement="right" overlay={renderTooltip(cell)}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
+                data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
+              >
+                <span>
+                  <a
+                    href={`https://github.com/${cell.row.original.orgName}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-github-link`}
+                  >
+                    {cell.row.original.orgName}
+                  </a>
+                </span>
+                <span>
+                  <a
+                    href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
+                  >
+                    <FaGithub
+                      size={"1.5em"}
+                      data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
+                    />
+                  </a>
+                </span>
+              </div>
+            </OverlayTrigger>
           );
         }
       },
