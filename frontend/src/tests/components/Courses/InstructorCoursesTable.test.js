@@ -123,7 +123,6 @@ describe("InstructorCoursesTable tests", () => {
       expect(window.alert).toHaveBeenCalledTimes(1);
     });
   });
-
   test("Has the expected column headers and content for admin user", async () => {
     render(
       <BrowserRouter>

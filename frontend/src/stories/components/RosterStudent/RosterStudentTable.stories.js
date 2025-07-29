@@ -55,3 +55,29 @@ ThreeItemsAdminUser.parameters = {
     }),
   ],
 };
+
+export const ItemWithEachStatusAdminUser = Template.bind({});
+ItemWithEachStatusAdminUser.args = {
+  students: rosterStudentFixtures.studentsWithEachStatus,
+  currentUser: currentUserFixtures.adminUser,
+};
+
+ItemWithEachStatusAdminUser.parameters = {
+  msw: [
+    http.delete("/api/rosterstudents/delete", ({ request }) => {
+      const url = new URL(request.url);
+      window.alert(
+        "Invoked delete with URL: " +
+          url +
+          " and params: " +
+          JSON.stringify(Object.fromEntries(url.searchParams)),
+      );
+      return HttpResponse.json(
+        {},
+        {
+          status: 200,
+        },
+      );
+    }),
+  ],
+};

@@ -25,8 +25,16 @@ describe("RosterStudentTable tests", () => {
     "First Name",
     "Last Name",
     "Email",
+    "Status",
   ];
-  const expectedFields = ["id", "studentId", "firstName", "lastName", "email"];
+  const expectedFields = [
+    "id",
+    "studentId",
+    "firstName",
+    "lastName",
+    "email",
+    "orgStatus",
+  ];
   const testId = "RosterStudentTable";
 
   beforeEach(() => {
@@ -71,7 +79,6 @@ describe("RosterStudentTable tests", () => {
       expect(fieldElement).not.toBeInTheDocument();
     });
   });
-
   test("Has the expected column headers, content and buttons for admin user", () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
@@ -81,7 +88,7 @@ describe("RosterStudentTable tests", () => {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RosterStudentTable
-            students={rosterStudentFixtures.threeStudents}
+            students={rosterStudentFixtures.studentsWithEachStatus}
             currentUser={currentUser}
           />
         </MemoryRouter>
@@ -102,7 +109,7 @@ describe("RosterStudentTable tests", () => {
     });
 
     expect(screen.getByTestId(`${testId}-cell-row-0-col-id`)).toHaveTextContent(
-      "3",
+      "1",
     );
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
@@ -118,6 +125,30 @@ describe("RosterStudentTable tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-email`),
     ).toHaveTextContent("alicebrown@ucsb.edu");
 
+    const pending = screen.getByText("Pending");
+    expect(pending).toBeInTheDocument();
+    expect(pending).toHaveStyle("color: orange");
+
+    const joinCourse = screen.getByText("Able to Generate Invite");
+    expect(joinCourse).toBeInTheDocument();
+    expect(joinCourse).toHaveStyle("color: pink");
+
+    const member = screen.getByText("Member");
+    expect(member).toBeInTheDocument();
+    expect(member).toHaveStyle("color: blue");
+
+    const owner = screen.getByText("Owner");
+    expect(owner).toBeInTheDocument();
+    expect(owner).toHaveStyle("color: purple");
+
+    const invited = screen.getByText("Invited");
+    expect(invited).toBeInTheDocument();
+    expect(invited).toHaveStyle("color: green");
+
+    const unexpected = screen.getByText("Illegal status that will never occur");
+    expect(unexpected).toBeInTheDocument();
+    expect(unexpected).not.toHaveStyle("color: red");
+
     const editButton = screen.getByTestId(
       `${testId}-cell-row-0-col-Edit-button`,
     );
@@ -130,7 +161,6 @@ describe("RosterStudentTable tests", () => {
     expect(deleteButton).toBeInTheDocument();
     expect(deleteButton).toHaveClass("btn-danger");
   });
-
   test("Has the expected column headers, content for ordinary user", () => {
     // arrange
     const currentUser = currentUserFixtures.userOnly;
@@ -272,4 +302,158 @@ describe("RosterStudentTable tests", () => {
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
     expect(axiosMock.history.delete[0].params).toEqual({ id: 3 });
   });
+});
+test("tooltips for PENDING status", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Pending"));
+
+  await waitFor(() => {
+    expect(
+      screen.getByText(
+        "Student cannot join the course until it has been completely set up.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+test("tooltips for JOINCOURSE status", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Able to Generate Invite"));
+
+  await waitFor(() => {
+    expect(
+      screen.getByText(
+        "Student has been prompted to join the course, but hasn't generated an invite to the organization yet.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+test("tooltips for INVITED status", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Invited"));
+  await waitFor(() => {
+    expect(
+      screen.getByText(
+        "Student has generated an invite, but has not yet accepted or declined the invitation.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+test("tooltips for OWNER status", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Owner"));
+  await waitFor(() => {
+    expect(
+      screen.getByText(
+        "Student is an owner of the GitHub organization associated with this course.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+test("tooltips for MEMBER status", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Member"));
+
+  await waitFor(() => {
+    expect(
+      screen.getByText(
+        "Student is a member of the GitHub organization associated with this course.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+test("tooltips for an illegal status", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Illegal status that will never occur"));
+
+  await waitFor(() => {
+    expect(
+      screen.getByText("Tooltip for illegal status that will never occur"),
+    ).toBeInTheDocument();
+  });
+});
+test("expect the correct tooltip ID", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Member"));
+
+  const tooltip = await screen.findByRole("tooltip");
+  expect(tooltip).toHaveAttribute("id", "member-tooltip");
 });
