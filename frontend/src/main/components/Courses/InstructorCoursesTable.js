@@ -115,15 +115,15 @@ export default function InstructorCoursesTable({
           );
         } else {
           return (
-            <OverlayTrigger placement="right" overlay={renderTooltip(cell)}>
-              <div
+            <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
                 }}
                 data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
               >
+            <OverlayTrigger placement="right" overlay={renderTooltip(cell)}>
                 <span>
                   <a
                     href={`https://github.com/${cell.row.original.orgName}`}
@@ -134,7 +134,8 @@ export default function InstructorCoursesTable({
                     {cell.row.original.orgName}
                   </a>
                 </span>
-                <span>
+            </OverlayTrigger>
+             <span>
                   <a
                     href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
                     target="_blank"
@@ -146,9 +147,8 @@ export default function InstructorCoursesTable({
                       data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
                     />
                   </a>
-                </span>
-              </div>
-            </OverlayTrigger>
+             </span>
+            </div>
           );
         }
       },
