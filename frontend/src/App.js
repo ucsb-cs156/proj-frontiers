@@ -68,6 +68,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePageConnectGithub />} />
           <Route path="*" element={<HomePageConnectGithub />} />
+          <Route path="/login/success" element={<SignInSuccessPage />} />
         </Routes>
       </BrowserRouter>
     );

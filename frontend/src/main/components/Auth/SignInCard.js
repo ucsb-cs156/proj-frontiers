@@ -6,6 +6,7 @@ export default function SignInCard({
   title,
   description,
   testid = "default",
+  onClick = () => {},
 }) {
   return (
     <Card style={{ width: "18rem" }} data-testid={`SignInCard-base-${testid}`}>
@@ -22,7 +23,9 @@ export default function SignInCard({
           className={"text-center"}
           data-testid={`SignInCard-footer-${testid}`}
         >
-          <Button href={url}>Log In</Button>
+          <Button onClick={onClick} href={url}>
+            Log In
+          </Button>
         </Card.Footer>
       </Card.Body>
     </Card>
