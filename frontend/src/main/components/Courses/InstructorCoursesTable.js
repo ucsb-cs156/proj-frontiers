@@ -116,14 +116,14 @@ export default function InstructorCoursesTable({
         } else {
           return (
             <div
-                style={{
+              style={{
                 display: "flex",
                 justifyContent: "space-between",
                 width: "100%",
-                }}
-                data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
-              >
-            <OverlayTrigger placement="right" overlay={renderTooltip(cell)}>
+              }}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
+            >
+              <OverlayTrigger placement="right" overlay={renderTooltip(cell)}>
                 <span>
                   <a
                     href={`https://github.com/${cell.row.original.orgName}`}
@@ -134,20 +134,20 @@ export default function InstructorCoursesTable({
                     {cell.row.original.orgName}
                   </a>
                 </span>
-            </OverlayTrigger>
-             <span>
-                  <a
-                    href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
-                  >
-                    <FaGithub
-                      size={"1.5em"}
-                      data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
-                    />
-                  </a>
-             </span>
+              </OverlayTrigger>
+              <span>
+                <a
+                  href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
+                >
+                  <FaGithub
+                    size={"1.5em"}
+                    data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
+                  />
+                </a>
+              </span>
             </div>
           );
         }
