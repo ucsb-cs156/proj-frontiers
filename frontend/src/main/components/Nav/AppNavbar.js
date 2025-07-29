@@ -1,5 +1,5 @@
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { hasRole } from "main/utils/currentUser";
 import AppNavbarLocalhost from "main/components/Nav/AppNavbarLocalhost";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
@@ -12,7 +12,9 @@ export default function AppNavbar({
   currentUrl = window.location.href,
 }) {
   const navigation = useNavigate();
+  const location = useLocation();
   const handleSignIn = () => {
+    sessionStorage.setItem("redirect", location.pathname);
     navigation("/login");
   };
   return (

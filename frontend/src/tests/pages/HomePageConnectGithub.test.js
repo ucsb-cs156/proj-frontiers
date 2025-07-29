@@ -1,4 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
@@ -71,5 +77,22 @@ describe("HomePageConnectGithub tests", () => {
     const footer = await screen.findByTestId("SignInCard-footer-github");
     const button = within(footer).getByRole("button", { name: /log in/i });
     expect(button).toHaveAttribute("href", "/oauth2/authorization/github");
+  });
+
+  test("Clicking button sets sessionStorage", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/example/return"]}>
+          <HomePageConnectGithub />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await screen.findByText(/Sign in with Github/);
+    fireEvent.click(
+      within(screen.getByTestId("SignInCard-base-github")).getByText("Log In"),
+    );
+    await waitFor(() =>
+      expect(sessionStorage.getItem("redirect")).toBe("/example/return"),
+    );
   });
 });

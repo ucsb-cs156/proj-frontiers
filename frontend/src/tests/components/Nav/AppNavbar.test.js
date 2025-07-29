@@ -180,7 +180,7 @@ describe("AppNavbar tests", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={["/example/return"]}>
           <AppNavbar currentUser={currentUser} systemInfo={systemInfo} />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -189,6 +189,8 @@ describe("AppNavbar tests", () => {
     await screen.findByText("Log In");
     fireEvent.click(screen.getByText("Log In"));
     await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith("/login"));
+    expect(sessionStorage.getItem("redirect")).toBe("/example/return");
+    sessionStorage.clear();
   });
   test("If user does have ROLE_GITHUB, it does renders the connected to github", async () => {
     const currentUser = currentUserFixturesWithGithub.userOnly;
