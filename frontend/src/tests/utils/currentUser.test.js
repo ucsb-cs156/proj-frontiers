@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useCurrentUser, useLogout, hasRole } from "main/utils/currentUser";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import {
@@ -35,7 +35,7 @@ describe("utils/currentUser tests", () => {
 
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
       await waitFor(() =>
-        expect(queryClient.getQueryState("current user").status).toBe(
+        expect(queryClient.getQueryState(['current user']).status).toBe(
           "success",
         ),
       );
@@ -46,7 +46,7 @@ describe("utils/currentUser tests", () => {
         initialData: true,
       });
 
-      const queryState = queryClient.getQueryState("current user");
+      const queryState = queryClient.getQueryState(['current user']);
       expect(queryState).toBeDefined();
 
       queryClient.clear();
@@ -76,8 +76,8 @@ describe("utils/currentUser tests", () => {
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
 
       await waitFor(() =>
-        expect(queryClient.getQueryState("current user").status).toBe(
-          "success",
+        expect(queryClient.getQueryState(['current user']).dataUpdateCount).toBe(
+          1,
         ),
       );
 
@@ -100,7 +100,7 @@ describe("utils/currentUser tests", () => {
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
 
       await waitFor(() =>
-        expect(queryClient.getQueryState("current user").status).toBe(
+        expect(queryClient.getQueryState(['current user']).status).toBe(
           "success",
         ),
       );
@@ -133,8 +133,8 @@ describe("utils/currentUser tests", () => {
       const { result } = renderHook(() => useCurrentUser(), { wrapper });
 
       await waitFor(() =>
-        expect(queryClient.getQueryState("current user").status).toBe(
-          "success",
+        expect(queryClient.getQueryState(['current user']).dataUpdateCount).toBe(
+          1,
         ),
       );
       expect(console.error).toHaveBeenCalled();
@@ -176,9 +176,7 @@ describe("utils/currentUser tests", () => {
       await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith("/"));
 
       await waitFor(() =>
-        expect(resetQueriesSpy).toHaveBeenCalledWith("current user", {
-          exact: true,
-        }),
+        expect(resetQueriesSpy).toHaveBeenCalledWith({"queryKey": ["current user"]}),
       );
 
       queryClient.clear();

@@ -1,7 +1,7 @@
 import { render, waitFor, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import mockConsole from "jest-mock-console";
 
 const mockedNavigate = jest.fn();

@@ -6,7 +6,7 @@ import {
   within,
 } from "@testing-library/react";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from "react-router-dom";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";

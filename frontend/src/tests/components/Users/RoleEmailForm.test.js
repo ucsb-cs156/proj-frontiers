@@ -3,7 +3,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 
 import RoleEmailForm from "main/components/Users/RoleEmailForm";
 
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockedNavigate = jest.fn();
 

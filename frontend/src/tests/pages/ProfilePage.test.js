@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from "react-router-dom";
 import {
   apiCurrentUserFixtures,
@@ -119,9 +119,9 @@ describe("ProfilePage tests", () => {
     ).toBeInTheDocument();
     const fire = screen.getByText("Yes, I'd like to do this");
     const updateCount =
-      queryClient.getQueryState("current user").dataUpdateCount;
+      queryClient.getQueryState(['current user']).dataUpdateCount;
     const systemInfoCount =
-      queryClient.getQueryState("systemInfo").dataUpdateCount;
+      queryClient.getQueryState(['systemInfo']).dataUpdateCount;
     fireEvent.click(fire);
     await waitFor(() =>
       expect(
@@ -133,10 +133,10 @@ describe("ProfilePage tests", () => {
     expect(mockToast).toBeCalledWith(
       "Disconnected from GitHub. You may now log in with a different account.",
     );
-    expect(queryClient.getQueryState("current user").dataUpdateCount).toBe(
+    expect(queryClient.getQueryState(['current user']).dataUpdateCount).toBe(
       updateCount + 1,
     );
-    expect(queryClient.getQueryState("systemInfo").dataUpdateCount).toBe(
+    expect(queryClient.getQueryState(['systemInfo']).dataUpdateCount).toBe(
       systemInfoCount,
     );
   });

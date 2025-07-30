@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -31,25 +31,24 @@ export function useBackend(
   initialData,
   suppressToasts = false,
 ) {
-  return useQuery(
-    queryKey,
-    async () => {
-      try {
-        const response = await axios(axiosParameters);
-        return response.data;
-      } catch (e) {
-        const errorMessage = `Error communicating with backend via ${axiosParameters.method} on ${axiosParameters.url}`;
-        if (!suppressToasts) {
-          toast(errorMessage);
-        }
-        console.error(errorMessage, e);
-        throw e;
+  return useQuery({
+    queryKey: queryKey,
+    queryFn: async () =>
+  {
+    try {
+      const response = await axios(axiosParameters);
+      return response.data;
+    } catch (e) {
+      const errorMessage = `Error communicating with backend via ${axiosParameters.method} on ${axiosParameters.url}`;
+      if (!suppressToasts) {
+        toast(errorMessage);
       }
-    },
-    {
-      initialData,
-    },
-  );
+      console.error(errorMessage, e);
+      throw e;
+    }
+  },
+  initialData: initialData,
+});
 }
 
 // const wrappedParams = async (params) =>
