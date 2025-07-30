@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -33,22 +33,21 @@ export function useBackend(
 ) {
   return useQuery({
     queryKey: queryKey,
-    queryFn: async () =>
-  {
-    try {
-      const response = await axios(axiosParameters);
-      return response.data;
-    } catch (e) {
-      const errorMessage = `Error communicating with backend via ${axiosParameters.method} on ${axiosParameters.url}`;
-      if (!suppressToasts) {
-        toast(errorMessage);
+    queryFn: async () => {
+      try {
+        const response = await axios(axiosParameters);
+        return response.data;
+      } catch (e) {
+        const errorMessage = `Error communicating with backend via ${axiosParameters.method} on ${axiosParameters.url}`;
+        if (!suppressToasts) {
+          toast(errorMessage);
+        }
+        console.error(errorMessage, e);
+        throw e;
       }
-      console.error(errorMessage, e);
-      throw e;
-    }
-  },
-  initialData: initialData,
-});
+    },
+    initialData: initialData,
+  });
 }
 
 // const wrappedParams = async (params) =>
@@ -67,13 +66,15 @@ export function useBackendMutation(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation((object) => wrappedParams(objectToAxiosParams(object)), {
+  return useMutation({
+    mutationFn: (object) => wrappedParams(objectToAxiosParams(object)),
     onError: (data) => {
       toast(`${data}`);
     },
     // Stryker disable all: Not sure how to set up the complex behavior needed to test this
     onSettled: () => {
-      if (queryKey !== null) queryClient.invalidateQueries(queryKey);
+      if (queryKey !== null)
+        queryClient.invalidateQueries({ queryKey: queryKey });
     },
     // Stryker restore all
     retry: false,

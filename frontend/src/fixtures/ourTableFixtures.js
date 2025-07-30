@@ -114,7 +114,7 @@ const ourTableFixtures = {
         header: "Actions",
         cell: (props) => (
           // You can access the entire row data using props.row.original
-          (<div>
+          <div>
             <button
               onClick={() => alert(`Editing ${props.row.original.firstName}`)}
             >
@@ -125,7 +125,7 @@ const ourTableFixtures = {
             >
               Delete
             </button>
-          </div>)
+          </div>
         ),
       }),
     ],

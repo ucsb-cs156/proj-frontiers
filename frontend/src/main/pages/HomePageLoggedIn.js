@@ -77,14 +77,14 @@ export default function HomePageLoggedIn() {
 
   const isStudentJoining = (cell) => {
     return (
-      studentJoinMutation.isLoading &&
+      studentJoinMutation.isPending &&
       studentJoinMutation.variables.row.index === cell.row.index
     );
   };
 
   const isStaffJoining = (cell) => {
     return (
-      staffJoinMutation.isLoading &&
+      staffJoinMutation.isPending &&
       staffJoinMutation.variables.row.index === cell.row.index
     );
   };

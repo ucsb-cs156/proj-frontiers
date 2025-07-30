@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export function useCurrentUser() {
   let rolesList = ["ERROR_GETTING_ROLES"];
   const queryResults = useQuery({
-    queryKey: ['current user'],
+    queryKey: ["current user"],
     queryFn: async () => {
       try {
         const response = await axios.get("/api/currentUser");
@@ -28,10 +28,12 @@ export function useCurrentUser() {
 export function useLogout() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const mutation = useMutation(async () => {
-    await axios.post("/logout");
-    await queryClient.resetQueries({queryKey: ['current user']});
-    navigate("/");
+  const mutation = useMutation({
+    mutationFn: async () => {
+      await axios.post("/logout");
+      await queryClient.resetQueries({ queryKey: ["current user"] });
+      navigate("/");
+    },
   });
   return mutation;
 }

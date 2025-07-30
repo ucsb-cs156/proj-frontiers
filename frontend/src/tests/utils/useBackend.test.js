@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor, act } from "@testing-library/react";
 
 import axios from "axios";
@@ -239,12 +239,11 @@ describe("utils/useBackend tests", () => {
         "Error: Request failed with status code 404",
       );
 
-      expect(console.error).toHaveBeenCalledTimes(2);
-      const errorMessage1 = console.error.mock.calls[0][0];
-      expect(errorMessage1.message).toMatch(
-        /Request failed with status code 404/,
-      );
-      const errorMessage2 = console.error.mock.calls[1][0];
+      console.log(console.error.mock.calls);
+      expect(console.error).toHaveBeenCalledTimes(1);
+      const errorMessage1 = console.error.mock.calls[0][1];
+      expect(errorMessage1).toMatch(/Request failed with status code 404/);
+      const errorMessage2 = console.error.mock.calls[0][0];
       expect(errorMessage2).toMatch(/onError from mutation.mutate called!/);
     });
   });

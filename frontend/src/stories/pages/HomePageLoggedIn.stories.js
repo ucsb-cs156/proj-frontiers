@@ -1,7 +1,7 @@
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { http, HttpResponse } from "msw";
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import coursesFixtures from "fixtures/coursesFixtures";

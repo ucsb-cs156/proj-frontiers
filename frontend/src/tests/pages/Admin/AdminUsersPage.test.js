@@ -1,5 +1,5 @@
 import { render, waitFor, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 import usersFixtures from "fixtures/usersFixtures";
