@@ -127,15 +127,15 @@ describe("RosterStudentTable tests", () => {
 
     const pending = screen.getByText("Pending");
     expect(pending).toBeInTheDocument();
-    expect(pending).toHaveStyle("color: orange");
+    expect(pending).toHaveStyle("color: red");
 
-    const joinCourse = screen.getByText("Able to Generate Invite");
+    const joinCourse = screen.getByText("Join Course");
     expect(joinCourse).toBeInTheDocument();
-    expect(joinCourse).toHaveStyle("color: pink");
+    expect(joinCourse).toHaveStyle("color: blue");
 
     const member = screen.getByText("Member");
     expect(member).toBeInTheDocument();
-    expect(member).toHaveStyle("color: blue");
+    expect(member).toHaveStyle("color: green");
 
     const owner = screen.getByText("Owner");
     expect(owner).toBeInTheDocument();
@@ -143,7 +143,7 @@ describe("RosterStudentTable tests", () => {
 
     const invited = screen.getByText("Invited");
     expect(invited).toBeInTheDocument();
-    expect(invited).toHaveStyle("color: green");
+    expect(invited).toHaveStyle("color: blue");
 
     const unexpected = screen.getByText("Illegal status that will never occur");
     expect(unexpected).toBeInTheDocument();
@@ -339,12 +339,12 @@ test("tooltips for JOINCOURSE status", async () => {
     </QueryClientProvider>,
   );
 
-  fireEvent.mouseOver(screen.getByText("Able to Generate Invite"));
+  fireEvent.mouseOver(screen.getByText("Join Course"));
 
   await waitFor(() => {
     expect(
       screen.getByText(
-        "Student has been prompted to join the course, but hasn't generated an invite to the organization yet.",
+        "Student has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.",
       ),
     ).toBeInTheDocument();
   });

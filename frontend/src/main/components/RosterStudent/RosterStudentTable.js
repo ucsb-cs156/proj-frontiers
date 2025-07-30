@@ -105,7 +105,7 @@ export default function RosterStudentTable({
         break;
       case "JOINCOURSE":
         set_message =
-          "Student has been prompted to join the course, but hasn't generated an invite to the organization yet.";
+          "Student has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
         break;
       case "INVITED":
         set_message =
@@ -138,7 +138,7 @@ export default function RosterStudentTable({
       if (status === "PENDING") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("PENDING")}>
-            <span style={{ color: "orange" }}>Pending</span>
+            <span style={{ color: "red" }}>Pending</span>
           </OverlayTrigger>
         );
       } else if (status === "JOINCOURSE") {
@@ -147,13 +147,13 @@ export default function RosterStudentTable({
             placement="right"
             overlay={renderTooltip("JOINCOURSE")}
           >
-            <span style={{ color: "pink" }}>Able to Generate Invite</span>
+            <span style={{ color: "blue" }}>Join Course</span>
           </OverlayTrigger>
         );
       } else if (status === "INVITED") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("INVITED")}>
-            <span style={{ color: "green" }}>Invited</span>
+            <span style={{ color: "blue" }}>Invited</span>
           </OverlayTrigger>
         );
       } else if (status === "OWNER") {
@@ -165,7 +165,7 @@ export default function RosterStudentTable({
       } else if (status === "MEMBER") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("MEMBER")}>
-            <span style={{ color: "blue" }}>Member</span>
+            <span style={{ color: "green" }}>Member</span>
           </OverlayTrigger>
         );
       }
