@@ -1,9 +1,9 @@
 import React from "react";
 import { useBackend } from "main/utils/useBackend";
-
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
 import { Button } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 export default function InstructorsIndexPage() {
   const {
@@ -22,7 +22,8 @@ export default function InstructorsIndexPage() {
     return (
       <Button
         variant="primary"
-        href="/admin/instructors/create"
+        as={Link}
+        to="/admin/instructors/create"
         style={{ float: "right" }}
       >
         New Instructor

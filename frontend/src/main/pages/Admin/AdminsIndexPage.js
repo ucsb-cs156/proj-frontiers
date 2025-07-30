@@ -1,6 +1,6 @@
 import React from "react";
 import { useBackend } from "main/utils/useBackend";
-
+import { Link } from "react-router-dom";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
 import { Button } from "react-bootstrap";
@@ -22,7 +22,8 @@ export default function AdminsIndexPage() {
     return (
       <Button
         variant="primary"
-        href="/admin/admins/create"
+        as={Link}
+        to="/admin/admins/create"
         style={{ float: "right" }}
       >
         New Admin

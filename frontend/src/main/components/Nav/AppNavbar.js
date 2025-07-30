@@ -59,11 +59,13 @@ export default function AppNavbar({
                   id="appnavbar-admin-dropdown"
                   data-testid="appnavbar-admin-dropdown"
                 >
-                  <NavDropdown.Item href="/admin/users">Users</NavDropdown.Item>
-                  <NavDropdown.Item href="/admin/admins">
+                  <NavDropdown.Item as={Link} to="/admin/users">
+                    Users
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/admins">
                     Admins
                   </NavDropdown.Item>
-                  <NavDropdown.Item href="/admin/instructors">
+                  <NavDropdown.Item as={Link} to="/admin/instructors">
                     Instructors
                   </NavDropdown.Item>
                 </NavDropdown>
@@ -74,7 +76,7 @@ export default function AppNavbar({
                   id="appnavbar-instructor-dropdown"
                   data-testid="appnavbar-instructor-dropdown"
                 >
-                  <NavDropdown.Item href="/instructor/courses">
+                  <NavDropdown.Item as={Link} to="/instructor/courses">
                     Courses
                   </NavDropdown.Item>
                 </NavDropdown>

@@ -2,6 +2,7 @@ import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
 import { FaGithub } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const columns = [
   {
@@ -21,12 +22,12 @@ const columns = [
             </Tooltip>
           }
         >
-          <a
-            href={`/instructor/courses/${cell.row.original.id}`}
+          <Link
+            to={`/instructor/courses/${cell.row.original.id}`}
             data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
           >
             {cell.row.original.courseName}
-          </a>
+          </Link>
         </OverlayTrigger>
       );
     },
