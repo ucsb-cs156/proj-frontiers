@@ -79,7 +79,7 @@ export default function InstructorCoursesTable({
     if (result) {
       set_message = `Click to install the GitHub app for the course: ${cell.row.original.courseName}`;
     } else {
-      set_message = `View Github organization: ${cell.row.original.orgName}`;
+      set_message = `View GitHub organization: ${cell.row.original.orgName}`;
     }
     return (
       <Tooltip id={`tooltip-orgname-${cell.row.index}`}>{set_message}</Tooltip>
@@ -89,7 +89,7 @@ export default function InstructorCoursesTable({
   const columnsWithInstall = [
     ...columns,
     {
-      header: "Github Org",
+      header: "GitHub Org",
       id: "orgName",
       cell: ({ cell }) => {
         const result = canInstall(cell.row);
@@ -102,7 +102,7 @@ export default function InstructorCoursesTable({
                   onClick={() => installCallback(cell)}
                   data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
                 >
-                  Install Github App
+                  Install GitHub App
                 </Button>
               </span>
             </OverlayTrigger>
@@ -135,19 +135,30 @@ export default function InstructorCoursesTable({
                   </a>
                 </span>
               </OverlayTrigger>
-              <span>
-                <a
-                  href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
-                >
-                  <FaGithub
-                    size={"1.5em"}
-                    data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
-                  />
-                </a>
-              </span>
+              <OverlayTrigger
+                placement="right"
+                overlay={
+                  <Tooltip id={`tooltip-githubicon-${cell.row.index}`}>
+                    Manage installation settings for the frontiers app,
+                    including the option to uninstall it from this GitHub
+                    organization.
+                  </Tooltip>
+                }
+              >
+                <span>
+                  <a
+                    href={`https://github.com/organizations/${cell.row.original.orgName}/settings/installations/${cell.row.original.installationId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
+                  >
+                    <FaGithub
+                      size={"1.5em"}
+                      data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
+                    />
+                  </a>
+                </span>
+              </OverlayTrigger>
             </div>
           );
         }

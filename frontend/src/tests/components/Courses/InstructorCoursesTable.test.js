@@ -58,7 +58,7 @@ describe("InstructorCoursesTable tests", () => {
       expect(header).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Github Org")).toBeInTheDocument();
+    expect(screen.getByText("GitHub Org")).toBeInTheDocument();
 
     expect(screen.getByTestId(`${testId}-cell-row-0-col-id`)).toHaveTextContent(
       "1",
@@ -103,7 +103,7 @@ describe("InstructorCoursesTable tests", () => {
       `${testId}-cell-row-2-col-orgName-button`,
     );
     expect(button3).toBeInTheDocument();
-    expect(button3).toHaveTextContent("Install Github App");
+    expect(button3).toHaveTextContent("Install GitHub App");
     expect(button3).toHaveAttribute("class", "btn btn-primary");
 
     const noOrgSpan = screen.getByTestId(
@@ -139,14 +139,14 @@ describe("InstructorCoursesTable tests", () => {
       `${testId}-cell-row-2-col-orgName-button`,
     );
     expect(button3).toBeInTheDocument();
-    expect(button3).toHaveTextContent("Install Github App");
+    expect(button3).toHaveTextContent("Install GitHub App");
     expect(button3).toHaveAttribute("class", "btn btn-primary");
 
     const button4 = screen.getByTestId(
       `${testId}-cell-row-3-col-orgName-button`,
     );
     expect(button4).toBeInTheDocument();
-    expect(button4).toHaveTextContent("Install Github App");
+    expect(button4).toHaveTextContent("Install GitHub App");
     expect(button4).toHaveAttribute("class", "btn btn-primary");
   });
 
@@ -165,7 +165,7 @@ describe("InstructorCoursesTable tests", () => {
       `${testId}-cell-row-2-col-orgName-button`,
     );
     expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent("Install Github App");
+    expect(button).toHaveTextContent("Install GitHub App");
     expect(button).toHaveAttribute("class", "btn btn-primary");
     fireEvent.click(button);
     await waitFor(() => {
@@ -191,7 +191,7 @@ describe("InstructorCoursesTable tests", () => {
       `${testId}-cell-row-2-col-orgName-button`,
     );
     expect(button3).toBeInTheDocument();
-    expect(button3).toHaveTextContent("Install Github App");
+    expect(button3).toHaveTextContent("Install GitHub App");
     expect(button3).toHaveAttribute("class", "btn btn-primary");
 
     fireEvent.click(button3);
@@ -203,7 +203,7 @@ describe("InstructorCoursesTable tests", () => {
     expect(window.location.href).toBe("/api/courses/redirect?courseId=3");
   });
 
-  test("Tests for Github link and icon", async () => {
+  test("Tests for GitHub link and icon", async () => {
     render(
       <BrowserRouter>
         <InstructorCoursesTable
@@ -245,7 +245,7 @@ describe("InstructorCoursesTable tests", () => {
       `${testId}-cell-row-2-col-orgName-button`,
     );
     expect(button3).toBeInTheDocument();
-    expect(button3).toHaveTextContent("Install Github App");
+    expect(button3).toHaveTextContent("Install GitHub App");
     expect(button3).toHaveAttribute("class", "btn btn-primary");
 
     fireEvent.click(button3);
@@ -288,6 +288,26 @@ describe("InstructorCoursesTable tests", () => {
     const tooltip = await screen.findByRole("tooltip");
     expect(tooltip).toHaveAttribute("id", "tooltip-orgname-1");
   });
+  test("expect the correct tooltip ID for the github icon (that redirects to github installation settings)", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const githubIcon = screen.getByTestId(
+      `CoursesTable-cell-row-0-col-orgName-github-icon`,
+    );
+
+    fireEvent.mouseOver(githubIcon);
+
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveAttribute("id", "tooltip-githubicon-0");
+  });
   test("the correct tooltip renders for courseName", async () => {
     render(
       <BrowserRouter>
@@ -320,7 +340,7 @@ describe("InstructorCoursesTable tests", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("View Github organization: wsu-cpts489-fa20"),
+        screen.getByText("View GitHub organization: wsu-cpts489-fa20"),
       ).toBeInTheDocument();
     });
   });
@@ -335,12 +355,37 @@ describe("InstructorCoursesTable tests", () => {
       </BrowserRouter>,
     );
 
-    fireEvent.mouseOver(screen.getByText("Install Github App"));
+    fireEvent.mouseOver(screen.getByText("Install GitHub App"));
 
     await waitFor(() => {
       expect(
         screen.getByText(
           "Click to install the GitHub app for the course: CMPSC 156",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+  test("the correct tooltip renders for GitHub icon (that redirects to github installation settings)", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const githubIcon = screen.getByTestId(
+      `CoursesTable-cell-row-0-col-orgName-github-icon`,
+    );
+
+    fireEvent.mouseOver(githubIcon);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Manage installation settings for the frontiers app, including the option to uninstall it from this GitHub organization.",
         ),
       ).toBeInTheDocument();
     });
