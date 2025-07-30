@@ -65,7 +65,7 @@ describe("HomePageConnectGithub tests", () => {
     );
   });
   test("If systemInfo is not available, use the default githubOauthLogin", async () => {
-    axiosMock.onGet("/api/systemInfo").reply(200, undefined);
+    axiosMock.onGet("/api/systemInfo").reply(200, null);
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>

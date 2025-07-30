@@ -297,10 +297,17 @@ describe("InstructorCourseShowPage tests", () => {
     jest.useFakeTimers({
       advanceTimers: false,
     });
+    const specificQueryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
     const setTimeoutSpy = jest.spyOn(global, "setTimeout");
     const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={specificQueryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
           <Routes>
             <Route
@@ -324,11 +331,12 @@ describe("InstructorCourseShowPage tests", () => {
       within(screen.getByRole("navigation")).getByText("Frontiers"),
     );
     await waitFor(() =>
-      expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(8),
+      expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(12),
     );
     setTimeoutSpy.mockRestore();
     clearTimeoutSpy.mockRestore();
     jest.useRealTimers();
+    specificQueryClient.clear();
   });
 
   test("Tab assertions", () => {
