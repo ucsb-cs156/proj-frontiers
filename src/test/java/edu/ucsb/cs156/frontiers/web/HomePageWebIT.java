@@ -56,7 +56,7 @@ public class HomePageWebIT {
         String url = String.format("http://localhost:%d/", port);
         page.navigate(url);
 
-        assertThat(page.getByText("This is the MVP for the Frontiers Project."))
+        assertThat(page.getByText("This is the MVP for the Frontiers Project.", new Page.GetByTextOptions().setExact(true)))
                 .isVisible();
         
         assertThat(page.getByText("Github"))
