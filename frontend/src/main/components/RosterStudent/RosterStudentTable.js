@@ -1,5 +1,6 @@
 import React from "react";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
+import { Tooltip, OverlayTrigger } from "react-bootstrap";
 
 import { useBackendMutation } from "main/utils/useBackend";
 import {
@@ -93,6 +94,91 @@ export default function RosterStudentTable({
       accessorKey: "email",
     },
   ];
+
+  const renderTooltip = (orgStatus) => (props) => {
+    let set_message;
+
+    switch (orgStatus) {
+      case "PENDING":
+        set_message =
+          "Student cannot join the course until it has been completely set up.";
+        break;
+      case "JOINCOURSE":
+        set_message =
+          "Student has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
+        break;
+      case "INVITED":
+        set_message =
+          "Student has generated an invite, but has not yet accepted or declined the invitation.";
+        break;
+      case "OWNER":
+        set_message =
+          "Student is an owner of the GitHub organization associated with this course.";
+        break;
+      case "MEMBER":
+        set_message =
+          "Student is a member of the GitHub organization associated with this course.";
+        break;
+      default:
+        set_message = "Tooltip for illegal status that will never occur";
+        break;
+    }
+    return (
+      <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
+        {set_message}
+      </Tooltip>
+    );
+  };
+
+  columns.push({
+    header: "Status",
+    accessorKey: "orgStatus",
+    cell: ({ cell }) => {
+      const status = cell.row.original.orgStatus;
+      if (status === "PENDING") {
+        return (
+          <OverlayTrigger placement="right" overlay={renderTooltip("PENDING")}>
+            <span style={{ color: "red" }}>Pending</span>
+          </OverlayTrigger>
+        );
+      } else if (status === "JOINCOURSE") {
+        return (
+          <OverlayTrigger
+            placement="right"
+            overlay={renderTooltip("JOINCOURSE")}
+          >
+            <span style={{ color: "blue" }}>Join Course</span>
+          </OverlayTrigger>
+        );
+      } else if (status === "INVITED") {
+        return (
+          <OverlayTrigger placement="right" overlay={renderTooltip("INVITED")}>
+            <span style={{ color: "blue" }}>Invited</span>
+          </OverlayTrigger>
+        );
+      } else if (status === "OWNER") {
+        return (
+          <OverlayTrigger placement="right" overlay={renderTooltip("OWNER")}>
+            <span style={{ color: "purple" }}>Owner</span>
+          </OverlayTrigger>
+        );
+      } else if (status === "MEMBER") {
+        return (
+          <OverlayTrigger placement="right" overlay={renderTooltip("MEMBER")}>
+            <span style={{ color: "green" }}>Member</span>
+          </OverlayTrigger>
+        );
+      }
+      return (
+        <OverlayTrigger
+          placement="right"
+          overlay={renderTooltip(cell.row.original.orgStatus)}
+        >
+          <span>{status}</span>
+        </OverlayTrigger>
+      );
+    },
+  });
 
   if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
