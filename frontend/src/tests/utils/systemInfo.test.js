@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSystemInfo } from "main/utils/systemInfo";
 import { renderHook } from "@testing-library/react";
 import mockConsole from "jest-mock-console";
@@ -39,7 +39,7 @@ describe("utils/systemInfo tests", () => {
         showSwaggerUILink: false,
       });
 
-      const queryState = queryClient.getQueryState("systemInfo");
+      const queryState = queryClient.getQueryState(["systemInfo"]);
       expect(queryState).toBeDefined();
 
       queryClient.clear();
@@ -65,7 +65,9 @@ describe("utils/systemInfo tests", () => {
 
       const { result } = renderHook(() => useSystemInfo(), { wrapper });
 
-      await waitFor(() => result.current.isFetched);
+      await waitFor(() =>
+        expect(result.current.isFetchedAfterMount).toBe(true),
+      );
 
       expect(result.current.data).toEqual(systemInfoFixtures.showingBoth);
       queryClient.clear();

@@ -3,7 +3,7 @@ import axios from "axios";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { render, screen, within } from "@testing-library/react";
 import SignInPage from "main/pages/Auth/SignInPage";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 

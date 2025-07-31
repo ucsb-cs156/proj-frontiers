@@ -4,7 +4,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mockedNavigate = jest.fn();
 

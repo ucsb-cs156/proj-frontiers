@@ -7,7 +7,7 @@ import {
   within,
 } from "@testing-library/react";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import coursesFixtures from "fixtures/coursesFixtures";
 
@@ -266,8 +266,10 @@ describe("InstructorCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
     //Great time to also check initial values
-    expect(queryClient.getQueryData("/api/courses/7")).toBe(null);
-    expect(queryClient.getQueryData("/api/rosterstudents/course/7")).toBe(null);
+    expect(queryClient.getQueryData(["/api/courses/7"])).toBe(null);
+    expect(queryClient.getQueryData(["/api/rosterstudents/course/7"])).toBe(
+      null,
+    );
 
     await screen.findByText(
       "Course not found. You will be returned to the course list in 3 seconds.",
@@ -295,10 +297,17 @@ describe("InstructorCourseShowPage tests", () => {
     jest.useFakeTimers({
       advanceTimers: false,
     });
+    const specificQueryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
     const setTimeoutSpy = jest.spyOn(global, "setTimeout");
     const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={specificQueryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
           <Routes>
             <Route
@@ -322,11 +331,12 @@ describe("InstructorCourseShowPage tests", () => {
       within(screen.getByRole("navigation")).getByText("Frontiers"),
     );
     await waitFor(() =>
-      expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(8),
+      expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(12),
     );
     setTimeoutSpy.mockRestore();
     clearTimeoutSpy.mockRestore();
     jest.useRealTimers();
+    specificQueryClient.clear();
   });
 
   test("Tab assertions", () => {
@@ -420,11 +430,12 @@ describe("InstructorCourseShowPage tests", () => {
     );
     await screen.findByTestId("RosterStudentCSVUploadForm-upload");
 
-    const alternateUpdateCount =
-      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount;
-    const updateCountStudent = queryClientSpecific.getQueryState(
+    const alternateUpdateCount = queryClientSpecific.getQueryState([
+      "/api/courses/7",
+    ]).dataUpdateCount;
+    const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
-    ).dataUpdateCount;
+    ]).dataUpdateCount;
     const upload = screen.getByTestId("RosterStudentCSVUploadForm-upload");
     const submitButton = screen.getByTestId(
       "RosterStudentCSVUploadForm-submit",
@@ -439,10 +450,10 @@ describe("InstructorCourseShowPage tests", () => {
     expect(axiosMock.history.post[0].data.get("file")).toEqual(file);
     expect(mockToast).toBeCalledWith("Roster successfully updated.");
     expect(
-      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount,
+      queryClientSpecific.getQueryState(["/api/courses/7"]).dataUpdateCount,
     ).toEqual(alternateUpdateCount);
     expect(
-      queryClientSpecific.getQueryState("/api/rosterstudents/course/7")
+      queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
   });
@@ -484,11 +495,12 @@ describe("InstructorCourseShowPage tests", () => {
     );
 
     await screen.findAllByText("Student Id");
-    const alternateUpdateCount =
-      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount;
-    const updateCountStudent = queryClientSpecific.getQueryState(
+    const alternateUpdateCount = queryClientSpecific.getQueryState([
+      "/api/courses/7",
+    ]).dataUpdateCount;
+    const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
-    ).dataUpdateCount;
+    ]).dataUpdateCount;
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Student Id"), {
       target: { value: "123456789" },
@@ -514,10 +526,10 @@ describe("InstructorCourseShowPage tests", () => {
     await waitFor(() => expect(mockToast).toBeCalled());
     expect(mockToast).toBeCalledWith("Roster successfully updated.");
     expect(
-      queryClientSpecific.getQueryState("/api/courses/7").dataUpdateCount,
+      queryClientSpecific.getQueryState(["/api/courses/7"]).dataUpdateCount,
     ).toEqual(alternateUpdateCount);
     expect(
-      queryClientSpecific.getQueryState("/api/rosterstudents/course/7")
+      queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
   });

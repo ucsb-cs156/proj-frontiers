@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { initialize, mswLoader } from 'msw-storybook-addon'
 
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { useEffect } from "react";

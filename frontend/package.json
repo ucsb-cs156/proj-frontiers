@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@jest/core": "^29.7.0",
+    "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-table": "^8.21.3",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/user-event": "^14.6.1",
@@ -18,7 +19,6 @@
     "react-hook-form": "^7.53.0",
     "react-icons": "^5.5.0",
     "react-inspector": "^6.0.2",
-    "react-query": "^3.39.3",
     "react-router-dom": "^6.26.1",
     "react-scripts": "5.0.1",
     "react-toastify": "^10.0.5",

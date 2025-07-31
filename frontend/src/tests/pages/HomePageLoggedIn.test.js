@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
 import axios from "axios";
@@ -157,11 +157,11 @@ describe("HomePageLoggedIn tests", () => {
       );
     });
 
-    expect(queryClient.getQueryState("/api/courses/list").dataUpdateCount).toBe(
-      2,
-    );
     expect(
-      queryClient.getQueryState("/api/courses/staffCourses").dataUpdateCount,
+      queryClient.getQueryState(["/api/courses/list"]).dataUpdateCount,
+    ).toBe(2);
+    expect(
+      queryClient.getQueryState(["/api/courses/staffCourses"]).dataUpdateCount,
     ).toBe(2);
   });
 

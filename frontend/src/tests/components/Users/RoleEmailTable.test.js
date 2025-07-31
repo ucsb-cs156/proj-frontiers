@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
@@ -203,7 +203,9 @@ describe("RoleEmailTable", () => {
       email: "user1@example.org",
     });
     expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith(["/api/admin/all"]);
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ["/api/admin/all"],
+    });
   });
 
   test("Check that api endpoint overrides work", async () => {
@@ -239,8 +241,8 @@ describe("RoleEmailTable", () => {
     });
 
     expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith([
-      "/api/admin/instructor/all",
-    ]);
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ["/api/admin/instructor/all"],
+    });
   });
 });
