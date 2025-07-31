@@ -85,7 +85,7 @@ describe("CoursesIndexPage tests", () => {
       "InstructorCoursesTable-cell-row-2-col-orgName-button",
     );
     expect(button3).toBeInTheDocument();
-    expect(button3).toHaveTextContent("Install Github App");
+    expect(button3).toHaveTextContent("Install GitHub App");
 
     // This one should not have a button because the instructor is not
     // the creator of the course
@@ -147,13 +147,13 @@ describe("CoursesIndexPage tests", () => {
       "InstructorCoursesTable-cell-row-2-col-orgName-button",
     );
     expect(button3).toBeInTheDocument();
-    expect(button3).toHaveTextContent("Install Github App");
+    expect(button3).toHaveTextContent("Install GitHub App");
 
     const button4 = screen.queryByTestId(
       "InstructorCoursesTable-cell-row-3-col-orgName-button",
     );
     expect(button4).toBeInTheDocument();
-    expect(button4).toHaveTextContent("Install Github App");
+    expect(button4).toHaveTextContent("Install GitHub App");
   });
 
   test("renders empty table when backend unavailable, admin only", async () => {
