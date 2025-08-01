@@ -41,6 +41,7 @@ const rosterStudentFixtures = {
       firstName: "Alice",
       lastName: "Brown",
       email: "alicebrown@ucsb.edu",
+      githubLogin: null,
       orgStatus: "PENDING",
     },
 
@@ -50,6 +51,7 @@ const rosterStudentFixtures = {
       firstName: "Tom",
       lastName: "Hanks",
       email: "tomhanks@ucsb.edu",
+      githubLogin: null,
       orgStatus: "JOINCOURSE",
     },
 
@@ -59,6 +61,7 @@ const rosterStudentFixtures = {
       firstName: "Emma",
       lastName: "Watson",
       email: "emmawatson@ucsb.edu",
+      githubLogin: null,
       orgStatus: "INVITED",
     },
     {
@@ -67,6 +70,7 @@ const rosterStudentFixtures = {
       firstName: "Jon",
       lastName: "Snow",
       email: "jonsnow@ucsb.edu",
+      githubLogin: "jonsnow",
       orgStatus: "OWNER",
     },
     {
@@ -75,6 +79,7 @@ const rosterStudentFixtures = {
       firstName: "Bob",
       lastName: "Smith",
       email: "bobsmith@ucsb.edu",
+      githubLogin: "bobsmith",
       orgStatus: "MEMBER",
     },
     {
@@ -83,6 +88,7 @@ const rosterStudentFixtures = {
       firstName: "Arya",
       lastName: "Sue",
       email: "aryasue@ucsb.edu",
+      githubLogin: "aryasue",
       orgStatus: "Illegal status that will never occur",
     },
   ],

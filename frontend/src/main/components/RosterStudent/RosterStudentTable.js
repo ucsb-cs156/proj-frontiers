@@ -93,6 +93,10 @@ export default function RosterStudentTable({
       header: "Email",
       accessorKey: "email",
     },
+    {
+      header: "GitHub Login",
+      accessorKey: "githubLogin",
+    },
   ];
 
   const renderTooltip = (orgStatus) => (props) => {
