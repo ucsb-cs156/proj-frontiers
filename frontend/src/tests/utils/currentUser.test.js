@@ -117,6 +117,35 @@ describe("utils/currentUser tests", () => {
       queryClient.clear();
     });
 
+    test("useCurrentUser when API returns 403 (not logged in)", async () => {
+      const queryClient = new QueryClient();
+      const wrapper = ({ children }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+
+      const axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.onGet("/api/currentUser").reply(403);
+
+      const restoreConsole = mockConsole();
+      const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryState(["current user"]).dataUpdateCount,
+        ).toBe(1),
+      );
+      expect(console.error).not.toHaveBeenCalled();
+      restoreConsole();
+
+      expect(result.current).toEqual({
+        loggedIn: false,
+        root: {},
+      });
+      queryClient.clear();
+    });
+
     test("useCurrentUser handles missing roles correctly", async () => {
       const queryClient = new QueryClient();
       const wrapper = ({ children }) => (

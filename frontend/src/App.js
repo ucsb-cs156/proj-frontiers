@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ProfilePage from "main/pages/ProfilePage";
 import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 
@@ -17,52 +16,17 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
-import LoadingPage from "main/pages/LoadingPage";
-import SignInPage from "main/pages/Auth/SignInPage";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
+import ProtectedPage from "main/pages/Auth/ProtectedPage";
+import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
+import SignInPage from "main/pages/Auth/SignInPage";
+import NotFoundPage from "main/pages/Auth/NotFoundPage";
 
 function App() {
-  const currentUserData = useCurrentUser();
+  const currentUser = useCurrentUser();
 
-  if (!currentUserData) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePageLoggedOut />} />
-          <Route path="*" element={<HomePageLoggedOut />} />
-          <Route exact path="/login" element={<SignInPage />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
-  if (currentUserData.initialData) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<LoadingPage />} />
-          <Route exact path="/login" element={<SignInPage />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
-  if (!currentUserData.loggedIn) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePageLoggedOut />} />
-          <Route path="*" element={<HomePageLoggedOut />} />
-          <Route exact path="/login" element={<SignInPage />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
-  const currentUser = currentUserData;
-
-  if (!hasRole(currentUser, "ROLE_GITHUB")) {
+  if (currentUser.loggedIn && !hasRole(currentUser, "ROLE_GITHUB")) {
     return (
       <BrowserRouter>
         <Routes>
@@ -74,58 +38,108 @@ function App() {
     );
   }
 
-  const userRoutes = hasRole(currentUser, "ROLE_USER") ? (
-    <>
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route exact path="/login" element={<SignInPage />} />
-      <Route path="/login/success" element={<SignInSuccessPage />} />
-    </>
-  ) : null;
-
-  const adminRoutes = hasRole(currentUser, "ROLE_ADMIN") ? (
-    <>
-      <Route path="/admin/users" element={<AdminUsersPage />} />
-      <Route path="/admin/admins" element={<AdminsIndexPage />} />
-      <Route path="/instructor/courses" element={<CoursesIndexPage />} />
-      <Route
-        path="/instructor/courses/:id"
-        element={<InstructorCourseShowPage />}
-      />
-      <Route path="/admin/instructors" element={<InstructorsIndexPage />} />
-      <Route path="/admin/admins/create" element={<AdminsCreatePage />} />
-      <Route
-        path="/admin/instructors/create"
-        element={<InstructorsCreatePage />}
-      />
-    </>
-  ) : null;
-
-  const instructorRoutes = hasRole(currentUser, "ROLE_INSTRUCTOR") ? (
-    <>
-      <Route path="/instructor/courses" element={<CoursesIndexPage />} />
-      <Route
-        path="/instructor/courses/:id"
-        element={<InstructorCourseShowPage />}
-      />
-    </>
-  ) : null;
-
-  const homeRoutes =
-    hasRole(currentUser, "ROLE_ADMIN") ||
-    hasRole(currentUser, "ROLE_INSTRUCTOR") ||
-    hasRole(currentUser, "ROLE_USER") ? (
-      <Route path="/" element={<HomePageLoggedIn />} />
-    ) : (
-      <Route path="/" element={<HomePageLoggedOut />} />
-    );
+  const homePage = currentUser.loggedIn ? (
+    <HomePageLoggedIn />
+  ) : (
+    <HomePageLoggedOut />
+  );
 
   return (
     <BrowserRouter>
       <Routes>
-        {userRoutes}
-        {adminRoutes}
-        {instructorRoutes}
-        {homeRoutes}
+        <Route path="*" element={<NotFoundPage />} />
+        <Route path="/login" element={<SignInPage />} />
+        <Route path="/" element={homePage} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedPage
+              component={<ProfilePage />}
+              enforceRole={"ROLE_USER"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/login/success"
+          element={
+            <ProtectedPage
+              component={<SignInSuccessPage />}
+              enforceRole={"ROLE_USER"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/instructor/courses"
+          element={
+            <ProtectedPage
+              component={<CoursesIndexPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/instructor/courses/:id"
+          element={
+            <ProtectedPage
+              component={<InstructorCourseShowPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedPage
+              component={<AdminUsersPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/admins"
+          element={
+            <ProtectedPage
+              component={<AdminsIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/instructors"
+          element={
+            <ProtectedPage
+              component={<InstructorsIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/admins/create"
+          element={
+            <ProtectedPage
+              component={<AdminsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/instructors/create"
+          element={
+            <ProtectedPage
+              component={<InstructorsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

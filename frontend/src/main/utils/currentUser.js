@@ -17,7 +17,12 @@ export function useCurrentUser() {
         response.data = { ...response.data, rolesList: rolesList };
         return { loggedIn: true, root: response.data };
       } catch (e) {
-        console.error("Error invoking axios.get: ", e);
+        if (e.status === 403) {
+          return { loggedIn: false, root: {} };
+        } else {
+          console.error("Error invoking axios.get: ", e);
+          throw e;
+        }
       }
     },
     initialData: { loggedIn: false, root: null, initialData: true },
