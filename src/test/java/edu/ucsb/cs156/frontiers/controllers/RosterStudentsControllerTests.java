@@ -22,11 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import edu.ucsb.cs156.frontiers.services.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -46,11 +46,9 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
-import edu.ucsb.cs156.frontiers.services.CurrentUserService;
-import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @WebMvcTest(controllers = {RosterStudentsController.class})
@@ -76,6 +74,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Autowired
         private ObjectMapper objectMapper;
+
+        @MockitoBean
+        private RosterStudentService rosterStudentService;
 
         Course course1 = Course.builder()
                         .id(1L)
@@ -121,9 +122,15 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         @WithMockUser(roles = { "INSTRUCTOR" })
         public void testPostRosterStudent() throws Exception {
 
+                RosterStudent submittedStudent = RosterStudent.builder()
+                        .firstName("Chris")
+                        .lastName("Gaucho")
+                        .email("cgaucho@example.org")
+                        .studentId("A123456")
+                        .build();
+
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-                when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rs1);
-                doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+                when(rosterStudentService.upsertStudent(any(RosterStudent.class), any(Course.class), any(RosterStatus.class))).thenReturn(new RosterStudentService.UpsertResponse(RosterStudentService.InsertStatus.INSERTED, submittedStudent));
                 // act
 
                 MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
@@ -138,87 +145,15 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 // assert
 
-                verify(courseRepository, times(1)).findById(eq(1L));
-                verify(rosterStudentRepository, times(1)).save(eq(rs1));
-                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1));
+                verify(rosterStudentService).upsertStudent(eq(submittedStudent), eq(course1), eq(RosterStatus.MANUAL));
 
                 String responseString = response.getResponse().getContentAsString();
-                RosterStudentsController.UpsertResponse upsertResponse = mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
-                assertEquals(RosterStudentsController.InsertStatus.INSERTED, upsertResponse.insertStatus());
-                assertEquals(rs1, upsertResponse.rosterStudent());
+                RosterStudentService.UpsertResponse upsertResponse = mapper.readValue(responseString, RosterStudentService.UpsertResponse.class);
+                assertEquals(RosterStudentService.InsertStatus.INSERTED, upsertResponse.insertStatus());
+                assertEquals(submittedStudent, upsertResponse.rosterStudent());
         }
 
-        /**
-         * Test the POST endpoint when installation ID is null. 
-         */
-        @Test
-        @WithMockUser(roles = { "INSTRUCTOR" })
-        public void testPostRosterStudentWithNoInstallationId() throws Exception {
 
-                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-
-                ArgumentCaptor<RosterStudent> rosterStudentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
-
-                when(rosterStudentRepository.save(any(RosterStudent.class))).thenAnswer(invocation -> invocation.getArgument(0)); 
-
-                // act
-        
-                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
-                        .with(csrf())
-                        .param("studentId", "A123456")
-                        .param("firstName", "Chris")
-                        .param("lastName", "Gaucho")
-                        .param("email", "cgaucho@example.org")
-                        .param("courseId", "1"))
-                        .andExpect(status().isOk())
-                        .andReturn();
-
-                // assert
-                verify(courseRepository, times(1)).findById(eq(1L));
-                verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor.capture());
-
-                RosterStudent rosterStudentSaved = rosterStudentCaptor.getValue(); 
-                assertEquals(OrgStatus.PENDING, rosterStudentSaved.getOrgStatus());
-
-                String responseString = response.getResponse().getContentAsString();
-                RosterStudentsController.UpsertResponse upsertResponse = mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
-                assertEquals(RosterStudentsController.InsertStatus.INSERTED, upsertResponse.insertStatus());
-                assertEquals(rs1, upsertResponse.rosterStudent());
-                assertEquals(rosterStudentSaved, upsertResponse.rosterStudent());
-        }
-
-         /**
-         * Test the POST endpoint when installation ID exists. 
-         */
-        @Test
-        @WithMockUser(roles = { "INSTRUCTOR" })
-        public void testPostRosterStudentWithInstallationId() throws Exception {
-
-                when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(course2));
-
-                ArgumentCaptor<RosterStudent> rosterStudentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
-
-                when(rosterStudentRepository.save(any(RosterStudent.class))).thenAnswer(invocation -> invocation.getArgument(0)); 
-
-                // act
-        
-                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
-                        .with(csrf())
-                        .param("studentId", "A123456")
-                        .param("firstName", "Chris")
-                        .param("lastName", "Gaucho")
-                        .param("email", "cgaucho@example.org")
-                        .param("courseId", "2"))
-                        .andExpect(status().isOk())
-                        .andReturn();
-
-                // assert
-                verify(courseRepository, times(1)).findById(eq(2L));
-                verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor.capture());
-
-                RosterStudent rosterStudentSaved = rosterStudentCaptor.getValue(); 
-                assertEquals(OrgStatus.JOINCOURSE, rosterStudentSaved.getOrgStatus());
-        }
 
         /**
          * Test that you cannot post a single roster student for a course that does not
@@ -323,94 +258,17 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         @Test
         public void instructor_can_upload_students_for_an_existing_course() throws Exception {
 
-                // arrange
-
-                RosterStudent rs1BeforeWithId = RosterStudent.builder()
-                                .id(1L)
-                                .firstName("Chris")
-                                .lastName("Gaucho")
-                                .studentId("A123456")
-                                .email("cgaucho@ucsb.edu")
-                                .course(course1)
-                                .rosterStatus(RosterStatus.MANUAL)
-                                .orgStatus(OrgStatus.PENDING)
-                                .build();
-
-                RosterStudent rs1AfterWithId = RosterStudent.builder()
-                                .id(1L)
-                                .firstName("CHRIS FAKE")
-                                .lastName("GAUCHO")
-                                .studentId("A123456")
-                                .email("cgaucho@ucsb.edu")
-                                .course(course1)
-                                .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.PENDING)
-                                .build();
-
-                RosterStudent rs2BeforeWithId = RosterStudent.builder()
-                                .id(2L)
-                                .firstName("Lauren")
-                                .lastName("Del Playa")
-                                .studentId("A987654")
-                                .email("ldelplaya@umail.ucsb.edu")
-                                .course(course1)
-                                .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.PENDING)
-                                .build();
-
-                RosterStudent rs2AfterWithId = RosterStudent.builder()
-                                .id(2L)
-                                .course(course1)
-                                .firstName("LAUREN")
-                                .lastName("DEL PLAYA")
-                                .email("ldelplaya@ucsb.edu")
-                                .studentId("A987654")
-                                .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.PENDING)
-                                .build();
-
-                RosterStudent rs3NoId = RosterStudent.builder()
-                                .course(course1)
-                                .firstName("SABADO")
-                                .lastName("TARDE")
-                                .email("sabadotarde@ucsb.edu")
-                                .studentId("1234567")
-                                .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.PENDING)
-                                .build();
-
-                RosterStudent rs3WithId = RosterStudent.builder()
-                                .id(3L)
-                                .course(course1)
-                                .firstName("SABADO")
-                                .lastName("TARDE")
-                                .email("sabadotarde@ucsb.edu")
-                                .studentId("1234567")
-                                .rosterStatus(RosterStatus.ROSTER)
-                                .orgStatus(OrgStatus.PENDING)
-                                .build();
-
                 MockMultipartFile file = new MockMultipartFile(
                                 "file",
                                 "egrades.csv",
                                 MediaType.TEXT_PLAIN_VALUE,
                                 sampleCSVContents.getBytes());
 
+                RosterStudentService.LoadResult result = new RosterStudentService.LoadResult(1, 1, List.of(rs1));
+
+                when(rosterStudentService.loadCsv(any(MultipartFile.class), any(Course.class))).thenReturn(result);
+
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-                when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
-                                .thenReturn(Optional.of(rs1BeforeWithId));
-                when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
-                                .thenReturn(Optional.of(rs2BeforeWithId));
-                when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("1234567")))
-                                .thenReturn(Optional.empty());
-
-                when(rosterStudentRepository.save(eq(rs1AfterWithId))).thenReturn(rs1AfterWithId);
-                when(rosterStudentRepository.save(eq(rs2AfterWithId))).thenReturn(rs2AfterWithId);
-                when(rosterStudentRepository.save(eq(rs3NoId))).thenReturn(rs3WithId);
-
-                doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));               
-                doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
-                doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs3WithId));
 
                 // act
 
@@ -424,22 +282,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // assert
 
                 verify(courseRepository, atLeastOnce()).findById(eq(1L));
-                verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("A123456"));
-                verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("A987654"));
-                verify(rosterStudentRepository, atLeastOnce()).findByCourseIdAndStudentId(eq(1L), eq("1234567"));
-                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
-                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
-                verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
-
-                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1AfterWithId));
-                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs2AfterWithId));
-                verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
+                verify(rosterStudentService).loadCsv(eq(file), eq(course1));
 
                 String responseString = response.getResponse().getContentAsString();
-                Map<String, String> expectedMap = Map.of(
-                                "filename", "egrades.csv",
-                                "message", "Inserted 1 new students, Updated 2 students");
-                String expectedJson = mapper.writeValueAsString(expectedMap);
+                String expectedJson = mapper.writeValueAsString(result);
                 assertEquals(expectedJson, responseString);
 
         }
@@ -1560,70 +1406,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 verify(rosterStudentRepository, never()).findById(any());
                 verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
                 verify(courseRepository, never()).save(any(Course.class));
-        }
-
-        @Test
-        @WithMockUser(roles = { "ADMIN" })
-        public void testUpsertStudentWithDuplicateEmail() throws Exception {
-                // Arrange
-                RosterStudent existingStudent = RosterStudent.builder()
-                        .id(1L)
-                        .firstName("Existing")
-                        .lastName("Student")
-                        .studentId("A123456")
-                        .email("cgaucho@ucsb.edu")
-                        .course(course1)
-                        .rosterStatus(RosterStatus.ROSTER)
-                        .build();
-                 RosterStudent newStudent = RosterStudent.builder()
-                        .id(1L)
-                        .firstName("New")
-                        .lastName("Student")
-                        .studentId("A123457")
-                        .email("cgaucho@umail.ucsb.edu")
-                        .course(course1)
-                        .rosterStatus(RosterStatus.MANUAL)
-                        .build();
-                RosterStudent expectedSaved = RosterStudent.builder()
-                        .id(1L)
-                        .firstName("New")
-                        .lastName("Student")
-                        .studentId("A123457")
-                        .email("cgaucho@ucsb.edu")
-                        .course(course1)
-                        .rosterStatus(RosterStatus.MANUAL)
-                        .build();
-
-                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));                
-                when(rosterStudentRepository.findByCourseIdAndStudentId(eq(course1.getId()), eq(newStudent.getStudentId())))
-                        .thenReturn(Optional.empty());
-                when(rosterStudentRepository.findByCourseIdAndEmail(eq(course1.getId()), eq("cgaucho@ucsb.edu")))
-                        .thenReturn(Optional.of(existingStudent));  
-                when(rosterStudentRepository.save(eq(expectedSaved))).thenReturn(expectedSaved); 
-                doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
-
-                // act
-
-                MvcResult response = mockMvc.perform(post("/api/rosterstudents/post")
-                                .with(csrf())
-                                .param("studentId", "A123457")
-                                .param("firstName", "New")
-                                .param("lastName", "Student")
-                                .param("email", "cgaucho@umail.ucsb.edu")
-                                .param("courseId", "1"))
-                                .andExpect(status().isOk())
-                                .andReturn();
-
-                // assert
-
-                String responseString = response.getResponse().getContentAsString();
-                RosterStudentsController.UpsertResponse upsertResponse = mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
-                assertEquals(RosterStudentsController.InsertStatus.UPDATED, upsertResponse.insertStatus());
-                assertEquals(expectedSaved, upsertResponse.rosterStudent());
-                verify(courseRepository, times(1)).findById(eq(1L));
-                verify(rosterStudentRepository, times(1)).findByCourseIdAndStudentId(eq(1L), eq("A123457"));
-                verify(rosterStudentRepository, times(1)).findByCourseIdAndEmail(eq(1L), eq("cgaucho@ucsb.edu"));
-                verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
         }
                 
 }

@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import edu.ucsb.cs156.frontiers.models.PreConvertRosterStudent;
+import edu.ucsb.cs156.frontiers.services.RosterStudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,10 +65,6 @@ public class RosterStudentsController extends ApiController {
     @Autowired
     private OrganizationMemberService organizationMemberService;
 
-    public enum InsertStatus {
-        INSERTED, UPDATED
-    };
-
     @Autowired
     private RosterStudentRepository rosterStudentRepository;
 
@@ -74,12 +72,10 @@ public class RosterStudentsController extends ApiController {
     private CourseRepository courseRepository;
 
     @Autowired
-    private UpdateUserService updateUserService;
-
-    @Autowired
     private CurrentUserService currentUserService;
 
-    public static record UpsertResponse(InsertStatus insertStatus,RosterStudent rosterStudent){}
+    @Autowired
+    private RosterStudentService rosterStudentService;
 
     /**
      * This method creates a new RosterStudent.
@@ -90,7 +86,7 @@ public class RosterStudentsController extends ApiController {
     @Operation(summary = "Create a new roster student")
     @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/post")
-    public UpsertResponse postRosterStudent(
+    public RosterStudentService.UpsertResponse postRosterStudent(
             @Parameter(name = "studentId") @RequestParam String studentId,
             @Parameter(name = "firstName") @RequestParam String firstName,
             @Parameter(name = "lastName") @RequestParam String lastName,
@@ -109,8 +105,7 @@ public class RosterStudentsController extends ApiController {
                 .email(email)
                 .build();
 
-        UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL); 
-        return upsertResponse; 
+        return rosterStudentService.upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
     }
 
     /**
@@ -134,82 +129,23 @@ public class RosterStudentsController extends ApiController {
      * @param courseId
      * @param file
      * @return
-     * @throws JsonProcessingException
      * @throws IOException
-     * @throws CsvException
      */
-    @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
+    @Operation(summary = "Upload Roster students for Course in CSV Format")
     @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping(value = "/upload/egrades", consumes = { "multipart/form-data" })
-    public Map<String, String> uploadRosterStudents(
+    public RosterStudentService.LoadResult uploadRosterStudents(
             @Parameter(name = "courseId") @RequestParam Long courseId,
             @Parameter(name = "file") @RequestParam("file") MultipartFile file)
-            throws JsonProcessingException, IOException, CsvException {
+            throws IOException {
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
 
-        int counts[] = { 0, 0 };
-
-        try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
-                InputStreamReader reader = new InputStreamReader(inputStream);
-                CSVReader csvReader = new CSVReader(reader);) {
-            csvReader.skip(2);
-            List<String[]> myEntries = csvReader.readAll();
-            for (String[] row : myEntries) {
-                RosterStudent rosterStudent = fromEgradesCSVRow(row);
-                UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
-                InsertStatus s = upsertResponse.insertStatus; 
-                counts[s.ordinal()]++;
-            }
-        }
-        return Map.of(
-                "filename", file.getOriginalFilename(),
-                "message", String.format("Inserted %d new students, Updated %d students",
-                        counts[InsertStatus.INSERTED.ordinal()], counts[InsertStatus.UPDATED.ordinal()]));
-
+        return rosterStudentService.loadCsv(file, course);
     }
 
-    public RosterStudent fromEgradesCSVRow(String[] row) {
-        return RosterStudent.builder()
-                .firstName(row[5])
-                .lastName(row[4])
-                .studentId(row[1])
-                .email(row[10])
-                .build();
-    }
 
-    public UpsertResponse upsertStudent(RosterStudent student, Course course, RosterStatus rosterStatus) {
-        String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
-        Optional<RosterStudent> existingStudent = rosterStudentRepository.findByCourseIdAndStudentId(course.getId(),
-                student.getStudentId());
-        Optional<RosterStudent> existingStudentByEmail = rosterStudentRepository.findByCourseIdAndEmail(course.getId(),
-                convertedEmail);
-        if (existingStudent.isPresent() || existingStudentByEmail.isPresent()) {
-            RosterStudent existingStudentObj = existingStudent.isPresent() ? existingStudent.get() : existingStudentByEmail.get();
-            existingStudentObj.setRosterStatus(rosterStatus);
-            existingStudentObj.setFirstName(student.getFirstName());
-            existingStudentObj.setLastName(student.getLastName());
-            existingStudentObj.setEmail(convertedEmail);
-            existingStudentObj.setStudentId(student.getStudentId());
-            existingStudentObj = rosterStudentRepository.save(existingStudentObj);
-            updateUserService.attachUserToRosterStudent(existingStudentObj);
-            return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
-        } else {
-            student.setCourse(course);
-            student.setEmail(convertedEmail);
-            student.setRosterStatus(rosterStatus);
-            //if an installationID exists, orgStatus should be set to JOINCOURSE. if it doesn't exist (null), set orgStatus to PENDING.
-            if(course.getInstallationId() != null) {
-                student.setOrgStatus(OrgStatus.JOINCOURSE);
-            } else {
-                student.setOrgStatus(OrgStatus.PENDING);
-            }
-            student = rosterStudentRepository.save(student);
-            updateUserService.attachUserToRosterStudent(student);
-            return new UpsertResponse(InsertStatus.INSERTED, student);
-        }
-    }
 
     @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @PostMapping("/updateCourseMembership")

@@ -7,26 +7,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
@@ -40,14 +33,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
-import edu.ucsb.cs156.frontiers.services.RosterStudentDTOService;
+import edu.ucsb.cs156.frontiers.services.RosterStudentService;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 
 @WebMvcTest(controllers = {CSVDownloadsController.class})
 @Import(TestConfig.class)
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
-  @MockitoBean(answers = Answers.CALLS_REAL_METHODS) RosterStudentDTOService rosterStudentDTOService;
+  @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
+  RosterStudentService rosterStudentService;
 
   @MockitoBean(answers = Answers.RETURNS_MOCKS) CourseRepository courseRepository;
 
@@ -94,8 +88,8 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     Course course = Course.builder().id(1L).build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
-    doReturn(List.of()).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
-    doReturn(csvWriter).when(rosterStudentDTOService).getStatefulBeanToCSV(any());
+    doReturn(List.of()).when(rosterStudentService).getRosterStudentDTOs(eq(1L));
+    doReturn(csvWriter).when(rosterStudentService).getStatefulBeanToCSV(any());
 
     doThrow(new CsvDataTypeMismatchException()).when(csvWriter).write(anyList());
 
@@ -142,7 +136,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
     );
               
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
-    doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
+    doReturn(List.of(rosterStudentDTO)).when(rosterStudentService).getRosterStudentDTOs(eq(1L));
     
     String expectedResponse =  """
                 "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","STUDENTID","USERGITHUBID","USERGITHUBLOGIN","USERID"
@@ -155,8 +149,8 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentDTOService, times(1)).getRosterStudentDTOs(eq(1L));
-    verify(rosterStudentDTOService, times(1)).getStatefulBeanToCSV(any());
+    verify(rosterStudentService, times(1)).getRosterStudentDTOs(eq(1L));
+    verify(rosterStudentService, times(1)).getStatefulBeanToCSV(any());
 
     assertEquals(expectedResponse, response.getResponse().getContentAsString());
   }

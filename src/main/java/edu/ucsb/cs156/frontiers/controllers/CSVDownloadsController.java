@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
@@ -25,7 +24,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
-import edu.ucsb.cs156.frontiers.services.RosterStudentDTOService;
+import edu.ucsb.cs156.frontiers.services.RosterStudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,7 +43,7 @@ public class CSVDownloadsController extends ApiController {
   private CourseRepository courseRepository;
 
   @Autowired
-  private RosterStudentDTOService rosterStudentDTOService;
+  private RosterStudentService rosterStudentService;
 
   @Operation(summary = "Download CSV File of Roster Students", description = "Returns a CSV file as a response", responses = {
       @ApiResponse(responseCode = "200", description = "CSV file", content = @Content(mediaType = "text/csv", schema = @Schema(type = "string", format = "binary"))),
@@ -58,10 +57,10 @@ public class CSVDownloadsController extends ApiController {
         .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     StreamingResponseBody stream = (outputStream) -> {
 
-      List<RosterStudentDTO> list = rosterStudentDTOService.getRosterStudentDTOs(courseId);
+      List<RosterStudentDTO> list = rosterStudentService.getRosterStudentDTOs(courseId);
       try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
         try {
-          StatefulBeanToCsv<RosterStudentDTO> beanToCsvWriter = rosterStudentDTOService.getStatefulBeanToCSV(writer);
+          StatefulBeanToCsv<RosterStudentDTO> beanToCsvWriter = rosterStudentService.getStatefulBeanToCSV(writer);
           beanToCsvWriter.write(list);
         } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
           log.error("Error writing CSV file", e);
