@@ -2,15 +2,11 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.ui.Model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -70,13 +66,14 @@ public class CustomErrorControllerTests extends ControllerTestCase {
     public void testHandleError_DefaultStatus() throws Exception {
         // Test with no status code provided (should default to 500)
         MvcResult response = mockMvc.perform(get("/error")
-                .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/some-path"))
+                .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/some-path")
+                .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 400))
                 .andExpect(status().isOk())
                 .andExpect(view().name("error"))
                 .andExpect(model().attributeExists("status", "error", "message", "timestamp", "path"))
-                .andExpect(model().attribute("status", 500))
-                .andExpect(model().attribute("error", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()))
-                .andExpect(model().attribute("message", "We're sorry, something went wrong on our end"))
+                .andExpect(model().attribute("status", 400))
+                .andExpect(model().attribute("error", HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(model().attribute("message", "An unexpected error occurred"))
                 .andReturn();
     }
 
