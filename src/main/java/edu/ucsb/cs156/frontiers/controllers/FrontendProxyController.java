@@ -39,7 +39,7 @@ public class FrontendProxyController {
    * @return response entity with the response from the frontend server, or a response entity with instructions in case the frontend server cannot be reached.
    */
 
-  @GetMapping({"/", "/{path:^(?!api|oauth2|swagger-ui|h2-console|logout).*}/**"})
+  @GetMapping({"/", "/{path:^(?!api|oauth2|swagger-ui|test-error|h2-console|logout).*}/**"})
   public ResponseEntity<?> proxy(ProxyExchange<byte []> proxy) {
     String path = proxy.path("/");
     try {
