@@ -1,12 +1,31 @@
 {
-  "name": "Java",
-  "image": "mcr.microsoft.com/devcontainers/java:1-21",
+  "name": "Java & Node",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "none",
-      "installMaven": "true",
-      "mavenVersion": "3.8.6",
-      "installGradle": "true"
+      "version": "21",
+      "installMaven": true
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
     }
-  }
+  },
+  "forwardPorts": [8080,6006],
+  "portsAttributes": {
+    "8080": {
+      "label": "Spring Boot API",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Frontend Dev Server",
+      "onAutoForward": "notify"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": ["bash", "-c", "npm ci --prefix frontend/ && mvn -DskipTests clean install"]
+
 }
