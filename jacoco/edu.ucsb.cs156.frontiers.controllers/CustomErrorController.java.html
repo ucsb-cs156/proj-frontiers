@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 <span class="fc" id="L30">        Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);</span>
 <span class="fc" id="L31">        int statusCode = 500; // Default to internal server error</span>
         
-<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (status != null) {</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (status != null) {</span>
 <span class="fc" id="L34">            statusCode = Integer.parseInt(status.toString());</span>
         }
         
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 <span class="fc" id="L40">            errorMessage = &quot;The page you are looking for might have been removed or is temporarily unavailable&quot;;</span>
 <span class="fc bfc" id="L41" title="All 2 branches covered.">        } else if (statusCode == 403) {</span>
 <span class="fc" id="L42">            errorMessage = &quot;You don't have permission to access this resource&quot;;</span>
-<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        } else if (statusCode == 500) {</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        } else if (statusCode == 500) {</span>
 <span class="fc" id="L44">            errorMessage = &quot;We're sorry, something went wrong on our end&quot;;</span>
         }
         
