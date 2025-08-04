@@ -26,6 +26,9 @@
     }
   },
 
+  "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+
   "postCreateCommand": ["bash", "-c", "npm ci --prefix frontend/"]
 
 }
