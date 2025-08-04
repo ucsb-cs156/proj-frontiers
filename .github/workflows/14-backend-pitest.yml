@@ -29,7 +29,10 @@ jobs:
           echo GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_CLEANED}}"
           echo "branch_name=${BRANCH}"
-          echo "branch_name=${BRANCH}" >> "$GITHUB_ENV"    
+          echo "branch_name=${BRANCH}" >> "$GITHUB_ENV"  
+          BRANCH_CLEANED=${BRANCH//\//-}
+          echo "branch_name_cleaned=${BRANCH_CLEANED}"
+          echo "branch_name_cleaned=${BRANCH_CLEANED}" >> "$GITHUB_ENV  
     - name: Set up Java (version from .java-version file)
       uses: actions/setup-java@v4
       with:
@@ -48,7 +51,7 @@ jobs:
       if: always() # always upload artifacts, even if tests fail
       uses: actions/upload-artifact@v4
       with:
-        name: pitest-${{env.branch_name}}-history.bin
+        name: pitest-${{env.branch_name_cleaned}}-history.bin
         path: target/pit-history/history.bin
     - name: Upload Pitest to Artifacts
       if: always() # always upload artifacts, even if tests fail

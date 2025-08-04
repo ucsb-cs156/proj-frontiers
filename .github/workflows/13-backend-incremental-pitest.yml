@@ -35,13 +35,16 @@ jobs:
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_CLEANED}}"
           echo "branch_name=${BRANCH}"
           echo "branch_name=${BRANCH}" >> "$GITHUB_ENV"    
+          BRANCH_CLEANED=${BRANCH//\//-}
+          echo "branch_name_cleaned=${BRANCH_CLEANED}"
+          echo "branch_name_cleaned=${BRANCH_CLEANED}" >> "$GITHUB_ENV
     - name: Download artifact
       id: download-artifact
       uses: dawidd6/action-download-artifact@v2.27.0
       with:
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: ${{ env.branch_name }}
-        name: pitest-${{env.branch_name}}-history.bin
+        name: pitest-${{env.branch_name_cleaned}}-history.bin
         path: target/pit-history
         check_artifacts: true
         if_no_artifact_found: warn
@@ -59,7 +62,7 @@ jobs:
       if: always() # always upload artifacts, even if tests fail
       uses: actions/upload-artifact@v4
       with:
-        name: pitest-${{env.branch_name}}-history.bin
+        name: pitest-${{env.branch_name_cleaned}}-history.bin
         path: target/pit-history/history.bin
     - name: Upload Pitest Report to Artifacts
       if: always() # always upload artifacts, even if tests fail
