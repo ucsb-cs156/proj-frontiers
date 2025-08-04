@@ -6,7 +6,7 @@ export default function SignInCard({
   title,
   description,
   testid = "default",
-  onClick = () => {},
+  onClick,
 }) {
   return (
     <Card style={{ width: "18rem" }} data-testid={`SignInCard-base-${testid}`}>

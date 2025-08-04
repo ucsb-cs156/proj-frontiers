@@ -5,7 +5,7 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 
-jest.mock("react-router-dom");
+jest.mock("react-router");
 
 const mockToast = jest.fn();
 jest.mock("react-toastify", () => {

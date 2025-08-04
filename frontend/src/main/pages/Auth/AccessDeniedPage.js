@@ -1,5 +1,5 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button } from "react-bootstrap";
 
 export default function AccessDeniedPage() {

@@ -4,7 +4,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { render, screen, within } from "@testing-library/react";
 import SignInPage from "main/pages/Auth/SignInPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 
 const axiosMock = new AxiosMockAdapter(axios);

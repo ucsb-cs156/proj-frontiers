@@ -3,7 +3,7 @@ import { useBackend } from "main/utils/useBackend";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import RoleEmailTable from "main/components/Users/RoleEmailTable";
 import { Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function InstructorsIndexPage() {
   const {

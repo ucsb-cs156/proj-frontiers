@@ -49,6 +49,22 @@ describe("OurPagination tests", () => {
     ]);
   });
 
+  test("renders correctly when we take the default of 10)", async () => {
+    render(<PaginationWrapper beginActivePage={1} args={{}} />);
+
+    checkTestIdsInOrder([
+      "OurPagination-prev",
+      "OurPagination-1",
+      "OurPagination-2",
+      "OurPagination-3",
+      "OurPagination-4",
+      "OurPagination-5",
+      "OurPagination-right-ellipsis",
+      "OurPagination-10",
+      "OurPagination-next",
+    ]);
+  });
+
   test("renders correctly for totalPages = 7 (less than or equal to 7)", async () => {
     render(<PaginationWrapper beginActivePage={1} args={{ totalPages: 7 }} />);
 

@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import coursesFixtures from "fixtures/coursesFixtures";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
@@ -19,8 +19,8 @@ import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import userEvent from "@testing-library/user-event";
 
 const mockedNavigate = jest.fn();
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useNavigate: () => mockedNavigate,
 }));
 const axiosMock = new AxiosMockAdapter(axios);

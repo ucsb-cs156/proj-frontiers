@@ -4,7 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Alert, Row } from "react-bootstrap";
 import SignInCard from "main/components/Auth/SignInCard";
 import { useSystemInfo } from "main/utils/systemInfo";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 export default function PromptSignInPage() {
   const microsoftIcon = () => {
