@@ -3,7 +3,8 @@ import RoleBadge from "main/components/Profile/RoleBadge";
 import { hasRole, useCurrentUser } from "main/utils/currentUser";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
-import { Inspector } from "react-inspector";
+
+import JsonView from '@uiw/react-json-view';
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -61,7 +62,7 @@ const ProfilePage = () => {
         </Col>
       </Row>
       <Row className="text-left">
-        <Inspector data={currentUser.root} />
+        <JsonView data={currentUser.root} />
       </Row>
       <Row className={"mt-3 g-3"} data-testid={"ProfilePage-advancedFeatures"}>
         <h2>Advanced Features</h2>
