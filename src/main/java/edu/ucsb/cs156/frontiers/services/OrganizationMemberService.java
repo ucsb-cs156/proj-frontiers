@@ -150,6 +150,47 @@ public class OrganizationMemberService {
             log.warn("Error while trying to get member status: {}", e.getMessage());
             return OrgStatus.JOINCOURSE;
         }
+    }
 
+    /**
+     * Removes a member from an organization.
+     * @param student The roster student to remove from the organization
+     * @return true if the student was successfully removed, false otherwise
+     */
+    public boolean removeOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        if (student.getGithubLogin() == null) {
+            log.warn("Cannot remove student from organization: GitHub login is null");
+            return false;
+        }
+
+        Course course = student.getCourse();
+        if (course.getOrgName() == null || course.getInstallationId() == null) {
+            log.warn("Cannot remove student from organization: Course has no linked organization");
+            return false;
+        }
+
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members/" + student.getGithubLogin();
+        HttpHeaders headers = new HttpHeaders();
+        String token;
+        try {
+            token = jwtService.getInstallationToken(course);
+        } catch (JsonProcessingException e) {
+            log.error("Error getting installation token: {}", e.getMessage());
+            return false;
+        }
+        
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Accept", "application/vnd.github+json");
+        headers.add("X-GitHub-Api-Version", "2022-11-28");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        
+        try {
+            restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);
+            log.info("Successfully removed student {} from organization {}", student.getGithubLogin(), course.getOrgName());
+            return true;
+        } catch (Exception e) {
+            log.error("Error removing student from organization: {}", e.getMessage());
+            return false;
+        }
     }
 }

@@ -524,4 +524,100 @@ public class OrganizationMemberServiceTests {
         mockServer.verify();
         assertEquals(result, List.of());
     }
+
+    @Test
+    void testRemoveOrganizationMember_Success() throws Exception {
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin("testuser")
+                .course(testCourse)
+                .build();
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members/testuser"))
+                .andExpect(method(HttpMethod.DELETE))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withStatus(HttpStatus.NO_CONTENT));
+
+        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertTrue(result);
+    }
+
+    @Test
+    void testRemoveOrganizationMember_NullGithubLogin() throws Exception {
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin(null)
+                .course(testCourse)
+                .build();
+
+        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertFalse(result);
+    }
+
+    @Test
+    void testRemoveOrganizationMember_NullOrgName() throws Exception {
+        Course courseWithoutOrg = Course.builder()
+                .installationId("123")
+                .orgName(null)
+                .build();
+
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin("testuser")
+                .course(courseWithoutOrg)
+                .build();
+
+        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertFalse(result);
+    }
+
+    @Test
+    void testRemoveOrganizationMember_NullInstallationId() throws Exception {
+        Course courseWithoutInstallation = Course.builder()
+                .orgName(TEST_ORG)
+                .installationId(null)
+                .build();
+
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin("testuser")
+                .course(courseWithoutInstallation)
+                .build();
+
+        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertFalse(result);
+    }
+
+    @Test
+    void testRemoveOrganizationMember_ApiError() throws Exception {
+        RosterStudent testStudent = RosterStudent.builder()
+                .githubId(12345)
+                .githubLogin("testuser")
+                .course(testCourse)
+                .build();
+
+        mockServer.expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members/testuser"))
+                .andExpect(method(HttpMethod.DELETE))
+                .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+                .andExpect(header("Accept", "application/vnd.github+json"))
+                .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+                .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"message\": \"Error removing member\"}"));
+
+        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+
+        mockServer.verify();
+        assertFalse(result);
+    }
 }
