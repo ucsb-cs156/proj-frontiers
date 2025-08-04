@@ -30,7 +30,9 @@ export default function HomePageConnectGithub() {
         <Row
           xs={1}
           md={2}
-          className={"g-5 d-flex gap-5 justify-content-center align-items-center"}
+          className={
+            "g-5 d-flex gap-5 justify-content-center align-items-center"
+          }
           data-testid={"HomePageConnectGithub-cardDisplay"}
         >
           <SignInCard
@@ -46,10 +48,10 @@ export default function HomePageConnectGithub() {
         </Row>
         <div className="mt-4">
           <p>Don't have a GitHub account?</p>
-          <Button 
-            variant="outline-primary" 
-            href="https://github.com/signup" 
-            target="_blank" 
+          <Button
+            variant="outline-primary"
+            href="https://github.com/signup"
+            target="_blank"
             rel="noopener noreferrer"
             data-testid="HomePageConnectGithub-createAccount"
           >

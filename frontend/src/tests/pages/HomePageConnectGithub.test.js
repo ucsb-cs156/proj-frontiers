@@ -47,13 +47,20 @@ describe("HomePageConnectGithub tests", () => {
     ).toHaveAttribute("href", "/oauth2/authorization/github");
     expect(screen.getByRole("img")).toHaveAttribute("height", "10em");
     expect(screen.getByRole("img")).toHaveAttribute("width", "10em");
-    
+
     // Check for the "Create GitHub Account" button
-    expect(screen.getByText("Don't have a GitHub account?")).toBeInTheDocument();
-    const createAccountButton = screen.getByTestId("HomePageConnectGithub-createAccount");
+    expect(
+      screen.getByText("Don't have a GitHub account?"),
+    ).toBeInTheDocument();
+    const createAccountButton = screen.getByTestId(
+      "HomePageConnectGithub-createAccount",
+    );
     expect(createAccountButton).toBeInTheDocument();
     expect(createAccountButton).toHaveTextContent("Create GitHub Account");
-    expect(createAccountButton).toHaveAttribute("href", "https://github.com/signup");
+    expect(createAccountButton).toHaveAttribute(
+      "href",
+      "https://github.com/signup",
+    );
     expect(createAccountButton).toHaveAttribute("target", "_blank");
     expect(createAccountButton).toHaveAttribute("rel", "noopener noreferrer");
   });
