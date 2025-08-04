@@ -26,6 +26,7 @@ describe("RosterStudentTable tests", () => {
     "Last Name",
     "Email",
     "Status",
+    "GitHub Login",
   ];
   const expectedFields = [
     "id",
@@ -34,6 +35,7 @@ describe("RosterStudentTable tests", () => {
     "lastName",
     "email",
     "orgStatus",
+    "githubLogin",
   ];
   const testId = "RosterStudentTable";
 
@@ -124,6 +126,9 @@ describe("RosterStudentTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-email`),
     ).toHaveTextContent("alicebrown@ucsb.edu");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-3-col-githubLogin`),
+    ).toHaveTextContent("jonsnow");
 
     const pending = screen.getByText("Pending");
     expect(pending).toBeInTheDocument();
