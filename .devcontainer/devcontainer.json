@@ -7,6 +7,9 @@
       "installMaven": "true",
       "mavenVersion": "3.8.6",
       "installGradle": "true"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
     }
   },
   "forwardPorts": [8080,6006],
