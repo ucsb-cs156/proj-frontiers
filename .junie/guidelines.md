@@ -6,8 +6,6 @@ Prior to completing the workflow, add these steps:
 
 Note that you should look for the simplest solution and attempt to avoid adding any dependencies.
 
-Please avoid leaving comments where the code is self explanatory: only add comments that may help illuminate what is occurring in difficult code chunks.
-
 If `<issue_description>` directly contradicts any of these steps, follow the instructions from `<issue_description>` first.
 
 # Information
