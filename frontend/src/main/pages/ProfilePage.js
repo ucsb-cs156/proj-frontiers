@@ -1,10 +1,9 @@
-import { Row, Col, Button } from "react-bootstrap";
+import { Row, Col, Button, Accordion } from "react-bootstrap";
 import RoleBadge from "main/components/Profile/RoleBadge";
 import { hasRole, useCurrentUser } from "main/utils/currentUser";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
-
-import JsonView from '@uiw/react-json-view';
+import JsonView from "@uiw/react-json-view";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -47,6 +46,7 @@ const ProfilePage = () => {
       </ConfirmationModal>
       <Row className="align-items-center profile-header mb-5 text-center text-md-left">
         <Col md={2}>
+          <h2>User Profile</h2>
           <img
             src={pictureUrl}
             alt="Profile"
@@ -61,9 +61,6 @@ const ProfilePage = () => {
           <RoleBadge role={"ROLE_ADMIN"} currentUser={currentUser} />
         </Col>
       </Row>
-      <Row className="text-left">
-        <JsonView data={currentUser.root} />
-      </Row>
       <Row className={"mt-3 g-3"} data-testid={"ProfilePage-advancedFeatures"}>
         <h2>Advanced Features</h2>
         {hasRole(currentUser, "ROLE_GITHUB") && (
@@ -75,6 +72,18 @@ const ProfilePage = () => {
             </Col>
           </>
         )}
+      </Row>
+      <Row>
+        <Col>
+          <Accordion>
+            <Accordion.Item eventKey="individual">
+              <Accordion.Header>Current User Information</Accordion.Header>
+              <Accordion.Body>
+                <JsonView value={currentUser} />
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+        </Col>
       </Row>
     </BasicLayout>
   );
