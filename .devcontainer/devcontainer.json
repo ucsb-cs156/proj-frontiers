@@ -26,6 +26,6 @@
     }
   },
 
-  "postCreateCommand": ["bash", "-c", "npm ci --prefix frontend/ && mvn -DskipTests clean install"]
+  "postCreateCommand": ["bash", "-c", "npm ci --prefix frontend/"]
 
 }
