@@ -6,7 +6,8 @@ const config = {
     "@storybook/addon-links",
     "@chromatic-com/storybook",
     "storybook-addon-remix-react-router",
-    "@storybook/addon-docs"
+    "@storybook/addon-docs",
+    "@storybook/preset-create-react-app"
   ],
   framework: {
     name: "@storybook/react-webpack5",
