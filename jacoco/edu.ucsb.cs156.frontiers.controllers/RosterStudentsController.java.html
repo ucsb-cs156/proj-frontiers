@@ -314,14 +314,25 @@ import lombok.extern.slf4j.Slf4j;
     @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
     @DeleteMapping(&quot;/delete&quot;)
     @Transactional
-    public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id) throws EntityNotFoundException{
+    public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id) throws EntityNotFoundException {
 <span class="fc" id="L318">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
 <span class="fc" id="L319">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
 <span class="fc" id="L320">        Course course = rosterStudent.getCourse();</span>
-<span class="fc" id="L321">        course.getRosterStudents().remove(rosterStudent);</span>
-<span class="fc" id="L322">        rosterStudentRepository.delete(rosterStudent);</span>
-<span class="fc" id="L323">        courseRepository.save(course);</span>
-<span class="fc" id="L324">        return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list&quot;);</span>
+        
+        // Try to remove the student from the organization if they have a GitHub login
+<span class="pc bpc" id="L323" title="2 of 6 branches missed.">        if (rosterStudent.getGithubLogin() != null &amp;&amp; course.getOrgName() != null &amp;&amp; course.getInstallationId() != null) {</span>
+            try {
+<span class="fc" id="L325">                organizationMemberService.removeOrganizationMember(rosterStudent);</span>
+<span class="nc" id="L326">            } catch (Exception e) {</span>
+<span class="nc" id="L327">                log.error(&quot;Error removing student from organization: {}&quot;, e.getMessage());</span>
+                // Continue with deletion even if organization removal fails
+<span class="fc" id="L329">            }</span>
+        }
+        
+<span class="fc" id="L332">        course.getRosterStudents().remove(rosterStudent);</span>
+<span class="fc" id="L333">        rosterStudentRepository.delete(rosterStudent);</span>
+<span class="fc" id="L334">        courseRepository.save(course);</span>
+<span class="fc" id="L335">        return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list and organization&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
