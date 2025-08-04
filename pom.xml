@@ -52,6 +52,7 @@
     <app.packagePath>edu/ucsb/cs156/frontiers</app.packagePath>
     <targetClasses>${targetClasses:edu.ucsb.cs156.*}</targetClasses>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+    <app.frontend.nodeVersion>v22.14.0</app.frontend.nodeVersion>
   </properties>
 
   <!-- (22) <dependencyManagement/> -->
@@ -593,7 +594,7 @@
                   <goal>install-node-and-npm</goal>
                 </goals>
                 <configuration>
-                  <nodeVersion>v20.17.0</nodeVersion>
+                  <nodeVersion>${app.frontend.nodeVersion}</nodeVersion>
                 </configuration>
               </execution>
               <execution>
@@ -654,7 +655,7 @@
                   <goal>install-node-and-npm</goal>
                 </goals>
                 <configuration>
-                  <nodeVersion>v20.17.0</nodeVersion>
+                  <nodeVersion>${app.frontend.nodeVersion}</nodeVersion>
                 </configuration>
               </execution>
               <execution>

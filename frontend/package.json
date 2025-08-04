@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "=v20.17.0"
+    "node": ">=22.14.0"
   },
   "dependencies": {
     "@jest/core": "^29.7.0",
