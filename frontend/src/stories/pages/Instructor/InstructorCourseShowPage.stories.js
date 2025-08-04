@@ -1,11 +1,8 @@
+// src/stories/InstructorCourseShowPage.stories.jsx
+
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { http, HttpResponse } from "msw";
-
-import {
-  withRouter,
-  reactRouterParameters,
-} from "storybook-addon-remix-react-router";
 
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import coursesFixtures from "fixtures/coursesFixtures";
@@ -14,14 +11,14 @@ import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
   component: InstructorCourseShowPage,
-  decorators: [withRouter],
+  
+  // This is where we will pass the routing parameters to our custom decorator
   parameters: {
-    reactRouter: reactRouterParameters({
-      location: {
-        pathParams: { id: "7" },
-      },
-      routing: { path: "/instructor/courses/:id" },
-    }),
+    // The key 'routing' is arbitrary, but we must use the same one in preview.js
+    routing: { 
+      path: "/instructor/courses/:id",
+      initialEntries: "/instructor/courses/7",
+    },
   },
 };
 
@@ -36,15 +33,16 @@ const exampleCourse = {
 const rosterStudents = rosterStudentFixtures.threeStudents;
 
 export const ExampleCourseNoStudents = Template.bind({});
+// suppressMemoryRouter is still used to control our custom decorator
 ExampleCourseNoStudents.args = {
-  suppressMemoryRouter: true,
+  suppressMemoryRouter: false, // Make sure this is false so the router is applied
 };
 ExampleCourseNoStudents.parameters = {
+  // We can merge parameters here if we need to, but for this case, it's not needed.
+  // The routing parameters are already in the default export.
   msw: {
     handlers: [
-      http.get("/api/currentUser", () => {
-        return HttpResponse.json(apiCurrentUserFixtures.adminUser);
-      }),
+      // ... (your existing msw handlers)
       http.get("/api/currentUser", () => {
         return HttpResponse.json(apiCurrentUserFixtures.adminUser);
       }),
@@ -67,14 +65,13 @@ ExampleCourseNoStudents.parameters = {
 
 export const ExampleCourseThreeStudents = Template.bind({});
 ExampleCourseThreeStudents.args = {
-  suppressMemoryRouter: true,
+  suppressMemoryRouter: false, // Make sure this is false
 };
 ExampleCourseThreeStudents.parameters = {
+  // Same here, the routing parameters are in the default export.
   msw: {
     handlers: [
-      http.get("/api/currentUser", () => {
-        return HttpResponse.json(apiCurrentUserFixtures.adminUser);
-      }),
+      // ... (your existing msw handlers)
       http.get("/api/currentUser", () => {
         return HttpResponse.json(apiCurrentUserFixtures.adminUser);
       }),
