@@ -90,4 +90,16 @@ public class CustomErrorControllerTests extends ControllerTestCase {
                 .andExpect(model().attribute("exceptionMessage", "No exception details available"))
                 .andReturn();
     }
+
+      @Test
+    public void testHandleError_NoStatusCode() throws Exception {
+        // Test with no exception provided
+        MvcResult response = mockMvc.perform(get("/error")
+                .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/api/something"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("error"))
+                .andExpect(model().attributeExists("status", "error", "message", "exceptionMessage", "timestamp", "path"))
+                .andExpect(model().attribute("exceptionMessage", "No exception details available"))
+                .andReturn();
+    }
 }
