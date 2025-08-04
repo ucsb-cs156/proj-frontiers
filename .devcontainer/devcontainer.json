@@ -1,13 +1,12 @@
 {
-  "name": "Java & Node",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "name": "Java",
+  "image": "mcr.microsoft.com/devcontainers/java:1-21",
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "21",
-      "installMaven": true
-    },
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
+      "version": "none",
+      "installMaven": "true",
+      "mavenVersion": "3.8.6",
+      "installGradle": "true"
     }
   },
   "forwardPorts": [8080,6006],
@@ -25,10 +24,5 @@
       "onAutoForward": "notify"
     }
   },
-
-  "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/${localWorkspaceFolderBasename},type=bind,consistency=cached",
-
   "postCreateCommand": ["bash", "-c", "npm ci --prefix frontend/"]
-
 }
