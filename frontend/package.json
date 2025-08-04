@@ -55,6 +55,7 @@
     "@storybook/addon-docs": "^9.1.0",
     "@storybook/addon-links": "^9.1.0",
     "@storybook/addon-onboarding": "^9.1.0",
+    "@storybook/preset-create-react-app": "^9.1.1",
     "@storybook/react-webpack5": "^9.1.0",
     "@stryker-mutator/jest-runner": "^8.5.0",
     "@testing-library/react": "^16.0.0",
