@@ -5,6 +5,9 @@
   "engines": {
     "node": "=v20.17.0"
   },
+  "overrides": {
+    "react-refresh": "0.11.0"
+  },
   "dependencies": {
     "@jest/core": "^29.7.0",
     "@tanstack/react-query": "^5.83.0",
@@ -20,7 +23,7 @@
     "react-icons": "^5.5.0",
     "react-inspector": "^6.0.2",
     "react-router": "^7.7.1",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "react-toastify": "^10.0.5",
     "react18-json-view": "^0.2.8",
     "web-vitals": "^2.1.4"
