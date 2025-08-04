@@ -151,7 +151,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         }
 
         /**
-         * Test the GET all endpoint for courses
+         * Test the GET all endpoint for courses for admins
          */
 
         @Test
@@ -178,7 +178,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 // act
 
-                MvcResult response = mockMvc.perform(get("/api/courses/all"))
+                MvcResult response = mockMvc.perform(get("/api/courses/allForAdmins"))
                                 .andExpect(status().isOk())
                                 .andReturn();
 
@@ -190,7 +190,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         }
 
         /**
-         * Test the GET endpoint
+         * Test the GET endpoint for courses for instructors
          */
 
         @Test
@@ -213,7 +213,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 // act
 
-                MvcResult response = mockMvc.perform(get("/api/courses/all"))
+                MvcResult response = mockMvc.perform(get("/api/courses/allForInstructors"))
                                 .andExpect(status().isOk())
                                 .andReturn();
 
