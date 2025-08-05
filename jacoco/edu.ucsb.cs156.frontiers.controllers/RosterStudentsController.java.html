@@ -314,14 +314,39 @@ import lombok.extern.slf4j.Slf4j;
     @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
     @DeleteMapping(&quot;/delete&quot;)
     @Transactional
-    public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id) throws EntityNotFoundException{
+    public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id) throws EntityNotFoundException {
 <span class="fc" id="L318">        RosterStudent rosterStudent = rosterStudentRepository.findById(id)</span>
 <span class="fc" id="L319">                .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
 <span class="fc" id="L320">        Course course = rosterStudent.getCourse();</span>
-<span class="fc" id="L321">        course.getRosterStudents().remove(rosterStudent);</span>
-<span class="fc" id="L322">        rosterStudentRepository.delete(rosterStudent);</span>
-<span class="fc" id="L323">        courseRepository.save(course);</span>
-<span class="fc" id="L324">        return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list&quot;);</span>
+        
+<span class="fc" id="L322">        boolean orgRemovalAttempted = false;</span>
+<span class="fc" id="L323">        boolean orgRemovalSuccessful = false;</span>
+<span class="fc" id="L324">        String orgRemovalErrorMessage = null;</span>
+        
+        // Try to remove the student from the organization if they have a GitHub login
+<span class="fc bfc" id="L327" title="All 6 branches covered.">        if (rosterStudent.getGithubLogin() != null &amp;&amp; course.getOrgName() != null &amp;&amp; course.getInstallationId() != null) {</span>
+<span class="fc" id="L328">            orgRemovalAttempted = true;</span>
+            try {
+<span class="fc" id="L330">                organizationMemberService.removeOrganizationMember(rosterStudent);</span>
+<span class="fc" id="L331">                orgRemovalSuccessful = true;</span>
+<span class="fc" id="L332">            } catch (Exception e) {</span>
+<span class="fc" id="L333">                log.error(&quot;Error removing student from organization: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L334">                orgRemovalErrorMessage = e.getMessage();</span>
+                // Continue with deletion even if organization removal fails
+<span class="fc" id="L336">            }</span>
+        }
+        
+<span class="fc" id="L339">        course.getRosterStudents().remove(rosterStudent);</span>
+<span class="fc" id="L340">        rosterStudentRepository.delete(rosterStudent);</span>
+<span class="fc" id="L341">        courseRepository.save(course);</span>
+        
+<span class="fc bfc" id="L343" title="All 2 branches covered.">        if (!orgRemovalAttempted) {</span>
+<span class="fc" id="L344">            return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list&quot;);</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        } else if (orgRemovalSuccessful) {</span>
+<span class="fc" id="L346">            return ResponseEntity.ok(&quot;Successfully deleted roster student and removed him/her from the course list and organization&quot;);</span>
+        } else {
+<span class="fc" id="L348">            return ResponseEntity.ok(&quot;Successfully deleted roster student but there was an error removing them from the course organization: &quot; + orgRemovalErrorMessage);</span>
+        }
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
