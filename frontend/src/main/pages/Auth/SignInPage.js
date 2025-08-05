@@ -4,6 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Row } from "react-bootstrap";
 import SignInCard from "main/components/Auth/SignInCard";
 import { useSystemInfo } from "main/utils/systemInfo";
+import loginProviderSchools from "main/utils/loginProviderSchools";
 
 export default function SignInPage() {
   const microsoftIcon = () => {
@@ -40,8 +41,9 @@ export default function SignInPage() {
               <>
                 If you have credentials with these schools, sign in with Google
                 <ul>
-                  <li>Chico State University</li>
-                  <li>University of California, Santa Barbara</li>
+                  {loginProviderSchools.google.map((school, index) => (
+                    <li key={index}>{school}</li>
+                  ))}
                 </ul>
               </>
             }
@@ -57,7 +59,9 @@ export default function SignInPage() {
               <>
                 If you have credentials with these schools, sign in with Microsoft
                 <ul>
-                  <li>Oregon State University</li>
+                  {loginProviderSchools.microsoft.map((school, index) => (
+                    <li key={index}>{school}</li>
+                  ))}
                 </ul>
               </>
             }
