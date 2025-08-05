@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentRepositoriesJob;
@@ -46,7 +47,7 @@ public class RepositoryController extends ApiController {
     */
     @PostMapping("/createRepos")
     @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-    public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional<Boolean> isPrivate) {
+    public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional<Boolean> isPrivate, @RequestParam RepositoryPermissions permissions) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
             if (course.getOrgName() == null || course.getInstallationId() == null) {
                 throw new NoLinkedOrganizationException(course.getCourseName());
@@ -56,6 +57,7 @@ public class RepositoryController extends ApiController {
                         .isPrivate(isPrivate.orElse(false))
                         .repositoryService(repositoryService)
                         .course(course)
+                        .permissions(permissions)
                         .build();
                 return jobService.runAsJob(job);
         }
