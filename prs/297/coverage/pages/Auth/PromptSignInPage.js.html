@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>9/9</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>9/9</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
@@ -137,7 +137,23 @@
 <a name='L72'></a><a href='#L72'>72</a>
 <a name='L73'></a><a href='#L73'>73</a>
 <a name='L74'></a><a href='#L74'>74</a>
-<a name='L75'></a><a href='#L75'>75</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -192,12 +208,26 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -218,6 +248,7 @@ import { Alert, Row } from "react-bootstrap";
 import SignInCard from "main/components/Auth/SignInCard";
 import { useSystemInfo } from "main/utils/systemInfo";
 import { useLocation } from "react-router";
+import loginProviderSchools from "main/utils/loginProviderSchools";
 &nbsp;
 export default function PromptSignInPage() {
   const microsoftIcon = () =&gt; {
@@ -262,7 +293,14 @@ export default function PromptSignInPage() {
             Icon={googleIcon}
             title={"Sign in with Google"}
             description={
-              "If you have Chico State or University of California-Santa Barbara login credentials, sign in with Google"
+              &lt;&gt;
+                If you have credentials with these schools, sign in with Google
+                &lt;ul&gt;
+                  {loginProviderSchools.google.map((school, index) =&gt; (
+                    &lt;li key={index}&gt;{school}&lt;/li&gt;
+                  ))}
+                &lt;/ul&gt;
+              &lt;/&gt;
             }
             url={systemInfo.oauthLogin}
             testid={"google"}
@@ -274,7 +312,14 @@ export default function PromptSignInPage() {
             Icon={microsoftIcon}
             title={"Sign in with Microsoft"}
             description={
-              "If you have Oregon State University login credentials, sign in with Microsoft."
+              &lt;&gt;
+                If you have credentials with these schools, sign in with Microsoft
+                &lt;ul&gt;
+                  {loginProviderSchools.microsoft.map((school, index) =&gt; (
+                    &lt;li key={index}&gt;{school}&lt;/li&gt;
+                  ))}
+                &lt;/ul&gt;
+              &lt;/&gt;
             }
             url={systemInfo.activeDirectoryUrl}
             testid={"microsoft"}
@@ -292,7 +337,7 @@ export default function PromptSignInPage() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-05T01:41:15.634Z
+                at 2025-08-05T21:20:09.082Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
