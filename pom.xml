@@ -52,7 +52,7 @@
     <app.packagePath>edu/ucsb/cs156/frontiers</app.packagePath>
     <targetClasses>${targetClasses:edu.ucsb.cs156.*}</targetClasses>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
-    <app.frontend.nodeVersion>v22.14.0</app.frontend.nodeVersion>
+    <app.frontend.nodeVersion>v22.18.0</app.frontend.nodeVersion>
   </properties>
 
   <!-- (22) <dependencyManagement/> -->
