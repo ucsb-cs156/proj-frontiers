@@ -92,7 +92,7 @@ public class RosterStudentsController extends ApiController {
 
     public static RosterSourceType getRosterSourceType(String [] headers) {
 
-        Map<RosterSourceType, String[]> sourceTypeToHeaders = new HashMap<RosterSourceType, String[]>();
+        Map<RosterSourceType, String[]> sourceTypeToHeaders = new HashMap<>();
         
         sourceTypeToHeaders.put(RosterSourceType.UCSB_EGRADES, UCSB_EGRADES_HEADERS.split(","));
         sourceTypeToHeaders.put(RosterSourceType.CHICO_CANVAS, CHICO_CANVAS_HEADERS.split(","));
