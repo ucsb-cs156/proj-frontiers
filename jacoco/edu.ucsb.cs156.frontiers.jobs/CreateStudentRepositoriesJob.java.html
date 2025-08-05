@@ -3,6 +3,7 @@
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
@@ -14,16 +15,17 @@ public class CreateStudentRepositoriesJob implements JobContextConsumer {
     RepositoryService repositoryService;
     String repositoryPrefix;
     Boolean isPrivate;
+    RepositoryPermissions permissions;
 
     @Override
     public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L20">        ctx.log(&quot;Processing...&quot;);</span>
-<span class="fc bfc" id="L21" title="All 2 branches covered.">        for(RosterStudent student : course.getRosterStudents()){</span>
-<span class="fc bfc" id="L22" title="All 4 branches covered.">            if(student.getGithubLogin() != null &amp;&amp; student.getOrgStatus() == OrgStatus.MEMBER){</span>
-<span class="fc" id="L23">                repositoryService.createStudentRepository(course, student, repositoryPrefix, isPrivate);</span>
+<span class="fc" id="L22">        ctx.log(&quot;Processing...&quot;);</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        for(RosterStudent student : course.getRosterStudents()){</span>
+<span class="fc bfc" id="L24" title="All 6 branches covered.">            if(student.getGithubLogin() != null &amp;&amp; (student.getOrgStatus() == OrgStatus.MEMBER || student.getOrgStatus() == OrgStatus.OWNER)){</span>
+<span class="fc" id="L25">                repositoryService.createStudentRepository(course, student, repositoryPrefix, isPrivate, permissions);</span>
             }
-<span class="fc" id="L25">        }</span>
-<span class="fc" id="L26">        ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L27">        }</span>
+<span class="fc" id="L28">        ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L29">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

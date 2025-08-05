@@ -3,6 +3,7 @@
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentRepositoriesJob;
@@ -24,7 +25,7 @@ import java.util.Optional;
 @Tag(name = &quot;Repository Controller&quot;)
 @RestController
 @RequestMapping(&quot;/api/repos&quot;)
-<span class="fc" id="L27">public class RepositoryController extends ApiController {</span>
+<span class="fc" id="L28">public class RepositoryController extends ApiController {</span>
 
     @Autowired
     RepositoryService repositoryService;
@@ -46,18 +47,19 @@ import java.util.Optional;
     */
     @PostMapping(&quot;/createRepos&quot;)
     @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
-    public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional&lt;Boolean&gt; isPrivate) {
-<span class="fc" id="L50">        Course course = courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc bfc" id="L51" title="All 4 branches covered.">            if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L52">                throw new NoLinkedOrganizationException(course.getCourseName());</span>
+    public Job createRepos(@RequestParam Long courseId, @RequestParam String repoPrefix, @RequestParam Optional&lt;Boolean&gt; isPrivate, @RequestParam RepositoryPermissions permissions) {
+<span class="fc" id="L51">        Course course = courseRepository.findById(courseId).orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L52" title="All 4 branches covered.">            if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L53">                throw new NoLinkedOrganizationException(course.getCourseName());</span>
             } else {
-<span class="fc" id="L54">                CreateStudentRepositoriesJob job = CreateStudentRepositoriesJob.builder()</span>
-<span class="fc" id="L55">                        .repositoryPrefix(repoPrefix)</span>
-<span class="fc" id="L56">                        .isPrivate(isPrivate.orElse(false))</span>
-<span class="fc" id="L57">                        .repositoryService(repositoryService)</span>
-<span class="fc" id="L58">                        .course(course)</span>
-<span class="fc" id="L59">                        .build();</span>
-<span class="fc" id="L60">                return jobService.runAsJob(job);</span>
+<span class="fc" id="L55">                CreateStudentRepositoriesJob job = CreateStudentRepositoriesJob.builder()</span>
+<span class="fc" id="L56">                        .repositoryPrefix(repoPrefix)</span>
+<span class="fc" id="L57">                        .isPrivate(isPrivate.orElse(false))</span>
+<span class="fc" id="L58">                        .repositoryService(repositoryService)</span>
+<span class="fc" id="L59">                        .course(course)</span>
+<span class="fc" id="L60">                        .permissions(permissions)</span>
+<span class="fc" id="L61">                        .build();</span>
+<span class="fc" id="L62">                return jobService.runAsJob(job);</span>
         }
     }
 }
