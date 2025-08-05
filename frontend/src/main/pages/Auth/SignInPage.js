@@ -57,7 +57,8 @@ export default function SignInPage() {
             title={"Sign in with Microsoft"}
             description={
               <>
-                If you have credentials with these schools, sign in with Microsoft
+                If you have credentials with these schools, sign in with
+                Microsoft
                 <ul>
                   {loginProviderSchools.microsoft.map((school, index) => (
                     <li key={index}>{school}</li>
