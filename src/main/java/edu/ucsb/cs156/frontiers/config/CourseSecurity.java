@@ -37,7 +37,7 @@ public class CourseSecurity {
             if(course.isEmpty()){
                 return true;
             }
-            return currentUser.getUser().getId() == course.get().getCreator().getId();
+            return currentUser.getUser().getEmail().equals(course.get().getInstructorEmail());
         }
     }
 }
