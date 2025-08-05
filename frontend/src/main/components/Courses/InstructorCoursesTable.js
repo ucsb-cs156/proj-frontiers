@@ -69,23 +69,28 @@ export default function InstructorCoursesTable({
 
   const handleUpdateInstructor = async () => {
     if (!selectedCourse || !newInstructorEmail) return;
-    
+
     setIsUpdating(true);
-    
+
     if (storybook) {
-      window.alert(`Would update course ${selectedCourse.id} instructor to: ${newInstructorEmail}`);
+      window.alert(
+        `Would update course ${selectedCourse.id} instructor to: ${newInstructorEmail}`,
+      );
       handleCloseModal();
       return;
     }
 
     try {
-      const response = await fetch(`/api/courses/updateInstructor?courseId=${selectedCourse.id}&instructorEmail=${encodeURIComponent(newInstructorEmail)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/courses/updateInstructor?courseId=${selectedCourse.id}&instructorEmail=${encodeURIComponent(newInstructorEmail)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
         },
-        credentials: 'include'
-      });
+      );
 
       if (response.ok) {
         window.location.reload(); // Reload to show updated data
@@ -243,7 +248,7 @@ export default function InstructorCoursesTable({
   return (
     <>
       <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
-      
+
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>Update Instructor</Modal.Title>
@@ -269,12 +274,16 @@ export default function InstructorCoursesTable({
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal} disabled={isUpdating}>
+          <Button
+            variant="secondary"
+            onClick={handleCloseModal}
+            disabled={isUpdating}
+          >
             Cancel
           </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleUpdateInstructor} 
+          <Button
+            variant="primary"
+            onClick={handleUpdateInstructor}
             disabled={isUpdating || !newInstructorEmail}
             data-testid="update-instructor-submit-button"
           >
