@@ -1,0 +1,35 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "001-update-courses",
+      "author": "copilot",
+      "changes": [
+        {
+          "dropForeignKeyConstraint": {
+            "baseTableName": "COURSE",
+            "constraintName": "FK_USER_ID"
+          }
+        },
+        {
+          "dropColumn": {
+            "tableName": "COURSE",
+            "columnName": "USER_ID"
+          }
+        },
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "INSTRUCTOR_EMAIL",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}
