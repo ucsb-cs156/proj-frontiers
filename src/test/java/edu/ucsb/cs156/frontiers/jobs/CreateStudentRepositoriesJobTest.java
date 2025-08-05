@@ -6,6 +6,7 @@ import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,13 +44,12 @@ public class CreateStudentRepositoriesJobTest {
         RosterStudent student = RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
         course.setRosterStudents(List.of(student));
 
-        doNothing().when(service).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(false));
-
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
                 .repositoryPrefix("repo-prefix")
                 .course(course)
                 .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
                 .build());
 
         repoJob.accept(ctx);
@@ -58,7 +58,7 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(false));
+        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(false), eq(RepositoryPermissions.WRITE));
     }
 
     @Test
@@ -67,13 +67,12 @@ public class CreateStudentRepositoriesJobTest {
         RosterStudent student = RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
         course.setRosterStudents(List.of(student));
 
-        doNothing().when(service).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true));
-
         var repoJob = spy(CreateStudentRepositoriesJob.builder()
                 .repositoryService(service)
                 .repositoryPrefix("repo-prefix")
                 .course(course)
                 .isPrivate(true)
+                .permissions(RepositoryPermissions.WRITE)
                 .build());
 
         repoJob.accept(ctx);
@@ -82,7 +81,30 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true));
+        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true), eq(RepositoryPermissions.WRITE));
+    }
+
+    @Test
+    public void testCreateStudentRepository_owner() throws Exception {
+        Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+        RosterStudent student = RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.OWNER).build();
+        course.setRosterStudents(List.of(student));
+
+        var repoJob = spy(CreateStudentRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(true)
+                .permissions(RepositoryPermissions.WRITE)
+                .build());
+
+        repoJob.accept(ctx);
+        String expected = """
+                Processing...
+                Done""";
+        assertEquals(expected, jobStarted.getLog());
+
+        verify(service, times(1)).createStudentRepository(eq(course), eq(student), contains("repo-prefix"), eq(true), eq(RepositoryPermissions.WRITE));
     }
 
 
@@ -97,6 +119,7 @@ public class CreateStudentRepositoriesJobTest {
                 .repositoryPrefix("repo-prefix")
                 .isPrivate(false)
                 .course(course)
+                .permissions(RepositoryPermissions.WRITE)
                 .build());
 
         repoJob.accept(ctx);
@@ -105,7 +128,7 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any());
+        verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -118,6 +141,7 @@ public class CreateStudentRepositoriesJobTest {
                 .repositoryPrefix("repo-prefix")
                 .isPrivate(false)
                 .course(course)
+                .permissions(RepositoryPermissions.WRITE)
                 .build());
 
         repoJob.accept(ctx);
@@ -126,6 +150,6 @@ public class CreateStudentRepositoriesJobTest {
                 Done""";
         assertEquals(expected, jobStarted.getLog());
 
-        verify(service, times(0)).createStudentRepository(any(),any(),any(),any());
+        verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
     }
 }

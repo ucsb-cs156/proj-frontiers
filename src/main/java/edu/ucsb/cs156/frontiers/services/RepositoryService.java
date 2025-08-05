@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class RepositoryService {
     private final JwtService  jwtService;
     private final RestTemplate restTemplate;
@@ -34,7 +37,7 @@ public class RepositoryService {
      * @param repoPrefix Name of the project or assignment. Used to title the repository, in the format repoPrefix-githubLogin
      * @param isPrivate Whether the repository is private or not
      */
-    public void createStudentRepository(Course course, RosterStudent student, String repoPrefix, Boolean isPrivate) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    public void createStudentRepository(Course course, RosterStudent student, String repoPrefix, Boolean isPrivate, RepositoryPermissions permissions) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         String newRepoName = repoPrefix+"-"+student.getGithubLogin();
         String token = jwtService.getInstallationToken(course);
         String existenceEndpoint = "https://api.github.com/repos/"+course.getOrgName()+"/"+newRepoName;
@@ -64,13 +67,20 @@ public class RepositoryService {
                 HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, createHeaders);
 
                 restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);
-                Map<String, Object> provisionBody  = new HashMap<>();
-                provisionBody.put("permission", "admin");
-                String provisionAsJson =  mapper.writeValueAsString(provisionBody);
-
-                HttpEntity<String> provisionEntity = new HttpEntity<>(provisionAsJson, createHeaders);
-                restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);
+            }else{
+                log.warn("Unexpected response code {} when checking for existence of repository {}", e.getStatusCode(), newRepoName);
+                return;
             }
+        }
+        try{
+            Map<String, Object> provisionBody  = new HashMap<>();
+            provisionBody.put("permission", permissions.getApiName());
+            String provisionAsJson =  mapper.writeValueAsString(provisionBody);
+
+            HttpEntity<String> provisionEntity = new HttpEntity<>(provisionAsJson, existenceHeaders);
+            restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);
+        }catch (HttpClientErrorException ignored){
+
         }
 
     }

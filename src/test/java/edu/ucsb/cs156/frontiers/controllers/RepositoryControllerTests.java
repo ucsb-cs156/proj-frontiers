@@ -58,6 +58,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
                 .with(csrf())
                 .param("courseId", "2")
                 .param("repoPrefix", "repo1")
+                .param("permissions", "WRITE")
         ).andExpect(status().isForbidden())
         .andReturn();
     }
@@ -71,6 +72,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
                         .with(csrf())
                         .param("courseId", "2")
                         .param("repoPrefix", "repo1")
+                        .param("permissions", "WRITE")
                 ).andExpect(status().isBadRequest())
                 .andReturn();
         Map<String, Object> json = responseToJson(response);
@@ -87,6 +89,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
                         .with(csrf())
                         .param("courseId", "2")
                         .param("repoPrefix", "repo1")
+                        .param("permissions", "WRITE")
                 ).andExpect(status().isBadRequest())
                 .andReturn();
         Map<String, Object> json = responseToJson(response);
@@ -105,6 +108,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
                         .with(csrf())
                         .param("courseId", "2")
                         .param("repoPrefix", "repo1")
+                        .param("permissions", "WRITE")
                 ).andExpect(status().isOk())
                 .andReturn();
 
@@ -124,6 +128,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
                         .with(csrf())
                         .param("courseId", "2")
                         .param("repoPrefix", "repo1")
+                        .param("permissions", "WRITE")
                 ).andExpect(status().isOk())
                 .andReturn();
 
@@ -141,6 +146,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
                         .with(csrf())
                         .param("courseId", "2")
                         .param("repoPrefix", "repo1")
+                        .param("permissions", "WRITE")
                 ).andExpect(status().isNotFound())
                 .andReturn();
         Map<String, Object> json = responseToJson(response);
