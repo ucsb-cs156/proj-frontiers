@@ -86,6 +86,8 @@ export default function InstructorCourseShowPage() {
 
   const onSuccess = () => {
     toast("Roster successfully updated.");
+    // Clear the search filter to show the updated roster
+    setSearchTerm("");
   };
 
   const rosterPostMutation = useBackendMutation(

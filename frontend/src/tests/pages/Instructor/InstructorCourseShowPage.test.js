@@ -390,7 +390,7 @@ describe("InstructorCourseShowPage tests", () => {
     fireEvent.click(changeTabs);
   });
 
-  test("Successfully makes a call to the backend on submit", async () => {
+  test("Successfully makes a call to the backend on submit and clears search filter", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
         queries: {
@@ -436,6 +436,12 @@ describe("InstructorCourseShowPage tests", () => {
     const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
     ]).dataUpdateCount;
+    
+    // Get the search input and set a search term
+    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(searchInput.value).toBe("test search");
+    
     const upload = screen.getByTestId("RosterStudentCSVUploadForm-upload");
     const submitButton = screen.getByTestId(
       "RosterStudentCSVUploadForm-submit",
@@ -456,9 +462,14 @@ describe("InstructorCourseShowPage tests", () => {
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
+    
+    // Verify that the search filter is cleared
+    await waitFor(() => {
+      expect(searchInput.value).toBe("");
+    });
   });
 
-  test("RosterStudentForm submit works", async () => {
+  test("RosterStudentForm submit works and clears search filter", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
         queries: {
@@ -501,6 +512,12 @@ describe("InstructorCourseShowPage tests", () => {
     const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
     ]).dataUpdateCount;
+    
+    // Get the search input and set a search term
+    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(searchInput.value).toBe("test search");
+    
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Student Id"), {
       target: { value: "123456789" },
@@ -532,6 +549,11 @@ describe("InstructorCourseShowPage tests", () => {
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
+    
+    // Verify that the search filter is cleared
+    await waitFor(() => {
+      expect(searchInput.value).toBe("");
+    });
   });
   
   test("Search filter works correctly", async () => {
