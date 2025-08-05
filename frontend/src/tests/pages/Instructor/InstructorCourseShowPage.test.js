@@ -436,12 +436,12 @@ describe("InstructorCourseShowPage tests", () => {
     const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
     ]).dataUpdateCount;
-    
+
     // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
     fireEvent.change(searchInput, { target: { value: "test search" } });
     expect(searchInput.value).toBe("test search");
-    
+
     const upload = screen.getByTestId("RosterStudentCSVUploadForm-upload");
     const submitButton = screen.getByTestId(
       "RosterStudentCSVUploadForm-submit",
@@ -462,7 +462,7 @@ describe("InstructorCourseShowPage tests", () => {
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
-    
+
     // Verify that the search filter is cleared
     await waitFor(() => {
       expect(searchInput.value).toBe("");
@@ -512,12 +512,12 @@ describe("InstructorCourseShowPage tests", () => {
     const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
     ]).dataUpdateCount;
-    
+
     // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
     fireEvent.change(searchInput, { target: { value: "test search" } });
     expect(searchInput.value).toBe("test search");
-    
+
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Student Id"), {
       target: { value: "123456789" },
@@ -549,13 +549,13 @@ describe("InstructorCourseShowPage tests", () => {
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
-    
+
     // Verify that the search filter is cleared
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
   });
-  
+
   test("Search filter works correctly", async () => {
     setupInstructorUser();
     const theCourse = {
@@ -564,7 +564,7 @@ describe("InstructorCourseShowPage tests", () => {
       createdByEmail: "phtcon@ucsb.edu",
     };
     axiosMock.onGet("/api/courses/1").reply(200, theCourse);
-    
+
     // Use studentsWithEachStatus fixture which includes githubLogin field
     axiosMock
       .onGet("/api/rosterstudents/course/1")
@@ -596,90 +596,135 @@ describe("InstructorCourseShowPage tests", () => {
     // Verify search input is rendered
     const searchInput = screen.getByTestId(`${testId}-search`);
     expect(searchInput).toBeInTheDocument();
-    expect(searchInput).toHaveAttribute("placeholder", "Search by name, email, student ID, or Github Login");
+    expect(searchInput).toHaveAttribute(
+      "placeholder",
+      "Search by name, email, student ID, or Github Login",
+    );
 
     // Initially all students should be visible
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toBeInTheDocument();
-    expect(screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`)).toBeInTheDocument();
-    expect(screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
+    ).toBeInTheDocument();
 
     // Test 1: Filter by first name
-    fireEvent.change(searchInput, { target: { value: rosterStudentFixtures.studentsWithEachStatus[0].firstName } });
-    
+    fireEvent.change(searchInput, {
+      target: {
+        value: rosterStudentFixtures.studentsWithEachStatus[0].firstName,
+      },
+    });
+
     // Only the matching student should be visible
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toHaveTextContent(
-      rosterStudentFixtures.studentsWithEachStatus[0].firstName
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+    ).toHaveTextContent(
+      rosterStudentFixtures.studentsWithEachStatus[0].firstName,
     );
-    expect(screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`)).not.toBeInTheDocument();
-    
+    expect(
+      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+    ).not.toBeInTheDocument();
+
     // Clear the filter
     fireEvent.change(searchInput, { target: { value: "" } });
-    
+
     // All students should be visible again
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toBeInTheDocument();
-    expect(screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`)).toBeInTheDocument();
-    expect(screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`)).toBeInTheDocument();
-    
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
+    ).toBeInTheDocument();
+
     // Test 2: Filter by email
-    fireEvent.change(searchInput, { target: { value: rosterStudentFixtures.studentsWithEachStatus[1].email } });
-    
+    fireEvent.change(searchInput, {
+      target: { value: rosterStudentFixtures.studentsWithEachStatus[1].email },
+    });
+
     // Only the matching student should be visible
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-email`)).toHaveTextContent(
-      rosterStudentFixtures.studentsWithEachStatus[1].email
-    );
-    expect(screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`)).not.toBeInTheDocument();
-    
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
+    ).toHaveTextContent(rosterStudentFixtures.studentsWithEachStatus[1].email);
+    expect(
+      screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
+    ).not.toBeInTheDocument();
+
     // Clear the filter
     fireEvent.change(searchInput, { target: { value: "" } });
-    
+
     // Test 3: Filter by Github Login
-    const studentWithGithub = rosterStudentFixtures.studentsWithEachStatus.find(s => s.githubLogin === "jonsnow");
-    fireEvent.change(searchInput, { target: { value: "jonsnow" } });
-    
-    // Only the student with matching Github Login should be visible
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toHaveTextContent(
-      studentWithGithub.firstName
+    const studentWithGithub = rosterStudentFixtures.studentsWithEachStatus.find(
+      (s) => s.githubLogin === "jonsnow",
     );
-    expect(screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`)).not.toBeInTheDocument();
-    
+    fireEvent.change(searchInput, { target: { value: "jonsnow" } });
+
+    // Only the student with matching Github Login should be visible
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+    ).toHaveTextContent(studentWithGithub.firstName);
+    expect(
+      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+    ).not.toBeInTheDocument();
+
     // Clear the filter
     fireEvent.change(searchInput, { target: { value: "" } });
-    
+
     // Test 4: Filter by full name (first + last)
     const fullNameStudent = rosterStudentFixtures.studentsWithEachStatus[2]; // Emma Watson
-    fireEvent.change(searchInput, { target: { value: `${fullNameStudent.firstName} ${fullNameStudent.lastName}` } });
-    
+    fireEvent.change(searchInput, {
+      target: {
+        value: `${fullNameStudent.firstName} ${fullNameStudent.lastName}`,
+      },
+    });
+
     // Only the student with matching full name should be visible
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toHaveTextContent(
-      fullNameStudent.firstName
-    );
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`)).toHaveTextContent(
-      fullNameStudent.lastName
-    );
-    expect(screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`)).not.toBeInTheDocument();
-    
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+    ).toHaveTextContent(fullNameStudent.firstName);
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`),
+    ).toHaveTextContent(fullNameStudent.lastName);
+    expect(
+      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+    ).not.toBeInTheDocument();
+
     // Clear the filter
     fireEvent.change(searchInput, { target: { value: "" } });
-    
+
     // Test 5: Test case insensitivity
     fireEvent.change(searchInput, { target: { value: "EMMA" } });
-    
+
     // The search should be case-insensitive
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toHaveTextContent(
-      "Emma"
-    );
-    expect(screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`)).not.toBeInTheDocument();
-    
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+    ).toHaveTextContent("Emma");
+    expect(
+      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+    ).not.toBeInTheDocument();
+
     // Clear the filter
     fireEvent.change(searchInput, { target: { value: "" } });
-    
+
     // Test 6: Test student with null values
     // The first student has null githubLogin, make sure it doesn't cause errors
-    fireEvent.change(searchInput, { target: { value: rosterStudentFixtures.studentsWithEachStatus[0].firstName } });
-    
+    fireEvent.change(searchInput, {
+      target: {
+        value: rosterStudentFixtures.studentsWithEachStatus[0].firstName,
+      },
+    });
+
     // Should still find the student
-    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toHaveTextContent(
-      rosterStudentFixtures.studentsWithEachStatus[0].firstName
+    expect(
+      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+    ).toHaveTextContent(
+      rosterStudentFixtures.studentsWithEachStatus[0].firstName,
     );
   });
 });

@@ -161,7 +161,9 @@ export default function InstructorCourseShowPage() {
           <Row className="mb-3">
             <Form>
               <Form.Group as={Row} controlId="searchFilter">
-                <Form.Label column sm={2}>Search Students:</Form.Label>
+                <Form.Label column sm={2}>
+                  Search Students:
+                </Form.Label>
                 <Col sm={10}>
                   <Form.Control
                     type="text"
@@ -177,29 +179,31 @@ export default function InstructorCourseShowPage() {
           <Row>
             <RosterStudentTable
               // Stryker disable next-line ArrayDeclaration : checking for ["Stryker was here"] is tough
-              students={(rosterStudents || []).filter(student => {
+              students={(rosterStudents || []).filter((student) => {
                 // If search term is empty, show all students
                 if (searchTerm === "") return true;
-                
+
                 const searchTermLower = searchTerm.toLowerCase();
-                
+
                 // Safely get values, converting to lowercase strings where appropriate
                 const firstName = student.firstName?.toLowerCase() || "";
                 const lastName = student.lastName?.toLowerCase() || "";
                 const email = student.email?.toLowerCase() || "";
                 const studentId = student.studentId?.toString() || "";
                 const githubLogin = student.githubLogin?.toLowerCase() || "";
-                
+
                 // Combine first and last name for full name search
                 const fullName = `${firstName} ${lastName}`.trim();
-                
+
                 // Check if search term is found in any of the fields
-                return firstName.includes(searchTermLower) ||
-                       lastName.includes(searchTermLower) ||
-                       fullName.includes(searchTermLower) ||
-                       email.includes(searchTermLower) ||
-                       studentId.includes(searchTerm) ||
-                       githubLogin.includes(searchTermLower);
+                return (
+                  firstName.includes(searchTermLower) ||
+                  lastName.includes(searchTermLower) ||
+                  fullName.includes(searchTermLower) ||
+                  email.includes(searchTermLower) ||
+                  studentId.includes(searchTerm) ||
+                  githubLogin.includes(searchTermLower)
+                );
               })}
               currentUser={currentUser}
               courseId={course ? course.id : ""}
