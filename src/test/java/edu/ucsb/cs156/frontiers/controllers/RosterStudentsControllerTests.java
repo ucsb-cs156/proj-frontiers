@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -1524,7 +1525,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // Since the student doesn't have a GitHub login, removeOrganizationMember should not be called
                 verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
-                assertEquals("Successfully deleted roster student and removed him/her from the course list and organization", 
+                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
                         response.getResponse().getContentAsString());
         }
         
@@ -1557,7 +1558,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
                 when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
                 when(courseRepository.save(any(Course.class))).thenReturn(course1);
-                when(organizationMemberService.removeOrganizationMember(any(RosterStudent.class))).thenReturn(true);
+                doNothing().when(organizationMemberService).removeOrganizationMember(any(RosterStudent.class));
 
                 MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
                         .with(csrf())
@@ -1619,7 +1620,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // Verify that removeOrganizationMember is NOT called since the course has no org name
                 verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
-                assertEquals("Successfully deleted roster student and removed him/her from the course list and organization", 
+                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
                         response.getResponse().getContentAsString());
         }
 
@@ -1666,7 +1667,59 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                 // Verify that removeOrganizationMember is NOT called since the course has no installation ID
                 verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
-                assertEquals("Successfully deleted roster student and removed him/her from the course list and organization", 
+                assertEquals("Successfully deleted roster student and removed him/her from the course list", 
+                        response.getResponse().getContentAsString());
+        }
+        
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testDeleteRosterStudent_withGithubLogin_orgRemovalFails() throws Exception {
+                // Set up course with org name and installation ID
+                course1.setOrgName("test-org");
+                course1.setInstallationId("12345");
+                
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Test")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("test@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.MEMBER)
+                        .githubId(67890)
+                        .githubLogin("teststudent")
+                        .build();
+
+                List<RosterStudent> students = new ArrayList<>();
+                students.add(rosterStudent);
+                course1.setRosterStudents(students);
+
+                List<RosterStudent> studentsSpy = Mockito.spy(students);
+                course1.setRosterStudents(studentsSpy);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                when(courseRepository.save(any(Course.class))).thenReturn(course1);
+                
+                // Simulate an exception when trying to remove the student from the organization
+                String errorMessage = "API rate limit exceeded";
+                doThrow(new RuntimeException(errorMessage))
+                    .when(organizationMemberService).removeOrganizationMember(any(RosterStudent.class));
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(1L));
+                verify(courseRepository).save(any(Course.class));
+                verify(rosterStudentRepository).delete(eq(rosterStudent));
+                verify(studentsSpy).remove(eq(rosterStudent));
+                // Verify that removeOrganizationMember is called but throws an exception
+                verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
+
+                assertEquals("Successfully deleted roster student but there was an error removing them from the course organization: " + errorMessage, 
                         response.getResponse().getContentAsString());
         }
 

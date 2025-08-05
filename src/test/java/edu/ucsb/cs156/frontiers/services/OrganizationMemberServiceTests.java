@@ -540,10 +540,11 @@ public class OrganizationMemberServiceTests {
                 .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
                 .andRespond(withStatus(HttpStatus.NO_CONTENT));
 
-        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+        // No exception should be thrown
+        organizationMemberService.removeOrganizationMember(testStudent);
 
         mockServer.verify();
-        assertTrue(result);
+        // No assertion needed as we're just verifying no exception is thrown
     }
 
     @Test
@@ -554,10 +555,12 @@ public class OrganizationMemberServiceTests {
                 .course(testCourse)
                 .build();
 
-        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            organizationMemberService.removeOrganizationMember(testStudent);
+        });
 
+        assertEquals("Cannot remove student from organization: GitHub login is null", exception.getMessage());
         mockServer.verify();
-        assertFalse(result);
     }
 
     @Test
@@ -573,10 +576,12 @@ public class OrganizationMemberServiceTests {
                 .course(courseWithoutOrg)
                 .build();
 
-        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            organizationMemberService.removeOrganizationMember(testStudent);
+        });
 
+        assertEquals("Cannot remove student from organization: Course has no linked organization", exception.getMessage());
         mockServer.verify();
-        assertFalse(result);
     }
 
     @Test
@@ -592,10 +597,12 @@ public class OrganizationMemberServiceTests {
                 .course(courseWithoutInstallation)
                 .build();
 
-        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            organizationMemberService.removeOrganizationMember(testStudent);
+        });
 
+        assertEquals("Cannot remove student from organization: Course has no linked organization", exception.getMessage());
         mockServer.verify();
-        assertFalse(result);
     }
 
     @Test
@@ -615,9 +622,11 @@ public class OrganizationMemberServiceTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"message\": \"Error removing member\"}"));
 
-        boolean result = organizationMemberService.removeOrganizationMember(testStudent);
+        Exception exception = assertThrows(Exception.class, () -> {
+            organizationMemberService.removeOrganizationMember(testStudent);
+        });
 
+        assertTrue(exception.getMessage().contains("Error removing member"));
         mockServer.verify();
-        assertFalse(result);
     }
 }

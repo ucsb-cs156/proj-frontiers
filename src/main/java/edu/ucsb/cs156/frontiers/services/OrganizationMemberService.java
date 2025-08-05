@@ -155,42 +155,32 @@ public class OrganizationMemberService {
     /**
      * Removes a member from an organization.
      * @param student The roster student to remove from the organization
-     * @return true if the student was successfully removed, false otherwise
+     * @throws NoSuchAlgorithmException if there is an algorithm error
+     * @throws InvalidKeySpecException if there is a key specification error
+     * @throws JsonProcessingException if there is an error processing JSON
+     * @throws IllegalArgumentException if student has no GitHub login or course has no linked organization
+     * @throws Exception if there is an error removing the student from the organization
      */
-    public boolean removeOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public void removeOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
         if (student.getGithubLogin() == null) {
-            log.warn("Cannot remove student from organization: GitHub login is null");
-            return false;
+            throw new IllegalArgumentException("Cannot remove student from organization: GitHub login is null");
         }
 
         Course course = student.getCourse();
         if (course.getOrgName() == null || course.getInstallationId() == null) {
-            log.warn("Cannot remove student from organization: Course has no linked organization");
-            return false;
+            throw new IllegalArgumentException("Cannot remove student from organization: Course has no linked organization");
         }
 
         String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members/" + student.getGithubLogin();
         HttpHeaders headers = new HttpHeaders();
-        String token;
-        try {
-            token = jwtService.getInstallationToken(course);
-        } catch (JsonProcessingException e) {
-            log.error("Error getting installation token: {}", e.getMessage());
-            return false;
-        }
+        String token = jwtService.getInstallationToken(course);
         
         headers.add("Authorization", "Bearer " + token);
         headers.add("Accept", "application/vnd.github+json");
         headers.add("X-GitHub-Api-Version", "2022-11-28");
         HttpEntity<String> entity = new HttpEntity<>(headers);
         
-        try {
-            restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);
-            log.info("Successfully removed student {} from organization {}", student.getGithubLogin(), course.getOrgName());
-            return true;
-        } catch (Exception e) {
-            log.error("Error removing student from organization: {}", e.getMessage());
-            return false;
-        }
+        restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);
+        log.info("Successfully removed student {} from organization {}", student.getGithubLogin(), course.getOrgName());
     }
 }
