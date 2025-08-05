@@ -178,7 +178,7 @@ public class RosterStudentsController extends ApiController {
      */
     @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
     @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
-    @PostMapping(value = "/upload/egrades", consumes = { "multipart/form-data" })
+    @PostMapping(value = "/upload/csv", consumes = { "multipart/form-data" })
     public Map<String, String> uploadRosterStudentsUCSBEgrades(
             @Parameter(name = "courseId") @RequestParam Long courseId,
             @Parameter(name = "file") @RequestParam("file") MultipartFile file)
@@ -216,17 +216,17 @@ public class RosterStudentsController extends ApiController {
 
     }
 
-    public RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
+    public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
         if (sourceType == RosterSourceType.UCSB_EGRADES) {
             return fromUCSBEgradesCSVRow(row);
         } else if (sourceType == RosterSourceType.CHICO_CANVAS) {
             return fromChicoCanvasCSVRow(row);
         } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Roster Source Type");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV format not recognized");
         }
     }
     
-    public RosterStudent fromUCSBEgradesCSVRow(String[] row) {
+    public static RosterStudent fromUCSBEgradesCSVRow(String[] row) {
         return RosterStudent.builder()
                 .firstName(row[5])
                 .lastName(row[4])
@@ -262,7 +262,7 @@ public class RosterStudentsController extends ApiController {
     }
 
 
-    public RosterStudent fromChicoCanvasCSVRow(String[] row) {
+    public static RosterStudent fromChicoCanvasCSVRow(String[] row) {
         return RosterStudent.builder()
                 .firstName(getFirstName(row[0]))
                 .lastName(getLastName(row[0]))
