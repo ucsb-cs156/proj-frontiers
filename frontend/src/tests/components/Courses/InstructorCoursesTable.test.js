@@ -38,14 +38,14 @@ describe("InstructorCoursesTable tests", () => {
       "Course Name",
       "Term",
       "School",
-      "Created By",
+      "Instructor",
     ];
     const expectedFields = [
       "id",
       "courseName",
       "term",
       "school",
-      "createdByEmail",
+      "instructorEmail",
     ];
 
     expectedHeaders.forEach((headerText) => {
@@ -74,7 +74,7 @@ describe("InstructorCoursesTable tests", () => {
     ).toHaveTextContent("UCSB");
 
     expect(
-      screen.getByTestId(`${testId}-cell-row-0-col-createdByEmail`),
+      screen.getByTestId(`${testId}-cell-row-0-col-instructorEmail`),
     ).toHaveTextContent("diba@ucsb.edu");
 
     expect(screen.getByText("ucsb-cs156-s25")).toBeInTheDocument();
