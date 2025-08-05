@@ -146,6 +146,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                 User user = currentUserService.getCurrentUser().getUser();
                 User otherUser = User.builder()
                                 .id(user.getId() + 1L)
+                                .email("different-instructor@example.org")
                                 .build();
                 Course course = Course.builder()
                                 .id(1L)
@@ -298,6 +299,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                 User user = currentUserService.getCurrentUser().getUser();
                 User otherUser = User.builder()
                                 .id(user.getId() + 1L)
+                                .email("different-instructor@example.org")
                                 .build();
                 Course course = Course.builder()
                                 .id(1L)
