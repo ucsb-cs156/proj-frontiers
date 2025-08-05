@@ -56,8 +56,8 @@ public class CourseSecurityTests {
     public class SuccessfulAdmin {
         @BeforeEach
         public void setup(){
-            User user = User.builder().id(1L).build();
-            User user2 = User.builder().id(2L).build();
+            User user = User.builder().id(1L).email("admin@example.com").build();
+            User user2 = User.builder().id(2L).email("instructor@example.com").build();
             Course testCourse = Course.builder().id(1L).instructorEmail(user2.getEmail()).build();
             when(currentUserService.getCurrentUser()).thenReturn(CurrentUser.builder().user(user).roles(Set.of(new SimpleGrantedAuthority("ROLE_ADMIN"))).build());
             when(courseRepository.findById(1L)).thenReturn(java.util.Optional.of(testCourse));
@@ -74,7 +74,7 @@ public class CourseSecurityTests {
     public class SuccessfulInstructor {
         @BeforeEach
         public void setup(){
-            User user = User.builder().id(1L).build();
+            User user = User.builder().id(1L).email("instructor@example.com").build();
             Course testCourse = Course.builder().id(1L).instructorEmail(user.getEmail()).build();
             when(currentUserService.getCurrentUser()).thenReturn(CurrentUser.builder().user(user).roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))).build());
             when(courseRepository.findById(1L)).thenReturn(java.util.Optional.of(testCourse));
@@ -91,8 +91,8 @@ public class CourseSecurityTests {
     public class UnsuccessfulInstructor {
         @BeforeEach
         public void setup(){
-            User user = User.builder().id(1L).build();
-            User user2 = User.builder().id(2L).build();
+            User user = User.builder().id(1L).email("instructor1@example.com").build();
+            User user2 = User.builder().id(2L).email("instructor2@example.com").build();
             Course testCourse = Course.builder().id(1L).instructorEmail(user2.getEmail()).build();
             when(currentUserService.getCurrentUser()).thenReturn(CurrentUser.builder().user(user).roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))).build());
             when(courseRepository.findById(1L)).thenReturn(java.util.Optional.of(testCourse));

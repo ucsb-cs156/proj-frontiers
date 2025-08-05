@@ -357,7 +357,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         @Test
         @WithMockUser(roles = { "INSTRUCTOR" })
         public void testNotCreator() throws Exception {
-                User separateUser = User.builder().id(2L).build();
+                User separateUser = User.builder().id(2L).email("separate@example.com").build();
                 Course course1 = Course.builder()
                                 .courseName("CS156")
                                 .term("S25")
@@ -382,7 +382,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         public void testCourseLinkSuccessWhenAdminNotCreator() throws Exception {
                 User user = currentUserService.getCurrentUser().getUser();
                 Long userId = user.getId();
-                User separateUser = User.builder().id(userId + 1L).build();
+                User separateUser = User.builder().id(userId + 1L).email("separate@example.com").build();
                 Course courseBefore = Course.builder()
                                 .courseName("CS156")
                                 .term("S25")
@@ -759,6 +759,98 @@ public class CoursesControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(Map.of("message", "Course with id 1 deleted"));
                 String responseString = response.getResponse().getContentAsString();
                 assertEquals(expectedJson, responseString);
+        }
+
+        /**
+         * Test that ROLE_ADMIN can update instructor email
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateInstructorEmail_byAdmin() throws Exception {
+                User admin = currentUserService.getCurrentUser().getUser();
+                Course course = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .instructorEmail("old-instructor@example.com")
+                                .build();
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+                when(instructorRepository.existsByEmail(eq("new-instructor@example.com"))).thenReturn(true);
+                when(adminRepository.existsByEmail(eq("new-instructor@example.com"))).thenReturn(false);
+                
+                Course updatedCourse = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .instructorEmail("new-instructor@example.com")
+                                .build();
+                        
+                when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+                // act
+                MvcResult response = mockMvc.perform(put("/api/courses/updateInstructor")
+                                .with(csrf())
+                                .param("courseId", "1")
+                                .param("instructorEmail", "new-instructor@example.com"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+                verify(courseRepository, times(1)).findById(eq(1L));
+                verify(instructorRepository, times(1)).existsByEmail(eq("new-instructor@example.com"));
+                verify(courseRepository, times(1)).save(any(Course.class));
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+                assertEquals(expectedJson, responseString);
+        }
+
+        /**
+         * Test that updateInstructorEmail fails when email doesn't exist in instructor or admin tables
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateInstructorEmail_emailNotFound() throws Exception {
+                Course course = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .instructorEmail("old-instructor@example.com")
+                                .build();
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+                when(instructorRepository.existsByEmail(eq("nonexistent@example.com"))).thenReturn(false);
+                when(adminRepository.existsByEmail(eq("nonexistent@example.com"))).thenReturn(false);
+
+                // act & assert
+                mockMvc.perform(put("/api/courses/updateInstructor")
+                                .with(csrf())
+                                .param("courseId", "1")
+                                .param("instructorEmail", "nonexistent@example.com"))
+                                .andExpect(status().isBadRequest());
+
+                verify(courseRepository, times(1)).findById(eq(1L));
+                verify(instructorRepository, times(1)).existsByEmail(eq("nonexistent@example.com"));
+                verify(adminRepository, times(1)).existsByEmail(eq("nonexistent@example.com"));
+                verify(courseRepository, never()).save(any(Course.class));
+        }
+
+        /**
+         * Test that updateInstructorEmail requires ADMIN role
+         */
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testUpdateInstructorEmail_requiresAdmin() throws Exception {
+                // act & assert
+                mockMvc.perform(put("/api/courses/updateInstructor")
+                                .with(csrf())
+                                .param("courseId", "1")
+                                .param("instructorEmail", "new-instructor@example.com"))
+                                .andExpect(status().isForbidden());
         }
 }
 
