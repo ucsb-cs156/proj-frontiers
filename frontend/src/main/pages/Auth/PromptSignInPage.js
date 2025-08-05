@@ -49,7 +49,7 @@ export default function PromptSignInPage() {
             Icon={googleIcon}
             title={"Sign in with Google"}
             description={
-              "If you have University of California-Santa Barbara login credentials, sign in with Google"
+              "If you have Chico State or University of California-Santa Barbara login credentials, sign in with Google"
             }
             url={systemInfo.oauthLogin}
             testid={"google"}

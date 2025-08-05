@@ -36,7 +36,7 @@ describe("SignInPage Tests", () => {
     expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "If you have University of California-Santa Barbara login credentials, sign in with Google",
+        "If you have Chico State or University of California-Santa Barbara login credentials, sign in with Google",
       ),
     ).toBeInTheDocument();
     expect(
