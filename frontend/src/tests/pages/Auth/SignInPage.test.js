@@ -36,8 +36,12 @@ describe("SignInPage Tests", () => {
     expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "If you have University of California-Santa Barbara login credentials, sign in with Google",
+        "If you have credentials with these schools, sign in with Google",
       ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Chico State University")).toBeInTheDocument();
+    expect(
+      screen.getByText("University of California, Santa Barbara"),
     ).toBeInTheDocument();
     expect(
       within(screen.getByTestId("SignInCard-base-google")).getByText("Log In"),
@@ -63,9 +67,10 @@ describe("SignInPage Tests", () => {
     expect(screen.getByText("Sign in with Microsoft")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "If you have Oregon State University login credentials, sign in with Microsoft.",
+        "If you have credentials with these schools, sign in with Microsoft",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByText("Oregon State University")).toBeInTheDocument();
     expect(
       within(screen.getByTestId("SignInCard-base-microsoft")).getByText(
         "Log In",

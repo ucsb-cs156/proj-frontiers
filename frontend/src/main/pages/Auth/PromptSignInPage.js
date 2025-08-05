@@ -5,6 +5,7 @@ import { Alert, Row } from "react-bootstrap";
 import SignInCard from "main/components/Auth/SignInCard";
 import { useSystemInfo } from "main/utils/systemInfo";
 import { useLocation } from "react-router";
+import loginProviderSchools from "main/utils/loginProviderSchools";
 
 export default function PromptSignInPage() {
   const microsoftIcon = () => {
@@ -49,7 +50,14 @@ export default function PromptSignInPage() {
             Icon={googleIcon}
             title={"Sign in with Google"}
             description={
-              "If you have University of California-Santa Barbara login credentials, sign in with Google"
+              <>
+                If you have credentials with these schools, sign in with Google
+                <ul>
+                  {loginProviderSchools.google.map((school, index) => (
+                    <li key={index}>{school}</li>
+                  ))}
+                </ul>
+              </>
             }
             url={systemInfo.oauthLogin}
             testid={"google"}
@@ -61,7 +69,15 @@ export default function PromptSignInPage() {
             Icon={microsoftIcon}
             title={"Sign in with Microsoft"}
             description={
-              "If you have Oregon State University login credentials, sign in with Microsoft."
+              <>
+                If you have credentials with these schools, sign in with
+                Microsoft
+                <ul>
+                  {loginProviderSchools.microsoft.map((school, index) => (
+                    <li key={index}>{school}</li>
+                  ))}
+                </ul>
+              </>
             }
             url={systemInfo.activeDirectoryUrl}
             testid={"microsoft"}
