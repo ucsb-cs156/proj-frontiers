@@ -16,14 +16,20 @@ import AxiosMockAdapter from "axios-mock-adapter";
 
 describe("HomePageConnectGithub tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
-  axiosMock
-    .onGet("/api/currentUser")
-    .reply(200, apiCurrentUserFixtures.userOnly);
-  axiosMock
-    .onGet("/api/systemInfo")
-    .reply(200, systemInfoFixtures.showingNeither);
-
   const queryClient = new QueryClient();
+  
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    queryClient.clear();
+    
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  });
   test("renders without crashing", async () => {
     render(
       <QueryClientProvider client={queryClient}>
