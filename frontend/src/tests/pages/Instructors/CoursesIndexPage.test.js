@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
@@ -31,6 +31,15 @@ describe("CoursesIndexPage tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
   });
+
+  const setupInstructorUser = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.instructorUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
 
   const setupAdminUser = () => {
     axiosMock
@@ -135,7 +144,7 @@ describe("CoursesIndexPage tests", () => {
       .onPost("/api/courses/post")
       .reply(200, coursesFixtures.severalCourses[0]);
     axiosMock
-      .onGet("/api/courses/all")
+      .onGet("/api/courses/allForAdmins")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -169,9 +178,7 @@ describe("CoursesIndexPage tests", () => {
     await waitFor(() =>
       expect(mockToast).toBeCalledWith("Course CMPSC 156 created"),
     );
-    expect(queryClient.getQueryState(["/api/courses/all"])).toBeTruthy();
-    await waitFor(() =>
-      expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument(),
-    );
+    expect(queryClient.getQueryState(["/api/courses/allForAdmins"])).toBeTruthy();
+    expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
   });
 });

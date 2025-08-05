@@ -8,6 +8,7 @@ import coursesFixtures from "fixtures/coursesFixtures";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { React } from "react";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
@@ -35,6 +36,15 @@ describe("HomePageLoggedIn tests", () => {
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupInstructorUser = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.instructorUser);
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
@@ -104,6 +114,48 @@ describe("HomePageLoggedIn tests", () => {
     expect(
       screen.getByTestId(`StaffCoursesTable-cell-row-0-col-studentStatus`),
     ).toHaveTextContent("Pending");
+  });
+
+  test("tables render correctly for instructor", async () => {
+    setupInstructorUser(); 
+    axiosMock
+      .onGet("/api/courses/allForInstructors")
+      .reply(200, coursesFixtures.severalCourses);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+   await waitFor(() => {
+      expect(
+        screen.getByTestId(`InstructorCoursesTable-cell-row-0-col-id`),
+      ).toHaveTextContent("1");
+    });
+    expect(screen.getByTestId(`InstructorCoursesTable-cell-row-1-col-id`)).toHaveTextContent(
+      "2",
+    );
+    expect(screen.getByTestId(`InstructorCoursesTable-cell-row-2-col-id`)).toHaveTextContent(
+      "3",
+    );
+
+    const orgName = screen.getByText("wsu-cpts489-fa20");
+    expect(orgName).toBeInTheDocument();
+
+    const button3 = screen.queryByTestId(
+      "InstructorCoursesTable-cell-row-2-col-orgName-button",
+    );
+    expect(button3).toBeInTheDocument();
+    expect(button3).toHaveTextContent("Install GitHub App");
+
+    const button4 = screen.queryByTestId(
+      "InstructorCoursesTable-cell-row-3-col-orgName-button",
+    );
+    expect(button4).toBeInTheDocument();
+    expect(button4).toHaveTextContent("Install GitHub App");
   });
 
   test("join callbacks work", async () => {
@@ -332,5 +384,48 @@ describe("HomePageLoggedIn tests", () => {
         "StaffCoursesTable-cell-row-6-col-studentStatus-button",
       ),
     ).toHaveTextContent("Join Course");
+  });
+   test("Can submit new course", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onPost("/api/courses/post")
+      .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock
+      .onGet("/api/courses/allForInstructors")
+      .reply(200, coursesFixtures.severalCourses);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const createCourse = screen.getByText("Create Course");
+    expect(createCourse).toHaveClass("btn btn-primary");
+    expect(createCourse).toHaveStyle("float: right; margin-bottom: 10px;");
+    fireEvent.click(createCourse);
+
+    await screen.findByLabelText("Course Name");
+    const courseName = screen.getByLabelText("Course Name");
+    const courseTerm = screen.getByLabelText("Term");
+    const school = screen.getByLabelText("School");
+    fireEvent.change(courseName, { target: { value: "CMPSC 156" } });
+    fireEvent.change(courseTerm, { target: { value: "Spring 2025" } });
+    fireEvent.change(school, { target: { value: "UCSB" } });
+    fireEvent.click(screen.getByText("Create"));
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].url).toBe("/api/courses/post");
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseName: "CMPSC 156",
+      term: "Spring 2025",
+      school: "UCSB",
+    });
+    await waitFor(() =>
+      expect(mockToast).toBeCalledWith("Course CMPSC 156 created"),
+    );
+    expect(queryClient.getQueryState(["/api/courses/allForInstructors"])).toBeTruthy();
+    expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
   });
 });
