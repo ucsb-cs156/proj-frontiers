@@ -37,7 +37,13 @@ export default function SignInPage() {
             Icon={googleIcon}
             title={"Sign in with Google"}
             description={
-              "If you have Chico State or University of California-Santa Barbara login credentials, sign in with Google"
+              <>
+                If you have credentials with these schools, sign in with Google
+                <ul>
+                  <li>Chico State University</li>
+                  <li>University of California, Santa Barbara</li>
+                </ul>
+              </>
             }
             url={systemInfo.oauthLogin}
             testid={"google"}
@@ -48,7 +54,12 @@ export default function SignInPage() {
             Icon={microsoftIcon}
             title={"Sign in with Microsoft"}
             description={
-              "If you have Oregon State University login credentials, sign in with Microsoft."
+              <>
+                If you have credentials with these schools, sign in with Microsoft
+                <ul>
+                  <li>Oregon State University</li>
+                </ul>
+              </>
             }
             url={systemInfo.activeDirectoryUrl}
             testid={"microsoft"}

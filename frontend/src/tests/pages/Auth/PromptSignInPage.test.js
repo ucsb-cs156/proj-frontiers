@@ -35,10 +35,10 @@ describe("SignInPage Tests", () => {
     expect(screen.getByTestId("SignInPage-googleIcon")).toBeInTheDocument();
     expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "If you have Chico State or University of California-Santa Barbara login credentials, sign in with Google",
-      ),
+      screen.getByText("If you have credentials with these schools, sign in with Google"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Chico State University")).toBeInTheDocument();
+    expect(screen.getByText("University of California, Santa Barbara")).toBeInTheDocument();
     expect(
       within(screen.getByTestId("SignInCard-base-google")).getByText("Log In"),
     ).toHaveAttribute("href", "/oauth2/authorization/google");
@@ -66,10 +66,9 @@ describe("SignInPage Tests", () => {
     expect(screen.getByTestId("SignInCard-base-microsoft")).toBeInTheDocument();
     expect(screen.getByText("Sign in with Microsoft")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "If you have Oregon State University login credentials, sign in with Microsoft.",
-      ),
+      screen.getByText("If you have credentials with these schools, sign in with Microsoft"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Oregon State University")).toBeInTheDocument();
     expect(
       within(screen.getByTestId("SignInCard-base-microsoft")).getByText(
         "Log In",
