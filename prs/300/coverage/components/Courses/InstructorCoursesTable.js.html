@@ -350,7 +350,16 @@
 <a name='L285'></a><a href='#L285'>285</a>
 <a name='L286'></a><a href='#L286'>286</a>
 <a name='L287'></a><a href='#L287'>287</a>
-<a name='L288'></a><a href='#L288'>288</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a>
+<a name='L294'></a><a href='#L294'>294</a>
+<a name='L295'></a><a href='#L295'>295</a>
+<a name='L296'></a><a href='#L296'>296</a>
+<a name='L297'></a><a href='#L297'>297</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -426,12 +435,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -637,6 +651,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button, Modal, Form } from "react-bootstrap";
@@ -708,23 +726,28 @@ export default function InstructorCoursesTable({
 &nbsp;
   const handleUpdateInstructor = <span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {
 <span class="cstat-no" title="statement not covered" >    if (!selectedCourse || !newInstructorEmail) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    setIsUpdating(true);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    if (storybook) {</span>
-<span class="cstat-no" title="statement not covered" >      window.alert(`Would update course ${selectedCourse.id} instructor to: ${newInstructorEmail}`);</span>
+<span class="cstat-no" title="statement not covered" >      window.alert(</span>
+        `Would update course ${selectedCourse.id} instructor to: ${newInstructorEmail}`,
+      );
 <span class="cstat-no" title="statement not covered" >      handleCloseModal();</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      const response = <span class="cstat-no" title="statement not covered" >await fetch(`/api/courses/updateInstructor?courseId=${selectedCourse.id}&amp;instructorEmail=${encodeURIComponent(newInstructorEmail)}`, {</span>
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = <span class="cstat-no" title="statement not covered" >await fetch(</span>
+        `/api/courses/updateInstructor?courseId=${selectedCourse.id}&amp;instructorEmail=${encodeURIComponent(newInstructorEmail)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
         },
-        credentials: 'include'
-      });
+      );
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (response.ok) {</span>
 <span class="cstat-no" title="statement not covered" >        window.location.reload(); </span>// Reload to show updated data
@@ -882,7 +905,7 @@ export default function InstructorCoursesTable({
   return (
     &lt;&gt;
       &lt;OurTable data={courses} columns={columnsWithInstall} testid={testId} /&gt;
-      
+&nbsp;
       &lt;Modal show={showModal} onHide={handleCloseModal}&gt;
         &lt;Modal.Header closeButton&gt;
           &lt;Modal.Title&gt;Update Instructor&lt;/Modal.Title&gt;
@@ -908,12 +931,16 @@ export default function InstructorCoursesTable({
           &lt;/Form&gt;
         &lt;/Modal.Body&gt;
         &lt;Modal.Footer&gt;
-          &lt;Button variant="secondary" onClick={handleCloseModal} disabled={isUpdating}&gt;
+          &lt;Button
+            variant="secondary"
+            onClick={handleCloseModal}
+            disabled={isUpdating}
+          &gt;
             Cancel
           &lt;/Button&gt;
-          &lt;Button 
-            variant="primary" 
-            onClick={handleUpdateInstructor} 
+          &lt;Button
+            variant="primary"
+            onClick={handleUpdateInstructor}
             disabled={isUpdating || !newInstructorEmail}
             data-testid="update-instructor-submit-button"
           &gt;
@@ -931,7 +958,7 @@ export default function InstructorCoursesTable({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-05T22:18:24.770Z
+                at 2025-08-05T22:22:29.657Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
