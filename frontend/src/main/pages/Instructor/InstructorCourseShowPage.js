@@ -8,11 +8,11 @@ import { useNavigate, useParams } from "react-router";
 
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
-import { Accordion, Button, Card, Row, Tab, Tabs } from "react-bootstrap";
+import { Accordion, Button, Row, Tab, Tabs } from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import { toast } from "react-toastify";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
-import IndividualAssignmentForm from "main/components/Assignments/IndividualAssignmentForm";
+import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -84,22 +84,8 @@ export default function InstructorCourseShowPage() {
     },
   });
 
-  const objectToAxiosParamsIndividualAssignment = (assignment) => ({
-    url: `/api/repos/createRepos`,
-    method: "POST",
-    params: {
-      courseId: courseId,
-      repoPrefix: assignment.repoPrefix,
-      isPrivate: assignment.assignmentPrivacy,
-    },
-  });
-
   const onSuccessRoster = () => {
     toast("Roster successfully updated.");
-  };
-
-  const onSuccessAssignment = () => {
-    toast("Repository creation successfully started.");
   };
 
   const rosterPostMutation = useBackendMutation(
@@ -114,21 +100,12 @@ export default function InstructorCourseShowPage() {
     [`/api/rosterstudents/course/${courseId}`],
   );
 
-  const indvidiualAssignmentMutation = useBackendMutation(
-    objectToAxiosParamsIndividualAssignment,
-    { onSuccess: onSuccessAssignment },
-  );
-
   const handleCsvSubmit = (formData) => {
     rosterCsvMutation.mutate(formData);
   };
 
   const handlePostSubmit = (student) => {
     rosterPostMutation.mutate(student);
-  };
-
-  const postIndividualAssignment = (assignment) => {
-    indvidiualAssignmentMutation.mutate(assignment);
   };
 
   const testId = "InstructorCourseShowPage";
@@ -158,16 +135,6 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
             testId={testId}
           />
-          <Row md={2}>
-            <Card>
-              <Card.Header>Individual Assignment</Card.Header>
-              <Card.Body>
-                <IndividualAssignmentForm
-                  submitAction={postIndividualAssignment}
-                />
-              </Card.Body>
-            </Card>
-          </Row>
         </Tab>
         <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
           <Row className="py-3">
@@ -198,6 +165,9 @@ export default function InstructorCourseShowPage() {
               testIdPrefix={`${testId}-RosterStudentTable`}
             />
           </Row>
+        </Tab>
+        <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
+          <AssignmentTabComponent courseId={courseId} />
         </Tab>
       </Tabs>
     </BasicLayout>

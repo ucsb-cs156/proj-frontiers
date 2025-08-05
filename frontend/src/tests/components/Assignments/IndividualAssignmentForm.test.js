@@ -15,6 +15,9 @@ test("No submit call on empty prefix", async () => {
   expect(
     screen.getByTestId("IndividualAssignmentForm-assignmentPrivacy"),
   ).toBeInTheDocument();
+  expect(
+    screen.getByTestId("IndividualAssignmentForm-permissions"),
+  ).toHaveValue("MAINTAIN");
 });
 
 test("Submit call on successful data", async () => {

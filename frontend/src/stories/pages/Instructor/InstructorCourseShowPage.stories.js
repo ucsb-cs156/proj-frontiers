@@ -61,6 +61,11 @@ ExampleCourseNoStudents.parameters = {
           status: 200,
         });
       }),
+      http.post("/api/repos/createRepos", () => {
+        return HttpResponse.json([], {
+          status: 200,
+        });
+      }),
     ],
   },
 };
@@ -105,6 +110,11 @@ ExampleCourseThreeStudents.parameters = {
             status: 200,
           },
         );
+      }),
+      http.post("/api/repos/createRepos", () => {
+        return HttpResponse.json([], {
+          status: 200,
+        });
       }),
     ],
   },

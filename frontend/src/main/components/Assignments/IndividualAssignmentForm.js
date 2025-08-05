@@ -9,7 +9,10 @@ export default function IndividualAssignmentForm({ submitAction }) {
   } = useForm();
 
   return (
-    <Form onSubmit={handleSubmit(submitAction)}>
+    <Form
+      onSubmit={handleSubmit(submitAction)}
+      data-testid="IndividualAssignmentForm"
+    >
       <Form.Group>
         <Form.Label htmlFor="repoPrefix">Repository Prefix</Form.Label>
         <Form.Control
@@ -35,6 +38,20 @@ export default function IndividualAssignmentForm({ submitAction }) {
           data-testid="IndividualAssignmentForm-assignmentPrivacy"
           {...register("assignmentPrivacy")}
         />
+      </Form.Group>
+      <Form.Group className="mb-3">
+        <Form.Label htmlFor="permissions">Student Permissions</Form.Label>
+        <Form.Control
+          as="select"
+          defaultValue={"MAINTAIN"}
+          data-testid={"IndividualAssignmentForm-permissions"}
+          {...register("permissions")}
+        >
+          <option value="READ">Read</option>
+          <option value="WRITE">Write</option>
+          <option value="MAINTAIN">Maintain</option>
+          <option value="ADMIN">Admin</option>
+        </Form.Control>
       </Form.Group>
       <Form.Group>
         <Button type="submit" data-testid="IndividualAssignmentForm-submit">

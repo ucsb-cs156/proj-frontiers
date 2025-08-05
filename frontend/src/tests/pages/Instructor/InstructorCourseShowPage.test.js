@@ -374,6 +374,10 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "enrollment",
     );
+    expect(screen.getByText("Assignments")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "assignments",
+    );
     expect(screen.getByText("Management")).toHaveAttribute(
       "aria-selected",
       "true",
@@ -533,7 +537,7 @@ describe("InstructorCourseShowPage tests", () => {
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
   });
-  test("Individual Assignment Form submit works", async () => {
+  test("Assignment tab is present", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
         queries: {
@@ -550,12 +554,6 @@ describe("InstructorCourseShowPage tests", () => {
     };
 
     axiosMock.onGet("/api/courses/7").reply(200, theCourse);
-
-    axiosMock
-      .onGet("/api/rosterstudents/course/7")
-      .reply(200, rosterStudentFixtures.threeStudents);
-
-    axiosMock.onPost("/api/repos/createRepos").reply(200);
     render(
       <QueryClientProvider client={queryClientSpecific}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
@@ -569,20 +567,6 @@ describe("InstructorCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
-    await screen.findByTestId("IndividualAssignmentForm-submit");
-    fireEvent.change(screen.getByLabelText("Repository Prefix"), {
-      target: { value: "test" },
-    });
-    fireEvent.click(screen.getByTestId("IndividualAssignmentForm-submit"));
-    await waitFor(() => expect(mockToast).toHaveBeenCalled());
-    expect(mockToast).toBeCalledWith(
-      "Repository creation successfully started.",
-    );
-    expect(axiosMock.history.post.length).toEqual(1);
-    expect(axiosMock.history.post[0].params).toEqual({
-      courseId: "7",
-      repoPrefix: "test",
-      isPrivate: false,
-    });
+    await screen.findByTestId("AssignmentTabComponent");
   });
 });
