@@ -3,6 +3,7 @@
 When making changes to the codebase, ensure that you:
 - Add unit tests under the frontend/src/tests when working on the frontend and src/test when working on the backend
 - Ensure that any added tests pass before completing.
+- Also ensure that your changes have complete line coverage.
 - When working in the frontend, ensure you run `npm run format` just prior to completing your work. This command must be run from the `frontend/` directory. 
 
 Note that you should look for the simplest solution and attempt to avoid adding any dependencies.
