@@ -1578,6 +1578,100 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
         @Test
         @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testDeleteRosterStudent_withGithubLogin_noOrgName_success() throws Exception {
+                // Set up course with null org name but with installation ID
+                course1.setOrgName(null);
+                course1.setInstallationId("12345");
+                
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Test")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("test@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.MEMBER)
+                        .githubId(67890)
+                        .githubLogin("teststudent")
+                        .build();
+
+                List<RosterStudent> students = new ArrayList<>();
+                students.add(rosterStudent);
+                course1.setRosterStudents(students);
+
+                List<RosterStudent> studentsSpy = Mockito.spy(students);
+                course1.setRosterStudents(studentsSpy);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(1L));
+                verify(courseRepository).save(any(Course.class));
+                verify(rosterStudentRepository).delete(eq(rosterStudent));
+                verify(studentsSpy).remove(eq(rosterStudent));
+                // Verify that removeOrganizationMember is NOT called since the course has no org name
+                verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
+
+                assertEquals("Successfully deleted roster student and removed him/her from the course list and organization", 
+                        response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
+        public void testDeleteRosterStudent_withGithubLogin_noInstallationId_success() throws Exception {
+                // Set up course with org name but no installation ID
+                course1.setOrgName("test-org");
+                course1.setInstallationId(null);
+                
+                RosterStudent rosterStudent = RosterStudent.builder()
+                        .id(1L)
+                        .firstName("Test")
+                        .lastName("Student")
+                        .studentId("A123456")
+                        .email("test@ucsb.edu")
+                        .course(course1)
+                        .rosterStatus(RosterStatus.ROSTER)
+                        .orgStatus(OrgStatus.MEMBER)
+                        .githubId(67890)
+                        .githubLogin("teststudent")
+                        .build();
+
+                List<RosterStudent> students = new ArrayList<>();
+                students.add(rosterStudent);
+                course1.setRosterStudents(students);
+
+                List<RosterStudent> studentsSpy = Mockito.spy(students);
+                course1.setRosterStudents(studentsSpy);
+
+                when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+                when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+                MvcResult response = mockMvc.perform(delete("/api/rosterstudents/delete")
+                        .with(csrf())
+                        .param("id", "1"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+                verify(rosterStudentRepository).findById(eq(1L));
+                verify(courseRepository).save(any(Course.class));
+                verify(rosterStudentRepository).delete(eq(rosterStudent));
+                verify(studentsSpy).remove(eq(rosterStudent));
+                // Verify that removeOrganizationMember is NOT called since the course has no installation ID
+                verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
+
+                assertEquals("Successfully deleted roster student and removed him/her from the course list and organization", 
+                        response.getResponse().getContentAsString());
+        }
+
+        @Test
+        @WithMockUser(roles = { "INSTRUCTOR" })
         public void testDeleteRosterStudent_notFound() throws Exception {
                 when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
 
