@@ -20,7 +20,10 @@ frontend/storybook-static
 # Only keep the one under frontend/
 
 package-lock.json
+package.json
+node_modules
 !frontend/package-lock.json
+!frontend/package.json
 
 # Maven
 

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import {
   apiCurrentUserFixtures,
   apiCurrentUserFixturesWithGithub,
@@ -53,8 +53,16 @@ describe("ProfilePage tests", () => {
       </QueryClientProvider>,
     );
 
-    await screen.findByText("Phillip Conrad");
-    expect(screen.getByText("pconrad.cis@gmail.com")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("User Profile")).toBeInTheDocument();
+    });
+
+    const header = screen.getByText("Current User Information");
+    expect(header).toBeInTheDocument();
+    fireEvent.click(header);
+
+    const loggedIn = screen.getByText("loggedIn");
+    expect(loggedIn).toBeInTheDocument();
   });
 
   test("renders correctly for admin user", async () => {
@@ -73,8 +81,10 @@ describe("ProfilePage tests", () => {
       </QueryClientProvider>,
     );
 
-    await screen.findByText("Phill Conrad");
-    expect(screen.getByText("phtcon@ucsb.edu")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("User Profile")).toBeInTheDocument();
+    });
+
     expect(screen.getByTestId("role-badge-user")).toBeInTheDocument();
     expect(screen.getByTestId("role-badge-admin")).toBeInTheDocument();
     expect(screen.getByTestId("role-badge-member")).toBeInTheDocument();

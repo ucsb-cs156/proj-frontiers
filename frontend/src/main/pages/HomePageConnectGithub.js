@@ -3,7 +3,7 @@ import { FaGithubSquare } from "react-icons/fa";
 import { useSystemInfo } from "main/utils/systemInfo";
 import { Row } from "react-bootstrap";
 import SignInCard from "main/components/Auth/SignInCard";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 export default function HomePageConnectGithub() {
   const githubIcon = () => {

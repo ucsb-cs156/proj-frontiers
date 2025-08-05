@@ -17,14 +17,15 @@ const Template = (args) => {
   );
 };
 
-export const Total_10_Max_5 = Template.bind({});
-Total_10_Max_5.args = {
+export const Total_10 = Template.bind({});
+Total_10.args = {
   totalPages: 10,
-  maxPages: 5,
 };
 
-export const Total_5_Max_10 = Template.bind({});
-Total_5_Max_10.args = {
+export const Total_5 = Template.bind({});
+Total_5.args = {
   totalPages: 5,
-  maxPages: 10,
 };
+
+export const Default = Template.bind({});
+Default.args = {};

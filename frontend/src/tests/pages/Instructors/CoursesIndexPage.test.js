@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import mockConsole from "jest-mock-console";
 import coursesFixtures from "fixtures/coursesFixtures";
 
@@ -223,6 +223,8 @@ describe("CoursesIndexPage tests", () => {
       expect(mockToast).toBeCalledWith("Course CMPSC 156 created"),
     );
     expect(queryClient.getQueryState(["/api/courses/all"])).toBeTruthy();
-    expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument(),
+    );
   });
 });

@@ -1,5 +1,5 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 export default function SignInSuccessPage() {
   const storedReturn = sessionStorage.getItem("redirect");
