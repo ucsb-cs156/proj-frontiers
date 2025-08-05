@@ -484,7 +484,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         @Test
         @WithMockUser(roles = {"INSTRUCTOR"})
         public void just_no_org_name() throws Exception {
-                Course course = Course.builder().courseName("course").installationId("1234").creator(currentUserService.getUser()).build();
+                Course course = Course.builder().courseName("course").installationId("1234").instructorEmail(currentUserService.getUser().getEmail()).build();
                 doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
                 MvcResult response = mockMvc.perform(post("/api/rosterstudents/updateCourseMembership")
                                 .with(csrf())
@@ -499,7 +499,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         @Test
         @WithMockUser(roles = {"INSTRUCTOR"})
         public void not_registered_org() throws Exception {
-                Course course = Course.builder().courseName("course").orgName("ucsb-cs156").creator(currentUserService.getUser()).build();
+                Course course = Course.builder().courseName("course").orgName("ucsb-cs156").instructorEmail(currentUserService.getUser().getEmail()).build();
                 doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
                 MvcResult response = mockMvc.perform(post("/api/rosterstudents/updateCourseMembership")
                                 .with(csrf())
@@ -514,7 +514,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         @Test
         @WithMockUser(roles = {"INSTRUCTOR"})
         public void job_actually_fires() throws Exception {
-                Course course = Course.builder().id(2L).orgName("ucsb-cs156").installationId("1234").courseName("course").creator(currentUserService.getUser()).build();
+                Course course = Course.builder().id(2L).orgName("ucsb-cs156").installationId("1234").courseName("course").instructorEmail(currentUserService.getUser().getEmail()).build();
                 doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
                 Job job = Job.builder().status("processing").build();
                 doReturn(job).when(service).runAsJob(any(UpdateOrgMembershipJob.class));
@@ -686,7 +686,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         public void no_fire_on_no_org_name() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(3L)
@@ -792,7 +792,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         public void test_fires_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(3L)
@@ -847,7 +847,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         public void test_already_part_is_member() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(3L)
@@ -902,7 +902,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         public void test_already_part_is_owner() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(3L)
@@ -957,7 +957,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         public void cant_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 RosterStudent rosterStudent = RosterStudent.builder()
                         .id(3L)

@@ -58,7 +58,7 @@ public class CourseSecurityTests {
         public void setup(){
             User user = User.builder().id(1L).build();
             User user2 = User.builder().id(2L).build();
-            Course testCourse = Course.builder().id(1L).creator(user2).build();
+            Course testCourse = Course.builder().id(1L).instructorEmail(user2.getEmail()).build();
             when(currentUserService.getCurrentUser()).thenReturn(CurrentUser.builder().user(user).roles(Set.of(new SimpleGrantedAuthority("ROLE_ADMIN"))).build());
             when(courseRepository.findById(1L)).thenReturn(java.util.Optional.of(testCourse));
         }
@@ -75,7 +75,7 @@ public class CourseSecurityTests {
         @BeforeEach
         public void setup(){
             User user = User.builder().id(1L).build();
-            Course testCourse = Course.builder().id(1L).creator(user).build();
+            Course testCourse = Course.builder().id(1L).instructorEmail(user.getEmail()).build();
             when(currentUserService.getCurrentUser()).thenReturn(CurrentUser.builder().user(user).roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))).build());
             when(courseRepository.findById(1L)).thenReturn(java.util.Optional.of(testCourse));
         }
@@ -93,7 +93,7 @@ public class CourseSecurityTests {
         public void setup(){
             User user = User.builder().id(1L).build();
             User user2 = User.builder().id(2L).build();
-            Course testCourse = Course.builder().id(1L).creator(user2).build();
+            Course testCourse = Course.builder().id(1L).instructorEmail(user2.getEmail()).build();
             when(currentUserService.getCurrentUser()).thenReturn(CurrentUser.builder().user(user).roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))).build());
             when(courseRepository.findById(1L)).thenReturn(java.util.Optional.of(testCourse));
         }

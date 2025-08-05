@@ -58,7 +58,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -96,7 +96,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -152,7 +152,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")    
                                 .school("UCSB")
-                                .creator(otherUser)
+                                .instructorEmail(otherUser.getEmail())
                                 .build();
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -190,7 +190,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -236,7 +236,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -304,7 +304,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")    
                                 .school("UCSB")
-                                .creator(otherUser)
+                                .instructorEmail(otherUser.getEmail())
                                 .build();
 
                 when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
