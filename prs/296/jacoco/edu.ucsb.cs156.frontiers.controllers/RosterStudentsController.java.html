@@ -92,7 +92,7 @@ import lombok.extern.slf4j.Slf4j;
 
     public static RosterSourceType getRosterSourceType(String [] headers) {
 
-<span class="fc" id="L95">        Map&lt;RosterSourceType, String[]&gt; sourceTypeToHeaders = new HashMap&lt;RosterSourceType, String[]&gt;();</span>
+<span class="fc" id="L95">        Map&lt;RosterSourceType, String[]&gt; sourceTypeToHeaders = new HashMap&lt;&gt;();</span>
         
 <span class="fc" id="L97">        sourceTypeToHeaders.put(RosterSourceType.UCSB_EGRADES, UCSB_EGRADES_HEADERS.split(&quot;,&quot;));</span>
 <span class="fc" id="L98">        sourceTypeToHeaders.put(RosterSourceType.CHICO_CANVAS, CHICO_CANVAS_HEADERS.split(&quot;,&quot;));</span>
