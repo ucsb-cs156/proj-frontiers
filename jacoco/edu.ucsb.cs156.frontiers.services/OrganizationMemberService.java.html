@@ -150,48 +150,7 @@ public class OrganizationMemberService {
 <span class="fc" id="L150">            log.warn(&quot;Error while trying to get member status: {}&quot;, e.getMessage());</span>
 <span class="fc" id="L151">            return OrgStatus.JOINCOURSE;</span>
         }
-    }
 
-    /**
-     * Removes a member from an organization.
-     * @param student The roster student to remove from the organization
-     * @return true if the student was successfully removed, false otherwise
-     */
-    public boolean removeOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc bfc" id="L161" title="All 2 branches covered.">        if (student.getGithubLogin() == null) {</span>
-<span class="fc" id="L162">            log.warn(&quot;Cannot remove student from organization: GitHub login is null&quot;);</span>
-<span class="fc" id="L163">            return false;</span>
-        }
-
-<span class="fc" id="L166">        Course course = student.getCourse();</span>
-<span class="fc bfc" id="L167" title="All 4 branches covered.">        if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L168">            log.warn(&quot;Cannot remove student from organization: Course has no linked organization&quot;);</span>
-<span class="fc" id="L169">            return false;</span>
-        }
-
-<span class="fc" id="L172">        String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/members/&quot; + student.getGithubLogin();</span>
-<span class="fc" id="L173">        HttpHeaders headers = new HttpHeaders();</span>
-        String token;
-        try {
-<span class="fc" id="L176">            token = jwtService.getInstallationToken(course);</span>
-<span class="nc" id="L177">        } catch (JsonProcessingException e) {</span>
-<span class="nc" id="L178">            log.error(&quot;Error getting installation token: {}&quot;, e.getMessage());</span>
-<span class="nc" id="L179">            return false;</span>
-<span class="fc" id="L180">        }</span>
-        
-<span class="fc" id="L182">        headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L183">        headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L184">        headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L185">        HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
-        
-        try {
-<span class="fc" id="L188">            restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);</span>
-<span class="fc" id="L189">            log.info(&quot;Successfully removed student {} from organization {}&quot;, student.getGithubLogin(), course.getOrgName());</span>
-<span class="fc" id="L190">            return true;</span>
-<span class="fc" id="L191">        } catch (Exception e) {</span>
-<span class="fc" id="L192">            log.error(&quot;Error removing student from organization: {}&quot;, e.getMessage());</span>
-<span class="fc" id="L193">            return false;</span>
-        }
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
