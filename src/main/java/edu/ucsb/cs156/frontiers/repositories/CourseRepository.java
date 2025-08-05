@@ -11,5 +11,5 @@ public interface CourseRepository extends JpaRepository<Course,Long>
 {
 
     Optional<Course> findByInstallationId(String installationId);
-    List<Course> findByCreatorId(Long userId);
+    List<Course> findByInstructorEmail(String instructorEmail);
 }

@@ -31,6 +31,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,6 +56,12 @@ public class CoursesController extends ApiController {
 
     @Autowired
     private CourseStaffRepository courseStaffRepository;
+
+    @Autowired
+    private InstructorRepository instructorRepository;
+
+    @Autowired
+    private AdminRepository adminRepository;
 
     @Autowired
     private OrganizationLinkerService linkerService;
@@ -80,7 +88,7 @@ public class CoursesController extends ApiController {
                 .courseName(courseName)
                 .term(term)
                 .school(school)
-                .creator(currentUser.getUser())
+                .instructorEmail(currentUser.getUser().getEmail())
                 .build();
         Course savedCourse = courseRepository.save(course);
 
@@ -98,10 +106,9 @@ public class CoursesController extends ApiController {
             String courseName,
             String term,
             String school,
-            Long createdByUserId,
-            String createdByEmail) {
+            String instructorEmail) {
 
-        // Creates view from Course entity and student email
+        // Creates view from Course entity
         public InstructorCourseView(Course c) {
             this(
                     c.getId(),
@@ -110,8 +117,7 @@ public class CoursesController extends ApiController {
                     c.getCourseName(),
                     c.getTerm(),
                     c.getSchool(),
-                    c.getCreator() != null ? c.getCreator().getId() : null,
-                    c.getCreator() != null ? c.getCreator().getEmail() : null);
+                    c.getInstructorEmail());
         }
     }
 
@@ -144,7 +150,32 @@ public class CoursesController extends ApiController {
     @GetMapping("/allForAdmins")
     public Iterable<InstructorCourseView> allForAdmins() {
         List<Course> courses = courseRepository.findAll();
+
+        List<InstructorCourseView> courseViews = courses.stream()
+                .map(InstructorCourseView::new)
+                .collect(Collectors.toList());
+        return courseViews;
+    }
     
+    @Operation(summary = "List all courses")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+    @GetMapping("/all")
+    public Iterable<InstructorCourseView> allCourses() {
+        List<Course> courses = null;
+        if (!isCurrentUserAdmin()) {
+            // if the user is not an admin, return only the courses they created
+            CurrentUser currentUser = getCurrentUser();
+            String userEmail = currentUser.getUser().getEmail();
+            courses = courseRepository.findByInstructorEmail(userEmail);
+            // Convert to InstructorCourseView
+            List<InstructorCourseView> courseViews = courses.stream()
+                    .map(InstructorCourseView::new)
+                    .collect(Collectors.toList());
+            // Return as Iterable
+            return courseViews;
+        } else {
+            courses = courseRepository.findAll();
+        }
         List<InstructorCourseView> courseViews = courses.stream()
                 .map(InstructorCourseView::new)
                 .collect(Collectors.toList());
@@ -162,7 +193,7 @@ public class CoursesController extends ApiController {
     public InstructorCourseView getCourseById(@Parameter(name = "id") @PathVariable Long id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Course.class, id));
-        if (!isCurrentUserAdmin() && !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {
+        if (!isCurrentUserAdmin() && !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {
             throw new EntityNotFoundException(Course.class, id);
         }
         // Convert to InstructorCourseView
@@ -227,7 +258,7 @@ public class CoursesController extends ApiController {
         } else {
             Course course = courseRepository.findById(state)
                     .orElseThrow(() -> new EntityNotFoundException(Course.class, state));
-            if (!isCurrentUserAdmin() && !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {
+            if (!isCurrentUserAdmin() && !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             } else {
                 String orgName = linkerService.getOrgName(installation_id.get());
@@ -344,6 +375,30 @@ public class CoursesController extends ApiController {
                     return sDto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Operation(summary = "Update instructor email for a course (admin only)")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping("/updateInstructor")
+    public InstructorCourseView updateInstructorEmail(
+            @Parameter(name = "courseId") @RequestParam Long courseId,
+            @Parameter(name = "instructorEmail") @RequestParam String instructorEmail) {
+        
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+        
+        // Validate that the email exists in either instructor or admin table
+        boolean isInstructor = instructorRepository.existsByEmail(instructorEmail);
+        boolean isAdmin = adminRepository.existsByEmail(instructorEmail);
+        
+        if (!isInstructor && !isAdmin) {
+            throw new IllegalArgumentException("Email must belong to either an instructor or admin");
+        }
+        
+        course.setInstructorEmail(instructorEmail);
+        Course savedCourse = courseRepository.save(course);
+        
+        return new InstructorCourseView(savedCourse);
     }
 
     @Operation(summary = "Delete a course")

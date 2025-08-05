@@ -46,6 +46,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +74,12 @@ public class CoursesControllerTests extends ControllerTestCase {
         @MockitoBean
         private CourseStaffRepository courseStaffRepository;
 
+        @MockitoBean
+        private InstructorRepository instructorRepository;
+
+        @MockitoBean
+        private AdminRepository adminRepository;
+
         /**
          * Test that ROLE_ADMIN can create a course
          */
@@ -86,7 +94,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 when(courseRepository.save(any(Course.class))).thenReturn(course);
@@ -125,7 +133,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 when(courseRepository.save(any(Course.class))).thenReturn(course);
@@ -204,12 +212,12 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 InstructorCourseView courseView1 = new InstructorCourseView(course1);
 
-                when(courseRepository.findByCreatorId(eq(user.getId()))).thenReturn(java.util.List.of(course1));
+                when(courseRepository.findByInstructorEmail(eq(user.getEmail()))).thenReturn(java.util.List.of(course1));
 
                 // act
 
@@ -221,7 +229,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(java.util.List.of(courseView1));
-                verify(courseRepository, times(1)).findByCreatorId(eq(user.getId()));
+                verify(courseRepository, times(1)).findByInstructorEmail(eq(user.getEmail()));
                 assertEquals(expectedJson, responseString);
         }
 
@@ -249,7 +257,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .id(1L)
                                 .build();
 
@@ -266,7 +274,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .installationId("1234")
                                 .orgName("ucsb-cs156-s25")
                                 .id(1L)
@@ -298,7 +306,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .courseStaff(List.of())
                                 .rosterStudents(List.of())
                                 .id(1L)
@@ -308,7 +316,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .installationId("1234")
                                 .orgName("ucsb-cs156-s25")
                                 .id(1L)
@@ -354,7 +362,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(separateUser)
+                                .instructorEmail(separateUser.getEmail())
                                 .id(1L)
                                 .build();
 
@@ -379,7 +387,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(separateUser)
+                                .instructorEmail(separateUser.getEmail())
                                 .courseStaff(List.of())
                                 .rosterStudents(List.of())
                                 .id(1L)
@@ -389,7 +397,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(separateUser)
+                                .instructorEmail(separateUser.getEmail())
                                 .installationId("1234")
                                 .orgName("ucsb-cs156-s25")
                                 .courseStaff(List.of())
@@ -440,7 +448,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .courseName("CS156")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .id(1L)
                                 .build();
 
@@ -614,7 +622,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(user)
+                                .instructorEmail(user.getEmail())
                                 .build();
 
                 CoursesController.InstructorCourseView courseView = new CoursesController.InstructorCourseView(course);
@@ -668,7 +676,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(otherInstructorUser)
+                                .instructorEmail(otherInstructorUser.getEmail())
                                 .build();
 
                 when(courseRepository.findById(1L)).thenReturn(Optional.of(course));    
@@ -703,7 +711,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                                 .orgName("ucsb-cs156-s25")
                                 .term("S25")
                                 .school("UCSB")
-                                .creator(otherInstructorUser)
+                                .instructorEmail(otherInstructorUser.getEmail())
                                 .build();
 
                 when(courseRepository.findById(1L)).thenReturn(Optional.of(course));    
