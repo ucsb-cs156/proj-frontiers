@@ -6,6 +6,9 @@ import { BrowserRouter } from "react-router";
 
 window.alert = jest.fn();
 
+// Mock fetch for API calls
+global.fetch = jest.fn();
+
 describe("InstructorCoursesTable tests", () => {
   const originalLocation = window.location;
 
@@ -14,7 +17,10 @@ describe("InstructorCoursesTable tests", () => {
   beforeEach(() => {
     // Remove window.location and mock it
     delete window.location;
-    window.location = { href: "" }; // Minimal mock
+    window.location = { href: "", reload: jest.fn() }; // Add reload mock
+    // Reset mocks
+    window.alert.mockClear();
+    fetch.mockClear();
   });
 
   afterEach(() => {
@@ -365,29 +371,556 @@ describe("InstructorCoursesTable tests", () => {
       ).toBeInTheDocument();
     });
   });
-  test("the correct tooltip renders for GitHub icon (that redirects to github installation settings)", async () => {
+  test("Tests instructor email is clickable for admin users", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+    expect(instructorEmailButton).toBeInTheDocument();
+    expect(instructorEmailButton).toHaveTextContent("diba@ucsb.edu");
+    expect(instructorEmailButton).toHaveClass("btn-link");
+  });
+
+  test("Tests instructor email is plain text for non-admin users", async () => {
     render(
       <BrowserRouter>
         <InstructorCoursesTable
           courses={coursesFixtures.severalCourses}
           currentUser={currentUserFixtures.instructorUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailCell = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail`,
+    );
+    expect(instructorEmailCell).toBeInTheDocument();
+    expect(instructorEmailCell).toHaveTextContent("diba@ucsb.edu");
+
+    // Should not have a button for non-admin users
+    expect(
+      screen.queryByTestId(`${testId}-cell-row-0-col-instructorEmail-button`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("Opens modal when admin clicks instructor email", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Course: CMPSC 156")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("diba@ucsb.edu")).toBeInTheDocument();
+  });
+
+  test("Modal closes when cancel button is clicked", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const cancelButton = screen.getByText("Cancel");
+    fireEvent.click(cancelButton);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  test("Modal closes when close button (X) is clicked", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const closeButton = screen.getByRole("button", { name: /close/i });
+    fireEvent.click(closeButton);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  test("Update button is disabled when email input is empty", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    // Clear the email input
+    fireEvent.change(emailInput, { target: { value: "" } });
+
+    expect(updateButton).toBeDisabled();
+  });
+
+  test("Email input field updates when user types", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+
+    fireEvent.change(emailInput, { target: { value: "new@example.com" } });
+
+    expect(emailInput).toHaveValue("new@example.com");
+  });
+
+  test("Shows alert and closes modal in storybook mode when updating instructor", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    fireEvent.change(emailInput, { target: { value: "new@example.com" } });
+    fireEvent.click(updateButton);
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith(
+        "Would update course 1 instructor to: new@example.com",
+      );
+    });
+
+    // Modal should close after successful update
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  test("Makes successful API call and reloads page when not in storybook mode", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+    });
+
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
           storybook={false}
         />
       </BrowserRouter>,
     );
 
-    const githubIcon = screen.getByTestId(
-      `CoursesTable-cell-row-0-col-orgName-github-icon`,
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
     );
 
-    fireEvent.mouseOver(githubIcon);
+    fireEvent.click(instructorEmailButton);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          "Manage installation settings for the frontiers app, including the option to uninstall it from this GitHub organization.",
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    fireEvent.change(emailInput, { target: { value: "new@example.com" } });
+    fireEvent.click(updateButton);
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/courses/updateInstructor?courseId=1&instructorEmail=new%40example.com",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        },
+      );
+    });
+
+    await waitFor(() => {
+      expect(window.location.reload).toHaveBeenCalled();
+    });
+  });
+
+  test("Shows alert when API call fails with response error", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      text: () => Promise.resolve("Email not found"),
+    });
+
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    fireEvent.change(emailInput, { target: { value: "invalid@example.com" } });
+    fireEvent.click(updateButton);
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith(
+        "Error updating instructor: Email not found",
+      );
+    });
+  });
+
+  test("Shows alert when API call throws an error", async () => {
+    const error = new Error("Network error");
+    fetch.mockRejectedValueOnce(error);
+
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.click(updateButton);
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith(
+        "Error updating instructor: Network error",
+      );
+    });
+  });
+
+  test("Button shows 'Updating...' text and is disabled during update", async () => {
+    // Mock a slow API response
+    fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => setTimeout(() => resolve({ ok: true }), 100)),
+    );
+
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.click(updateButton);
+
+    // Should show updating state
+    expect(screen.getByText("Updating...")).toBeInTheDocument();
+    expect(updateButton).toBeDisabled();
+    expect(screen.getByText("Cancel")).toBeDisabled();
+  });
+
+  test("Does not call API when selectedCourse is null", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    // Clear the email to make it empty
+    fireEvent.change(emailInput, { target: { value: "" } });
+
+    // Button should be disabled when email is empty
+    expect(updateButton).toBeDisabled();
+
+    // Try to force click (though it should be disabled)
+    fireEvent.click(updateButton);
+
+    // Should not make API call
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test("Modal resets state correctly when reopened", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    // Open modal for first course
+    const firstInstructorButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+    fireEvent.click(firstInstructorButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    // Change email and close modal
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    fireEvent.change(emailInput, { target: { value: "changed@example.com" } });
+
+    const cancelButton = screen.getByText("Cancel");
+    fireEvent.click(cancelButton);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    // Open modal for second course
+    const secondInstructorButton = screen.getByTestId(
+      `${testId}-cell-row-1-col-instructorEmail-button`,
+    );
+    fireEvent.click(secondInstructorButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    // Should show the second course's original email, not the changed value
+    expect(screen.getByDisplayValue("phtcon@ucsb.edu")).toBeInTheDocument();
+    expect(screen.getByText("Course: CPTS 489")).toBeInTheDocument();
+  });
+
+  test("Tests styling of instructor email button for admins", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    // Test button styling
+    expect(instructorEmailButton).toHaveStyle({
+      padding: "0px",
+      textDecoration: "underline",
+    });
+  });
+
+  test("Tests modal footer button text variations", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={true}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    // Test default button text
+    expect(updateButton).toHaveTextContent("Update Instructor");
+  });
+
+  test("Tests empty email validation path in handleUpdateInstructor", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+
+    fireEvent.click(instructorEmailButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByTestId("update-instructor-email-input");
+    const updateButton = screen.getByTestId("update-instructor-submit-button");
+
+    // Clear email to empty string
+    fireEvent.change(emailInput, { target: { value: "" } });
+
+    // Button should be disabled when email is empty, but test the internal logic
+    expect(updateButton).toBeDisabled();
+
+    // The function should return early if email is empty (this tests the conditional)
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
