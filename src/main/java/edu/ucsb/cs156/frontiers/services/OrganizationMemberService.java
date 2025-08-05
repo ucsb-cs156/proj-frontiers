@@ -150,6 +150,37 @@ public class OrganizationMemberService {
             log.warn("Error while trying to get member status: {}", e.getMessage());
             return OrgStatus.JOINCOURSE;
         }
+    }
 
+    /**
+     * Removes a member from an organization.
+     * @param student The roster student to remove from the organization
+     * @throws NoSuchAlgorithmException if there is an algorithm error
+     * @throws InvalidKeySpecException if there is a key specification error
+     * @throws JsonProcessingException if there is an error processing JSON
+     * @throws IllegalArgumentException if student has no GitHub login or course has no linked organization
+     * @throws Exception if there is an error removing the student from the organization
+     */
+    public void removeOrganizationMember(RosterStudent student) throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        if (student.getGithubLogin() == null) {
+            throw new IllegalArgumentException("Cannot remove student from organization: GitHub login is null");
+        }
+
+        Course course = student.getCourse();
+        if (course.getOrgName() == null || course.getInstallationId() == null) {
+            throw new IllegalArgumentException("Cannot remove student from organization: Course has no linked organization");
+        }
+
+        String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName() + "/members/" + student.getGithubLogin();
+        HttpHeaders headers = new HttpHeaders();
+        String token = jwtService.getInstallationToken(course);
+        
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Accept", "application/vnd.github+json");
+        headers.add("X-GitHub-Api-Version", "2022-11-28");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        
+        restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);
+        log.info("Successfully removed student {} from organization {}", student.getGithubLogin(), course.getOrgName());
     }
 }

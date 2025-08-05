@@ -314,13 +314,38 @@ public class RosterStudentsController extends ApiController {
     @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
     @DeleteMapping("/delete")
     @Transactional
-    public ResponseEntity<String> deleteRosterStudent(@Parameter(name = "id") @RequestParam Long id) throws EntityNotFoundException{
+    public ResponseEntity<String> deleteRosterStudent(@Parameter(name = "id") @RequestParam Long id) throws EntityNotFoundException {
         RosterStudent rosterStudent = rosterStudentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
         Course course = rosterStudent.getCourse();
+        
+        boolean orgRemovalAttempted = false;
+        boolean orgRemovalSuccessful = false;
+        String orgRemovalErrorMessage = null;
+        
+        // Try to remove the student from the organization if they have a GitHub login
+        if (rosterStudent.getGithubLogin() != null && course.getOrgName() != null && course.getInstallationId() != null) {
+            orgRemovalAttempted = true;
+            try {
+                organizationMemberService.removeOrganizationMember(rosterStudent);
+                orgRemovalSuccessful = true;
+            } catch (Exception e) {
+                log.error("Error removing student from organization: {}", e.getMessage());
+                orgRemovalErrorMessage = e.getMessage();
+                // Continue with deletion even if organization removal fails
+            }
+        }
+        
         course.getRosterStudents().remove(rosterStudent);
         rosterStudentRepository.delete(rosterStudent);
         courseRepository.save(course);
-        return ResponseEntity.ok("Successfully deleted roster student and removed him/her from the course list");
+        
+        if (!orgRemovalAttempted) {
+            return ResponseEntity.ok("Successfully deleted roster student and removed him/her from the course list");
+        } else if (orgRemovalSuccessful) {
+            return ResponseEntity.ok("Successfully deleted roster student and removed him/her from the course list and organization");
+        } else {
+            return ResponseEntity.ok("Successfully deleted roster student but there was an error removing them from the course organization: " + orgRemovalErrorMessage);
+        }
     }
 }
