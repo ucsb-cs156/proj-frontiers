@@ -761,12 +761,43 @@ public class CoursesControllerTests extends ControllerTestCase {
                 assertEquals(expectedJson, responseString);
         }
 
+
+        /**
+         * Test that when we try to update the instructor emaii, if the course does not exist,
+         * it returns an appropriate error.
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateInstructorEmail_courseDoesNotExist() throws Exception {
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+                // act
+                MvcResult response = mockMvc.perform(put("/api/courses/updateInstructor")
+                                .with(csrf())
+                                .param("courseId", "1")
+                                .param("instructorEmail", "new-instructor@example.com"))
+                                .andExpect(status().isNotFound())
+                                .andReturn();
+
+                // assert
+                verify(courseRepository, times(1)).findById(eq(1L));
+
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                                "type", "EntityNotFoundException",
+                                "message", "Course with id 1 not found");
+                Map<String, String> actualMap = mapper.readValue(responseString, new TypeReference<Map<String, String>>() {});
+                assertEquals(expectedMap, actualMap);
+
+        }
+
         /**
          * Test that ROLE_ADMIN can update instructor email
          */
         @Test
         @WithMockUser(roles = { "ADMIN" })
-        public void testUpdateInstructorEmail_byAdmin() throws Exception {
+        public void testUpdateInstructorEmail_byAdmin_email_is_instructor() throws Exception {
                 User admin = currentUserService.getCurrentUser().getUser();
                 Course course = Course.builder()
                                 .id(1L)
@@ -807,6 +838,54 @@ public class CoursesControllerTests extends ControllerTestCase {
                 String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
                 assertEquals(expectedJson, responseString);
         }
+
+        /**
+         * Test that ROLE_ADMIN can update instructor email
+         */
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void testUpdateInstructorEmail_byAdmin_email_is_admin() throws Exception {
+                User admin = currentUserService.getCurrentUser().getUser();
+                Course course = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .instructorEmail("old-instructor@example.com")
+                                .build();
+
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+                when(instructorRepository.existsByEmail(eq("new-instructor@example.com"))).thenReturn(false);
+                when(adminRepository.existsByEmail(eq("new-instructor@example.com"))).thenReturn(true);
+                
+                Course updatedCourse = Course.builder()
+                                .id(1L)
+                                .courseName("CS156")
+                                .term("S25")
+                                .school("UCSB")
+                                .instructorEmail("new-instructor@example.com")
+                                .build();
+                        
+                when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+                // act
+                MvcResult response = mockMvc.perform(put("/api/courses/updateInstructor")
+                                .with(csrf())
+                                .param("courseId", "1")
+                                .param("instructorEmail", "new-instructor@example.com"))
+                                .andExpect(status().isOk())
+                                .andReturn();
+
+                // assert
+                verify(courseRepository, times(1)).findById(eq(1L));
+                verify(instructorRepository, times(1)).existsByEmail(eq("new-instructor@example.com"));
+                verify(courseRepository, times(1)).save(any(Course.class));
+
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+                assertEquals(expectedJson, responseString);
+        }
+
 
         /**
          * Test that updateInstructorEmail fails when email doesn't exist in instructor or admin tables
