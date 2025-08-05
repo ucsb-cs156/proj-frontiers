@@ -8,7 +8,7 @@ import { useNavigate, useParams } from "react-router";
 
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
-import { Accordion, Button, Row, Tab, Tabs } from "react-bootstrap";
+import { Accordion, Button, Row, Tab, Tabs, Form, Col } from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import { toast } from "react-toastify";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
@@ -17,6 +17,7 @@ export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const {
     data: course,
@@ -155,10 +156,32 @@ export default function InstructorCourseShowPage() {
               </Accordion.Item>
             </Accordion>
           </Row>
+          <Row className="mb-3">
+            <Form>
+              <Form.Group as={Row} controlId="searchFilter">
+                <Form.Label column sm={2}>Search Students:</Form.Label>
+                <Col sm={10}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by name, email, or student ID"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    data-testid={`${testId}-search`}
+                  />
+                </Col>
+              </Form.Group>
+            </Form>
+          </Row>
           <Row>
             <RosterStudentTable
               // Stryker disable next-line ArrayDeclaration : checking for ["Stryker was here"] is tough
-              students={rosterStudents || []}
+              students={(rosterStudents || []).filter(student => 
+                searchTerm === "" || 
+                student.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                student.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                student.studentId?.toString().includes(searchTerm)
+              )}
               currentUser={currentUser}
               courseId={course ? course.id : ""}
               testIdPrefix={`${testId}-RosterStudentTable`}

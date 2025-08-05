@@ -533,4 +533,76 @@ describe("InstructorCourseShowPage tests", () => {
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
   });
+  
+  test("Search filter works correctly", async () => {
+    setupInstructorUser();
+    const theCourse = {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+    axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+    axiosMock
+      .onGet("/api/rosterstudents/course/1")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const testId = "InstructorCourseShowPage";
+    const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
+
+    // Wait for the table to load
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+      ).toHaveTextContent(rosterStudentFixtures.threeStudents[0].id);
+    });
+
+    // Verify search input is rendered
+    const searchInput = screen.getByTestId(`${testId}-search`);
+    expect(searchInput).toBeInTheDocument();
+    expect(searchInput).toHaveAttribute("placeholder", "Search by name, email, or student ID");
+
+    // Initially all three students should be visible
+    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`)).toBeInTheDocument();
+
+    // Filter by first name
+    fireEvent.change(searchInput, { target: { value: rosterStudentFixtures.threeStudents[0].firstName } });
+    
+    // Only the first student should be visible
+    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toHaveTextContent(
+      rosterStudentFixtures.threeStudents[0].firstName
+    );
+    expect(screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`)).not.toBeInTheDocument();
+    
+    // Clear the filter
+    fireEvent.change(searchInput, { target: { value: "" } });
+    
+    // All three students should be visible again
+    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`)).toBeInTheDocument();
+    
+    // Filter by email
+    fireEvent.change(searchInput, { target: { value: rosterStudentFixtures.threeStudents[1].email } });
+    
+    // Only the second student should be visible
+    expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-email`)).toHaveTextContent(
+      rosterStudentFixtures.threeStudents[1].email
+    );
+    expect(screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`)).not.toBeInTheDocument();
+  });
 });
