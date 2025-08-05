@@ -7,6 +7,7 @@ import { useBackend, useBackendMutation } from "main/utils/useBackend";
 
 jest.mock("react-router");
 
+const axiosMock = new AxiosMockAdapter(axios);
 const mockToast = jest.fn();
 jest.mock("react-toastify", () => {
   const originalModule = jest.requireActual("react-toastify");
@@ -21,6 +22,9 @@ describe("utils/useBackend tests", () => {
   beforeEach(() => {
     jest.spyOn(console, "error");
     console.error.mockImplementation(() => null);
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    mockToast.mockClear();
   });
 
   afterEach(() => {
@@ -43,8 +47,6 @@ describe("utils/useBackend tests", () => {
           {children}
         </QueryClientProvider>
       );
-
-      var axiosMock = new AxiosMockAdapter(axios);
 
       axiosMock.onGet("/api/admin/users").reply(404, {});
 
@@ -85,8 +87,6 @@ describe("utils/useBackend tests", () => {
           {children}
         </QueryClientProvider>
       );
-
-      var axiosMock = new AxiosMockAdapter(axios);
 
       axiosMock.onGet("/api/admin/users").reply(404, {});
 
@@ -163,8 +163,6 @@ describe("utils/useBackend tests", () => {
         </QueryClientProvider>
       );
 
-      var axiosMock = new AxiosMockAdapter(axios);
-
       axiosMock.onPost("/api/ucsbdates/post").reply(202, {
         id: 17,
         quarterYYYYQ: "20221",
@@ -225,8 +223,6 @@ describe("utils/useBackend tests", () => {
           {children}
         </QueryClientProvider>
       );
-
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onPost("/api/ucsbdates/post").reply(404);
 
       const objectToAxiosParams = (ucsbDate) => ({

@@ -30,12 +30,13 @@ describe("RoleEmailTable", () => {
       },
     });
     invalidateQueriesSpy = jest.spyOn(queryClient, "invalidateQueries");
+    axiosMock.reset();
+    axiosMock.resetHistory();
   });
 
-  // After each test, restore the original axios implementation and clean up.
+  // After each test, restore the original implementation and clean up.
   afterEach(() => {
     invalidateQueriesSpy.mockRestore(); // Restore original implementation of the spy
-    axiosMock.restore(); // Restore axios to its original state (remove mocks)
     queryClient.clear(); // Clear the React Query cache
   });
 
@@ -179,8 +180,6 @@ describe("RoleEmailTable", () => {
   });
 
   test("Check defaults for api endpoints", async () => {
-    var axiosMock = new AxiosMockAdapter(axios);
-
     axiosMock.onDelete("/api/admin/delete").reply(200, {});
 
     render(
@@ -209,8 +208,6 @@ describe("RoleEmailTable", () => {
   });
 
   test("Check that api endpoint overrides work", async () => {
-    var axiosMock = new AxiosMockAdapter(axios);
-
     axiosMock.onDelete("/api/admin/instructor/delete").reply(200, {});
 
     render(
