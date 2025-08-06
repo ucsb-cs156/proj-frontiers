@@ -22,7 +22,7 @@ export default function HomePageConnectGithub() {
   const { data: systemInfo } = useSystemInfo();
 
   var githubOauthLogin =
-    systemInfo?.githubOauthLogin || "/oauth2/authorization/github";
+    systemInfo.githubOauthLogin || "/oauth2/authorization/github";
 
   return (
     <BasicLayout>
