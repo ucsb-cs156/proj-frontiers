@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
+import axios from "axios";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
@@ -17,6 +18,31 @@ export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
   const [showErrorModal, setShowErrorModal] = useState(false);
+  
+  const downloadCSV = async () => {
+    try {
+      const response = await axios.get(`/api/csv/rosterstudents?courseId=${courseId}`, {
+        responseType: 'blob',
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const courseName = course ? course.courseName : 'roster';
+      link.setAttribute('download', `${courseName}_roster.csv`);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      toast("CSV file downloaded successfully.");
+    } catch (error) {
+      console.error("Error downloading CSV:", error);
+      toast("Error downloading CSV file. Please try again.");
+    }
+  };
 
   const {
     data: course,
@@ -154,6 +180,17 @@ export default function InstructorCourseShowPage() {
                 </Accordion.Body>
               </Accordion.Item>
             </Accordion>
+          </Row>
+          <Row className="mb-3">
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="primary"
+                onClick={downloadCSV}
+                data-testid={`${testId}-download-csv-button`}
+              >
+                Download Student GitHub IDs CSV
+              </Button>
+            </div>
           </Row>
           <Row>
             <RosterStudentTable
