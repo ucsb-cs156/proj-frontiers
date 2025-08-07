@@ -19,6 +19,10 @@ function CourseModal({
     toggleShowModal(false);
   };
 
+  // Determine if we're editing or creating based on whether initialContents has an id
+  const isEditing = initialContents && initialContents.id;
+  const modalTitle = isEditing ? "Edit Course" : "Create Course";
+
   return (
     <Modal
       show={showModal}
@@ -27,7 +31,7 @@ function CourseModal({
       data-testid={"CourseModal-base"}
     >
       <Modal.Header>
-        <Modal.Title>Create Course</Modal.Title>
+        <Modal.Title>{modalTitle}</Modal.Title>
         <button
           type="button"
           className="btn-close"

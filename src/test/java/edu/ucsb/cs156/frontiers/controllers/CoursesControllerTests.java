@@ -752,6 +752,114 @@ public class CoursesControllerTests extends ControllerTestCase {
                 String responseString = response.getResponse().getContentAsString();
                 assertEquals(expectedJson, responseString);
         }
+
+        @Test
+        @WithInstructorCoursePermissions
+        public void update_course_not_found_returns_not_found() throws Exception {
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+                MvcResult response = mockMvc.perform(put("/api/courses")
+                        .param("courseId", "1")
+                        .param("courseName", "Updated Course")
+                        .param("term", "F25")
+                        .param("school", "Updated School")
+                        .with(csrf()))
+                        .andExpect(status().isNotFound())
+                        .andReturn();
+                String responseString = response.getResponse().getContentAsString();
+                Map<String, String> expectedMap = Map.of(
+                        "type", "EntityNotFoundException",
+                        "message", "Course with id 1 not found");
+                String expectedJson = mapper.writeValueAsString(expectedMap);
+                assertEquals(expectedJson, responseString);
+                verify(courseRepository).findById(eq(1L));
+                verifyNoMoreInteractions(courseRepository);
+        }
+
+        @Test
+        @WithInstructorCoursePermissions
+        public void update_course_success_returns_ok() throws Exception {
+                User user = currentUserService.getCurrentUser().getUser();
+                
+                Course originalCourse = Course.builder()
+                        .id(1L)
+                        .courseName("Original Course")
+                        .term("S25")
+                        .school("Original School")
+                        .creator(user)
+                        .build();
+                
+                Course updatedCourse = Course.builder()
+                        .id(1L)
+                        .courseName("Updated Course")
+                        .term("F25")
+                        .school("Updated School")
+                        .creator(user)
+                        .build();
+                
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+                when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+                
+                MvcResult response = mockMvc.perform(put("/api/courses")
+                        .param("courseId", "1")
+                        .param("courseName", "Updated Course")
+                        .param("term", "F25")
+                        .param("school", "Updated School")
+                        .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andReturn();
+                
+                verify(courseRepository).findById(eq(1L));
+                verify(courseRepository).save(originalCourse);
+                
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+                assertEquals(expectedJson, responseString);
+        }
+
+        @Test
+        @WithMockUser(roles = { "ADMIN" })
+        public void admin_can_update_course_created_by_someone_else() throws Exception {
+                User adminUser = currentUserService.getCurrentUser().getUser();
+                User instructorUser = User.builder()
+                        .id(adminUser.getId() + 1L)
+                        .email("instructor@example.com")
+                        .build();
+                
+                Course originalCourse = Course.builder()
+                        .id(1L)
+                        .courseName("Original Course")
+                        .term("S25")
+                        .school("Original School")
+                        .creator(instructorUser)
+                        .build();
+                
+                Course updatedCourse = Course.builder()
+                        .id(1L)
+                        .courseName("Admin Updated Course")
+                        .term("F25")
+                        .school("Admin Updated School")
+                        .creator(instructorUser)
+                        .build();
+                
+                when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+                when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+                
+                MvcResult response = mockMvc.perform(put("/api/courses")
+                        .param("courseId", "1")
+                        .param("courseName", "Admin Updated Course")
+                        .param("term", "F25")
+                        .param("school", "Admin Updated School")
+                        .with(csrf()))
+                        .andExpect(status().isOk())
+                        .andReturn();
+                
+                verify(courseRepository).findById(eq(1L));
+                verify(courseRepository).save(originalCourse);
+                
+                String responseString = response.getResponse().getContentAsString();
+                String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+                assertEquals(expectedJson, responseString);
+        }
 }
 
 
