@@ -1,0 +1,98 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "Team-0",
+      "author": "Division7",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "TEAM_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "name": "NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_TEAM_COURSE_ID",
+                    "referencedTableName": "COURSE",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "COURSE_ID",
+                  "type": "BIGINT"
+                }
+              }
+            ],
+            "tableName": "TEAM"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "changeSet": {
+      "id": "TeamMember-0",
+      "author": "Division7",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "TEAM_MEMBER_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_ROSTER_STUDENT_ID",
+                    "referencedTableName": "ROSTER_STUDENT",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "ROSTER_STUDENT_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_TEAM_MEMBER_TEAM_ID",
+                    "referencedTableName": "TEAM",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "TEAM_ID",
+                  "type": "BIGINT"
+                }
+              }
+            ],
+            "tableName": "TEAM_MEMBER"
+          }
+        }
+      ]
+    }
+  }
+]}
