@@ -8,6 +8,7 @@ function CourseModal({
   toggleShowModal,
   initialContents,
   buttonText = "Create",
+  title,
 }) {
   const {
     register,
@@ -21,7 +22,8 @@ function CourseModal({
 
   // Determine if we're editing or creating based on whether initialContents has an id
   const isEditing = initialContents && initialContents.id;
-  const modalTitle = isEditing ? "Edit Course" : "Create Course";
+  // Use provided title prop if available, otherwise fall back to the default logic
+  const modalTitle = title || (isEditing ? "Edit Course" : "Create Course");
 
   return (
     <Modal

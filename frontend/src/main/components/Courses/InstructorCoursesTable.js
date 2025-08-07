@@ -76,13 +76,8 @@ export default function InstructorCoursesTable({
   };
   
   const canEdit = (row) => {
-    if (hasRole(currentUser, "ROLE_ADMIN")) {
-      return true;
-    }
-    if (
-      hasRole(currentUser, "ROLE_INSTRUCTOR") &&
-      row.original.createdByEmail === currentUser.root.user.email
-    ) {
+    // Assume that any course in the table the viewer has permissions to edit
+    if (hasRole(currentUser, "ROLE_ADMIN") || hasRole(currentUser, "ROLE_INSTRUCTOR")) {
       return true;
     }
 

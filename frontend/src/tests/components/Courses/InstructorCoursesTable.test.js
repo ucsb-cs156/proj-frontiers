@@ -419,39 +419,32 @@ describe("InstructorCoursesTable tests", () => {
     expect(mockEditCourse).toHaveBeenCalledWith(coursesFixtures.severalCourses[0]);
   });
 
-  test("Edit button is visible only for courses created by the instructor", async () => {
+  test("Edit button is visible for all courses when user is an instructor", async () => {
     const mockEditCourse = jest.fn();
-    
-    // Create a modified fixture where the first course is created by the instructor
-    const modifiedCourses = [...coursesFixtures.severalCourses];
-    modifiedCourses[0] = {
-      ...modifiedCourses[0],
-      createdByEmail: currentUserFixtures.instructorUser.root.user.email
-    };
     
     render(
       <BrowserRouter>
         <InstructorCoursesTable
-          courses={modifiedCourses}
+          courses={coursesFixtures.severalCourses}
           currentUser={currentUserFixtures.instructorUser}
           onEditCourse={mockEditCourse}
         />
       </BrowserRouter>,
     );
 
-    // Check that the edit button is visible only for the course created by the instructor
+    // Check that the edit button is visible for all courses when the user is an instructor
     const editButton0 = screen.getByTestId(`${testId}-cell-row-0-col-actions-edit-button`);
     expect(editButton0).toBeInTheDocument();
     expect(editButton0).toHaveTextContent("Edit");
     
-    // Check that the edit button is not visible for other courses
-    const editButton1 = screen.queryByTestId(`${testId}-cell-row-1-col-actions-edit-button`);
-    expect(editButton1).not.toBeInTheDocument();
+    const editButton1 = screen.getByTestId(`${testId}-cell-row-1-col-actions-edit-button`);
+    expect(editButton1).toBeInTheDocument();
+    expect(editButton1).toHaveTextContent("Edit");
     
     // Click the edit button and check that onEditCourse is called with the correct course
     fireEvent.click(editButton0);
     expect(mockEditCourse).toHaveBeenCalledTimes(1);
-    expect(mockEditCourse).toHaveBeenCalledWith(modifiedCourses[0]);
+    expect(mockEditCourse).toHaveBeenCalledWith(coursesFixtures.severalCourses[0]);
   });
 
   test("Edit button is not rendered when onEditCourse is not provided", async () => {

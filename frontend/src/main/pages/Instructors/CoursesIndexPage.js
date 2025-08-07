@@ -110,6 +110,7 @@ export default function CoursesIndexPage() {
           onSubmitAction={onSubmit}
           initialContents={courseToEdit}
           buttonText={courseToEdit ? "Update" : "Create"}
+          title={courseToEdit ? "Edit Course" : "Create Course"}
         />
         <InstructorCoursesTable 
           courses={courses} 
