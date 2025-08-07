@@ -39,6 +39,7 @@ describe("InstructorCoursesTable tests", () => {
       "Term",
       "School",
       "Created By",
+      "Actions",
     ];
     const expectedFields = [
       "id",
@@ -46,6 +47,7 @@ describe("InstructorCoursesTable tests", () => {
       "term",
       "school",
       "createdByEmail",
+      "actions",
     ];
 
     expectedHeaders.forEach((headerText) => {
@@ -389,5 +391,81 @@ describe("InstructorCoursesTable tests", () => {
         ),
       ).toBeInTheDocument();
     });
+  });
+  test("Edit button is visible for admin user and calls onEditCourse when clicked", async () => {
+    const mockEditCourse = jest.fn();
+    
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+          onEditCourse={mockEditCourse}
+        />
+      </BrowserRouter>,
+    );
+
+    // Check that the edit button is visible for all courses for admin
+    const editButton0 = screen.getByTestId(`${testId}-cell-row-0-col-actions-edit-button`);
+    expect(editButton0).toBeInTheDocument();
+    expect(editButton0).toHaveTextContent("Edit");
+    
+    const editButton1 = screen.getByTestId(`${testId}-cell-row-1-col-actions-edit-button`);
+    expect(editButton1).toBeInTheDocument();
+    
+    // Click the edit button and check that onEditCourse is called with the correct course
+    fireEvent.click(editButton0);
+    expect(mockEditCourse).toHaveBeenCalledTimes(1);
+    expect(mockEditCourse).toHaveBeenCalledWith(coursesFixtures.severalCourses[0]);
+  });
+
+  test("Edit button is visible only for courses created by the instructor", async () => {
+    const mockEditCourse = jest.fn();
+    
+    // Create a modified fixture where the first course is created by the instructor
+    const modifiedCourses = [...coursesFixtures.severalCourses];
+    modifiedCourses[0] = {
+      ...modifiedCourses[0],
+      createdByEmail: currentUserFixtures.instructorUser.root.user.email
+    };
+    
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={modifiedCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          onEditCourse={mockEditCourse}
+        />
+      </BrowserRouter>,
+    );
+
+    // Check that the edit button is visible only for the course created by the instructor
+    const editButton0 = screen.getByTestId(`${testId}-cell-row-0-col-actions-edit-button`);
+    expect(editButton0).toBeInTheDocument();
+    expect(editButton0).toHaveTextContent("Edit");
+    
+    // Check that the edit button is not visible for other courses
+    const editButton1 = screen.queryByTestId(`${testId}-cell-row-1-col-actions-edit-button`);
+    expect(editButton1).not.toBeInTheDocument();
+    
+    // Click the edit button and check that onEditCourse is called with the correct course
+    fireEvent.click(editButton0);
+    expect(mockEditCourse).toHaveBeenCalledTimes(1);
+    expect(mockEditCourse).toHaveBeenCalledWith(modifiedCourses[0]);
+  });
+
+  test("Edit button is not rendered when onEditCourse is not provided", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.adminUser}
+        />
+      </BrowserRouter>,
+    );
+
+    // Check that no edit buttons are rendered
+    const editButton = screen.queryByText("Edit");
+    expect(editButton).not.toBeInTheDocument();
   });
 });

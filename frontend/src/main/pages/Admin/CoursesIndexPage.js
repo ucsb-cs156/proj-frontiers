@@ -24,8 +24,9 @@ export default function CoursesIndexPage() {
   );
 
   const [viewModal, setViewModal] = React.useState(false);
+  const [courseToEdit, setCourseToEdit] = React.useState(null);
 
-  const objectToAxiosParams = (course) => ({
+  const createObjectToAxiosParams = (course) => ({
     url: "/api/courses/post",
     method: "POST",
     params: {
@@ -35,23 +36,62 @@ export default function CoursesIndexPage() {
     },
   });
 
-  const onSuccess = (course) => {
+  const updateObjectToAxiosParams = (course) => ({
+    url: "/api/courses",
+    method: "PUT",
+    params: {
+      courseId: course.id,
+      courseName: course.courseName,
+      term: course.term,
+      school: course.school,
+    },
+  });
+
+  const onCreateSuccess = (course) => {
     toast(`Course ${course.courseName} created`);
     setViewModal(false);
   };
 
-  const mutation = useBackendMutation(
-    objectToAxiosParams,
-    { onSuccess },
+  const onUpdateSuccess = (course) => {
+    toast(`Course ${course.courseName} updated`);
+    setViewModal(false);
+    setCourseToEdit(null);
+  };
+
+  const createMutation = useBackendMutation(
+    createObjectToAxiosParams,
+    { onSuccess: onCreateSuccess },
+    // Stryker disable next-line all : hard to set up test for caching
+    ["/api/courses/all"],
+  );
+
+  const updateMutation = useBackendMutation(
+    updateObjectToAxiosParams,
+    { onSuccess: onUpdateSuccess },
     // Stryker disable next-line all : hard to set up test for caching
     ["/api/courses/allForAdmins"],
   );
 
   const onSubmit = async (data) => {
-    mutation.mutate(data);
+    if (courseToEdit) {
+      updateMutation.mutate({
+        ...data,
+        id: courseToEdit.id
+      });
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
-  const createCourse = () => setViewModal(true);
+  const createCourse = () => {
+    setCourseToEdit(null);
+    setViewModal(true);
+  };
+
+  const editCourse = (course) => {
+    setCourseToEdit(course);
+    setViewModal(true);
+  };
 
   return (
     <BasicLayout>
@@ -68,8 +108,14 @@ export default function CoursesIndexPage() {
           showModal={viewModal}
           toggleShowModal={setViewModal}
           onSubmitAction={onSubmit}
+          initialContents={courseToEdit}
+          buttonText={courseToEdit ? "Update" : "Create"}
         />
-        <InstructorCoursesTable courses={courses} currentUser={currentUser} />
+        <InstructorCoursesTable 
+          courses={courses} 
+          currentUser={currentUser} 
+          onEditCourse={editCourse}
+        />
       </div>
     </BasicLayout>
   );
