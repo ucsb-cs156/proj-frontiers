@@ -155,7 +155,7 @@ LoggedInInstructorUser.parameters = {
         return HttpResponse.json(systemInfoFixtures.showingNeither);
       }),
       http.get("/api/courses/allForInstructors", () => {
-        return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
+        return HttpResponse.json(coursesFixtures.severalCourses);
       }),
       http.get("/api/courses/allForAdmins", () => {
         return HttpResponse.json([]);
@@ -181,7 +181,6 @@ LoggedInInstructorUser.parameters = {
     ],
   },
 };
-
 
 export const LoggedInAdminUserNoCourses = Template.bind({});
 LoggedInAdminUserNoCourses.parameters = {
@@ -217,7 +216,7 @@ LoggedInAdminUserNoCourses.parameters = {
       }),
     ],
   },
-  };
+};
 
 export const LoggedInAdminUserShowingSwaggerAndH2Console = Template.bind({});
 LoggedInAdminUserShowingSwaggerAndH2Console.parameters = {

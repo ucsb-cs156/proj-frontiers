@@ -32,15 +32,6 @@ describe("CoursesIndexPage tests", () => {
     queryClient.clear();
   });
 
-  const setupInstructorUser = () => {
-    axiosMock
-      .onGet("/api/currentUser")
-      .reply(200, apiCurrentUserFixtures.instructorUser);
-    axiosMock
-      .onGet("/api/systemInfo")
-      .reply(200, systemInfoFixtures.showingNeither);
-  };
-
   const setupAdminUser = () => {
     axiosMock
       .onGet("/api/currentUser")
@@ -100,13 +91,13 @@ describe("CoursesIndexPage tests", () => {
 
     // For an admin user, the next two courses should have a button, not an org name
     const button3 = screen.queryByTestId(
-      "InstructorCoursesTable-cell-row-2-col-orgName-button",
+      `${testId}-cell-row-2-col-orgName-button`,
     );
     expect(button3).toBeInTheDocument();
     expect(button3).toHaveTextContent("Install GitHub App");
 
     const button4 = screen.queryByTestId(
-      "InstructorCoursesTable-cell-row-3-col-orgName-button",
+      `${testId}-cell-row-3-col-orgName-button`,
     );
     expect(button4).toBeInTheDocument();
     expect(button4).toHaveTextContent("Install GitHub App");
@@ -178,7 +169,9 @@ describe("CoursesIndexPage tests", () => {
     await waitFor(() =>
       expect(mockToast).toBeCalledWith("Course CMPSC 156 created"),
     );
-    expect(queryClient.getQueryState(["/api/courses/allForAdmins"])).toBeTruthy();
+    expect(
+      queryClient.getQueryState(["/api/courses/allForAdmins"]),
+    ).toBeTruthy();
     expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
   });
 });

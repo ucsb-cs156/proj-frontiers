@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter } from "react-router-dom";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
@@ -67,6 +67,8 @@ describe("HomePageLoggedIn tests", () => {
       </QueryClientProvider>,
     );
 
+    expect(screen.getByText("Your Student Courses")).toBeInTheDocument();
+
     await waitFor(() => {
       expect(
         screen.getByTestId(`CoursesTable-cell-row-0-col-id`),
@@ -90,6 +92,8 @@ describe("HomePageLoggedIn tests", () => {
     expect(
       screen.getByTestId(`CoursesTable-cell-row-0-col-studentStatus`),
     ).toHaveTextContent("Pending");
+
+    expect(screen.getByText("Your Staff Courses")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(
@@ -116,8 +120,41 @@ describe("HomePageLoggedIn tests", () => {
     ).toHaveTextContent("Pending");
   });
 
-  test("tables render correctly for instructor", async () => {
-    setupInstructorUser(); 
+
+  test("tables don't render when there are no staffCourses or courses", async () => {
+    setupUserOnly();
+    axiosMock
+      .onGet("/api/courses/staffCourses")
+      .reply(200, []);
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Your Student Courses")
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText("You are not enrolled in any student courses yet."),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByText("Your Staff Courses"),
+    ).not.toBeInTheDocument();
+  });
+
+
+  test("tables render correctly for instructor when courses exist", async () => {
+    setupInstructorUser();
     axiosMock
       .onGet("/api/courses/allForInstructors")
       .reply(200, coursesFixtures.severalCourses);
@@ -130,33 +167,68 @@ describe("HomePageLoggedIn tests", () => {
       </QueryClientProvider>,
     );
 
-   await waitFor(() => {
+    await waitFor(() => {
       expect(
         screen.getByTestId(`InstructorCoursesTable-cell-row-0-col-id`),
       ).toHaveTextContent("1");
     });
-    expect(screen.getByTestId(`InstructorCoursesTable-cell-row-1-col-id`)).toHaveTextContent(
-      "2",
-    );
-    expect(screen.getByTestId(`InstructorCoursesTable-cell-row-2-col-id`)).toHaveTextContent(
-      "3",
-    );
+    expect(screen.getByText("Create Course")).toBeInTheDocument();
+    expect(screen.getByText("Your Instructor Courses")).toBeInTheDocument();
+    expect(screen.queryByText("No instructor courses yet. Click the button above to create one.")).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId(`InstructorCoursesTable-cell-row-1-col-id`),
+    ).toHaveTextContent("2");
+    expect(
+      screen.getByTestId(`InstructorCoursesTable-cell-row-2-col-id`),
+    ).toHaveTextContent("3");
 
     const orgName = screen.getByText("wsu-cpts489-fa20");
     expect(orgName).toBeInTheDocument();
 
-    const button3 = screen.queryByTestId(
+    const button2 = screen.queryByTestId(
       "InstructorCoursesTable-cell-row-2-col-orgName-button",
     );
-    expect(button3).toBeInTheDocument();
-    expect(button3).toHaveTextContent("Install GitHub App");
+    expect(button2).toBeInTheDocument();
+    expect(button2).toHaveTextContent("Install GitHub App");
 
-    const button4 = screen.queryByTestId(
-      "InstructorCoursesTable-cell-row-3-col-orgName-button",
-    );
-    expect(button4).toBeInTheDocument();
-    expect(button4).toHaveTextContent("Install GitHub App");
+    expect(screen.queryByTestId("InstructorCoursesTable")).toBeInTheDocument();
   });
+
+  test("table doesn't render for instructors when courses don't exist", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/allForInstructors")
+      .reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText("Your Instructor Courses")).toBeInTheDocument()
+    })
+
+    expect(screen.queryByTestId(`InstructorCoursesTable-cell-row-0-col-id`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`InstructorCoursesTable-cell-row-1-col-id`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`InstructorCoursesTable-cell-row-2-col-id`),
+    ).not.toBeInTheDocument();
+
+    const orgName = screen.queryByText("wsu-cpts489-fa20");
+    expect(orgName).not.toBeInTheDocument();
+
+    expect(screen.queryByText("Create Course")).toBeInTheDocument();
+    expect(screen.queryByText("No instructor courses yet. Click the button above to create one.")).toBeInTheDocument();
+
+    expect(screen.queryByTestId("InstructorCoursesTable")).not.toBeInTheDocument();
+  });
+
 
   test("join callbacks work", async () => {
     setupUserOnly();
@@ -385,7 +457,7 @@ describe("HomePageLoggedIn tests", () => {
       ),
     ).toHaveTextContent("Join Course");
   });
-   test("Can submit new course", async () => {
+  test("Can submit new course", async () => {
     setupInstructorUser();
     axiosMock
       .onPost("/api/courses/post")
@@ -401,6 +473,12 @@ describe("HomePageLoggedIn tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`InstructorCoursesTable-cell-row-0-col-id`),
+      ).toHaveTextContent("1");
+    });
 
     const createCourse = screen.getByText("Create Course");
     expect(createCourse).toHaveClass("btn btn-primary");
@@ -425,7 +503,9 @@ describe("HomePageLoggedIn tests", () => {
     await waitFor(() =>
       expect(mockToast).toBeCalledWith("Course CMPSC 156 created"),
     );
-    expect(queryClient.getQueryState(["/api/courses/allForInstructors"])).toBeTruthy();
+    expect(
+      queryClient.getQueryState(["/api/courses/allForInstructors"]),
+    ).toBeTruthy();
     expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
   });
 });

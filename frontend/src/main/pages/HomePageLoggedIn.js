@@ -10,7 +10,7 @@ import React from "react";
 import { hasRole } from "main/utils/currentUser";
 
 export default function HomePageLoggedIn() {
-  const { data: currentUser } = useCurrentUser();
+  const currentUser = useCurrentUser();
 
   const {
     data: courses,
@@ -144,32 +144,34 @@ export default function HomePageLoggedIn() {
       <div className="pt-2">
         {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
           <>
-          <h1>Your Instructor Courses</h1>
-          {instructorCourses.length === 0 && (
-            <p>No instructor courses yet. Click the button above to create one.</p>
-          )}
-          {instructorCourses.length > 0 && (
-            <>
-              <Button
-                onClick={createCourse}
-                style={{ float: "right", marginBottom: 10 }}
-                variant="primary"
-              >
-                Create Course
+            <Button
+                  onClick={createCourse}
+                  style={{ float: "right", marginBottom: 10 }}
+                  variant="primary"
+                >
+                  Create Course
               </Button>
-              <CourseModal
-                showModal={viewModal}
-                toggleShowModal={setViewModal}
-                onSubmitAction={onSubmit}
-              />
+            <h1>Your Instructor Courses</h1>
+            {instructorCourses.length === 0 && (
+              <p>
+                No instructor courses yet. Click the button above to create one.
+              </p>
+            )}
+            {instructorCourses.length > 0 && (
               <>
-                <InstructorCoursesTable
-                  courses={instructorCourses}
-                  currentUser={currentUser}
+                <CourseModal
+                  showModal={viewModal}
+                  toggleShowModal={setViewModal}
+                  onSubmitAction={onSubmit}
                 />
+                <>
+                  <InstructorCoursesTable
+                    courses={instructorCourses}
+                    currentUser={currentUser}
+                  />
+                </>
               </>
-            </>
-          )}
+            )}
           </>
         )}
         <h1>Your Student Courses</h1>
@@ -187,13 +189,13 @@ export default function HomePageLoggedIn() {
         )}
         {staffCourses.length > 0 && (
           <>
-          <h1>Your Staff Courses</h1>
-          <CoursesTable
-          courses={staffCourses}
-          testId={"StaffCoursesTable"}
-          joinCallback={joinStaffCourseCallback}
-          isLoading={isStaffJoining}
-          />
+            <h1>Your Staff Courses</h1>
+            <CoursesTable
+              courses={staffCourses}
+              testId={"StaffCoursesTable"}
+              joinCallback={joinStaffCourseCallback}
+              isLoading={isStaffJoining}
+            />
           </>
         )}
       </div>
