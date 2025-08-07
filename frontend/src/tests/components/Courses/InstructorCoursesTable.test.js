@@ -3,11 +3,14 @@ import coursesFixtures from "fixtures/coursesFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { BrowserRouter } from "react-router";
+import axios from "axios";
+import MockAdapter from "axios-mock-adapter";
 
 window.alert = jest.fn();
 
 describe("InstructorCoursesTable tests", () => {
   const originalLocation = window.location;
+  let mockAxios;
 
   const testId = "InstructorCoursesTable";
 
@@ -15,11 +18,19 @@ describe("InstructorCoursesTable tests", () => {
     // Remove window.location and mock it
     delete window.location;
     window.location = { href: "" }; // Minimal mock
+    
+    // Setup mock for axios
+    mockAxios = new MockAdapter(axios);
+    
+    // Mock the URL.createObjectURL function
+    global.URL.createObjectURL = jest.fn(() => "mock-url");
   });
 
   afterEach(() => {
     // Restore original window.location
     window.location = originalLocation;
+    mockAxios.restore();
+    jest.restoreAllMocks();
   });
 
   test("Has the expected column headers and content for instructor user", async () => {
@@ -389,5 +400,124 @@ describe("InstructorCoursesTable tests", () => {
         ),
       ).toBeInTheDocument();
     });
+  });
+
+  test("Download button is rendered for courses with an organization", () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    // Course with orgName should have a download button
+    const downloadButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-download-download-button`
+    );
+    expect(downloadButton).toBeInTheDocument();
+    expect(downloadButton).toHaveTextContent("CSV");
+  });
+
+  test("Download button is not rendered for courses without an organization", () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    // Course without orgName should not have a download button
+    // Course at index 2 has no orgName based on the fixtures
+    const downloadButtonCell = screen.queryByTestId(
+      `${testId}-cell-row-2-col-download-download-button`
+    );
+    expect(downloadButtonCell).not.toBeInTheDocument();
+  });
+
+  test("Download button tooltip shows correct text", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const downloadButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-download-download-button`
+    );
+    
+    fireEvent.mouseOver(downloadButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Download CSV with student GitHub IDs")
+      ).toBeInTheDocument();
+    });
+  });
+
+  test("Download function calls the API with the correct URL", async () => {
+    // Mock the API response for roster students
+    const mockRosterStudents = [
+      {
+        id: 1,
+        studentId: "1234567",
+        firstName: "John",
+        lastName: "Doe",
+        email: "johndoe@example.com",
+        githubId: 12345,
+        githubLogin: "johndoe"
+      }
+    ];
+
+    mockAxios.onGet("/api/rosterstudents/course/1").reply(200, mockRosterStudents);
+
+    // Mock window.URL.createObjectURL to prevent actual download
+    const originalCreateObjectURL = URL.createObjectURL;
+    URL.createObjectURL = jest.fn(() => "mock-url");
+
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
+
+    const downloadButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-download-download-button`
+    );
+    
+    // Mock the actual download functionality to prevent errors
+    const originalCreateElement = document.createElement;
+    document.createElement = jest.fn(() => ({
+      setAttribute: jest.fn(),
+      style: {},
+      click: jest.fn()
+    }));
+    document.body.appendChild = jest.fn();
+    document.body.removeChild = jest.fn();
+    
+    fireEvent.click(downloadButton);
+
+    await waitFor(() => {
+      // Verify that the API was called with the correct URL
+      expect(mockAxios.history.get.length).toBe(1);
+      expect(mockAxios.history.get[0].url).toBe("/api/rosterstudents/course/1");
+    });
+    
+    // Restore original functions
+    URL.createObjectURL = originalCreateObjectURL;
+    document.createElement = originalCreateElement;
   });
 });

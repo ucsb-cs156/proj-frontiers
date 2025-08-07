@@ -1,8 +1,9 @@
 import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaDownload } from "react-icons/fa";
 import { Link } from "react-router";
+import axios from "axios";
 
 const columns = [
   {
@@ -48,6 +49,46 @@ export default function InstructorCoursesTable({
   currentUser,
   testId = "InstructorCoursesTable",
 }) {
+  const downloadStudentGithubIds = async (courseId, courseName) => {
+    try {
+      const response = await axios.get(`/api/rosterstudents/course/${courseId}`);
+      const students = response.data;
+      
+      // Create CSV content
+      let csvContent = "Student ID,First Name,Last Name,Email,GitHub ID,GitHub Username\n";
+      
+      students.forEach(student => {
+        const githubId = student.githubId || "";
+        const githubLogin = student.githubLogin || "";
+        const studentId = student.studentId || "";
+        const firstName = student.firstName || "";
+        const lastName = student.lastName || "";
+        const email = student.email || "";
+        
+        // Escape fields that might contain commas
+        const escapedFirstName = firstName.includes(",") ? `"${firstName}"` : firstName;
+        const escapedLastName = lastName.includes(",") ? `"${lastName}"` : lastName;
+        const escapedEmail = email.includes(",") ? `"${email}"` : email;
+        const escapedGithubLogin = githubLogin.includes(",") ? `"${githubLogin}"` : githubLogin;
+        
+        csvContent += `${studentId},${escapedFirstName},${escapedLastName},${escapedEmail},${githubId},${escapedGithubLogin}\n`;
+      });
+      
+      // Create a blob and download the file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${courseName.replace(/\s+/g, "_")}_github_ids.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading student GitHub IDs:", error);
+      alert("Error downloading student GitHub IDs. Please try again.");
+    }
+  };
   const installCallback = (cell) => {
     const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;
     if (storybook) {
@@ -163,6 +204,34 @@ export default function InstructorCoursesTable({
             </div>
           );
         }
+      },
+    },
+    {
+      header: "Download",
+      id: "download",
+      cell: ({ cell }) => {
+        // Only show download button if the course has an organization
+        if (cell.row.original.orgName) {
+          return (
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id={`tooltip-download-${cell.row.index}`}>
+                  Download CSV with student GitHub IDs
+                </Tooltip>
+              }
+            >
+              <Button
+                variant="outline-primary"
+                onClick={() => downloadStudentGithubIds(cell.row.original.id, cell.row.original.courseName)}
+                data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-download-button`}
+              >
+                <FaDownload /> CSV
+              </Button>
+            </OverlayTrigger>
+          );
+        }
+        return null;
       },
     },
     {
