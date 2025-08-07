@@ -556,175 +556,188 @@ describe("InstructorCourseShowPage tests", () => {
     });
   });
 
-  test("Search filter works correctly", async () => {
-    setupInstructorUser();
+  describe("Search filter works correctly", () => {
     const theCourse = {
       ...coursesFixtures.oneCourseWithEachStatus[0],
       id: 1,
       createdByEmail: "phtcon@ucsb.edu",
     };
-    axiosMock.onGet("/api/courses/1").reply(200, theCourse);
-
-    // Use studentsWithEachStatus fixture which includes githubLogin field
-    axiosMock
-      .onGet("/api/rosterstudents/course/1")
-      .reply(200, rosterStudentFixtures.studentsWithEachStatus);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/1"]}>
-          <Routes>
-            <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
     const testId = "InstructorCourseShowPage";
     const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
+    const studentList = [
+      ...rosterStudentFixtures.studentsWithEachStatus,
+      {
+        id: 7,
+        studentId: "A626737",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fakename@ucsb.edu",
+        githubLogin: "DifferingGitHub",
+        orgStatus: "JOINCOURSE",
+      },
+    ];
+    beforeEach(() => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/1").reply(200, theCourse);
 
-    // Wait for the table to load
-    await waitFor(() => {
+      axiosMock.onGet("/api/rosterstudents/course/1").reply(200, studentList);
+    });
+
+    test("PLaceholder, initial check", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+        ).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByTestId(`${testId}-search`);
+      expect(searchInput).toBeInTheDocument();
+      expect(searchInput).toHaveAttribute(
+        "placeholder",
+        "Search by name, email, student ID, or Github Login",
+      );
       expect(
-        screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
       ).toBeInTheDocument();
     });
 
-    // Verify search input is rendered
-    const searchInput = screen.getByTestId(`${testId}-search`);
-    expect(searchInput).toBeInTheDocument();
-    expect(searchInput).toHaveAttribute(
-      "placeholder",
-      "Search by name, email, student ID, or Github Login",
-    );
+    test("First Name, Email", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
 
-    // Initially all students should be visible
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
-    ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+        ).toBeInTheDocument();
+      });
 
-    // Test 1: Filter by first name
-    fireEvent.change(searchInput, {
-      target: {
-        value: rosterStudentFixtures.studentsWithEachStatus[0].firstName,
-      },
+      // Verify search input is rendered
+      const searchInput = screen.getByTestId(`${testId}-search`);
+
+      const fullNameStudent = rosterStudentFixtures.studentsWithEachStatus[2]; // Emma Watson
+      fireEvent.change(searchInput, {
+        target: {
+          value:
+            `${fullNameStudent.firstName} ${fullNameStudent.lastName}`.toUpperCase(),
+        },
+      });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+      ).toHaveTextContent(fullNameStudent.firstName);
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`),
+      ).toHaveTextContent(fullNameStudent.lastName);
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).not.toBeInTheDocument();
+
+      fireEvent.change(searchInput, { target: { value: "" } });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
+      ).toBeInTheDocument();
+
+      fireEvent.change(searchInput, {
+        target: {
+          value:
+            rosterStudentFixtures.studentsWithEachStatus[1].email.toUpperCase(),
+        },
+      });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
+      ).toHaveTextContent(
+        rosterStudentFixtures.studentsWithEachStatus[1].email,
+      );
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
+      ).not.toBeInTheDocument();
     });
 
-    // Only the matching student should be visible
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-    ).toHaveTextContent(
-      rosterStudentFixtures.studentsWithEachStatus[0].firstName,
-    );
-    expect(
-      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-    ).not.toBeInTheDocument();
+    test("GitHub Login, Student ID", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+        ).toBeInTheDocument();
+      });
 
-    // Clear the filter
-    fireEvent.change(searchInput, { target: { value: "" } });
+      const searchInput = screen.getByTestId(`${testId}-search`);
+      const studentWithGithub = studentList[6].githubLogin;
+      fireEvent.change(searchInput, {
+        target: { value: studentWithGithub.toUpperCase() },
+      });
 
-    // All students should be visible again
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
-    ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-githubLogin`),
+      ).toHaveTextContent(studentWithGithub);
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).not.toBeInTheDocument();
 
-    // Test 2: Filter by email
-    fireEvent.change(searchInput, {
-      target: { value: rosterStudentFixtures.studentsWithEachStatus[1].email },
+      fireEvent.change(searchInput, { target: { value: "" } });
+
+      fireEvent.change(searchInput, {
+        target: {
+          value:
+            rosterStudentFixtures.studentsWithEachStatus[1].studentId.toUpperCase(),
+        },
+      });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-studentId`),
+      ).toHaveTextContent(
+        rosterStudentFixtures.studentsWithEachStatus[1].studentId,
+      );
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-studentId`),
+      ).not.toBeInTheDocument();
     });
-
-    // Only the matching student should be visible
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
-    ).toHaveTextContent(rosterStudentFixtures.studentsWithEachStatus[1].email);
-    expect(
-      screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
-    ).not.toBeInTheDocument();
-
-    // Clear the filter
-    fireEvent.change(searchInput, { target: { value: "" } });
-
-    // Test 3: Filter by Github Login
-    const studentWithGithub = rosterStudentFixtures.studentsWithEachStatus.find(
-      (s) => s.githubLogin === "jonsnow",
-    );
-    fireEvent.change(searchInput, { target: { value: "jonsnow" } });
-
-    // Only the student with matching Github Login should be visible
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-    ).toHaveTextContent(studentWithGithub.firstName);
-    expect(
-      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-    ).not.toBeInTheDocument();
-
-    // Clear the filter
-    fireEvent.change(searchInput, { target: { value: "" } });
-
-    // Test 4: Filter by full name (first + last)
-    const fullNameStudent = rosterStudentFixtures.studentsWithEachStatus[2]; // Emma Watson
-    fireEvent.change(searchInput, {
-      target: {
-        value: `${fullNameStudent.firstName} ${fullNameStudent.lastName}`,
-      },
-    });
-
-    // Only the student with matching full name should be visible
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-    ).toHaveTextContent(fullNameStudent.firstName);
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`),
-    ).toHaveTextContent(fullNameStudent.lastName);
-    expect(
-      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-    ).not.toBeInTheDocument();
-
-    // Clear the filter
-    fireEvent.change(searchInput, { target: { value: "" } });
-
-    // Test 5: Test case insensitivity
-    fireEvent.change(searchInput, { target: { value: "EMMA" } });
-
-    // The search should be case-insensitive
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-    ).toHaveTextContent("Emma");
-    expect(
-      screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-    ).not.toBeInTheDocument();
-
-    // Clear the filter
-    fireEvent.change(searchInput, { target: { value: "" } });
-
-    // Test 6: Test student with null values
-    // The first student has null githubLogin, make sure it doesn't cause errors
-    fireEvent.change(searchInput, {
-      target: {
-        value: rosterStudentFixtures.studentsWithEachStatus[0].firstName,
-      },
-    });
-
-    // Should still find the student
-    expect(
-      screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-    ).toHaveTextContent(
-      rosterStudentFixtures.studentsWithEachStatus[0].firstName,
-    );
   });
 });
