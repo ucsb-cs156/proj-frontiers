@@ -215,17 +215,16 @@ describe("CoursesIndexPage tests", () => {
     expect(editButton).toBeInTheDocument();
     fireEvent.click(editButton);
 
-    // Wait for the modal to open and verify it has the correct initial values
+    // Wait for the modal to open and verify it has the correct title (testing title prop)
     await screen.findByText("Edit Course");
     
-    // Debug: Log all input values in the modal
-    console.log("Modal inputs:", screen.getAllByRole("textbox").map(input => input.value));
-    
-    // Use getAllByRole to find the inputs and check their values
-    const inputs = screen.getAllByRole("textbox");
-    expect(inputs[0].value).toBe("CMPSC 156");
-    expect(inputs[1].value).toBe("Spring 2025");
-    expect(inputs[2].value).toBe("UCSB");
+    // Wait for the form fields to be populated with the course data
+    await waitFor(() => {
+      const inputs = screen.getAllByRole("textbox");
+      expect(inputs[0].value).toBe("CMPSC 156");
+      expect(inputs[1].value).toBe("Spring 2025");
+      expect(inputs[2].value).toBe("UCSB");
+    });
 
     // Change the course values
     const courseName = screen.getByLabelText("Course Name");

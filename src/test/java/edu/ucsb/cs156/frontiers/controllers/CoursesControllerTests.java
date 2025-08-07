@@ -809,7 +809,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                         .andReturn();
                 
                 verify(courseRepository).findById(eq(1L));
-                verify(courseRepository).save(originalCourse);
+                verify(courseRepository).save(updatedCourse);
                 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
@@ -854,7 +854,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                         .andReturn();
                 
                 verify(courseRepository).findById(eq(1L));
-                verify(courseRepository).save(originalCourse);
+                verify(courseRepository).save(updatedCourse);
                 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
