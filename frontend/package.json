@@ -28,9 +28,9 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "jest",
     "eject": "react-scripts eject",
-    "coverage": "react-scripts test --watchAll=false --coverage; echo \"Coverage report is available at file://`pwd`/coverage/lcov-report/index.html\"",
+    "coverage": "jest --watchAll=false --coverage; echo \"Coverage report is available at file://`pwd`/coverage/lcov-report/index.html\"",
     "check-format": "prettier --check \"src/**/*.{js,jsx}\"",
     "format": "prettier --write \"src/**/*.{js,jsx}\"",
     "storybook": "storybook dev -p 6006",
@@ -60,12 +60,18 @@
     "@stryker-mutator/jest-runner": "^8.5.0",
     "@testing-library/react": "^16.0.0",
     "axios-mock-adapter": "^2.0.0",
+    "babel-jest": "^29.7.0",
     "chromatic": "^11.25.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-storybook": "^9.1.0",
     "globals": "^15.9.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "jest-mock-console": "^2.0.0",
+    "jest-transform-stub": "^2.0.0",
+    "jest-watch-typeahead": "^2.2.2",
     "msw": "^2.3.5",
     "msw-storybook-addon": "^2.0.3",
     "nyc": "^17.0.0",
@@ -85,14 +91,6 @@
     "reporter": [
       "html",
       "text-summary"
-    ]
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^axios$": "axios/dist/node/axios.cjs"
-    },
-    "collectCoverageFrom": [
-      "src/main/**/*.{js,jsx,ts,tsx}"
     ]
   },
   "msw": {
