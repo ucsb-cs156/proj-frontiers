@@ -671,7 +671,9 @@ describe("InstructorCoursesTable tests", () => {
     const emailInput = screen.getByTestId("update-instructor-email-input");
     const updateButton = screen.getByTestId("update-instructor-submit-button");
 
-    fireEvent.change(emailInput, { target: { value: "invalid@example.com" } });
+    fireEvent.change(emailInput, {
+      target: { value: "invalid@example.com" },
+    });
     fireEvent.click(updateButton);
 
     await waitFor(() => {
@@ -817,7 +819,9 @@ describe("InstructorCoursesTable tests", () => {
 
     // Change email and close modal
     const emailInput = screen.getByTestId("update-instructor-email-input");
-    fireEvent.change(emailInput, { target: { value: "changed@example.com" } });
+    fireEvent.change(emailInput, {
+      target: { value: "changed@example.com" },
+    });
 
     const cancelButton = screen.getByText("Cancel");
     fireEvent.click(cancelButton);
