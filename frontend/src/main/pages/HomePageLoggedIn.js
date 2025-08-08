@@ -145,12 +145,12 @@ export default function HomePageLoggedIn() {
         {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
           <>
             <Button
-                  onClick={createCourse}
-                  style={{ float: "right", marginBottom: 10 }}
-                  variant="primary"
-                >
-                  Create Course
-              </Button>
+              onClick={createCourse}
+              style={{ float: "right", marginBottom: 10 }}
+              variant="primary"
+            >
+              Create Course
+            </Button>
             <h1>Your Instructor Courses</h1>
             {instructorCourses.length === 0 && (
               <p>

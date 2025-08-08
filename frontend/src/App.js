@@ -71,26 +71,6 @@ function App() {
           }
         />
         <Route
-          path="/instructor/courses"
-          element={
-            <ProtectedPage
-              component={<CoursesIndexPage />}
-              enforceRole={"ROLE_INSTRUCTOR"}
-              currentUser={currentUser}
-            />
-          }
-        />
-        <Route
-          path="/instructor/courses/:id"
-          element={
-            <ProtectedPage
-              component={<InstructorCourseShowPage />}
-              enforceRole={"ROLE_INSTRUCTOR"}
-              currentUser={currentUser}
-            />
-          }
-        />
-        <Route
           path="/admin/users"
           element={
             <ProtectedPage
@@ -125,6 +105,26 @@ function App() {
           element={
             <ProtectedPage
               component={<AdminsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/courses"
+          element={
+            <ProtectedPage
+              component={<CoursesIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/courses/:id"
+          element={
+            <ProtectedPage
+              component={<InstructorCourseShowPage />}
               enforceRole={"ROLE_ADMIN"}
               currentUser={currentUser}
             />
