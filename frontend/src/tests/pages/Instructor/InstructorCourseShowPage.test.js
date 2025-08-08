@@ -374,6 +374,10 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "enrollment",
     );
+    expect(screen.getByText("Assignments")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "assignments",
+    );
     expect(screen.getByText("Management")).toHaveAttribute(
       "aria-selected",
       "true",
@@ -514,7 +518,7 @@ describe("InstructorCourseShowPage tests", () => {
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "cgaucho@ucsb.edu" },
     });
-    fireEvent.click(screen.getByText("Create"));
+    fireEvent.click(screen.getByTestId("RosterStudentForm-submit"));
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     expect(axiosMock.history.post[0].params).toEqual({
       courseId: "7",
@@ -532,5 +536,37 @@ describe("InstructorCourseShowPage tests", () => {
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
+  });
+  test("Assignment tab is present", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    setupInstructorUser();
+    const theCourse = {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+
+    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("AssignmentTabComponent");
   });
 });

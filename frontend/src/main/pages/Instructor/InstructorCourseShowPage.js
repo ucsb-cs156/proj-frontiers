@@ -12,6 +12,7 @@ import { Accordion, Button, Row, Tab, Tabs } from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import { toast } from "react-toastify";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
+import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -83,19 +84,19 @@ export default function InstructorCourseShowPage() {
     },
   });
 
-  const onSuccess = () => {
+  const onSuccessRoster = () => {
     toast("Roster successfully updated.");
   };
 
   const rosterPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
-    { onSuccess: onSuccess },
+    { onSuccess: onSuccessRoster },
     [`/api/rosterstudents/course/${courseId}`],
   );
 
   const rosterCsvMutation = useBackendMutation(
     objectToAxiosParamsCSV,
-    { onSuccess: onSuccess },
+    { onSuccess: onSuccessRoster },
     [`/api/rosterstudents/course/${courseId}`],
   );
 
@@ -164,6 +165,9 @@ export default function InstructorCourseShowPage() {
               testIdPrefix={`${testId}-RosterStudentTable`}
             />
           </Row>
+        </Tab>
+        <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
+          <AssignmentTabComponent courseId={courseId} />
         </Tab>
       </Tabs>
     </BasicLayout>
