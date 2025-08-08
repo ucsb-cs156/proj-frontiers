@@ -10,7 +10,7 @@ import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
 
 export default {
-  title: "pages/Admins/CoursesIndexPage",
+  title: "pages/Admin/CoursesIndexPage",
   component: CoursesIndexPage,
 };
 

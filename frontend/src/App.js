@@ -13,7 +13,7 @@ import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
-import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
+import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
