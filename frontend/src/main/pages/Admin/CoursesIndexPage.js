@@ -17,8 +17,8 @@ export default function CoursesIndexPage() {
     status: _status,
   } = useBackend(
     // Stryker disable next-line all : don't test internal caching of React Query
-    ["/api/courses/all"],
-    { method: "GET", url: "/api/courses/all" },
+    ["/api/courses/allForAdmins"],
+    { method: "GET", url: "/api/courses/allForAdmins" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
   );
@@ -44,7 +44,7 @@ export default function CoursesIndexPage() {
     objectToAxiosParams,
     { onSuccess },
     // Stryker disable next-line all : hard to set up test for caching
-    ["/api/courses/all"],
+    ["/api/courses/allForAdmins"],
   );
 
   const onSubmit = async (data) => {

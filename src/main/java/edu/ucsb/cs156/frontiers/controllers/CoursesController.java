@@ -118,27 +118,33 @@ public class CoursesController extends ApiController {
     /**
      * This method returns a list of courses.
      * 
-     * @return a list of all courses.
+     * @return a list of all courses for an instructor.
      */
-    @Operation(summary = "List all courses")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
-    @GetMapping("/all")
-    public Iterable<InstructorCourseView> allCourses() {
-        List<Course> courses = null;
-        if (!isCurrentUserAdmin()) {
-            // if the user is not an admin, return only the courses they created
-            CurrentUser currentUser = getCurrentUser();
-            Long userId = currentUser.getUser().getId();
-            courses = courseRepository.findByCreatorId(userId);
-            // Convert to InstructorCourseView
-            List<InstructorCourseView> courseViews = courses.stream()
-                    .map(InstructorCourseView::new)
-                    .collect(Collectors.toList());
-            // Return as Iterable
-            return courseViews;
-        } else {
-            courses = courseRepository.findAll();
-        }
+    @Operation(summary = "List all courses for an instructor")
+    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @GetMapping("/allForInstructors")
+    public Iterable<InstructorCourseView> allForInstructors() {
+        CurrentUser currentUser = getCurrentUser();
+        Long userId = currentUser.getUser().getId();
+        List<Course> courses = courseRepository.findByCreatorId(userId);
+
+        List<InstructorCourseView> courseViews = courses.stream()
+                .map(InstructorCourseView::new)
+                .collect(Collectors.toList());
+        return courseViews;
+    }
+
+    /**
+     * This method returns a list of courses.
+     * 
+     * @return a list of all courses for an admin.
+     */
+    @Operation(summary = "List all courses for an admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/allForAdmins")
+    public Iterable<InstructorCourseView> allForAdmins() {
+        List<Course> courses = courseRepository.findAll();
+    
         List<InstructorCourseView> courseViews = courses.stream()
                 .map(InstructorCourseView::new)
                 .collect(Collectors.toList());

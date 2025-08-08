@@ -68,15 +68,7 @@ export default function AppNavbar({
                   <NavDropdown.Item as={Link} to="/admin/instructors">
                     Instructors
                   </NavDropdown.Item>
-                </NavDropdown>
-              )}
-              {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
-                <NavDropdown
-                  title="Instructor"
-                  id="appnavbar-instructor-dropdown"
-                  data-testid="appnavbar-instructor-dropdown"
-                >
-                  <NavDropdown.Item as={Link} to="/instructor/courses">
+                  <NavDropdown.Item as={Link} to="/admin/courses">
                     Courses
                   </NavDropdown.Item>
                 </NavDropdown>

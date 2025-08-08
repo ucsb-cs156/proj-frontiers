@@ -13,7 +13,7 @@ import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
-import CoursesIndexPage from "main/pages/Instructors/CoursesIndexPage";
+import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
@@ -71,26 +71,6 @@ function App() {
           }
         />
         <Route
-          path="/instructor/courses"
-          element={
-            <ProtectedPage
-              component={<CoursesIndexPage />}
-              enforceRole={"ROLE_INSTRUCTOR"}
-              currentUser={currentUser}
-            />
-          }
-        />
-        <Route
-          path="/instructor/courses/:id"
-          element={
-            <ProtectedPage
-              component={<InstructorCourseShowPage />}
-              enforceRole={"ROLE_INSTRUCTOR"}
-              currentUser={currentUser}
-            />
-          }
-        />
-        <Route
           path="/admin/users"
           element={
             <ProtectedPage
@@ -125,6 +105,26 @@ function App() {
           element={
             <ProtectedPage
               component={<AdminsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/courses"
+          element={
+            <ProtectedPage
+              component={<CoursesIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/courses/:id"
+          element={
+            <ProtectedPage
+              component={<InstructorCourseShowPage />}
               enforceRole={"ROLE_ADMIN"}
               currentUser={currentUser}
             />

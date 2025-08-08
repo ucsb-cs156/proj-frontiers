@@ -49,9 +49,6 @@ describe("AppNavbar tests", () => {
     await screen.findByText("Welcome, phtcon@ucsb.edu");
     const adminMenu = screen.getByTestId("appnavbar-admin-dropdown");
     expect(adminMenu).toBeInTheDocument();
-
-    const instructorMenu = screen.getByTestId("appnavbar-instructor-dropdown");
-    expect(instructorMenu).toBeInTheDocument();
   });
 
   test("renders correctly for instructor user", async () => {
@@ -67,8 +64,6 @@ describe("AppNavbar tests", () => {
     );
 
     await screen.findByText("Welcome, diba@ucsb.edu");
-    const instructorMenu = screen.getByTestId("appnavbar-instructor-dropdown");
-    expect(instructorMenu).toBeInTheDocument();
 
     // Admin menu should not be present for instructor
     const adminMenu = screen.queryByTestId("appnavbar-admin-dropdown");
