@@ -152,7 +152,7 @@ This repo has support for partial pitest runs
 For example, to run pitest on just one class, use:
 
 ```
-mvn pitest:mutationCoverage -DtargetClasses=edu.ucsb.cs156.frontiers.controllers.RestaurantsController
+mvn pitest:mutationCoverage -DtargetClasses=edu.ucsb.cs156.frontiers.controllers.CoursesController
 ```
 
 To run pitest on just one package, use:

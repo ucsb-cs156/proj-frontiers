@@ -845,7 +845,6 @@ public class CoursesControllerTests extends ControllerTestCase {
         @Test
         @WithMockUser(roles = { "ADMIN" })
         public void testUpdateInstructorEmail_byAdmin_email_is_admin() throws Exception {
-                User admin = currentUserService.getCurrentUser().getUser();
                 Course course = Course.builder()
                                 .id(1L)
                                 .courseName("CS156")
@@ -879,7 +878,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                 // assert
                 verify(courseRepository, times(1)).findById(eq(1L));
                 verify(instructorRepository, times(1)).existsByEmail(eq("new-instructor@example.com"));
-                verify(courseRepository, times(1)).save(any(Course.class));
+                verify(courseRepository, times(1)).save(eq(updatedCourse));
 
                 String responseString = response.getResponse().getContentAsString();
                 String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
