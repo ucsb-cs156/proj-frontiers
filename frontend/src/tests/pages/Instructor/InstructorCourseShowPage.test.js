@@ -394,7 +394,7 @@ describe("InstructorCourseShowPage tests", () => {
     fireEvent.click(changeTabs);
   });
 
-  test("Successfully makes a call to the backend on submit", async () => {
+  test("Successfully makes a call to the backend on submit and clears search filter", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
         queries: {
@@ -440,6 +440,12 @@ describe("InstructorCourseShowPage tests", () => {
     const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
     ]).dataUpdateCount;
+
+    // Get the search input and set a search term
+    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(searchInput.value).toBe("test search");
+
     const upload = screen.getByTestId("RosterStudentCSVUploadForm-upload");
     const submitButton = screen.getByTestId(
       "RosterStudentCSVUploadForm-submit",
@@ -460,9 +466,14 @@ describe("InstructorCourseShowPage tests", () => {
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
+
+    // Verify that the search filter is cleared
+    await waitFor(() => {
+      expect(searchInput.value).toBe("");
+    });
   });
 
-  test("RosterStudentForm submit works", async () => {
+  test("RosterStudentForm submit works and clears search filter", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
         queries: {
@@ -505,6 +516,12 @@ describe("InstructorCourseShowPage tests", () => {
     const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
     ]).dataUpdateCount;
+
+    // Get the search input and set a search term
+    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(searchInput.value).toBe("test search");
+
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Student Id"), {
       target: { value: "123456789" },
@@ -536,6 +553,196 @@ describe("InstructorCourseShowPage tests", () => {
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
+
+    // Verify that the search filter is cleared
+    await waitFor(() => {
+      expect(searchInput.value).toBe("");
+    });
+  });
+
+  describe("Search filter works correctly", () => {
+    const theCourse = {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+    const testId = "InstructorCourseShowPage";
+    const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
+    const studentList = [
+      ...rosterStudentFixtures.studentsWithEachStatus,
+      {
+        id: 7,
+        studentId: "A626737",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fakename@ucsb.edu",
+        githubLogin: "DifferingGitHub",
+        orgStatus: "JOINCOURSE",
+      },
+    ];
+    beforeEach(() => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+
+      axiosMock.onGet("/api/rosterstudents/course/1").reply(200, studentList);
+    });
+
+    test("PLaceholder, initial check", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+        ).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByTestId(`${testId}-search`);
+      expect(searchInput).toBeInTheDocument();
+      expect(searchInput).toHaveAttribute(
+        "placeholder",
+        "Search by name, email, student ID, or Github Login",
+      );
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
+      ).toBeInTheDocument();
+    });
+
+    test("First Name, Email", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+        ).toBeInTheDocument();
+      });
+
+      // Verify search input is rendered
+      const searchInput = screen.getByTestId(`${testId}-search`);
+
+      const fullNameStudent = rosterStudentFixtures.studentsWithEachStatus[2]; // Emma Watson
+      fireEvent.change(searchInput, {
+        target: {
+          value:
+            `${fullNameStudent.firstName} ${fullNameStudent.lastName}`.toUpperCase(),
+        },
+      });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+      ).toHaveTextContent(fullNameStudent.firstName);
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`),
+      ).toHaveTextContent(fullNameStudent.lastName);
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).not.toBeInTheDocument();
+
+      fireEvent.change(searchInput, { target: { value: "" } });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-2-col-firstName`),
+      ).toBeInTheDocument();
+
+      fireEvent.change(searchInput, {
+        target: {
+          value:
+            rosterStudentFixtures.studentsWithEachStatus[1].email.toUpperCase(),
+        },
+      });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
+      ).toHaveTextContent(
+        rosterStudentFixtures.studentsWithEachStatus[1].email,
+      );
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
+      ).not.toBeInTheDocument();
+    });
+
+    test("GitHub Login, Student ID", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+        ).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByTestId(`${testId}-search`);
+      const studentWithGithub = studentList[6].githubLogin;
+      fireEvent.change(searchInput, {
+        target: { value: studentWithGithub.toUpperCase() },
+      });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-githubLogin`),
+      ).toHaveTextContent(studentWithGithub);
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
+      ).not.toBeInTheDocument();
+
+      fireEvent.change(searchInput, { target: { value: "" } });
+
+      fireEvent.change(searchInput, {
+        target: {
+          value:
+            rosterStudentFixtures.studentsWithEachStatus[1].studentId.toUpperCase(),
+        },
+      });
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-studentId`),
+      ).toHaveTextContent(
+        rosterStudentFixtures.studentsWithEachStatus[1].studentId,
+      );
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-studentId`),
+      ).not.toBeInTheDocument();
+    });
   });
   test("Assignment tab is present", async () => {
     const queryClientSpecific = new QueryClient({
