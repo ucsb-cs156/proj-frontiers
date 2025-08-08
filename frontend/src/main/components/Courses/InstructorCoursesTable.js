@@ -68,8 +68,6 @@ export default function InstructorCoursesTable({
   };
 
   const handleUpdateInstructor = async () => {
-    if (!selectedCourse || !newInstructorEmail) return;
-
     setIsUpdating(true);
 
     if (storybook) {
