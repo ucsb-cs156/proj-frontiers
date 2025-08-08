@@ -1,0 +1,34 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "001-update-courses",
+      "author": "copilot",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "INSTRUCTOR_EMAIL",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "sql": {
+            "sql": "UPDATE COURSE SET INSTRUCTOR_EMAIL = (SELECT EMAIL FROM USERS WHERE USERS.ID = COURSE.USER_ID);"
+          }
+        },
+        {
+          "dropColumn": {
+            "tableName": "COURSE",
+            "columnName": "USER_ID"
+          }
+        }
+      ]
+    }
+  }
+]}

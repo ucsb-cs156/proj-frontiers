@@ -23,11 +23,7 @@ public class Course {
 
     private String orgName;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @JsonIgnore
-    @ToString.Exclude
-    private User creator;
+    private String instructorEmail;
 
     private String courseName;
 

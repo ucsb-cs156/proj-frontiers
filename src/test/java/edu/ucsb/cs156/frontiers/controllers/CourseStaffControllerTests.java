@@ -450,7 +450,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         public void no_fire_on_no_org_name() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 CourseStaff courseStaff = CourseStaff.builder()
                         .id(3L)
@@ -542,7 +542,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         public void test_fires_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 CourseStaff courseStaff = CourseStaff.builder()
                         .id(3L)
@@ -590,7 +590,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         public void test_already_part_is_member() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 CourseStaff courseStaff = CourseStaff.builder()
                         .id(3L)
@@ -638,7 +638,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         public void test_already_part_is_owner() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 CourseStaff courseStaff = CourseStaff.builder()
                         .id(3L)
@@ -686,7 +686,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         public void cant_invite() throws Exception {
                 User currentUser = currentUserService.getUser();
 
-                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").creator(currentUser).build();
+                Course course2 = Course.builder().id(2L).installationId("1234").orgName("ucsb-cs156").courseName("course").instructorEmail(currentUser.getEmail()).build();
 
                 CourseStaff courseStaff = CourseStaff.builder()
                         .id(3L)
