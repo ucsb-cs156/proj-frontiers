@@ -35,11 +35,6 @@ module.exports = {
     'src/main/**/*.{js,jsx,ts,tsx}'
   ],
   
-  // Transform ignore patterns - allow transformation of certain node_modules
-  transformIgnorePatterns: [
-    'node_modules/(?!(axios)/)'
-  ],
-  
   // Files to ignore
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
