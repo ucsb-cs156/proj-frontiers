@@ -31,7 +31,5 @@ public class Team {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "team")
     @Fetch(FetchMode.JOIN)
-    @JsonIgnore
-    @ToString.Exclude
     private List<TeamMember> teamMembers;
 }
