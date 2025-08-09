@@ -6,13 +6,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JobContextFactory {
-    private final JobsRepository repository;
+  private final JobsRepository repository;
 
-    public JobContextFactory(JobsRepository repository) {
-        this.repository = repository;
-    }
+  public JobContextFactory(JobsRepository repository) {
+    this.repository = repository;
+  }
 
-    public JobContext createContext(Job job){
-        return new JobContext(repository, job);
-    }
+  public JobContext createContext(Job job) {
+    return new JobContext(repository, job);
+  }
 }

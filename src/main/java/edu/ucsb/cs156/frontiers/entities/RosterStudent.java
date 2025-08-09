@@ -1,7 +1,5 @@
 package edu.ucsb.cs156.frontiers.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import jakarta.persistence.*;
@@ -13,31 +11,30 @@ import lombok.*;
 @Builder
 @Entity
 public class RosterStudent {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "course_id")
-    private Course course;
+  @ManyToOne
+  @JoinColumn(name = "course_id")
+  private Course course;
 
-    private String studentId;
-    private String firstName;
-    private String lastName;
-    private String email;
+  private String studentId;
+  private String firstName;
+  private String lastName;
+  private String email;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @ToString.Exclude
-    private User user;
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  @ToString.Exclude
+  private User user;
 
-    @Enumerated(EnumType.STRING)
-    private RosterStatus rosterStatus;
+  @Enumerated(EnumType.STRING)
+  private RosterStatus rosterStatus;
 
-    @Enumerated(EnumType.STRING)
-    private OrgStatus orgStatus;
+  @Enumerated(EnumType.STRING)
+  private OrgStatus orgStatus;
 
-    private Integer githubId;
-    private String githubLogin;
-
+  private Integer githubId;
+  private String githubLogin;
 }

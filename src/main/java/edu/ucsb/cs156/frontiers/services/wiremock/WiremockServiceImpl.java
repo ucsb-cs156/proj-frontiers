@@ -1,14 +1,5 @@
 package edu.ucsb.cs156.frontiers.services.wiremock;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
-import com.github.tomakehurst.wiremock.junit.Stubbing;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -18,12 +9,18 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.junit.Stubbing;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
 /**
  * This is a service for mocking authentication using wiremock
- * 
- * This class relies on property values. For hints on testing, see: <a href=
+ *
+ * <p>This class relies on property values. For hints on testing, see: <a href=
  * "https://www.baeldung.com/spring-boot-testing-configurationproperties">https://www.baeldung.com/spring-boot-testing-configurationproperties</a>
- * 
  */
 @Slf4j
 @Service("wiremockService")
@@ -35,7 +32,7 @@ public class WiremockServiceImpl extends WiremockService {
 
   /**
    * This method returns the wiremockServer
-   * 
+   *
    * @return the wiremockServer
    */
   public WireMockServer getWiremockServer() {
@@ -44,33 +41,40 @@ public class WiremockServiceImpl extends WiremockService {
 
   /**
    * This method sets up the necessary mocks for authentication
-   * 
+   *
    * @param s in an instance of a WireMockServer or WireMockExtension
    */
   public static void setupOauthMocks(Stubbing s, boolean isAdmin) {
 
-    s.stubFor(get(urlPathMatching("/oauth/authorize.*"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "text/html")
-            .withBodyFile("login.html")));
+    s.stubFor(
+        get(urlPathMatching("/oauth/authorize.*"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/html")
+                    .withBodyFile("login.html")));
 
-    s.stubFor(post(urlPathEqualTo("/login"))
-        .willReturn(temporaryRedirect(
-            "{{formData request.body 'form' urlDecode=true}}{{{form.redirectUri}}}?code={{{randomValue length=30 type='ALPHANUMERIC'}}}&state={{{form.state}}}")));
+    s.stubFor(
+        post(urlPathEqualTo("/login"))
+            .willReturn(
+                temporaryRedirect(
+                    "{{formData request.body 'form' urlDecode=true}}{{{form.redirectUri}}}?code={{{randomValue length=30 type='ALPHANUMERIC'}}}&state={{{form.state}}}")));
 
-    s.stubFor(post(urlPathEqualTo("/oauth/token"))
-        .willReturn(
-            okJson(
-                "{\"access_token\":\"{{randomValue length=20 type='ALPHANUMERIC'}}\",\"token_type\": \"Bearer\",\"expires_in\":\"3600\",\"scope\":\"https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid\"}")));
+    s.stubFor(
+        post(urlPathEqualTo("/oauth/token"))
+            .willReturn(
+                okJson(
+                    "{\"access_token\":\"{{randomValue length=20 type='ALPHANUMERIC'}}\",\"token_type\": \"Bearer\",\"expires_in\":\"3600\",\"scope\":\"https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid\"}")));
 
     if (isAdmin) {
-      s.stubFor(get(urlPathMatching("/userinfo"))
-          .willReturn(aResponse()
-              .withStatus(200)
-              .withHeader("Content-Type", "application/json")
-              .withBody(
-                  """
+      s.stubFor(
+          get(urlPathMatching("/userinfo"))
+              .willReturn(
+                  aResponse()
+                      .withStatus(200)
+                      .withHeader("Content-Type", "application/json")
+                      .withBody(
+                          """
                       {
                         "sub": "107126842018026740288",
                         "name": "Admin GaucSho",
@@ -84,12 +88,14 @@ public class WiremockServiceImpl extends WiremockService {
                       }
                       """)));
     } else {
-      s.stubFor(get(urlPathMatching("/userinfo"))
-          .willReturn(aResponse()
-              .withStatus(200)
-              .withHeader("Content-Type", "application/json")
-              .withBody(
-                  """
+      s.stubFor(
+          get(urlPathMatching("/userinfo"))
+              .willReturn(
+                  aResponse()
+                      .withStatus(200)
+                      .withHeader("Content-Type", "application/json")
+                      .withBody(
+                          """
                       {
                         "sub": "107126842018026740288",
                         "name": "Chris Gaucho",
@@ -103,17 +109,13 @@ public class WiremockServiceImpl extends WiremockService {
                       }
                       """)));
     }
-
   }
 
-  /**
-   * This method initializes the WireMockServer
-   */
+  /** This method initializes the WireMockServer */
   public void init() {
     log.info("WiremockServiceImpl.init() called");
 
-    WireMockServer wireMockServer = new WireMockServer(options()
-        .port(8090).globalTemplating(true));
+    WireMockServer wireMockServer = new WireMockServer(options().port(8090).globalTemplating(true));
     setupOauthMocks(wireMockServer, true);
 
     wireMockServer.start();

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import edu.ucsb.cs156.frontiers.models.SystemInfo;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,10 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.test.context.NestedTestConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import edu.ucsb.cs156.frontiers.models.SystemInfo;
-import edu.ucsb.cs156.frontiers.services.SystemInfoService;
-import edu.ucsb.cs156.frontiers.services.SystemInfoServiceImpl;
 
 // The unit under test relies on property values
 // For hints on testing, see: https://www.baeldung.com/spring-boot-testing-configurationproperties
@@ -26,8 +23,7 @@ import edu.ucsb.cs156.frontiers.services.SystemInfoServiceImpl;
 @TestPropertySource("classpath:application-development.properties")
 class SystemInfoServiceImplTests {
 
-  @Autowired
-  private SystemInfoService systemInfoService;
+  @Autowired private SystemInfoService systemInfoService;
 
   @Test
   void test_getSystemInfo() {
@@ -51,11 +47,11 @@ class SystemInfoServiceImplTests {
   }
 
   @Nested
-  @TestPropertySource(properties = "spring.security.oauth2.client.registration.azure-dev.provider=azure")
-  class MicrosoftEnabledInfoServiceTests{
+  @TestPropertySource(
+      properties = "spring.security.oauth2.client.registration.azure-dev.provider=azure")
+  class MicrosoftEnabledInfoServiceTests {
 
-    @Autowired
-    private SystemInfoService secondaryLoadedService;
+    @Autowired private SystemInfoService secondaryLoadedService;
 
     @Test
     public void displaysMicrosoftProvider() {

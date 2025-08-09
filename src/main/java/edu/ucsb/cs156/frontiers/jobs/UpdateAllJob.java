@@ -1,10 +1,9 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
-import lombok.Builder;
-
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import lombok.Builder;
 
 @Builder
 public class UpdateAllJob implements JobContextConsumer {

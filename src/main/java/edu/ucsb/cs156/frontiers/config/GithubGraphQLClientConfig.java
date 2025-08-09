@@ -8,11 +8,10 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class GithubGraphQLClientConfig {
 
-    @Bean
-    public HttpSyncGraphQlClient graphQlClient() {
-        RestClient restClient = RestClient.create("https://api.github.com/graphql");
-        HttpSyncGraphQlClient graphQlClient = HttpSyncGraphQlClient.builder(restClient)
-                .build();
-        return graphQlClient;
-    }
+  @Bean
+  public HttpSyncGraphQlClient graphQlClient() {
+    RestClient restClient = RestClient.create("https://api.github.com/graphql");
+    HttpSyncGraphQlClient graphQlClient = HttpSyncGraphQlClient.builder(restClient).build();
+    return graphQlClient;
+  }
 }

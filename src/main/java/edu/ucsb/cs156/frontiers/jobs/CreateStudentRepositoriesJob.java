@@ -11,20 +11,23 @@ import lombok.Builder;
 
 @Builder
 public class CreateStudentRepositoriesJob implements JobContextConsumer {
-    Course course;
-    RepositoryService repositoryService;
-    String repositoryPrefix;
-    Boolean isPrivate;
-    RepositoryPermissions permissions;
+  Course course;
+  RepositoryService repositoryService;
+  String repositoryPrefix;
+  Boolean isPrivate;
+  RepositoryPermissions permissions;
 
-    @Override
-    public void accept(JobContext ctx) throws Exception {
-        ctx.log("Processing...");
-        for(RosterStudent student : course.getRosterStudents()){
-            if(student.getGithubLogin() != null && (student.getOrgStatus() == OrgStatus.MEMBER || student.getOrgStatus() == OrgStatus.OWNER)){
-                repositoryService.createStudentRepository(course, student, repositoryPrefix, isPrivate, permissions);
-            }
-        }
-        ctx.log("Done");
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+    ctx.log("Processing...");
+    for (RosterStudent student : course.getRosterStudents()) {
+      if (student.getGithubLogin() != null
+          && (student.getOrgStatus() == OrgStatus.MEMBER
+              || student.getOrgStatus() == OrgStatus.OWNER)) {
+        repositoryService.createStudentRepository(
+            course, student, repositoryPrefix, isPrivate, permissions);
+      }
     }
+    ctx.log("Done");
+  }
 }
