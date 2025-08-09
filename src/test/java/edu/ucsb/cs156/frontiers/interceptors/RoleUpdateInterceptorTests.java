@@ -1,206 +1,150 @@
 package edu.ucsb.cs156.frontiers.interceptors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.lenient;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-
+import edu.ucsb.cs156.frontiers.config.SecurityConfig;
+import edu.ucsb.cs156.frontiers.controllers.DummyController;
 import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
+import edu.ucsb.cs156.frontiers.testconfig.TestCourseSecurity;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest({RoleUpdateInterceptor.class, DummyController.class})
+@Import({TestConfig.class, SecurityConfig.class, TestCourseSecurity.class})
 public class RoleUpdateInterceptorTests {
 
-    @Mock
-    private AdminRepository adminRepository;
+  @MockitoBean AdminRepository adminRepository;
 
-    @Mock
-    private InstructorRepository instructorRepository;
+  @MockitoBean InstructorRepository instructorRepository;
 
-    @Mock
-    private HttpServletRequest request;
+  @Autowired MockMvc mockMvc;
 
-    @Mock
-    private HttpServletResponse response;
+  @Test
+  public void user_not_admin_or_instructor_and_no_role_update_by_interceptor() throws Exception {
+    when(adminRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
+    when(instructorRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
 
-    @Mock
-    private Object handler;
+    mockMvc
+        .perform(
+            get("/dummycontroller/interceptorTest")
+                .with(
+                    oidcLogin()
+                        .userInfoToken(token -> token.email("testuser@ucsb.edu"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_USER"))))
+        .andExpect(authenticated().withRoles("USER"));
+  }
 
-    @InjectMocks
-    private RoleUpdateInterceptor interceptor;
+  @Test
+  public void user_is_admin_role_update_by_interceptor() throws Exception {
+    when(adminRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(true);
+    when(instructorRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
 
-    @Mock
-    private SecurityContext securityContext;
-    
-    @Mock
-    private OAuth2AuthenticationToken authentication;
-    
-    @Mock
-    private OidcUser oidcUser;
-    
-    private Set<GrantedAuthority> authorities;
-    private Authentication updatedAuthentication;
+    mockMvc
+        .perform(
+            get("/dummycontroller/interceptorTest")
+                .with(
+                    oidcLogin()
+                        .userInfoToken(token -> token.email("testuser@ucsb.edu"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_USER"))))
+        .andExpect(authenticated().withRoles("USER", "ADMIN"));
+  }
 
-    @BeforeEach
-    public void setUp() {
-        // Create a set of authorities
-        authorities = new HashSet<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+  @Test
+  public void user_is_instructor_role_update_by_interceptor() throws Exception {
+    when(adminRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
+    when(instructorRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(true);
 
-        // Setup OidcUser with lenient to avoid UnnecessaryStubbingException
-        lenient().when(oidcUser.getEmail()).thenReturn("user@example.com");
+    mockMvc
+        .perform(
+            get("/dummycontroller/interceptorTest")
+                .with(
+                    oidcLogin()
+                        .userInfoToken(token -> token.email("testuser@ucsb.edu"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_USER"))))
+        .andExpect(authenticated().withRoles("USER", "INSTRUCTOR"));
+  }
 
-        // Setup OAuth2AuthenticationToken with lenient
-        lenient().when(authentication.getPrincipal()).thenReturn(oidcUser);
-        lenient().when(authentication.getAuthorities()).thenReturn(authorities);
-        lenient().when(authentication.getAuthorizedClientRegistrationId()).thenReturn("google");
+  @Test
+  public void admin_role_removed_when_user_loses_admin_status() throws Exception {
+    when(adminRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
+    when(instructorRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
 
-        // Setup SecurityContext
-        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        
-        // Capture the updated authentication
-        doAnswer(invocation -> {
-            updatedAuthentication = invocation.getArgument(0);
-            return null;
-        }).when(securityContext).setAuthentication(any(Authentication.class));
-    }
+    mockMvc
+        .perform(
+            get("/dummycontroller/interceptorTest")
+                .with(
+                    oidcLogin()
+                        .userInfoToken(token -> token.email("testuser@ucsb.edu"))
+                        .authorities(
+                            new SimpleGrantedAuthority("ROLE_USER"),
+                            new SimpleGrantedAuthority("ROLE_ADMIN"))))
+        .andExpect(authenticated().withRoles("USER"));
+  }
 
-    @Test
-    public void testPreHandle_UserIsAdmin() throws Exception {
-        // Setup
-        lenient().when(adminRepository.existsByEmail(anyString())).thenReturn(true);
-        lenient().when(instructorRepository.existsByEmail(anyString())).thenReturn(false);
+  @Test
+  public void instructor_role_removed_when_user_loses_instructor_status() throws Exception {
+    when(adminRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
+    when(instructorRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
 
-        // Execute
-        boolean result = interceptor.preHandle(request, response, handler);
+    mockMvc
+        .perform(
+            get("/dummycontroller/interceptorTest")
+                .with(
+                    oidcLogin()
+                        .userInfoToken(token -> token.email("testuser@ucsb.edu"))
+                        .authorities(
+                            new SimpleGrantedAuthority("ROLE_USER"),
+                            new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))))
+        .andExpect(authenticated().withRoles("USER"));
+  }
 
-        // Verify
-        assertTrue(result, "preHandle should return true");
-        verify(securityContext).setAuthentication(any(Authentication.class));
-        
-        // Check that the updated authentication has the ROLE_ADMIN authority
-        Collection<? extends GrantedAuthority> updatedAuthorities = updatedAuthentication.getAuthorities();
-        boolean hasAdminRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        
-        assertTrue(hasAdminRole, "User should have ROLE_ADMIN");
-    }
+  @Test
+  public void other_authorities_preserved_while_updating_roles() throws Exception {
+    when(adminRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(true);
+    when(instructorRepository.existsByEmail("testuser@ucsb.edu")).thenReturn(false);
 
-    @Test
-    public void testPreHandle_UserIsInstructor() throws Exception {
-        // Setup
-        lenient().when(adminRepository.existsByEmail(anyString())).thenReturn(false);
-        lenient().when(instructorRepository.existsByEmail(anyString())).thenReturn(true);
+    mockMvc
+        .perform(
+            get("/dummycontroller/interceptorTest")
+                .with(
+                    oidcLogin()
+                        .userInfoToken(token -> token.email("testuser@ucsb.edu"))
+                        .authorities(
+                            new SimpleGrantedAuthority("ROLE_USER"),
+                            new SimpleGrantedAuthority("ROLE_CUSTOM"))))
+        .andExpect(authenticated().withRoles("USER", "ADMIN", "CUSTOM"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("OK"));
+  }
 
-        // Execute
-        boolean result = interceptor.preHandle(request, response, handler);
+  @Test
+  @WithMockUser
+  public void non_oauth_authentication_handled() throws Exception {
+    mockMvc
+        .perform(get("/dummycontroller/interceptorTest"))
+        .andExpect(authenticated().withRoles("USER"));
+  }
 
-        // Verify
-        assertTrue(result, "preHandle should return true");
-        verify(securityContext).setAuthentication(any(Authentication.class));
-        
-        // Check that the updated authentication has the ROLE_INSTRUCTOR authority
-        Collection<? extends GrantedAuthority> updatedAuthorities = updatedAuthentication.getAuthorities();
-        boolean hasInstructorRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_INSTRUCTOR"));
-        
-        assertTrue(hasInstructorRole, "User should have ROLE_INSTRUCTOR");
-    }
-
-    @Test
-    public void testPreHandle_UserIsNeitherAdminNorInstructor() throws Exception {
-        // Setup
-        lenient().when(adminRepository.existsByEmail(anyString())).thenReturn(false);
-        lenient().when(instructorRepository.existsByEmail(anyString())).thenReturn(false);
-
-        // Execute
-        boolean result = interceptor.preHandle(request, response, handler);
-
-        // Verify
-        assertTrue(result, "preHandle should return true");
-        verify(securityContext).setAuthentication(any(Authentication.class));
-        
-        // Check that the updated authentication has only the ROLE_USER authority
-        Collection<? extends GrantedAuthority> updatedAuthorities = updatedAuthentication.getAuthorities();
-        
-        boolean hasAdminRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        
-        boolean hasInstructorRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_INSTRUCTOR"));
-        
-        boolean hasUserRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER"));
-        
-        assertTrue(!hasAdminRole, "User should not have ROLE_ADMIN");
-        assertTrue(!hasInstructorRole, "User should not have ROLE_INSTRUCTOR");
-        assertTrue(hasUserRole, "User should have ROLE_USER");
-    }
-
-    @Test
-    public void testPreHandle_UserHasExistingRoles() throws Exception {
-        // Setup
-        lenient().when(adminRepository.existsByEmail(anyString())).thenReturn(true);
-        lenient().when(instructorRepository.existsByEmail(anyString())).thenReturn(false);
-        
-        // Add existing roles to initial authorities
-        authorities.clear(); // Clear existing authorities
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        authorities.add(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"));
-        authorities.add(new SimpleGrantedAuthority("ROLE_GITHUB"));
-
-        // Execute
-        boolean result = interceptor.preHandle(request, response, handler);
-
-        // Verify
-        assertTrue(result, "preHandle should return true");
-        verify(securityContext).setAuthentication(any(Authentication.class));
-        
-        // Check that the updated authentication has the correct authorities
-        Collection<? extends GrantedAuthority> updatedAuthorities = updatedAuthentication.getAuthorities();
-        
-        boolean hasAdminRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        
-        boolean hasInstructorRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_INSTRUCTOR"));
-        
-        boolean hasGithubRole = updatedAuthorities.stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_GITHUB"));
-        
-        assertTrue(hasAdminRole, "User should have ROLE_ADMIN");
-        assertTrue(!hasInstructorRole, "User should not have ROLE_INSTRUCTOR");
-        assertTrue(hasGithubRole, "User should retain ROLE_GITHUB");
-    }
-
-
+  @Test
+  public void skip_oauth2() throws Exception {
+    mockMvc
+        .perform(
+            get("/dummycontroller/interceptorTest")
+                .with(oauth2Login().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
+        .andExpect(authenticated().withRoles("USER"));
+  }
 }
