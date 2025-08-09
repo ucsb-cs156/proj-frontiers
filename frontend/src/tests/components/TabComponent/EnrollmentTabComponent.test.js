@@ -122,6 +122,10 @@ describe("EnrollmentTabComponent Tests", () => {
       );
       expect(fieldElement).not.toBeInTheDocument();
     });
+    expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-post-modal`),
+    ).not.toBeInTheDocument();
   });
 
   test("Successfully makes a call to the backend on submit and clears search filter", async () => {
@@ -152,7 +156,7 @@ describe("EnrollmentTabComponent Tests", () => {
         />
       </QueryClientProvider>,
     );
-    await screen.findByTestId("RosterStudentCSVUploadForm-upload");
+    const openModal = await screen.findByTestId(`${testId}-csv-button`);
 
     const arbitraryUpdateCount = queryClientSpecific.getQueryState([
       "arbitraryQuery",
@@ -167,7 +171,14 @@ describe("EnrollmentTabComponent Tests", () => {
     fireEvent.change(searchInput, { target: { value: "test search" } });
     expect(searchInput.value).toBe("test search");
 
-    const upload = screen.getByTestId("RosterStudentCSVUploadForm-upload");
+    fireEvent.click(openModal);
+    expect(screen.getByTestId(`${testId}-csv-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+
+    const upload = await screen.findByTestId(
+      "RosterStudentCSVUploadForm-upload",
+    );
     const submitButton = screen.getByTestId(
       "RosterStudentCSVUploadForm-submit",
     );
@@ -192,6 +203,7 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
+    expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
   });
 
   test("RosterStudentForm submit works and clears search filter", async () => {
@@ -224,13 +236,19 @@ describe("EnrollmentTabComponent Tests", () => {
       queryClientSpecific.getQueryData(["/api/rosterstudents/course/7"]),
     ).toStrictEqual([]);
 
-    await screen.findAllByText("Student Id");
+    const openModal = await screen.findByTestId(`${testId}-post-button`);
     const arbitraryUpdateCount = queryClientSpecific.getQueryState([
       "arbitraryQuery",
     ]).dataUpdateCount;
     const updateCountStudent = queryClientSpecific.getQueryState([
       "/api/rosterstudents/course/7",
     ]).dataUpdateCount;
+
+    fireEvent.click(openModal);
+    await screen.findByLabelText("Student Id");
+    expect(screen.getByTestId(`${testId}-post-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
 
     // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
@@ -273,6 +291,45 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
+    expect(
+      screen.queryByTestId(`${testId}-post-modal`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("Modal close on escape key press", async () => {
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ArbitraryTestQueryComponent />
+        <EnrollmentTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const openModalPost = await screen.findByTestId(`${testId}-post-button`);
+    fireEvent.click(openModalPost);
+    let closeButton = await screen.findByRole("button", { name: "Close" });
+    fireEvent.click(closeButton);
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
+    const openModalCsv = await screen.findByTestId(`${testId}-csv-button`);
+    fireEvent.click(openModalCsv);
+    closeButton = await screen.findByRole("button", { name: "Close" });
+    fireEvent.click(closeButton);
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   describe("Search filter works correctly", () => {

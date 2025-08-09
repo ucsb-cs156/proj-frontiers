@@ -36,7 +36,7 @@ export default function InstructorCourseShowPage() {
     if (getCourseFailed) {
       setShowErrorModal(true);
       const timer = setTimeout(() => {
-        navigate("/instructor/courses", { replace: true });
+        navigate("/", { replace: true });
       }, 3000);
       return () => {
         clearTimeout(timer);

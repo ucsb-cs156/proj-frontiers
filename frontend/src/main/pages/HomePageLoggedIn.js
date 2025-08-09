@@ -144,6 +144,11 @@ export default function HomePageLoggedIn() {
       <div className="pt-2">
         {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
           <>
+            <CourseModal
+              showModal={viewModal}
+              toggleShowModal={setViewModal}
+              onSubmitAction={onSubmit}
+            />
             <Button
               onClick={createCourse}
               style={{ float: "right", marginBottom: 10 }}
@@ -159,11 +164,6 @@ export default function HomePageLoggedIn() {
             )}
             {instructorCourses.length > 0 && (
               <>
-                <CourseModal
-                  showModal={viewModal}
-                  toggleShowModal={setViewModal}
-                  onSubmitAction={onSubmit}
-                />
                 <>
                   <InstructorCoursesTable
                     courses={instructorCourses}

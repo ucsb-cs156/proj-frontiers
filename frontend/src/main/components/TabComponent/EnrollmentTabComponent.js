@@ -1,16 +1,26 @@
 import { toast } from "react-toastify";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import React, { useState } from "react";
-import { Accordion, Col, Form, Row } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Form,
+  ModalBody,
+  ModalHeader,
+  Row,
+} from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
+import Modal from "react-bootstrap/Modal";
 
 export default function EnrollmentTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
 }) {
+  const [postModal, showPostModal] = useState(false);
+  const [csvModal, showCsvModal] = useState(false);
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -45,21 +55,22 @@ export default function EnrollmentTabComponent({
     },
   });
 
-  const onSuccessRoster = () => {
+  const onSuccessRoster = (modalFn) => {
     toast("Roster successfully updated.");
     // Clear the search filter to show the updated roster
     setSearchTerm("");
+    modalFn(false);
   };
 
   const rosterPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
-    { onSuccess: onSuccessRoster },
+    { onSuccess: () => onSuccessRoster(showPostModal) },
     [`/api/rosterstudents/course/${courseId}`],
   );
 
   const rosterCsvMutation = useBackendMutation(
     objectToAxiosParamsCSV,
-    { onSuccess: onSuccessRoster },
+    { onSuccess: () => onSuccessRoster(showCsvModal) },
     [`/api/rosterstudents/course/${courseId}`],
   );
 
@@ -73,26 +84,32 @@ export default function EnrollmentTabComponent({
 
   return (
     <div data-testid={`${testIdPrefix}-EnrollmentTabComponent`}>
-      <Row className="py-3">
-        <Accordion defaultActiveKey="upload">
-          <Accordion.Item eventKey="upload">
-            <Accordion.Header>Upload Roster</Accordion.Header>
-            <Accordion.Body>
-              <RosterStudentCSVUploadForm submitAction={handleCsvSubmit} />
-            </Accordion.Body>
-          </Accordion.Item>
-          <Accordion.Item eventKey="individual">
-            <Accordion.Header>Add Individual Student</Accordion.Header>
-            <Accordion.Body>
-              <RosterStudentForm
-                submitAction={handlePostSubmit}
-                cancelDisabled={true}
-              />
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-      </Row>
-      <Row className="mb-3">
+      <Modal
+        show={csvModal}
+        onHide={() => showCsvModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-csv-modal`}
+      >
+        <ModalHeader closeButton>Upload CSV Roster</ModalHeader>
+        <ModalBody>
+          <RosterStudentCSVUploadForm submitAction={handleCsvSubmit} />
+        </ModalBody>
+      </Modal>
+      <Modal
+        show={postModal}
+        onHide={() => showPostModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-post-modal`}
+      >
+        <ModalHeader closeButton>Add Individual Student</ModalHeader>
+        <ModalBody>
+          <RosterStudentForm
+            submitAction={handlePostSubmit}
+            cancelDisabled={true}
+          />
+        </ModalBody>
+      </Modal>
+      <Row className="mb-2">
         <Form>
           <Form.Group as={Row} controlId="searchFilter">
             <Form.Label column sm={2}>
@@ -109,6 +126,26 @@ export default function EnrollmentTabComponent({
             </Col>
           </Form.Group>
         </Form>
+      </Row>
+      <Row sm={2} className="p-2">
+        <Col>
+          <Button
+            onClick={() => showCsvModal(true)}
+            data-testid={`${testIdPrefix}-csv-button`}
+            className="w-100"
+          >
+            Upload CSV Roster
+          </Button>
+        </Col>
+        <Col>
+          <Button
+            onClick={() => showPostModal(true)}
+            data-testid={`${testIdPrefix}-post-button`}
+            className="w-100"
+          >
+            Add Individual Student
+          </Button>
+        </Col>
       </Row>
       <Row>
         <RosterStudentTable

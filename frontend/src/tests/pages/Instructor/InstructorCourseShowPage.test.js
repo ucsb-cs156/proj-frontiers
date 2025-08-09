@@ -163,7 +163,7 @@ describe("InstructorCourseShowPage tests", () => {
     act(() => {
       jest.advanceTimersByTime(5000);
     });
-    expect(mockedNavigate).toHaveBeenCalledWith("/instructor/courses", {
+    expect(mockedNavigate).toHaveBeenCalledWith("/", {
       replace: true,
     });
     expect(mockedNavigate).toHaveBeenCalledTimes(1);
@@ -263,14 +263,6 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.getByText("Management")).toHaveAttribute(
       "aria-selected",
       "true",
-    );
-    expect(screen.getByText("Upload Roster")).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    expect(screen.getByText("Add Individual Student")).toHaveAttribute(
-      "aria-expanded",
-      "false",
     );
     const changeTabs = screen.getByText("Enrollment");
     fireEvent.click(changeTabs);
