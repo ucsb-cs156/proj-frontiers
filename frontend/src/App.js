@@ -121,7 +121,7 @@ function App() {
           }
         />
         <Route
-          path="/admin/courses/:id"
+          path="/instructor/courses/:id"
           element={
             <ProtectedPage
               component={<InstructorCourseShowPage />}
