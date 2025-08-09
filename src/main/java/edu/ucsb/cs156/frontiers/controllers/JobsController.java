@@ -2,7 +2,6 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
@@ -38,17 +37,13 @@ public class JobsController extends ApiController {
 
   @Autowired private JobService jobService;
 
-  @Autowired private UpdateUserService updateUserService; 
-  
+  @Autowired private UpdateUserService updateUserService;
+
   @Autowired ObjectMapper mapper;
-    @Autowired
-    private RosterStudentRepository rosterStudentRepository;
-    @Autowired
-    private CourseRepository courseRepository;
-    @Autowired
-    private OrganizationMemberService organizationMemberService;
-    @Autowired
-    private CourseStaffRepository courseStaffRepository;
+  @Autowired private RosterStudentRepository rosterStudentRepository;
+  @Autowired private CourseRepository courseRepository;
+  @Autowired private OrganizationMemberService organizationMemberService;
+  @Autowired private CourseStaffRepository courseStaffRepository;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -90,8 +85,6 @@ public class JobsController extends ApiController {
     return Map.of("message", String.format("Job with id %d deleted", id));
   }
 
-
-
   @Operation(summary = "Get long job logs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/logs/{id}")
@@ -105,10 +98,7 @@ public class JobsController extends ApiController {
   @PostMapping("/launch/updateAll")
   public Job launchUpdateAllJob() {
 
-    UpdateAllJob job = 
-        UpdateAllJob.builder()
-            .updateUserService(updateUserService) 
-            .build();
+    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();
     return jobService.runAsJob(job);
   }
 
@@ -117,7 +107,8 @@ public class JobsController extends ApiController {
   @PostMapping("/launch/auditAllCourses")
   public Job launchAuditAllCoursesJob() {
 
-    MembershipAuditJob job = MembershipAuditJob.builder()
+    MembershipAuditJob job =
+        MembershipAuditJob.builder()
             .rosterStudentRepository(rosterStudentRepository)
             .courseRepository(courseRepository)
             .organizationMemberService(organizationMemberService)

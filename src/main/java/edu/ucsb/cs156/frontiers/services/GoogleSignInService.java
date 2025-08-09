@@ -6,7 +6,6 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 public interface GoogleSignInService extends OAuth2UserService<OidcUserRequest, OidcUser> {
-    @Override
-    OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException;
-
+  @Override
+  OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException;
 }

@@ -13,27 +13,29 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @TestComponent
 public class DummyCourseSecurity {
 
-    @Autowired
-    CourseRepository courseRepository;
+  @Autowired CourseRepository courseRepository;
 
-    @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-    public Course loadCourse(Long courseId){
-        /*
-        This method simply exists to add the preauthorization annotation so that the method can be tested directly.
-         */
-        return courseRepository.findById(courseId).orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-    }
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public Course loadCourse(Long courseId) {
+    /*
+    This method simply exists to add the preauthorization annotation so that the method can be tested directly.
+     */
+    return courseRepository
+        .findById(courseId)
+        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+  }
 
-    @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-    public boolean nullTest(Long courseId){
-        if (courseRepository.findById(courseId).isEmpty() ){
-            return true;
-        }else{
-            return false;
-        }
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public boolean nullTest(Long courseId) {
+    if (courseRepository.findById(courseId).isEmpty()) {
+      return true;
+    } else {
+      return false;
     }
-    @Bean
-    public static RoleHierarchy loadedRoleHierarchy(){
-        return SecurityConfig.roleHierarchy();
-    }
+  }
+
+  @Bean
+  public static RoleHierarchy loadedRoleHierarchy() {
+    return SecurityConfig.roleHierarchy();
+  }
 }
