@@ -296,7 +296,9 @@ describe("EnrollmentTabComponent Tests", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("Modal close on escape key press", async () => {
+  test("Modals close on close buttons (respectively), download works", async () => {
+    const download = jest.fn();
+    window.open = (a, b) => download(a, b);
     axiosMock
       .onGet("/api/rosterstudents/course/7")
       .reply(200, rosterStudentFixtures.threeStudents);
@@ -329,6 +331,12 @@ describe("EnrollmentTabComponent Tests", () => {
       expect(
         screen.queryByTestId(`${testId}-csv-modal`),
       ).not.toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByText("Download Student CSV"));
+    await waitFor(() => expect(download).toBeCalled());
+    expect(download).toBeCalledWith(
+      "/api/csv/rosterstudents?courseId=7",
+      "_blank",
     );
   });
 

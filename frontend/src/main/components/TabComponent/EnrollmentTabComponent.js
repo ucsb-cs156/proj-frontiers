@@ -82,6 +82,10 @@ export default function EnrollmentTabComponent({
     rosterPostMutation.mutate(student);
   };
 
+  const downloadCsv = () => {
+    window.open(`/api/csv/rosterstudents?courseId=${courseId}`, "_blank");
+  };
+
   return (
     <div data-testid={`${testIdPrefix}-EnrollmentTabComponent`}>
       <Modal
@@ -109,7 +113,7 @@ export default function EnrollmentTabComponent({
           />
         </ModalBody>
       </Modal>
-      <Row className="mb-2">
+      <Row className="mb-1">
         <Form>
           <Form.Group as={Row} controlId="searchFilter">
             <Form.Label column sm={2}>
@@ -127,7 +131,7 @@ export default function EnrollmentTabComponent({
           </Form.Group>
         </Form>
       </Row>
-      <Row sm={2} className="p-2">
+      <Row sm={3} className="p-2">
         <Col>
           <Button
             onClick={() => showCsvModal(true)}
@@ -144,6 +148,11 @@ export default function EnrollmentTabComponent({
             className="w-100"
           >
             Add Individual Student
+          </Button>
+        </Col>
+        <Col>
+          <Button onClick={downloadCsv} className="w-100">
+            Download Student CSV
           </Button>
         </Col>
       </Row>
