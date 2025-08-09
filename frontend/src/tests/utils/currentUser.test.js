@@ -15,7 +15,13 @@ import AxiosMockAdapter from "axios-mock-adapter";
 jest.mock("react-router");
 const { MemoryRouter } = jest.requireActual("react-router");
 
+const axiosMock = new AxiosMockAdapter(axios);
+
 describe("utils/currentUser tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+  });
   describe("useCurrentUser tests", () => {
     test("useCurrentUser retrieves initial data", async () => {
       const queryClient = new QueryClient();
@@ -25,7 +31,6 @@ describe("utils/currentUser tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onGet("/api/currentUser").timeoutOnce();
       axiosMock
         .onGet("/api/systemInfo")
@@ -65,7 +70,6 @@ describe("utils/currentUser tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock
         .onGet("/api/currentUser")
         .reply(200, apiCurrentUserFixtures.userOnly);
@@ -93,7 +97,6 @@ describe("utils/currentUser tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onGet("/api/currentUser").reply(404);
 
       const restoreConsole = mockConsole();
@@ -125,7 +128,6 @@ describe("utils/currentUser tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onGet("/api/currentUser").reply(403);
 
       const restoreConsole = mockConsole();
@@ -155,7 +157,6 @@ describe("utils/currentUser tests", () => {
       );
 
       const apiResult = apiCurrentUserFixtures.missingRolesToTestErrorHandling;
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onGet("/api/currentUser").reply(200, apiResult);
 
       const restoreConsole = mockConsole();
@@ -188,7 +189,6 @@ describe("utils/currentUser tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onPost("/logout").reply(200);
 
       const navigateSpy = jest.fn();

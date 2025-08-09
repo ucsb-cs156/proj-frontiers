@@ -16,15 +16,25 @@ import AxiosMockAdapter from "axios-mock-adapter";
 
 describe("HomePageConnectGithub tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
-  axiosMock
-    .onGet("/api/currentUser")
-    .reply(200, apiCurrentUserFixtures.userOnly);
-  axiosMock
-    .onGet("/api/systemInfo")
-    .reply(200, systemInfoFixtures.showingNeither);
-
   const queryClient = new QueryClient();
+
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    queryClient.clear();
+  });
+
+  const setUpBaseEnvironment = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
   test("renders without crashing", async () => {
+    setUpBaseEnvironment();
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -64,7 +74,7 @@ describe("HomePageConnectGithub tests", () => {
     expect(createAccountButton).toHaveAttribute("target", "_blank");
     expect(createAccountButton).toHaveAttribute("rel", "noopener noreferrer");
   });
-  test("Base environment test", () => {
+  test("Base environment test", async () => {
     axiosMock.onGet("/api/systemInfo").timeout();
     render(
       <QueryClientProvider client={queryClient}>
@@ -79,17 +89,6 @@ describe("HomePageConnectGithub tests", () => {
       "d-flex",
       "gap-5",
     );
-  });
-  test("If systemInfo is not available, use the default githubOauthLogin", async () => {
-    axiosMock.onGet("/api/systemInfo").reply(200, null);
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <HomePageConnectGithub />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
     const footer = await screen.findByTestId("SignInCard-footer-github");
     const button = within(footer).getByRole("button", { name: /log in/i });
     expect(button).toHaveAttribute("href", "/oauth2/authorization/github");

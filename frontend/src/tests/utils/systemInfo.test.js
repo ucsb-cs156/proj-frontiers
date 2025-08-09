@@ -12,7 +12,13 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 jest.mock("react-router");
 const { _MemoryRouter } = jest.requireActual("react-router");
 
+const axiosMock = new AxiosMockAdapter(axios);
+
 describe("utils/systemInfo tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+  });
   describe("useSystemInfo tests", () => {
     test("useSystemInfo retrieves initial data", async () => {
       const queryClient = new QueryClient();
@@ -22,7 +28,6 @@ describe("utils/systemInfo tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onGet("/api/systemInfo").timeoutOnce();
       axiosMock
         .onGet("/api/systemInfo")
@@ -58,7 +63,6 @@ describe("utils/systemInfo tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock
         .onGet("/api/systemInfo")
         .reply(200, systemInfoFixtures.showingBoth);
@@ -81,7 +85,6 @@ describe("utils/systemInfo tests", () => {
         </QueryClientProvider>
       );
 
-      const axiosMock = new AxiosMockAdapter(axios);
       axiosMock.onGet("/api/systemInfo").reply(404);
 
       const restoreConsole = mockConsole();
