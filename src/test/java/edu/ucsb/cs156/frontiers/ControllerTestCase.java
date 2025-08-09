@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.config.SecurityConfig;
+import edu.ucsb.cs156.frontiers.interceptors.RoleUpdateInterceptor;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.testconfig.TestCourseSecurity;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -24,6 +26,9 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * This is a base class for all controller test cases. It provides
@@ -46,8 +51,16 @@ public abstract class ControllerTestCase {
   @Autowired
   public ObjectMapper mapper;
 
+  @MockitoBean
+  RoleUpdateInterceptor roleUpdateInterceptor;
+
   protected Map<String, Object> responseToJson(MvcResult result) throws UnsupportedEncodingException, JsonProcessingException {
     String responseString = result.getResponse().getContentAsString();
     return mapper.readValue(responseString, Map.class);
+  }
+
+  @PostConstruct
+  void passthroughInterceptor() throws Exception {
+      when(roleUpdateInterceptor.preHandle(any(),any(), any())).thenReturn(true);
   }
 }
