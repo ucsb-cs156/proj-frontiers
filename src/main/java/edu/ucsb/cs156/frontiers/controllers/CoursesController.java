@@ -157,31 +157,6 @@ public class CoursesController extends ApiController {
         return courseViews;
     }
     
-    @Operation(summary = "List all courses")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
-    @GetMapping("/all")
-    public Iterable<InstructorCourseView> allCourses() {
-        List<Course> courses = null;
-        if (!isCurrentUserAdmin()) {
-            // if the user is not an admin, return only the courses they created
-            CurrentUser currentUser = getCurrentUser();
-            String userEmail = currentUser.getUser().getEmail();
-            courses = courseRepository.findByInstructorEmail(userEmail);
-            // Convert to InstructorCourseView
-            List<InstructorCourseView> courseViews = courses.stream()
-                    .map(InstructorCourseView::new)
-                    .collect(Collectors.toList());
-            // Return as Iterable
-            return courseViews;
-        } else {
-            courses = courseRepository.findAll();
-        }
-        List<InstructorCourseView> courseViews = courses.stream()
-                .map(InstructorCourseView::new)
-                .collect(Collectors.toList());
-        return courseViews;
-    }
-
     /**
      * This method returns single course by its id
      * 
