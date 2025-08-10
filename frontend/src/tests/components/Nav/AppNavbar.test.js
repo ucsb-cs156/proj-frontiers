@@ -200,4 +200,55 @@ describe("AppNavbar tests", () => {
 
     expect(screen.getByText("Github: cgaucho-github")).toBeInTheDocument();
   });
+
+  test("renders Help dropdown for all users", async () => {
+    const currentUser = currentUserFixtures.userOnly;
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppNavbar currentUser={currentUser} doLogin={doLogin} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const helpMenu = screen.getByTestId("appnavbar-help-dropdown");
+    expect(helpMenu).toBeInTheDocument();
+    expect(screen.getByText("Help")).toBeInTheDocument();
+  });
+
+  test("renders Help dropdown for admin users", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppNavbar currentUser={currentUser} doLogin={doLogin} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const helpMenu = screen.getByTestId("appnavbar-help-dropdown");
+    expect(helpMenu).toBeInTheDocument();
+    expect(screen.getByText("Help")).toBeInTheDocument();
+  });
+
+  test("renders Help dropdown for logged out users", async () => {
+    const currentUser = currentUserFixtures.notLoggedIn;
+    const doLogin = jest.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppNavbar currentUser={currentUser} doLogin={doLogin} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const helpMenu = screen.getByTestId("appnavbar-help-dropdown");
+    expect(helpMenu).toBeInTheDocument();
+    expect(screen.getByText("Help")).toBeInTheDocument();
+  });
 });

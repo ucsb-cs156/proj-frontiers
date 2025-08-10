@@ -53,6 +53,18 @@ export default function AppNavbar({
                   <Nav.Link href="/h2-console">H2Console</Nav.Link>
                 </>
               )}
+              <NavDropdown
+                title="Help"
+                id="appnavbar-help-dropdown"
+                data-testid="appnavbar-help-dropdown"
+              >
+                <NavDropdown.Item as={Link} to="/help/about">
+                  About Frontiers
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/help/csv">
+                  CSV Upload/Download Formats
+                </NavDropdown.Item>
+              </NavDropdown>
               {hasRole(currentUser, "ROLE_ADMIN") && (
                 <NavDropdown
                   title="Admin"
