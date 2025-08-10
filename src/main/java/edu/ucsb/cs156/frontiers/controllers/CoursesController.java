@@ -131,8 +131,8 @@ public class CoursesController extends ApiController {
     @GetMapping("/allForInstructors")
     public Iterable<InstructorCourseView> allForInstructors() {
         CurrentUser currentUser = getCurrentUser();
-        Long userId = currentUser.getUser().getId();
-        List<Course> courses = courseRepository.findByCreatorId(userId);
+        String instructorEmail = currentUser.getUser().getEmail();
+        List<Course> courses = courseRepository.findByInstructorEmail(instructorEmail);
 
         List<InstructorCourseView> courseViews = courses.stream()
                 .map(InstructorCourseView::new)
