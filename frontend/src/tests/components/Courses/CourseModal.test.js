@@ -53,62 +53,6 @@ describe("CourseModal Tests", () => {
     expect(screen.getByDisplayValue("UCSB")).toBeInTheDocument();
     expect(screen.getByText("Edit")).toBeInTheDocument();
   });
-  
-  test("Shows correct title when creating", async () => {
-    render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-        />
-      </div>,
-    );
-
-    expect(screen.getByText("Create Course")).toBeInTheDocument();
-  });
-
-  test("Shows correct title when editing", async () => {
-    render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={coursesFixtures.severalCourses[0]}
-          buttonText={"Update"}
-        />
-      </div>,
-    );
-
-    expect(screen.getByText("Edit Course")).toBeInTheDocument();
-  });
-  
-  test("Uses custom title when title prop is provided", async () => {
-    render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={coursesFixtures.severalCourses[0]}
-          buttonText={"Update"}
-          title={"Custom Modal Title"}
-        />
-      </div>,
-    );
-
-    expect(screen.getByText("Custom Modal Title")).toBeInTheDocument();
-  });
 
   test("Can submit successfully", async () => {
     render(

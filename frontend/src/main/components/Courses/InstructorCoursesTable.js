@@ -47,7 +47,6 @@ export default function InstructorCoursesTable({
   storybook = false,
   currentUser,
   testId = "InstructorCoursesTable",
-  onEditCourse,
 }) {
   const installCallback = (cell) => {
     const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;
@@ -69,15 +68,6 @@ export default function InstructorCoursesTable({
       hasRole(currentUser, "ROLE_INSTRUCTOR") &&
       row.original.createdByEmail === currentUser.root.user.email
     ) {
-      return true;
-    }
-
-    return false;
-  };
-  
-  const canEdit = (row) => {
-    // Assume that any course in the table the viewer has permissions to edit
-    if (hasRole(currentUser, "ROLE_ADMIN") || hasRole(currentUser, "ROLE_INSTRUCTOR")) {
       return true;
     }
 
@@ -178,25 +168,6 @@ export default function InstructorCoursesTable({
     {
       header: "Created By",
       accessorKey: "createdByEmail",
-    },
-    {
-      header: "Actions",
-      id: "actions",
-      cell: ({ cell }) => {
-        const canEditCourse = canEdit(cell.row);
-        if (canEditCourse && onEditCourse) {
-          return (
-            <Button
-              variant="primary"
-              onClick={() => onEditCourse(cell.row.original)}
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-edit-button`}
-            >
-              Edit
-            </Button>
-          );
-        }
-        return null;
-      },
     },
   ];
 
