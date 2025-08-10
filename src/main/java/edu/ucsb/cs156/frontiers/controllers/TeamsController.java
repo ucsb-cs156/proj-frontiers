@@ -98,7 +98,7 @@ public class TeamsController extends ApiController {
      * @param file csv file with roster student emails and team assignments
      * @return Count of students added to teams, already existing, and rejected students
      */
-    @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
+    @Operation(summary = "Upload team assignments; CSV in format team,email")
     @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
     @PostMapping(value = "/upload/csv", consumes = { "multipart/form-data" })
     public TeamCreationResponse uploadTeamsCsv(
