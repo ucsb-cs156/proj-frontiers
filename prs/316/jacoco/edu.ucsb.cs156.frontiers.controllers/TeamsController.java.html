@@ -98,7 +98,7 @@ import java.util.*;
      * @param file csv file with roster student emails and team assignments
      * @return Count of students added to teams, already existing, and rejected students
      */
-    @Operation(summary = &quot;Upload Roster students for Course in UCSB Egrades Format&quot;)
+    @Operation(summary = &quot;Upload team assignments; CSV in format team,email&quot;)
     @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
     @PostMapping(value = &quot;/upload/csv&quot;, consumes = { &quot;multipart/form-data&quot; })
     public TeamCreationResponse uploadTeamsCsv(
