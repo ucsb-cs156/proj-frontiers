@@ -57,7 +57,7 @@ public class GithubGraphQLController extends ApiController {
 
 <span class="fc" id="L58">        log.info(&quot;Found course: {}&quot;, course);</span>
 
-<span class="fc bfc" id="L60" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc bfc" id="L60" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {</span>
 <span class="fc" id="L61">            throw new CourseNotAuthorized(courseId);</span>
         }
 
@@ -98,7 +98,7 @@ public class GithubGraphQLController extends ApiController {
 
 <span class="fc" id="L99">        log.info(&quot;Found course: {}&quot;, course);</span>
 
-<span class="fc bfc" id="L101" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !(course.getCreator().getId() == getCurrentUser().getUser().getId())) {</span>
+<span class="fc bfc" id="L101" title="All 4 branches covered.">        if (!isCurrentUserAdmin() &amp;&amp; !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {</span>
 <span class="fc" id="L102">            throw new CourseNotAuthorized(courseId);</span>
         }
 
