@@ -179,7 +179,7 @@ import lombok.extern.slf4j.Slf4j;
     @Operation(summary = &quot;Upload Roster students for Course in UCSB Egrades Format&quot;)
     @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
     @PostMapping(value = &quot;/upload/csv&quot;, consumes = { &quot;multipart/form-data&quot; })
-    public Map&lt;String, String&gt; uploadRosterStudentsUCSBEgrades(
+    public Map&lt;String, String&gt; uploadRosterStudentsCSV(
             @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
             @Parameter(name = &quot;file&quot;) @RequestParam(&quot;file&quot;) MultipartFile file)
             throws JsonProcessingException, IOException, CsvException {
