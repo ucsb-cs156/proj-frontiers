@@ -40,6 +40,13 @@
             ],
             "tableName": "TEAM"
           }
+        },
+        {
+          "addUniqueConstraint": {
+            "columnNames": "NAME, COURSE_ID",
+            "constraintName": "UK_TEAM_NAME_COURSE",
+            "tableName": "TEAM"
+          }
         }
       ]
     }
@@ -94,9 +101,9 @@
         },
         {
           "addUniqueConstraint": {
-            "columnNames": "NAME, COURSE_ID",
-            "constraintName": "UK_TEAM_NAME_COURSE",
-            "tableName": "TEAM"
+            "columnNames": "ROSTER_STUDENT_ID, TEAM_ID",
+            "constraintName": "UK_TEAM_MEMBER_TEAM_ID_ROSTER_STUDENT_ID",
+            "tableName": "TEAM_MEMBER"
           }
         }
       ]
