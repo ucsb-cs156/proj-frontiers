@@ -14,19 +14,23 @@ describe("AdminJobsPage tests", () => {
   beforeEach(() => {
     axiosMock.reset();
     axiosMock.resetHistory();
-    axiosMock.onGet("/api/currentUser").reply(200, apiCurrentUserFixtures.adminUser);
-    axiosMock.onGet("/api/systemInfo").reply(200, systemInfoFixtures.showingNeither);
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.adminUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
   });
 
   test("renders without crashing", async () => {
     axiosMock.onGet("/api/jobs/all").reply(200, []);
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <AdminJobsPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("Launch Jobs")).toBeInTheDocument();
@@ -36,13 +40,13 @@ describe("AdminJobsPage tests", () => {
 
   test("renders job launchers correctly", async () => {
     axiosMock.onGet("/api/jobs/all").reply(200, []);
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <AdminJobsPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("Update All Users")).toBeInTheDocument();
@@ -59,15 +63,15 @@ describe("AdminJobsPage tests", () => {
         log: "Job completed successfully",
       },
     ];
-    
+
     axiosMock.onGet("/api/jobs/all").reply(200, jobsFixture);
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <AdminJobsPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("id")).toBeInTheDocument();
@@ -83,13 +87,13 @@ describe("AdminJobsPage tests", () => {
       id: 1,
       status: "running",
     });
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <AdminJobsPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Find and click the Update All Users accordion header
@@ -110,13 +114,13 @@ describe("AdminJobsPage tests", () => {
       id: 2,
       status: "running",
     });
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <AdminJobsPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Find and click the Audit All Courses accordion header
@@ -128,7 +132,9 @@ describe("AdminJobsPage tests", () => {
     fireEvent.click(auditAllCoursesButton);
 
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
-    expect(axiosMock.history.post[0].url).toBe("/api/jobs/launch/auditAllCourses");
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/jobs/launch/auditAllCourses",
+    );
   });
 
   test("clicking Purge Job Log button calls the correct API", async () => {
@@ -136,13 +142,13 @@ describe("AdminJobsPage tests", () => {
     axiosMock.onDelete("/api/jobs/all").reply(200, {
       message: "All jobs deleted",
     });
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <AdminJobsPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const purgeJobLogButton = await screen.findByTestId("purgeJobLog");

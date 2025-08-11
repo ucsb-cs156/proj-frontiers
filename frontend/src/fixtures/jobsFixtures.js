@@ -37,7 +37,9 @@ const jobsFixtures = {
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
-      log: "This is a very long log message that should be displayed in a scrollable container. ".repeat(20),
+      log: "This is a very long log message that should be displayed in a scrollable container. ".repeat(
+        20,
+      ),
     },
   ],
 };

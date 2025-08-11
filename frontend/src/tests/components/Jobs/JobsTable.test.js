@@ -21,7 +21,7 @@ describe("JobsTable tests", () => {
         <MemoryRouter>
           <JobsTable jobs={[]} />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   });
 
@@ -31,7 +31,7 @@ describe("JobsTable tests", () => {
         <MemoryRouter>
           <JobsTable jobs={null} />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   });
 
@@ -56,7 +56,7 @@ describe("JobsTable tests", () => {
         <MemoryRouter>
           <JobsTable jobs={jobsFixture} />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Check that the table headers are rendered

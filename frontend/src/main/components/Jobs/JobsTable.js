@@ -3,32 +3,31 @@ import OurTable from "main/components/OurTable";
 import { formatTime } from "main/utils/dateUtils";
 
 export default function JobsTable({ jobs }) {
-
   const columns = [
     {
-      Header: "id",
-      accessor: "id",
+      header: "id",
+      accessorKey: "id",
     },
     {
-      Header: "Created",
-      accessor: (row) => formatTime(row.createdAt),
+      header: "Created",
+      accessorFn: (row) => formatTime(row.createdAt),
       id: "createdAt",
     },
     {
-      Header: "Updated",
-      accessor: (row) => formatTime(row.updatedAt),
+      header: "Updated",
+      accessorFn: (row) => formatTime(row.updatedAt),
       id: "updatedAt",
     },
     {
-      Header: "Status",
-      accessor: "status",
+      header: "Status",
+      accessorKey: "status",
     },
     {
-      Header: "Log",
-      accessor: "log",
-      Cell: ({ cell }) => (
+      header: "Log",
+      accessorKey: "log",
+      cell: ({ cell }) => (
         <div style={{ maxWidth: 450, maxHeight: 100, overflowY: "auto" }}>
-          <pre style={{ whiteSpace: "pre-wrap" }}>{cell.value}</pre>
+          <pre style={{ whiteSpace: "pre-wrap" }}>{cell.getValue()}</pre>
         </div>
       ),
     },
