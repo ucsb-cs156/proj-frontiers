@@ -2,7 +2,6 @@
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
@@ -32,38 +31,34 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;Jobs&quot;)
 @RequestMapping(&quot;/api/jobs&quot;)
 @RestController
-<span class="fc" id="L35">@Slf4j</span>
-<span class="fc" id="L36">public class JobsController extends ApiController {</span>
+<span class="fc" id="L34">@Slf4j</span>
+<span class="fc" id="L35">public class JobsController extends ApiController {</span>
   @Autowired private JobsRepository jobsRepository;
 
   @Autowired private JobService jobService;
 
-  @Autowired private UpdateUserService updateUserService; 
-  
+  @Autowired private UpdateUserService updateUserService;
+
   @Autowired ObjectMapper mapper;
-    @Autowired
-    private RosterStudentRepository rosterStudentRepository;
-    @Autowired
-    private CourseRepository courseRepository;
-    @Autowired
-    private OrganizationMemberService organizationMemberService;
-    @Autowired
-    private CourseStaffRepository courseStaffRepository;
+  @Autowired private RosterStudentRepository rosterStudentRepository;
+  @Autowired private CourseRepository courseRepository;
+  @Autowired private OrganizationMemberService organizationMemberService;
+  @Autowired private CourseStaffRepository courseStaffRepository;
 
   @Operation(summary = &quot;List all jobs&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;Job&gt; allJobs() {
-<span class="fc" id="L57">    Iterable&lt;Job&gt; jobs = jobsRepository.findAll();</span>
-<span class="fc" id="L58">    return jobs;</span>
+<span class="fc" id="L52">    Iterable&lt;Job&gt; jobs = jobsRepository.findAll();</span>
+<span class="fc" id="L53">    return jobs;</span>
   }
 
   @Operation(summary = &quot;Delete all job records&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;/all&quot;)
   public Map&lt;String, String&gt; deleteAllJobs() {
-<span class="fc" id="L65">    jobsRepository.deleteAll();</span>
-<span class="fc" id="L66">    return Map.of(&quot;message&quot;, &quot;All jobs deleted&quot;);</span>
+<span class="fc" id="L60">    jobsRepository.deleteAll();</span>
+<span class="fc" id="L61">    return Map.of(&quot;message&quot;, &quot;All jobs deleted&quot;);</span>
   }
 
   @Operation(summary = &quot;Get a specific Job Log by ID if it is in the database&quot;)
@@ -73,31 +68,29 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;id&quot;, description = &quot;ID of the job&quot;) @RequestParam Long id)
       throws JsonProcessingException {
 
-<span class="fc" id="L76">    Job job =</span>
-<span class="fc" id="L77">        jobsRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Job.class, id));</span>
+<span class="fc" id="L71">    Job job =</span>
+<span class="fc" id="L72">        jobsRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Job.class, id));</span>
 
-<span class="fc" id="L79">    return job;</span>
+<span class="fc" id="L74">    return job;</span>
   }
 
   @Operation(summary = &quot;Delete specific job record&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;&quot;)
   public Map&lt;String, String&gt; deleteAllJobs(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc bfc" id="L86" title="All 2 branches covered.">    if (!jobsRepository.existsById(id)) {</span>
-<span class="fc" id="L87">      return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d not found&quot;, id));</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">    if (!jobsRepository.existsById(id)) {</span>
+<span class="fc" id="L82">      return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d not found&quot;, id));</span>
     }
-<span class="fc" id="L89">    jobsRepository.deleteById(id);</span>
-<span class="fc" id="L90">    return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d deleted&quot;, id));</span>
+<span class="fc" id="L84">    jobsRepository.deleteById(id);</span>
+<span class="fc" id="L85">    return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d deleted&quot;, id));</span>
   }
-
-
 
   @Operation(summary = &quot;Get long job logs&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;/logs/{id}&quot;)
   public String getJobLogs(@Parameter(name = &quot;id&quot;, description = &quot;Job ID&quot;) @PathVariable Long id) {
 
-<span class="fc" id="L100">    return jobService.getJobLogs(id);</span>
+<span class="fc" id="L93">    return jobService.getJobLogs(id);</span>
   }
 
   @Operation(summary = &quot;Launch UpdateAll job&quot;)
@@ -105,11 +98,8 @@ import org.springframework.web.bind.annotation.RestController;
   @PostMapping(&quot;/launch/updateAll&quot;)
   public Job launchUpdateAllJob() {
 
-    UpdateAllJob job = 
-<span class="fc" id="L109">        UpdateAllJob.builder()</span>
-<span class="fc" id="L110">            .updateUserService(updateUserService) </span>
-<span class="fc" id="L111">            .build();</span>
-<span class="fc" id="L112">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L101">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
+<span class="fc" id="L102">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Audit All Courses Job&quot;)
@@ -117,13 +107,14 @@ import org.springframework.web.bind.annotation.RestController;
   @PostMapping(&quot;/launch/auditAllCourses&quot;)
   public Job launchAuditAllCoursesJob() {
 
-<span class="fc" id="L120">    MembershipAuditJob job = MembershipAuditJob.builder()</span>
-<span class="fc" id="L121">            .rosterStudentRepository(rosterStudentRepository)</span>
-<span class="fc" id="L122">            .courseRepository(courseRepository)</span>
-<span class="fc" id="L123">            .organizationMemberService(organizationMemberService)</span>
-<span class="fc" id="L124">            .courseStaffRepository(courseStaffRepository)</span>
-<span class="fc" id="L125">            .build();</span>
-<span class="fc" id="L126">    return jobService.runAsJob(job);</span>
+    MembershipAuditJob job =
+<span class="fc" id="L111">        MembershipAuditJob.builder()</span>
+<span class="fc" id="L112">            .rosterStudentRepository(rosterStudentRepository)</span>
+<span class="fc" id="L113">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L114">            .organizationMemberService(organizationMemberService)</span>
+<span class="fc" id="L115">            .courseStaffRepository(courseStaffRepository)</span>
+<span class="fc" id="L116">            .build();</span>
+<span class="fc" id="L117">    return jobService.runAsJob(job);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

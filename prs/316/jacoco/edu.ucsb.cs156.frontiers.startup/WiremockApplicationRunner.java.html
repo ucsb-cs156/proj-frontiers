@@ -12,19 +12,17 @@ import org.springframework.context.annotation.Profile;
 <span class="fc" id="L12">@Slf4j</span>
 @Profile(&quot;wiremock&quot;)
 <span class="fc" id="L14">public class WiremockApplicationRunner implements ApplicationRunner {</span>
-    @Autowired
-    WiremockService wiremockService;
+  @Autowired WiremockService wiremockService;
 
-    /**
-     * When using the wiremock profile, this method will call the code needed to set
-     * up the wiremock services
-     */
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-<span class="fc" id="L24">        log.info(&quot;wiremock mode&quot;);</span>
-<span class="fc" id="L25">        wiremockService.init();</span>
-<span class="fc" id="L26">        log.info(&quot;wiremockApplicationRunner completed&quot;);</span>
-<span class="fc" id="L27">    }</span>
-
+  /**
+   * When using the wiremock profile, this method will call the code needed to set up the wiremock
+   * services
+   */
+  @Override
+  public void run(ApplicationArguments args) throws Exception {
+<span class="fc" id="L23">    log.info(&quot;wiremock mode&quot;);</span>
+<span class="fc" id="L24">    wiremockService.init();</span>
+<span class="fc" id="L25">    log.info(&quot;wiremockApplicationRunner completed&quot;);</span>
+<span class="fc" id="L26">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

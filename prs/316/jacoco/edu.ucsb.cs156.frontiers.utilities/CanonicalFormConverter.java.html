@@ -2,33 +2,33 @@
 
 <span class="fc" id="L3">public class CanonicalFormConverter {</span>
 
-    /**
-     * Converts an email address to a valid canonical form.
-     * 
-     * Some universities may have email systems where there are 
-     * multiple valid representations of the same email address.
-     * 
-     * This method ensures that the email is in a consistent
-     * canonical form.   This is the place to isolate these
-     * conversions, so that if the rules change, we only have
-     * to change them in one place.
-     * 
-     * @param email
-     * @return email in canonical form
-     */
-    public static String convertToValidEmail(String email) {
-<span class="fc" id="L20">       String canonicalEmail = email.replace(&quot;@umail.ucsb.edu&quot;, &quot;@ucsb.edu&quot;)</span>
-<span class="fc" id="L21">                                    .toLowerCase();</span>
-<span class="fc" id="L22">       return canonicalEmail;</span>
-    }
+  /**
+   * Converts an email address to a valid canonical form.
+   *
+   * &lt;p&gt;Some universities may have email systems where there are multiple valid representations of
+   * the same email address.
+   *
+   * &lt;p&gt;This method ensures that the email is in a consistent canonical form. This is the place to
+   * isolate these conversions, so that if the rules change, we only have to change them in one
+   * place.
+   *
+   * @param email
+   * @return email in canonical form
+   */
+  public static String convertToValidEmail(String email) {
+<span class="fc" id="L19">    String canonicalEmail = email.replace(&quot;@umail.ucsb.edu&quot;, &quot;@ucsb.edu&quot;).toLowerCase();</span>
+<span class="fc" id="L20">    return canonicalEmail;</span>
+  }
 
-    /** Check whether two emails are equivalent in their canonical form
-     * @param email1
-     * @param email2
-     * @return true if the canonical forms of the two emails are equal, false otherwise
-     */
-    public static boolean areEquivalentEmails(String email1, String email2) {
-<span class="fc" id="L31">        return convertToValidEmail(email1).equals(convertToValidEmail(email2));</span>
-    }
+  /**
+   * Check whether two emails are equivalent in their canonical form
+   *
+   * @param email1
+   * @param email2
+   * @return true if the canonical forms of the two emails are equal, false otherwise
+   */
+  public static boolean areEquivalentEmails(String email1, String email2) {
+<span class="fc" id="L31">    return convertToValidEmail(email1).equals(convertToValidEmail(email2));</span>
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
