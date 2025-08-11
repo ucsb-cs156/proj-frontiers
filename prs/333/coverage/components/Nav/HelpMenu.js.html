@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Nav/GithubLogin.js</title>
+    <title>Code coverage report for components/Nav/HelpMenu.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,20 +19,20 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> GithubLogin.js</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> HelpMenu.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
@@ -86,18 +86,11 @@
 <a name='L21'></a><a href='#L21'>21</a>
 <a name='L22'></a><a href='#L22'>22</a>
 <a name='L23'></a><a href='#L23'>23</a>
-<a name='L24'></a><a href='#L24'>24</a>
-<a name='L25'></a><a href='#L25'>25</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L24'></a><a href='#L24'>24</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">123x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -105,35 +98,39 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Button, Navbar } from "react-bootstrap";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {  NavDropdown } from "react-bootstrap";
 import { Link } from "react-router";
 &nbsp;
-export default function GithubLogin({ currentUser, systemInfo }) {
-  var githubOauthLogin =
-    systemInfo?.githubOauthLogin || "/oauth2/authorization/github";
-  if (!currentUser || !currentUser.loggedIn) {
-    return &lt;span data-testid="GithubLogin-logged-out" /&gt;;
-  }
-  if (currentUser.root.user.githubLogin) {
+export default function HelpMenu() {
     return (
-      &lt;&gt;
-        &lt;Navbar.Text className="me-3" as={Link} to="/profile"&gt;
-          Github: {currentUser.root.user.githubLogin}
-        &lt;/Navbar.Text&gt;
-      &lt;/&gt;
+        &lt;&gt;
+            &lt;NavDropdown
+                title="Help"
+                id="appnavbar-help-dropdown"
+                data-testid="appnavbar-help-dropdown"
+                className="narrow-dropdown" // Add the custom class
+                align="end" // Align the menu to the right
+            &gt;
+                &lt;NavDropdown.Item as={Link} to="/help/about"&gt;
+                    About Frontiers
+                &lt;/NavDropdown.Item&gt;
+                &lt;NavDropdown.Item as={Link} to="/help/csv"&gt;
+                    CSV Upload/Download Formats
+                &lt;/NavDropdown.Item&gt;
+            &lt;/NavDropdown&gt;
+        &lt;/&gt;
     );
-  }
-  return (
-    &lt;&gt;
-      &lt;Button href={githubOauthLogin}&gt;Connect Github&lt;/Button&gt;
-    &lt;/&gt;
-  );
 }
 &nbsp;</pre></td></tr></table></pre>
 
