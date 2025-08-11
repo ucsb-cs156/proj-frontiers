@@ -1,8 +1,6 @@
 import React from "react";
 import JobsTable from "main/components/Jobs/JobsTable";
 import { jobsFixtures } from "fixtures/jobsFixtures";
-import { currentUserFixtures } from "fixtures/currentUserFixtures";
-import { rest } from "msw";
 
 export default {
   title: "components/Jobs/JobsTable",

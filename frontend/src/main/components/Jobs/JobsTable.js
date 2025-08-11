@@ -1,10 +1,8 @@
 import React from "react";
-import OurTable, { ButtonColumn } from "main/components/Common/OurTable";
-import { useNavigate } from "react-router-dom";
+import OurTable from "main/components/OurTable";
 import { formatTime } from "main/utils/dateUtils";
 
 export default function JobsTable({ jobs }) {
-  const navigate = useNavigate();
 
   const columns = [
     {
