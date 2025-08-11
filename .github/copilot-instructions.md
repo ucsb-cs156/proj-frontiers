@@ -1,6 +1,6 @@
 # Frontiers - GitHub Copilot Instructions
 
-Frontiers is a Spring Boot Java backend application with a React frontend that supports NSF Frontiers project for software engineering education. The application helps instructors manage GitHub organizations, student rosters, and code evaluation.
+Frontiers is a Spring Boot Java backend application with a React frontend that supports the NSF Frontiers project for software engineering education. The application helps instructors manage GitHub organizations, student rosters, and code evaluation.
 
 **ALWAYS reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
