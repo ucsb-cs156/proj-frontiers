@@ -7,30 +7,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
-import java.util.Optional;
-
+import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.TestJob;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextFactory;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import java.util.List;
+import java.util.Optional;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public class JobServiceTests {
 
   @Mock private JobsRepository jobRepository;
 
-  @Mock
-  JobContextFactory contextFactory;
+  @Mock JobContextFactory contextFactory;
 
   @Mock private JobService injectedJobService;
 
@@ -43,7 +40,11 @@ public class JobServiceTests {
   @BeforeEach
   public void setup() {
     MockitoAnnotations.openMocks(this);
-    user = CurrentUser.builder().roles(List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))).user(User.builder().id(1L).build()).build();
+    user =
+        CurrentUser.builder()
+            .roles(List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
+            .user(User.builder().id(1L).build())
+            .build();
   }
 
   @Test
@@ -87,11 +88,10 @@ public class JobServiceTests {
   }
 
   @Test
-  void runAsJob_fires_correctly(){
+  void runAsJob_fires_correctly() {
     TestJob job = TestJob.builder().fail(false).sleepMs(0).build();
 
     Job fireJob = Job.builder().createdBy(user.getUser()).status("running").build();
-
 
     doNothing().when(injectedJobService).runJobAsync(any(), any());
     when(currentUserService.getUser()).thenReturn(user.getUser());
@@ -115,9 +115,7 @@ public class JobServiceTests {
     doNothing().when(job).accept(eq(context));
 
     jobService.runJobAsync(passedJob, job);
-    await()
-            .atMost(2, SECONDS)
-            .untilAsserted(() -> verify(jobRepository).save(eq(expectedReturn)));
+    await().atMost(2, SECONDS).untilAsserted(() -> verify(jobRepository).save(eq(expectedReturn)));
     verify(job).accept(eq(context));
     verify(contextFactory).createContext(eq(passedJob));
   }
@@ -134,9 +132,7 @@ public class JobServiceTests {
     doThrow(new Exception("fail!")).when(job).accept(eq(context));
 
     jobService.runJobAsync(passedJob, job);
-    await()
-            .atMost(2, SECONDS)
-            .untilAsserted(() -> verify(context).log(contains("fail!")));
+    await().atMost(2, SECONDS).untilAsserted(() -> verify(context).log(contains("fail!")));
     verify(job).accept(eq(context));
     verify(contextFactory).createContext(eq(passedJob));
     assertEquals("error", passedJob.getStatus());

@@ -1,13 +1,12 @@
 package edu.ucsb.cs156.frontiers.services.jobs;
 
+import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
+import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
-import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 
 @Service
 public class JobService {
