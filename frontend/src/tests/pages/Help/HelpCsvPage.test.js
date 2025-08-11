@@ -7,6 +7,7 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import csvFixtures from "fixtures/csvFixtures";
 
 describe("HelpCsvPage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
@@ -27,6 +28,11 @@ describe("HelpCsvPage tests", () => {
       </QueryClientProvider>,
     );
     await screen.findByText(/CSV Upload\/Download Formats/);
-    await screen.findByText(/Coming soon/);
+    const chicoStateCsvExample = screen.getByTestId("chicoStateCsvExample");
+    const ucsbEgradesCsvExample = screen.getByTestId("ucsbEgradesCsvExample");
+    expect(chicoStateCsvExample).toBeInTheDocument();
+    expect(ucsbEgradesCsvExample).toBeInTheDocument();
+    expect(chicoStateCsvExample).toHaveClass("csvExample");
+    expect(ucsbEgradesCsvExample).toHaveClass("csvExample");
   });
 });

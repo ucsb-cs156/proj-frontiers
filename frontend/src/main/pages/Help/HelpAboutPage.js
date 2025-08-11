@@ -46,7 +46,7 @@ export default function HelpAboutPage() {
                 <li>
                   Provide a link for students on the course roster and staff
                   roster to automatically generate an invitation to join the
-                  course organization{" "}
+                  course organization
                 </li>
                 <li>
                   See the status of each student and staff member (i.e. whether
