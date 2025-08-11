@@ -1,5 +1,5 @@
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { hasRole } from "main/utils/currentUser";
 import AppNavbarLocalhost from "main/components/Nav/AppNavbarLocalhost";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
@@ -70,6 +70,9 @@ export default function AppNavbar({
                   </NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/admin/courses">
                     Courses
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/jobs">
+                    Jobs
                   </NavDropdown.Item>
                 </NavDropdown>
               )}
