@@ -30,6 +30,7 @@ export function useBackend(
   axiosParameters,
   initialData,
   suppressToasts = false,
+  options = {},
 ) {
   return useQuery({
     queryKey: queryKey,
@@ -47,6 +48,7 @@ export function useBackend(
       }
     },
     initialData: initialData,
+    ...options,
   });
 }
 

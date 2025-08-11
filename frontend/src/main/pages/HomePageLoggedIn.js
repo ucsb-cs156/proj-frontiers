@@ -47,6 +47,10 @@ export default function HomePageLoggedIn() {
     { method: "GET", url: "/api/courses/allForInstructors" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
+    false,
+    {
+      enabled: hasRole(currentUser, "ROLE_INSTRUCTOR"),
+    },
   );
 
   const onJoinSuccess = (message) => {
