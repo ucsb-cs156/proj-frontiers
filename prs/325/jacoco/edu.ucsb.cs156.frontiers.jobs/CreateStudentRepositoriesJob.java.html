@@ -11,21 +11,24 @@ import lombok.Builder;
 
 @Builder
 public class CreateStudentRepositoriesJob implements JobContextConsumer {
-    Course course;
-    RepositoryService repositoryService;
-    String repositoryPrefix;
-    Boolean isPrivate;
-    RepositoryPermissions permissions;
+  Course course;
+  RepositoryService repositoryService;
+  String repositoryPrefix;
+  Boolean isPrivate;
+  RepositoryPermissions permissions;
 
-    @Override
-    public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L22">        ctx.log(&quot;Processing...&quot;);</span>
-<span class="fc bfc" id="L23" title="All 2 branches covered.">        for(RosterStudent student : course.getRosterStudents()){</span>
-<span class="fc bfc" id="L24" title="All 6 branches covered.">            if(student.getGithubLogin() != null &amp;&amp; (student.getOrgStatus() == OrgStatus.MEMBER || student.getOrgStatus() == OrgStatus.OWNER)){</span>
-<span class="fc" id="L25">                repositoryService.createStudentRepository(course, student, repositoryPrefix, isPrivate, permissions);</span>
-            }
-<span class="fc" id="L27">        }</span>
-<span class="fc" id="L28">        ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L29">    }</span>
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L22">    ctx.log(&quot;Processing...&quot;);</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">    for (RosterStudent student : course.getRosterStudents()) {</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">      if (student.getGithubLogin() != null</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">          &amp;&amp; (student.getOrgStatus() == OrgStatus.MEMBER</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">              || student.getOrgStatus() == OrgStatus.OWNER)) {</span>
+<span class="fc" id="L27">        repositoryService.createStudentRepository(</span>
+            course, student, repositoryPrefix, isPrivate, permissions);
+      }
+<span class="fc" id="L30">    }</span>
+<span class="fc" id="L31">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L32">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

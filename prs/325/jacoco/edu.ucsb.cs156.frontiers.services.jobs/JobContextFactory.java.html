@@ -6,14 +6,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JobContextFactory {
-    private final JobsRepository repository;
+  private final JobsRepository repository;
 
-<span class="fc" id="L11">    public JobContextFactory(JobsRepository repository) {</span>
-<span class="fc" id="L12">        this.repository = repository;</span>
-<span class="fc" id="L13">    }</span>
+<span class="fc" id="L11">  public JobContextFactory(JobsRepository repository) {</span>
+<span class="fc" id="L12">    this.repository = repository;</span>
+<span class="fc" id="L13">  }</span>
 
-    public JobContext createContext(Job job){
-<span class="fc" id="L16">        return new JobContext(repository, job);</span>
-    }
+  public JobContext createContext(Job job) {
+<span class="fc" id="L16">    return new JobContext(repository, job);</span>
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
