@@ -286,6 +286,9 @@ describe("HomePageLoggedIn tests", () => {
     expect(
       queryClient.getQueryState(["/api/courses/staffCourses"]).dataUpdateCount,
     ).toBe(2);
+    expect(
+      queryClient.isFetching({ queryKey: ["/api/courses/allForInstructors"] }),
+    ).toBe(0);
   });
 
   test("right message on 400", async () => {
@@ -506,5 +509,26 @@ describe("HomePageLoggedIn tests", () => {
       queryClient.getQueryState(["/api/courses/allForInstructors"]),
     ).toBeTruthy();
     expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+  });
+
+  test("toast called on instructor error", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/allForInstructors").reply(500);
+    axiosMock
+      .onGet("/api/courses/staffCourses")
+      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => expect(mockToast).toHaveBeenCalled());
   });
 });
