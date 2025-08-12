@@ -26,7 +26,10 @@ export default function JobsTable({ jobs }) {
       header: "Log",
       accessorKey: "log",
       cell: ({ cell }) => (
-        <div style={{ maxWidth: 450, maxHeight: 100, overflowY: "auto" }}>
+        <div
+          style={{ maxWidth: 450, maxHeight: 100, overflowY: "auto" }}
+          data-testid={`JobsTable-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
+        >
           <pre style={{ whiteSpace: "pre-wrap" }}>{cell.getValue()}</pre>
         </div>
       ),
@@ -35,5 +38,5 @@ export default function JobsTable({ jobs }) {
 
   const testid = "JobsTable";
 
-  return <OurTable data={jobs || []} columns={columns} testid={testid} />;
+  return <OurTable data={jobs} columns={columns} testid={testid} />;
 }

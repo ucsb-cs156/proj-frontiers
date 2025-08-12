@@ -272,7 +272,6 @@ describe("RosterStudentTable tests", () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
 
-    const axiosMock = new AxiosMockAdapter(axios);
     axiosMock
       .onDelete("/api/rosterstudents/delete")
       .reply(200, { message: "Student deleted" });

@@ -10,7 +10,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
-let axiosMock = new AxiosMockAdapter(axios);
+const axiosMock = new AxiosMockAdapter(axios);
 
 const mockToast = jest.fn();
 
