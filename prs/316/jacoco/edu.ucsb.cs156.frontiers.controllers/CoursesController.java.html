@@ -352,5 +352,36 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L352">    courseRepository.delete(course);</span>
 <span class="fc" id="L353">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
   }
+
+  /**
+   * This method updates an existing course.
+   *
+   * @param courseId the id of the course to update
+   * @param courseName the new name of the course
+   * @param term the new term of the course
+   * @param school the new school of the course
+   * @return the updated course
+   */
+  @Operation(summary = &quot;Update an existing course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PutMapping(&quot;&quot;)
+  public InstructorCourseView updateCourse(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
+      @Parameter(name = &quot;term&quot;) @RequestParam String term,
+      @Parameter(name = &quot;school&quot;) @RequestParam String school) {
+<span class="fc" id="L373">    Course course =</span>
+        courseRepository
+<span class="fc" id="L375">            .findById(courseId)</span>
+<span class="fc" id="L376">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L378">    course.setCourseName(courseName);</span>
+<span class="fc" id="L379">    course.setTerm(term);</span>
+<span class="fc" id="L380">    course.setSchool(school);</span>
+
+<span class="fc" id="L382">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L384">    return new InstructorCourseView(savedCourse);</span>
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
