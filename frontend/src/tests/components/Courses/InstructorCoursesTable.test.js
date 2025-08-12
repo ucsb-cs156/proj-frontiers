@@ -128,6 +128,10 @@ describe("InstructorCoursesTable tests", () => {
     await waitFor(() => {
       expect(window.alert).toHaveBeenCalledTimes(1);
     });
+
+    // Modal should not appear; this kills mutations of this line:
+    //   const [showModal, setShowModal] = useState(true);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   test("Has the expected column headers and content for admin user", async () => {
@@ -640,6 +644,9 @@ describe("InstructorCoursesTable tests", () => {
     await waitFor(() => {
       expect(window.location.reload).toHaveBeenCalled();
     });
+
+    // Modal should not appear at this point
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   test("Shows alert when API call fails with response error", async () => {

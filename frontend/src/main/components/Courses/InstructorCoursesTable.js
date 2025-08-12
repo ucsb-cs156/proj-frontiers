@@ -51,7 +51,7 @@ export default function InstructorCoursesTable({
 }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [newInstructorEmail, setNewInstructorEmail] = useState("");
+  const [newInstructorEmail, setNewInstructorEmail] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleShowModal = (course) => {
@@ -63,8 +63,6 @@ export default function InstructorCoursesTable({
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedCourse(null);
-    setNewInstructorEmail("");
-    setIsUpdating(false);
   };
 
   const handleUpdateInstructor = async () => {
@@ -99,7 +97,6 @@ export default function InstructorCoursesTable({
     } catch (error) {
       window.alert(`Error updating instructor: ${error.message}`);
     } finally {
-      setIsUpdating(false);
       handleCloseModal();
     }
   };
