@@ -1,5 +1,6 @@
 edu.ucsb.cs156.frontiers.jobs
 edu.ucsb.cs156.frontiers.controllers
+edu.ucsb.cs156.frontiers.interceptors
 edu.ucsb.cs156.frontiers.startup
 edu.ucsb.cs156.frontiers.config
 edu.ucsb.cs156.frontiers.utilities
