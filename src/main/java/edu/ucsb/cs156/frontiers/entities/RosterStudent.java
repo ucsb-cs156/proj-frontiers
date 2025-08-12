@@ -1,9 +1,13 @@
 package edu.ucsb.cs156.frontiers.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import jakarta.persistence.*;
+import java.util.List;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Data
 @AllArgsConstructor
@@ -37,6 +41,12 @@ public class RosterStudent {
   @JoinColumn(name = "user_id")
   @ToString.Exclude
   private User user;
+
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
+  @Fetch(FetchMode.JOIN)
+  @JsonIgnore
+  @ToString.Exclude
+  private List<TeamMember> teamMembers;
 
   @Enumerated(EnumType.STRING)
   private RosterStatus rosterStatus;
