@@ -31,7 +31,8 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,622,0,62,0,151,0,50,0,19
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,780,0,84,0,191,0,66,0,24
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.RosterSourceType,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,0,23,0,5,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.InsertStatus,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,373,0,10,0,106,0,24,0,19
