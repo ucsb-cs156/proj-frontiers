@@ -656,7 +656,7 @@ public class TeamsControllerTests extends ControllerTestCase {
         .thenReturn(Optional.of(student3));
     when(teamRepository.findByCourseIdAndName(eq(1L), eq("team1"))).thenReturn(Optional.of(team1));
     when(teamMemberRepository.findByTeamAndRosterStudent(eq(team1), eq(student3)))
-        .thenReturn(Optional.ofNullable(teamMemberFor3));
+        .thenReturn(Optional.of(teamMemberFor3));
 
     // act
     MvcResult response =
