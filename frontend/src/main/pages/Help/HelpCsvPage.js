@@ -85,10 +85,12 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>Student Last</td>
                     <td>Student Last Name</td>
+                    <td></td>
                   </tr>
                   <tr>
                     <td>Student First</td>
                     <td>Student First Name</td>
+                    <td></td>
                   </tr>
                   <tr>
                     <td>Perm #</td>
