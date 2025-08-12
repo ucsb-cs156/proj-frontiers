@@ -17,6 +17,15 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * RoleUpdateInterceptor reloads a user's security context on each request to the backend. This is
+ * necessary to ensure that the user has the correct roles and does not have to log in or out to
+ * have access to restricted endpoints.
+ *
+ * &lt;p&gt;To prevent interference with @WebMvcTest test slices, ControllerTestCase contains a
+ * passthrough RoleUpdateInterceptor MockitoBean so that every ControllerTestCase is not required to
+ * add an AdminRepository and InstructorRepository MockitoBean.
+ */
 @Component
 public class RoleUpdateInterceptor implements HandlerInterceptor {
 
@@ -25,10 +34,10 @@ public class RoleUpdateInterceptor implements HandlerInterceptor {
   private final InstructorRepository instructorRepository;
 
   public RoleUpdateInterceptor(
-<span class="fc" id="L28">      AdminRepository adminRepository, InstructorRepository instructorRepository) {</span>
-<span class="fc" id="L29">    this.adminRepository = adminRepository;</span>
-<span class="fc" id="L30">    this.instructorRepository = instructorRepository;</span>
-<span class="fc" id="L31">  }</span>
+<span class="fc" id="L37">      AdminRepository adminRepository, InstructorRepository instructorRepository) {</span>
+<span class="fc" id="L38">    this.adminRepository = adminRepository;</span>
+<span class="fc" id="L39">    this.instructorRepository = instructorRepository;</span>
+<span class="fc" id="L40">  }</span>
 
   @Override
   public boolean preHandle(
@@ -36,42 +45,42 @@ public class RoleUpdateInterceptor implements HandlerInterceptor {
     // Update user's security context on server each time the user makes HTTP request to the backend
     // If user has admin or instructor status in database, we will update their roles in security
     // context
-<span class="fc" id="L39">    SecurityContext securityContext = SecurityContextHolder.getContext();</span>
-<span class="fc" id="L40">    Authentication authentication = securityContext.getAuthentication();</span>
+<span class="fc" id="L48">    SecurityContext securityContext = SecurityContextHolder.getContext();</span>
+<span class="fc" id="L49">    Authentication authentication = securityContext.getAuthentication();</span>
 
-<span class="fc bfc" id="L42" title="All 2 branches covered.">    if (authentication instanceof OAuth2AuthenticationToken) {</span>
-<span class="fc" id="L43">      OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;</span>
-<span class="fc bfc" id="L44" title="All 2 branches covered.">      if (oauthToken.getPrincipal() instanceof OidcUser) {</span>
-<span class="fc" id="L45">        OidcUser oidcUser = (OidcUser) oauthToken.getPrincipal();</span>
-<span class="fc" id="L46">        String email = oidcUser.getEmail();</span>
-<span class="fc" id="L47">        Set&lt;GrantedAuthority&gt; newAuthorities = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L48">        Collection&lt;? extends GrantedAuthority&gt; currentAuthorities = authentication.getAuthorities();</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">    if (authentication instanceof OAuth2AuthenticationToken) {</span>
+<span class="fc" id="L52">      OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">      if (oauthToken.getPrincipal() instanceof OidcUser) {</span>
+<span class="fc" id="L54">        OidcUser oidcUser = (OidcUser) oauthToken.getPrincipal();</span>
+<span class="fc" id="L55">        String email = oidcUser.getEmail();</span>
+<span class="fc" id="L56">        Set&lt;GrantedAuthority&gt; newAuthorities = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L57">        Collection&lt;? extends GrantedAuthority&gt; currentAuthorities = authentication.getAuthorities();</span>
 
         // Copy all existing authorities except ROLE_ADMIN and ROLE_INSTRUCTOR
-<span class="fc" id="L51">        currentAuthorities.stream()</span>
-<span class="fc" id="L52">            .filter(</span>
+<span class="fc" id="L60">        currentAuthorities.stream()</span>
+<span class="fc" id="L61">            .filter(</span>
                 authority -&gt;
-<span class="fc bfc" id="L54" title="All 2 branches covered.">                    !authority.getAuthority().equals(&quot;ROLE_ADMIN&quot;)</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">                        &amp;&amp; !authority.getAuthority().equals(&quot;ROLE_INSTRUCTOR&quot;))</span>
-<span class="fc" id="L56">            .forEach(newAuthorities::add);</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                    !authority.getAuthority().equals(&quot;ROLE_ADMIN&quot;)</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                        &amp;&amp; !authority.getAuthority().equals(&quot;ROLE_INSTRUCTOR&quot;))</span>
+<span class="fc" id="L65">            .forEach(newAuthorities::add);</span>
 
         // Check if user is admin or instructor and add appropriate role
-<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (adminRepository.existsByEmail(email)) {</span>
-<span class="fc" id="L60">          newAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_ADMIN&quot;));</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">        } else if (instructorRepository.existsByEmail(email)) {</span>
-<span class="fc" id="L62">          newAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_INSTRUCTOR&quot;));</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (adminRepository.existsByEmail(email)) {</span>
+<span class="fc" id="L69">          newAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_ADMIN&quot;));</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        } else if (instructorRepository.existsByEmail(email)) {</span>
+<span class="fc" id="L71">          newAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_INSTRUCTOR&quot;));</span>
         }
 
         // Create new authentication with updated authorities
-<span class="fc" id="L66">        Authentication newAuth =</span>
+<span class="fc" id="L75">        Authentication newAuth =</span>
             new OAuth2AuthenticationToken(
-<span class="fc" id="L68">                oidcUser, newAuthorities, oauthToken.getAuthorizedClientRegistrationId());</span>
+<span class="fc" id="L77">                oidcUser, newAuthorities, oauthToken.getAuthorizedClientRegistrationId());</span>
 
-<span class="fc" id="L70">        SecurityContextHolder.getContext().setAuthentication(newAuth);</span>
+<span class="fc" id="L79">        SecurityContextHolder.getContext().setAuthentication(newAuth);</span>
       }
     }
 
-<span class="fc" id="L74">    return true;</span>
+<span class="fc" id="L83">    return true;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
