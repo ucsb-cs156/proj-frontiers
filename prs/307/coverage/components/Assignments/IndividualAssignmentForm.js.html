@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Users/RoleEmailForm.js</title>
+    <title>Code coverage report for components/Assignments/IndividualAssignmentForm.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Users</a> RoleEmailForm.js</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Assignments</a> IndividualAssignmentForm.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/6</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>3/3</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Functions</span>
                 <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>1/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -118,7 +118,15 @@
 <a name='L53'></a><a href='#L53'>53</a>
 <a name='L54'></a><a href='#L54'>54</a>
 <a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -126,27 +134,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -163,7 +153,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -173,61 +162,96 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Button, Form } from "react-bootstrap";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useForm } from "react-hook-form";
+import { Button, Form } from "react-bootstrap";
 &nbsp;
-function RoleEmailForm({ submitAction, buttonLabel = "Create" }) {
-  // Stryker disable all
+export default function IndividualAssignmentForm({ submitAction }) {
   const {
     register,
     formState: { errors },
     handleSubmit,
   } = useForm();
-  // Stryker restore all
-&nbsp;
-  const navigate = useNavigate();
-&nbsp;
-  const testIdPrefix = "RoleEmailForm";
-&nbsp;
-  // Stryker disable next-line Regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 &nbsp;
   return (
-    &lt;Form onSubmit={handleSubmit(submitAction)}&gt;
-      &lt;Form.Group className="mb-3"&gt;
-        &lt;Form.Label htmlFor="email"&gt;Email&lt;/Form.Label&gt;
+    &lt;Form
+      onSubmit={handleSubmit(submitAction)}
+      data-testid="IndividualAssignmentForm"
+    &gt;
+      &lt;Form.Group&gt;
+        &lt;Form.Label htmlFor="repoPrefix"&gt;Repository Prefix&lt;/Form.Label&gt;
         &lt;Form.Control
-          // Stryker disable next-line all
-          data-testid={testIdPrefix + "-email"}
-          id="email"
+          id="repoPrefix"
           type="text"
-          isInvalid={Boolean(errors.email)}
-          {...register("email", {
-            required: "Email is required.",
-            pattern: emailRegex,
+          isInvalid={Boolean(errors.repoPrefix)}
+          data-testid="IndividualAssignmentForm-repoPrefix"
+          {...register("repoPrefix", {
+            required: "Repository Prefix is required.",
           })}
         /&gt;
         &lt;Form.Control.Feedback type="invalid"&gt;
-          {errors.email &amp;&amp; "A valid email is required."}
+          {errors.repoPrefix?.message}
         &lt;/Form.Control.Feedback&gt;
       &lt;/Form.Group&gt;
-&nbsp;
-      &lt;Button type="submit" data-testid={testIdPrefix + "-submit"}&gt;
-        {buttonLabel}
-      &lt;/Button&gt;
-      &lt;Button
-        variant="Secondary"
-        onClick={() =&gt; navigate(-1)}
-        data-testid={testIdPrefix + "-cancel"}
-      &gt;
-        Cancel
-      &lt;/Button&gt;
+      &lt;Form.Group className="mb-3"&gt;
+        &lt;Form.Label htmlFor="assignmentPrivacy"&gt;
+          Private Repositories?
+        &lt;/Form.Label&gt;
+        &lt;Form.Check
+          id="assignmentPrivacy"
+          type="checkbox"
+          data-testid="IndividualAssignmentForm-assignmentPrivacy"
+          {...register("assignmentPrivacy")}
+        /&gt;
+      &lt;/Form.Group&gt;
+      &lt;Form.Group className="mb-3"&gt;
+        &lt;Form.Label htmlFor="permissions"&gt;Student Permissions&lt;/Form.Label&gt;
+        &lt;Form.Control
+          as="select"
+          defaultValue={"MAINTAIN"}
+          data-testid={"IndividualAssignmentForm-permissions"}
+          {...register("permissions")}
+        &gt;
+          &lt;option value="READ"&gt;Read&lt;/option&gt;
+          &lt;option value="WRITE"&gt;Write&lt;/option&gt;
+          &lt;option value="MAINTAIN"&gt;Maintain&lt;/option&gt;
+          &lt;option value="ADMIN"&gt;Admin&lt;/option&gt;
+        &lt;/Form.Control&gt;
+      &lt;/Form.Group&gt;
+      &lt;Form.Group&gt;
+        &lt;Button type="submit" data-testid="IndividualAssignmentForm-submit"&gt;
+          Create
+        &lt;/Button&gt;
+      &lt;/Form.Group&gt;
     &lt;/Form&gt;
   );
 }
-&nbsp;
-export default RoleEmailForm;
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
