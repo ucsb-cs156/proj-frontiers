@@ -8,7 +8,6 @@ export default function CourseStaffTable({
   courseId,
   testIdPrefix = "CourseStaffTable",
 }) {
-
   const columns = [
     {
       header: "id",

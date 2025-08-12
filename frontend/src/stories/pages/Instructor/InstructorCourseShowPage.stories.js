@@ -10,6 +10,7 @@ import {
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -34,6 +35,7 @@ const exampleCourse = {
 };
 
 const rosterStudents = rosterStudentFixtures.threeStudents;
+const courseStaff = courseStaffFixtures.threeStaff;
 
 export const ExampleCourseNoStudents = Template.bind({});
 ExampleCourseNoStudents.args = {
@@ -60,6 +62,16 @@ ExampleCourseNoStudents.parameters = {
         return HttpResponse.json([], {
           status: 200,
         });
+      }),
+      http.get("/api/coursestaff/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        if (courseId === "7") {
+          return HttpResponse.json([], {
+            status: 200,
+          });
+        }
+        return HttpResponse.json([], { status: 200 });
       }),
       http.post("/api/repos/createRepos", () => {
         return HttpResponse.json([], {
@@ -95,6 +107,16 @@ ExampleCourseThreeStudents.parameters = {
         return HttpResponse.json(rosterStudents, {
           status: 200,
         });
+      }),
+      http.get("/api/coursestaff/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        if (courseId === "7") {
+          return HttpResponse.json(courseStaff, {
+            status: 200,
+          });
+        }
+        return HttpResponse.json([], { status: 200 });
       }),
       http.delete("/api/rosterstudents/delete", ({ request }) => {
         const url = new URL(request.url);

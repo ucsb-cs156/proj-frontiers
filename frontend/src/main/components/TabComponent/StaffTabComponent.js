@@ -66,7 +66,7 @@ export default function StaffTabComponent({
   };
 
   const downloadCsv = () => {
-    // No-op for now since backend doesn't support this yet  
+    // No-op for now since backend doesn't support this yet
   };
 
   // Render tooltip for disabled buttons
@@ -123,17 +123,14 @@ export default function StaffTabComponent({
       </Row>
       <Row sm={3} className="p-2">
         <Col>
-          <OverlayTrigger
-            placement="top"
-            overlay={renderComingSoonTooltip}
-          >
+          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
             <span className="d-inline-block w-100">
               <Button
                 onClick={() => showCsvModal(true)}
                 data-testid={`${testIdPrefix}-csv-button`}
                 className="w-100"
                 disabled
-                style={{ pointerEvents: 'none' }}
+                style={{ pointerEvents: "none" }}
               >
                 Upload CSV Roster
               </Button>
@@ -150,16 +147,13 @@ export default function StaffTabComponent({
           </Button>
         </Col>
         <Col>
-          <OverlayTrigger
-            placement="top"
-            overlay={renderComingSoonTooltip}
-          >
+          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
             <span className="d-inline-block w-100">
               <Button
                 onClick={downloadCsv}
                 className="w-100"
                 disabled
-                style={{ pointerEvents: 'none' }}
+                style={{ pointerEvents: "none" }}
               >
                 Download Staff CSV
               </Button>
