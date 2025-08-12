@@ -202,8 +202,7 @@ describe("InstructorCoursesTable tests", () => {
 
     expect(window.location.href).toBe("/api/courses/redirect?courseId=3");
   });
-
-  test("Tests for GitHub link and icon", async () => {
+  test("Tests for GitHub link", async () => {
     render(
       <BrowserRouter>
         <InstructorCoursesTable
@@ -214,13 +213,6 @@ describe("InstructorCoursesTable tests", () => {
       </BrowserRouter>,
     );
 
-    const githubIcon = screen.getByTestId(
-      `CoursesTable-cell-row-0-col-orgName-github-icon`,
-    );
-    expect(githubIcon).toBeInTheDocument();
-    expect(githubIcon).toHaveAttribute("height", "1.5em");
-    expect(githubIcon).toHaveAttribute("width", "1.5em");
-
     const githubLink = screen.getByTestId(
       `CoursesTable-cell-row-0-col-orgName-github-settings-link`,
     );
@@ -230,7 +222,46 @@ describe("InstructorCoursesTable tests", () => {
       "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
     );
   });
+  test("tests for GitHub Settings icon", async () => {
+    render(
+      <BrowserRouter>
+        <InstructorCoursesTable
+          courses={coursesFixtures.severalCourses}
+          currentUser={currentUserFixtures.instructorUser}
+          storybook={false}
+        />
+      </BrowserRouter>,
+    );
 
+    const githubSettingsIcon = screen.getByTestId(
+      `CoursesTable-cell-row-0-col-orgName-gear-github-icon`,
+    );
+    expect(githubSettingsIcon).toBeInTheDocument();
+    expect(githubSettingsIcon).toHaveStyle({
+      display: "absolute",
+      alignItems: "inline-block",
+    });
+
+    const githubIcon = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-orgName-gear-github-icon-github-icon",
+    );
+    expect(githubIcon).toBeInTheDocument();
+    expect(githubIcon).toHaveAttribute("width", "24");
+    expect(githubIcon).toHaveAttribute("height", "24");
+    expect(githubIcon).toHaveStyle({ color: "black" });
+
+    const settingsIcon = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-orgName-gear-github-icon-settings-icon",
+    );
+    expect(settingsIcon).toBeInTheDocument();
+    expect(settingsIcon).toHaveAttribute("width", "16");
+    expect(settingsIcon).toHaveAttribute("height", "16");
+    expect(settingsIcon).toHaveStyle({ color: "blue" });
+    expect(settingsIcon).toHaveStyle({ position: "relative" });
+    expect(settingsIcon).toHaveStyle({ top: "0px" });
+    expect(settingsIcon).toHaveStyle({ left: "0px" });
+    expect(settingsIcon).toHaveStyle({ transform: "translate(-15%, 60%)" });
+  });
   test("Tests that when storybook is false by default all works as expected", async () => {
     render(
       <BrowserRouter>
@@ -300,13 +331,13 @@ describe("InstructorCoursesTable tests", () => {
     );
 
     const githubIcon = screen.getByTestId(
-      `CoursesTable-cell-row-0-col-orgName-github-icon`,
+      `CoursesTable-cell-row-0-col-orgName-gear-github-icon`,
     );
 
     fireEvent.mouseOver(githubIcon);
 
     const tooltip = await screen.findByRole("tooltip");
-    expect(tooltip).toHaveAttribute("id", "tooltip-githubicon-0");
+    expect(tooltip).toHaveAttribute("id", "tooltip-geargithubicon-0");
   });
   test("the correct tooltip renders for courseName", async () => {
     render(
@@ -335,12 +366,11 @@ describe("InstructorCoursesTable tests", () => {
         />
       </BrowserRouter>,
     );
-
     fireEvent.mouseOver(screen.getByText("wsu-cpts489-fa20"));
 
     await waitFor(() => {
       expect(
-        screen.getByText("View GitHub organization: wsu-cpts489-fa20"),
+        screen.getByText("View organization associated with CPTS 489."),
       ).toBeInTheDocument();
     });
   });
@@ -359,13 +389,11 @@ describe("InstructorCoursesTable tests", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          "Click to install the GitHub app for the course: CMPSC 156",
-        ),
+        screen.getByText("Click to install the GitHub app for CMPSC 156"),
       ).toBeInTheDocument();
     });
   });
-  test("the correct tooltip renders for GitHub icon (that redirects to github installation settings)", async () => {
+  test("the correct tooltip renders for GitHub Settings icon (that redirects to github installation settings)", async () => {
     render(
       <BrowserRouter>
         <InstructorCoursesTable
@@ -377,7 +405,7 @@ describe("InstructorCoursesTable tests", () => {
     );
 
     const githubIcon = screen.getByTestId(
-      `CoursesTable-cell-row-0-col-orgName-github-icon`,
+      `CoursesTable-cell-row-0-col-orgName-gear-github-icon`,
     );
 
     fireEvent.mouseOver(githubIcon);
@@ -385,7 +413,7 @@ describe("InstructorCoursesTable tests", () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          "Manage installation settings for the frontiers app, including the option to uninstall it from this GitHub organization.",
+          "Manage settings for association between your GitHub organization and this web application.",
         ),
       ).toBeInTheDocument();
     });

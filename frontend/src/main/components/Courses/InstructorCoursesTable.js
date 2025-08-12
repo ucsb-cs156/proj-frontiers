@@ -1,7 +1,7 @@
 import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
-import { FaGithub } from "react-icons/fa";
+import { FaGear, FaGithub } from "react-icons/fa6";
 import { Link } from "react-router";
 
 const columns = [
@@ -78,14 +78,43 @@ export default function InstructorCoursesTable({
     let set_message;
     const result = canInstall(cell.row);
     if (result) {
-      set_message = `Click to install the GitHub app for the course: ${cell.row.original.courseName}`;
+      set_message = `Click to install the GitHub app for ${cell.row.original.courseName}`;
     } else {
-      set_message = `View GitHub organization: ${cell.row.original.orgName}`;
+      set_message = `View organization associated with ${cell.row.original.courseName}.`;
     }
     return (
       <Tooltip id={`tooltip-orgname-${cell.row.index}`}>{set_message}</Tooltip>
     );
   };
+
+  const GithubSettingIcon = ({
+    size = 24,
+    gearColor = "blue",
+    githubColor = "black",
+    "data-testid": dataTestId,
+  }) => (
+    <span
+      style={{ display: "absolute", alignItems: "inline-block" }}
+      data-testid={dataTestId}
+    >
+      <FaGithub
+        size={size}
+        color={githubColor}
+        data-testid={`${dataTestId}-github-icon`}
+      />
+      <FaGear
+        size={size / 1.5}
+        color={gearColor}
+        data-testid={`${dataTestId}-settings-icon`}
+        style={{
+          position: "relative",
+          top: 0,
+          left: 0,
+          transform: "translate(-15%, 60%)",
+        }}
+      />
+    </span>
+  );
 
   const columnsWithInstall = [
     ...columns,
@@ -139,10 +168,9 @@ export default function InstructorCoursesTable({
               <OverlayTrigger
                 placement="right"
                 overlay={
-                  <Tooltip id={`tooltip-githubicon-${cell.row.index}`}>
-                    Manage installation settings for the frontiers app,
-                    including the option to uninstall it from this GitHub
-                    organization.
+                  <Tooltip id={`tooltip-geargithubicon-${cell.row.index}`}>
+                    Manage settings for association between your GitHub
+                    organization and this web application.
                   </Tooltip>
                 }
               >
@@ -153,9 +181,9 @@ export default function InstructorCoursesTable({
                     rel="noopener noreferrer"
                     data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-settings-link`}
                   >
-                    <FaGithub
-                      size={"1.5em"}
-                      data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-github-icon`}
+                    <GithubSettingIcon
+                      size={24}
+                      data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-gear-github-icon`}
                     />
                   </a>
                 </span>
