@@ -14,6 +14,7 @@ import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
+import AdminJobsPage from "main/pages/Admin/AdminJobsPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
@@ -22,6 +23,8 @@ import ProtectedPage from "main/pages/Auth/ProtectedPage";
 import HomePageLoggedOut from "main/pages/HomePageLoggedOut";
 import SignInPage from "main/pages/Auth/SignInPage";
 import NotFoundPage from "main/pages/Auth/NotFoundPage";
+import HelpAboutPage from "main/pages/Help/HelpAboutPage";
+import HelpCsvPage from "main/pages/Help/HelpCsvPage";
 
 function App() {
   const currentUser = useCurrentUser();
@@ -31,6 +34,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePageConnectGithub />} />
+          <Route path="/help/about" element={<HelpAboutPage />} />
+          <Route path="/help/csv" element={<HelpCsvPage />} />
           <Route path="*" element={<HomePageConnectGithub />} />
           <Route path="/login/success" element={<SignInSuccessPage />} />
         </Routes>
@@ -50,6 +55,8 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/login" element={<SignInPage />} />
         <Route path="/" element={homePage} />
+        <Route path="/help/about" element={<HelpAboutPage />} />
+        <Route path="/help/csv" element={<HelpCsvPage />} />
         <Route
           path="/profile"
           element={
@@ -115,6 +122,16 @@ function App() {
           element={
             <ProtectedPage
               component={<CoursesIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/jobs"
+          element={
+            <ProtectedPage
+              component={<AdminJobsPage />}
               enforceRole={"ROLE_ADMIN"}
               currentUser={currentUser}
             />

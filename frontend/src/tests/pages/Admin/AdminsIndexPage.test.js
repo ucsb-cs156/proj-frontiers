@@ -90,12 +90,6 @@ describe("AdminsIndexPage tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-delete-button`),
     ).toBeInTheDocument();
 
-    // Write a test to find the
-    //    <p>
-    //      Note: Initial admins that are set in the <code>ADMIN_EMAILS</code>{" "}
-    //      configuration cannot be deleted through the application.
-    //    </p>
-
     expect(
       screen.getByText(/Note: Initial admins that are set in the /i),
     ).toBeInTheDocument();

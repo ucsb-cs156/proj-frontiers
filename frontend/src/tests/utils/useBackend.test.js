@@ -111,6 +111,40 @@ describe("utils/useBackend tests", () => {
       );
       expect(mockToast).not.toHaveBeenCalled();
     });
+    test("useBackend handles disabled correctly", async () => {
+      // See: https://react-query.tanstack.com/guides/testing#turn-off-retries
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: {
+            // ✅ turns retries off
+            retry: false,
+          },
+        },
+      });
+      const wrapper = ({ children }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+
+      var axiosMock = new AxiosMockAdapter(axios);
+
+      axiosMock.onGet("/api/admin/users").reply(404, {});
+
+      const { result } = renderHook(
+        () =>
+          useBackend(
+            ["/api/admin/users"],
+            { method: "GET", url: "/api/admin/users" },
+            ["initialData"],
+            false,
+            { enabled: false },
+          ),
+        { wrapper },
+      );
+
+      expect(result.current.isLoading).toBe(false);
+    });
   });
   describe("utils/useBackend useBackendMutation tests", () => {
     test("useBackendMutation handles success correctly", async () => {

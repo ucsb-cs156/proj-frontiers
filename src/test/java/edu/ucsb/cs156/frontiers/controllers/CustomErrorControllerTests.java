@@ -8,6 +8,7 @@ import jakarta.servlet.RequestDispatcher;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = CustomErrorController.class)
@@ -21,7 +22,8 @@ public class CustomErrorControllerTests extends ControllerTestCase {
             .perform(
                 get("/error")
                     .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 404)
-                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/some-non-existent-page"))
+                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/some-non-existent-page")
+                    .accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())
             .andExpect(view().name("error"))
             .andExpect(model().attributeExists("status", "error", "message", "timestamp", "path"))
@@ -43,7 +45,8 @@ public class CustomErrorControllerTests extends ControllerTestCase {
             .perform(
                 get("/error")
                     .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 403)
-                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/admin/something"))
+                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/admin/something")
+                    .accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())
             .andExpect(view().name("error"))
             .andExpect(model().attributeExists("status", "error", "message", "timestamp", "path"))
@@ -65,7 +68,8 @@ public class CustomErrorControllerTests extends ControllerTestCase {
                 get("/error")
                     .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 500)
                     .requestAttr(RequestDispatcher.ERROR_EXCEPTION, testException)
-                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/api/something"))
+                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/api/something")
+                    .accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())
             .andExpect(view().name("error"))
             .andExpect(
@@ -94,7 +98,8 @@ public class CustomErrorControllerTests extends ControllerTestCase {
             .perform(
                 get("/error")
                     .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/some-path")
-                    .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 400))
+                    .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 400)
+                    .accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())
             .andExpect(view().name("error"))
             .andExpect(model().attributeExists("status", "error", "message", "timestamp", "path"))
@@ -112,7 +117,8 @@ public class CustomErrorControllerTests extends ControllerTestCase {
             .perform(
                 get("/error")
                     .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 500)
-                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/api/something"))
+                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/api/something")
+                    .accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())
             .andExpect(view().name("error"))
             .andExpect(
@@ -130,7 +136,9 @@ public class CustomErrorControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                get("/error").requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/api/something"))
+                get("/error")
+                    .requestAttr(RequestDispatcher.ERROR_REQUEST_URI, "/api/something")
+                    .accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())
             .andExpect(view().name("error"))
             .andExpect(
