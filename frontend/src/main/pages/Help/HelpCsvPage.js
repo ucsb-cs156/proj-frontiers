@@ -38,7 +38,7 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>Student Name</td>
                     <td>Student Last Name</td>
-                    <td colSpan="2">
+                    <td>
                       We split the name at the last space; instructors may have
                       to correct this for some students.
                     </td>
@@ -46,6 +46,7 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>Student Name</td>
                     <td>Student First Name</td>
+                    <td>See above.</td>
                   </tr>
                   <tr>
                     <td>Student SIS ID</td>
