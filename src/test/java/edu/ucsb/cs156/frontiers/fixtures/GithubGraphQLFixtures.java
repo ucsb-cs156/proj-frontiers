@@ -1,17 +1,14 @@
 package edu.ucsb.cs156.frontiers.fixtures;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 
 public class GithubGraphQLFixtures {
 
-
-
-
   public static final ObjectMapper objectMapper = new ObjectMapper();
-  public static final String COMMITS_RESPONSE = """
+  public static final String COMMITS_RESPONSE =
+      """
       {
         "repository" : {
           "ref" : {
@@ -67,15 +64,14 @@ public class GithubGraphQLFixtures {
       }
       """;
 
-  
   public static final Map<String, Object> COMMITS_RESPONSE_MAP;
+
   static {
     try {
-      COMMITS_RESPONSE_MAP = objectMapper.readValue(COMMITS_RESPONSE,
-        new TypeReference<Map<String, Object>>() {});
+      COMMITS_RESPONSE_MAP =
+          objectMapper.readValue(COMMITS_RESPONSE, new TypeReference<Map<String, Object>>() {});
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
-
 }
