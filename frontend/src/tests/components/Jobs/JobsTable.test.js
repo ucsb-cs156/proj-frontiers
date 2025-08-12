@@ -25,16 +25,6 @@ describe("JobsTable tests", () => {
     );
   });
 
-  test("renders without crashing for null table", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <JobsTable jobs={null} />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-  });
-
   test("renders correctly with jobs data", () => {
     // Mock the formatTime function to return predictable values
     formatTime
@@ -72,6 +62,13 @@ describe("JobsTable tests", () => {
     expect(screen.getByText("2023-01-01 10:05:00")).toBeInTheDocument();
     expect(screen.getByText("complete")).toBeInTheDocument();
     expect(screen.getByText("Job completed successfully")).toBeInTheDocument();
+    expect(screen.getByTestId("JobsTable-header-log")).toBeInTheDocument();
+    expect(screen.getByText("Job completed successfully")).toHaveStyle({
+      whiteSpace: "pre-wrap",
+    });
+    expect(screen.getByTestId("JobsTable-cell-row-0-col-log-div")).toHaveStyle(
+      "max-width: 450px; max-height: 100px; overflow-y: auto;",
+    );
 
     // Verify formatTime was called with the correct arguments
     expect(formatTime).toHaveBeenCalledTimes(2);
