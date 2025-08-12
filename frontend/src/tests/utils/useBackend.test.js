@@ -24,7 +24,7 @@ describe("utils/useBackend tests", () => {
     console.error.mockImplementation(() => null);
     axiosMock.reset();
     axiosMock.resetHistory();
-    mockToast.mockClear();
+    mockToast.mockReset();
   });
 
   afterEach(() => {
@@ -126,8 +126,6 @@ describe("utils/useBackend tests", () => {
           {children}
         </QueryClientProvider>
       );
-
-      var axiosMock = new AxiosMockAdapter(axios);
 
       axiosMock.onGet("/api/admin/users").reply(404, {});
 
