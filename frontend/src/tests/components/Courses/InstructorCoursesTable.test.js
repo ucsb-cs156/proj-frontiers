@@ -640,19 +640,16 @@ describe("InstructorCoursesTable tests", () => {
       </BrowserRouter>,
     );
 
-<<<<<<< HEAD
     const instructorEmailButton = screen.getByTestId(
       `${testId}-cell-row-0-col-instructorEmail-button`,
-=======
+    );
     const githubIcon = screen.getByTestId(
       `CoursesTable-cell-row-0-col-orgName-gear-github-icon`,
->>>>>>> origin/main
     );
 
     fireEvent.click(instructorEmailButton);
 
     await waitFor(() => {
-<<<<<<< HEAD
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
@@ -699,6 +696,12 @@ describe("InstructorCoursesTable tests", () => {
       </BrowserRouter>,
     );
 
+    // expect(
+    //   screen.getByText(
+    //     "Manage settings for association between your GitHub organization and this web application.",
+    //   ),
+    // ).toBeInTheDocument();
+
     const instructorEmailButton = screen.getByTestId(
       `${testId}-cell-row-0-col-instructorEmail-button`,
     );
@@ -721,13 +724,6 @@ describe("InstructorCoursesTable tests", () => {
       expect(window.alert).toHaveBeenCalledWith(
         "Error updating instructor: Email not found",
       );
-=======
-      expect(
-        screen.getByText(
-          "Manage settings for association between your GitHub organization and this web application.",
-        ),
-      ).toBeInTheDocument();
->>>>>>> origin/main
     });
   });
 
