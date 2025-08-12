@@ -4,21 +4,21 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * Controller for testing the custom error page.
- * This controller intentionally throws exceptions to trigger the error page.
+ * Controller for testing the custom error page. This controller intentionally throws exceptions to
+ * trigger the error page.
  */
 @Controller
 <span class="fc" id="L11">public class TestErrorController {</span>
 
-    /**
-     * Endpoint that intentionally throws a RuntimeException to test the custom error page.
-     * 
-     * @return This method never returns normally as it always throws an exception
-     * @throws RuntimeException always thrown to trigger the error page
-     */
-    @GetMapping(&quot;/test-error&quot;)
-    public String testError() {
-<span class="fc" id="L21">        throw new RuntimeException(&quot;This is a test exception to trigger the custom error page&quot;);</span>
-    }
+  /**
+   * Endpoint that intentionally throws a RuntimeException to test the custom error page.
+   *
+   * @return This method never returns normally as it always throws an exception
+   * @throws RuntimeException always thrown to trigger the error page
+   */
+  @GetMapping(&quot;/test-error&quot;)
+  public String testError() {
+<span class="fc" id="L21">    throw new RuntimeException(&quot;This is a test exception to trigger the custom error page&quot;);</span>
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
