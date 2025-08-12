@@ -9,7 +9,8 @@
   ],
   "coverageAnalysis": "off",
   "jest": {
-    "projectType": "create-react-app"
+    "projectType": "custom",
+    "configFile": "./jest.config.js"
   },
   "mutate": [
     "src/main/**/*.js",
