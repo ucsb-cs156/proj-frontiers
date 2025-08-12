@@ -42,7 +42,7 @@ public class RosterStudent {
   @ToString.Exclude
   private User user;
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "rosterStudent")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
   @ToString.Exclude
