@@ -352,4 +352,35 @@ public class CoursesController extends ApiController {
     courseRepository.delete(course);
     return genericMessage("Course with id %s deleted".formatted(course.getId()));
   }
+
+  /**
+   * This method updates an existing course.
+   *
+   * @param courseId the id of the course to update
+   * @param courseName the new name of the course
+   * @param term the new term of the course
+   * @param school the new school of the course
+   * @return the updated course
+   */
+  @Operation(summary = "Update an existing course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("")
+  public InstructorCourseView updateCourse(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "courseName") @RequestParam String courseName,
+      @Parameter(name = "term") @RequestParam String term,
+      @Parameter(name = "school") @RequestParam String school) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    course.setCourseName(courseName);
+    course.setTerm(term);
+    course.setSchool(school);
+
+    Course savedCourse = courseRepository.save(course);
+
+    return new InstructorCourseView(savedCourse);
+  }
 }
