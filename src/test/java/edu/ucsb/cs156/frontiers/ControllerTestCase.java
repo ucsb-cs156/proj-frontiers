@@ -44,6 +44,16 @@ public abstract class ControllerTestCase {
     return mapper.readValue(responseString, Map.class);
   }
 
+  /**
+   * To prevent interference with @WebMvcTest test slices, ControllerTestCase contains a passthrough
+   * RoleUpdateInterceptor MockitoBean so that every ControllerTestCase is not required to add an
+   * AdminRepository and InstructorRepository MockitoBean.
+   *
+   * <p>As a MockitoBean, it does not require any dependencies. Since it is an antipattern to mark
+   * RoleUpdateInterceptor as a Service (as it is not one), it must be a Component. Components are
+   * consistently loaded into the context. Since it requires the Repositories (even if it remains
+   * unused), the context would throw an error. As a MockitoBean, the dependencies are ignored.
+   */
   @PostConstruct
   void passthroughInterceptor() throws Exception {
     when(roleUpdateInterceptor.preHandle(any(), any(), any())).thenReturn(true);

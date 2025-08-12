@@ -17,6 +17,15 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * RoleUpdateInterceptor reloads a user's security context on each request to the backend. This is
+ * necessary to ensure that the user has the correct roles and does not have to log in or out to
+ * have access to restricted endpoints.
+ *
+ * <p>To prevent interference with @WebMvcTest test slices, ControllerTestCase contains a
+ * passthrough RoleUpdateInterceptor MockitoBean so that every ControllerTestCase is not required to
+ * add an AdminRepository and InstructorRepository MockitoBean.
+ */
 @Component
 public class RoleUpdateInterceptor implements HandlerInterceptor {
 
