@@ -1,5 +1,5 @@
 import React from "react";
-import { rest } from "msw";
+import { HttpResponse, http } from "msw";
 import AdminJobsPage from "main/pages/Admin/AdminJobsPage";
 import { jobsFixtures } from "fixtures/jobsFixtures";
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
@@ -9,42 +9,40 @@ export default {
   title: "pages/Admin/AdminJobsPage",
   component: AdminJobsPage,
   parameters: {
-    msw: [
-      rest.get("/api/currentUser", (_req, res, ctx) => {
-        return res(ctx.json(apiCurrentUserFixtures.adminUser));
-      }),
-      rest.get("/api/systemInfo", (_req, res, ctx) => {
-        return res(ctx.json(systemInfoFixtures.showingNeither));
-      }),
-      rest.get("/api/jobs/all", (_req, res, ctx) => {
-        return res(ctx.json(jobsFixtures.threeJobs));
-      }),
-      rest.post("/api/jobs/launch/updateAll", (_req, res, ctx) => {
-        return res(
-          ctx.json({
+    msw: {
+      handlers: [
+        http.get("/api/currentUser", () => {
+          return HttpResponse.json(apiCurrentUserFixtures.adminUser);
+        }),
+        http.get("/api/systemInfo", () => {
+          return HttpResponse.json(systemInfoFixtures.showingNeither);
+        }),
+        http.get("/api/jobs/all", () => {
+          return HttpResponse.json(jobsFixtures.threeJobs);
+        }),
+        http.post("/api/jobs/launch/updateAll", () => {
+          return HttpResponse.json({
             id: 4,
             createdAt: "2023-01-04T10:00:00",
             updatedAt: "2023-01-04T10:00:00",
             status: "running",
             log: "Job is starting...",
-          }),
-        );
-      }),
-      rest.post("/api/jobs/launch/auditAllCourses", (_req, res, ctx) => {
-        return res(
-          ctx.json({
+          });
+        }),
+        http.post("/api/jobs/launch/auditAllCourses", () => {
+          return HttpResponse.json({
             id: 5,
             createdAt: "2023-01-05T10:00:00",
             updatedAt: "2023-01-05T10:00:00",
             status: "running",
             log: "Job is starting...",
-          }),
-        );
-      }),
-      rest.delete("/api/jobs/all", (_req, res, ctx) => {
-        return res(ctx.json({ message: "All jobs deleted" }));
-      }),
-    ],
+          });
+        }),
+        http.delete("/api/jobs/all", () => {
+          return HttpResponse.json({ message: "All jobs deleted" });
+        }),
+      ],
+    },
   },
 };
 
