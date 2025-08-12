@@ -27,6 +27,5 @@ describe("HelpAboutPage tests", () => {
       </QueryClientProvider>,
     );
     await screen.findByText(/About Frontiers/);
-    await screen.findByText(/Coming soon/);
   });
 });

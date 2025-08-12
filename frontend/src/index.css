@@ -21,3 +21,10 @@ code {
 .narrow-dropdown .dropdown-menu {
   width: min-content;
 }
+
+.csvExample {
+  white-space: pre-wrap; /* Allows the text to wrap */
+  word-break: break-all; /* Breaks long words */
+  font-family: monospace; /* Ensures consistent spacing */
+  font-size: 0.8em; /* Smaller font size for better readability */
+} 
