@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -70,6 +71,44 @@ public class RosterStudentsController extends ApiController {
   @Autowired private UpdateUserService updateUserService;
 
   @Autowired private CurrentUserService currentUserService;
+
+  public enum RosterSourceType {
+    UCSB_EGRADES,
+    CHICO_CANVAS,
+    UNKNOWN
+  }
+
+  public static final String UCSB_EGRADES_HEADERS =
+      "Enrl Cd,Perm #,Grade,Final Units,Student Last,Student First Middle,Quarter,Course ID,Section,Meeting Time(s) / Location(s),Email,ClassLevel,Major1,Major2,Date/Time,Pronoun";
+  public static final String CHICO_CANVAS_HEADERS =
+      "Student Name,Student ID,Student SIS ID,Email,Section Name";
+
+  public static RosterSourceType getRosterSourceType(String[] headers) {
+
+    Map<RosterSourceType, String[]> sourceTypeToHeaders = new HashMap<>();
+
+    sourceTypeToHeaders.put(RosterSourceType.UCSB_EGRADES, UCSB_EGRADES_HEADERS.split(","));
+    sourceTypeToHeaders.put(RosterSourceType.CHICO_CANVAS, CHICO_CANVAS_HEADERS.split(","));
+
+    for (Map.Entry<RosterSourceType, String[]> entry : sourceTypeToHeaders.entrySet()) {
+      RosterSourceType type = entry.getKey();
+      String[] expectedHeaders = entry.getValue();
+      if (headers.length >= expectedHeaders.length) {
+        boolean matches = true;
+        for (int i = 0; i < expectedHeaders.length; i++) {
+          if (!expectedHeaders[i].equalsIgnoreCase(headers[i])) {
+            matches = false;
+            break;
+          }
+        }
+        if (matches) {
+          return type;
+        }
+      }
+    }
+    // If no known type matches, return UNKNOWN
+    return RosterSourceType.UNKNOWN;
+  }
 
   public static record UpsertResponse(InsertStatus insertStatus, RosterStudent rosterStudent) {}
 
@@ -140,9 +179,9 @@ public class RosterStudentsController extends ApiController {
   @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
   @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
   @PostMapping(
-      value = "/upload/egrades",
+      value = "/upload/csv",
       consumes = {"multipart/form-data"})
-  public Map<String, String> uploadRosterStudents(
+  public Map<String, String> uploadRosterStudentsCSV(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "file") @RequestParam("file") MultipartFile file)
       throws JsonProcessingException, IOException, CsvException {
@@ -157,10 +196,18 @@ public class RosterStudentsController extends ApiController {
     try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
         InputStreamReader reader = new InputStreamReader(inputStream);
         CSVReader csvReader = new CSVReader(reader); ) {
-      csvReader.skip(2);
+
+      String[] headers = csvReader.readNext();
+      RosterSourceType sourceType = getRosterSourceType(headers);
+      if (sourceType == RosterSourceType.UNKNOWN) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Roster Source Type");
+      }
+      if (sourceType == RosterSourceType.UCSB_EGRADES) {
+        csvReader.skip(1);
+      }
       List<String[]> myEntries = csvReader.readAll();
       for (String[] row : myEntries) {
-        RosterStudent rosterStudent = fromEgradesCSVRow(row);
+        RosterStudent rosterStudent = fromCSVRow(row, sourceType);
         UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
         InsertStatus s = upsertResponse.insertStatus;
         counts[s.ordinal()]++;
@@ -174,12 +221,61 @@ public class RosterStudentsController extends ApiController {
                 counts[InsertStatus.INSERTED.ordinal()], counts[InsertStatus.UPDATED.ordinal()]));
   }
 
-  public RosterStudent fromEgradesCSVRow(String[] row) {
+  public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
+    if (sourceType == RosterSourceType.UCSB_EGRADES) {
+      return fromUCSBEgradesCSVRow(row);
+    } else if (sourceType == RosterSourceType.CHICO_CANVAS) {
+      return fromChicoCanvasCSVRow(row);
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV format not recognized");
+    }
+  }
+
+  public static RosterStudent fromUCSBEgradesCSVRow(String[] row) {
     return RosterStudent.builder()
         .firstName(row[5])
         .lastName(row[4])
         .studentId(row[1])
         .email(row[10])
+        .build();
+  }
+
+  /**
+   * Get everything except up to and not including the last space in the full name. If the string
+   * contains no spaces, return an empty string.
+   *
+   * @param fullName
+   * @return
+   */
+  public static String getFirstName(String fullName) {
+    int lastSpaceIndex = fullName.lastIndexOf(" ");
+    if (lastSpaceIndex == -1) {
+      return ""; // No spaces found, return empty string
+    }
+    return fullName.substring(0, lastSpaceIndex).trim(); // Return everything before the last space
+  }
+
+  /**
+   * Get everything after the last space in the full name. If the string contains no spaces, return
+   * the entire input string as the result.
+   *
+   * @param fullName
+   * @return best estimate of last name
+   */
+  public static String getLastName(String fullName) {
+    int lastSpaceIndex = fullName.lastIndexOf(" ");
+    if (lastSpaceIndex == -1) {
+      return fullName; // No spaces found, return the entire string
+    }
+    return fullName.substring(lastSpaceIndex + 1).trim(); // Return everything after the last space
+  }
+
+  public static RosterStudent fromChicoCanvasCSVRow(String[] row) {
+    return RosterStudent.builder()
+        .firstName(getFirstName(row[0]))
+        .lastName(getLastName(row[0]))
+        .studentId(row[2])
+        .email(row[3])
         .build();
   }
 
