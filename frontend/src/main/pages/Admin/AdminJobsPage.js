@@ -7,22 +7,17 @@ import Accordion from "react-bootstrap/Accordion";
 import SingleButtonJobForm from "main/components/Jobs/SingleButtonJobForm";
 import { useBackendMutation } from "main/utils/useBackend";
 
-const AdminJobsPage = () => {
-  const refreshJobsIntervalMilliseconds = 5000;
-
-  // UpdateAll job
+export default function AdminJobsPage() {
   const objectToAxiosParamsUpdateAllJob = () => ({
     url: "/api/jobs/launch/updateAll",
     method: "POST",
   });
 
-  // Stryker disable all
   const updateAllJobMutation = useBackendMutation(
     objectToAxiosParamsUpdateAllJob,
     {},
     ["/api/jobs/all"],
   );
-  // Stryker restore all
 
   const submitUpdateAllJob = async () => {
     updateAllJobMutation.mutate();
@@ -34,13 +29,11 @@ const AdminJobsPage = () => {
     method: "POST",
   });
 
-  // Stryker disable all
   const auditAllCoursesJobMutation = useBackendMutation(
     objectToAxiosParamsAuditAllCoursesJob,
     {},
     ["/api/jobs/all"],
   );
-  // Stryker restore all
 
   const submitAuditAllCoursesJob = async () => {
     auditAllCoursesJobMutation.mutate();
@@ -52,33 +45,25 @@ const AdminJobsPage = () => {
     method: "DELETE",
   });
 
-  // Stryker disable all
   const purgeJobLogMutation = useBackendMutation(
     objectToAxiosParamsPurgeJobLog,
     {},
     ["/api/jobs/all"],
   );
-  // Stryker restore all
 
   const purgeJobLog = async () => {
     purgeJobLogMutation.mutate();
   };
 
-  // Stryker disable all
-  const {
-    data: jobs,
-    error: _error,
-    status: _status,
-  } = useBackend(
+  const { data: jobs } = useBackend(
     ["/api/jobs/all"],
     {
+      //Stryker disable next-line StringLiteral: axios default is GET
       method: "GET",
       url: "/api/jobs/all",
     },
     [],
-    { refetchInterval: refreshJobsIntervalMilliseconds },
   );
-  // Stryker restore all
 
   const jobLaunchers = [
     {
@@ -86,7 +71,8 @@ const AdminJobsPage = () => {
       form: (
         <SingleButtonJobForm
           callback={submitUpdateAllJob}
-          text={"Update All Users"}
+          text={"Start"}
+          testid={"updateAllJob"}
         />
       ),
     },
@@ -95,7 +81,8 @@ const AdminJobsPage = () => {
       form: (
         <SingleButtonJobForm
           callback={submitAuditAllCoursesJob}
-          text={"Audit All Courses"}
+          text={"Start"}
+          testid={"auditAllCoursesJob"}
         />
       ),
     },
@@ -119,6 +106,4 @@ const AdminJobsPage = () => {
       </Button>
     </BasicLayout>
   );
-};
-
-export default AdminJobsPage;
+}
