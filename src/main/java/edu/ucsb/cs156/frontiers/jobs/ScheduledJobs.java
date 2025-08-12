@@ -1,18 +1,12 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
-import edu.ucsb.cs156.frontiers.entities.CourseStaff;
-import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import lombok.extern.slf4j.Slf4j;
-
-import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -34,16 +28,17 @@ public class ScheduledJobs {
   @Autowired private JobService jobService;
 
   @Autowired private RosterStudentRepository rosterStudentRepository;
-  
+
   @Autowired private CourseRepository courseRepository;
 
-  @Autowired private OrganizationMemberService organizationMemberService; 
+  @Autowired private OrganizationMemberService organizationMemberService;
 
   @Autowired private CourseStaffRepository courseStaffRepository;
 
   @Scheduled(cron = "${app.jobs.MembershipAuditJob.cron}", zone = "${spring.jackson.time-zone}")
   public void runMembershipAuditJobBasedOnCron() throws Exception {
-     MembershipAuditJob job = MembershipAuditJob.builder()
+    MembershipAuditJob job =
+        MembershipAuditJob.builder()
             .rosterStudentRepository(rosterStudentRepository)
             .courseRepository(courseRepository)
             .organizationMemberService(organizationMemberService)
@@ -52,6 +47,5 @@ public class ScheduledJobs {
 
     jobService.runAsJob(job);
     log.info("runMembershipAuditJobBasedOnCron: running");
-
   }
 }

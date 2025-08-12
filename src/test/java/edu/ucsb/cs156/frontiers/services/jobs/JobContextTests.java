@@ -3,13 +3,11 @@ package edu.ucsb.cs156.frontiers.services.jobs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
+import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import org.junit.jupiter.api.Test;
-
-import edu.ucsb.cs156.frontiers.entities.Job;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-
 
 public class JobContextTests {
   @Test
@@ -48,7 +46,5 @@ public class JobContextTests {
 
     inOrder.verify(repository).save(jobAfterSecondSave);
     inOrder.verifyNoMoreInteractions();
-
   }
-
 }

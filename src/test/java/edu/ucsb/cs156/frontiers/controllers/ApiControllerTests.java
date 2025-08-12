@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,92 +16,92 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
-import edu.ucsb.cs156.frontiers.ControllerTestCase;
-import edu.ucsb.cs156.frontiers.repositories.UserRepository;
-
 @WebMvcTest(controllers = DummyController.class)
 public class ApiControllerTests extends ControllerTestCase {
 
-        @MockitoBean
-        UserRepository userRepository;
+  @MockitoBean UserRepository userRepository;
 
-        @Autowired DummyController dummyController;
+  @Autowired DummyController dummyController;
 
+  @Test
+  public void generic_message_test() {
+    ApiController apiController = new DummyController();
+    Object result = apiController.genericMessage("Hello World");
+    Object expected = Map.of("message", "Hello World");
+    assertEquals(expected, result);
+  }
 
-        @Test
-        public void generic_message_test() {
-                ApiController apiController = new DummyController();
-                Object result = apiController.genericMessage("Hello World");
-                Object expected = Map.of("message", "Hello World");
-                assertEquals(expected,result);
-        }       
+  @Test
+  public void test_that_dummy_controller_returns_String1_when_1_is_passed() throws Exception {
 
-        @Test
-        public void test_that_dummy_controller_returns_String1_when_1_is_passed() throws Exception {
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/dummycontroller?id=1")).andExpect(status().isOk()).andReturn();
 
-                // act
-                MvcResult response = mockMvc.perform(get("/dummycontroller?id=1"))
-                                .andExpect(status().isOk()).andReturn();
+    // assert
 
-                // assert
+    assertEquals("String1", response.getResponse().getContentAsString());
+  }
 
-                assertEquals("String1", response.getResponse().getContentAsString());
-        }
+  @Test
+  public void test_that_dummy_controller_returns_Exception_when_1_is_not_passed() throws Exception {
 
-        @Test
-        public void test_that_dummy_controller_returns_Exception_when_1_is_not_passed() throws Exception {
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/dummycontroller?id=7")).andExpect(status().isNotFound()).andReturn();
 
-                // act
-                MvcResult response = mockMvc.perform(get("/dummycontroller?id=7"))
-                                .andExpect(status().isNotFound()).andReturn();
+    // assert
 
-                // assert
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("String with id 7 not found", json.get("message"));
+  }
 
-                Map<String, Object> json = responseToJson(response);
-                assertEquals("EntityNotFoundException", json.get("type"));
-                assertEquals("String with id 7 not found", json.get("message"));
-        }
+  @Test
+  public void test_dummy_controller_returns_no_linked_org() throws Exception {
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/dummycontroller/noorg?courseName=course"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
 
-        @Test
-        public void test_dummy_controller_returns_no_linked_org() throws Exception {
-                // act
-                MvcResult response = mockMvc.perform(get("/dummycontroller/noorg?courseName=course"))
-                        .andExpect(status().isBadRequest()).andReturn();
+    // assert
 
-                // assert
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("NoLinkedOrganizationException", json.get("type"));
+    assertEquals(
+        "No linked GitHub Organization to course. Please link a GitHub Organization first.",
+        json.get("message"));
+  }
 
-                Map<String, Object> json = responseToJson(response);
-                assertEquals("NoLinkedOrganizationException", json.get("type"));
-                assertEquals("No linked GitHub Organization to course. Please link a GitHub Organization first.", json.get("message"));
-        }
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_doesCurrentUserHaveRole_true() throws Exception {
+    assertTrue(dummyController.doesCurrentUserHaveRole("ROLE_ADMIN"));
+    assertTrue(dummyController.isCurrentUserAdmin());
+  }
 
-        @Test
-        @WithMockUser(roles = { "ADMIN" })
-        public void test_doesCurrentUserHaveRole_true() throws Exception {           
-                assertTrue( dummyController.doesCurrentUserHaveRole("ROLE_ADMIN"));
-                assertTrue( dummyController.isCurrentUserAdmin());
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void test_doesCurrentUserHaveRole_false() throws Exception {
+    assertFalse(dummyController.doesCurrentUserHaveRole("ROLE_ADMIN"));
+    assertFalse(dummyController.isCurrentUserAdmin());
+  }
 
-        }
+  @Test
+  public void test_dummy_controller_returns_illegal_argument() throws Exception {
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/dummycontroller/illegalargument?courseName=course"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
 
-         @Test
-        @WithMockUser(roles = { "USER" })
-        public void test_doesCurrentUserHaveRole_false() throws Exception {
-                assertFalse( dummyController.doesCurrentUserHaveRole("ROLE_ADMIN"));
-                assertFalse( dummyController.isCurrentUserAdmin());
-        }
+    // assert
 
-        @Test
-        public void test_dummy_controller_returns_illegal_argument() throws Exception {
-                // act
-                MvcResult response = mockMvc.perform(get("/dummycontroller/illegalargument?courseName=course"))
-                        .andExpect(status().isBadRequest()).andReturn();
-
-                // assert
-
-                Map<String, Object> json = responseToJson(response);
-                assertEquals("IllegalArgumentException", json.get("type"));
-                assertEquals("course", json.get("message"));
-        }
-
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("IllegalArgumentException", json.get("type"));
+    assertEquals("course", json.get("message"));
+  }
 }
-
