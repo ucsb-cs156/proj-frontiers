@@ -11,3 +11,13 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* The NavDropdown header taking up the width of the widest menu item 
+   is a common issue. To fix this, you need to set the width of the 
+   dropdown menu to be relative to its content rather than its parent. 
+   You can achieve this by targeting the dropdown menu with a custom 
+   class and setting its width to min-content. */
+   
+.narrow-dropdown .dropdown-menu {
+  width: min-content;
+}
