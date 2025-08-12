@@ -143,7 +143,7 @@ describe("EnrollmentTabComponent Tests", () => {
       .onGet("/api/rosterstudents/course/7")
       .reply(200, rosterStudentFixtures.threeStudents);
 
-    axiosMock.onPost("/api/rosterstudents/upload/egrades").reply(200);
+    axiosMock.onPost("/api/rosterstudents/upload/csv").reply(200);
 
     const user = userEvent.setup();
     render(

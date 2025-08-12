@@ -34,7 +34,7 @@ export default function EnrollmentTabComponent({
     const file = new FormData();
     file.append("file", formData.upload[0]);
     return {
-      url: `/api/rosterstudents/upload/egrades`,
+      url: `/api/rosterstudents/upload/csv`,
       data: file,
       params: {
         courseId: courseId,
