@@ -953,4 +953,128 @@ public class CoursesControllerTests extends ControllerTestCase {
                 .param("instructorEmail", "new-instructor@example.com"))
         .andExpect(status().isForbidden());
   }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void updateCourse_success_admin() throws Exception {
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("OldName")
+            .term("OldTerm")
+            .school("OldSchool")
+            .instructorEmail("rando@example.com")
+            .build();
+
+    Course updatedCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("NewName")
+            .term("NewTerm")
+            .school("NewSchool")
+            .instructorEmail("rando@example.com")
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/api/courses")
+                    .param("courseId", "1")
+                    .param("courseName", "NewName")
+                    .param("term", "NewTerm")
+                    .param("school", "NewSchool")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseRepository, times(1)).save(any(Course.class));
+
+    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+    assertEquals(expectedJson, result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  public void updateCourse_success_instructor() throws Exception {
+
+    User user = currentUserService.getCurrentUser().getUser();
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("OldName")
+            .term("OldTerm")
+            .school("OldSchool")
+            .instructorEmail(user.getEmail())
+            .build();
+
+    Course updatedCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("NewName")
+            .term("NewTerm")
+            .school("NewSchool")
+            .instructorEmail(user.getEmail())
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/api/courses")
+                    .param("courseId", "1")
+                    .param("courseName", "NewName")
+                    .param("term", "NewTerm")
+                    .param("school", "NewSchool")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseRepository, times(1)).save(any(Course.class));
+
+    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+    assertEquals(expectedJson, result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  public void updateCourse_notFound() throws Exception {
+    when(courseRepository.findById(eq(2L))).thenReturn(Optional.empty());
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/api/courses")
+                    .param("courseId", "2")
+                    .param("courseName", "AnyName")
+                    .param("term", "AnyTerm")
+                    .param("school", "AnySchool")
+                    .with(csrf()))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void updateCourse_forbidden_for_non_instructor() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/courses")
+                .param("courseId", "1")
+                .param("courseName", "NewName")
+                .param("term", "NewTerm")
+                .param("school", "NewSchool")
+                .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
 }
