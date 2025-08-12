@@ -49,7 +49,7 @@ export default function HomePageLoggedIn() {
     [],
     false,
     {
-      enabled: hasRole(currentUser, "ROLE_INSTRUCTOR"),
+      enabled: Boolean(hasRole(currentUser, "ROLE_INSTRUCTOR")),
     },
   );
 
