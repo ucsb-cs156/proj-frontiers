@@ -18,7 +18,7 @@ jest.mock("react-toastify", () => {
   };
 });
 
-let axiosMock;
+const axiosMock = new AxiosMockAdapter(axios);
 describe("CourseStaffTable tests", () => {
   const expectedHeaders = [
     "id",
@@ -39,11 +39,10 @@ describe("CourseStaffTable tests", () => {
   const testId = "CourseStaffTable";
 
   beforeEach(() => {
-    axiosMock = new AxiosMockAdapter(axios);
-    axiosMock.restore();
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    mockToast.mockClear();
   });
 
   test("renders empty table correctly", () => {
@@ -242,7 +241,7 @@ describe("CourseStaffTable tests", () => {
     await waitFor(() => axiosMock.history.put.length === 1);
   });
 
-  test.skip("Delete button calls delete callback", async () => {
+  test("Delete button calls delete callback", async () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
 
@@ -441,7 +440,8 @@ describe("CourseStaffTable tests", () => {
     });
   });
 
-  test.skip("onEditSuccess calls toast and hideModal", async () => {
+  test("onEditSuccess calls toast and hideModal", async () => {
+    axiosMock.onPut("/api/coursestaff").reply(200, []);
     // Arrange
     const currentUser = currentUserFixtures.adminUser;
     // Render the component
@@ -469,6 +469,11 @@ describe("CourseStaffTable tests", () => {
 
     // Simulate successful edit by clicking Update
     fireEvent.click(screen.getByText("Update"));
+
+    await waitFor(() => expect(mockToast).toHaveBeenCalled());
+    expect(mockToast).toHaveBeenCalledWith(
+      "Staff member updated successfully.",
+    );
 
     // Modal should be closed after success
     await waitFor(() => {
