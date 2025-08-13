@@ -177,7 +177,7 @@ export default function CourseStaffTable({
     },
   });
 
-  if (hasRole(currentUser, "ROLE_INSTRUCTOR") ) {
+  if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
       ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
