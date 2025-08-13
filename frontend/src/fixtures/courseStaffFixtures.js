@@ -82,6 +82,16 @@ const courseStaffFixtures = {
       orgStatus: "MEMBER",
     },
   ],
+  staffWithUndefinedStatus: [
+    {
+      id: 1,
+      firstName: "Major",
+      lastName: "Tom",
+      email: "majortom@nasa.gov",
+      githubLogin: null,
+      orgStatus: "Floating in Space",
+    },
+  ],
 };
 
 export { courseStaffFixtures };

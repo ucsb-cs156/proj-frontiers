@@ -20,7 +20,7 @@ export default function StaffTabComponent({
   testIdPrefix,
   currentUser,
 }) {
-  const [postModal, showPostModal] = useState(false);
+  const [postModal, setPostModal] = useState(false);
   const { data: courseStaff } = useBackend(
     [`/api/coursestaff/course?courseId=${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -50,7 +50,7 @@ export default function StaffTabComponent({
 
   const staffPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
-    { onSuccess: () => onSuccessStaff(showPostModal) },
+    { onSuccess: () => onSuccessStaff(setPostModal) },
     [`/api/coursestaff/course?courseId=${courseId}`],
   );
 
@@ -59,10 +59,8 @@ export default function StaffTabComponent({
   };
 
   // Render tooltip for disabled buttons
-  const renderComingSoonTooltip = (props) => (
-    <Tooltip id="coming-soon-tooltip" {...props}>
-      Coming Soon
-    </Tooltip>
+  const renderComingSoonTooltip = () => (
+    <Tooltip id="coming-soon-tooltip">Coming Soon</Tooltip>
   );
 
   console.log("courseStaff=", courseStaff);
@@ -71,7 +69,7 @@ export default function StaffTabComponent({
     <div data-testid={`${testIdPrefix}-StaffTabComponent`}>
       <Modal
         show={postModal}
-        onHide={() => showPostModal(false)}
+        onHide={() => setPostModal(false)}
         centered={true}
         data-testid={`${testIdPrefix}-post-modal`}
       >
@@ -119,7 +117,7 @@ export default function StaffTabComponent({
         </Col>
         <Col>
           <Button
-            onClick={() => showPostModal(true)}
+            onClick={() => setPostModal(true)}
             data-testid={`${testIdPrefix}-post-button`}
             className="w-100"
           >

@@ -68,7 +68,9 @@ describe("StaffTabComponent Tests", () => {
     const rsTestId = "InstructorCourseShowPage-CourseStaffTable";
 
     await waitFor(() => {
-      expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-id`)).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+      ).toBeInTheDocument();
     });
 
     expect(
@@ -373,5 +375,45 @@ describe("StaffTabComponent Tests", () => {
         screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("shows a tooltip containing Coming Soon when you hover over the Upload CSV Roster button", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const uploadButton = screen.getByTestId(`${testId}-csv-button`);
+    fireEvent.mouseOver(uploadButton);
+
+    expect(await screen.findByText("Coming Soon")).toBeInTheDocument();
+  });
+
+  test("Modals close on close buttons (respectively), download works", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ArbitraryTestQueryComponent />
+        <StaffTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const openModalPost = await screen.findByTestId(`${testId}-post-button`);
+    fireEvent.click(openModalPost);
+    let closeButton = await screen.findByRole("button", { name: "Close" });
+    fireEvent.click(closeButton);
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 });

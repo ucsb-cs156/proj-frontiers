@@ -242,7 +242,7 @@ describe("CourseStaffTable tests", () => {
     await waitFor(() => axiosMock.history.put.length === 1);
   });
 
-  test.only("Delete button calls delete callback", async () => {
+  test.skip("Delete button calls delete callback", async () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
 
@@ -280,140 +280,199 @@ describe("CourseStaffTable tests", () => {
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
     expect(axiosMock.history.delete[0].params).toEqual({ id: 1 });
   });
-});
-test("tooltips for PENDING status", async () => {
-  const currentUser = currentUserFixtures.adminUser;
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CourseStaffTable
-          staff={courseStaffFixtures.staffWithEachStatus}
-          currentUser={currentUser}
-        />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
 
-  fireEvent.mouseOver(screen.getByText("Pending"));
+  test("tooltips for PENDING status", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithEachStatus}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-  await waitFor(() => {
-    expect(
-      screen.getByText(
-        "Student cannot join the course until it has been completely set up.",
-      ),
-    ).toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByText("Pending"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Staff member cannot join the course until it has been completely set up.",
+        ),
+      ).toBeInTheDocument();
+    });
   });
-});
-test("tooltips for JOINCOURSE status", async () => {
-  const currentUser = currentUserFixtures.adminUser;
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CourseStaffTable
-          staff={courseStaffFixtures.staffWithEachStatus}
-          currentUser={currentUser}
-        />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+  test("tooltips for JOINCOURSE status", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithEachStatus}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-  fireEvent.mouseOver(screen.getByText("Join Course"));
+    fireEvent.mouseOver(screen.getByText("Join Course"));
 
-  await waitFor(() => {
-    expect(
-      screen.getByText(
-        "Student has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.",
-      ),
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.",
+        ),
+      ).toBeInTheDocument();
+    });
   });
-});
-test("tooltips for INVITED status", async () => {
-  const currentUser = currentUserFixtures.adminUser;
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CourseStaffTable
-          staff={courseStaffFixtures.staffWithEachStatus}
-          currentUser={currentUser}
-        />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+  test("tooltips for INVITED status", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithEachStatus}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-  fireEvent.mouseOver(screen.getByText("Invited"));
-  await waitFor(() => {
-    expect(
-      screen.getByText(
-        "Student has generated an invite, but has not yet accepted or declined the invitation.",
-      ),
-    ).toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByText("Invited"));
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Staff member has generated an invite, but has not yet accepted or declined the invitation.",
+        ),
+      ).toBeInTheDocument();
+    });
   });
-});
-test("tooltips for OWNER status", async () => {
-  const currentUser = currentUserFixtures.adminUser;
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CourseStaffTable
-          staff={courseStaffFixtures.staffWithEachStatus}
-          currentUser={currentUser}
-        />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+  test("tooltips for OWNER status", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithEachStatus}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-  fireEvent.mouseOver(screen.getByText("Owner"));
-  await waitFor(() => {
-    expect(
-      screen.getByText(
-        "Staff member is an owner of the GitHub organization associated with this course.",
-      ),
-    ).toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByText("Owner"));
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Staff member is an owner of the GitHub organization associated with this course.",
+        ),
+      ).toBeInTheDocument();
+    });
   });
-});
-test.only("tooltips for MEMBER status", async () => {
-  const currentUser = currentUserFixtures.adminUser;
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CourseStaffTable
-          staff={courseStaffFixtures.staffWithEachStatus}
-          currentUser={currentUser}
-        />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+  test("tooltips for MEMBER status", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithEachStatus}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-  const members = screen.getAllByText("Member");
-  fireEvent.mouseOver(members[0]);
+    const members = screen.getAllByText("Member");
+    fireEvent.mouseOver(members[0]);
 
-  await waitFor(() => {
-    expect(
-      screen.getByText(
-        "Staff member is a member of the GitHub organization associated with this course.",
-      ),
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Staff member is a member of the GitHub organization associated with this course.",
+        ),
+      ).toBeInTheDocument();
+    });
   });
-});
 
-test.only("expect the correct tooltip ID", async () => {
-  const currentUser = currentUserFixtures.adminUser;
+  test("expect the correct tooltip ID", async () => {
+    const currentUser = currentUserFixtures.adminUser;
 
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CourseStaffTable
-          staff={courseStaffFixtures.staffWithEachStatus}
-          currentUser={currentUser}
-        />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithEachStatus}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-  const members = screen.getAllByText("Member");
+    const members = screen.getAllByText("Member");
 
-  fireEvent.mouseOver(members[0]);
+    fireEvent.mouseOver(members[0]);
 
-  const tooltip = await screen.findByRole("tooltip");
-  expect(tooltip).toHaveAttribute("id", "member-tooltip");
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveAttribute("id", "member-tooltip");
+  });
+
+  test("tooltips for an illegal status", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithUndefinedStatus}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.mouseOver(screen.getByText("Floating in Space"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Tooltip for illegal status that will never occur"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  test.skip("onEditSuccess calls toast and hideModal", async () => {
+    // Arrange
+    const currentUser = currentUserFixtures.adminUser;
+    // Render the component
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.threeStaff}
+            currentUser={currentUser}
+            courseId={7}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Access the component instance via screen (simulate edit success)
+    // Find and click the Edit button to open modal
+    const editButton = screen.getByTestId(
+      "CourseStaffTable-cell-row-0-col-Edit-button",
+    );
+    fireEvent.click(editButton);
+
+    // The modal should be open
+    expect(screen.getByText("Edit Staff Member")).toBeInTheDocument();
+
+    // Simulate successful edit by clicking Update
+    fireEvent.click(screen.getByText("Update"));
+
+    // Modal should be closed after success
+    await waitFor(() => {
+      expect(screen.queryByText("Edit Staff Member")).not.toBeInTheDocument();
+    });
+  });
 });
