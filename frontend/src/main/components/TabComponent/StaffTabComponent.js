@@ -107,7 +107,7 @@ export default function StaffTabComponent({
             <span className="d-inline-block w-100">
               <Button
                 data-testid={`${testIdPrefix}-csv-button`}
-                className="w-100 button btn-light disabled"
+                className="w-100 button btn-secondary disabled"
                 disabled
                 style={{ pointerEvents: "none" }}
                 aria-disabled="true"
@@ -130,7 +130,7 @@ export default function StaffTabComponent({
           <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
             <span className="d-inline-block w-100">
               <Button
-                className="w-100 button btn-light disabled"
+                className="w-100 button btn-secondary disabled"
                 disabled
                 style={{ pointerEvents: "none" }}
                 aria-disabled="true"
