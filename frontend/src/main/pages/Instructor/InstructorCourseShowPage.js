@@ -10,7 +10,6 @@ import Modal from "react-bootstrap/Modal";
 import { Button, Tab, Tabs } from "react-bootstrap";
 import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
 import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabComponent";
-import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -75,13 +74,6 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
           <EnrollmentTabComponent
-            courseId={course ? course.id : ""}
-            testIdPrefix={"InstructorCourseShowPage"}
-            currentUser={currentUser}
-          />
-        </Tab>
-        <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
-          <StaffTabComponent
             courseId={course ? course.id : ""}
             testIdPrefix={"InstructorCourseShowPage"}
             currentUser={currentUser}

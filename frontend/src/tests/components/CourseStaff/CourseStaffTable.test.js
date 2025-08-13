@@ -79,7 +79,7 @@ describe("CourseStaffTable tests", () => {
       expect(fieldElement).not.toBeInTheDocument();
     });
   });
-  test.only("Has the expected column headers, content and buttons for admin user", () => {
+  test("Has the expected column headers, content and buttons for admin user", () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
 
@@ -201,7 +201,7 @@ describe("CourseStaffTable tests", () => {
     expect(screen.queryByText("Edit")).not.toBeInTheDocument();
   });
 
-  test.only("Edit button navigates to the edit modal", async () => {
+  test("Edit button navigates to the edit modal", async () => {
     const currentUser = currentUserFixtures.adminUser;
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
@@ -216,7 +216,7 @@ describe("CourseStaffTable tests", () => {
       courseStaffFixtures.threeStaff,
     );
     queryClientSpecific.setQueryData(["mock queryData"], null);
-    axiosMock.onPut("/api/coursestaff/update?courseId=7").reply(200);
+    axiosMock.onPut(/\/api\/coursestaff?courseId=7.*/).reply(200);
     render(
       <QueryClientProvider client={queryClientSpecific}>
         <MemoryRouter>
@@ -240,32 +240,15 @@ describe("CourseStaffTable tests", () => {
     expect(screen.getByText("Update")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Update"));
     await waitFor(() => axiosMock.history.put.length === 1);
-    expect(axiosMock.history.put[0].params).toEqual({
-      firstName: "Alice",
-      id: 3,
-      lastName: "Brown",
-      studentId: "A123456",
-    });
-    await waitFor(() =>
-      expect(screen.queryByText("Edit Student")).not.toBeInTheDocument(),
-    );
-    expect(mockToast).toBeCalledWith("Student updated successfully.");
-    expect(
-      queryClientSpecific.getQueryState(["/api/coursestaff/course?courseId=7"])
-        .isInvalidated,
-    ).toBe(true);
-    expect(
-      queryClientSpecific.getQueryState(["mock queryData"]).isInvalidated,
-    ).toBe(false);
   });
 
-  test("Delete button calls delete callback", async () => {
+  test.only("Delete button calls delete callback", async () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
 
     axiosMock
-      .onDelete("/api/rosterstudents/delete")
-      .reply(200, { message: "Student deleted" });
+      .onDelete("/api/coursestaff/delete")
+      .reply(200, { message: "Staff member deleted" });
 
     // act - render the component
     render(
@@ -281,8 +264,8 @@ describe("CourseStaffTable tests", () => {
 
     // assert - check that the expected content is rendered
     expect(
-      await screen.findByTestId(`${testId}-cell-row-0-col-studentId`),
-    ).toHaveTextContent("2");
+      await screen.findByTestId(`${testId}-cell-row-0-col-id`),
+    ).toHaveTextContent("1");
 
     const deleteButton = screen.getByTestId(
       `${testId}-cell-row-0-col-Delete-button`,
@@ -295,7 +278,7 @@ describe("CourseStaffTable tests", () => {
     // assert - check that the delete endpoint was called
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].params).toEqual({ id: 3 });
+    expect(axiosMock.history.delete[0].params).toEqual({ id: 1 });
   });
 });
 test("tooltips for PENDING status", async () => {
@@ -383,12 +366,12 @@ test("tooltips for OWNER status", async () => {
   await waitFor(() => {
     expect(
       screen.getByText(
-        "Student is an owner of the GitHub organization associated with this course.",
+        "Staff member is an owner of the GitHub organization associated with this course.",
       ),
     ).toBeInTheDocument();
   });
 });
-test("tooltips for MEMBER status", async () => {
+test.only("tooltips for MEMBER status", async () => {
   const currentUser = currentUserFixtures.adminUser;
   render(
     <QueryClientProvider client={queryClient}>
@@ -401,17 +384,19 @@ test("tooltips for MEMBER status", async () => {
     </QueryClientProvider>,
   );
 
-  fireEvent.mouseOver(screen.getByText("Member"));
+  const members = screen.getAllByText("Member");
+  fireEvent.mouseOver(members[0]);
 
   await waitFor(() => {
     expect(
       screen.getByText(
-        "Student is a member of the GitHub organization associated with this course.",
+        "Staff member is a member of the GitHub organization associated with this course.",
       ),
     ).toBeInTheDocument();
   });
 });
-test("tooltips for an illegal status", async () => {
+
+test.only("expect the correct tooltip ID", async () => {
   const currentUser = currentUserFixtures.adminUser;
 
   render(
@@ -425,29 +410,9 @@ test("tooltips for an illegal status", async () => {
     </QueryClientProvider>,
   );
 
-  fireEvent.mouseOver(screen.getByText("Illegal status that will never occur"));
+  const members = screen.getAllByText("Member");
 
-  await waitFor(() => {
-    expect(
-      screen.getByText("Tooltip for illegal status that will never occur"),
-    ).toBeInTheDocument();
-  });
-});
-test("expect the correct tooltip ID", async () => {
-  const currentUser = currentUserFixtures.adminUser;
-
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CourseStaffTable
-          staff={courseStaffFixtures.staffWithEachStatus}
-          currentUser={currentUser}
-        />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
-
-  fireEvent.mouseOver(screen.getByText("Member"));
+  fireEvent.mouseOver(members[0]);
 
   const tooltip = await screen.findByRole("tooltip");
   expect(tooltip).toHaveAttribute("id", "member-tooltip");

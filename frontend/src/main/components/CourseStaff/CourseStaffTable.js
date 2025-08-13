@@ -30,7 +30,7 @@ export default function CourseStaffTable({
   // Stryker restore all
 
   const cellToAxiosParamsEdit = (formData) => ({
-    url: `/api/coursestaff/update`,
+    url: `/api/coursestaff`,
     method: "PUT",
     params: {
       firstName: formData.firstName,
@@ -177,7 +177,7 @@ export default function CourseStaffTable({
     },
   });
 
-  if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
+  if (hasRole(currentUser, "ROLE_INSTRUCTOR") ) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
       ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
