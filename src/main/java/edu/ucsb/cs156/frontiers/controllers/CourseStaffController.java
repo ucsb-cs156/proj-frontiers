@@ -41,7 +41,7 @@ public class CourseStaffController extends ApiController {
    *
    * @return the created CourseStaff
    */
-  @Operation(summary = "Create a new course staff")
+  @Operation(summary = "Add a staff member to a course")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/post")
   public CourseStaff postCourseStaff(
@@ -84,7 +84,7 @@ public class CourseStaffController extends ApiController {
    *
    * @return a list of all courses.
    */
-  @Operation(summary = "List all course staff for a course")
+  @Operation(summary = "List all course staff members for a course")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/course")
   public Iterable<CourseStaff> courseStaffForCourse(

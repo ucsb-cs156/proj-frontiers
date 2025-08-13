@@ -76,6 +76,8 @@ export default function StaffTabComponent({
     </Tooltip>
   );
 
+  console.log("courseStaff=", courseStaff);
+
   return (
     <div data-testid={`${testIdPrefix}-StaffTabComponent`}>
       <Modal
