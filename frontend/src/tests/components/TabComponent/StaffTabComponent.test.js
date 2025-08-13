@@ -12,7 +12,6 @@ import userEvent from "@testing-library/user-event";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 
-const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
 const mockToast = jest.fn();
@@ -39,14 +38,21 @@ const ArbitraryTestQueryComponent = () => {
   return <></>;
 };
 
+let axiosMock;
+
 describe("StaffTabComponent Tests", () => {
   beforeEach(() => {
+    axiosMock = new AxiosMockAdapter(axios);
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
   });
 
-  test.only("Table Renders", async () => {
+  afterEach(() => {
+    axiosMock.restore();
+  });
+
+  test("Table Renders", async () => {
     axiosMock
       .onGet("/api/coursestaff/course?courseId=1")
       .reply(200, courseStaffFixtures.threeStaff);
@@ -79,8 +85,9 @@ describe("StaffTabComponent Tests", () => {
     const staffId0 = screen.getByTestId(`${rsTestId}-cell-row-0-col-id`);
     expect(staffId0).toHaveTextContent(courseStaffFixtures.threeStaff[0].id);
   });
+
   test("Table Renders with no students", async () => {
-    axiosMock.onGet("/api/coursestaff/course/7").reply(200, []);
+    axiosMock.onGet("/api/coursestaff/course?courseId=7").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -95,7 +102,7 @@ describe("StaffTabComponent Tests", () => {
     await waitFor(() => {
       expect(
         screen.getByTestId(
-          "InstructorCourseShowPage-CourseStaffTable-header-studentId",
+          "InstructorCourseShowPage-CourseStaffTable-header-id",
         ),
       ).toBeInTheDocument();
     });
@@ -104,8 +111,8 @@ describe("StaffTabComponent Tests", () => {
       screen.queryByTestId(`${testId}-cell-row-0-col-id`),
     ).not.toBeInTheDocument();
 
-    const expectedHeaders = ["Student Id", "First Name", "Last Name", "Email"];
-    const expectedFields = ["studentId", "firstName", "lastName", "email"];
+    const expectedHeaders = ["id", "First Name", "Last Name", "Email"];
+    const expectedFields = ["id", "firstName", "lastName", "email"];
 
     // assert
     expectedHeaders.forEach((headerText, index) => {
@@ -127,85 +134,7 @@ describe("StaffTabComponent Tests", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("Successfully makes a call to the backend on submit and clears search filter", async () => {
-    const queryClientSpecific = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          staleTime: Infinity,
-        },
-      },
-    });
-    const file = new File(["there"], "egrades.csv", { type: "text/csv" });
-
-    axiosMock
-      .onGet("/api/coursestaff/course/7")
-      .reply(200, rosterStudentFixtures.threeStudents);
-
-    axiosMock.onPost("/api/coursestaff/upload/csv").reply(200);
-
-    const user = userEvent.setup();
-    render(
-      <QueryClientProvider client={queryClientSpecific}>
-        <ArbitraryTestQueryComponent />
-        <StaffTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>,
-    );
-    const openModal = await screen.findByTestId(`${testId}-csv-button`);
-
-    const arbitraryUpdateCount = queryClientSpecific.getQueryState([
-      "arbitraryQuery",
-    ]).dataUpdateCount;
-
-    const updateCountStudent = queryClientSpecific.getQueryState([
-      "/api/coursestaff/course/7",
-    ]).dataUpdateCount;
-
-    // Get the search input and set a search term
-    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
-    fireEvent.change(searchInput, { target: { value: "test search" } });
-    expect(searchInput.value).toBe("test search");
-
-    fireEvent.click(openModal);
-    expect(screen.getByTestId(`${testId}-csv-modal`)).toHaveClass(
-      "modal-dialog modal-dialog-centered",
-    );
-
-    const upload = await screen.findByTestId(
-      "RosterStudentCSVUploadForm-upload",
-    );
-    const submitButton = screen.getByTestId(
-      "RosterStudentCSVUploadForm-submit",
-    );
-    await user.upload(upload, file);
-    fireEvent.click(submitButton);
-    await waitFor(() => {
-      expect(axiosMock.history.post[0].params).toEqual({
-        courseId: 7,
-      });
-    });
-    expect(axiosMock.history.post[0].data.get("file")).toEqual(file);
-    expect(mockToast).toBeCalledWith("Roster successfully updated.");
-    expect(
-      queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
-    ).toBe(arbitraryUpdateCount);
-    expect(
-      queryClientSpecific.getQueryState(["/api/coursestaff/course/7"])
-        .dataUpdateCount,
-    ).toEqual(updateCountStudent + 1);
-
-    // Verify that the search filter is cleared
-    await waitFor(() => {
-      expect(searchInput.value).toBe("");
-    });
-    expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
-  });
-
-  test("RosterStudentForm submit works and clears search filter", async () => {
+  test("StaffForm submit works and clears search filter", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
         queries: {
@@ -215,8 +144,8 @@ describe("StaffTabComponent Tests", () => {
       },
     });
     axiosMock
-      .onGet("/api/coursestaff/course/7")
-      .reply(200, rosterStudentFixtures.threeStudents);
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
 
     axiosMock.onPost("/api/coursestaff/post").reply(200);
     render(
@@ -232,7 +161,7 @@ describe("StaffTabComponent Tests", () => {
 
     //Great time to check initial values
     expect(
-      queryClientSpecific.getQueryData(["/api/coursestaff/course/7"]),
+      queryClientSpecific.getQueryData(["/api/coursestaff/course?courseId=7"]),
     ).toStrictEqual([]);
 
     const openModal = await screen.findByTestId(`${testId}-post-button`);
@@ -240,11 +169,11 @@ describe("StaffTabComponent Tests", () => {
       "arbitraryQuery",
     ]).dataUpdateCount;
     const updateCountStudent = queryClientSpecific.getQueryState([
-      "/api/coursestaff/course/7",
+      "/api/coursestaff/course?courseId=7",
     ]).dataUpdateCount;
 
     fireEvent.click(openModal);
-    await screen.findByLabelText("Student Id");
+    await screen.findByLabelText("First Name");
     expect(screen.getByTestId(`${testId}-post-modal`)).toHaveClass(
       "modal-dialog modal-dialog-centered",
     );
@@ -255,9 +184,6 @@ describe("StaffTabComponent Tests", () => {
     expect(searchInput.value).toBe("test search");
 
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Student Id"), {
-      target: { value: "123456789" },
-    });
     fireEvent.change(screen.getByLabelText("First Name"), {
       target: { value: "Chris" },
     });
@@ -267,22 +193,21 @@ describe("StaffTabComponent Tests", () => {
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "cgaucho@ucsb.edu" },
     });
-    fireEvent.click(screen.getByTestId("RosterStudentForm-submit"));
+    fireEvent.click(screen.getByTestId("CourseStaffForm-submit"));
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     expect(axiosMock.history.post[0].params).toEqual({
       courseId: 7,
-      studentId: "123456789",
       firstName: "Chris",
       lastName: "Gaucho",
       email: "cgaucho@ucsb.edu",
     });
     await waitFor(() => expect(mockToast).toBeCalled());
-    expect(mockToast).toBeCalledWith("Roster successfully updated.");
+    expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
     expect(
       queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
     ).toBe(arbitraryUpdateCount);
     expect(
-      queryClientSpecific.getQueryState(["/api/coursestaff/course/7"])
+      queryClientSpecific.getQueryState(["/api/coursestaff/course?courseId=7"])
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
 
@@ -295,58 +220,13 @@ describe("StaffTabComponent Tests", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("Modals close on close buttons (respectively), download works", async () => {
-    const download = jest.fn();
-    window.open = (a, b) => download(a, b);
-    axiosMock
-      .onGet("/api/coursestaff/course/7")
-      .reply(200, rosterStudentFixtures.threeStudents);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <ArbitraryTestQueryComponent />
-        <StaffTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>,
-    );
-
-    const openModalPost = await screen.findByTestId(`${testId}-post-button`);
-    fireEvent.click(openModalPost);
-    let closeButton = await screen.findByRole("button", { name: "Close" });
-    fireEvent.click(closeButton);
-    await waitFor(() =>
-      expect(
-        screen.queryByTestId(`${testId}-post-modal`),
-      ).not.toBeInTheDocument(),
-    );
-    const openModalCsv = await screen.findByTestId(`${testId}-csv-button`);
-    fireEvent.click(openModalCsv);
-    closeButton = await screen.findByRole("button", { name: "Close" });
-    fireEvent.click(closeButton);
-    await waitFor(() =>
-      expect(
-        screen.queryByTestId(`${testId}-csv-modal`),
-      ).not.toBeInTheDocument(),
-    );
-    fireEvent.click(screen.getByText("Download Student CSV"));
-    await waitFor(() => expect(download).toBeCalled());
-    expect(download).toBeCalledWith(
-      "/api/csv/coursestaff?courseId=7",
-      "_blank",
-    );
-  });
-
   describe("Search filter works correctly", () => {
     const testId = "InstructorCourseShowPage";
     const rsTestId = "InstructorCourseShowPage-CourseStaffTable";
-    const studentList = [
-      ...rosterStudentFixtures.studentsWithEachStatus,
+    const staffList = [
+      ...courseStaffFixtures.staffWithEachStatus,
       {
         id: 7,
-        studentId: "A626737",
         firstName: "Fake",
         lastName: "Name",
         email: "fakename@ucsb.edu",
@@ -354,11 +234,22 @@ describe("StaffTabComponent Tests", () => {
         orgStatus: "JOINCOURSE",
       },
     ];
+
     beforeEach(() => {
-      axiosMock.onGet("/api/coursestaff/course/1").reply(200, studentList);
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock
+        .onGet("/api/coursestaff/course?courseId=1")
+        .reply(200, staffList);
+      queryClient.clear();
     });
 
-    test("PLaceholder, initial check", async () => {
+    afterEach(() => {
+      axiosMock.restore();
+    });
+
+    test("Placeholder, initial check", async () => {
       render(
         <QueryClientProvider client={queryClient}>
           <StaffTabComponent
@@ -378,7 +269,7 @@ describe("StaffTabComponent Tests", () => {
       expect(searchInput).toBeInTheDocument();
       expect(searchInput).toHaveAttribute(
         "placeholder",
-        "Search by name, email, student ID, or Github Login",
+        "Search by name, email, or Github Login",
       );
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
@@ -411,20 +302,20 @@ describe("StaffTabComponent Tests", () => {
       // Verify search input is rendered
       const searchInput = screen.getByTestId(`${testId}-search`);
 
-      const fullNameStudent = rosterStudentFixtures.studentsWithEachStatus[2]; // Emma Watson
+      const fullNameStaff = courseStaffFixtures.staffWithEachStatus[2]; // Emma Watson
       fireEvent.change(searchInput, {
         target: {
           value:
-            `${fullNameStudent.firstName} ${fullNameStudent.lastName}`.toUpperCase(),
+            `${fullNameStaff.firstName} ${fullNameStaff.lastName}`.toUpperCase(),
         },
       });
 
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-      ).toHaveTextContent(fullNameStudent.firstName);
+      ).toHaveTextContent(fullNameStaff.firstName);
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`),
-      ).toHaveTextContent(fullNameStudent.lastName);
+      ).toHaveTextContent(fullNameStaff.lastName);
       expect(
         screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
       ).not.toBeInTheDocument();
@@ -443,16 +334,13 @@ describe("StaffTabComponent Tests", () => {
 
       fireEvent.change(searchInput, {
         target: {
-          value:
-            rosterStudentFixtures.studentsWithEachStatus[1].email.toUpperCase(),
+          value: courseStaffFixtures.staffWithEachStatus[1].email.toUpperCase(),
         },
       });
 
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
-      ).toHaveTextContent(
-        rosterStudentFixtures.studentsWithEachStatus[1].email,
-      );
+      ).toHaveTextContent(courseStaffFixtures.staffWithEachStatus[1].email);
       expect(
         screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
       ).not.toBeInTheDocument();
@@ -475,34 +363,16 @@ describe("StaffTabComponent Tests", () => {
       });
 
       const searchInput = screen.getByTestId(`${testId}-search`);
-      const studentWithGithub = studentList[6].githubLogin;
+      const staffWithGithub = staffList[6].githubLogin;
       fireEvent.change(searchInput, {
-        target: { value: studentWithGithub.toUpperCase() },
+        target: { value: staffWithGithub.toUpperCase() },
       });
 
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-githubLogin`),
-      ).toHaveTextContent(studentWithGithub);
+      ).toHaveTextContent(staffWithGithub);
       expect(
         screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-      ).not.toBeInTheDocument();
-
-      fireEvent.change(searchInput, { target: { value: "" } });
-
-      fireEvent.change(searchInput, {
-        target: {
-          value:
-            rosterStudentFixtures.studentsWithEachStatus[1].studentId.toUpperCase(),
-        },
-      });
-
-      expect(
-        screen.getByTestId(`${rsTestId}-cell-row-0-col-studentId`),
-      ).toHaveTextContent(
-        rosterStudentFixtures.studentsWithEachStatus[1].studentId,
-      );
-      expect(
-        screen.queryByTestId(`${rsTestId}-cell-row-1-col-studentId`),
       ).not.toBeInTheDocument();
     });
   });

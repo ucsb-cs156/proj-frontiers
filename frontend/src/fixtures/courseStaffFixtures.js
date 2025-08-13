@@ -73,6 +73,14 @@ const courseStaffFixtures = {
       githubLogin: "mikeassist",
       orgStatus: "MEMBER",
     },
+    {
+      id: 6,
+      firstName: "Fred",
+      lastName: "Assistant",
+      email: "fredassist@ucsb.edu",
+      githubLogin: "fredassist",
+      orgStatus: "MEMBER",
+    },
   ],
 };
 

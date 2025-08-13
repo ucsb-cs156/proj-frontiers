@@ -11,7 +11,6 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
-import CourseStaffCSVUploadForm from "main/components/CourseStaff/CourseStaffCSVUploadForm";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import CourseStaffTable from "main/components/CourseStaff/CourseStaffTable";
 import Modal from "react-bootstrap/Modal";
@@ -81,17 +80,6 @@ export default function StaffTabComponent({
   return (
     <div data-testid={`${testIdPrefix}-StaffTabComponent`}>
       <Modal
-        show={csvModal}
-        onHide={() => showCsvModal(false)}
-        centered={true}
-        data-testid={`${testIdPrefix}-csv-modal`}
-      >
-        <ModalHeader closeButton>Upload CSV Roster</ModalHeader>
-        <ModalBody>
-          <CourseStaffCSVUploadForm submitAction={handleCsvSubmit} />
-        </ModalBody>
-      </Modal>
-      <Modal
         show={postModal}
         onHide={() => showPostModal(false)}
         centered={true}
@@ -128,7 +116,6 @@ export default function StaffTabComponent({
           <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
             <span className="d-inline-block w-100">
               <Button
-                onClick={() => showCsvModal(true)}
                 data-testid={`${testIdPrefix}-csv-button`}
                 className="w-100"
                 disabled
