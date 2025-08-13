@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import {
@@ -8,7 +7,6 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
-import userEvent from "@testing-library/user-event";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 
@@ -70,7 +68,7 @@ describe("StaffTabComponent Tests", () => {
     const rsTestId = "InstructorCourseShowPage-CourseStaffTable";
 
     await waitFor(() => {
-      expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-id`)).toBe;
+      expect(screen.getByTestId(`${rsTestId}-cell-row-0-col-id`)).toBeInTheDocument();
     });
 
     expect(
