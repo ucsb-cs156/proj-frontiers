@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.*;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -779,5 +781,73 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     assertEquals(
         "Could not invite staff member to Organization",
         response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_success() throws Exception {
+    CourseStaff existingStaffMember =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("OldName")
+            .email("old@ucsb.edu")
+            .course(course1)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    CourseStaff updatedStaffMember =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("New")
+            .lastName("NewName")
+            .email("old@ucsb.edu")
+            .course(course1)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(existingStaffMember));
+    when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(updatedStaffMember);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/coursestaff")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("id", "1")
+                    .param("firstName", "   New   ")
+                    .param("lastName", "   NewName   "))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).save(captor.capture());
+    CourseStaff saved = captor.getValue();
+    assertEquals("New", saved.getFirstName());
+    assertEquals("NewName", saved.getLastName());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(updatedStaffMember);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_course_not_found() throws Exception {
+
+    when(courseRepository.findById(eq(42L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/coursestaff")
+                    .with(csrf())
+                    .param("courseId", "42")
+                    .param("id", "1")
+                    .param("firstName", "   New   ")
+                    .param("lastName", "   NewName   "))
+            .andExpect(status().isNotFound())
+            .andReturn();
   }
 }

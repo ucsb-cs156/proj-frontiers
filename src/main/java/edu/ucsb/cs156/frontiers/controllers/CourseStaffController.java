@@ -7,7 +7,6 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.services.*;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class CourseStaffController extends ApiController {
 
-  @Autowired private JobService jobService;
   @Autowired private OrganizationMemberService organizationMemberService;
 
   @Autowired private CourseStaffRepository courseStaffRepository;
@@ -42,7 +40,7 @@ public class CourseStaffController extends ApiController {
    * @return the created CourseStaff
    */
   @Operation(summary = "Add a staff member to a course")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/post")
   public CourseStaff postCourseStaff(
       @Parameter(name = "firstName") @RequestParam String firstName,
@@ -85,7 +83,7 @@ public class CourseStaffController extends ApiController {
    * @return a list of all courses.
    */
   @Operation(summary = "List all course staff members for a course")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/course")
   public Iterable<CourseStaff> courseStaffForCourse(
       @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException {
@@ -147,5 +145,25 @@ public class CourseStaffController extends ApiController {
       return ResponseEntity.internalServerError()
           .body("Could not invite staff member to Organization");
     }
+  }
+
+  @Operation(summary = "Update a staff member")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("")
+  public CourseStaff updateStaffMember(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "id") @RequestParam Long id,
+      @Parameter(name = "firstName") @RequestParam String firstName,
+      @Parameter(name = "lastName") @RequestParam String lastName)
+      throws EntityNotFoundException {
+
+    CourseStaff staffMember =
+        courseStaffRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(CourseStaff.class, id));
+
+    staffMember.setFirstName(firstName.trim());
+    staffMember.setLastName(lastName.trim());
+    return courseStaffRepository.save(staffMember);
   }
 }
