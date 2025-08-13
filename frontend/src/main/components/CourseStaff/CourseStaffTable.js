@@ -3,10 +3,6 @@ import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { Tooltip, OverlayTrigger } from "react-bootstrap";
 
 import { useBackendMutation } from "main/utils/useBackend";
-import {
-  cellToAxiosParamsDelete,
-  onDeleteSuccess,
-} from "main/utils/courseStaffUtils";
 import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
@@ -36,6 +32,7 @@ export default function CourseStaffTable({
       firstName: formData.firstName,
       lastName: formData.lastName,
       id: formData.id,
+      courseId: courseId
     },
   });
 
@@ -52,6 +49,22 @@ export default function CourseStaffTable({
   const deleteCallback = async (cell) => {
     deleteMutation.mutate(cell);
   };
+
+  function onDeleteSuccess(message) {
+    console.log(message);
+    toast(message);
+  }
+
+  function cellToAxiosParamsDelete(cell) {
+    return {
+      url: "/api/coursestaff/delete",
+      method: "DELETE",
+      params: {
+        id: cell.row.original.id,
+        courseId
+      },
+    };
+  }
 
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
