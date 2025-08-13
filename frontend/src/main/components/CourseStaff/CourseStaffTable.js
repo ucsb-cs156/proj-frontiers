@@ -32,7 +32,7 @@ export default function CourseStaffTable({
       firstName: formData.firstName,
       lastName: formData.lastName,
       id: formData.id,
-      courseId: courseId
+      courseId: courseId,
     },
   });
 
@@ -61,7 +61,7 @@ export default function CourseStaffTable({
       method: "DELETE",
       params: {
         id: cell.row.original.id,
-        courseId
+        courseId,
       },
     };
   }
