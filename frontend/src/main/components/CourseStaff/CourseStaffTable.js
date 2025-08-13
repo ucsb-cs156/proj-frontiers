@@ -1,13 +1,73 @@
 import React from "react";
-import OurTable from "main/components/OurTable";
+import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { Tooltip, OverlayTrigger } from "react-bootstrap";
+
+import { useBackendMutation } from "main/utils/useBackend";
+import {
+  cellToAxiosParamsDelete,
+  onDeleteSuccess,
+} from "main/utils/courseStaffUtils";
+import { hasRole } from "main/utils/currentUser";
+import Modal from "react-bootstrap/Modal";
+import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
+import { toast } from "react-toastify";
 
 export default function CourseStaffTable({
   staff,
-  currentUser: _currentUser,
+  currentUser,
   courseId,
   testIdPrefix = "CourseStaffTable",
 }) {
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [editStaff, setEditStaff] = React.useState(null);
+
+  // Stryker disable all : hard to test for query caching
+  const deleteMutation = useBackendMutation(
+    cellToAxiosParamsDelete,
+    { onSuccess: onDeleteSuccess },
+    [`/api/coursestaff/course?courseId=${courseId}`],
+  );
+  // Stryker restore all
+
+  const cellToAxiosParamsEdit = (formData) => ({
+    url: `/api/coursestaff/update`,
+    method: "PUT",
+    params: {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      id: formData.id,
+    },
+  });
+
+  const hideModal = () => {
+    setShowEditModal(false);
+  };
+
+  const onEditSuccess = () => {
+    toast("Staff member updated successfully.");
+    hideModal();
+  };
+
+  // Stryker disable next-line all
+  const deleteCallback = async (cell) => {
+    deleteMutation.mutate(cell);
+  };
+
+  const editMutation = useBackendMutation(
+    cellToAxiosParamsEdit,
+    { onSuccess: onEditSuccess },
+    [`/api/coursestaff/course?courseId=${courseId}`],
+  );
+
+  const editCallback = (cell) => {
+    setEditStaff(cell.row.original);
+    setShowEditModal(true);
+  };
+
+  const submitEditForm = (data) => {
+    editMutation.mutate(data);
+  };
+
   const columns = [
     {
       header: "id",
@@ -117,10 +177,32 @@ export default function CourseStaffTable({
     },
   });
 
-  // Note: Edit and Delete functionality removed since backend endpoints don't exist yet
+  if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
+    columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
+    columns.push(
+      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
+    );
+  }
 
   return (
     <>
+      <Modal show={showEditModal} onHide={hideModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Staff Member</Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          className={"pb-3"}
+          data-testid={`${testIdPrefix}-modal-body`}
+        >
+          <CourseStaffForm
+            initialContents={editStaff}
+            submitAction={submitEditForm}
+            buttonLabel={"Update"}
+            cancelDisabled={true}
+          />
+        </Modal.Body>
+      </Modal>
+
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}

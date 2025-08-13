@@ -21,7 +21,6 @@ export default function StaffTabComponent({
   currentUser,
 }) {
   const [postModal, showPostModal] = useState(false);
-  const [csvModal, showCsvModal] = useState(false);
   const { data: courseStaff } = useBackend(
     [`/api/coursestaff/course?courseId=${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -57,15 +56,6 @@ export default function StaffTabComponent({
 
   const handlePostSubmit = (staff) => {
     staffPostMutation.mutate(staff);
-  };
-
-  // Disabled CSV functions - not implemented yet
-  const handleCsvSubmit = () => {
-    // No-op for now since backend doesn't support this yet
-  };
-
-  const downloadCsv = () => {
-    // No-op for now since backend doesn't support this yet
   };
 
   // Render tooltip for disabled buttons
@@ -117,9 +107,10 @@ export default function StaffTabComponent({
             <span className="d-inline-block w-100">
               <Button
                 data-testid={`${testIdPrefix}-csv-button`}
-                className="w-100"
+                className="w-100 button btn-light disabled"
                 disabled
                 style={{ pointerEvents: "none" }}
+                aria-disabled="true"
               >
                 Upload CSV Roster
               </Button>
@@ -139,10 +130,10 @@ export default function StaffTabComponent({
           <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
             <span className="d-inline-block w-100">
               <Button
-                onClick={downloadCsv}
-                className="w-100"
+                className="w-100 button btn-light disabled"
                 disabled
                 style={{ pointerEvents: "none" }}
+                aria-disabled="true"
               >
                 Download Staff CSV
               </Button>
