@@ -210,7 +210,7 @@ public class CourseStaffController extends ApiController {
           "Successfully deleted staff member and removed them from the staff roster.");
     } else if (orgRemovalSuccessful) {
       return ResponseEntity.ok(
-          "Successfully deleted staff member and removed them from the course list and organization.");
+          "Successfully deleted staff member and removed them from the staff roster and organization.");
     } else {
       return ResponseEntity.ok(
           "Successfully deleted staff member but there was an error removing them from the course organization: "

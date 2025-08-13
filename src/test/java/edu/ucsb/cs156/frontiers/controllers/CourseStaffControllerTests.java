@@ -948,7 +948,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     verify(organizationMemberService).removeOrganizationMember(eq(staffMember));
 
     assertEquals(
-        "Successfully deleted staff member and removed them from the course list and organization.",
+        "Successfully deleted staff member and removed them from the staff roster and organization.",
         response.getResponse().getContentAsString());
   }
 
@@ -1001,134 +1001,153 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         response.getResponse().getContentAsString());
   }
 
-  // @Test
-  // @WithMockUser(roles = { "INSTRUCTOR" })
-  // public void testDeleteCourseStaff_withGithubLogin_noInstallationId_success()
-  // throws Exception {
-  // course1.setOrgName("test-org");
-  // course1.setInstallationId(null);
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteCourseStaff_withGithubLogin_noInstallationId_success() throws Exception {
+    course1.setOrgName("test-org");
+    course1.setInstallationId(null);
 
-  // CourseStaff staffMember = CourseStaff.builder()
-  // .id(1L)
-  // .firstName("Test")
-  // .lastName("Staff")
-  // .email("teststaff@ucsb.edu")
-  // .course(course1)
-  // .orgStatus(OrgStatus.MEMBER)
-  // .githubId(67890)
-  // .githubLogin("teststaff")
-  // .build();
+    CourseStaff staffMember =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(course1)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
 
-  // List<CourseStaff> staffList = new ArrayList<>();
-  // staffList.add(staffMember);
-  // course1.setCourseStaff(staffList);
+    List<CourseStaff> staffList = new ArrayList<>();
+    staffList.add(staffMember);
+    course1.setCourseStaff(staffList);
 
-  // List<CourseStaff> staffListSpy = Mockito.spy(staffList);
-  // course1.setCourseStaff(staffListSpy);
+    List<CourseStaff> staffListSpy = Mockito.spy(staffList);
+    course1.setCourseStaff(staffListSpy);
 
-  // when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
-  // when(courseRepository.save(any(Course.class))).thenReturn(course1);
+    when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
-  // MvcResult response = mockMvc
-  // .perform(delete("/api/coursestaff/delete").with(csrf()).param("id", "1"))
-  // .andExpect(status().isOk())
-  // .andReturn();
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/coursestaff/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
 
-  // verify(courseStaffRepository).findById(eq(1L));
-  // verify(courseRepository).save(any(Course.class));
-  // verify(courseStaffRepository).delete(eq(staffMember));
-  // verify(staffListSpy).remove(eq(staffMember));
-  // verify(organizationMemberService,
-  // never()).removeOrganizationMember(any(CourseStaff.class));
+    verify(courseStaffRepository).findById(eq(1L));
+    verify(courseRepository).save(any(Course.class));
+    verify(courseStaffRepository).delete(eq(staffMember));
+    verify(staffListSpy).remove(eq(staffMember));
+    verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
-  // assertEquals(
-  // "Successfully deleted course staff and removed him/her from the course list",
-  // response.getResponse().getContentAsString());
-  // }
+    assertEquals(
+        "Successfully deleted staff member and removed them from the staff roster.",
+        response.getResponse().getContentAsString());
+  }
 
-  // @Test
-  // @WithMockUser(roles = { "INSTRUCTOR" })
-  // public void testDeleteCourseStaff_withGithubLogin_orgRemovalFails() throws
-  // Exception {
-  // course1.setOrgName("test-org");
-  // course1.setInstallationId("12345");
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteCourseStaff_withGithubLogin_orgRemovalFails() throws Exception {
+    course1.setOrgName("test-org");
+    course1.setInstallationId("12345");
 
-  // CourseStaff staffMember = CourseStaff.builder()
-  // .id(1L)
-  // .firstName("Test")
-  // .lastName("Staff")
-  // .email("teststaff@ucsb.edu")
-  // .course(course1)
-  // .orgStatus(OrgStatus.MEMBER)
-  // .githubId(67890)
-  // .githubLogin("teststaff")
-  // .build();
+    CourseStaff staffMember =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(course1)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
 
-  // List<CourseStaff> staffList = new ArrayList<>();
-  // staffList.add(staffMember);
-  // course1.setCourseStaff(staffList);
+    List<CourseStaff> staffList = new ArrayList<>();
+    staffList.add(staffMember);
+    course1.setCourseStaff(staffList);
 
-  // List<CourseStaff> staffListSpy = Mockito.spy(staffList);
-  // course1.setCourseStaff(staffListSpy);
+    List<CourseStaff> staffListSpy = Mockito.spy(staffList);
+    course1.setCourseStaff(staffListSpy);
 
-  // when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
-  // when(courseRepository.save(any(Course.class))).thenReturn(course1);
+    when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
-  // String errorMessage = "API rate limit exceeded";
-  // doThrow(new RuntimeException(errorMessage))
-  // .when(organizationMemberService)
-  // .removeOrganizationMember(any(CourseStaff.class));
+    String errorMessage = "API rate limit exceeded";
+    doThrow(new RuntimeException(errorMessage))
+        .when(organizationMemberService)
+        .removeOrganizationMember(any(CourseStaff.class));
 
-  // MvcResult response = mockMvc
-  // .perform(delete("/api/coursestaff/delete").with(csrf()).param("id", "1"))
-  // .andExpect(status().isOk())
-  // .andReturn();
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/coursestaff/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
 
-  // verify(courseStaffRepository).findById(eq(1L));
-  // verify(courseRepository).save(any(Course.class));
-  // verify(courseStaffRepository).delete(eq(staffMember));
-  // verify(staffListSpy).remove(eq(staffMember));
-  // verify(organizationMemberService).removeOrganizationMember(eq(staffMember));
+    verify(courseStaffRepository).findById(eq(1L));
+    verify(courseRepository).save(any(Course.class));
+    verify(courseStaffRepository).delete(eq(staffMember));
+    verify(staffListSpy).remove(eq(staffMember));
+    verify(organizationMemberService).removeOrganizationMember(eq(staffMember));
 
-  // assertEquals(
-  // "Successfully deleted course staff but there was an error removing them from
-  // the course organization: "
-  // + errorMessage,
-  // response.getResponse().getContentAsString());
-  // }
+    assertEquals(
+        "Successfully deleted staff member but there was an error removing them from the course organization: "
+            + errorMessage,
+        response.getResponse().getContentAsString());
+  }
 
-  // @Test
-  // @WithMockUser(roles = { "INSTRUCTOR" })
-  // public void testDeleteCourseStaff_notFound() throws Exception {
-  // when(courseStaffRepository.findById(eq(99L))).thenReturn(Optional.empty());
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteCourseStaff_notFound() throws Exception {
+    when(courseStaffRepository.findById(eq(99L))).thenReturn(Optional.empty());
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/coursestaff/delete")
+                    .with(csrf())
+                    .param("id", "99")
+                    .param("courseId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
 
-  // MvcResult response = mockMvc
-  // .perform(delete("/api/coursestaff/delete").with(csrf()).param("id", "99"))
-  // .andExpect(status().isNotFound())
-  // .andReturn();
+    verify(courseStaffRepository).findById(eq(99L));
+    verify(courseStaffRepository, never()).delete(any(CourseStaff.class));
+    verify(courseRepository, never()).save(any(Course.class));
 
-  // verify(courseStaffRepository).findById(eq(99L));
-  // verify(courseStaffRepository, never()).delete(any(CourseStaff.class));
-  // verify(courseRepository, never()).save(any(Course.class));
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "CourseStaff with id 99 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
 
-  // String responseString = response.getResponse().getContentAsString();
-  // Map<String, String> expectedMap = Map.of(
-  // "type", "EntityNotFoundException",
-  // "message", "CourseStaff with id 99 not found");
-  // String expectedJson = mapper.writeValueAsString(expectedMap);
-  // assertEquals(expectedJson, responseString);
-  // }
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testDeleteCourseStaff_unauthorized() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/coursestaff/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("courseId", "7"))
+            .andExpect(status().isForbidden())
+            .andReturn();
 
-  // @Test
-  // @WithMockUser(roles = { "USER" })
-  // public void testDeleteCourseStaff_unauthorized() throws Exception {
-  // mockMvc
-  // .perform(delete("/api/coursestaff/delete").with(csrf()).param("id", "1"))
-  // .andExpect(status().isForbidden());
-
-  // verify(courseStaffRepository, never()).findById(any());
-  // verify(courseStaffRepository, never()).delete(any(CourseStaff.class));
-  // verify(courseRepository, never()).save(any(Course.class));
-  // }
-
+    verify(courseStaffRepository, never()).findById(any());
+    verify(courseStaffRepository, never()).delete(any(CourseStaff.class));
+    verify(courseRepository, never()).save(any(Course.class));
+  }
 }
