@@ -485,7 +485,6 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  /** Test the POST endpoint */
   @Test
   public void testListCoursesForCurrentUser() throws Exception {
     String email = "student@example.com";
