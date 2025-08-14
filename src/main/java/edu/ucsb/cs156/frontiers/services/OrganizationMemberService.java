@@ -197,14 +197,52 @@ public class OrganizationMemberService {
       throw new IllegalArgumentException(
           "Cannot remove student from organization: Course has no linked organization");
     }
+    removeOrganizationMember(
+        course.getOrgName(), student.getGithubLogin(), jwtService.getInstallationToken(course));
+  }
 
-    String ENDPOINT =
-        "https://api.github.com/orgs/"
-            + course.getOrgName()
-            + "/members/"
-            + student.getGithubLogin();
+  /**
+   * Removes a member from an organization.
+   *
+   * @param staffMember The staff member to remove from the organization
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws IllegalArgumentException if student has no GitHub login or course has no linked
+   *     organization
+   * @throws Exception if there is an error removing the student from the organization
+   */
+  public void removeOrganizationMember(CourseStaff staffMember)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    if (staffMember.getGithubLogin() == null) {
+      throw new IllegalArgumentException(
+          "Cannot remove staff member from organization: GitHub login is null");
+    }
+
+    Course course = staffMember.getCourse();
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      throw new IllegalArgumentException(
+          "Cannot remove staff member from organization: Course has no linked organization");
+    }
+    removeOrganizationMember(
+        course.getOrgName(), staffMember.getGithubLogin(), jwtService.getInstallationToken(course));
+  }
+
+  /**
+   * Remove member from organization
+   *
+   * @param orgName
+   * @param githubLogin
+   * @param token
+   * @throws NoSuchAlgorithmException
+   * @throws InvalidKeySpecException
+   * @throws JsonProcessingException
+   */
+  public void removeOrganizationMember(String orgName, String githubLogin, String token)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+    String ENDPOINT = "https://api.github.com/orgs/" + orgName + "/members/" + githubLogin;
     HttpHeaders headers = new HttpHeaders();
-    String token = jwtService.getInstallationToken(course);
 
     headers.add("Authorization", "Bearer " + token);
     headers.add("Accept", "application/vnd.github+json");
@@ -212,9 +250,6 @@ public class OrganizationMemberService {
     HttpEntity<String> entity = new HttpEntity<>(headers);
 
     restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);
-    log.info(
-        "Successfully removed student {} from organization {}",
-        student.getGithubLogin(),
-        course.getOrgName());
+    log.info("Successfully removed student {} from organization {}", githubLogin, orgName);
   }
 }
