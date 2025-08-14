@@ -34,6 +34,8 @@ describe("CourseStaffForm tests", () => {
       const header = screen.getByText(headerText);
       expect(header).toBeInTheDocument();
     });
+    expect(await screen.findByTestId(`${testId}-email`)).toBeInTheDocument();
+    expect(screen.getByText(`Email`)).toBeInTheDocument();
   });
 
   test("renders correctly when passing in initialContents", async () => {

@@ -58,7 +58,7 @@ function CourseStaffForm({
         <Form.Group className="mb-3">
           <Form.Label htmlFor="email">Email</Form.Label>
           <Form.Control
-            data-testid={testIdPrefix + "-email"}
+            data-testid={`${testIdPrefix}-email`}
             id="email"
             type="text"
             isInvalid={Boolean(errors.email)}

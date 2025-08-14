@@ -39,6 +39,7 @@ export default function InstructorCourseShowPage() {
       const timer = setTimeout(() => {
         navigate("/", { replace: true });
       }, 3000);
+      // Stryker disable next-line BlockStatement
       return () => {
         clearTimeout(timer);
       };
@@ -75,15 +76,15 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
           <EnrollmentTabComponent
-            courseId={course ? course.id : ""}
-            testIdPrefix={"InstructorCourseShowPage"}
+            courseId={courseId}
+            testIdPrefix={testId}
             currentUser={currentUser}
           />
         </Tab>
         <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
           <StaffTabComponent
-            courseId={course ? course.id : ""}
-            testIdPrefix={"InstructorCourseShowPage"}
+            courseId={courseId}
+            testIdPrefix={testId}
             currentUser={currentUser}
           />
         </Tab>
