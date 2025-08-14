@@ -13,7 +13,6 @@ import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -44,7 +43,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
   @Test
   @WithMockUser(roles = {"INSTRUCTOR"})
   public void not_the_creator() throws Exception {
-    Course course = Course.builder().creator(User.builder().build()).build();
+    Course course = Course.builder().instructorEmail("test@example.com").build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     MvcResult response =
         mockMvc
@@ -62,7 +61,10 @@ public class RepositoryControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   public void not_registered_org() throws Exception {
     Course course =
-        Course.builder().courseName("course").creator(currentUserService.getUser()).build();
+        Course.builder()
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     MvcResult response =
         mockMvc
@@ -88,7 +90,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("course")
             .orgName("ucsb-cs156")
-            .creator(currentUserService.getUser())
+            .instructorEmail(currentUserService.getUser().getEmail())
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     MvcResult response =
@@ -117,7 +119,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156")
             .installationId("1234")
             .courseName("course")
-            .creator(currentUserService.getUser())
+            .instructorEmail(currentUserService.getUser().getEmail())
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     Job job = Job.builder().status("processing").build();
@@ -147,7 +149,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156")
             .installationId("1234")
             .courseName("course")
-            .creator(currentUserService.getUser())
+            .instructorEmail(currentUserService.getUser().getEmail())
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     Job job = Job.builder().status("processing").build();
@@ -172,7 +174,10 @@ public class RepositoryControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   public void notFound() throws Exception {
     Course course =
-        Course.builder().courseName("course").creator(currentUserService.getUser()).build();
+        Course.builder()
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
     doReturn(Optional.empty()).when(courseRepository).findById(eq(2L));
     MvcResult response =
         mockMvc
