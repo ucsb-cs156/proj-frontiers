@@ -4,7 +4,7 @@ import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 describe("GithubSettingIcon tests", () => {
   test("renders correctly with defaults", () => {
     render(<GithubSettingIcon />);
-           
+
     const container = screen.getByTestId("GithubSettingIcon");
     expect(container).toBeInTheDocument();
 
