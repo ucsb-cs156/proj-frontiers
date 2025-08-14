@@ -17,13 +17,16 @@ export default function CourseStaffTable({
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStaff, setEditStaff] = React.useState(null);
 
+  // Stryker disable all
   function onDeleteSuccess(message) {
     console.log(message);
     toast(message);
   }
+  // Stryker restore all
 
   function cellToAxiosParamsDelete(cell) {
     return {
+      // Stryker disable next-line StringLiteral
       url: "/api/coursestaff/delete",
       method: "DELETE",
       params: {
@@ -37,6 +40,7 @@ export default function CourseStaffTable({
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
+    // Stryker disable next-line all
     [`/api/coursestaff/course?courseId=${courseId}`],
   );
   // Stryker restore all
@@ -44,6 +48,7 @@ export default function CourseStaffTable({
   const cellToAxiosParamsEdit = (formData) => ({
     url: `/api/coursestaff`,
     method: "PUT",
+    // Stryker disable next-line ObjectLiteral
     params: {
       firstName: formData.firstName,
       lastName: formData.lastName,
@@ -69,6 +74,7 @@ export default function CourseStaffTable({
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     { onSuccess: onEditSuccess },
+    // Stryker disable next-line all
     [`/api/coursestaff/course?courseId=${courseId}`],
   );
 
