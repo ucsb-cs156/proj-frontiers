@@ -1,8 +1,9 @@
 import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
-import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
-import { FaGear, FaGithub } from "react-icons/fa6";
+import { Tooltip, OverlayTrigger, Button, Modal, Form } from "react-bootstrap";
 import { Link } from "react-router";
+import { useState } from "react";
+import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 
 const columns = [
   {
@@ -48,6 +49,57 @@ export default function InstructorCoursesTable({
   currentUser,
   testId = "InstructorCoursesTable",
 }) {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [newInstructorEmail, setNewInstructorEmail] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleShowModal = (course) => {
+    setSelectedCourse(course);
+    setNewInstructorEmail(course.instructorEmail);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedCourse(null);
+  };
+
+  const handleUpdateInstructor = async () => {
+    setIsUpdating(true);
+
+    if (storybook) {
+      window.alert(
+        `Would update course ${selectedCourse.id} instructor to: ${newInstructorEmail}`,
+      );
+      handleCloseModal();
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/courses/updateInstructor?courseId=${selectedCourse.id}&instructorEmail=${encodeURIComponent(newInstructorEmail)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        },
+      );
+
+      if (response.ok) {
+        window.location.reload(); // Reload to show updated data
+      } else {
+        const errorData = await response.text();
+        window.alert(`Error updating instructor: ${errorData}`);
+      }
+    } catch (error) {
+      window.alert(`Error updating instructor: ${error.message}`);
+    } finally {
+      handleCloseModal();
+    }
+  };
   const installCallback = (cell) => {
     const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;
     if (storybook) {
@@ -66,7 +118,7 @@ export default function InstructorCoursesTable({
     }
     if (
       hasRole(currentUser, "ROLE_INSTRUCTOR") &&
-      row.original.createdByEmail === currentUser.root.user.email
+      row.original.instructorEmail === currentUser.root.user.email
     ) {
       return true;
     }
@@ -86,35 +138,6 @@ export default function InstructorCoursesTable({
       <Tooltip id={`tooltip-orgname-${cell.row.index}`}>{set_message}</Tooltip>
     );
   };
-
-  const GithubSettingIcon = ({
-    size = 24,
-    gearColor = "blue",
-    githubColor = "black",
-    "data-testid": dataTestId,
-  }) => (
-    <span
-      style={{ display: "absolute", alignItems: "inline-block" }}
-      data-testid={dataTestId}
-    >
-      <FaGithub
-        size={size}
-        color={githubColor}
-        data-testid={`${dataTestId}-github-icon`}
-      />
-      <FaGear
-        size={size / 1.5}
-        color={gearColor}
-        data-testid={`${dataTestId}-settings-icon`}
-        style={{
-          position: "relative",
-          top: 0,
-          left: 0,
-          transform: "translate(-15%, 60%)",
-        }}
-      />
-    </span>
-  );
 
   const columnsWithInstall = [
     ...columns,
@@ -194,12 +217,74 @@ export default function InstructorCoursesTable({
       },
     },
     {
-      header: "Created By",
-      accessorKey: "createdByEmail",
+      header: "Instructor",
+      accessorKey: "instructorEmail",
+      cell: ({ cell }) => {
+        const isAdmin = hasRole(currentUser, "ROLE_ADMIN");
+        if (isAdmin) {
+          return (
+            <Button
+              variant="link"
+              onClick={() => handleShowModal(cell.row.original)}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-instructorEmail-button`}
+              style={{ padding: 0, textDecoration: "underline" }}
+            >
+              {cell.row.original.instructorEmail}
+            </Button>
+          );
+        } else {
+          return cell.row.original.instructorEmail;
+        }
+      },
     },
   ];
 
   return (
-    <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
+    <>
+      <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
+
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Update Instructor</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Course: {selectedCourse?.courseName}</Form.Label>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>New Instructor Email</Form.Label>
+              <Form.Control
+                type="email"
+                value={newInstructorEmail}
+                onChange={(e) => setNewInstructorEmail(e.target.value)}
+                placeholder="Enter instructor email"
+                data-testid="update-instructor-email-input"
+              />
+              <Form.Text className="text-muted">
+                Email must belong to an existing instructor or admin.
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={handleCloseModal}
+            disabled={isUpdating}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleUpdateInstructor}
+            disabled={isUpdating || !newInstructorEmail}
+            data-testid="update-instructor-submit-button"
+          >
+            {isUpdating ? "Updating..." : "Update Instructor"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 }
