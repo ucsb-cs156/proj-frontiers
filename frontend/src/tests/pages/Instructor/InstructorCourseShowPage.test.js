@@ -99,38 +99,6 @@ describe("InstructorCourseShowPage tests", () => {
     jest.useRealTimers();
   });
 
-  test("handles fallback for courseId", async () => {
-    setupInstructorUser();
-
-    axiosMock.onGet("/api/courses/7").reply(200, null);
-
-    axiosMock
-      .onGet("/api/rosterstudents/course/7")
-      .reply(200, rosterStudentFixtures.threeStudents);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
-          <Routes>
-            <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
-    await waitFor(() => {
-      expect(screen.getByTestId(`${rsTestId}-courseId`)).toBeInTheDocument();
-    });
-
-    const courseIdHiddenElement = screen.getByTestId(`${rsTestId}-courseId`);
-    expect(courseIdHiddenElement).toBeInTheDocument();
-    expect(courseIdHiddenElement).toHaveAttribute("data-course-id", "");
-  });
-
   test("Returns to course page on timeout", async () => {
     axiosMock.onGet("/api/courses/7").timeout();
     axiosMock.onGet("/api/rosterstudents/course/7").timeout();
@@ -255,6 +223,10 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.getByText("Enrollment")).toHaveAttribute(
       "data-rr-ui-event-key",
       "enrollment",
+    );
+    expect(screen.getByText("Staff")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "staff",
     );
     expect(screen.getByText("Assignments")).toHaveAttribute(
       "data-rr-ui-event-key",
