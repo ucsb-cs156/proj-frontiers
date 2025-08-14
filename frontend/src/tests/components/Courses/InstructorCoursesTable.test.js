@@ -646,6 +646,7 @@ describe("InstructorCoursesTable tests", () => {
     const githubIcon = screen.getByTestId(
       `CoursesTable-cell-row-0-col-orgName-gear-github-icon`,
     );
+    expect(githubIcon).toBeInTheDocument();
 
     fireEvent.click(instructorEmailButton);
 

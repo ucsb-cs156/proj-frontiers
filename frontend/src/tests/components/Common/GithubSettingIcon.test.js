@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 
 describe("GithubSettingIcon tests", () => {
