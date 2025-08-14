@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Users/UsersTable.js</title>
+    <title>Code coverage report for components/Common/GithubSettingIcon.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Users</a> UsersTable.js</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Common</a> GithubSettingIcon.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
@@ -95,17 +95,15 @@
 <a name='L30'></a><a href='#L30'>30</a>
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
-<a name='L33'></a><a href='#L33'>33</a>
-<a name='L34'></a><a href='#L34'>34</a>
-<a name='L35'></a><a href='#L35'>35</a>
-<a name='L36'></a><a href='#L36'>36</a>
-<a name='L37'></a><a href='#L37'>37</a>
-<a name='L38'></a><a href='#L38'>38</a>
-<a name='L39'></a><a href='#L39'>39</a>
-<a name='L40'></a><a href='#L40'>40</a>
-<a name='L41'></a><a href='#L41'>41</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">48x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -127,61 +125,39 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import OurTable from "main/components/OurTable";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { FaGear, FaGithub } from "react-icons/fa6";
 &nbsp;
-const columns = [
-  {
-    Header: "id",
-    accessor: "id", // accessor is the "key" in the data
-  },
-  {
-    header: "First Name",
-    accessorKey: "givenName",
-  },
-  {
-    header: "Last Name",
-    accessorKey: "familyName",
-  },
-  {
-    header: "Email",
-    accessorKey: "email",
-  },
-  {
-    header: "Admin",
-    id: "admin",
-    accessorKey: "admin",
-    cell: ({ cell }) =&gt; {
-      return String(cell.getValue());
-    }, // convert boolean to string for display
-  },
-  {
-    header: "Instructor",
-    id: "instructor",
-    accessorKey: "instructor",
-    cell: ({ cell }) =&gt; {
-      return String(cell.getValue());
-    }, // convert boolean to string for display
-  },
-];
-&nbsp;
-export default function UsersTable({ users }) {
-  return &lt;OurTable data={users} columns={columns} testid={"UsersTable"} /&gt;;
+export default function GithubSettingIcon({
+  size = 24,
+  gearColor = "blue",
+  githubColor = "black",
+  "data-testid": dataTestId = "GithubSettingIcon",
+}) {
+  return (
+    &lt;span
+      style={{ display: "absolute", alignItems: "inline-block" }}
+      data-testid={dataTestId}
+    &gt;
+      &lt;FaGithub
+        size={size}
+        color={githubColor}
+        data-testid={`${dataTestId}-github-icon`}
+      /&gt;
+      &lt;FaGear
+        size={size / 1.5}
+        color={gearColor}
+        data-testid={`${dataTestId}-settings-icon`}
+        style={{
+          position: "relative",
+          top: 0,
+          left: 0,
+          transform: "translate(-15%, 60%)",
+        }}
+      /&gt;
+    &lt;/span&gt;
+  );
 }
 &nbsp;</pre></td></tr></table></pre>
 
