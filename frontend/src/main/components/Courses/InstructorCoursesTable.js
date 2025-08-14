@@ -1,8 +1,9 @@
 import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
-import { FaGear, FaGithub } from "react-icons/fa6";
 import { Link } from "react-router";
+
+import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 
 const columns = [
   {
@@ -86,35 +87,6 @@ export default function InstructorCoursesTable({
       <Tooltip id={`tooltip-orgname-${cell.row.index}`}>{set_message}</Tooltip>
     );
   };
-
-  const GithubSettingIcon = ({
-    size = 24,
-    gearColor = "blue",
-    githubColor = "black",
-    "data-testid": dataTestId,
-  }) => (
-    <span
-      style={{ display: "absolute", alignItems: "inline-block" }}
-      data-testid={dataTestId}
-    >
-      <FaGithub
-        size={size}
-        color={githubColor}
-        data-testid={`${dataTestId}-github-icon`}
-      />
-      <FaGear
-        size={size / 1.5}
-        color={gearColor}
-        data-testid={`${dataTestId}-settings-icon`}
-        style={{
-          position: "relative",
-          top: 0,
-          left: 0,
-          transform: "translate(-15%, 60%)",
-        }}
-      />
-    </span>
-  );
 
   const columnsWithInstall = [
     ...columns,
