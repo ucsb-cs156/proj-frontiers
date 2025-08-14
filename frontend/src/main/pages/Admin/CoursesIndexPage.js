@@ -69,7 +69,11 @@ export default function CoursesIndexPage() {
           toggleShowModal={setViewModal}
           onSubmitAction={onSubmit}
         />
-        <InstructorCoursesTable courses={courses} currentUser={currentUser} />
+        <InstructorCoursesTable
+          courses={courses}
+          currentUser={currentUser}
+          enableInstructorUpdate={true}
+        />
       </div>
     </BasicLayout>
   );
