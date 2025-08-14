@@ -533,6 +533,26 @@ public class OrganizationMemberServiceTests {
   }
 
   @Test
+  void testRemoveOrganizationMember_Success_staffMember() throws Exception {
+    CourseStaff testStaffMember =
+        CourseStaff.builder().githubId(12345).githubLogin("testuser").course(testCourse).build();
+
+    mockServer
+        .expect(requestTo("https://api.github.com/orgs/" + TEST_ORG + "/members/testuser"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andRespond(withStatus(HttpStatus.NO_CONTENT));
+
+    // No exception should be thrown
+    organizationMemberService.removeOrganizationMember(testStaffMember);
+
+    mockServer.verify();
+    // No assertion needed as we're just verifying no exception is thrown
+  }
+
+  @Test
   void testRemoveOrganizationMember_NullGithubLogin() throws Exception {
     RosterStudent testStudent =
         RosterStudent.builder().githubId(12345).githubLogin(null).course(testCourse).build();
@@ -574,6 +594,50 @@ public class OrganizationMemberServiceTests {
   }
 
   @Test
+  void testRemoveOrganizationMember_NullOrgName_staffMember() throws Exception {
+    Course courseWithoutOrg = Course.builder().installationId("123").orgName(null).build();
+
+    CourseStaff testStaffMember =
+        CourseStaff.builder()
+            .githubId(12345)
+            .githubLogin("testuser")
+            .course(courseWithoutOrg)
+            .build();
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              organizationMemberService.removeOrganizationMember(testStaffMember);
+            });
+
+    assertEquals(
+        "Cannot remove staff member from organization: Course has no linked organization",
+        exception.getMessage());
+    mockServer.verify();
+  }
+
+  @Test
+  void testRemoveOrganizationMember_NullGithubLogin_staffMember() throws Exception {
+    Course courseWithoutOrg = Course.builder().installationId("123").orgName(null).build();
+
+    CourseStaff testStaffMember =
+        CourseStaff.builder().githubId(12345).githubLogin(null).course(courseWithoutOrg).build();
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              organizationMemberService.removeOrganizationMember(testStaffMember);
+            });
+
+    assertEquals(
+        "Cannot remove staff member from organization: GitHub login is null",
+        exception.getMessage());
+    mockServer.verify();
+  }
+
+  @Test
   void testRemoveOrganizationMember_NullInstallationId() throws Exception {
     Course courseWithoutInstallation =
         Course.builder().orgName(TEST_ORG).installationId(null).build();
@@ -594,6 +658,31 @@ public class OrganizationMemberServiceTests {
 
     assertEquals(
         "Cannot remove student from organization: Course has no linked organization",
+        exception.getMessage());
+    mockServer.verify();
+  }
+
+  @Test
+  void testRemoveOrganizationMember_NullInstallationId_staffMember() throws Exception {
+    Course courseWithoutInstallation =
+        Course.builder().orgName(TEST_ORG).installationId(null).build();
+
+    CourseStaff testStaffMember =
+        CourseStaff.builder()
+            .githubId(12345)
+            .githubLogin("testuser")
+            .course(courseWithoutInstallation)
+            .build();
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              organizationMemberService.removeOrganizationMember(testStaffMember);
+            });
+
+    assertEquals(
+        "Cannot remove staff member from organization: Course has no linked organization",
         exception.getMessage());
     mockServer.verify();
   }
