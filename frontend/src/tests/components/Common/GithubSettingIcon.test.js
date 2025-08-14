@@ -4,16 +4,27 @@ import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 describe("GithubSettingIcon tests", () => {
   test("renders correctly with defaults", () => {
     render(<GithubSettingIcon />);
+           
+    const container = screen.getByTestId("GithubSettingIcon");
+    expect(container).toBeInTheDocument();
+
+    // Check Github icon
+    const githubIcon = screen.getByTestId("GithubSettingIcon-github-icon");
+    expect(githubIcon).toBeInTheDocument();
+    expect(githubIcon).toHaveAttribute("color", "black");
+
+    // Check Gear icon
+    const gearIcon = screen.getByTestId("GithubSettingIcon-settings-icon");
+    expect(gearIcon).toBeInTheDocument();
+    expect(gearIcon).toHaveAttribute("color", "blue");
     expect(
       screen.getByTestId("GithubSettingIcon-github-icon"),
     ).toBeInTheDocument();
-    const settingsIcon = screen.getByTestId("GithubSettingIcon-settings-icon");
-    expect(settingsIcon).toBeInTheDocument();
-    expect(settingsIcon).toHaveStyle({
+    expect(gearIcon).toHaveStyle({
       position: "relative",
       top: "0px",
     });
-    expect(settingsIcon).toHaveStyle({
+    expect(gearIcon).toHaveStyle({
       left: "0px",
       transform: "translate(-15%, 60%)",
     });
@@ -33,9 +44,5 @@ describe("GithubSettingIcon tests", () => {
       left: "0px",
       transform: "translate(-15%, 60%)",
     });
-
-    expect(
-      screen.getByTestId("GithubSettingIcon-settings-icon"),
-    ).toBeInTheDocument();
   });
 });

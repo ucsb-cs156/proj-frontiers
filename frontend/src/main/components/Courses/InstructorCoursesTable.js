@@ -9,6 +9,8 @@ import { toast } from "react-toastify";
 import UpdateInstructorForm from "main/components/Courses/UpdateInstructorForm";
 import Modal from "react-bootstrap/Modal";
 
+import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
+
 const columns = [
   {
     header: "id",
