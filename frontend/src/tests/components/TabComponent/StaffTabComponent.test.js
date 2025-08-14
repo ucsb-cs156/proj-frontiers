@@ -50,7 +50,7 @@ describe("StaffTabComponent Tests", () => {
     axiosMock.restore();
   });
 
-  test("Table Renders", async () => {
+  test("StaffTabComponent Renders", async () => {
     axiosMock
       .onGet("/api/coursestaff/course?courseId=1")
       .reply(200, courseStaffFixtures.threeStaff);
@@ -72,6 +72,10 @@ describe("StaffTabComponent Tests", () => {
         screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
       ).toBeInTheDocument();
     });
+
+    expect(
+      screen.getByTestId(`InstructorCourseShowPage-StaffTabComponent`),
+    ).toBeInTheDocument();
 
     expect(
       screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
@@ -394,6 +398,7 @@ describe("StaffTabComponent Tests", () => {
     // Find the disabled buttons
     const uploadCsvButton = screen.getByTestId(`${testId}-csv-button`);
     expect(uploadCsvButton).toBeDisabled();
+    expect(uploadCsvButton).toHaveStyle({ pointerEvents: "none" });
 
     // Simulate mouse over to trigger tooltip
     fireEvent.mouseOver(uploadCsvButton);
@@ -425,7 +430,7 @@ describe("StaffTabComponent Tests", () => {
     // Download CSV button (no testId, but can find by text)
     const downloadCsvButton = screen.getByText("Download Staff CSV");
     expect(downloadCsvButton).toBeDisabled();
-
+    expect(downloadCsvButton).toHaveStyle("pointerEvents: none");
     fireEvent.mouseOver(downloadCsvButton);
 
     await waitFor(() => {
