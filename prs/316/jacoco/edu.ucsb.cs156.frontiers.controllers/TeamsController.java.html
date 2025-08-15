@@ -201,12 +201,13 @@ import org.springframework.web.server.ResponseStatusException;
    * @return the team
    */
   @Operation(summary = &quot;Get a single team&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;&quot;)
-  public Team getTeamById(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc" id="L207">    Team team =</span>
-<span class="fc" id="L208">        teamRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Team.class, id));</span>
-<span class="fc" id="L209">    return team;</span>
+  public Team getTeamById(
+      @Parameter(name = &quot;id&quot;) @RequestParam Long id, @RequestParam Long courseId) {
+<span class="fc" id="L208">    Team team =</span>
+<span class="fc" id="L209">        teamRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Team.class, id));</span>
+<span class="fc" id="L210">    return team;</span>
   }
 
   /**
@@ -216,13 +217,14 @@ import org.springframework.web.server.ResponseStatusException;
    * @return a message indicating the team was deleted
    */
   @Operation(summary = &quot;Delete a team&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @DeleteMapping(&quot;&quot;)
-  public Object deleteTeam(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc" id="L222">    Team team =</span>
-<span class="fc" id="L223">        teamRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Team.class, id));</span>
-<span class="fc" id="L224">    teamRepository.delete(team);</span>
-<span class="fc" id="L225">    return genericMessage(&quot;Team with id %s deleted&quot;.formatted(id));</span>
+  public Object deleteTeam(
+      @Parameter(name = &quot;id&quot;) @RequestParam Long id, @RequestParam Long courseId) {
+<span class="fc" id="L224">    Team team =</span>
+<span class="fc" id="L225">        teamRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Team.class, id));</span>
+<span class="fc" id="L226">    teamRepository.delete(team);</span>
+<span class="fc" id="L227">    return genericMessage(&quot;Team with id %s deleted&quot;.formatted(id));</span>
   }
 
   /**
@@ -233,32 +235,42 @@ import org.springframework.web.server.ResponseStatusException;
    * @return the created team member
    */
   @Operation(summary = &quot;Add a roster student to a team&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @PostMapping(&quot;/addMember&quot;)
   public TeamMember addTeamMember(
       @Parameter(name = &quot;teamId&quot;) @RequestParam Long teamId,
-      @Parameter(name = &quot;rosterStudentId&quot;) @RequestParam Long rosterStudentId) {
+      @Parameter(name = &quot;rosterStudentId&quot;) @RequestParam Long rosterStudentId,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-<span class="fc" id="L242">    Team team =</span>
+<span class="fc" id="L245">    Team team =</span>
         teamRepository
-<span class="fc" id="L244">            .findById(teamId)</span>
-<span class="fc" id="L245">            .orElseThrow(() -&gt; new EntityNotFoundException(Team.class, teamId));</span>
+<span class="fc" id="L247">            .findById(teamId)</span>
+<span class="fc" id="L248">            .orElseThrow(() -&gt; new EntityNotFoundException(Team.class, teamId));</span>
 
-<span class="fc" id="L247">    RosterStudent rosterStudent =</span>
+<span class="fc" id="L250">    RosterStudent rosterStudent =</span>
         rosterStudentRepository
-<span class="fc" id="L249">            .findById(rosterStudentId)</span>
-<span class="fc" id="L250">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, rosterStudentId));</span>
+<span class="fc" id="L252">            .findById(rosterStudentId)</span>
+<span class="fc" id="L253">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, rosterStudentId));</span>
 
-<span class="fc bfc" id="L252" title="All 2 branches covered.">    if (teamMemberRepository.findByTeamAndRosterStudent(team, rosterStudent).isPresent()) {</span>
-<span class="fc" id="L253">      throw new ResponseStatusException(</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">    if (!team.getCourse().getId().equals(courseId)) {</span>
+<span class="fc" id="L256">      throw new ResponseStatusException(</span>
+<span class="fc" id="L257">          HttpStatus.BAD_REQUEST, &quot;Team is not from course %d&quot;.formatted(courseId));</span>
+    }
+<span class="fc bfc" id="L259" title="All 2 branches covered.">    if (!rosterStudent.getCourse().getId().equals(courseId)) {</span>
+<span class="fc" id="L260">      throw new ResponseStatusException(</span>
+<span class="fc" id="L261">          HttpStatus.BAD_REQUEST, &quot;Roster student is not from course %d&quot;.formatted(courseId));</span>
+    }
+
+<span class="fc bfc" id="L264" title="All 2 branches covered.">    if (teamMemberRepository.findByTeamAndRosterStudent(team, rosterStudent).isPresent()) {</span>
+<span class="fc" id="L265">      throw new ResponseStatusException(</span>
           HttpStatus.CONFLICT,
           &quot;Team member already exists for team %s and roster student %s&quot;
-<span class="fc" id="L256">              .formatted(team.getName(), rosterStudent.getEmail()));</span>
+<span class="fc" id="L268">              .formatted(team.getName(), rosterStudent.getEmail()));</span>
     }
-<span class="fc" id="L258">    TeamMember teamMember = TeamMember.builder().team(team).rosterStudent(rosterStudent).build();</span>
-<span class="fc" id="L259">    TeamMember savedTeamMember = teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L270">    TeamMember teamMember = TeamMember.builder().team(team).rosterStudent(rosterStudent).build();</span>
+<span class="fc" id="L271">    TeamMember savedTeamMember = teamMemberRepository.save(teamMember);</span>
 
-<span class="fc" id="L261">    return savedTeamMember;</span>
+<span class="fc" id="L273">    return savedTeamMember;</span>
   }
 
   /**
@@ -268,88 +280,89 @@ import org.springframework.web.server.ResponseStatusException;
    * @return a message indicating the team member was removed
    */
   @Operation(summary = &quot;Remove a team member&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @DeleteMapping(&quot;/removeMember&quot;)
   public Object removeTeamMember(
-      @Parameter(name = &quot;teamMemberId&quot;) @RequestParam Long teamMemberId) {
-<span class="fc" id="L275">    TeamMember teamMember =</span>
+      @Parameter(name = &quot;teamMemberId&quot;) @RequestParam Long teamMemberId,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L288">    TeamMember teamMember =</span>
         teamMemberRepository
-<span class="fc" id="L277">            .findById(teamMemberId)</span>
-<span class="fc" id="L278">            .orElseThrow(() -&gt; new EntityNotFoundException(TeamMember.class, teamMemberId));</span>
-<span class="fc" id="L279">    teamMemberRepository.delete(teamMember);</span>
-<span class="fc" id="L280">    return genericMessage(&quot;Team member with id %s deleted&quot;.formatted(teamMemberId));</span>
+<span class="fc" id="L290">            .findById(teamMemberId)</span>
+<span class="fc" id="L291">            .orElseThrow(() -&gt; new EntityNotFoundException(TeamMember.class, teamMemberId));</span>
+<span class="fc" id="L292">    teamMemberRepository.delete(teamMember);</span>
+<span class="fc" id="L293">    return genericMessage(&quot;Team member with id %s deleted&quot;.formatted(teamMemberId));</span>
   }
 
-<span class="fc" id="L283">  public enum TeamSourceType {</span>
-<span class="fc" id="L284">    SIMPLE,</span>
-<span class="fc" id="L285">    UNKNOWN</span>
+<span class="fc" id="L296">  public enum TeamSourceType {</span>
+<span class="fc" id="L297">    SIMPLE,</span>
+<span class="fc" id="L298">    UNKNOWN</span>
   }
 
-<span class="fc" id="L288">  public enum TeamMemberStatus {</span>
-<span class="fc" id="L289">    CREATED,</span>
-<span class="fc" id="L290">    EXISTS,</span>
-<span class="fc" id="L291">    MISSING</span>
+<span class="fc" id="L301">  public enum TeamMemberStatus {</span>
+<span class="fc" id="L302">    CREATED,</span>
+<span class="fc" id="L303">    EXISTS,</span>
+<span class="fc" id="L304">    MISSING</span>
   }
 
   public static final String SIMPLE_HEADERS = &quot;team,email&quot;;
 
   public TeamSourceType getRosterSourceType(String[] headers) {
 
-<span class="fc" id="L298">    Map&lt;TeamSourceType, String[]&gt; sourceTypeToHeaders = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L311">    Map&lt;TeamSourceType, String[]&gt; sourceTypeToHeaders = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L300">    sourceTypeToHeaders.put(TeamSourceType.SIMPLE, SIMPLE_HEADERS.split(&quot;,&quot;));</span>
+<span class="fc" id="L313">    sourceTypeToHeaders.put(TeamSourceType.SIMPLE, SIMPLE_HEADERS.split(&quot;,&quot;));</span>
 
-<span class="fc bfc" id="L302" title="All 2 branches covered.">    for (Map.Entry&lt;TeamSourceType, String[]&gt; entry : sourceTypeToHeaders.entrySet()) {</span>
-<span class="fc" id="L303">      TeamSourceType type = entry.getKey();</span>
-<span class="fc" id="L304">      String[] expectedHeaders = entry.getValue();</span>
-<span class="fc bfc" id="L305" title="All 2 branches covered.">      if (headers.length &gt;= expectedHeaders.length) {</span>
-<span class="fc" id="L306">        boolean matches = true;</span>
-<span class="fc bfc" id="L307" title="All 2 branches covered.">        for (int i = 0; i &lt; expectedHeaders.length; i++) {</span>
-<span class="fc bfc" id="L308" title="All 2 branches covered.">          if (!expectedHeaders[i].equalsIgnoreCase(headers[i])) {</span>
-<span class="fc" id="L309">            matches = false;</span>
-<span class="fc" id="L310">            break;</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">    for (Map.Entry&lt;TeamSourceType, String[]&gt; entry : sourceTypeToHeaders.entrySet()) {</span>
+<span class="fc" id="L316">      TeamSourceType type = entry.getKey();</span>
+<span class="fc" id="L317">      String[] expectedHeaders = entry.getValue();</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">      if (headers.length &gt;= expectedHeaders.length) {</span>
+<span class="fc" id="L319">        boolean matches = true;</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">        for (int i = 0; i &lt; expectedHeaders.length; i++) {</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">          if (!expectedHeaders[i].equalsIgnoreCase(headers[i])) {</span>
+<span class="fc" id="L322">            matches = false;</span>
+<span class="fc" id="L323">            break;</span>
           }
         }
-<span class="fc bfc" id="L313" title="All 2 branches covered.">        if (matches) {</span>
-<span class="fc" id="L314">          return type;</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">        if (matches) {</span>
+<span class="fc" id="L327">          return type;</span>
         }
       }
-<span class="fc" id="L317">    }</span>
+<span class="fc" id="L330">    }</span>
     // If no known type matches, throw
-<span class="fc" id="L319">    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Unknown Roster Source Type&quot;);</span>
+<span class="fc" id="L332">    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Unknown Roster Source Type&quot;);</span>
   }
 
   public TeamMemberResult fromCSVRow(String[] row, TeamSourceType sourceType, Course course) {
     // No if statements because this is the only possible value to enter here at the moment. Replace
     // with if when more
     // Formats are added.
-<span class="fc" id="L326">    return teamMemberFromSimpleCsv(row, course);</span>
+<span class="fc" id="L339">    return teamMemberFromSimpleCsv(row, course);</span>
   }
 
   public TeamMemberResult teamMemberFromSimpleCsv(String[] row, Course course) {
-<span class="fc" id="L330">    Optional&lt;RosterStudent&gt; student =</span>
-<span class="fc" id="L331">        rosterStudentRepository.findByCourseIdAndEmail(course.getId(), row[1]);</span>
-<span class="fc" id="L332">    Optional&lt;Team&gt; team = teamRepository.findByCourseIdAndName(course.getId(), row[0]);</span>
-<span class="fc bfc" id="L333" title="All 4 branches covered.">    if (student.isPresent() &amp;&amp; team.isPresent()) {</span>
-<span class="fc" id="L334">      Optional&lt;TeamMember&gt; teamMember =</span>
-<span class="fc" id="L335">          teamMemberRepository.findByTeamAndRosterStudent(team.get(), student.get());</span>
-<span class="fc bfc" id="L336" title="All 2 branches covered.">      if (teamMember.isPresent()) {</span>
-<span class="fc" id="L337">        return new TeamMemberResult(teamMember.get(), TeamMemberStatus.EXISTS);</span>
+<span class="fc" id="L343">    Optional&lt;RosterStudent&gt; student =</span>
+<span class="fc" id="L344">        rosterStudentRepository.findByCourseIdAndEmail(course.getId(), row[1]);</span>
+<span class="fc" id="L345">    Optional&lt;Team&gt; team = teamRepository.findByCourseIdAndName(course.getId(), row[0]);</span>
+<span class="fc bfc" id="L346" title="All 4 branches covered.">    if (student.isPresent() &amp;&amp; team.isPresent()) {</span>
+<span class="fc" id="L347">      Optional&lt;TeamMember&gt; teamMember =</span>
+<span class="fc" id="L348">          teamMemberRepository.findByTeamAndRosterStudent(team.get(), student.get());</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">      if (teamMember.isPresent()) {</span>
+<span class="fc" id="L350">        return new TeamMemberResult(teamMember.get(), TeamMemberStatus.EXISTS);</span>
       } else {
         TeamMember teamMemberToSave =
-<span class="fc" id="L340">            TeamMember.builder().team(team.get()).rosterStudent(student.get()).build();</span>
-<span class="fc" id="L341">        TeamMember savedTeamMember = teamMemberRepository.save(teamMemberToSave);</span>
-<span class="fc" id="L342">        return new TeamMemberResult(savedTeamMember, TeamMemberStatus.CREATED);</span>
+<span class="fc" id="L353">            TeamMember.builder().team(team.get()).rosterStudent(student.get()).build();</span>
+<span class="fc" id="L354">        TeamMember savedTeamMember = teamMemberRepository.save(teamMemberToSave);</span>
+<span class="fc" id="L355">        return new TeamMemberResult(savedTeamMember, TeamMemberStatus.CREATED);</span>
       }
-<span class="fc bfc" id="L344" title="All 2 branches covered.">    } else if (student.isPresent()) {</span>
-<span class="fc" id="L345">      Team teamToSave = Team.builder().name(row[0]).course(course).build();</span>
-<span class="fc" id="L346">      teamRepository.save(teamToSave);</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">    } else if (student.isPresent()) {</span>
+<span class="fc" id="L358">      Team teamToSave = Team.builder().name(row[0]).course(course).build();</span>
+<span class="fc" id="L359">      teamRepository.save(teamToSave);</span>
       TeamMember saveTeamMember =
-<span class="fc" id="L348">          TeamMember.builder().team(teamToSave).rosterStudent(student.get()).build();</span>
-<span class="fc" id="L349">      teamMemberRepository.save(saveTeamMember);</span>
-<span class="fc" id="L350">      return new TeamMemberResult(saveTeamMember, TeamMemberStatus.CREATED);</span>
+<span class="fc" id="L361">          TeamMember.builder().team(teamToSave).rosterStudent(student.get()).build();</span>
+<span class="fc" id="L362">      teamMemberRepository.save(saveTeamMember);</span>
+<span class="fc" id="L363">      return new TeamMemberResult(saveTeamMember, TeamMemberStatus.CREATED);</span>
     } else {
-<span class="fc" id="L352">      return new TeamMemberResult(row[1]);</span>
+<span class="fc" id="L365">      return new TeamMemberResult(row[1]);</span>
     }
   }
 }
