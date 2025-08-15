@@ -72,10 +72,19 @@ export default function InstructorCoursesTable({
     handleCloseModal();
   };
 
+  const onInstructorUpdateError = (error) => {
+    if (error.response.data.message)
+      toast(
+        `Was not able to update instructor:\n${error.response.data.message}`,
+      );
+    else toast(`Was not able to update instructor:\n${error.message}`);
+  };
+
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     {
       onSuccess: onInstructorUpdateSuccess,
+      onError: onInstructorUpdateError,
     },
     ["/api/courses/allForAdmins"],
   );
@@ -91,16 +100,8 @@ export default function InstructorCoursesTable({
   };
 
   const handleUpdateInstructor = async (formData) => {
-    if (storybook) {
-      window.alert(
-        `Would update course ${selectedCourse.id} instructor to: ${formData.instructorEmail}`,
-      );
-      handleCloseModal();
-      return;
-    }
     formData.courseId = selectedCourse.id;
     editMutation.mutate(formData);
-    handleCloseModal();
   };
   const installCallback = (cell) => {
     const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;

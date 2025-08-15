@@ -10,10 +10,9 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
-const axiosMock = new AxiosMockAdapter(axios);
-
 const mockToast = jest.fn();
 
+let axiosMock;
 jest.mock("react-toastify", () => {
   const originalModule = jest.requireActual("react-toastify");
   return {
@@ -27,6 +26,7 @@ describe("CoursesIndexPage tests", () => {
   const testId = "InstructorCoursesTable";
 
   beforeEach(() => {
+    axiosMock = new AxiosMockAdapter(axios);
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
