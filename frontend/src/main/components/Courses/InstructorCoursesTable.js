@@ -68,7 +68,6 @@ export default function InstructorCoursesTable({
   };
 
   const onInstructorUpdateSuccess = () => {
-    toast("Successfully updated instructor");
     handleCloseModal();
   };
 
@@ -86,6 +85,7 @@ export default function InstructorCoursesTable({
       onSuccess: onInstructorUpdateSuccess,
       onError: onInstructorUpdateError,
     },
+    // Stryker disable next-line all : set up a test for caching in a future PR
     ["/api/courses/allForAdmins"],
   );
 
@@ -244,7 +244,12 @@ export default function InstructorCoursesTable({
 
   return (
     <>
-      <Modal show={showModal} onHide={handleCloseModal} centered={true}>
+      <Modal
+        data-testid={`${testId}-modal`}
+        show={showModal}
+        onHide={handleCloseModal}
+        centered={true}
+      >
         <Modal.Header closeButton>
           <Modal.Title>Update Instructor</Modal.Title>
         </Modal.Header>

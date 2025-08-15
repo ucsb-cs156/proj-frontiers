@@ -548,6 +548,10 @@ describe("InstructorCoursesTable tests", () => {
       await waitFor(() => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
+
+      const modal = screen.getByTestId(`${testId}-modal`);
+      expect(modal).toBeInTheDocument();
+      expect(modal).toHaveClass("modal-dialog modal-dialog-centered");
     });
 
     test("Modal closes when close button (X) is clicked", async () => {
@@ -697,6 +701,12 @@ describe("InstructorCoursesTable tests", () => {
 
       await waitFor(() => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+      expect(axiosMock.history.put[0].params).toEqual({
+        courseId: 1,
+        instructorEmail: "new@example.com",
       });
     });
 
