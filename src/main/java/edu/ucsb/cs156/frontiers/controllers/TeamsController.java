@@ -201,9 +201,10 @@ public class TeamsController extends ApiController {
    * @return the team
    */
   @Operation(summary = "Get a single team")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("")
-  public Team getTeamById(@Parameter(name = "id") @RequestParam Long id) {
+  public Team getTeamById(
+      @Parameter(name = "id") @RequestParam Long id, @RequestParam Long courseId) {
     Team team =
         teamRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(Team.class, id));
     return team;
@@ -216,9 +217,10 @@ public class TeamsController extends ApiController {
    * @return a message indicating the team was deleted
    */
   @Operation(summary = "Delete a team")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @DeleteMapping("")
-  public Object deleteTeam(@Parameter(name = "id") @RequestParam Long id) {
+  public Object deleteTeam(
+      @Parameter(name = "id") @RequestParam Long id, @RequestParam Long courseId) {
     Team team =
         teamRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(Team.class, id));
     teamRepository.delete(team);
@@ -233,11 +235,12 @@ public class TeamsController extends ApiController {
    * @return the created team member
    */
   @Operation(summary = "Add a roster student to a team")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/addMember")
   public TeamMember addTeamMember(
       @Parameter(name = "teamId") @RequestParam Long teamId,
-      @Parameter(name = "rosterStudentId") @RequestParam Long rosterStudentId) {
+      @Parameter(name = "rosterStudentId") @RequestParam Long rosterStudentId,
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
 
     Team team =
         teamRepository
@@ -248,6 +251,15 @@ public class TeamsController extends ApiController {
         rosterStudentRepository
             .findById(rosterStudentId)
             .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, rosterStudentId));
+
+    if (!team.getCourse().getId().equals(courseId)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Team is not from course %d".formatted(courseId));
+    }
+    if (!rosterStudent.getCourse().getId().equals(courseId)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Roster student is not from course %d".formatted(courseId));
+    }
 
     if (teamMemberRepository.findByTeamAndRosterStudent(team, rosterStudent).isPresent()) {
       throw new ResponseStatusException(
@@ -268,10 +280,11 @@ public class TeamsController extends ApiController {
    * @return a message indicating the team member was removed
    */
   @Operation(summary = "Remove a team member")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @DeleteMapping("/removeMember")
   public Object removeTeamMember(
-      @Parameter(name = "teamMemberId") @RequestParam Long teamMemberId) {
+      @Parameter(name = "teamMemberId") @RequestParam Long teamMemberId,
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
     TeamMember teamMember =
         teamMemberRepository
             .findById(teamMemberId)

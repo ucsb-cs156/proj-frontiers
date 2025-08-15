@@ -226,8 +226,8 @@ public class TeamsControllerTests extends ControllerTestCase {
 
   // Tests for GET /api/teams
 
-  @WithMockUser(roles = {"ADMIN"})
   @Test
+  @WithInstructorCoursePermissions
   public void testGetTeamById() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").build();
@@ -237,7 +237,10 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // act
     MvcResult response =
-        mockMvc.perform(get("/api/teams").param("id", "1")).andExpect(status().isOk()).andReturn();
+        mockMvc
+            .perform(get("/api/teams").param("id", "1").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
 
     // assert
     verify(teamRepository, times(1)).findById(1L);
@@ -256,7 +259,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     // act
     MvcResult response =
         mockMvc
-            .perform(get("/api/teams").param("id", "999"))
+            .perform(get("/api/teams").param("id", "999").param("courseId", "1"))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -274,7 +277,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
   // Tests for DELETE /api/teams
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithInstructorCoursePermissions
   @Test
   public void testDeleteTeam_success() throws Exception {
     // arrange
@@ -286,7 +289,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     // act
     MvcResult response =
         mockMvc
-            .perform(delete("/api/teams").param("id", "1").with(csrf()))
+            .perform(delete("/api/teams").param("id", "1").param("courseId", "1").with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -309,7 +312,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     // act
     MvcResult response =
         mockMvc
-            .perform(delete("/api/teams").param("id", "999").with(csrf()))
+            .perform(delete("/api/teams").param("id", "999").param("courseId", "1").with(csrf()))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -328,13 +331,14 @@ public class TeamsControllerTests extends ControllerTestCase {
 
   // Tests for POST /api/teams/addMember
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithInstructorCoursePermissions
   @Test
   public void testAddTeamMember_success() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
-    RosterStudent rosterStudent = RosterStudent.builder().id(1L).email("student@ucsb.edu").build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().id(1L).email("student@ucsb.edu").course(course).build();
     TeamMember teamMember =
         TeamMember.builder().id(1L).team(team).rosterStudent(rosterStudent).build();
 
@@ -352,6 +356,7 @@ public class TeamsControllerTests extends ControllerTestCase {
                 post("/api/teams/addMember")
                     .param("teamId", "1")
                     .param("rosterStudentId", "1")
+                    .param("courseId", "1")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
@@ -364,6 +369,60 @@ public class TeamsControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(teamMember);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void testAddTeamMember_differing_course_team() throws Exception {
+    // arrange
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+    Course course2 = Course.builder().id(2L).courseName("CS126").build();
+    Team team = Team.builder().id(1L).name("Team Alpha").course(course2).build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().id(1L).email("student@ucsb.edu").course(course).build();
+    when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/teams/addMember")
+                    .param("teamId", "1")
+                    .param("rosterStudentId", "1")
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    assertEquals("Team is not from course 1", response.getResponse().getErrorMessage());
+    verifyNoInteractions(teamMemberRepository);
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void testAddTeamMember_differing_course_roster_student() throws Exception {
+    // arrange
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+    Course course2 = Course.builder().id(2L).courseName("CS126").build();
+    Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().id(1L).email("student@ucsb.edu").course(course2).build();
+    when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/teams/addMember")
+                    .param("teamId", "1")
+                    .param("rosterStudentId", "1")
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    assertEquals("Roster student is not from course 1", response.getResponse().getErrorMessage());
+    verifyNoInteractions(teamMemberRepository);
   }
 
   @WithMockUser(roles = {"ADMIN"})
@@ -379,6 +438,7 @@ public class TeamsControllerTests extends ControllerTestCase {
                 post("/api/teams/addMember")
                     .param("teamId", "999")
                     .param("rosterStudentId", "1")
+                    .param("courseId", "1")
                     .with(csrf()))
             .andExpect(status().isNotFound())
             .andReturn();
@@ -397,13 +457,14 @@ public class TeamsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithInstructorCoursePermissions
   @Test
   public void testAddTeamMember_alreadyexists() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
-    RosterStudent rosterStudent = RosterStudent.builder().id(1L).email("student@ucsb.edu").build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().id(1L).email("student@ucsb.edu").course(course).build();
     TeamMember teamMember =
         TeamMember.builder().id(1L).team(team).rosterStudent(rosterStudent).build();
 
@@ -419,6 +480,7 @@ public class TeamsControllerTests extends ControllerTestCase {
                 post("/api/teams/addMember")
                     .param("teamId", "1")
                     .param("rosterStudentId", "1")
+                    .param("courseId", "1")
                     .with(csrf()))
             .andExpect(status().isConflict())
             .andReturn();
@@ -447,6 +509,7 @@ public class TeamsControllerTests extends ControllerTestCase {
                 post("/api/teams/addMember")
                     .param("teamId", "1")
                     .param("rosterStudentId", "999")
+                    .param("courseId", "1")
                     .with(csrf()))
             .andExpect(status().isNotFound())
             .andReturn();
@@ -467,7 +530,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
   // Tests for DELETE /api/teams/removeMember
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithInstructorCoursePermissions
   @Test
   public void testRemoveTeamMember_success() throws Exception {
     // arrange
@@ -480,7 +543,11 @@ public class TeamsControllerTests extends ControllerTestCase {
     // act
     MvcResult response =
         mockMvc
-            .perform(delete("/api/teams/removeMember").param("teamMemberId", "1").with(csrf()))
+            .perform(
+                delete("/api/teams/removeMember")
+                    .param("teamMemberId", "1")
+                    .param("courseId", "1")
+                    .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -503,7 +570,11 @@ public class TeamsControllerTests extends ControllerTestCase {
     // act
     MvcResult response =
         mockMvc
-            .perform(delete("/api/teams/removeMember").param("teamMemberId", "999").with(csrf()))
+            .perform(
+                delete("/api/teams/removeMember")
+                    .param("teamMemberId", "999")
+                    .param("courseId", "1")
+                    .with(csrf()))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -616,12 +687,12 @@ public class TeamsControllerTests extends ControllerTestCase {
 
   public static String sampleCSVContents =
       """
-            team,email
-            team1,fakestudent1@ucsb.edu
-            team2,fakestudent2@ucsb.edu
-            team1,existingstudent@ucsb.edu
-            team1,nors@ucsb.edu
-            """;
+          team,email
+          team1,fakestudent1@ucsb.edu
+          team2,fakestudent2@ucsb.edu
+          team1,existingstudent@ucsb.edu
+          team1,nors@ucsb.edu
+          """;
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
