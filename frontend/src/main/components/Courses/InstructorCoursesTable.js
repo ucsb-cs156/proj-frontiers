@@ -2,8 +2,12 @@ import OurTable from "main/components/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
 import { Link } from "react-router";
-
+import { useState } from "react";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
+import { useBackendMutation } from "main/utils/useBackend";
+import { toast } from "react-toastify";
+import UpdateInstructorForm from "main/components/Courses/UpdateInstructorForm";
+import Modal from "react-bootstrap/Modal";
 
 const columns = [
   {
@@ -48,7 +52,57 @@ export default function InstructorCoursesTable({
   storybook = false,
   currentUser,
   testId = "InstructorCoursesTable",
+  enableInstructorUpdate = false,
 }) {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const cellToAxiosParamsEdit = (formData) => {
+    return {
+      url: `/api/courses/updateInstructor`,
+      method: "PUT",
+      params: {
+        courseId: formData.courseId,
+        instructorEmail: formData.instructorEmail,
+      },
+    };
+  };
+
+  const onInstructorUpdateSuccess = () => {
+    handleCloseModal();
+  };
+
+  const onInstructorUpdateError = (error) => {
+    if (error.response.data.message)
+      toast(
+        `Was not able to update instructor:\n${error.response.data.message}`,
+      );
+    else toast(`Was not able to update instructor:\n${error.message}`);
+  };
+
+  const editMutation = useBackendMutation(
+    cellToAxiosParamsEdit,
+    {
+      onSuccess: onInstructorUpdateSuccess,
+      onError: onInstructorUpdateError,
+    },
+    // Stryker disable next-line all : set up a test for caching in a future PR
+    ["/api/courses/allForAdmins"],
+  );
+
+  const handleShowModal = (course) => {
+    setSelectedCourse(course);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedCourse(null);
+  };
+
+  const handleUpdateInstructor = async (formData) => {
+    formData.courseId = selectedCourse.id;
+    editMutation.mutate(formData);
+  };
   const installCallback = (cell) => {
     const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;
     if (storybook) {
@@ -67,7 +121,7 @@ export default function InstructorCoursesTable({
     }
     if (
       hasRole(currentUser, "ROLE_INSTRUCTOR") &&
-      row.original.createdByEmail === currentUser.root.user.email
+      row.original.instructorEmail === currentUser.root.user.email
     ) {
       return true;
     }
@@ -166,12 +220,47 @@ export default function InstructorCoursesTable({
       },
     },
     {
-      header: "Created By",
-      accessorKey: "createdByEmail",
+      header: "Instructor",
+      accessorKey: "instructorEmail",
+      cell: ({ cell }) => {
+        const isAdmin = hasRole(currentUser, "ROLE_ADMIN");
+        if (isAdmin && enableInstructorUpdate) {
+          return (
+            <Button
+              variant="link"
+              onClick={() => handleShowModal(cell.row.original)}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-instructorEmail-button`}
+              style={{ padding: 0, textDecoration: "underline" }}
+            >
+              {cell.row.original.instructorEmail}
+            </Button>
+          );
+        } else {
+          return cell.row.original.instructorEmail;
+        }
+      },
     },
   ];
 
   return (
-    <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
+    <>
+      <Modal
+        data-testid={`${testId}-modal`}
+        show={showModal}
+        onHide={handleCloseModal}
+        centered={true}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Update Instructor</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <UpdateInstructorForm
+            handleUpdateInstructor={handleUpdateInstructor}
+            initialContents={selectedCourse}
+          />
+        </Modal.Body>
+      </Modal>
+      <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
+    </>
   );
 }

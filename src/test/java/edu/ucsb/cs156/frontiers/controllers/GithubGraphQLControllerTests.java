@@ -52,7 +52,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .term("S25")
             .school("UCSB")
-            .creator(user)
+            .instructorEmail(user.getEmail())
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -93,7 +93,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .term("S25")
             .school("UCSB")
-            .creator(user)
+            .instructorEmail(user.getEmail())
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -145,14 +145,15 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
   public void test_getDefaultMainBranch_unauthorized() throws Exception {
     // arrange
     User user = currentUserService.getCurrentUser().getUser();
-    User otherUser = User.builder().id(user.getId() + 1L).build();
+    User otherUser =
+        User.builder().id(user.getId() + 1L).email("different-instructor@example.org").build();
     Course course =
         Course.builder()
             .id(1L)
             .courseName("CS156")
             .term("S25")
             .school("UCSB")
-            .creator(otherUser)
+            .instructorEmail(otherUser.getEmail())
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -193,7 +194,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .term("S25")
             .school("UCSB")
-            .creator(user)
+            .instructorEmail(user.getEmail())
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -237,7 +238,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .term("S25")
             .school("UCSB")
-            .creator(user)
+            .instructorEmail(user.getEmail())
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
@@ -295,14 +296,15 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
   public void test_getCommits_unauthorized() throws Exception {
     // arrange
     User user = currentUserService.getCurrentUser().getUser();
-    User otherUser = User.builder().id(user.getId() + 1L).build();
+    User otherUser =
+        User.builder().id(user.getId() + 1L).email("different-instructor@example.org").build();
     Course course =
         Course.builder()
             .id(1L)
             .courseName("CS156")
             .term("S25")
             .school("UCSB")
-            .creator(otherUser)
+            .instructorEmail(otherUser.getEmail())
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));

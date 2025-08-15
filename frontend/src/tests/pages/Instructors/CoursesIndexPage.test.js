@@ -10,10 +10,9 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
-const axiosMock = new AxiosMockAdapter(axios);
-
 const mockToast = jest.fn();
 
+let axiosMock;
 jest.mock("react-toastify", () => {
   const originalModule = jest.requireActual("react-toastify");
   return {
@@ -27,6 +26,7 @@ describe("CoursesIndexPage tests", () => {
   const testId = "InstructorCoursesTable";
 
   beforeEach(() => {
+    axiosMock = new AxiosMockAdapter(axios);
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
@@ -43,7 +43,7 @@ describe("CoursesIndexPage tests", () => {
 
   const queryClient = new QueryClient();
 
-  test("Renders for admin user", async () => {
+  test("Renders empty table for admin user correctly", async () => {
     setupAdminUser();
     axiosMock.onGet("/api/courses/allForAdmins").reply(200, []);
 
@@ -60,7 +60,7 @@ describe("CoursesIndexPage tests", () => {
     });
   });
 
-  test("renders correctly for admin user", async () => {
+  test("Renders course data correctly for admin user", async () => {
     setupAdminUser();
     axiosMock
       .onGet("/api/courses/allForAdmins")
@@ -101,6 +101,13 @@ describe("CoursesIndexPage tests", () => {
     );
     expect(button4).toBeInTheDocument();
     expect(button4).toHaveTextContent("Install GitHub App");
+
+    const instructorEmailButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-instructorEmail-button`,
+    );
+    expect(instructorEmailButton).toBeInTheDocument();
+    expect(instructorEmailButton).toHaveTextContent("diba@ucsb.edu");
+    expect(instructorEmailButton).toHaveClass("btn-link");
   });
 
   test("renders empty table when backend unavailable, admin only", async () => {

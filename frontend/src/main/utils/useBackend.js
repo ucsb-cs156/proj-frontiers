@@ -52,13 +52,10 @@ export function useBackend(
   });
 }
 
-// const wrappedParams = async (params) =>
-//   await ( await axios(params)).data;
-
 const wrappedParams = async (params) => {
-  return await (
-    await axios(params)
-  ).data;
+  // Directly returning the promise allows useMutation to handle rejections.
+  const response = await axios(params);
+  return response.data;
 };
 
 export function useBackendMutation(

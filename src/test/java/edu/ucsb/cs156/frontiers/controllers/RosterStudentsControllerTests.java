@@ -681,7 +681,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("course")
             .installationId("1234")
-            .creator(currentUserService.getUser())
+            .instructorEmail(currentUserService.getUser().getEmail())
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     MvcResult response =
@@ -706,7 +706,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("course")
             .orgName("ucsb-cs156")
-            .creator(currentUserService.getUser())
+            .instructorEmail(currentUserService.getUser().getEmail())
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     MvcResult response =
@@ -733,7 +733,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156")
             .installationId("1234")
             .courseName("course")
-            .creator(currentUserService.getUser())
+            .instructorEmail(currentUserService.getUser().getEmail())
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     Job job = Job.builder().status("processing").build();
@@ -924,7 +924,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .id(2L)
             .installationId("1234")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     RosterStudent rosterStudent =
@@ -1047,7 +1047,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     RosterStudent rosterStudent =
@@ -1114,7 +1114,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     RosterStudent rosterStudent =
@@ -1181,7 +1181,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     RosterStudent rosterStudent =
@@ -1248,7 +1248,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     RosterStudent rosterStudent =

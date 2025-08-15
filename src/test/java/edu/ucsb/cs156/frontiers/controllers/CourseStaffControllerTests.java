@@ -453,7 +453,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .id(2L)
             .installationId("1234")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     CourseStaff courseStaff =
@@ -560,7 +560,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     CourseStaff courseStaff =
@@ -619,7 +619,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     CourseStaff courseStaff =
@@ -678,7 +678,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     CourseStaff courseStaff =
@@ -737,7 +737,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156")
             .courseName("course")
-            .creator(currentUser)
+            .instructorEmail(currentUser.getEmail())
             .build();
 
     CourseStaff courseStaff =
