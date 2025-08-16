@@ -41,7 +41,7 @@ public class CourseStaffController extends ApiController {
    * @return the created CourseStaff
    */
   @Operation(summary = "Add a staff member to a course")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
   @PostMapping("/post")
   public CourseStaff postCourseStaff(
       @Parameter(name = "firstName") @RequestParam String firstName,
@@ -149,7 +149,7 @@ public class CourseStaffController extends ApiController {
   }
 
   @Operation(summary = "Update a staff member")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
   @PutMapping("")
   public CourseStaff updateStaffMember(
       @Parameter(name = "courseId") @RequestParam Long courseId,
@@ -169,7 +169,7 @@ public class CourseStaffController extends ApiController {
   }
 
   @Operation(summary = "Delete a staff member")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
   @DeleteMapping("/delete")
   @Transactional
   public ResponseEntity<String> deleteStaffMember(
