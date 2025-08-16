@@ -49,7 +49,7 @@ public class JobsController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/all")
   public Iterable<Job> allJobs() {
-    Iterable<Job> jobs = jobsRepository.findAll();
+    Iterable<Job> jobs = jobsRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
     return jobs;
   }
 
