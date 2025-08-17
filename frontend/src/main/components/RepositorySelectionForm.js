@@ -14,7 +14,6 @@ function RepositorySelectionForm({ collections = [] }) {
     if (inputValueTrimmed.length < 1) {
       setMessageURL(
         <span data-testid="url-error-message" style={{ color: "red" }}>
-          {" "}
           GitHub repository or organization URL is required
         </span>,
       );
@@ -28,6 +27,16 @@ function RepositorySelectionForm({ collections = [] }) {
           Please enter a valid GitHub repository or organization URL
         </span>,
       );
+    } else {
+      setMessageURL(
+        <span data-testid="url-success-message" style={{ color: "green" }}>
+          Verified{" "}
+          <FaCheckCircle
+            data-testid="url-success-icon"
+            style={{ color: "green" }}
+          />
+        </span>,
+      );
     }
   };
   const handleChangeURL = (e) => {
@@ -37,24 +46,12 @@ function RepositorySelectionForm({ collections = [] }) {
     setURL(inputValue);
     if (inputValueTrimmed.length < 1) {
       setMessageURL(
-        <span data-testid="url-error-message" style={{ color: "red" }}>
-          {" "}
+        <span data-testid="url-empty-message" style={{ color: "red" }}>
           GitHub repository or organization URL is required
         </span>,
       );
-    } else if (
-      !inputValueTrimmed.match(
-        /^https:\/\/github\.com\/[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)?(?:\.git)?\/?$/,
-      )
-    ) {
-      setMessageURL("");
     } else {
-      setMessageURL(
-        <span data-testid="url-success-message" style={{ color: "green" }}>
-          {" "}
-          Verified <FaCheckCircle style={{ color: "green" }} />
-        </span>,
-      );
+      setMessageURL(<span data-testid="url-empty-message"></span>);
     }
   };
 
@@ -97,9 +94,11 @@ function RepositorySelectionForm({ collections = [] }) {
     } else {
       setMessageName(
         <span data-testid="name-success-message" style={{ color: "green" }}>
-          {" "}
           Collection name is available{" "}
-          <FaCheckCircle style={{ color: "green" }} />
+          <FaCheckCircle
+            data-testid="name-success-icon"
+            style={{ color: "green" }}
+          />
         </span>,
       );
     }
