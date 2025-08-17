@@ -597,9 +597,7 @@ describe("RosterStudentForm tests", () => {
     });
 
     expect(screen.getByTestId("name-error-message")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Collection name is required/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Collection name is required/)).toBeInTheDocument();
 
     const nameErrorMessage = screen.getByTestId("name-error-message");
     expect(nameErrorMessage).toHaveStyle({ color: "red" });
