@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -78,7 +79,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
     ArrayList<Job> expectedJobs = new ArrayList<>();
     expectedJobs.addAll(Arrays.asList(job1, job2));
 
-    when(jobsRepository.findAll()).thenReturn(expectedJobs);
+    when(jobsRepository.findAll(any(Sort.class))).thenReturn(expectedJobs);
 
     // act
     MvcResult response =
@@ -86,7 +87,13 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
     // assert
 
-    verify(jobsRepository, atLeastOnce()).findAll();
+    // Verify the endpoint delegates to repository with a Sort by createdAt DESC
+    org.mockito.ArgumentCaptor<org.springframework.data.domain.Sort> sortCaptor =
+        org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Sort.class);
+    verify(jobsRepository, atLeastOnce()).findAll(sortCaptor.capture());
+    org.springframework.data.domain.Sort usedSort = sortCaptor.getValue();
+    assertEquals(Sort.Direction.DESC, usedSort.getOrderFor("createdAt").getDirection());
+
     String expectedJson = mapper.writeValueAsString(expectedJobs);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
