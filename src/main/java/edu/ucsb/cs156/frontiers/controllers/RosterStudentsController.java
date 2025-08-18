@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,9 +60,12 @@ public class RosterStudentsController extends ApiController {
   @Autowired private JobService jobService;
   @Autowired private OrganizationMemberService organizationMemberService;
 
+  public record LoadResult(Integer created, Integer updated, List<RosterStudent> rejected) {}
+
   public enum InsertStatus {
     INSERTED,
-    UPDATED
+    UPDATED,
+    REJECTED
   };
 
   @Autowired private RosterStudentRepository rosterStudentRepository;
@@ -181,7 +185,7 @@ public class RosterStudentsController extends ApiController {
   @PostMapping(
       value = "/upload/csv",
       consumes = {"multipart/form-data"})
-  public Map<String, String> uploadRosterStudentsCSV(
+  public LoadResult uploadRosterStudentsCSV(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "file") @RequestParam("file") MultipartFile file)
       throws JsonProcessingException, IOException, CsvException {
@@ -192,6 +196,7 @@ public class RosterStudentsController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
 
     int counts[] = {0, 0};
+    List<RosterStudent> rejectedStudents = new ArrayList<>();
 
     try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
         InputStreamReader reader = new InputStreamReader(inputStream);
@@ -209,16 +214,18 @@ public class RosterStudentsController extends ApiController {
       for (String[] row : myEntries) {
         RosterStudent rosterStudent = fromCSVRow(row, sourceType);
         UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
-        InsertStatus s = upsertResponse.insertStatus;
-        counts[s.ordinal()]++;
+        if (upsertResponse.insertStatus == InsertStatus.REJECTED) {
+          rejectedStudents.add(rosterStudent);
+        } else {
+          InsertStatus s = upsertResponse.insertStatus;
+          counts[s.ordinal()]++;
+        }
       }
     }
-    return Map.of(
-        "filename", file.getOriginalFilename(),
-        "message",
-            String.format(
-                "Inserted %d new students, Updated %d students",
-                counts[InsertStatus.INSERTED.ordinal()], counts[InsertStatus.UPDATED.ordinal()]));
+    return new LoadResult(
+        counts[InsertStatus.INSERTED.ordinal()],
+        counts[InsertStatus.UPDATED.ordinal()],
+        rejectedStudents);
   }
 
   public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
@@ -286,7 +293,18 @@ public class RosterStudentsController extends ApiController {
         rosterStudentRepository.findByCourseIdAndStudentId(course.getId(), student.getStudentId());
     Optional<RosterStudent> existingStudentByEmail =
         rosterStudentRepository.findByCourseIdAndEmail(course.getId(), convertedEmail);
-    if (existingStudent.isPresent() || existingStudentByEmail.isPresent()) {
+    if (existingStudent.isPresent() && existingStudentByEmail.isPresent()) {
+      if (existingStudent.get().getId().equals(existingStudentByEmail.get().getId())) {
+        RosterStudent existingStudentObj = existingStudent.get();
+        existingStudentObj.setRosterStatus(rosterStatus);
+        existingStudentObj.setFirstName(student.getFirstName());
+        existingStudentObj.setLastName(student.getLastName());
+        rosterStudentRepository.save(existingStudentObj);
+        return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
+      } else {
+        return new UpsertResponse(InsertStatus.REJECTED, student);
+      }
+    } else if (existingStudent.isPresent() || existingStudentByEmail.isPresent()) {
       RosterStudent existingStudentObj =
           existingStudent.isPresent() ? existingStudent.get() : existingStudentByEmail.get();
       existingStudentObj.setRosterStatus(rosterStatus);
