@@ -24,7 +24,7 @@ describe("RosterStudentForm tests", () => {
     "GitHub Repository or Organization URL",
   ];
 
-  test("renders correctly with no initialContents", async () => {
+  test("renders correctly", async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -39,8 +39,20 @@ describe("RosterStudentForm tests", () => {
       const header = screen.getByText(headerText);
       expect(header).toBeInTheDocument();
     });
+
+    const urlInput = screen.getByTestId("URL-input");
+    expect(urlInput).toHaveValue("");
+
+    const nameInput = screen.getByTestId("collection-name-input");
+    expect(nameInput).toHaveValue("");
+
+    const messageURLContainer = screen.getByTestId("github-url-message");
+    expect(messageURLContainer).toBeEmptyDOMElement();
+
+    const messageNameContainer = screen.getByTestId("collection-name-message");
+    expect(messageNameContainer).toBeEmptyDOMElement();
   });
-  test("uses empty collections when no collections prop is passed", () => {
+  test("uses empty collections when no collections is passed in", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -56,28 +68,6 @@ describe("RosterStudentForm tests", () => {
     expect(
       screen.queryByText(/Collection name already exists/),
     ).not.toBeInTheDocument();
-  });
-  test("renders correctly when passing in initialContents", async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <RepositorySelectionForm />
-        </Router>
-      </QueryClientProvider>,
-    );
-
-    const urlInput = screen.getByTestId("URL-input");
-    expect(urlInput).toHaveValue("");
-
-    const nameInput = screen.getByTestId("collection-name-input");
-    expect(nameInput).toHaveValue("");
-
-    const messageURLContainer = screen.getByTestId("github-url-message");
-    //expect(messageURLContainer).toHaveTextContent("");
-    expect(messageURLContainer).toBeEmptyDOMElement();
-
-    const messageNameContainer = screen.getByTestId("collection-name-message");
-    expect(messageNameContainer).toBeEmptyDOMElement();
   });
   test("correct error message displayed when input is empty for onBlurURL", async () => {
     render(
@@ -103,7 +93,7 @@ describe("RosterStudentForm tests", () => {
       ),
     ).not.toBeInTheDocument();
   });
-  test("shows correct error message when URL input is invalid (not correct format) on blur", () => {
+  test("shows correct error message when URL input is invalid (not correctly formatted) onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -124,7 +114,7 @@ describe("RosterStudentForm tests", () => {
       ),
     ).toBeInTheDocument();
   });
-  test("shows error message when URL input is empty on blur", () => {
+  test("shows correct error message when URL input is empty onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -145,7 +135,7 @@ describe("RosterStudentForm tests", () => {
       color: "red",
     });
   });
-  test("shows error message when URL input is invalid (spaces) on blur", async () => {
+  test("shows correct error message when URL input is invalid (only includes spaces) onBlurURL", async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -166,7 +156,7 @@ describe("RosterStudentForm tests", () => {
       screen.getByText(/GitHub repository or organization URL is required/),
     ).toBeInTheDocument();
   });
-  test("does not show an error message when URL input is valid and has spaces", () => {
+  test("does not show an error message when URL input is valid and has spaces onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -191,7 +181,7 @@ describe("RosterStudentForm tests", () => {
     expect(successMessage.textContent).toBe("Verified ");
     expect(successMessage).toHaveStyle({ color: "green" });
   });
-  test("rejects URLs missing https protocol", () => {
+  test("rejects URLs missing https protocol for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -216,7 +206,7 @@ describe("RosterStudentForm tests", () => {
       color: "red",
     });
   });
-  test("rejects URL with wrong domain", () => {
+  test("rejects URL with wrong domain for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -238,7 +228,7 @@ describe("RosterStudentForm tests", () => {
       ),
     ).toBeInTheDocument();
   });
-  test("accepts URL with just org", () => {
+  test("accepts URL with just org for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -254,7 +244,7 @@ describe("RosterStudentForm tests", () => {
     expect(screen.getByTestId("url-success-message")).toBeInTheDocument();
     expect(screen.getByText(/Verified/)).toBeInTheDocument();
   });
-  test("accepts URL with org and repo", () => {
+  test("accepts URL with org and repo for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -275,7 +265,7 @@ describe("RosterStudentForm tests", () => {
       color: "green",
     });
   });
-  test("accepts URL with .git extension", () => {
+  test("accepts URL with .git extension for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -292,7 +282,7 @@ describe("RosterStudentForm tests", () => {
 
     expect(screen.queryByTestId("url-error-message")).not.toBeInTheDocument();
   });
-  test("accepts URL with trailing slash", () => {
+  test("accepts URL with trailing slash for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -309,7 +299,7 @@ describe("RosterStudentForm tests", () => {
 
     expect(screen.queryByTestId("url-error-message")).not.toBeInTheDocument();
   });
-  test("rejects invalid characters in username", () => {
+  test("rejects invalid characters in username for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -326,7 +316,7 @@ describe("RosterStudentForm tests", () => {
 
     expect(screen.getByTestId("url-error-message")).toBeInTheDocument();
   });
-  test("rejects URLs with subdomain", () => {
+  test("rejects URLs with subdomain for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -343,7 +333,7 @@ describe("RosterStudentForm tests", () => {
 
     expect(screen.getByTestId("url-error-message")).toBeInTheDocument();
   });
-  test("rejects URLs with surronding text", () => {
+  test("rejects URLs with surronding text for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -365,7 +355,7 @@ describe("RosterStudentForm tests", () => {
       ),
     ).toBeInTheDocument();
   });
-  test("rejects URLs with text at the front", () => {
+  test("rejects URLs with text at the front for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -387,7 +377,7 @@ describe("RosterStudentForm tests", () => {
       ),
     ).toBeInTheDocument();
   });
-  test("rejects URLs with text at the back", () => {
+  test("rejects URLs with text at the back for onBlurURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -409,7 +399,6 @@ describe("RosterStudentForm tests", () => {
       ),
     ).toBeInTheDocument();
   });
-
   test("correct error message displayed when input is empty for onBlurName", async () => {
     render(
       <QueryClientProvider client={queryClient}>
@@ -430,7 +419,7 @@ describe("RosterStudentForm tests", () => {
     const nameErrorMessage = screen.getByTestId("name-error-message");
     expect(nameErrorMessage).toHaveStyle({ color: "red" });
   });
-  test("shows error message when name input is invalid (spaces) on blur for onBlurName", () => {
+  test("shows correct error message when name input is invalid (only spaces) on blur for onBlurName", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -445,6 +434,7 @@ describe("RosterStudentForm tests", () => {
     fireEvent.blur(nameInput);
 
     expect(screen.getByTestId("name-error-message")).toBeInTheDocument();
+    expect(screen.getByText(/Collection name is required/)).toBeInTheDocument();
   });
   test("shows valid message when name input is valid for onBlurName", () => {
     render(
@@ -470,7 +460,7 @@ describe("RosterStudentForm tests", () => {
       color: "green",
     });
   });
-  test("does not show an error message when name input is valid and has spaces for onBlurName", () => {
+  test("shows valid message when name input is valid and has spaces for onBlurName", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -517,6 +507,46 @@ describe("RosterStudentForm tests", () => {
       color: "red",
     });
   });
+  test("shows an error for a repeated name (with spaces) for onBlurName", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <RepositorySelectionForm
+            collections={collectionNames.collectionNamesForOneCourse}
+          />
+        </Router>
+      </QueryClientProvider>,
+    );
+    const nameInput = screen.getByTestId("collection-name-input");
+
+    fireEvent.change(nameInput, {
+      target: { value: "divy-commit-collection " },
+    });
+
+    expect(screen.getByTestId("name-error-message")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Collection name already exists/),
+    ).toBeInTheDocument();
+  });
+  test("shows error message when name input is invalid (only spaces) for onBlurName", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <RepositorySelectionForm />
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    const nameInput = screen.getByTestId("collection-name-input");
+
+    fireEvent.change(nameInput, { target: { value: " " } });
+    fireEvent.blur(nameInput);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("name-error-message")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Collection name is required/)).toBeInTheDocument();
+  });
   test("doesn't show any message for URLs while typing text for onChangeURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
@@ -542,7 +572,7 @@ describe("RosterStudentForm tests", () => {
     const urlEmptyMessage = screen.getByTestId("url-empty-message");
     expect(urlEmptyMessage).toHaveTextContent("");
   });
-  test("shows an error for an empty string onChangeURL", () => {
+  test("shows correct error for an empty string onChangeURL", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -602,7 +632,7 @@ describe("RosterStudentForm tests", () => {
     const nameErrorMessage = screen.getByTestId("name-error-message");
     expect(nameErrorMessage).toHaveStyle({ color: "red" });
   });
-  test("shows an error when a commit name that already exists is passed in onChangeName", () => {
+  test("shows an error when a collection name that already exists is passed in onChangeName", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -623,7 +653,7 @@ describe("RosterStudentForm tests", () => {
       screen.getByText(/Collection name already exists/),
     ).toBeInTheDocument();
   });
-  test("does not show an error when a unique commit name is passed in onChangeName", () => {
+  test("does not show an error when a unique collection name is passed in onChangeName", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
@@ -672,46 +702,6 @@ describe("RosterStudentForm tests", () => {
     expect(
       screen.getByText(/Collection name already exists/),
     ).toBeInTheDocument();
-  });
-  test("shows an error for a repeated name (with spaces) for onBlurName", () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <RepositorySelectionForm
-            collections={collectionNames.collectionNamesForOneCourse}
-          />
-        </Router>
-      </QueryClientProvider>,
-    );
-    const nameInput = screen.getByTestId("collection-name-input");
-
-    fireEvent.change(nameInput, {
-      target: { value: "divy-commit-collection " },
-    });
-
-    expect(screen.getByTestId("name-error-message")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Collection name already exists/),
-    ).toBeInTheDocument();
-  });
-  test("shows error message when name input is invalid (spaces) on blur", async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <RepositorySelectionForm />
-        </Router>
-      </QueryClientProvider>,
-    );
-
-    const nameInput = screen.getByTestId("collection-name-input");
-
-    fireEvent.change(nameInput, { target: { value: " " } });
-    fireEvent.blur(nameInput);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("name-error-message")).toBeInTheDocument();
-    });
-    expect(screen.getByText(/Collection name is required/)).toBeInTheDocument();
   });
   test("expect placeholder for name input to be there", () => {
     render(
