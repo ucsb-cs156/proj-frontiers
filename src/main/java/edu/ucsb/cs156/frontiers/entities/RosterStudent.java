@@ -10,6 +10,15 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
+@Table(
+    uniqueConstraints = {
+      @UniqueConstraint(
+          name = "UK_ROSTER_STUDENT_COURSE_STUDENT",
+          columnNames = {"course_id", "student_id"}),
+      @UniqueConstraint(
+          name = "UK_ROSTER_STUDENT_COURSE_EMAIL",
+          columnNames = {"course_id", "email"})
+    })
 public class RosterStudent {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
