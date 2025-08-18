@@ -1,5 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.springframework.data.domain.Sort.by;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
@@ -19,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,7 +52,7 @@ public class JobsController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/all")
   public Iterable<Job> allJobs() {
-    Iterable<Job> jobs = jobsRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+    Iterable<Job> jobs = jobsRepository.findAll(by(Sort.Direction.DESC, "createdAt"));
     return jobs;
   }
 
