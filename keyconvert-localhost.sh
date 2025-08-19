@@ -50,9 +50,7 @@ fi
 cat <<EOF > secrets.yaml
 app:
   private:
-    key: "-----BEGIN PRIVATE KEY-----
-$key_content
------END PRIVATE KEY-----"
+    key: "$key_content"
 EOF
 
 echo "secrets.yaml has been created with the converted key."
