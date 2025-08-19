@@ -29,8 +29,29 @@ public class CourseSecurity {
     this.courseRepository = courseRepository;
   }
 
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("hasRole('ROLE_USER')")
   public Boolean hasManagePermissions(
+      MethodSecurityExpressionOperations operations, Long courseId) {
+    CurrentUser currentUser = currentUserService.getCurrentUser();
+    Collection<? extends GrantedAuthority> authorities =
+        roleHierarchy.getReachableGrantedAuthorities(currentUser.getRoles());
+    if (authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"))) {
+      return true;
+    } else {
+      Optional<Course> course = courseRepository.findById(courseId);
+      if (course.isEmpty()) {
+        return true;
+      }
+      if (course.get().getCourseStaff().stream()
+          .anyMatch(staff -> staff.getEmail().equals(currentUser.getUser().getEmail()))) {
+        return true;
+      }
+      return currentUser.getUser().getEmail().equals(course.get().getInstructorEmail());
+    }
+  }
+
+  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  public Boolean hasInstructorPermissions(
       MethodSecurityExpressionOperations operations, Long courseId) {
     CurrentUser currentUser = currentUserService.getCurrentUser();
     Collection<? extends GrantedAuthority> authorities =
