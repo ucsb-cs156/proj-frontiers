@@ -155,8 +155,8 @@ describe("InstructorCourseShowPage tests", () => {
         },
       },
     });
-    const setTimeoutSpy = vi.spyOn(global, "setTimeout");
-    const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
     render(
       <QueryClientProvider client={specificQueryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>

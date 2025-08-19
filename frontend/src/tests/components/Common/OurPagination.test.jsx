@@ -1,7 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import OurPagination, {
-  emptyArray,
-} from "main/components/Common/OurPagination";
+import OurPagination from "main/components/Common/OurPagination";
 import { useState } from "react";
 import { vi } from "vitest";
 
@@ -32,10 +30,6 @@ const PaginationWrapper = ({ beginActivePage, args }) => {
 };
 
 describe("OurPagination tests", () => {
-  test("emptyArray returns empty array", () => {
-    expect(emptyArray()).toStrictEqual([]);
-  });
-
   test("renders correctly for totalPages = 5 (less than or equal to 7)", async () => {
     render(<PaginationWrapper beginActivePage={1} args={{ totalPages: 5 }} />);
 

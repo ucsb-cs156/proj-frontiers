@@ -1,8 +1,6 @@
 import React from "react";
 import { Pagination } from "react-bootstrap";
 
-export const emptyArray = () => []; // factored out for Stryker testing
-
 const OurPagination = ({
   currentActivePage,
   updateActivePage,
@@ -33,18 +31,14 @@ const OurPagination = ({
   );
 
   const generateSimplePaginationItems = () => {
-    const paginationItems = emptyArray();
-    for (let number = 1; number <= totalPages; number++) {
-      paginationItems.push(pageButton(number));
-    }
-    return paginationItems;
+    return Array.from({ length: totalPages }, (_, index) =>
+      pageButton(index + 1),
+    );
   };
 
   const generateComplexPaginationItems = () => {
-    const paginationItems = emptyArray();
-
     // Always show page 1 and totalPages
-    paginationItems.push(pageButton(1));
+    const paginationItems = [pageButton(1)];
 
     // Case 1: currentActivePage is near the beginning (1, 2, 3, 4)
     if (currentActivePage < 5) {

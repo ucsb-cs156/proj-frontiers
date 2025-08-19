@@ -8,13 +8,15 @@ export default function SignInCard({
   testid = "default",
   onClick,
 }) {
+  //Eslint alias to so that it knows Icon is used
+  const IconComponent = Icon;
   return (
     <Card style={{ width: "18rem" }} data-testid={`SignInCard-base-${testid}`}>
       <Card.Body
         className={"text-center"}
         data-testid={`SignInCard-header-${testid}`}
       >
-        <Icon />
+        <IconComponent />
       </Card.Body>
       <Card.Body>
         <Card.Title>{title}</Card.Title>
