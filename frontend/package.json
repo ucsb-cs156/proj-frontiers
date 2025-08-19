@@ -1,9 +1,9 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "^=22.18.0"
+    "node": "^v22.18.0"
   },
   "module": "true",
   "dependencies": {
@@ -21,8 +21,7 @@
     "react-icons": "^5.5.0",
     "react-router": "^7.8.1",
     "react-toastify": "^11.0.5",
-    "react18-json-view": "^0.2.9",
-    "web-vitals": "^5.1.0"
+    "react18-json-view": "^0.2.9"
   },
   "scripts": {
     "dev": "vite",
