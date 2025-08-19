@@ -1,16 +1,17 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSystemInfo } from "main/utils/systemInfo";
 import { renderHook } from "@testing-library/react";
-import mockConsole from "jest-mock-console";
+import mockConsole from "tests/testutils/mockConsole";
 
 import { waitFor } from "@testing-library/react";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { vi } from "vitest";
 
-jest.mock("react-router");
-const { _MemoryRouter } = jest.requireActual("react-router");
+vi.mock("react-router");
+const { _MemoryRouter } = await vi.importActual("react-router");
 
 const axiosMock = new AxiosMockAdapter(axios);
 

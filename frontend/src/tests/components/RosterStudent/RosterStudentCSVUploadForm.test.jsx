@@ -1,9 +1,10 @@
 import { render, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
+import { vi } from "vitest";
 
 describe("RosterStudentCSVUploadForm Tests", () => {
-  const mockSubmitAction = jest.fn();
+  const mockSubmitAction = vi.fn();
   const file = new File(["there"], "roster.csv", { type: "text/csv" });
   test("Required fires when there's no input", async () => {
     render(<RosterStudentCSVUploadForm />);

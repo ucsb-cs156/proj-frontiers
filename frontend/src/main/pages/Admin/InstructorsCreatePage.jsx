@@ -1,10 +1,11 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import RoleEmailForm from "main/components/Users/RoleEmailForm";
-import { Navigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 
 export default function InstructorsCreatePage({ storybook = false }) {
+  const navigation = useNavigate();
   const objectToAxiosParams = (instructor) => ({
     url: "/api/admin/instructors/post",
     method: "POST",
@@ -15,6 +16,7 @@ export default function InstructorsCreatePage({ storybook = false }) {
 
   const onSuccess = (instructor) => {
     toast(`New instructor added - email: ${instructor.email}`);
+    if (!storybook) navigation("/admin/instructors");
   };
 
   const mutation = useBackendMutation(
@@ -24,15 +26,9 @@ export default function InstructorsCreatePage({ storybook = false }) {
     ["/api/admin/instructors/all"], // mutation makes this key stale so that pages relying on it reload
   );
 
-  const { isSuccess } = mutation;
-
   const onSubmit = async (data) => {
     mutation.mutate(data);
   };
-
-  if (isSuccess & !storybook) {
-    return <Navigate to="/admin/instructors" />;
-  }
 
   return (
     <BasicLayout>

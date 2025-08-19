@@ -6,18 +6,14 @@ import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTab
 import { BrowserRouter } from "react-router";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
+import { vi } from "vitest";
 
-window.alert = jest.fn();
+window.alert = vi.fn();
 
-// Mock fetch for API calls
-global.fetch = jest.fn();
-
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
@@ -32,10 +28,9 @@ describe("InstructorCoursesTable tests", () => {
     beforeEach(() => {
       // Remove window.location and mock it
       delete window.location;
-      window.location = { href: "", reload: jest.fn() }; // Add reload mock
+      window.location = { href: "", reload: vi.fn() }; // Add reload mock
       // Reset mocks
       window.alert.mockClear();
-      fetch.mockClear();
     });
 
     afterEach(() => {
@@ -285,7 +280,7 @@ describe("InstructorCoursesTable tests", () => {
       expect(githubIcon).toBeInTheDocument();
       expect(githubIcon).toHaveAttribute("width", "24");
       expect(githubIcon).toHaveAttribute("height", "24");
-      expect(githubIcon).toHaveStyle({ color: "black" });
+      expect(githubIcon).toHaveAttribute("color", "black");
 
       const settingsIcon = screen.getByTestId(
         "CoursesTable-cell-row-0-col-orgName-gear-github-icon-settings-icon",
@@ -293,7 +288,7 @@ describe("InstructorCoursesTable tests", () => {
       expect(settingsIcon).toBeInTheDocument();
       expect(settingsIcon).toHaveAttribute("width", "16");
       expect(settingsIcon).toHaveAttribute("height", "16");
-      expect(settingsIcon).toHaveStyle({ color: "blue" });
+      expect(settingsIcon).toHaveAttribute("color", "blue");
       expect(settingsIcon).toHaveStyle({ position: "relative" });
       expect(settingsIcon).toHaveStyle({ top: "0px" });
       expect(settingsIcon).toHaveStyle({ left: "0px" });

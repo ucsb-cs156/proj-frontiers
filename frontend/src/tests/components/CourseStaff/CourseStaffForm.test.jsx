@@ -5,11 +5,11 @@ import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { vi } from "vitest";
 
-const mockedNavigate = jest.fn();
-
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
 

@@ -5,6 +5,7 @@ import { currentUserFixtures } from "fixtures/currentUserFixtures";
 
 import GoogleLogin from "main/components/Nav/GoogleLogin";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { vi } from "vitest";
 
 describe("GoogleLogin tests", () => {
   const queryClient = new QueryClient();
@@ -14,7 +15,7 @@ describe("GoogleLogin tests", () => {
   test("renders correctly for regular logged in user", async () => {
     const currentUser = currentUserFixtures.userOnly;
 
-    const doLogin = jest.fn();
+    const doLogin = vi.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -33,7 +34,7 @@ describe("GoogleLogin tests", () => {
 
   test("renders correctly for admin user", async () => {
     const currentUser = currentUserFixtures.adminUser;
-    const doLogin = jest.fn();
+    const doLogin = vi.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -52,7 +53,7 @@ describe("GoogleLogin tests", () => {
 
   test("renders login button when not logged in", async () => {
     const currentUser = { loggedIn: false };
-    const doLogin = jest.fn();
+    const doLogin = vi.fn();
 
     render(
       <QueryClientProvider client={queryClient}>

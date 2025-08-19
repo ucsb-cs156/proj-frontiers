@@ -2,22 +2,21 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
-import mockConsole from "jest-mock-console";
+import mockConsole from "tests/testutils/mockConsole";
 import coursesFixtures from "fixtures/coursesFixtures";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import { vi } from "vitest";
 
-const mockToast = jest.fn();
+const mockToast = vi.fn();
 
 let axiosMock;
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });

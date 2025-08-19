@@ -5,26 +5,23 @@ import { MemoryRouter } from "react-router";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { vi } from "vitest";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
 
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => {
-  const originalModule = jest.requireActual("react-router");
+const mockNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     Navigate: (x) => {
       mockNavigate(x);
       return null;
@@ -36,7 +33,7 @@ describe("AdminsCreatePage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     axiosMock.reset();
     axiosMock.resetHistory();
     axiosMock

@@ -3,6 +3,7 @@ import OurPagination, {
   emptyArray,
 } from "main/components/Common/OurPagination";
 import { useState } from "react";
+import { vi } from "vitest";
 
 const checkTestIdsInOrder = (testIds) => {
   const links = screen.getAllByTestId(/OurPagination-/);
@@ -13,7 +14,7 @@ const checkTestIdsInOrder = (testIds) => {
   }
 };
 
-const mockStateWrapper = jest.fn();
+const mockStateWrapper = vi.fn();
 
 const PaginationWrapper = ({ beginActivePage, args }) => {
   const [activePage, setActivePage] = useState(beginActivePage);

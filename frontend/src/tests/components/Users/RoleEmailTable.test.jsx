@@ -6,13 +6,14 @@ import { MemoryRouter } from "react-router";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
+import { vi } from "vitest";
 
 const testData = [
   { email: "user1@example.org" },
   { email: "user2@example.org" },
 ];
 
-const mockDeleteCallback = jest.fn();
+const mockDeleteCallback = vi.fn();
 
 const axiosMock = new AxiosMockAdapter(axios);
 
@@ -29,7 +30,7 @@ describe("RoleEmailTable", () => {
         },
       },
     });
-    invalidateQueriesSpy = jest.spyOn(queryClient, "invalidateQueries");
+    invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
     axiosMock.reset();
     axiosMock.resetHistory();
   });

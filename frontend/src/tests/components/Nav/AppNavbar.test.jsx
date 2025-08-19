@@ -8,20 +8,25 @@ import {
 
 import AppNavbar from "main/components/Nav/AppNavbar";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { vi } from "vitest";
 
-const mockedNavigate = jest.fn();
-
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
 
 describe("AppNavbar tests", () => {
   const queryClient = new QueryClient();
+  const doLogin = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   test("renders correctly for regular logged in user", async () => {
     const currentUser = currentUserFixtures.userOnly;
-    const doLogin = jest.fn();
+    const doLogin = vi.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -36,7 +41,6 @@ describe("AppNavbar tests", () => {
 
   test("renders correctly for admin user", async () => {
     const currentUser = currentUserFixtures.adminUser;
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -53,7 +57,6 @@ describe("AppNavbar tests", () => {
 
   test("renders correctly for instructor user", async () => {
     const currentUser = currentUserFixtures.instructorUser;
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -73,8 +76,6 @@ describe("AppNavbar tests", () => {
   test("renders H2Console and Swagger links correctly", async () => {
     const currentUser = currentUserFixtures.adminUser;
     const systemInfo = systemInfoFixtures.showingBoth;
-
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -96,7 +97,6 @@ describe("AppNavbar tests", () => {
   test("renders the AppNavbarLocalhost when on http://localhost:3000", async () => {
     const currentUser = currentUserFixtures.userOnly;
     const systemInfo = systemInfoFixtures.showingBoth;
-    const doLogin = jest.fn();
 
     delete window.location;
     window.location = new URL("http://localhost:3000");
@@ -125,7 +125,6 @@ describe("AppNavbar tests", () => {
   test("renders the AppNavbarLocalhost when on http://127.0.0.1:3000", async () => {
     const currentUser = currentUserFixtures.userOnly;
     const systemInfo = systemInfoFixtures.showingBoth;
-    const doLogin = jest.fn();
 
     delete window.location;
     window.location = new URL("http://127.0.0.1:3000");
@@ -148,7 +147,6 @@ describe("AppNavbar tests", () => {
   test("does NOT render the AppNavbarLocalhost when on localhost:8080", async () => {
     const currentUser = currentUserFixtures.userOnly;
     const systemInfo = systemInfoFixtures.showingBoth;
-    const doLogin = jest.fn();
 
     delete window.location;
     window.location = new URL("http://localhost:8080");
@@ -203,7 +201,6 @@ describe("AppNavbar tests", () => {
 
   test("renders Help dropdown for all users", async () => {
     const currentUser = currentUserFixtures.userOnly;
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -220,7 +217,6 @@ describe("AppNavbar tests", () => {
 
   test("renders Help dropdown for admin users", async () => {
     const currentUser = currentUserFixtures.adminUser;
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -237,7 +233,6 @@ describe("AppNavbar tests", () => {
 
   test("renders Help dropdown for logged out users", async () => {
     const currentUser = currentUserFixtures.notLoggedIn;
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>

@@ -4,6 +4,7 @@ import OurTable, {
   convertOldStyleColumnsToNewStyle,
 } from "main/components/OurTable";
 import ourTableFixtures from "fixtures/ourTableFixtures";
+import { vi } from "vitest";
 
 describe("OurTable tests", () => {
   describe("OurTable helper tests", () => {
@@ -47,7 +48,7 @@ describe("OurTable tests", () => {
       },
     ];
 
-    const clickMeCallback = jest.fn();
+    const clickMeCallback = vi.fn();
 
     const columns = [
       {

@@ -2,13 +2,14 @@ import { render, waitFor, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import mockConsole from "jest-mock-console";
+import mockConsole from "tests/testutils/mockConsole";
+import { vi } from "vitest";
 
-const mockedNavigate = jest.fn();
 const queryClient = new QueryClient();
 
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
 describe("SignInSuccessPage tests", () => {

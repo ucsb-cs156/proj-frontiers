@@ -142,7 +142,7 @@ export default function RosterStudentTable({
       if (status === "PENDING") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("PENDING")}>
-            <span style={{ color: "red" }}>Pending</span>
+            <span className="text-danger">Pending</span>
           </OverlayTrigger>
         );
       } else if (status === "JOINCOURSE") {
@@ -151,13 +151,13 @@ export default function RosterStudentTable({
             placement="right"
             overlay={renderTooltip("JOINCOURSE")}
           >
-            <span style={{ color: "blue" }}>Join Course</span>
+            <span className="text-primary">Join Course</span>
           </OverlayTrigger>
         );
       } else if (status === "INVITED") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("INVITED")}>
-            <span style={{ color: "blue" }}>Invited</span>
+            <span className="text-primary">Invited</span>
           </OverlayTrigger>
         );
       } else if (status === "OWNER") {
@@ -169,7 +169,7 @@ export default function RosterStudentTable({
       } else if (status === "MEMBER") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("MEMBER")}>
-            <span style={{ color: "green" }}>Member</span>
+            <span className="text-success">Member</span>
           </OverlayTrigger>
         );
       }

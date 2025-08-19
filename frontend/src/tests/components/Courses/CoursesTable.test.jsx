@@ -8,11 +8,15 @@ import {
 import coursesFixtures from "fixtures/coursesFixtures";
 import CoursesTable from "main/components/Courses/CoursesTable";
 import { BrowserRouter } from "react-router";
+import { vi } from "vitest";
 
-const joinCallback = jest.fn();
-const isLoading = jest.fn(() => false);
+const joinCallback = vi.fn();
+const isLoading = vi.fn(() => false);
 
 describe("CoursesTable tests", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
@@ -63,7 +67,7 @@ describe("CoursesTable tests", () => {
 
     const pending = screen.getByText("Pending");
     expect(pending).toBeInTheDocument();
-    expect(pending).toHaveStyle("color: orange");
+    expect(pending).toHaveClass("text-warning");
 
     const joinCourse = screen.getByText("Join Course");
     expect(joinCourse).toBeInTheDocument();
@@ -71,15 +75,15 @@ describe("CoursesTable tests", () => {
 
     const member = screen.getByText("Member");
     expect(member).toBeInTheDocument();
-    expect(member).toHaveStyle("color: blue");
+    expect(member).toHaveClass("text-primary");
 
     const owner = screen.getByText("Owner");
     expect(owner).toBeInTheDocument();
-    expect(owner).toHaveStyle("color: purple");
+    expect(owner).toHaveClass("text-info");
 
     const unexpected = screen.getByText("Illegal status that will never occur");
     expect(unexpected).toBeInTheDocument();
-    expect(unexpected).not.toHaveStyle("color: red");
+    expect(unexpected).not.toHaveClass("text-danger");
 
     // expect that the mocked joinCallback function is not called
     expect(joinCallback).not.toHaveBeenCalled();
@@ -176,7 +180,7 @@ describe("CoursesTable tests", () => {
     expect(joinCallback).not.toHaveBeenCalled();
   });
   test("Does not call joinCallback when storybook is explicitly false for button 'View Invite'", () => {
-    const openMock = jest.fn();
+    const openMock = vi.fn();
     window.open = (a, b) => openMock(a, b);
     render(
       <BrowserRouter>

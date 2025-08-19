@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import IndividualAssignmentForm from "main/components/Assignments/IndividualAssignmentForm";
+import { vi } from "vitest";
 
-const mockSubmit = jest.fn();
+const mockSubmit = vi.fn();
 
 test("No submit call on empty prefix", async () => {
   render(<IndividualAssignmentForm submitAction={mockSubmit} />);

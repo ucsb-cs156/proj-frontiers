@@ -2,10 +2,11 @@ import CourseModal from "main/components/Courses/CourseModal";
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
+import { vi } from "vitest";
 
-const mockSubmit = jest.fn();
-const showModal = jest.fn();
-const toggleShowModal = jest.fn();
+const mockSubmit = vi.fn();
+const showModal = vi.fn();
+const toggleShowModal = vi.fn();
 
 describe("CourseModal Tests", () => {
   test("Validation works correctly", async () => {

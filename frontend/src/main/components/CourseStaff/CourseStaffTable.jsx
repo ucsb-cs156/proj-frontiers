@@ -154,7 +154,7 @@ export default function CourseStaffTable({
       if (status === "PENDING") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("PENDING")}>
-            <span style={{ color: "red" }}>Pending</span>
+            <span className="text-warning">Pending</span>
           </OverlayTrigger>
         );
       } else if (status === "JOINCOURSE") {
@@ -163,25 +163,25 @@ export default function CourseStaffTable({
             placement="right"
             overlay={renderTooltip("JOINCOURSE")}
           >
-            <span style={{ color: "blue" }}>Join Course</span>
+            <span className="text-primary">Join Course</span>
           </OverlayTrigger>
         );
       } else if (status === "INVITED") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("INVITED")}>
-            <span style={{ color: "blue" }}>Invited</span>
+            <span className="text-primary">Invited</span>
           </OverlayTrigger>
         );
       } else if (status === "OWNER") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("OWNER")}>
-            <span style={{ color: "purple" }}>Owner</span>
+            <span className="text-info">Owner</span>
           </OverlayTrigger>
         );
       } else if (status === "MEMBER") {
         return (
           <OverlayTrigger placement="right" overlay={renderTooltip("MEMBER")}>
-            <span style={{ color: "green" }}>Member</span>
+            <span className="text-primary">Member</span>
           </OverlayTrigger>
         );
       }

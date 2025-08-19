@@ -10,23 +10,22 @@ import {
 import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabComponent";
 import userEvent from "@testing-library/user-event";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
+import { vi } from "vitest";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
 
-const mockedNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
 
@@ -297,7 +296,7 @@ describe("EnrollmentTabComponent Tests", () => {
   });
 
   test("Modals close on close buttons (respectively), download works", async () => {
-    const download = jest.fn();
+    const download = vi.fn();
     window.open = (a, b) => download(a, b);
     axiosMock
       .onGet("/api/rosterstudents/course/7")

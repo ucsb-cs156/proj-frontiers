@@ -6,15 +6,14 @@ import { MemoryRouter } from "react-router";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import { vi } from "vitest";
 
 const queryClient = new QueryClient();
 const axiosMock = new AxiosMockAdapter(axios);
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
@@ -132,27 +131,27 @@ describe("RosterStudentTable tests", () => {
 
     const pending = screen.getByText("Pending");
     expect(pending).toBeInTheDocument();
-    expect(pending).toHaveStyle("color: red");
+    expect(pending).toHaveClass("text-danger");
 
     const joinCourse = screen.getByText("Join Course");
     expect(joinCourse).toBeInTheDocument();
-    expect(joinCourse).toHaveStyle("color: blue");
+    expect(joinCourse).toHaveClass("text-primary");
 
     const member = screen.getByText("Member");
     expect(member).toBeInTheDocument();
-    expect(member).toHaveStyle("color: green");
+    expect(member).toHaveClass("text-success");
 
     const owner = screen.getByText("Owner");
     expect(owner).toBeInTheDocument();
-    expect(owner).toHaveStyle("color: purple");
+    expect(owner).toHaveStyle("color: rgb(128, 0, 128)");
 
     const invited = screen.getByText("Invited");
     expect(invited).toBeInTheDocument();
-    expect(invited).toHaveStyle("color: blue");
+    expect(invited).toHaveClass("text-primary");
 
     const unexpected = screen.getByText("Illegal status that will never occur");
     expect(unexpected).toBeInTheDocument();
-    expect(unexpected).not.toHaveStyle("color: red");
+    expect(unexpected).not.toHaveClass("text-danger");
 
     const editButton = screen.getByTestId(
       `${testId}-cell-row-0-col-Edit-button`,

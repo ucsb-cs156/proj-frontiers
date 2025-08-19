@@ -3,14 +3,13 @@ import { fireEvent, render, waitFor, screen } from "@testing-library/react";
 import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { vi } from "vitest";
 
 const axiosMock = new AxiosMockAdapter(axios);
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });

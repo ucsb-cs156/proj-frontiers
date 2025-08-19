@@ -6,14 +6,13 @@ import { MemoryRouter } from "react-router";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import { vi } from "vitest";
 
 const queryClient = new QueryClient();
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
@@ -129,22 +128,22 @@ describe("CourseStaffTable tests", () => {
 
     const pending = screen.getByText("Pending");
     expect(pending).toBeInTheDocument();
-    expect(pending).toHaveStyle("color: red");
+    expect(pending).toHaveClass("text-warning");
 
     const joinCourse = screen.getByText("Join Course");
     expect(joinCourse).toBeInTheDocument();
-    expect(joinCourse).toHaveStyle("color: blue");
+    expect(joinCourse).toHaveClass("text-primary");
 
     const members = screen.getAllByText("Member");
-    members.forEach((x) => expect(x).toHaveStyle("color: green"));
+    members.forEach((x) => expect(x).toHaveClass("text-primary"));
 
     const owner = screen.getByText("Owner");
     expect(owner).toBeInTheDocument();
-    expect(owner).toHaveStyle("color: purple");
+    expect(owner).toHaveClass("text-info");
 
     const invited = screen.getByText("Invited");
     expect(invited).toBeInTheDocument();
-    expect(invited).toHaveStyle("color: blue");
+    expect(invited).toHaveClass("text-primary");
 
     const editButton = screen.getByTestId(
       `${testId}-cell-row-0-col-Edit-button`,

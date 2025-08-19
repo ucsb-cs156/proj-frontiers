@@ -5,7 +5,7 @@ import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 import usersFixtures from "fixtures/usersFixtures";
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
-import mockConsole from "jest-mock-console";
+import mockConsole from "tests/testutils/mockConsole";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";

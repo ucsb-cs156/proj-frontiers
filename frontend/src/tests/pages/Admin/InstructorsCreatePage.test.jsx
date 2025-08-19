@@ -8,35 +8,27 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import { vi } from "vitest";
 
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
 
-const mockNavigate = jest.fn();
-jest.mock("react-router", () => {
-  const originalModule = jest.requireActual("react-router");
-  return {
-    __esModule: true,
-    ...originalModule,
-    Navigate: (x) => {
-      mockNavigate(x);
-      return null;
-    },
-  };
-});
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
+  useNavigate: () => mockedNavigate,
+}));
 
 describe("InstructorsCreatePage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     axiosMock.reset();
     axiosMock.resetHistory();
     axiosMock
@@ -105,12 +97,54 @@ describe("InstructorsCreatePage tests", () => {
       "New instructor added - email: testemailone@ucsb.edu",
     );
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith({
-        to: "/admin/instructors",
-      });
+      expect(mockedNavigate).toHaveBeenCalledWith("/admin/instructors");
     });
-    expect(mockNavigate).toHaveBeenCalledWith({
-      to: "/admin/instructors",
+  });
+
+  test("on storybook, no redirect", async () => {
+    const queryClient = new QueryClient();
+    const instructor = {
+      email: "testemailone@ucsb.edu",
+    };
+
+    axiosMock.onPost("/api/admin/instructors/post").reply(202, instructor);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <InstructorsCreatePage storybook={true} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByLabelText("Email");
+    expect(emailInput).toBeInTheDocument();
+
+    const createButton = screen.getByText("Create");
+    expect(createButton).toBeInTheDocument();
+
+    fireEvent.change(emailInput, {
+      target: { value: "testemailone@ucsb.edu" },
+    });
+
+    fireEvent.click(createButton);
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+
+    expect(axiosMock.history.post[0].params).toEqual({
+      email: "testemailone@ucsb.edu",
+    });
+
+    // assert - check that the toast was called with the expected message
+    expect(mockToast).toHaveBeenCalledWith(
+      "New instructor added - email: testemailone@ucsb.edu",
+    );
+    await waitFor(() => {
+      expect(mockedNavigate).not.toHaveBeenCalledWith("/admin/instructors");
     });
   });
 });

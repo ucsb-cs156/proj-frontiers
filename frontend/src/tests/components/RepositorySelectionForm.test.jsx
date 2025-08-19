@@ -5,12 +5,13 @@ import RepositorySelectionForm from "main/components/RepositorySelectionForm";
 import collectionNames from "fixtures/collectionNames";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { vi } from "vitest";
 
-const mockedNavigate = jest.fn();
+const mockedNavigate = vi.fn();
 const queryClient = new QueryClient();
 
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
 
@@ -131,9 +132,7 @@ describe("RosterStudentForm tests", () => {
     expect(
       screen.getByText(/GitHub repository or organization URL is required/),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("url-error-message")).toHaveStyle({
-      color: "red",
-    });
+    expect(screen.getByTestId("url-error-message")).toHaveClass("text-danger");
   });
   test("shows correct error message when URL input is invalid (only includes spaces) onBlurURL", async () => {
     render(
@@ -177,9 +176,9 @@ describe("RosterStudentForm tests", () => {
 
     const verifiedIcon = screen.getByTestId("url-success-icon");
     const successMessage = screen.getByTestId("url-success-message");
-    expect(verifiedIcon).toHaveStyle({ color: "green" });
+    expect(verifiedIcon).toHaveClass("text-success");
     expect(successMessage.textContent).toBe("Verified ");
-    expect(successMessage).toHaveStyle({ color: "green" });
+    expect(successMessage).toHaveClass("text-success");
   });
   test("rejects URLs missing https protocol for onBlurURL", () => {
     render(
@@ -202,9 +201,7 @@ describe("RosterStudentForm tests", () => {
         /Please enter a valid GitHub repository or organization URL/,
       ),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("url-error-message")).toHaveStyle({
-      color: "red",
-    });
+    expect(screen.getByTestId("url-error-message")).toHaveClass("text-danger");
   });
   test("rejects URL with wrong domain for onBlurURL", () => {
     render(
@@ -261,9 +258,9 @@ describe("RosterStudentForm tests", () => {
 
     expect(screen.getByTestId("url-success-message")).toBeInTheDocument();
     expect(screen.getByText(/Verified/)).toBeInTheDocument();
-    expect(screen.getByTestId("url-success-message")).toHaveStyle({
-      color: "green",
-    });
+    expect(screen.getByTestId("url-success-message")).toHaveClass(
+      "text-success",
+    );
   });
   test("accepts URL with .git extension for onBlurURL", () => {
     render(
@@ -417,7 +414,7 @@ describe("RosterStudentForm tests", () => {
     expect(screen.getByText(/Collection name is required/)).toBeInTheDocument();
 
     const nameErrorMessage = screen.getByTestId("name-error-message");
-    expect(nameErrorMessage).toHaveStyle({ color: "red" });
+    expect(nameErrorMessage).toHaveClass("text-danger");
   });
   test("shows correct error message when name input is invalid (only spaces) on blur for onBlurName", () => {
     render(
@@ -453,12 +450,10 @@ describe("RosterStudentForm tests", () => {
     expect(screen.getByTestId("name-success-message")).toBeInTheDocument();
     const successMessage = screen.getByTestId("name-success-message");
     expect(successMessage.textContent).toBe("Collection name is available ");
-    expect(screen.getByTestId("name-success-message")).toHaveStyle({
-      color: "green",
-    });
-    expect(screen.getByTestId("name-success-icon")).toHaveStyle({
-      color: "green",
-    });
+    expect(screen.getByTestId("name-success-message")).toHaveClass(
+      "text-success",
+    );
+    expect(screen.getByTestId("name-success-icon")).toHaveClass("text-success");
   });
   test("shows valid message when name input is valid and has spaces for onBlurName", () => {
     render(
@@ -479,9 +474,9 @@ describe("RosterStudentForm tests", () => {
     expect(
       screen.getByText(/Collection name is available/),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("name-success-message")).toHaveStyle({
-      color: "green",
-    });
+    expect(screen.getByTestId("name-success-message")).toHaveClass(
+      "text-success",
+    );
   });
   test("shows an error message when the name already exists for onBlurName", () => {
     render(
@@ -503,9 +498,7 @@ describe("RosterStudentForm tests", () => {
     expect(
       screen.getByText(/Collection name already exists/),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("name-error-message")).toHaveStyle({
-      color: "red",
-    });
+    expect(screen.getByTestId("name-error-message")).toHaveClass("text-danger");
   });
   test("shows an error for a repeated name (with spaces) for onBlurName", () => {
     render(
@@ -591,7 +584,7 @@ describe("RosterStudentForm tests", () => {
       screen.getByText(/GitHub repository or organization URL is required/),
     ).toBeInTheDocument();
     const urlErrorMessage = screen.getByTestId("url-empty-message");
-    expect(urlErrorMessage).toHaveStyle({ color: "red" });
+    expect(urlErrorMessage).toHaveClass("text-danger");
   });
   test("shows valid message when name input is valid for onChangeURL", () => {
     render(
@@ -630,7 +623,7 @@ describe("RosterStudentForm tests", () => {
     expect(screen.getByText(/Collection name is required/)).toBeInTheDocument();
 
     const nameErrorMessage = screen.getByTestId("name-error-message");
-    expect(nameErrorMessage).toHaveStyle({ color: "red" });
+    expect(nameErrorMessage).toHaveClass("text-danger");
   });
   test("shows an error when a collection name that already exists is passed in onChangeName", () => {
     render(
@@ -678,9 +671,7 @@ describe("RosterStudentForm tests", () => {
       screen.getByText(/Collection name is available/),
     ).toBeInTheDocument();
     expect(screen.getByTestId("name-success-icon")).toBeInTheDocument();
-    expect(screen.getByTestId("name-success-icon")).toHaveStyle({
-      color: "green",
-    });
+    expect(screen.getByTestId("name-success-icon")).toHaveClass("text-success");
   });
   test("shows an error for a repeated name (with spaces) for onChangeName", () => {
     render(

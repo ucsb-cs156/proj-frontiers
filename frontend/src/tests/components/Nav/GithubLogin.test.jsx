@@ -8,15 +8,21 @@ import {
 
 import GithubLogin from "main/components/Nav/GithubLogin";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { vi } from "vitest";
 
 describe("GithubLogin tests", () => {
   const queryClient = new QueryClient();
 
   const systemInfo = systemInfoFixtures.showingNeither; // Default system info for tests
 
+  const doLogin = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test("renders correctly when not logged in to Google", async () => {
     const currentUser = { loggedIn: false };
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -37,8 +43,6 @@ describe("GithubLogin tests", () => {
 
   test("default link is the correct value", async () => {
     const currentUser = currentUserFixtures.userOnly;
-
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -70,8 +74,6 @@ describe("GithubLogin tests", () => {
       githubOauthLogin: "/oauth2/authorization/custom-github", // Override the oauth login URL
     };
 
-    const doLogin = jest.fn();
-
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -100,8 +102,6 @@ describe("GithubLogin tests", () => {
   test("renders correctly for user logged into Google but not Github", async () => {
     const currentUser = currentUserFixtures.userOnly;
 
-    const doLogin = jest.fn();
-
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -119,7 +119,6 @@ describe("GithubLogin tests", () => {
 
   test("renders correctly for admin logged into Google but not Github", async () => {
     const currentUser = currentUserFixtures.adminUser;
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -139,8 +138,6 @@ describe("GithubLogin tests", () => {
   test("renders correctly for user logged into Google and Github", async () => {
     const currentUser = currentUserFixturesWithGithub.userOnly;
 
-    const doLogin = jest.fn();
-
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -158,7 +155,6 @@ describe("GithubLogin tests", () => {
 
   test("renders correctly for admin logged into Google and Github", async () => {
     const currentUser = currentUserFixturesWithGithub.adminUser;
-    const doLogin = jest.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -176,7 +172,7 @@ describe("GithubLogin tests", () => {
   });
   test("If systemInfo is not available, use the default githubOauthLogin", async () => {
     const currentUser = currentUserFixtures.userOnly;
-    const doLogin = jest.fn();
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>

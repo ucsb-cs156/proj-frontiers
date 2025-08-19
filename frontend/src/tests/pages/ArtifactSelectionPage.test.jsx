@@ -6,14 +6,14 @@ import ArtifactSelectionPage from "main/pages/ArtifactSelectionPage";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import collectionNames from "fixtures/collectionNames";
+import { vi } from "vitest";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 
-const mockedNavigate = jest.fn();
-
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
 

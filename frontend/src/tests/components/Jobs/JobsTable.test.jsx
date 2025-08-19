@@ -3,9 +3,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import JobsTable from "main/components/Jobs/JobsTable";
 import { formatTime } from "main/utils/dateUtils";
+import { vi } from "vitest";
 
-jest.mock("main/utils/dateUtils", () => ({
-  formatTime: jest.fn(),
+vi.mock("main/utils/dateUtils", () => ({
+  formatTime: vi.fn(),
 }));
 
 describe("JobsTable tests", () => {

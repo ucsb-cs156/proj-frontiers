@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import SingleButtonJobForm from "main/components/Jobs/SingleButtonJobForm";
+import { vi } from "vitest";
 
 describe("SingleButtonJobForm tests", () => {
   test("renders correctly with the provided text", () => {
@@ -18,7 +19,7 @@ describe("SingleButtonJobForm tests", () => {
   });
 
   test("calls the callback function when clicked", () => {
-    const callback = jest.fn();
+    const callback = vi.fn();
     render(
       <SingleButtonJobForm
         text="Test Button"

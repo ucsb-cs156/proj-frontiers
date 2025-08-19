@@ -13,7 +13,7 @@ function RepositorySelectionForm({ collections = [] }) {
     const inputValueTrimmed = inputValue.trim();
     if (inputValueTrimmed.length < 1) {
       setMessageURL(
-        <span data-testid="url-error-message" style={{ color: "red" }}>
+        <span data-testid="url-error-message" className="text-danger">
           GitHub repository or organization URL is required
         </span>,
       );
@@ -23,17 +23,17 @@ function RepositorySelectionForm({ collections = [] }) {
       )
     ) {
       setMessageURL(
-        <span data-testid="url-error-message" style={{ color: "red" }}>
+        <span data-testid="url-error-message" className="text-danger">
           Please enter a valid GitHub repository or organization URL
         </span>,
       );
     } else {
       setMessageURL(
-        <span data-testid="url-success-message" style={{ color: "green" }}>
+        <span data-testid="url-success-message" className="text-success">
           Verified{" "}
           <FaCheckCircle
             data-testid="url-success-icon"
-            style={{ color: "green" }}
+            className="text-success"
           />
         </span>,
       );
@@ -46,7 +46,7 @@ function RepositorySelectionForm({ collections = [] }) {
     setURL(inputValue);
     if (inputValueTrimmed.length < 1) {
       setMessageURL(
-        <span data-testid="url-empty-message" style={{ color: "red" }}>
+        <span data-testid="url-empty-message" className="text-danger">
           GitHub repository or organization URL is required
         </span>,
       );
@@ -65,7 +65,7 @@ function RepositorySelectionForm({ collections = [] }) {
     setName(inputValue);
     if (inputValueTrimmed.length < 1) {
       setMessageName(
-        <span data-testid="name-error-message" style={{ color: "red" }}>
+        <span data-testid="name-error-message" className="text-danger">
           Collection name is required
         </span>,
       );
@@ -79,7 +79,7 @@ function RepositorySelectionForm({ collections = [] }) {
     setName(inputValue);
     if (inputValueTrimmed.length < 1) {
       setMessageName(
-        <span data-testid="name-error-message" style={{ color: "red" }}>
+        <span data-testid="name-error-message" className="text-danger">
           Collection name is required
         </span>,
       );
@@ -87,17 +87,17 @@ function RepositorySelectionForm({ collections = [] }) {
       collections.some((collectionName) => collectionName === inputValueTrimmed)
     ) {
       setMessageName(
-        <span data-testid="name-error-message" style={{ color: "red" }}>
+        <span data-testid="name-error-message" className="text-danger">
           Collection name already exists
         </span>,
       );
     } else {
       setMessageName(
-        <span data-testid="name-success-message" style={{ color: "green" }}>
+        <span data-testid="name-success-message" className="text-success">
           Collection name is available{" "}
           <FaCheckCircle
             data-testid="name-success-icon"
-            style={{ color: "green" }}
+            className="text-success"
           />
         </span>,
       );

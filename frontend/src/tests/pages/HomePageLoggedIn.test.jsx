@@ -9,17 +9,15 @@ import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { React } from "react";
+import { vi } from "vitest";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 
-const mockToast = jest.fn();
-
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });

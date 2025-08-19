@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import ConfirmationModal from "main/components/Common/ConfirmationModal";
+import { vi } from "vitest";
 
 test("Sanity Check Modal works as designed", async () => {
-  const mockSubmit = jest.fn();
-  const showModal = jest.fn();
-  const toggleShowModal = jest.fn();
+  const mockSubmit = vi.fn();
+  const showModal = vi.fn();
+  const toggleShowModal = vi.fn();
   render(
     <div
       className="modal show"

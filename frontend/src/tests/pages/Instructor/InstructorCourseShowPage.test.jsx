@@ -16,27 +16,26 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { vi } from "vitest";
 
-const mockedNavigate = jest.fn();
-jest.mock("react-router", () => ({
-  ...jest.requireActual("react-router"),
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
 
 describe("InstructorCourseShowPage tests", () => {
-  afterEach(() => {
+  beforeEach(() => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
@@ -52,8 +51,11 @@ describe("InstructorCourseShowPage tests", () => {
   };
 
   test("renders correctly for instructor user", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
     setupInstructorUser();
-    jest.useFakeTimers();
     const theCourse = {
       ...coursesFixtures.oneCourseWithEachStatus[0],
       id: 1,
@@ -77,13 +79,6 @@ describe("InstructorCourseShowPage tests", () => {
     const testId = "InstructorCourseShowPage";
 
     await waitFor(() => {
-      expect(screen.getByTestId(`${testId}-title`)).toBeInTheDocument();
-    });
-
-    const courseName = screen.getByTestId(`${testId}-title`);
-    expect(courseName).toHaveTextContent("Course: Loading...");
-
-    await waitFor(() => {
       expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
         "Course: CMPSC 156 (1)",
       );
@@ -93,16 +88,18 @@ describe("InstructorCourseShowPage tests", () => {
     expect(orgName).toBeInTheDocument();
 
     expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
-
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
     expect(mockedNavigate).not.toHaveBeenCalled();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("Returns to course page on timeout", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
     axiosMock.onGet("/api/courses/7").timeout();
     axiosMock.onGet("/api/rosterstudents/course/7").timeout();
-    jest.useFakeTimers();
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
@@ -117,6 +114,12 @@ describe("InstructorCourseShowPage tests", () => {
     );
     //Great time to also check initial values
     expect(queryClient.getQueryData(["/api/courses/7"])).toBe(null);
+    const testId = "InstructorCourseShowPage";
+
+    await screen.findByTestId(`${testId}-title`);
+
+    const courseName = screen.getByTestId(`${testId}-title`);
+    expect(courseName).toHaveTextContent("Course: Loading...");
 
     await screen.findByText(
       "Course not found. You will be returned to the course list in 3 seconds.",
@@ -129,21 +132,22 @@ describe("InstructorCourseShowPage tests", () => {
       expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument(),
     );
     act(() => {
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
     });
     expect(mockedNavigate).toHaveBeenCalledWith("/", {
       replace: true,
     });
     expect(mockedNavigate).toHaveBeenCalledTimes(1);
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("Cleans up correctly on unmount", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
     axiosMock.onGet("/api/courses/7").timeout();
     axiosMock.onGet("/api/rosterstudents/course/7").timeout();
-    jest.useFakeTimers({
-      advanceTimers: false,
-    });
     const specificQueryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -151,8 +155,8 @@ describe("InstructorCourseShowPage tests", () => {
         },
       },
     });
-    const setTimeoutSpy = jest.spyOn(global, "setTimeout");
-    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
+    const setTimeoutSpy = vi.spyOn(global, "setTimeout");
+    const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
     render(
       <QueryClientProvider client={specificQueryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
@@ -178,14 +182,14 @@ describe("InstructorCourseShowPage tests", () => {
       charCode: 27,
     });
     fireEvent.click(
-      within(screen.getByRole("navigation")).getByText("Frontiers"),
+      within(screen.getByTestId("AppNavbar")).getByText("Frontiers"),
     );
     await waitFor(() =>
       expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(12),
     );
     setTimeoutSpy.mockRestore();
     clearTimeoutSpy.mockRestore();
-    jest.useRealTimers();
+    vi.useRealTimers();
     specificQueryClient.clear();
   });
 

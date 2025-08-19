@@ -2,14 +2,13 @@ import {
   onDeleteSuccess,
   cellToAxiosParamsDelete,
 } from "main/utils/rosterStudentUtils";
-import mockConsole from "jest-mock-console";
+import mockConsole from "tests/testutils/mockConsole";
+import { vi } from "vitest";
 
-const mockToast = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
   return {
-    __esModule: true,
-    ...originalModule,
+    ...(await importOriginal()),
     toast: (x) => mockToast(x),
   };
 });
