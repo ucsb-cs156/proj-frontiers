@@ -1,0 +1,32 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "002-roster-student-unique-constraints-1",
+      "author": "jetbrains-junie",
+      "changes": [
+        {
+          "addUniqueConstraint": {
+            "tableName": "ROSTER_STUDENT",
+            "columnNames": "COURSE_ID, STUDENT_ID",
+            "constraintName": "UK_ROSTER_STUDENT_COURSE_STUDENT"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "changeSet": {
+      "id": "002-roster-student-unique-constraints-2",
+      "author": "jetbrains-junie",
+      "changes": [
+        {
+          "addUniqueConstraint": {
+            "tableName": "ROSTER_STUDENT",
+            "columnNames": "COURSE_ID, EMAIL",
+            "constraintName": "UK_ROSTER_STUDENT_COURSE_EMAIL"
+          }
+        }
+      ]
+    }
+  }
+]}
