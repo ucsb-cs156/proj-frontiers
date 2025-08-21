@@ -232,7 +232,7 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L232">                });</span>
 <span class="fc" id="L233">        courseRepository.save(course);</span>
 <span class="fc" id="L234">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
-<span class="fc" id="L235">            .header(HttpHeaders.LOCATION, &quot;/instructor/courses?success=True&amp;course=&quot; + state)</span>
+<span class="fc" id="L235">            .header(HttpHeaders.LOCATION, &quot;/login/success&quot;)</span>
 <span class="fc" id="L236">            .build();</span>
       }
     }
