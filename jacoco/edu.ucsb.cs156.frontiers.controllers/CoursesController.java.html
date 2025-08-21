@@ -169,7 +169,7 @@ import org.springframework.web.bind.annotation.*;
    *     marked as the state parameter, which GitHub will return.
    */
   @Operation(summary = &quot;Authorize Frontiers to a Github Course&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;/redirect&quot;)
   public ResponseEntity&lt;Void&gt; linkCourse(@Parameter Long courseId)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {

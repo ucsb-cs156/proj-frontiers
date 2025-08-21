@@ -40,7 +40,7 @@ public class GithubGraphQLController extends ApiController {
    * @return the default branch name
    */
   @Operation(summary = &quot;Get default branch name&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;defaultBranchName&quot;)
   public String getDefaultBranchName(
       @Parameter Long courseId, @Parameter String owner, @Parameter String repo) throws Exception {
@@ -74,7 +74,7 @@ public class GithubGraphQLController extends ApiController {
    * @return the default branch name
    */
   @Operation(summary = &quot;Get commits&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;commits&quot;)
   public String getCommits(
       @Parameter Long courseId,
