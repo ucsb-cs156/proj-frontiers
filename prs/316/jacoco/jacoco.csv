@@ -28,7 +28,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CustomErrorController,0,129,0,14,
 frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,66,0,2,0,15,0,6,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,596,0,34,0,108,0,38,0,21
+frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,609,0,34,0,111,0,38,0,21
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.RosterSourceType,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.InsertStatus,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,454,0,14,0,124,0,30,0,23
@@ -41,7 +41,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamCreationRespo
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController.AdminDTO,0,18,0,0,0,3,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamSourceType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,85,0,2,0,19,0,8,0,7
-frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,104,0,2,0,23,0,11,0,10
+frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,112,0,2,0,23,0,11,0,10
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
