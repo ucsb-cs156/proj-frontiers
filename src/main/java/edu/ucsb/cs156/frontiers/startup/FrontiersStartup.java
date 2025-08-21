@@ -16,6 +16,9 @@ public class FrontiersStartup {
   @Value("#{'${app.admin.emails}'.split(',')}")
   List<String> adminEmails;
 
+  @Value("${app.webhook.secret}")
+  String webhookSecret;
+
   @Autowired AdminRepository adminRepository;
 
   /**
@@ -24,6 +27,9 @@ public class FrontiersStartup {
    */
   public void alwaysRunOnStartup() {
     log.info("alwaysRunOnStartup called");
+
+    validateWebhookSecret();
+
     try {
       adminEmails.forEach(
           (email) -> {
@@ -33,5 +39,17 @@ public class FrontiersStartup {
     } catch (Exception e) {
       log.error("Error in loading all ADMIN_EMAILS:", e);
     }
+  }
+
+  private void validateWebhookSecret() {
+    if (webhookSecret == null || webhookSecret.length() < 10) {
+      String error =
+          String.format(
+              "WEBHOOK_SECRET must be at least 10 characters long. Current length: %d",
+              webhookSecret == null ? 0 : webhookSecret.length());
+      log.error(error);
+      throw new IllegalStateException(error);
+    }
+    log.info("Webhook secret validation passed");
   }
 }

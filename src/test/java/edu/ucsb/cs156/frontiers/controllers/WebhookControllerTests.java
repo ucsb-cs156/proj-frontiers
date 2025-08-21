@@ -15,7 +15,10 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -31,6 +34,97 @@ public class WebhookControllerTests extends ControllerTestCase {
   @MockitoBean CourseRepository courseRepository;
 
   @MockitoBean CourseStaffRepository courseStaffRepository;
+
+  private static final String TEST_SECRET = "test_webhook_secret_123";
+
+  // Helper method to generate valid signatures for testing
+  private String generateValidSignature(String payload, String secret) throws Exception {
+    Mac mac = Mac.getInstance("HmacSHA256");
+    SecretKeySpec secretKeySpec =
+        new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    mac.init(secretKeySpec);
+    byte[] signature = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+    return "sha256=" + bytesToHex(signature);
+  }
+
+  private String bytesToHex(byte[] bytes) {
+    StringBuilder result = new StringBuilder();
+    for (byte b : bytes) {
+      result.append(String.format("%02x", b));
+    }
+    return result.toString();
+  }
+
+  @Test
+  public void webhookWithoutSignature_returnsUnauthorized() throws Exception {
+    String sendBody =
+        """
+                {
+                "action" : "member_added",
+                "membership": {
+                    "role": "direct_member",
+                    "user": {
+                        "login": "testLogin"
+                    }
+                },
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized())
+            .andReturn();
+
+    String actualBody = response.getResponse().getContentAsString();
+    assertEquals("Unauthorized: Invalid signature", actualBody);
+
+    verifyNoInteractions(rosterStudentRepository);
+    verifyNoInteractions(courseRepository);
+    verifyNoInteractions(courseStaffRepository);
+  }
+
+  @Test
+  public void webhookWithInvalidSignature_returnsUnauthorized() throws Exception {
+    String sendBody =
+        """
+                {
+                "action" : "member_added",
+                "membership": {
+                    "role": "direct_member",
+                    "user": {
+                        "login": "testLogin"
+                    }
+                },
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", "sha256=invalid_signature"))
+            .andExpect(status().isUnauthorized())
+            .andReturn();
+
+    String actualBody = response.getResponse().getContentAsString();
+    assertEquals("Unauthorized: Invalid signature", actualBody);
+
+    verifyNoInteractions(rosterStudentRepository);
+    verifyNoInteractions(courseRepository);
+    verifyNoInteractions(courseStaffRepository);
+  }
 
   @Test
   public void successfulWebhook_member() throws Exception {
