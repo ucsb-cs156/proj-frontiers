@@ -119,7 +119,7 @@ public class RosterStudentsController extends ApiController {
    * @return the created RosterStudent
    */
   @Operation(summary = "Create a new roster student")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/post")
   public UpsertResponse postRosterStudent(
       @Parameter(name = "studentId") @RequestParam String studentId,
@@ -154,7 +154,7 @@ public class RosterStudentsController extends ApiController {
    * @return a list of all courses.
    */
   @Operation(summary = "List all roster students for a course")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/course/{courseId}")
   public Iterable<RosterStudent> rosterStudentForCourse(
       @Parameter(name = "courseId") @PathVariable Long courseId) throws EntityNotFoundException {
@@ -177,7 +177,7 @@ public class RosterStudentsController extends ApiController {
    * @throws CsvException
    */
   @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping(
       value = "/upload/csv",
       consumes = {"multipart/form-data"})
@@ -314,7 +314,7 @@ public class RosterStudentsController extends ApiController {
     }
   }
 
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/updateCourseMembership")
   public Job updateCourseMembership(
       @Parameter(name = "courseId", description = "Course ID") @RequestParam Long courseId)

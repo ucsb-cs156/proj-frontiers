@@ -55,7 +55,7 @@ public class CSVDownloadsController extends ApiController {
         @ApiResponse(responseCode = "500", description = "Internal Server Error")
       })
   @GetMapping(value = "/rosterstudents", produces = "text/csv")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   public ResponseEntity<StreamingResponseBody> csvForQuarter(
       @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
           Long courseId)
