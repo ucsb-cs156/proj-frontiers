@@ -280,7 +280,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
     verify(courseRepository, times(1)).save(eq(course2));
-    assertEquals("/instructor/courses?success=True&course=1", responseUrl);
+    assertEquals("/login/success", responseUrl);
   }
 
   @Test
@@ -326,7 +326,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
     verify(courseRepository, times(1)).save(eq(course2));
-    assertEquals("/instructor/courses?success=True&course=1", responseUrl);
+    assertEquals("/login/success", responseUrl);
   }
 
   @Test
@@ -419,7 +419,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
     verify(courseRepository, times(1)).save(eq(courseAfter));
-    assertEquals("/instructor/courses?success=True&course=1", responseUrl);
+    assertEquals("/login/success", responseUrl);
   }
 
   @Test
