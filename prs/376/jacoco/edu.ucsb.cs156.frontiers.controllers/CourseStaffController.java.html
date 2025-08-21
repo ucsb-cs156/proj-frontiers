@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.*;
    * @return the created CourseStaff
    */
   @Operation(summary = &quot;Add a staff member to a course&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
   @PostMapping(&quot;/post&quot;)
   public CourseStaff postCourseStaff(
       @Parameter(name = &quot;firstName&quot;) @RequestParam String firstName,
@@ -149,7 +149,7 @@ import org.springframework.web.bind.annotation.*;
   }
 
   @Operation(summary = &quot;Update a staff member&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
   @PutMapping(&quot;&quot;)
   public CourseStaff updateStaffMember(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
@@ -169,7 +169,7 @@ import org.springframework.web.bind.annotation.*;
   }
 
   @Operation(summary = &quot;Delete a staff member&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
   @DeleteMapping(&quot;/delete&quot;)
   @Transactional
   public ResponseEntity&lt;String&gt; deleteStaffMember(
