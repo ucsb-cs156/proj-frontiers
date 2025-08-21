@@ -185,7 +185,7 @@ public class RosterStudentsController extends ApiController {
   @PostMapping(
       value = "/upload/csv",
       consumes = {"multipart/form-data"})
-  public LoadResult uploadRosterStudentsCSV(
+  public ResponseEntity<LoadResult> uploadRosterStudentsCSV(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "file") @RequestParam("file") MultipartFile file)
       throws JsonProcessingException, IOException, CsvException {
@@ -222,10 +222,16 @@ public class RosterStudentsController extends ApiController {
         }
       }
     }
-    return new LoadResult(
-        counts[InsertStatus.INSERTED.ordinal()],
-        counts[InsertStatus.UPDATED.ordinal()],
-        rejectedStudents);
+    LoadResult loadResult =
+        new LoadResult(
+            counts[InsertStatus.INSERTED.ordinal()],
+            counts[InsertStatus.UPDATED.ordinal()],
+            rejectedStudents);
+    if (rejectedStudents.isEmpty()) {
+      return ResponseEntity.ok(loadResult);
+    } else {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(loadResult);
+    }
   }
 
   public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {

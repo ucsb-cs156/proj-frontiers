@@ -634,7 +634,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .file(file)
                     .param("courseId", "1")
                     .with(csrf()))
-            .andExpect(status().isOk())
+            .andExpect(status().isConflict())
             .andReturn();
 
     RosterStudent rosterStudentRejected =
