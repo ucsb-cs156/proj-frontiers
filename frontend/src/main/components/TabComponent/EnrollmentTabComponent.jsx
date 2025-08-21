@@ -19,8 +19,8 @@ export default function EnrollmentTabComponent({
   testIdPrefix,
   currentUser,
 }) {
-  const [postModal, showPostModal] = useState(false);
-  const [csvModal, showCsvModal] = useState(false);
+  const [postModal, setPostModal] = useState(false);
+  const [csvModal, setCsvModal] = useState(false);
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -64,13 +64,20 @@ export default function EnrollmentTabComponent({
 
   const rosterPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
-    { onSuccess: () => onSuccessRoster(showPostModal) },
+    { onSuccess: () => onSuccessRoster(setPostModal) },
     [`/api/rosterstudents/course/${courseId}`],
   );
 
   const rosterCsvMutation = useBackendMutation(
     objectToAxiosParamsCSV,
-    { onSuccess: () => onSuccessRoster(showCsvModal) },
+    {
+      onSuccess: () => onSuccessRoster(setCsvModal),
+      onError: (error) => {
+        toast.error(
+          `Error uploading CSV: ${JSON.stringify(error.response.data, null, 2)}`,
+        );
+      },
+    },
     [`/api/rosterstudents/course/${courseId}`],
   );
 
@@ -90,7 +97,7 @@ export default function EnrollmentTabComponent({
     <div data-testid={`${testIdPrefix}-EnrollmentTabComponent`}>
       <Modal
         show={csvModal}
-        onHide={() => showCsvModal(false)}
+        onHide={() => setCsvModal(false)}
         centered={true}
         data-testid={`${testIdPrefix}-csv-modal`}
       >
@@ -101,7 +108,7 @@ export default function EnrollmentTabComponent({
       </Modal>
       <Modal
         show={postModal}
-        onHide={() => showPostModal(false)}
+        onHide={() => setPostModal(false)}
         centered={true}
         data-testid={`${testIdPrefix}-post-modal`}
       >
@@ -134,7 +141,7 @@ export default function EnrollmentTabComponent({
       <Row sm={3} className="p-2">
         <Col>
           <Button
-            onClick={() => showCsvModal(true)}
+            onClick={() => setCsvModal(true)}
             data-testid={`${testIdPrefix}-csv-button`}
             className="w-100"
           >
@@ -143,7 +150,7 @@ export default function EnrollmentTabComponent({
         </Col>
         <Col>
           <Button
-            onClick={() => showPostModal(true)}
+            onClick={() => setPostModal(true)}
             data-testid={`${testIdPrefix}-post-button`}
             className="w-100"
           >
