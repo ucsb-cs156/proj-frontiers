@@ -18,6 +18,7 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -537,6 +538,10 @@ public class TeamsControllerTests extends ControllerTestCase {
     Course course = Course.builder().id(1L).courseName("CS156").build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
     TeamMember teamMember = TeamMember.builder().id(1L).team(team).build();
+    team.setTeamMembers(new ArrayList<>(List.of(teamMember)));
+
+    Team updatedTeam = Team.builder().id(1L).name("Team Alpha").course(course).build();
+    updatedTeam.setTeamMembers(List.of());
 
     when(teamMemberRepository.findById(eq(1L))).thenReturn(Optional.of(teamMember));
 
@@ -554,6 +559,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     // assert
     verify(teamMemberRepository, times(1)).findById(1L);
     verify(teamMemberRepository, times(1)).delete(teamMember);
+    verify(teamRepository, times(1)).save(eq(updatedTeam));
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team member with id 1 deleted");
