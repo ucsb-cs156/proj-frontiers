@@ -119,7 +119,7 @@ import org.springframework.web.server.ResponseStatusException;
    * @return the created RosterStudent
    */
   @Operation(summary = &quot;Create a new roster student&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
   @PostMapping(&quot;/post&quot;)
   public UpsertResponse postRosterStudent(
       @Parameter(name = &quot;studentId&quot;) @RequestParam String studentId,
@@ -154,7 +154,7 @@ import org.springframework.web.server.ResponseStatusException;
    * @return a list of all courses.
    */
   @Operation(summary = &quot;List all roster students for a course&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
   @GetMapping(&quot;/course/{courseId}&quot;)
   public Iterable&lt;RosterStudent&gt; rosterStudentForCourse(
       @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId) throws EntityNotFoundException {
@@ -177,7 +177,7 @@ import org.springframework.web.server.ResponseStatusException;
    * @throws CsvException
    */
   @Operation(summary = &quot;Upload Roster students for Course in UCSB Egrades Format&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
   @PostMapping(
       value = &quot;/upload/csv&quot;,
       consumes = {&quot;multipart/form-data&quot;})
@@ -314,7 +314,7 @@ import org.springframework.web.server.ResponseStatusException;
     }
   }
 
-  @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
   @PostMapping(&quot;/updateCourseMembership&quot;)
   public Job updateCourseMembership(
       @Parameter(name = &quot;courseId&quot;, description = &quot;Course ID&quot;) @RequestParam Long courseId)
@@ -398,7 +398,7 @@ import org.springframework.web.server.ResponseStatusException;
   }
 
   @Operation(summary = &quot;Update a roster student&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)&quot;)
   @PutMapping(&quot;/update&quot;)
   public RosterStudent updateRosterStudent(
       @Parameter(name = &quot;id&quot;) @RequestParam Long id,
@@ -439,7 +439,7 @@ import org.springframework.web.server.ResponseStatusException;
   }
 
   @Operation(summary = &quot;Delete a roster student&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)&quot;)
   @DeleteMapping(&quot;/delete&quot;)
   @Transactional
   public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id)
