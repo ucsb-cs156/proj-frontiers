@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -282,6 +283,7 @@ public class TeamsController extends ApiController {
   @Operation(summary = "Remove a team member")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @DeleteMapping("/removeMember")
+  @Transactional
   public Object removeTeamMember(
       @Parameter(name = "teamMemberId") @RequestParam Long teamMemberId,
       @Parameter(name = "courseId") @RequestParam Long courseId) {
