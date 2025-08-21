@@ -146,17 +146,13 @@ public class CoursesController extends ApiController {
    * @return a course
    */
   @Operation(summary = "Get course by id")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @GetMapping("/{id}")
   public InstructorCourseView getCourseById(@Parameter(name = "id") @PathVariable Long id) {
     Course course =
         courseRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, id));
-    if (!isCurrentUserAdmin()
-        && !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {
-      throw new EntityNotFoundException(Course.class, id);
-    }
     // Convert to InstructorCourseView
     InstructorCourseView courseView = new InstructorCourseView(course);
     return courseView;
@@ -173,7 +169,7 @@ public class CoursesController extends ApiController {
    *     marked as the state parameter, which GitHub will return.
    */
   @Operation(summary = "Authorize Frontiers to a Github Course")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @GetMapping("/redirect")
   public ResponseEntity<Void> linkCourse(@Parameter Long courseId)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {

@@ -119,7 +119,7 @@ public class RosterStudentsController extends ApiController {
    * @return the created RosterStudent
    */
   @Operation(summary = "Create a new roster student")
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @PostMapping("/post")
   public UpsertResponse postRosterStudent(
       @Parameter(name = "studentId") @RequestParam String studentId,
@@ -154,7 +154,7 @@ public class RosterStudentsController extends ApiController {
    * @return a list of all courses.
    */
   @Operation(summary = "List all roster students for a course")
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @GetMapping("/course/{courseId}")
   public Iterable<RosterStudent> rosterStudentForCourse(
       @Parameter(name = "courseId") @PathVariable Long courseId) throws EntityNotFoundException {
@@ -177,7 +177,7 @@ public class RosterStudentsController extends ApiController {
    * @throws CsvException
    */
   @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @PostMapping(
       value = "/upload/csv",
       consumes = {"multipart/form-data"})
@@ -314,7 +314,7 @@ public class RosterStudentsController extends ApiController {
     }
   }
 
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @PostMapping("/updateCourseMembership")
   public Job updateCourseMembership(
       @Parameter(name = "courseId", description = "Course ID") @RequestParam Long courseId)
@@ -398,7 +398,7 @@ public class RosterStudentsController extends ApiController {
   }
 
   @Operation(summary = "Update a roster student")
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)")
   @PutMapping("/update")
   public RosterStudent updateRosterStudent(
       @Parameter(name = "id") @RequestParam Long id,
@@ -439,7 +439,7 @@ public class RosterStudentsController extends ApiController {
   }
 
   @Operation(summary = "Delete a roster student")
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)")
   @DeleteMapping("/delete")
   @Transactional
   public ResponseEntity<String> deleteRosterStudent(@Parameter(name = "id") @RequestParam Long id)

@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,6 +55,7 @@ public class CSVDownloadsController extends ApiController {
         @ApiResponse(responseCode = "500", description = "Internal Server Error")
       })
   @GetMapping(value = "/rosterstudents", produces = "text/csv")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   public ResponseEntity<StreamingResponseBody> csvForQuarter(
       @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
           Long courseId)

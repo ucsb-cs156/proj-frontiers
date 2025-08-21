@@ -1,7 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.errors.CourseNotAuthorized;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
@@ -41,7 +40,7 @@ public class GithubGraphQLController extends ApiController {
    * @return the default branch name
    */
   @Operation(summary = "Get default branch name")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @GetMapping("defaultBranchName")
   public String getDefaultBranchName(
       @Parameter Long courseId, @Parameter String owner, @Parameter String repo) throws Exception {
@@ -56,11 +55,6 @@ public class GithubGraphQLController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
     log.info("Found course: {}", course);
-
-    if (!isCurrentUserAdmin()
-        && !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {
-      throw new CourseNotAuthorized(courseId);
-    }
 
     log.info("Current user is authorized to access course: {}", course.getId());
 
@@ -80,7 +74,7 @@ public class GithubGraphQLController extends ApiController {
    * @return the default branch name
    */
   @Operation(summary = "Get commits")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
   @GetMapping("commits")
   public String getCommits(
       @Parameter Long courseId,
@@ -104,11 +98,6 @@ public class GithubGraphQLController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
     log.info("Found course: {}", course);
-
-    if (!isCurrentUserAdmin()
-        && !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {
-      throw new CourseNotAuthorized(courseId);
-    }
 
     log.info("Current user is authorized to access course: {}", course.getId());
 
