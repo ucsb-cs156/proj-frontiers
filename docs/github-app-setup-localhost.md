@@ -45,9 +45,15 @@ Scroll down to permissions, and under repository, set the following accesses:
 Under Organization, select the following permissions:
 - Administration: Read and Write
 
-Then, scroll further and uncheck "Active" under "Webhooks"
+Then, scroll further and uncheck "Active" under "Webhooks" (localhost testing doesn't need webhook functionality)
 
 ![image](https://github.com/user-attachments/assets/74119317-b1a5-40c8-88ce-d7e394f7e5a6)
+
+**Note about webhook security**: While webhooks are disabled for localhost, in production environments you must set up a webhook secret for security. The application requires a `WEBHOOK_SECRET` environment variable that is at least 10 characters long. For localhost development, you can set this to any value of 10+ characters in your `.env` file:
+
+```
+WEBHOOK_SECRET=localhost_dev_secret_123
+```
 
 
 Then, scroll further and under "Where can this Github App be installed?" select "Any Account"
