@@ -284,7 +284,7 @@ public class CoursesControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testLinkCourseSuccessfullyProfessorCreator() throws Exception {
     User user = currentUserService.getCurrentUser().getUser();
     Course course1 =
@@ -623,7 +623,7 @@ public class CoursesControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testGetCourseById() throws Exception {
     // arrange
     User user = currentUserService.getCurrentUser().getUser();
@@ -653,45 +653,10 @@ public class CoursesControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testGetCourseById_courseDoesNotExist() throws Exception {
 
     when(courseRepository.findById(1L)).thenReturn(Optional.empty());
-
-    // act
-    MvcResult response =
-        mockMvc.perform(get("/api/courses/1")).andExpect(status().isNotFound()).andReturn();
-
-    // assert
-    String responseString = response.getResponse().getContentAsString();
-    Map<String, String> expectedMap =
-        Map.of(
-            "type", "EntityNotFoundException",
-            "message", "Course with id 1 not found");
-    Map<String, String> actualMap =
-        mapper.readValue(responseString, new TypeReference<Map<String, String>>() {});
-    assertEquals(expectedMap, actualMap);
-  }
-
-  @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
-  public void testGetCourseById_instructorCannotGetCourseCreatedBySomeoneElse() throws Exception {
-    // arrange
-    User user = currentUserService.getCurrentUser().getUser();
-    User otherInstructorUser =
-        User.builder().id(user.getId() + 1L).email("not_" + user.getEmail()).build();
-
-    Course course =
-        Course.builder()
-            .id(1L)
-            .courseName("CS156")
-            .orgName("ucsb-cs156-s25")
-            .term("S25")
-            .school("UCSB")
-            .instructorEmail(otherInstructorUser.getEmail())
-            .build();
-
-    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     // act
     MvcResult response =

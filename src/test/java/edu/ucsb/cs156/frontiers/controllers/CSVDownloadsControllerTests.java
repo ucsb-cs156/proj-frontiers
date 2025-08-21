@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
@@ -29,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -49,6 +51,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
   @Autowired ObjectMapper objectMapper;
 
   @Test
+  @WithMockUser(roles = {"ADMIN"})
   public void test_no_such_course() throws Exception {
 
     // arrange
@@ -74,6 +77,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
   }
 
   @Test
+  @WithInstructorCoursePermissions
   public void test_csv_exception() throws Exception {
 
     // arrange
@@ -103,6 +107,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @Test
   @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+  @WithInstructorCoursePermissions
   public void mockMvcSRBTest() throws Exception {
     Course course =
         Course.builder().id(1L).courseName("ucsb-cs156-s25").term("S25").school("UCSB").build();

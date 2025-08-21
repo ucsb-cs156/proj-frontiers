@@ -19,4 +19,11 @@ public class TestCourseSecurity {
       MethodSecurityExpressionOperations operations, Long courseId) {
     return true;
   }
+
+  @PreAuthorize(
+      "((hasRole('ROLE_INSTRUCTOR') || hasRole('ROLE_USER')) && hasAuthority('COURSE_PERMISSIONS'))|| hasRole('ROLE_ADMIN')")
+  public Boolean hasRosterStudentManagementPermissions(
+      MethodSecurityExpressionOperations operations, Long rosterStudentId) {
+    return true;
+  }
 }
