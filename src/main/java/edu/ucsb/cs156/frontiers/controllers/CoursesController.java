@@ -169,7 +169,7 @@ public class CoursesController extends ApiController {
    *     marked as the state parameter, which GitHub will return.
    */
   @Operation(summary = "Authorize Frontiers to a Github Course")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/redirect")
   public ResponseEntity<Void> linkCourse(@Parameter Long courseId)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -232,7 +232,7 @@ public class CoursesController extends ApiController {
                 });
         courseRepository.save(course);
         return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
-            .header(HttpHeaders.LOCATION, "/instructor/courses?success=True&course=" + state)
+            .header(HttpHeaders.LOCATION, "/login/success")
             .build();
       }
     }
