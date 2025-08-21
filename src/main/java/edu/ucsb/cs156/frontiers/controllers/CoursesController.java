@@ -232,7 +232,7 @@ public class CoursesController extends ApiController {
                 });
         courseRepository.save(course);
         return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
-            .header(HttpHeaders.LOCATION, "/instructor/courses?success=True&course=" + state)
+            .header(HttpHeaders.LOCATION, "/login/success")
             .build();
       }
     }

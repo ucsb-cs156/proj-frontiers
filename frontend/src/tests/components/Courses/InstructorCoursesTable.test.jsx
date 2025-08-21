@@ -3,7 +3,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
-import { BrowserRouter } from "react-router";
+import { BrowserRouter, MemoryRouter } from "react-router";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { vi } from "vitest";
@@ -205,13 +205,13 @@ describe("InstructorCoursesTable tests", () => {
     test("Tests that when storybook is explictly false all still works as expected", async () => {
       render(
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
+          <MemoryRouter initialEntries={["/instructor/courses"]}>
             <InstructorCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               storybook={false}
             />
-          </BrowserRouter>
+          </MemoryRouter>
         </QueryClientProvider>,
       );
 
@@ -229,6 +229,8 @@ describe("InstructorCoursesTable tests", () => {
       });
 
       expect(window.location.href).toBe("/api/courses/redirect?courseId=3");
+      expect(sessionStorage.getItem("redirect")).toBe("/instructor/courses");
+      sessionStorage.clear();
     });
     test("Tests for GitHub link", async () => {
       render(
