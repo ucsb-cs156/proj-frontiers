@@ -236,131 +236,137 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
   // @Test
   // @WithInstructorCoursePermissions
-  // public void instructor_can_upload_students_for_an_existing_course_ucsb() throws Exception {
+  // public void instructor_can_upload_students_for_an_existing_course_ucsb()
+  // throws Exception {
 
-  //     // arrange
+  // // arrange
 
-  //     Course course1 = Course.builder()
-  //             .id(1L)
-  //             .courseName("OSU 101")
-  //             .orgName("osu-101-s25")
-  //             .term("S25")
-  //             .school("Oregon State")
-  //             .build();
+  // Course course1 = Course.builder()
+  // .id(1L)
+  // .courseName("OSU 101")
+  // .orgName("osu-101-s25")
+  // .term("S25")
+  // .school("Oregon State")
+  // .build();
 
-  //     RosterStudent rs1BeforeWithId = RosterStudent.builder()
-  //             .id(1L)
-  //             .firstName("Chris")
-  //             .lastName("Gaucho")
-  //             .studentId("A123456")
-  //             .email("cgaucho@ucsb.edu")
-  //             .course(course1)
-  //             .rosterStatus(RosterStatus.MANUAL)
-  //             .orgStatus(OrgStatus.PENDING)
-  //             .build();
+  // RosterStudent rs1BeforeWithId = RosterStudent.builder()
+  // .id(1L)
+  // .firstName("Chris")
+  // .lastName("Gaucho")
+  // .studentId("A123456")
+  // .email("cgaucho@ucsb.edu")
+  // .course(course1)
+  // .rosterStatus(RosterStatus.MANUAL)
+  // .orgStatus(OrgStatus.PENDING)
+  // .build();
 
-  //     RosterStudent rs1AfterWithId = RosterStudent.builder()
-  //             .id(1L)
-  //             .firstName("CHRIS FAKE")
-  //             .lastName("GAUCHO")
-  //             .studentId("A123456")
-  //             .email("cgaucho@ucsb.edu")
-  //             .course(course1)
-  //             .rosterStatus(RosterStatus.ROSTER)
-  //             .orgStatus(OrgStatus.PENDING)
-  //             .build();
+  // RosterStudent rs1AfterWithId = RosterStudent.builder()
+  // .id(1L)
+  // .firstName("CHRIS FAKE")
+  // .lastName("GAUCHO")
+  // .studentId("A123456")
+  // .email("cgaucho@ucsb.edu")
+  // .course(course1)
+  // .rosterStatus(RosterStatus.ROSTER)
+  // .orgStatus(OrgStatus.PENDING)
+  // .build();
 
-  //     RosterStudent rs2BeforeWithId = RosterStudent.builder()
-  //             .id(2L)
-  //             .firstName("Lauren")
-  //             .lastName("Del Playa")
-  //             .studentId("A987654")
-  //             .email("ldelplaya@umail.ucsb.edu")
-  //             .course(course1)
-  //             .rosterStatus(RosterStatus.ROSTER)
-  //             .orgStatus(OrgStatus.PENDING)
-  //             .build();
+  // RosterStudent rs2BeforeWithId = RosterStudent.builder()
+  // .id(2L)
+  // .firstName("Lauren")
+  // .lastName("Del Playa")
+  // .studentId("A987654")
+  // .email("ldelplaya@umail.ucsb.edu")
+  // .course(course1)
+  // .rosterStatus(RosterStatus.ROSTER)
+  // .orgStatus(OrgStatus.PENDING)
+  // .build();
 
-  //     RosterStudent rs2AfterWithId = RosterStudent.builder()
-  //             .id(2L)
-  //             .course(course1)
-  //             .firstName("LAUREN")
-  //             .lastName("DEL PLAYA")
-  //             .email("ldelplaya@ucsb.edu")
-  //             .studentId("A987654")
-  //             .rosterStatus(RosterStatus.ROSTER)
-  //             .orgStatus(OrgStatus.PENDING)
-  //             .build();
+  // RosterStudent rs2AfterWithId = RosterStudent.builder()
+  // .id(2L)
+  // .course(course1)
+  // .firstName("LAUREN")
+  // .lastName("DEL PLAYA")
+  // .email("ldelplaya@ucsb.edu")
+  // .studentId("A987654")
+  // .rosterStatus(RosterStatus.ROSTER)
+  // .orgStatus(OrgStatus.PENDING)
+  // .build();
 
-  //     RosterStudent rs3NoId = RosterStudent.builder()
-  //             .course(course1)
-  //             .firstName("SABADO")
-  //             .lastName("TARDE")
-  //             .email("sabadotarde@ucsb.edu")
-  //             .studentId("1234567")
-  //             .rosterStatus(RosterStatus.ROSTER)
-  //             .orgStatus(OrgStatus.PENDING)
-  //             .build();
+  // RosterStudent rs3NoId = RosterStudent.builder()
+  // .course(course1)
+  // .firstName("SABADO")
+  // .lastName("TARDE")
+  // .email("sabadotarde@ucsb.edu")
+  // .studentId("1234567")
+  // .rosterStatus(RosterStatus.ROSTER)
+  // .orgStatus(OrgStatus.PENDING)
+  // .build();
 
-  //     RosterStudent rs3WithId = RosterStudent.builder()
-  //             .id(3L)
-  //             .course(course1)
-  //             .firstName("SABADO")
-  //             .lastName("TARDE")
-  //             .email("sabadotarde@ucsb.edu")
-  //             .studentId("1234567")
-  //             .rosterStatus(RosterStatus.ROSTER)
-  //             .orgStatus(OrgStatus.PENDING)
-  //             .build();
+  // RosterStudent rs3WithId = RosterStudent.builder()
+  // .id(3L)
+  // .course(course1)
+  // .firstName("SABADO")
+  // .lastName("TARDE")
+  // .email("sabadotarde@ucsb.edu")
+  // .studentId("1234567")
+  // .rosterStatus(RosterStatus.ROSTER)
+  // .orgStatus(OrgStatus.PENDING)
+  // .build();
 
-  //     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-  //     when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
-  //             .thenReturn(Optional.of(rs1BeforeWithId));
-  //     when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
-  //             .thenReturn(Optional.of(rs2BeforeWithId));
-  //     when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("1234567")))
-  //             .thenReturn(Optional.empty());
+  // when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+  // when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L),
+  // eq("A123456")))
+  // .thenReturn(Optional.of(rs1BeforeWithId));
+  // when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L),
+  // eq("A987654")))
+  // .thenReturn(Optional.of(rs2BeforeWithId));
+  // when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L),
+  // eq("1234567")))
+  // .thenReturn(Optional.empty());
 
-  //     MockMultipartFile file = new MockMultipartFile(
-  //             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE,
+  // MockMultipartFile file = new MockMultipartFile(
+  // "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE,
   // sampleCSVContentsUCSB.getBytes());
 
-  //     doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));
-  //     doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
-  //     doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs3WithId));
+  // doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));
+  // doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
+  // doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs3WithId));
 
-  //     // act
+  // // act
 
-  //     MvcResult response = mockMvc
-  //             .perform(
-  //                     multipart("/api/rosterstudents/upload/csv")
-  //                             .file(file)
-  //                             .param("courseId", "1")
-  //                             .with(csrf()))
-  //             .andExpect(status().isOk())
-  //             .andReturn();
+  // MvcResult response = mockMvc
+  // .perform(
+  // multipart("/api/rosterstudents/upload/csv")
+  // .file(file)
+  // .param("courseId", "1")
+  // .with(csrf()))
+  // .andExpect(status().isOk())
+  // .andReturn();
 
-  //     // assert
+  // // assert
 
-  //     verify(courseRepository, atLeastOnce()).findById(eq(1L));
-  //     verify(rosterStudentRepository, atLeastOnce())
-  //             .findByCourseIdAndStudentId(eq(1L), eq("A123456"));
-  //     verify(rosterStudentRepository, atLeastOnce())
-  //             .findByCourseIdAndStudentId(eq(1L), eq("A987654"));
-  //     verify(rosterStudentRepository, atLeastOnce())
-  //             .findByCourseIdAndStudentId(eq(1L), eq("1234567"));
-  //     verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
-  //     verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
-  //     verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
+  // verify(courseRepository, atLeastOnce()).findById(eq(1L));
+  // verify(rosterStudentRepository, atLeastOnce())
+  // .findByCourseIdAndStudentId(eq(1L), eq("A123456"));
+  // verify(rosterStudentRepository, atLeastOnce())
+  // .findByCourseIdAndStudentId(eq(1L), eq("A987654"));
+  // verify(rosterStudentRepository, atLeastOnce())
+  // .findByCourseIdAndStudentId(eq(1L), eq("1234567"));
+  // verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
+  // verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
+  // verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
 
-  //     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1AfterWithId));
-  //     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs2AfterWithId));
-  //     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
+  // verify(updateUserService,
+  // times(1)).attachUserToRosterStudent(eq(rs1AfterWithId));
+  // verify(updateUserService,
+  // times(1)).attachUserToRosterStudent(eq(rs2AfterWithId));
+  // verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
 
-  //     String responseString = response.getResponse().getContentAsString();
-  //     LoadResult expectedResult = new LoadResult(1, 2, List.of());
-  //     String expectedJson = mapper.writeValueAsString(expectedResult);
-  //     assertEquals(expectedJson, responseString);
+  // String responseString = response.getResponse().getContentAsString();
+  // LoadResult expectedResult = new LoadResult(1, 2, List.of());
+  // String expectedJson = mapper.writeValueAsString(expectedResult);
+  // assertEquals(expectedJson, responseString);
   // }
 
   @Test
@@ -633,6 +639,42 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
     assertEquals(
         "OREGON_STATE CSV row does not have enough columns. Length = 9 Row content = [[Sting, Sting, 1234567, 100, 100, 8-Aug-25, 12-Dec-25, 5-May-25, sting@oregonstate.edu]]",
+        ex.getReason());
+  }
+
+  @Test
+  public void test_fromCSVRowChico_notEnoughColumns() {
+    String row[] = {
+      "Marge Simpson", "88200", "013228559",
+    };
+
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class,
+            () ->
+                RosterStudentsCSVController.fromCSVRow(
+                    row, RosterStudentsCSVController.RosterSourceType.CHICO_CANVAS));
+    assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    assertEquals(
+        "CHICO_CANVAS CSV row does not have enough columns. Length = 3 Row content = [[Marge Simpson, 88200, 013228559]]",
+        ex.getReason());
+  }
+
+  @Test
+  public void test_fromCSVRowUCSB_notEnoughColumns() {
+    String row[] = {"08235", "A123456", "", "4.0", "GAUCHO", "CHRIS FAKE", "F23", "CMPSC156"
+      // missing rest of columns
+    };
+
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class,
+            () ->
+                RosterStudentsCSVController.fromCSVRow(
+                    row, RosterStudentsCSVController.RosterSourceType.UCSB_EGRADES));
+    assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    assertEquals(
+        "UCSB_EGRADES CSV row does not have enough columns. Length = 8 Row content = [[08235, A123456, , 4.0, GAUCHO, CHRIS FAKE, F23, CMPSC156]]",
         ex.getReason());
   }
 }
