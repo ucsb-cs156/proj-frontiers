@@ -30,6 +30,6 @@ jobs:
     - name: Build with Maven
       env:
         PRODUCTION: true
-      run: mvn -DskipTests clean dependency:list install
+      run: mvn -ntp -DskipTests clean dependency:list install
 
   

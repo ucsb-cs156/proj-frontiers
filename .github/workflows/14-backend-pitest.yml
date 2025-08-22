@@ -39,7 +39,7 @@ jobs:
          distribution: semeru # See: https://github.com/actions/setup-java#supported-distributions
          java-version-file: ./.java-version
     - name: Build with Maven
-      run: mvn -B -ntp test 
+      run: mvn -ntp -B -ntp test 
     
     # Note that we DO NOT download history in this job;
     # this job is intended as a "reset" of the history each time the 
@@ -69,17 +69,11 @@ jobs:
         echo "pr_number=${pr_number}" 
         echo "pr_number=${pr_number}" >> "$GITHUB_ENV"
 
-    - name: Set path for github pages deploy when there is a PR num
-      if: ${{ env.pr_number != 'null' }}
-      run: |
-        prefix="prs/${pr_number}/"
-        echo "prefix=${prefix}"
-        echo "prefix=${prefix}" >> "$GITHUB_ENV"
-    
-    - name: Set path for github pages deploy when there is NOT a PR num
-      if: ${{ env.pr_number == 'null' }}
-      run: |
-        prefix=""
+        if [ "${pr_number}" == "null" ]; then
+          prefix=""
+        else
+          prefix="prs/${pr_number}/"
+        fi
         echo "prefix=${prefix}"
         echo "prefix=${prefix}" >> "$GITHUB_ENV"
 
