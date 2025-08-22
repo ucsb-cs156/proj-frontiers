@@ -292,9 +292,12 @@ public class TeamsController extends ApiController {
             .findById(teamMemberId)
             .orElseThrow(() -> new EntityNotFoundException(TeamMember.class, teamMemberId));
     Team team = teamMember.getTeam();
+    RosterStudent rosterStudent = teamMember.getRosterStudent();
     team.getTeamMembers().remove(teamMember);
+    rosterStudent.getTeamMembers().remove(teamMember);
     teamMemberRepository.delete(teamMember);
     teamRepository.save(team);
+    rosterStudentRepository.save(rosterStudent);
     return genericMessage("Team member with id %s deleted".formatted(teamMemberId));
   }
 

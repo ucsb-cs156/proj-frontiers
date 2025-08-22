@@ -536,12 +536,16 @@ public class TeamsControllerTests extends ControllerTestCase {
   public void testRemoveTeamMember_success() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").build();
+    RosterStudent rs = RosterStudent.builder().id(2L).course(course).build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
-    TeamMember teamMember = TeamMember.builder().id(1L).team(team).build();
+    TeamMember teamMember = TeamMember.builder().id(1L).team(team).rosterStudent(rs).build();
     team.setTeamMembers(new ArrayList<>(List.of(teamMember)));
+    rs.setTeamMembers(new ArrayList<>(List.of(teamMember)));
 
     Team updatedTeam = Team.builder().id(1L).name("Team Alpha").course(course).build();
     updatedTeam.setTeamMembers(List.of());
+    RosterStudent rsUpdated = RosterStudent.builder().id(2L).course(course).build();
+    rsUpdated.setTeamMembers(List.of());
 
     when(teamMemberRepository.findById(eq(1L))).thenReturn(Optional.of(teamMember));
 
@@ -560,6 +564,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     verify(teamMemberRepository, times(1)).findById(1L);
     verify(teamMemberRepository, times(1)).delete(teamMember);
     verify(teamRepository, times(1)).save(eq(updatedTeam));
+    verify(rosterStudentRepository, times(1)).save(eq(rsUpdated));
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team member with id 1 deleted");
