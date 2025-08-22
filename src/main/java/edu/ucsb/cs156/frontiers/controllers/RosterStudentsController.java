@@ -125,7 +125,7 @@ public class RosterStudentsController extends ApiController {
   @Operation(summary = "Create a new roster student")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/post")
-  public UpsertResponse postRosterStudent(
+  public ResponseEntity<UpsertResponse> postRosterStudent(
       @Parameter(name = "studentId") @RequestParam String studentId,
       @Parameter(name = "firstName") @RequestParam String firstName,
       @Parameter(name = "lastName") @RequestParam String lastName,
@@ -149,7 +149,11 @@ public class RosterStudentsController extends ApiController {
             .build();
 
     UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
-    return upsertResponse;
+    if (upsertResponse.insertStatus == InsertStatus.REJECTED) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(upsertResponse);
+    } else {
+      return ResponseEntity.ok(upsertResponse);
+    }
   }
 
   /**

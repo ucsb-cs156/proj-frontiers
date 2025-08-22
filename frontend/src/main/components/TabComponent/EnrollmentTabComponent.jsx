@@ -64,7 +64,14 @@ export default function EnrollmentTabComponent({
 
   const rosterPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
-    { onSuccess: () => onSuccessRoster(setPostModal) },
+    {
+      onSuccess: () => onSuccessRoster(setPostModal),
+      onError: (error) => {
+        toast.error(
+          `Error adding student: ${JSON.stringify(error.response.data, null, 2)}`,
+        );
+      },
+    },
     [`/api/rosterstudents/course/${courseId}`],
   );
 

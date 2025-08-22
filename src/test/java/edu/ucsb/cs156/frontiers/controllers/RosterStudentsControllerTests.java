@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.LoadResult;
-import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.RosterSourceType;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
@@ -265,6 +264,36 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             "message", "Course with id 1 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
+  }
+
+  /** Test the POST endpoint */
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_post_fails_on_matching() throws Exception {
+
+    RosterStudent rosterStudent1 =
+        RosterStudent.builder().id(1L).studentId("A123456").course(course1).build();
+    RosterStudent rosterStudent2 =
+        RosterStudent.builder().id(2L).email("cgaucho@example.org").course(course1).build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
+        .thenReturn(Optional.of(rosterStudent1));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@example.org")))
+        .thenReturn(Optional.of(rosterStudent2));
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@example.org")
+                    .param("courseId", "1"))
+            .andExpect(status().isConflict())
+            .andReturn();
   }
 
   /** Test the GET endpoint */
