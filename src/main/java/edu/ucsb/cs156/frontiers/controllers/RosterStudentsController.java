@@ -79,6 +79,7 @@ public class RosterStudentsController extends ApiController {
   public enum RosterSourceType {
     UCSB_EGRADES,
     CHICO_CANVAS,
+    OREGON_STATE,
     UNKNOWN
   }
 
@@ -86,6 +87,8 @@ public class RosterStudentsController extends ApiController {
       "Enrl Cd,Perm #,Grade,Final Units,Student Last,Student First Middle,Quarter,Course ID,Section,Meeting Time(s) / Location(s),Email,ClassLevel,Major1,Major2,Date/Time,Pronoun";
   public static final String CHICO_CANVAS_HEADERS =
       "Student Name,Student ID,Student SIS ID,Email,Section Name";
+  public static final String OSU_HEADERS =
+      "Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id";
 
   public static RosterSourceType getRosterSourceType(String[] headers) {
 
@@ -93,6 +96,7 @@ public class RosterStudentsController extends ApiController {
 
     sourceTypeToHeaders.put(RosterSourceType.UCSB_EGRADES, UCSB_EGRADES_HEADERS.split(","));
     sourceTypeToHeaders.put(RosterSourceType.CHICO_CANVAS, CHICO_CANVAS_HEADERS.split(","));
+    sourceTypeToHeaders.put(RosterSourceType.OREGON_STATE, OSU_HEADERS.split(","));
 
     for (Map.Entry<RosterSourceType, String[]> entry : sourceTypeToHeaders.entrySet()) {
       RosterSourceType type = entry.getKey();
@@ -184,7 +188,7 @@ public class RosterStudentsController extends ApiController {
    * @throws IOException
    * @throws CsvException
    */
-  @Operation(summary = "Upload Roster students for Course in UCSB Egrades Format")
+  @Operation(summary = "Upload Roster students for Course in any supported Format")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping(
       value = "/upload/csv",
@@ -243,9 +247,25 @@ public class RosterStudentsController extends ApiController {
       return fromUCSBEgradesCSVRow(row);
     } else if (sourceType == RosterSourceType.CHICO_CANVAS) {
       return fromChicoCanvasCSVRow(row);
+    } else if (sourceType == RosterSourceType.OREGON_STATE) {
+      return fromOregonStateCSVRow(row);
     } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV format not recognized");
     }
+  }
+
+  public static RosterStudent fromOregonStateCSVRow(String[] row) {
+
+    String sortableName = row[1];
+    String sortableNameParts[] = sortableName.split(",");
+    String lastName = sortableNameParts[0].trim();
+    String firstName = sortableNameParts.length > 1 ? sortableNameParts[1].trim() : "";
+    return RosterStudent.builder()
+        .firstName(firstName)
+        .lastName(lastName)
+        .studentId(row[8])
+        .email(row[7])
+        .build();
   }
 
   public static RosterStudent fromUCSBEgradesCSVRow(String[] row) {
