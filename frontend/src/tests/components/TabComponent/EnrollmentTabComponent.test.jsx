@@ -385,12 +385,6 @@ describe("EnrollmentTabComponent Tests", () => {
     ).toStrictEqual([]);
 
     const openModal = await screen.findByTestId(`${testId}-post-button`);
-    const arbitraryUpdateCount = queryClientSpecific.getQueryState([
-      "arbitraryQuery",
-    ]).dataUpdateCount;
-    const updateCountStudent = queryClientSpecific.getQueryState([
-      "/api/rosterstudents/course/7",
-    ]).dataUpdateCount;
 
     fireEvent.click(openModal);
     await screen.findByLabelText("Student Id");
