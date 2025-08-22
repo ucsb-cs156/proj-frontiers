@@ -1,28 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-
-import edu.ucsb.cs156.frontiers.controllers.RosterStudentsCSVController.RosterSourceType;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
@@ -44,7 +22,25 @@ import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @Tag(name = "RosterStudents")
 @RequestMapping("/api/rosterstudents")
@@ -95,7 +91,9 @@ public class RosterStudentsController extends ApiController {
             .email(email)
             .build();
 
-    UpsertResponse upsertResponse = upsertStudent(rosterStudentRepository, updateUserService, rosterStudent, course, RosterStatus.MANUAL);
+    UpsertResponse upsertResponse =
+        upsertStudent(
+            rosterStudentRepository, updateUserService, rosterStudent, course, RosterStatus.MANUAL);
     if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(upsertResponse);
     } else {
@@ -118,82 +116,6 @@ public class RosterStudentsController extends ApiController {
         .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
     return rosterStudents;
-  }
-
-  
-
-  public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
-    if (sourceType == RosterSourceType.UCSB_EGRADES) {
-      return fromUCSBEgradesCSVRow(row);
-    } else if (sourceType == RosterSourceType.CHICO_CANVAS) {
-      return fromChicoCanvasCSVRow(row);
-    } else if (sourceType == RosterSourceType.OREGON_STATE) {
-      return fromOregonStateCSVRow(row);
-    } else {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV format not recognized");
-    }
-  }
-
-  public static RosterStudent fromOregonStateCSVRow(String[] row) {
-
-    String sortableName = row[1];
-    String sortableNameParts[] = sortableName.split(",");
-    String lastName = sortableNameParts[0].trim();
-    String firstName = sortableNameParts.length > 1 ? sortableNameParts[1].trim() : "";
-    return RosterStudent.builder()
-        .firstName(firstName)
-        .lastName(lastName)
-        .studentId(row[8])
-        .email(row[7])
-        .build();
-  }
-
-  public static RosterStudent fromUCSBEgradesCSVRow(String[] row) {
-    return RosterStudent.builder()
-        .firstName(row[5])
-        .lastName(row[4])
-        .studentId(row[1])
-        .email(row[10])
-        .build();
-  }
-
-  /**
-   * Get everything except up to and not including the last space in the full name. If the string
-   * contains no spaces, return an empty string.
-   *
-   * @param fullName
-   * @return
-   */
-  public static String getFirstName(String fullName) {
-    int lastSpaceIndex = fullName.lastIndexOf(" ");
-    if (lastSpaceIndex == -1) {
-      return ""; // No spaces found, return empty string
-    }
-    return fullName.substring(0, lastSpaceIndex).trim(); // Return everything before the last space
-  }
-
-  /**
-   * Get everything after the last space in the full name. If the string contains no spaces, return
-   * the entire input string as the result.
-   *
-   * @param fullName
-   * @return best estimate of last name
-   */
-  public static String getLastName(String fullName) {
-    int lastSpaceIndex = fullName.lastIndexOf(" ");
-    if (lastSpaceIndex == -1) {
-      return fullName; // No spaces found, return the entire string
-    }
-    return fullName.substring(lastSpaceIndex + 1).trim(); // Return everything after the last space
-  }
-
-  public static RosterStudent fromChicoCanvasCSVRow(String[] row) {
-    return RosterStudent.builder()
-        .firstName(getFirstName(row[0]))
-        .lastName(getLastName(row[0]))
-        .studentId(row[2])
-        .email(row[3])
-        .build();
   }
 
   public static UpsertResponse upsertStudent(
