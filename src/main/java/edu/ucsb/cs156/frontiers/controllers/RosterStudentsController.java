@@ -1,39 +1,9 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
-import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.RosterStudent;
-import edu.ucsb.cs156.frontiers.entities.User;
-import edu.ucsb.cs156.frontiers.enums.OrgStatus;
-import edu.ucsb.cs156.frontiers.enums.RosterStatus;
-import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
-import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
-import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
-import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
-import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
-import edu.ucsb.cs156.frontiers.services.CurrentUserService;
-import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.UpdateUserService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,8 +18,33 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import edu.ucsb.cs156.frontiers.controllers.RosterStudentsCSVController.RosterSourceType;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.InsertStatus;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.models.UpsertResponse;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "RosterStudents")
 @RequestMapping("/api/rosterstudents")
@@ -60,14 +55,6 @@ public class RosterStudentsController extends ApiController {
   @Autowired private JobService jobService;
   @Autowired private OrganizationMemberService organizationMemberService;
 
-  public record LoadResult(Integer created, Integer updated, List<RosterStudent> rejected) {}
-
-  public enum InsertStatus {
-    INSERTED,
-    UPDATED,
-    REJECTED
-  };
-
   @Autowired private RosterStudentRepository rosterStudentRepository;
 
   @Autowired private CourseRepository courseRepository;
@@ -75,50 +62,6 @@ public class RosterStudentsController extends ApiController {
   @Autowired private UpdateUserService updateUserService;
 
   @Autowired private CurrentUserService currentUserService;
-
-  public enum RosterSourceType {
-    UCSB_EGRADES,
-    CHICO_CANVAS,
-    OREGON_STATE,
-    UNKNOWN
-  }
-
-  public static final String UCSB_EGRADES_HEADERS =
-      "Enrl Cd,Perm #,Grade,Final Units,Student Last,Student First Middle,Quarter,Course ID,Section,Meeting Time(s) / Location(s),Email,ClassLevel,Major1,Major2,Date/Time,Pronoun";
-  public static final String CHICO_CANVAS_HEADERS =
-      "Student Name,Student ID,Student SIS ID,Email,Section Name";
-  public static final String OSU_HEADERS =
-      "Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id";
-
-  public static RosterSourceType getRosterSourceType(String[] headers) {
-
-    Map<RosterSourceType, String[]> sourceTypeToHeaders = new HashMap<>();
-
-    sourceTypeToHeaders.put(RosterSourceType.UCSB_EGRADES, UCSB_EGRADES_HEADERS.split(","));
-    sourceTypeToHeaders.put(RosterSourceType.CHICO_CANVAS, CHICO_CANVAS_HEADERS.split(","));
-    sourceTypeToHeaders.put(RosterSourceType.OREGON_STATE, OSU_HEADERS.split(","));
-
-    for (Map.Entry<RosterSourceType, String[]> entry : sourceTypeToHeaders.entrySet()) {
-      RosterSourceType type = entry.getKey();
-      String[] expectedHeaders = entry.getValue();
-      if (headers.length >= expectedHeaders.length) {
-        boolean matches = true;
-        for (int i = 0; i < expectedHeaders.length; i++) {
-          if (!expectedHeaders[i].equalsIgnoreCase(headers[i])) {
-            matches = false;
-            break;
-          }
-        }
-        if (matches) {
-          return type;
-        }
-      }
-    }
-    // If no known type matches, return UNKNOWN
-    return RosterSourceType.UNKNOWN;
-  }
-
-  public static record UpsertResponse(InsertStatus insertStatus, RosterStudent rosterStudent) {}
 
   /**
    * This method creates a new RosterStudent. It is important to keep the code in this method
@@ -152,8 +95,8 @@ public class RosterStudentsController extends ApiController {
             .email(email)
             .build();
 
-    UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
-    if (upsertResponse.insertStatus == InsertStatus.REJECTED) {
+    UpsertResponse upsertResponse = upsertStudent(rosterStudentRepository, updateUserService, rosterStudent, course, RosterStatus.MANUAL);
+    if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(upsertResponse);
     } else {
       return ResponseEntity.ok(upsertResponse);
@@ -177,70 +120,7 @@ public class RosterStudentsController extends ApiController {
     return rosterStudents;
   }
 
-  /**
-   * Upload Roster students for Course in UCSB Egrades Format It is important to keep the code in
-   * this method consistent with the code for adding a single roster student
-   *
-   * @param courseId
-   * @param file
-   * @return
-   * @throws JsonProcessingException
-   * @throws IOException
-   * @throws CsvException
-   */
-  @Operation(summary = "Upload Roster students for Course in any supported Format")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @PostMapping(
-      value = "/upload/csv",
-      consumes = {"multipart/form-data"})
-  public ResponseEntity<LoadResult> uploadRosterStudentsCSV(
-      @Parameter(name = "courseId") @RequestParam Long courseId,
-      @Parameter(name = "file") @RequestParam("file") MultipartFile file)
-      throws JsonProcessingException, IOException, CsvException {
-
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
-
-    int counts[] = {0, 0};
-    List<RosterStudent> rejectedStudents = new ArrayList<>();
-
-    try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
-        InputStreamReader reader = new InputStreamReader(inputStream);
-        CSVReader csvReader = new CSVReader(reader); ) {
-
-      String[] headers = csvReader.readNext();
-      RosterSourceType sourceType = getRosterSourceType(headers);
-      if (sourceType == RosterSourceType.UNKNOWN) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown Roster Source Type");
-      }
-      if (sourceType == RosterSourceType.UCSB_EGRADES) {
-        csvReader.skip(1);
-      }
-      List<String[]> myEntries = csvReader.readAll();
-      for (String[] row : myEntries) {
-        RosterStudent rosterStudent = fromCSVRow(row, sourceType);
-        UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
-        if (upsertResponse.insertStatus == InsertStatus.REJECTED) {
-          rejectedStudents.add(rosterStudent);
-        } else {
-          InsertStatus s = upsertResponse.insertStatus;
-          counts[s.ordinal()]++;
-        }
-      }
-    }
-    LoadResult loadResult =
-        new LoadResult(
-            counts[InsertStatus.INSERTED.ordinal()],
-            counts[InsertStatus.UPDATED.ordinal()],
-            rejectedStudents);
-    if (rejectedStudents.isEmpty()) {
-      return ResponseEntity.ok(loadResult);
-    } else {
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(loadResult);
-    }
-  }
+  
 
   public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
     if (sourceType == RosterSourceType.UCSB_EGRADES) {
@@ -316,8 +196,12 @@ public class RosterStudentsController extends ApiController {
         .build();
   }
 
-  public UpsertResponse upsertStudent(
-      RosterStudent student, Course course, RosterStatus rosterStatus) {
+  public static UpsertResponse upsertStudent(
+      RosterStudentRepository rosterStudentRepository,
+      UpdateUserService updateUserService,
+      RosterStudent student,
+      Course course,
+      RosterStatus rosterStatus) {
     String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
     Optional<RosterStudent> existingStudent =
         rosterStudentRepository.findByCourseIdAndStudentId(course.getId(), student.getStudentId());

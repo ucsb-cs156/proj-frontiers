@@ -1,7 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -15,45 +14,46 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MvcResult;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
-import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.LoadResult;
-import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.RosterSourceType;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.InsertStatus;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.models.LoadResult;
+import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @WebMvcTest(controllers = {RosterStudentsController.class})
@@ -145,9 +145,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1));
 
     String responseString = response.getResponse().getContentAsString();
-    RosterStudentsController.UpsertResponse upsertResponse =
-        mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
-    assertEquals(RosterStudentsController.InsertStatus.INSERTED, upsertResponse.insertStatus());
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
     assertEquals(rs1, upsertResponse.rosterStudent());
   }
 
@@ -187,9 +186,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(OrgStatus.PENDING, rosterStudentSaved.getOrgStatus());
 
     String responseString = response.getResponse().getContentAsString();
-    RosterStudentsController.UpsertResponse upsertResponse =
-        mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
-    assertEquals(RosterStudentsController.InsertStatus.INSERTED, upsertResponse.insertStatus());
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
     assertEquals(rs1, upsertResponse.rosterStudent());
     assertEquals(rosterStudentSaved, upsertResponse.rosterStudent());
   }
@@ -333,414 +331,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(get("/api/rosterstudents/course/1"))
-            .andExpect(status().isNotFound())
-            .andReturn();
-
-    // assert
-
-    verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    String responseString = response.getResponse().getContentAsString();
-    Map<String, String> expectedMap =
-        Map.of(
-            "type", "EntityNotFoundException",
-            "message", "Course with id 1 not found");
-    String expectedJson = mapper.writeValueAsString(expectedMap);
-    assertEquals(expectedJson, responseString);
-  }
-
-  /** Test whether instructor can upload students */
-  private final String sampleCSVContentsUCSB =
-      """
-                        Enrl Cd,Perm #,Grade,Final Units,Student Last,Student First Middle,Quarter,Course ID,Section,Meeting Time(s) / Location(s),Email,ClassLevel,Major1,Major2,Date/Time,Pronoun
-
-                        08235,A123456,,4.0,GAUCHO,CHRIS FAKE,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,cgaucho@ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,
-                        08250,A987654,,4.0,DEL PLAYA,LAUREN,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,ldelplaya@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,She (She/Her/Hers)
-                        08243,1234567,,4.0,TARDE,SABADO,F23,CMPSC156,0100,T R   2:00- 3:15 SH 1431     W    5:00- 5:50 PHELP 3525  W    6:00- 6:50 PHELP 3525  W    7:00- 7:50 PHELP 3525  ,sabadotarde@umail.ucsb.edu,SR,CMPSC,,9/27/2023 9:39:25 AM,He (He/Him/His)
-                        """;
-
-  private final String sampleCSVContentsChico =
-      """
-                        Student Name,Student ID,Student SIS ID,Email,Section Name
-                        Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
-                        Homer Simpson,88001,013205354,hsimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
-                        Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
-                        """;
-
-  private final String sampleUnknownCSVFormat =
-      """
-                        Name,ID,SIS ID,University Email,Invalid Column Name
-                        Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
-                        """;
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void instructor_can_upload_students_for_an_existing_course_chico() throws Exception {
-
-    // arrange
-
-    RosterStudent rs1BeforeWithId =
-        RosterStudent.builder()
-            .id(1L)
-            .firstName("MARGE")
-            .lastName("SIMPSON")
-            .studentId("013228559")
-            .email("msimpson@csuchico.edu")
-            .course(course1)
-            .rosterStatus(RosterStatus.MANUAL)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs1AfterWithId =
-        RosterStudent.builder()
-            .id(1L)
-            .firstName("Marge")
-            .lastName("Simpson")
-            .studentId("013228559")
-            .email("msimpson@csuchico.edu")
-            .course(course1)
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs2BeforeWithId =
-        RosterStudent.builder()
-            .id(2L)
-            .firstName("Homer")
-            .lastName("Simpson")
-            .studentId("013205354")
-            .email("hsimpson@csuchico.edu")
-            .course(course1)
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs2AfterWithId =
-        RosterStudent.builder()
-            .id(2L)
-            .course(course1)
-            .firstName("Homer")
-            .lastName("Simpson")
-            .email("hsimpson@csuchico.edu")
-            .studentId("013205354")
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs3NoId =
-        RosterStudent.builder()
-            .course(course1)
-            .firstName("Ralph")
-            .lastName("Wiggum")
-            .email("rwiggum@csuchico.edu")
-            .studentId("013251642")
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs3WithId =
-        RosterStudent.builder()
-            .id(3L)
-            .course(course1)
-            .firstName("Ralph")
-            .lastName("Wiggum")
-            .email("rwiggum@csuchico.edu")
-            .studentId("013251642")
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    MockMultipartFile file =
-        new MockMultipartFile(
-            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsChico.getBytes());
-
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("013228559")))
-        .thenReturn(Optional.of(rs1BeforeWithId));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("013205354")))
-        .thenReturn(Optional.of(rs2BeforeWithId));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("013251642")))
-        .thenReturn(Optional.empty());
-
-    when(rosterStudentRepository.save(eq(rs1AfterWithId))).thenReturn(rs1AfterWithId);
-    when(rosterStudentRepository.save(eq(rs2AfterWithId))).thenReturn(rs2AfterWithId);
-    when(rosterStudentRepository.save(eq(rs3NoId))).thenReturn(rs3WithId);
-
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs3WithId));
-
-    // act
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                multipart("/api/rosterstudents/upload/csv")
-                    .file(file)
-                    .param("courseId", "1")
-                    .with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    // assert
-
-    verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("013228559"));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("013205354"));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("013251642"));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
-
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1AfterWithId));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs2AfterWithId));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
-
-    String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 2, List.of());
-    String expectedJson = mapper.writeValueAsString(expectedResult);
-    assertEquals(expectedJson, responseString);
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void instructor_can_upload_students_for_an_existing_course_ucsb() throws Exception {
-
-    // arrange
-
-    RosterStudent rs1BeforeWithId =
-        RosterStudent.builder()
-            .id(1L)
-            .firstName("Chris")
-            .lastName("Gaucho")
-            .studentId("A123456")
-            .email("cgaucho@ucsb.edu")
-            .course(course1)
-            .rosterStatus(RosterStatus.MANUAL)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs1AfterWithId =
-        RosterStudent.builder()
-            .id(1L)
-            .firstName("CHRIS FAKE")
-            .lastName("GAUCHO")
-            .studentId("A123456")
-            .email("cgaucho@ucsb.edu")
-            .course(course1)
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs2BeforeWithId =
-        RosterStudent.builder()
-            .id(2L)
-            .firstName("Lauren")
-            .lastName("Del Playa")
-            .studentId("A987654")
-            .email("ldelplaya@umail.ucsb.edu")
-            .course(course1)
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs2AfterWithId =
-        RosterStudent.builder()
-            .id(2L)
-            .course(course1)
-            .firstName("LAUREN")
-            .lastName("DEL PLAYA")
-            .email("ldelplaya@ucsb.edu")
-            .studentId("A987654")
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs3NoId =
-        RosterStudent.builder()
-            .course(course1)
-            .firstName("SABADO")
-            .lastName("TARDE")
-            .email("sabadotarde@ucsb.edu")
-            .studentId("1234567")
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    RosterStudent rs3WithId =
-        RosterStudent.builder()
-            .id(3L)
-            .course(course1)
-            .firstName("SABADO")
-            .lastName("TARDE")
-            .email("sabadotarde@ucsb.edu")
-            .studentId("1234567")
-            .rosterStatus(RosterStatus.ROSTER)
-            .orgStatus(OrgStatus.PENDING)
-            .build();
-
-    MockMultipartFile file =
-        new MockMultipartFile(
-            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
-
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
-        .thenReturn(Optional.of(rs1BeforeWithId));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
-        .thenReturn(Optional.of(rs2BeforeWithId));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("1234567")))
-        .thenReturn(Optional.empty());
-
-    when(rosterStudentRepository.save(eq(rs1AfterWithId))).thenReturn(rs1AfterWithId);
-    when(rosterStudentRepository.save(eq(rs2AfterWithId))).thenReturn(rs2AfterWithId);
-    when(rosterStudentRepository.save(eq(rs3NoId))).thenReturn(rs3WithId);
-
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs3WithId));
-
-    // act
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                multipart("/api/rosterstudents/upload/csv")
-                    .file(file)
-                    .param("courseId", "1")
-                    .with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    // assert
-
-    verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("A123456"));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("A987654"));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("1234567"));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
-
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1AfterWithId));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs2AfterWithId));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
-
-    String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 2, List.of());
-    String expectedJson = mapper.writeValueAsString(expectedResult);
-    assertEquals(expectedJson, responseString);
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void students_with_non_matching_student_id_and_email_are_rejected() throws Exception {
-    RosterStudent student1ID = RosterStudent.builder().id(1L).studentId("A123456").build();
-    RosterStudent student1Email = RosterStudent.builder().id(2L).email("cgaucho@ucsb.edu").build();
-    RosterStudent student2 =
-        RosterStudent.builder().id(3L).studentId("A987654").email("ldelplaya@ucsb.edu").build();
-    Course course1 = Course.builder().id(1L).build();
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
-        .thenReturn(Optional.of(student1ID));
-    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@ucsb.edu")))
-        .thenReturn(Optional.of(student1Email));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
-        .thenReturn(Optional.of(student2));
-    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("ldelplaya@ucsb.edu")))
-        .thenReturn(Optional.of(student2));
-    MockMultipartFile file =
-        new MockMultipartFile(
-            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
-    MvcResult response =
-        mockMvc
-            .perform(
-                multipart("/api/rosterstudents/upload/csv")
-                    .file(file)
-                    .param("courseId", "1")
-                    .with(csrf()))
-            .andExpect(status().isConflict())
-            .andReturn();
-
-    RosterStudent rosterStudentRejected =
-        RosterStudent.builder()
-            .firstName("CHRIS FAKE")
-            .lastName("GAUCHO")
-            .studentId("A123456")
-            .email("cgaucho@ucsb.edu")
-            .build();
-    RosterStudent rosterStudent2Updated =
-        RosterStudent.builder()
-            .id(3L)
-            .firstName("LAUREN")
-            .lastName("DEL PLAYA")
-            .email("ldelplaya@ucsb.edu")
-            .studentId("A987654")
-            .rosterStatus(RosterStatus.ROSTER)
-            .build();
-
-    verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rosterStudent2Updated));
-    String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 1, List.of(rosterStudentRejected));
-    String expectedJson = mapper.writeValueAsString(expectedResult);
-    assertEquals(expectedJson, responseString);
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void unrecognized_csv_format_throws_an_exception() throws Exception {
-
-    MockMultipartFile file =
-        new MockMultipartFile(
-            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleUnknownCSVFormat.getBytes());
-
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-
-    // act
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                multipart("/api/rosterstudents/upload/csv")
-                    .file(file)
-                    .param("courseId", "1")
-                    .with(csrf()))
-            .andExpect(status().is4xxClientError())
-            .andReturn();
-
-    String responseString = response.getResponse().getErrorMessage();
-    assertEquals("Unknown Roster Source Type", responseString);
-  }
-
-  /** Test that you cannot upload a roster for a course that does not exist */
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  @WithInstructorCoursePermissions
-  public void instructor_cannot_upload_students_for_a_course_that_does_not_exist()
-      throws Exception {
-
-    // arrange
-
-    MockMultipartFile file =
-        new MockMultipartFile(
-            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
-
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
-
-    // act
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                multipart("/api/rosterstudents/upload/csv")
-                    .file(file)
-                    .param("courseId", "1")
-                    .with(csrf()))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -2266,59 +1856,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // assert
 
     String responseString = response.getResponse().getContentAsString();
-    RosterStudentsController.UpsertResponse upsertResponse =
-        mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
-    assertEquals(RosterStudentsController.InsertStatus.UPDATED, upsertResponse.insertStatus());
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.UPDATED, upsertResponse.insertStatus());
     assertEquals(expectedSaved, upsertResponse.rosterStudent());
     verify(courseRepository, times(1)).findById(eq(1L));
     verify(rosterStudentRepository, times(1)).findByCourseIdAndStudentId(eq(1L), eq("A123457"));
     verify(rosterStudentRepository, times(1))
         .findByCourseIdAndEmail(eq(1L), eq("cgaucho@ucsb.edu"));
     verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
-  }
-
-  @Test
-  public void test_getLastName() {
-    assertEquals("Gaucho", RosterStudentsController.getLastName("Chris Gaucho"));
-    assertEquals("Milnes", RosterStudentsController.getLastName("Christopher Robin Milnes"));
-    assertEquals("Cher", RosterStudentsController.getLastName("Cher"));
-  }
-
-  @Test
-  public void test_getFirstname() {
-    assertEquals("Chris", RosterStudentsController.getFirstName("Chris Gaucho"));
-    assertEquals(
-        "Christopher Robin", RosterStudentsController.getFirstName("Christopher Robin Milnes"));
-    assertEquals("", RosterStudentsController.getFirstName("Cher"));
-  }
-
-  @Test
-  public void test_getRosterSourceType() {
-    // Test with UCSB Egrades header
-    String[] ucsbEgradesHeader = RosterStudentsController.UCSB_EGRADES_HEADERS.split(",");
-    assertEquals(
-        RosterSourceType.UCSB_EGRADES,
-        RosterStudentsController.getRosterSourceType(ucsbEgradesHeader));
-
-    // Test with Chico Canvas header
-    String[] chicoCanvasHeader = RosterStudentsController.CHICO_CANVAS_HEADERS.split(",");
-    assertEquals(
-        RosterSourceType.CHICO_CANVAS,
-        RosterStudentsController.getRosterSourceType(chicoCanvasHeader));
-
-    // Test with unknown header
-    String[] unknownHeader = {"Unknown Header 1", "Unknown Header 2"};
-    assertEquals(
-        RosterSourceType.UNKNOWN, RosterStudentsController.getRosterSourceType(unknownHeader));
-  }
-
-  @Test
-  public void test_fromCSVRow_UnrecognizedSourceType() {
-    assertThrows(
-        ResponseStatusException.class,
-        () -> {
-          String[] row = {"Unknown Header 1", "Unknown Header 2"};
-          RosterStudentsController.fromCSVRow(row, RosterSourceType.UNKNOWN);
-        });
   }
 }
