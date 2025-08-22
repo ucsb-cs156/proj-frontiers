@@ -91,8 +91,7 @@ public class RosterStudentsCSVController extends ApiController {
     return RosterSourceType.UNKNOWN;
   }
 
-
-/**
+  /**
    * Upload Roster students for Course in any supported format. It is important to keep the code in
    * this method consistent with the code for adding a single roster student
    *
@@ -136,7 +135,13 @@ public class RosterStudentsCSVController extends ApiController {
       List<String[]> myEntries = csvReader.readAll();
       for (String[] row : myEntries) {
         RosterStudent rosterStudent = fromCSVRow(row, sourceType);
-        UpsertResponse upsertResponse = RosterStudentsController.upsertStudent(rosterStudentRepository, updateUserService, rosterStudent, course, RosterStatus.ROSTER);
+        UpsertResponse upsertResponse =
+            RosterStudentsController.upsertStudent(
+                rosterStudentRepository,
+                updateUserService,
+                rosterStudent,
+                course,
+                RosterStatus.ROSTER);
         if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
           rejectedStudents.add(rosterStudent);
         } else {
@@ -156,8 +161,6 @@ public class RosterStudentsCSVController extends ApiController {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(loadResult);
     }
   }
-
-
 
   public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
     if (sourceType == RosterSourceType.UCSB_EGRADES) {
