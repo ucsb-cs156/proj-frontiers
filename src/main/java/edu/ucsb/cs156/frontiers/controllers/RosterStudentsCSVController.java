@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +77,7 @@ public class RosterStudentsCSVController extends ApiController {
       if (headers.length >= expectedHeaders.length) {
         boolean matches = true;
         for (int i = 0; i < expectedHeaders.length; i++) {
-          if (!expectedHeaders[i].equalsIgnoreCase(headers[i])) {
+          if (!expectedHeaders[i].trim().equalsIgnoreCase(headers[i].trim())) {
             matches = false;
             break;
           }
@@ -170,7 +171,18 @@ public class RosterStudentsCSVController extends ApiController {
     }
   }
 
+  public static void checkRowLength(String[] row, int expectedLength, RosterSourceType sourceType) {
+    if (row.length < expectedLength) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          String.format(
+              "%s CSV row does not have enough columns. Length = %d Row content = [%s]",
+              sourceType.toString(), row.length, Arrays.toString(row)));
+    }
+  }
+
   public static RosterStudent fromUCSBEgradesCSVRow(String[] row) {
+    checkRowLength(row, 11, RosterSourceType.UCSB_EGRADES);
     return RosterStudent.builder()
         .firstName(row[5])
         .lastName(row[4])
@@ -180,6 +192,7 @@ public class RosterStudentsCSVController extends ApiController {
   }
 
   public static RosterStudent fromChicoCanvasCSVRow(String[] row) {
+    checkRowLength(row, 4, RosterSourceType.CHICO_CANVAS);
     return RosterStudent.builder()
         .firstName(getFirstName(row[0]))
         .lastName(getLastName(row[0]))
@@ -190,6 +203,7 @@ public class RosterStudentsCSVController extends ApiController {
 
   public static RosterStudent fromOregonStateCSVRow(String[] row) {
 
+    checkRowLength(row, 10, RosterSourceType.OREGON_STATE);
     String sortableName = row[1];
     String sortableNameParts[] = sortableName.split(",");
     String lastName = sortableNameParts[0].trim();
@@ -197,8 +211,8 @@ public class RosterStudentsCSVController extends ApiController {
     return RosterStudent.builder()
         .firstName(firstName)
         .lastName(lastName)
-        .studentId(row[8])
-        .email(row[7])
+        .studentId(row[9])
+        .email(row[8])
         .build();
   }
 

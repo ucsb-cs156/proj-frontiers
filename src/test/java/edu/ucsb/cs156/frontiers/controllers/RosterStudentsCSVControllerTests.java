@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -25,6 +26,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
@@ -35,6 +38,7 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -50,6 +54,8 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     @MockitoBean
     private RosterStudentRepository rosterStudentRepository;
 
+    @Autowired
+    private CurrentUserService currentUserService;
 
     @MockitoBean
     private UpdateUserService updateUserService;
@@ -60,17 +66,8 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     @MockitoBean
     private JobService service;
 
-
-
-    Course course1 = Course.builder()
-            .id(1L)
-            .courseName("CS156")
-            .orgName("ucsb-cs156-s25")
-            .term("S25")
-            .school("UCSB")
-            .build();
-
-
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /** Test whether instructor can upload students */
     private final String sampleCSVContentsUCSB = """
@@ -91,12 +88,12 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     private final String sampleCSVContentsOregonState = """
             Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id
             Tom Smith,"Smith, Tom",6056208,96.25,80.4,2-Jul-25,11-Jun-25,21-May-25,tomsmith@oregonstate.edu,931551625
-            Martha Washington,"Washington, Martha",9876543,100,100,8-Aug-25,12-Dec-25,12-Dec-25,martha@oregonstate.edu,123456789
+            Martha Washington,"Washington, Martha",9876543,100,100,8-Aug-25,12-Dec-25,5-May-25,martha@oregonstate.edu,123456789
             John Doe,"Doe, John",1234567,88.5,75.0,15-Jul-25,10-Jun-25,5-May-25,johndoe@oregonstate.edu,987654321
             Alice Johnson,"Johnson, Alice",7654321,92.0,85.5,20-Jun-25,18-Jun-25,10-Jun-25,alicejohnson@oregonstate.edu,192837465
             Bob Lee,"Lee, Bob",2468135,78.75,60.0,5-May-25,2-May-25,1-May-25,boblee@oregonstate.edu,564738291
             """;
-            
+
     private final String sampleUnknownCSVFormat = """
             Name,ID,SIS ID,University Email,Invalid Column Name
             Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
@@ -107,6 +104,14 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     public void instructor_can_upload_students_for_an_existing_course_chico() throws Exception {
 
         // arrange
+
+        Course course1 = Course.builder()
+                .id(1L)
+                .courseName("CSED 500")
+                .orgName("csed-500-s25")
+                .term("S25")
+                .school("CSU Chico")
+                .build();
 
         RosterStudent rs1BeforeWithId = RosterStudent.builder()
                 .id(1L)
@@ -232,6 +237,14 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
         // arrange
 
+        Course course1 = Course.builder()
+                .id(1L)
+                .courseName("OSU 101")
+                .orgName("osu-101-s25")
+                .term("S25")
+                .school("Oregon State")
+                .build();
+
         RosterStudent rs1BeforeWithId = RosterStudent.builder()
                 .id(1L)
                 .firstName("Chris")
@@ -297,9 +310,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
                 .orgStatus(OrgStatus.PENDING)
                 .build();
 
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
-
+    
         when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
         when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
                 .thenReturn(Optional.of(rs1BeforeWithId));
@@ -308,9 +319,8 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("1234567")))
                 .thenReturn(Optional.empty());
 
-        when(rosterStudentRepository.save(eq(rs1AfterWithId))).thenReturn(rs1AfterWithId);
-        when(rosterStudentRepository.save(eq(rs2AfterWithId))).thenReturn(rs2AfterWithId);
-        when(rosterStudentRepository.save(eq(rs3NoId))).thenReturn(rs3WithId);
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
 
         doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));
         doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
@@ -353,6 +363,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     @Test
     @WithInstructorCoursePermissions
     public void students_with_non_matching_student_id_and_email_are_rejected() throws Exception {
+
         RosterStudent student1ID = RosterStudent.builder().id(1L).studentId("A123456").build();
         RosterStudent student1Email = RosterStudent.builder().id(2L).email("cgaucho@ucsb.edu").build();
         RosterStudent student2 = RosterStudent.builder().id(3L).studentId("A987654").email("ldelplaya@ucsb.edu")
@@ -405,6 +416,13 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     @Test
     public void unrecognized_csv_format_throws_an_exception() throws Exception {
 
+        Course course1 = Course.builder()
+                .id(1L)
+                .courseName("OSU 101")
+                .orgName("osu-101-s25")
+                .term("S25")
+                .school("Oregon State")
+                .build();
         MockMultipartFile file = new MockMultipartFile(
                 "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleUnknownCSVFormat.getBytes());
 
@@ -512,4 +530,91 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
                             row, RosterStudentsCSVController.RosterSourceType.UNKNOWN);
                 });
     }
+
+    @Test
+    public void test_fromCSVRowOregonState() {
+        String row[] = {
+                "Martha Washington",
+                "Washington, Martha",
+                "9876543",
+                "100",
+                "100",
+                "8-Aug-25",
+                "12-Dec-25",
+                "5-May-25",
+                "martha@oregonstate.edu",
+                "123456789"
+        };
+
+        RosterStudent rs = RosterStudentsCSVController.fromCSVRow(
+                row, RosterStudentsCSVController.RosterSourceType.OREGON_STATE);
+
+        assertEquals("Martha", rs.getFirstName());
+        assertEquals("Washington", rs.getLastName());
+        assertEquals("123456789", rs.getStudentId());
+        assertEquals("martha@oregonstate.edu", rs.getEmail());
+    }
+
+    @Test
+    public void test_fromCSVRowOregonState_noComma() {
+        String row[] = {
+                "Sting",
+                "Sting",
+                "1234567",
+                "100",
+                "100",
+                "8-Aug-25",
+                "12-Dec-25",
+                "5-May-25",
+                "sting@oregonstate.edu",
+                "999999999"
+        };
+
+        RosterStudent rs = RosterStudentsCSVController.fromCSVRow(
+                row, RosterStudentsCSVController.RosterSourceType.OREGON_STATE);
+
+        assertEquals("", rs.getFirstName());
+        assertEquals("Sting", rs.getLastName());
+        assertEquals("999999999", rs.getStudentId());
+        assertEquals("sting@oregonstate.edu", rs.getEmail());
+    }
+
+    @Test
+    public void test_checkRowLength_throwsException() {
+        String row[] = { "a", "b", "c" };
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> RosterStudentsCSVController.checkRowLength(
+                        row, 5, RosterStudentsCSVController.RosterSourceType.CHICO_CANVAS));
+        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(
+                "CHICO_CANVAS CSV row does not have enough columns. Length = 3 Row content = [[a, b, c]]",
+                ex.getReason());
+    }
+
+    @Test
+    public void test_fromCSVRowOregonState_notEnoughColumns() {
+        String row[] = {
+                "Sting",
+                "Sting",
+                "1234567",
+                "100",
+                "100",
+                "8-Aug-25",
+                "12-Dec-25",
+                "5-May-25",
+                "sting@oregonstate.edu"
+                // missing SIS Id column
+        };
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> RosterStudentsCSVController.fromCSVRow(
+                        row, RosterStudentsCSVController.RosterSourceType.OREGON_STATE));
+        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals(
+                "OREGON_STATE CSV row does not have enough columns. Length = 9 Row content = [[Sting, Sting, 1234567, 100, 100, 8-Aug-25, 12-Dec-25, 5-May-25, sting@oregonstate.edu]]",
+                ex.getReason());
+    }
+
 }
