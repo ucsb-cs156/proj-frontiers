@@ -94,4 +94,17 @@ const rosterStudentFixtures = {
   ],
 };
 
-export { rosterStudentFixtures };
+const loadResultFixtures = {
+  successful: {
+    created: 1,
+    updated: 2,
+    rejected: [],
+  },
+  failed: {
+    created: 3,
+    updated: 4,
+    rejected: rosterStudentFixtures.oneStudent,
+  },
+};
+
+export { rosterStudentFixtures, loadResultFixtures };

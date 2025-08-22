@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
+import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.LoadResult;
 import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.RosterSourceType;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
@@ -265,6 +266,36 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
+  /** Test the POST endpoint */
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_post_fails_on_matching() throws Exception {
+
+    RosterStudent rosterStudent1 =
+        RosterStudent.builder().id(1L).studentId("A123456").course(course1).build();
+    RosterStudent rosterStudent2 =
+        RosterStudent.builder().id(2L).email("cgaucho@example.org").course(course1).build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
+        .thenReturn(Optional.of(rosterStudent1));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@example.org")))
+        .thenReturn(Optional.of(rosterStudent2));
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@example.org")
+                    .param("courseId", "1"))
+            .andExpect(status().isConflict())
+            .andReturn();
+  }
+
   /** Test the GET endpoint */
   @Test
   @WithInstructorCoursePermissions
@@ -468,11 +499,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
 
     String responseString = response.getResponse().getContentAsString();
-    Map<String, String> expectedMap =
-        Map.of(
-            "filename", "roster.csv",
-            "message", "Inserted 1 new students, Updated 2 students");
-    String expectedJson = mapper.writeValueAsString(expectedMap);
+    LoadResult expectedResult = new LoadResult(1, 2, List.of());
+    String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
 
@@ -603,16 +631,68 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
 
     String responseString = response.getResponse().getContentAsString();
-    Map<String, String> expectedMap =
-        Map.of(
-            "filename", "roster.csv",
-            "message", "Inserted 1 new students, Updated 2 students");
-    String expectedJson = mapper.writeValueAsString(expectedMap);
+    LoadResult expectedResult = new LoadResult(1, 2, List.of());
+    String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
 
-  @WithInstructorCoursePermissions
   @Test
+  @WithInstructorCoursePermissions
+  public void students_with_non_matching_student_id_and_email_are_rejected() throws Exception {
+    RosterStudent student1ID = RosterStudent.builder().id(1L).studentId("A123456").build();
+    RosterStudent student1Email = RosterStudent.builder().id(2L).email("cgaucho@ucsb.edu").build();
+    RosterStudent student2 =
+        RosterStudent.builder().id(3L).studentId("A987654").email("ldelplaya@ucsb.edu").build();
+    Course course1 = Course.builder().id(1L).build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
+        .thenReturn(Optional.of(student1ID));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@ucsb.edu")))
+        .thenReturn(Optional.of(student1Email));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
+        .thenReturn(Optional.of(student2));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("ldelplaya@ucsb.edu")))
+        .thenReturn(Optional.of(student2));
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/rosterstudents/upload/csv")
+                    .file(file)
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isConflict())
+            .andReturn();
+
+    RosterStudent rosterStudentRejected =
+        RosterStudent.builder()
+            .firstName("CHRIS FAKE")
+            .lastName("GAUCHO")
+            .studentId("A123456")
+            .email("cgaucho@ucsb.edu")
+            .build();
+    RosterStudent rosterStudent2Updated =
+        RosterStudent.builder()
+            .id(3L)
+            .firstName("LAUREN")
+            .lastName("DEL PLAYA")
+            .email("ldelplaya@ucsb.edu")
+            .studentId("A987654")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
+    verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
+    verify(rosterStudentRepository, atLeastOnce()).save(eq(rosterStudent2Updated));
+    String responseString = response.getResponse().getContentAsString();
+    LoadResult expectedResult = new LoadResult(1, 1, List.of(rosterStudentRejected));
+    String expectedJson = mapper.writeValueAsString(expectedResult);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void unrecognized_csv_format_throws_an_exception() throws Exception {
 
     MockMultipartFile file =
@@ -640,6 +720,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   /** Test that you cannot upload a roster for a course that does not exist */
   @WithMockUser(roles = {"ADMIN"})
   @Test
+  @WithInstructorCoursePermissions
   public void instructor_cannot_upload_students_for_a_course_that_does_not_exist()
       throws Exception {
 

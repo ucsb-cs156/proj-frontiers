@@ -1,5 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import {
+  loadResultFixtures,
+  rosterStudentFixtures,
+} from "fixtures/rosterStudentFixtures";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import {
@@ -11,15 +14,17 @@ import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabCo
 import userEvent from "@testing-library/user-event";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { vi } from "vitest";
+import { toast } from "react-toastify";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
-const mockToast = vi.fn();
 vi.mock("react-toastify", async (importOriginal) => {
+  const mockToast = vi.fn();
+  mockToast.error = vi.fn();
   return {
     ...(await importOriginal()),
-    toast: (x) => mockToast(x),
+    toast: mockToast,
   };
 });
 
@@ -42,6 +47,7 @@ describe("EnrollmentTabComponent Tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    vi.resetAllMocks();
   });
 
   test("Table Renders", async () => {
@@ -189,7 +195,7 @@ describe("EnrollmentTabComponent Tests", () => {
       });
     });
     expect(axiosMock.history.post[0].data.get("file")).toEqual(file);
-    expect(mockToast).toBeCalledWith("Roster successfully updated.");
+    expect(toast).toBeCalledWith("Roster successfully updated.");
     expect(
       queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
     ).toBe(arbitraryUpdateCount);
@@ -203,6 +209,54 @@ describe("EnrollmentTabComponent Tests", () => {
       expect(searchInput.value).toBe("");
     });
     expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
+  });
+
+  test("CsvForm error returns correctly", async () => {
+    const file = new File(["there"], "egrades.csv", { type: "text/csv" });
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    axiosMock
+      .onPost("/api/rosterstudents/upload/csv")
+      .reply(409, loadResultFixtures.failed);
+
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+    const openModal = await screen.findByTestId(`${testId}-csv-button`);
+
+    // Get the search input and set a search term
+    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(searchInput.value).toBe("test search");
+
+    fireEvent.click(openModal);
+    expect(screen.getByTestId(`${testId}-csv-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+
+    const upload = await screen.findByTestId(
+      "RosterStudentCSVUploadForm-upload",
+    );
+    const submitButton = screen.getByTestId(
+      "RosterStudentCSVUploadForm-submit",
+    );
+    await user.upload(upload, file);
+    fireEvent.click(submitButton);
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        `Error uploading CSV: ${JSON.stringify(loadResultFixtures.failed, null, 2)}`,
+      ),
+    );
   });
 
   test("RosterStudentForm submit works and clears search filter", async () => {
@@ -276,8 +330,8 @@ describe("EnrollmentTabComponent Tests", () => {
       lastName: "Gaucho",
       email: "cgaucho@ucsb.edu",
     });
-    await waitFor(() => expect(mockToast).toBeCalled());
-    expect(mockToast).toBeCalledWith("Roster successfully updated.");
+    await waitFor(() => expect(toast).toBeCalled());
+    expect(toast).toBeCalledWith("Roster successfully updated.");
     expect(
       queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
     ).toBe(arbitraryUpdateCount);
@@ -293,6 +347,77 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(
       screen.queryByTestId(`${testId}-post-modal`),
     ).not.toBeInTheDocument();
+  });
+
+  test("RosterStudentForm works on error", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    const postResponse = {
+      insertStatus: "REJECTED",
+      rosterStudent: rosterStudentFixtures.oneStudent[0],
+    };
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    axiosMock.onPost("/api/rosterstudents/post").reply(409, postResponse);
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <ArbitraryTestQueryComponent />
+        <EnrollmentTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    //Great time to check initial values
+    expect(
+      queryClientSpecific.getQueryData(["/api/rosterstudents/course/7"]),
+    ).toStrictEqual([]);
+
+    const openModal = await screen.findByTestId(`${testId}-post-button`);
+
+    fireEvent.click(openModal);
+    await screen.findByLabelText("Student Id");
+    expect(screen.getByTestId(`${testId}-post-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+
+    // Get the search input and set a search term
+    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(searchInput.value).toBe("test search");
+
+    expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Student Id"), {
+      target: { value: "1234567" },
+    });
+    fireEvent.change(screen.getByLabelText("First Name"), {
+      target: { value: "Bob" },
+    });
+    fireEvent.change(screen.getByLabelText("Last Name"), {
+      target: { value: "Smith" },
+    });
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "bobsmith@ucsb.edu" },
+    });
+    fireEvent.click(screen.getByTestId("RosterStudentForm-submit"));
+    screen.debug(null, 1000000);
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    await waitFor(() =>
+      expect(toast.error).toBeCalledWith(
+        `Error adding student: ${JSON.stringify(postResponse, null, 2)}`,
+      ),
+    );
   });
 
   test("Modals close on close buttons (respectively), download works", async () => {

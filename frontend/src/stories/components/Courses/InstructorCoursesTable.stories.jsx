@@ -18,7 +18,6 @@ export const AdminUser = Template.bind({});
 export const InstructorUser = Template.bind({});
 export const EmptyTable = Template.bind({});
 export const AdminUserWithBadEmailError = Template.bind({});
-export const AdminUserWithNetworkError = Template.bind({});
 
 AdminUser.args = {
   courses: coursesFixtures.severalCourses,
