@@ -1,0 +1,266 @@
+package edu.ucsb.cs156.frontiers.jobs;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import java.util.Arrays;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+public class PushTeamsToGithubJobTests {
+
+  @Mock private CourseRepository courseRepository;
+  @Mock private TeamRepository teamRepository;
+  @Mock private TeamMemberRepository teamMemberRepository;
+  @Mock private GithubTeamService githubTeamService;
+
+  Job jobStarted = Job.builder().build();
+  JobContext ctx = new JobContext(null, jobStarted);
+
+  @BeforeEach
+  public void setup() {
+    MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  public void testAccept_CourseNotFound() throws Exception {
+    // Arrange
+    Long courseId = 1L;
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
+  }
+
+  @Test
+  public void testAccept_CourseWithoutGithubOrg() throws Exception {
+    // Arrange
+    Long courseId = 1L;
+    Course course = Course.builder().id(courseId).courseName("Test Course").build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
+  }
+
+  @Test
+  public void testAccept_SuccessfulTeamCreationAndMemberProcessing() throws Exception {
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    RosterStudent student1 =
+        RosterStudent.builder().email("student1@test.com").githubLogin("student1").build();
+
+    RosterStudent student2 =
+        RosterStudent.builder().email("student2@test.com").githubLogin(null).build();
+
+    TeamMember teamMember1 = TeamMember.builder().rosterStudent(student1).build();
+    TeamMember teamMember2 = TeamMember.builder().rosterStudent(student2).build();
+
+    Team team1 =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(null)
+            .teamMembers(Arrays.asList(teamMember1, teamMember2))
+            .build();
+
+    Team team2 =
+        Team.builder().name("team2").githubTeamId(456).teamMembers(Arrays.asList()).build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team1, team2));
+
+    // Mock GitHub service calls
+    when(githubTeamService.createOrGetTeamId(team1, course)).thenReturn(123);
+    when(githubTeamService.createOrGetTeamId(team2, course)).thenReturn(456);
+    when(githubTeamService.getTeamMembershipStatus("student1", 123, course))
+        .thenReturn(TeamStatus.NOT_ORG_MEMBER);
+    when(githubTeamService.addTeamMember("student1", 123, "member", course))
+        .thenReturn(TeamStatus.TEAM_MEMBER);
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verify(teamRepository).findByCourseId(courseId);
+    verify(githubTeamService).createOrGetTeamId(team1, course);
+    verify(githubTeamService).createOrGetTeamId(team2, course);
+    verify(githubTeamService).getTeamMembershipStatus("student1", 123, course);
+    verify(githubTeamService).addTeamMember("student1", 123, "member", course);
+
+    // Verify team1 was updated with GitHub team ID
+    verify(teamRepository)
+        .save(argThat(t -> t.getName().equals("team1") && t.getGithubTeamId().equals(123)));
+
+    // Verify team members were updated with correct status
+    verify(teamMemberRepository)
+        .save(
+            argThat(
+                tm ->
+                    tm.getRosterStudent().equals(student1)
+                        && tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
+    verify(teamMemberRepository)
+        .save(
+            argThat(
+                tm ->
+                    tm.getRosterStudent().equals(student2)
+                        && tm.getTeamStatus().equals(TeamStatus.NO_GITHUB_ID)));
+  }
+
+  @Test
+  public void testAccept_ExistingTeamMember() throws Exception {
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    RosterStudent student =
+        RosterStudent.builder().email("student@test.com").githubLogin("student").build();
+
+    TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
+
+    Team team =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(123)
+            .teamMembers(Arrays.asList(teamMember))
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
+        .thenReturn(TeamStatus.TEAM_MAINTAINER);
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    verify(githubTeamService, never()).addTeamMember(any(), any(), any(), any());
+    verify(teamMemberRepository)
+        .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
+  }
+
+  @Test
+  public void testAccept_GithubServiceError() throws Exception {
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    RosterStudent student =
+        RosterStudent.builder().email("student@test.com").githubLogin("student").build();
+
+    TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
+
+    Team team =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(123)
+            .teamMembers(Arrays.asList(teamMember))
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
+        .thenThrow(new RuntimeException("GitHub API error"));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    verify(teamMemberRepository)
+        .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.NOT_ORG_MEMBER)));
+  }
+}

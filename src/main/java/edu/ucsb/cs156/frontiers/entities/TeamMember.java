@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,4 +27,8 @@ public class TeamMember {
   @JsonIgnore
   @ToString.Exclude
   private Team team;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = true)
+  private TeamStatus teamStatus;
 }
