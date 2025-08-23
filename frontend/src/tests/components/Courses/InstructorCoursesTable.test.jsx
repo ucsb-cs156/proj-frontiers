@@ -56,6 +56,7 @@ describe("InstructorCoursesTable tests", () => {
         "Course Name",
         "Term",
         "School",
+        "Edit",
         "Instructor",
       ];
       const expectedFields = [
@@ -67,8 +68,14 @@ describe("InstructorCoursesTable tests", () => {
       ];
 
       expectedHeaders.forEach((headerText) => {
-        const header = screen.getByText(headerText);
-        expect(header).toBeInTheDocument();
+        if (headerText === "Edit") {
+          const header = screen.getByTestId("InstructorCoursesTable-header-edit-sort-header");
+          expect(header).toBeInTheDocument();
+          expect(header).toHaveTextContent("Edit");
+        } else {
+          const header = screen.getByText(headerText);
+          expect(header).toBeInTheDocument();
+        }
       });
 
       expectedFields.forEach((field) => {
@@ -144,6 +151,20 @@ describe("InstructorCoursesTable tests", () => {
       // Modal should not appear; this kills mutations of this line:
       //   const [showModal, setShowModal] = useState(true);
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+      // Check that Edit buttons are present for courses the instructor can edit
+      const editButton0 = screen.getByTestId(`${testId}-cell-row-0-col-edit-button`);
+      expect(editButton0).toBeInTheDocument();
+      expect(editButton0).toHaveTextContent("Edit");
+
+      const editButton2 = screen.getByTestId(`${testId}-cell-row-2-col-edit-button`);
+      expect(editButton2).toBeInTheDocument();
+      expect(editButton2).toHaveTextContent("Edit");
+
+      // Check that instructor cannot edit course they don't own
+      const noEditPermission = screen.getByTestId(`${testId}-cell-row-1-col-edit-no-permission`);
+      expect(noEditPermission).toBeInTheDocument();
+      expect(noEditPermission).toBeEmptyDOMElement();
     });
 
     test("Has the expected column headers and content for admin user", async () => {
@@ -172,6 +193,19 @@ describe("InstructorCoursesTable tests", () => {
       expect(button4).toBeInTheDocument();
       expect(button4).toHaveTextContent("Install GitHub App");
       expect(button4).toHaveAttribute("class", "btn btn-primary");
+
+      // Check that admin can edit all courses
+      const editButton0 = screen.getByTestId(`${testId}-cell-row-0-col-edit-button`);
+      expect(editButton0).toBeInTheDocument();
+      expect(editButton0).toHaveTextContent("Edit");
+
+      const editButton1 = screen.getByTestId(`${testId}-cell-row-1-col-edit-button`);
+      expect(editButton1).toBeInTheDocument();
+      expect(editButton1).toHaveTextContent("Edit");
+
+      const editButton2 = screen.getByTestId(`${testId}-cell-row-2-col-edit-button`);
+      expect(editButton2).toBeInTheDocument();
+      expect(editButton2).toHaveTextContent("Edit");
     });
 
     test("Calls window.alert when the button is pressed on storybook", async () => {
@@ -903,6 +937,45 @@ describe("InstructorCoursesTable tests", () => {
 
       // Test default button text
       expect(updateButton).toHaveTextContent("Update Instructor");
+    });
+
+    test("Edit course modal opens and closes properly", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.onPut("/api/courses").reply(200, coursesFixtures.severalCourses[0]);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Verify modal is not initially open
+      expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+
+      // Click the edit button
+      const editButton = screen.getByTestId(`${testId}-cell-row-0-col-edit-button`);
+      fireEvent.click(editButton);
+
+      // Check that modal appears with correct title
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+        expect(screen.getByText("Edit Course")).toBeInTheDocument();
+        expect(screen.getByText("Update")).toBeInTheDocument();
+      });
+
+      // Close modal using close button
+      const closeButton = screen.getByTestId("CourseModal-closeButton");
+      fireEvent.click(closeButton);
+
+      await waitFor(() => {
+        expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+      });
     });
   });
 });

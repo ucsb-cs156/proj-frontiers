@@ -8,6 +8,7 @@ function CourseModal({
   toggleShowModal,
   initialContents,
   buttonText = "Create",
+  modalTitle = "Create Course",
 }) {
   const {
     register,
@@ -27,7 +28,7 @@ function CourseModal({
       data-testid={"CourseModal-base"}
     >
       <Modal.Header>
-        <Modal.Title>Create Course</Modal.Title>
+        <Modal.Title>{modalTitle}</Modal.Title>
         <button
           type="button"
           className="btn-close"
