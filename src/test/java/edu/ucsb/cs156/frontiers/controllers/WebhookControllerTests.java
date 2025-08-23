@@ -23,10 +23,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = WebhookController.class)
+@TestPropertySource(properties = "app.webhook.secret=test_webhook_secret_123")
 public class WebhookControllerTests extends ControllerTestCase {
 
   @MockitoBean RosterStudentRepository rosterStudentRepository;
@@ -159,12 +161,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(1))
@@ -208,12 +213,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(1))
@@ -248,12 +256,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(1))
@@ -284,12 +295,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -316,12 +330,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -347,12 +364,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -395,12 +415,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -429,12 +452,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -459,12 +485,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -491,12 +520,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -521,12 +553,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -553,12 +588,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -580,12 +618,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -609,12 +650,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -636,12 +680,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -665,12 +712,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -697,12 +747,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -731,12 +784,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -766,12 +822,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(rosterStudentRepository, times(0)).findByCourseAndGithubLogin(any(), any());
@@ -809,12 +868,15 @@ public class WebhookControllerTests extends ControllerTestCase {
             }
             """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -862,12 +924,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(courseStaffRepository, times(1))
@@ -911,12 +976,15 @@ public class WebhookControllerTests extends ControllerTestCase {
                 }
                 """;
 
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/webhooks/github")
                     .content(sendBody)
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
             .andExpect(status().isOk())
             .andReturn();
     verify(courseStaffRepository, times(1))
