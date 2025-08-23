@@ -74,7 +74,8 @@ jobs:
         mkdir -p site
         cp -r frontend/docs-index/* site
   
-    - name: Deploy 🚀
+    - name: Deploy 🚀    
+      if: always() # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -83,4 +84,4 @@ jobs:
         with: |
           folder: site # The folder the action should deploy.
           branch: gh-pages
-          clean: false
+          clean: false # Automatically remove deleted files from the deploy branch

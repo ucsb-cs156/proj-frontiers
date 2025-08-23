@@ -3,6 +3,10 @@
 
 name: "40-check-production-build: Check Production Build (if this fails, deploying to Dokku will fail)"
 
+env:
+  # See: https://github.com/actions/setup-java#supported-distributions
+  JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }} 
+
 on:
   workflow_dispatch:
   push:
@@ -17,15 +21,17 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: szenius/set-timezone@v1.2
+    - uses: szenius/set-timezone@v2.0
       with:
         timezoneLinux: "America/Los_Angeles"
     - uses: actions/checkout@v4
     - name: Set up Java (version from .java-version file)
       uses: actions/setup-java@v4
       with:
-         distribution: semeru # See: https://github.com/actions/setup-java#supported-distributions
+         distribution: ${{ env.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml' 
   
     - name: Build with Maven
       env:
