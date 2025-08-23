@@ -203,13 +203,14 @@ public class TeamsController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
-    // Build a map of rosterStudentId -> Team for quick lookup of team membership
-    Map<Long, Team> membershipByStudentId = new HashMap<>();
-    List<Team> teams = course.getTeams();
+    // Build a map of rosterStudentId -> List<Team> to capture all memberships for each student
+    Map<Long, List<Team>> membershipByStudentId = new HashMap<>();
+    List<Team> teams = course.getTeams() == null ? List.of() : course.getTeams();
     for (Team team : teams) {
-      for (TeamMember member : team.getTeamMembers()) {
+      List<TeamMember> teamMembers = team.getTeamMembers() == null ? List.of() : team.getTeamMembers();
+      for (TeamMember member : teamMembers) {
         Long rsId = member.getRosterStudent().getId();
-        membershipByStudentId.putIfAbsent(rsId, team);
+        membershipByStudentId.computeIfAbsent(rsId, k -> new ArrayList<>()).add(team);
       }
     }
 
@@ -217,8 +218,14 @@ public class TeamsController extends ApiController {
     Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
     List<TeamMemberMapping> mappings = new ArrayList<>();
     for (RosterStudent rs : rosterStudents) {
-      Team team = membershipByStudentId.get(rs.getId());
-      mappings.add(TeamMemberMapping.from(rs, team));
+      List<Team> teamsForStudent = membershipByStudentId.get(rs.getId());
+      if (teamsForStudent == null || teamsForStudent.isEmpty()) {
+        mappings.add(TeamMemberMapping.from(rs, null));
+      } else {
+        for (Team t : teamsForStudent) {
+          mappings.add(TeamMemberMapping.from(rs, t));
+        }
+      }
     }
     return mappings;
   }

@@ -893,4 +893,74 @@ public class TeamsControllerTests extends ControllerTestCase {
     verify(courseRepository, times(1)).findById(1L);
     assertEquals("Unknown Roster Source Type", response.getResponse().getErrorMessage());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testTeamMemberMapping_multipleTeamsForStudent() throws Exception {
+    // arrange
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+    Team team1 = Team.builder().id(1L).name("s25-01").course(course).build();
+    Team team2 = Team.builder().id(2L).name("s25-02").course(course).build();
+
+    RosterStudent studentMulti =
+        RosterStudent.builder()
+            .id(100L)
+            .email("multi@ucsb.edu")
+            .firstName("Multi")
+            .lastName("Team")
+            .githubLogin("multi")
+            .build();
+    TeamMember tm1 = TeamMember.builder().id(10L).team(team1).rosterStudent(studentMulti).build();
+    TeamMember tm2 = TeamMember.builder().id(11L).team(team2).rosterStudent(studentMulti).build();
+
+    RosterStudent studentSingle =
+        RosterStudent.builder()
+            .id(101L)
+            .email("single@ucsb.edu")
+            .firstName("Single")
+            .lastName("Team")
+            .githubLogin(null)
+            .build();
+    TeamMember tm3 = TeamMember.builder().id(12L).team(team1).rosterStudent(studentSingle).build();
+
+    RosterStudent studentNone =
+        RosterStudent.builder()
+            .id(102L)
+            .email("none@ucsb.edu")
+            .firstName("No")
+            .lastName("Team")
+            .githubLogin(null)
+            .build();
+
+    team1.setTeamMembers(List.of(tm1, tm3));
+    team2.setTeamMembers(List.of(tm2));
+    course.setTeams(List.of(team1, team2));
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(studentMulti, studentSingle, studentNone));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/teams/mapping").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    List<TeamsController.TeamMemberMapping> expectedMappings =
+        List.of(
+            new TeamsController.TeamMemberMapping(
+                1L, "s25-01", 100L, "multi@ucsb.edu", "Multi", "Team", "multi"),
+            new TeamsController.TeamMemberMapping(
+                2L, "s25-02", 100L, "multi@ucsb.edu", "Multi", "Team", "multi"),
+            new TeamsController.TeamMemberMapping(
+                1L, "s25-01", 101L, "single@ucsb.edu", "Single", "Team", null),
+            new TeamsController.TeamMemberMapping(
+                null, null, 102L, "none@ucsb.edu", "No", "Team", null));
+
+    String expectedJson = mapper.writeValueAsString(expectedMappings);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
 }
