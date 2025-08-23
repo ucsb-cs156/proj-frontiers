@@ -27,5 +27,6 @@ jobs:
     - name: Run IT tests with maven
       run: |
         export WEBHOOK_SECRET=$(openssl rand -base64 32)
-        INTEGRATION=true mvn -B test-compile failsafe:integration-test failsafe:verify
+        INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
+
       

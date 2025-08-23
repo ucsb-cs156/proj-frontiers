@@ -8,6 +8,7 @@ import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 import UpdateInstructorForm from "main/components/Courses/UpdateInstructorForm";
 import Modal from "react-bootstrap/Modal";
+import { useLocation } from "react-router";
 
 const columns = [
   {
@@ -54,6 +55,8 @@ export default function InstructorCoursesTable({
   testId = "InstructorCoursesTable",
   enableInstructorUpdate = false,
 }) {
+  const location = useLocation();
+
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const cellToAxiosParamsEdit = (formData) => {
@@ -103,7 +106,10 @@ export default function InstructorCoursesTable({
     formData.courseId = selectedCourse.id;
     editMutation.mutate(formData);
   };
+
   const installCallback = (cell) => {
+    sessionStorage.setItem("redirect", location.pathname);
+
     const url = `/api/courses/redirect?courseId=${cell.row.original.id}`;
     if (storybook) {
       window.alert(`would have navigated to: ${url}`);

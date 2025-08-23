@@ -22,6 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
+import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.LoadResult;
 import edu.ucsb.cs156.frontiers.controllers.RosterStudentsController.RosterSourceType;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
@@ -115,7 +117,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
   /** Test the POST endpoint */
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testPostRosterStudent() throws Exception {
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
@@ -151,7 +153,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
   /** Test the POST endpoint when installation ID is null. */
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testPostRosterStudentWithNoInstallationId() throws Exception {
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
@@ -194,7 +196,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
   /** Test the POST endpoint when installation ID exists. */
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testPostRosterStudentWithInstallationId() throws Exception {
 
     when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(course2));
@@ -234,7 +236,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
    * @throws Exception
    */
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithMockUser(roles = {"ADMIN"})
   public void test_InstructorCannotPostRosterStudentForCourseThatDoesNotExist() throws Exception {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
 
@@ -264,9 +266,39 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
+  /** Test the POST endpoint */
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_post_fails_on_matching() throws Exception {
+
+    RosterStudent rosterStudent1 =
+        RosterStudent.builder().id(1L).studentId("A123456").course(course1).build();
+    RosterStudent rosterStudent2 =
+        RosterStudent.builder().id(2L).email("cgaucho@example.org").course(course1).build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
+        .thenReturn(Optional.of(rosterStudent1));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@example.org")))
+        .thenReturn(Optional.of(rosterStudent2));
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@example.org")
+                    .param("courseId", "1"))
+            .andExpect(status().isConflict())
+            .andReturn();
+  }
+
   /** Test the GET endpoint */
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testRosterStudentsByCourse() throws Exception {
 
     // arrange
@@ -287,9 +319,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   /** Test whether instructor can get roster students for a non existing course */
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void geting_roster_students_for_a_non_existing_course_returns_appropriate_error()
+  public void getting_roster_students_for_a_non_existing_course_returns_appropriate_error()
       throws Exception {
 
     // arrange
@@ -340,8 +372,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                         Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
                         """;
 
-  @WithMockUser(roles = {"INSTRUCTOR"})
   @Test
+  @WithInstructorCoursePermissions
   public void instructor_can_upload_students_for_an_existing_course_chico() throws Exception {
 
     // arrange
@@ -467,16 +499,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
 
     String responseString = response.getResponse().getContentAsString();
-    Map<String, String> expectedMap =
-        Map.of(
-            "filename", "roster.csv",
-            "message", "Inserted 1 new students, Updated 2 students");
-    String expectedJson = mapper.writeValueAsString(expectedMap);
+    LoadResult expectedResult = new LoadResult(1, 2, List.of());
+    String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"INSTRUCTOR"})
   @Test
+  @WithInstructorCoursePermissions
   public void instructor_can_upload_students_for_an_existing_course_ucsb() throws Exception {
 
     // arrange
@@ -602,16 +631,68 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
 
     String responseString = response.getResponse().getContentAsString();
-    Map<String, String> expectedMap =
-        Map.of(
-            "filename", "roster.csv",
-            "message", "Inserted 1 new students, Updated 2 students");
-    String expectedJson = mapper.writeValueAsString(expectedMap);
+    LoadResult expectedResult = new LoadResult(1, 2, List.of());
+    String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
 
-  @WithMockUser(roles = {"INSTRUCTOR"})
   @Test
+  @WithInstructorCoursePermissions
+  public void students_with_non_matching_student_id_and_email_are_rejected() throws Exception {
+    RosterStudent student1ID = RosterStudent.builder().id(1L).studentId("A123456").build();
+    RosterStudent student1Email = RosterStudent.builder().id(2L).email("cgaucho@ucsb.edu").build();
+    RosterStudent student2 =
+        RosterStudent.builder().id(3L).studentId("A987654").email("ldelplaya@ucsb.edu").build();
+    Course course1 = Course.builder().id(1L).build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
+        .thenReturn(Optional.of(student1ID));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@ucsb.edu")))
+        .thenReturn(Optional.of(student1Email));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
+        .thenReturn(Optional.of(student2));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("ldelplaya@ucsb.edu")))
+        .thenReturn(Optional.of(student2));
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/rosterstudents/upload/csv")
+                    .file(file)
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isConflict())
+            .andReturn();
+
+    RosterStudent rosterStudentRejected =
+        RosterStudent.builder()
+            .firstName("CHRIS FAKE")
+            .lastName("GAUCHO")
+            .studentId("A123456")
+            .email("cgaucho@ucsb.edu")
+            .build();
+    RosterStudent rosterStudent2Updated =
+        RosterStudent.builder()
+            .id(3L)
+            .firstName("LAUREN")
+            .lastName("DEL PLAYA")
+            .email("ldelplaya@ucsb.edu")
+            .studentId("A987654")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
+    verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
+    verify(rosterStudentRepository, atLeastOnce()).save(eq(rosterStudent2Updated));
+    String responseString = response.getResponse().getContentAsString();
+    LoadResult expectedResult = new LoadResult(1, 1, List.of(rosterStudentRejected));
+    String expectedJson = mapper.writeValueAsString(expectedResult);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void unrecognized_csv_format_throws_an_exception() throws Exception {
 
     MockMultipartFile file =
@@ -637,8 +718,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   /** Test that you cannot upload a roster for a course that does not exist */
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithMockUser(roles = {"ADMIN"})
   @Test
+  @WithInstructorCoursePermissions
   public void instructor_cannot_upload_students_for_a_course_that_does_not_exist()
       throws Exception {
 
@@ -675,7 +757,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void just_no_org_name() throws Exception {
     Course course =
         Course.builder()
@@ -700,7 +782,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void not_registered_org() throws Exception {
     Course course =
         Course.builder()
@@ -725,7 +807,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void job_actually_fires() throws Exception {
     Course course =
         Course.builder()
@@ -753,7 +835,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithMockUser(roles = {"ADMIN"})
   public void notFound() throws Exception {
     doReturn(Optional.empty()).when(courseRepository).findById(eq(2L));
     MvcResult response =
@@ -1378,7 +1460,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_emptyFields() throws Exception {
     MvcResult response =
         mockMvc
@@ -1400,7 +1482,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithMockUser(roles = {"ADMIN"})
   public void testUpdateRosterStudent_success() throws Exception {
     RosterStudent existingStudent =
         RosterStudent.builder()
@@ -1454,7 +1536,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_duplicateStudentId() throws Exception {
     RosterStudent existingStudent =
         RosterStudent.builder()
@@ -1505,7 +1587,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_notFound() throws Exception {
     when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
 
@@ -1551,7 +1633,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_newStudentIdNotExists() throws Exception {
     RosterStudent existingStudent =
         RosterStudent.builder()
@@ -1607,7 +1689,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_sameStudentIdWithWhitespace() throws Exception {
     RosterStudent existingStudent =
         RosterStudent.builder()
@@ -1661,7 +1743,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_nullFields() throws Exception {
     MvcResult response =
         mockMvc
@@ -1682,7 +1764,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_nullFirstName() throws Exception {
     MvcResult response =
         mockMvc
@@ -1703,7 +1785,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_nullLastName() throws Exception {
     MvcResult response =
         mockMvc
@@ -1724,7 +1806,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_nullStudentId() throws Exception {
     MvcResult response =
         mockMvc
@@ -1745,7 +1827,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_emptyFirstName() throws Exception {
     MvcResult response =
         mockMvc
@@ -1767,7 +1849,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_emptyLastName() throws Exception {
     MvcResult response =
         mockMvc
@@ -1789,7 +1871,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_emptyStudentId() throws Exception {
     MvcResult response =
         mockMvc
@@ -1839,7 +1921,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testDeleteRosterStudent_success() throws Exception {
     RosterStudent rosterStudent =
         RosterStudent.builder()
@@ -1882,7 +1964,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testDeleteRosterStudent_withGithubLogin_success() throws Exception {
     // Set up course with org name and installation ID
     course1.setOrgName("test-org");
@@ -1932,7 +2014,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testDeleteRosterStudent_withGithubLogin_noOrgName_success() throws Exception {
     // Set up course with null org name but with installation ID
     course1.setOrgName(null);
@@ -1981,7 +2063,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testDeleteRosterStudent_withGithubLogin_noInstallationId_success() throws Exception {
     // Set up course with org name but no installation ID
     course1.setOrgName("test-org");
@@ -2030,7 +2112,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testDeleteRosterStudent_withGithubLogin_orgRemovalFails() throws Exception {
     // Set up course with org name and installation ID
     course1.setOrgName("test-org");
@@ -2086,7 +2168,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testDeleteRosterStudent_notFound() throws Exception {
     when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
 

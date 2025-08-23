@@ -1,6 +1,5 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
-import edu.ucsb.cs156.frontiers.errors.CourseNotAuthorized;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -116,20 +115,6 @@ public abstract class ApiController {
   @ExceptionHandler({IllegalArgumentException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleIllegalArgument(Throwable e) {
-    return Map.of(
-        "type", e.getClass().getSimpleName(),
-        "message", e.getMessage());
-  }
-
-  /**
-   * This method handles the CourseNotAuthorized exception. It maps to a 403/Forbidden.
-   *
-   * @param e the exception
-   * @return a map with the type and message of the exception
-   */
-  @ExceptionHandler({CourseNotAuthorized.class})
-  @ResponseStatus(HttpStatus.FORBIDDEN)
-  public Object handleCourseNotAuthorized(Throwable e) {
     return Map.of(
         "type", e.getClass().getSimpleName(),
         "message", e.getMessage());
