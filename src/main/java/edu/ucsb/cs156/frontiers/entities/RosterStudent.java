@@ -36,6 +36,7 @@ public class RosterStudent {
   private String firstName;
   private String lastName;
   private String email;
+  private String section;
 
   @ManyToOne
   @JoinColumn(name = "user_id")

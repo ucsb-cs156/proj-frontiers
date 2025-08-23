@@ -1,0 +1,27 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "003-add-section-to-roster-student",
+      "author": "copilot",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "ROSTER_STUDENT",
+            "columns": [
+              {
+                "column": {
+                  "name": "SECTION",
+                  "type": "VARCHAR(255)",
+                  "defaultValue": "",
+                  "constraints": {
+                    "nullable": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}
