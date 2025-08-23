@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>CourseSecurity.java</h1>
+
+<table class="src">
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package edu.ucsb.cs156.frontiers.config;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.entities.Course;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.models.CurrentUser;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.repositories.CourseRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.services.CurrentUserService;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.Collection;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.Optional;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import lombok.extern.slf4j.Slf4j;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.access.hierarchicalroles.RoleHierarchy;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.access.prepost.PreAuthorize;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.core.GrantedAuthority;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.stereotype.Component;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_16'/>
+16
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_16'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_17'/>
+17
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_17'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>/**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_18'/>
+18
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_18'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * CourseSecurity provides methods to check permissions for managing courses and roster students. It</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * uses the CurrentUserService to get the current user and RoleHierarchy to check roles.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_21'/>
+21
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_21'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * &#60;p&#62;The methods defined here are used as annotations (e.g. &#60;code&#62;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_22'/>
+22
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_22'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> *   @PreAuthorize(&#34;@CourseSecurity.hasManagePermissions(#root, #id)&#34;)&#60;/code&#62;) in the</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_23'/>
+23
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_23'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * CourseController and RosterStudentController to enforce security checks.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_24'/>
+24
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_24'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_25'/>
+25
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_25'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * &#60;p&#62;Note that for a method with a courseId, you &#60;em&#62;still&#60;/em&#62; need to verify in each method,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_26'/>
+26
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_26'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * whether the course exists or not. These annotations will &#60;em&#62;only&#60;/em&#62; check whether or not the</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_27'/>
+27
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_27'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * particular user has access to a particular course, for example.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_28'/>
+28
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_28'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_29'/>
+29
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_29'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * &#60;p&#62;When testing, use &#60;code&#62;@WithInstructorCoursePermissions&#60;/code&#62; or &#60;code&#62;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_30'/>
+30
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_30'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * @WithStaffCoursePermissions&#60;/code&#62; to mock a user with the appropriate roles.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_31'/>
+31
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_31'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> */</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_32'/>
+32
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_32'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>@Slf4j</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_33'/>
+33
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_33'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@Component(&#34;CourseSecurity&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_34'/>
+34
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_34'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>public class CourseSecurity {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_35'/>
+35
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_35'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private final CurrentUserService currentUserService;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_36'/>
+36
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_36'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private final RoleHierarchy roleHierarchy;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_37'/>
+37
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_37'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private final CourseRepository courseRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_38'/>
+38
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_38'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private final RosterStudentRepository rosterStudentRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_39'/>
+39
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_39'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_40'/>
+40
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_40'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public CourseSecurity(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_41'/>
+41
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_41'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      CurrentUserService currentUserService,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_42'/>
+42
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_42'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      RoleHierarchy roleHierarchy,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_43'/>
+43
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_43'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      CourseRepository courseRepository,</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_44'/>
+44
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_44'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      RosterStudentRepository rosterStudentRepository) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_45'/>
+45
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_45'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    this.currentUserService = currentUserService;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_46'/>
+46
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_46'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    this.roleHierarchy = roleHierarchy;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_47'/>
+47
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_47'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    this.courseRepository = courseRepository;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_48'/>
+48
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_48'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    this.rosterStudentRepository = rosterStudentRepository;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_49'/>
+49
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_49'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_50'/>
+50
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_50'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_51'/>
+51
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_51'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_52'/>
+52
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_52'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * Use this when you want to check whether the user is either a staff member, instructor or admin</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_53'/>
+53
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_53'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * for the course.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_54'/>
+54
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_54'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_55'/>
+55
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_55'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param operations</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_56'/>
+56
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_56'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param courseId</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_57'/>
+57
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_57'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return true if the user has manage permissions for the course, false otherwise.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_58'/>
+58
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_58'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_59'/>
+59
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_59'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @PreAuthorize(&#34;hasRole(&#39;ROLE_USER&#39;)&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_60'/>
+60
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_60'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public Boolean hasManagePermissions(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_61'/>
+61
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_61'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      MethodSecurityExpressionOperations operations, Long courseId) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_62'/>
+62
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_62'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    Optional&#60;Course&#62; course = courseRepository.findById(courseId);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_63'/>
+63
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_63'>1</a>
+<span>
+1. hasManagePermissions : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (course.isEmpty()) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_64'/>
+64
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_64'>1</a>
+<span>
+1. hasManagePermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasManagePermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return true;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_65'/>
+65
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_65'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_66'/>
+66
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_66'>2</a>
+<span>
+1. hasManagePermissions : replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasManagePermissions &rarr; KILLED<br/>
+2. hasManagePermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasManagePermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return baseHasManagePermissions(operations, course.get());</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_67'/>
+67
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_67'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_68'/>
+68
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_68'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_69'/>
+69
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_69'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_70'/>
+70
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_70'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * Use this for operations that only an instructor can do, but not a staff member, such as adding</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_71'/>
+71
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_71'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * or deleting a course staff member.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_72'/>
+72
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_72'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_73'/>
+73
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_73'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param operations</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_74'/>
+74
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_74'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param courseId</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_75'/>
+75
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_75'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return true if the user has instructor permissions for the course, false otherwise.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_76'/>
+76
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_76'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_77'/>
+77
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_77'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @PreAuthorize(&#34;hasRole(&#39;ROLE_INSTRUCTOR&#39;)&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_78'/>
+78
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_78'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public Boolean hasInstructorPermissions(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_79'/>
+79
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_79'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      MethodSecurityExpressionOperations operations, Long courseId) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_80'/>
+80
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_80'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    CurrentUser currentUser = currentUserService.getCurrentUser();</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_81'/>
+81
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_81'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    Collection&#60;? extends GrantedAuthority&#62; authorities =</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_82'/>
+82
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_82'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        roleHierarchy.getReachableGrantedAuthorities(currentUser.getRoles());</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_83'/>
+83
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_83'>3</a>
+<span>
+1. hasInstructorPermissions : negated conditional &rarr; KILLED<br/>
+2. lambda$hasInstructorPermissions$0 : replaced boolean return with false for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasInstructorPermissions$0 &rarr; KILLED<br/>
+3. lambda$hasInstructorPermissions$0 : replaced boolean return with true for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasInstructorPermissions$0 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (authorities.stream().anyMatch(role -&#62; role.getAuthority().equals(&#34;ROLE_ADMIN&#34;))) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_84'/>
+84
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_84'>1</a>
+<span>
+1. hasInstructorPermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return true;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_85'/>
+85
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_85'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    } else {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_86'/>
+86
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_86'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      Optional&#60;Course&#62; course = courseRepository.findById(courseId);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_87'/>
+87
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_87'>1</a>
+<span>
+1. hasInstructorPermissions : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      if (course.isEmpty()) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_88'/>
+88
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_88'>1</a>
+<span>
+1. hasInstructorPermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return true;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_89'/>
+89
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_89'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      }</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_90'/>
+90
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_90'>2</a>
+<span>
+1. hasInstructorPermissions : replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED<br/>
+2. hasInstructorPermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return currentUser.getUser().getEmail().equals(course.get().getInstructorEmail());</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_91'/>
+91
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_91'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_92'/>
+92
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_92'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_93'/>
+93
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_93'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_94'/>
+94
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_94'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_95'/>
+95
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_95'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * This method checks if the current user has management permissions for the course associated</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_96'/>
+96
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_96'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * with the given rosterStudent. This allows us to create endpoints that just take a roster</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_97'/>
+97
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_97'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * student id, not a course id, and still check permissions. This one works for both staff and</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_98'/>
+98
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_98'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * instructor permissions.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_99'/>
+99
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_99'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_100'/>
+100
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_100'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param operations</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_101'/>
+101
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_101'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param rosterStudentId</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_102'/>
+102
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_102'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_103'/>
+103
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_103'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_104'/>
+104
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_104'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @PreAuthorize(&#34;hasRole(&#39;ROLE_USER&#39;)&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_105'/>
+105
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_105'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public Boolean hasRosterStudentManagementPermissions(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_106'/>
+106
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_106'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      MethodSecurityExpressionOperations operations, Long rosterStudentId) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_107'/>
+107
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_107'>2</a>
+<span>
+1. hasRosterStudentManagementPermissions : replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasRosterStudentManagementPermissions &rarr; KILLED<br/>
+2. hasRosterStudentManagementPermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasRosterStudentManagementPermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return rosterStudentRepository</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_108'/>
+108
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_108'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        .findById(rosterStudentId)</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_109'/>
+109
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_109'>2</a>
+<span>
+1. lambda$hasRosterStudentManagementPermissions$1 : replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasRosterStudentManagementPermissions$1 &rarr; KILLED<br/>
+2. lambda$hasRosterStudentManagementPermissions$1 : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasRosterStudentManagementPermissions$1 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        .map(rosterStudent -&#62; baseHasManagePermissions(operations, rosterStudent.getCourse()))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_110'/>
+110
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_110'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        .orElse(true);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_111'/>
+111
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_111'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_112'/>
+112
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_112'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_113'/>
+113
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_113'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_114'/>
+114
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_114'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * This is a helper method that checks if the current user has management permissions for the</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_115'/>
+115
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_115'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * given course.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_116'/>
+116
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_116'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_117'/>
+117
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_117'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param operations</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_118'/>
+118
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_118'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param course</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_119'/>
+119
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_119'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_120'/>
+120
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_120'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_121'/>
+121
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_121'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public Boolean baseHasManagePermissions(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_122'/>
+122
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_122'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      MethodSecurityExpressionOperations operations, Course course) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_123'/>
+123
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_123'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    CurrentUser currentUser = currentUserService.getCurrentUser();</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_124'/>
+124
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_124'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    Collection&#60;? extends GrantedAuthority&#62; authorities =</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_125'/>
+125
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_125'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        roleHierarchy.getReachableGrantedAuthorities(currentUser.getRoles());</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_126'/>
+126
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_126'>3</a>
+<span>
+1. baseHasManagePermissions : negated conditional &rarr; KILLED<br/>
+2. lambda$baseHasManagePermissions$2 : replaced boolean return with true for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$2 &rarr; KILLED<br/>
+3. lambda$baseHasManagePermissions$2 : replaced boolean return with false for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$2 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (authorities.stream().anyMatch(role -&#62; role.getAuthority().equals(&#34;ROLE_ADMIN&#34;))) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_127'/>
+127
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_127'>1</a>
+<span>
+1. baseHasManagePermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return true;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_128'/>
+128
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_128'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    } else {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_129'/>
+129
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_129'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      if (course.getCourseStaff().stream()</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_130'/>
+130
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_130'>3</a>
+<span>
+1. baseHasManagePermissions : negated conditional &rarr; KILLED<br/>
+2. lambda$baseHasManagePermissions$3 : replaced boolean return with false for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$3 &rarr; KILLED<br/>
+3. lambda$baseHasManagePermissions$3 : replaced boolean return with true for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$3 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>          .anyMatch(staff -&#62; staff.getEmail().equals(currentUser.getUser().getEmail()))) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_131'/>
+131
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_131'>1</a>
+<span>
+1. baseHasManagePermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return true;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_132'/>
+132
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_132'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      }</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_133'/>
+133
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_133'>2</a>
+<span>
+1. baseHasManagePermissions : replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED<br/>
+2. baseHasManagePermissions : replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return currentUser.getUser().getEmail().equals(course.getInstructorEmail());</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_134'/>
+134
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_134'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_135'/>
+135
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_135'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@486aedab_136'/>
+136
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_136'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_63'>63</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_63'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFound]/[method:null_on_null()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_64'>64</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_64'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFound]/[method:null_on_null()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasManagePermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_66'>66</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_66'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:UnsuccessfulInstructor]/[method:instructor_cant_load_non_owned_course()]</span></span> replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasManagePermissions &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>hasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdmin]/[method:instructor_can_load_owned_course()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasManagePermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_83'>83</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_83'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasInstructorPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdminPerms]/[method:instructor_can_load_owned_course()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$hasInstructorPermissions$0<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdminPerms]/[method:instructor_can_load_owned_course()]</span></span> replaced boolean return with false for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasInstructorPermissions$0 &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>lambda$hasInstructorPermissions$0<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:UnsuccessfulInstructorPerms]/[method:instructor_cant_load_non_owned_course()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasInstructorPermissions$0 &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_84'>84</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_84'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasInstructorPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdminPerms]/[method:instructor_can_load_owned_course()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_87'>87</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_87'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasInstructorPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFoundInstructor]/[method:null_on_null()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_88'>88</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_88'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasInstructorPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFoundInstructor]/[method:null_on_null()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_90'>90</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_90'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasInstructorPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:UnsuccessfulInstructorPerms]/[method:instructor_cant_load_non_owned_course()]</span></span> replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>hasInstructorPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulInstructorPerms]/[method:instructor_can_load_owned_course()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasInstructorPermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_107'>107</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_107'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>hasRosterStudentManagementPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:CorrectPassRosterStudent]/[method:returns_properly()]</span></span> replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasRosterStudentManagementPermissions &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>hasRosterStudentManagementPermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFoundRosterStudent]/[method:null_on_null()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::hasRosterStudentManagementPermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_109'>109</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_109'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$hasRosterStudentManagementPermissions$1<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:CorrectPassRosterStudent]/[method:returns_properly()]</span></span> replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasRosterStudentManagementPermissions$1 &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$hasRosterStudentManagementPermissions$1<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:FalseButExistsRosterStudent]/[method:returns_properly()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$hasRosterStudentManagementPermissions$1 &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_126'>126</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_126'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>baseHasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdmin]/[method:instructor_can_load_owned_course()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$baseHasManagePermissions$2<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:CorrectPassRosterStudent]/[method:returns_properly()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$2 &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>lambda$baseHasManagePermissions$2<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdmin]/[method:instructor_can_load_owned_course()]</span></span> replaced boolean return with false for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$2 &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_127'>127</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_127'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>baseHasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdmin]/[method:instructor_can_load_owned_course()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_130'>130</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_130'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>baseHasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:CorrectPassRosterStudent]/[method:returns_properly()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$baseHasManagePermissions$3<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulCourseStaff]/[method:instructor_can_load_owned_course()]</span></span> replaced boolean return with false for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$3 &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>lambda$baseHasManagePermissions$3<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:UnsuccessfulInstructor]/[method:instructor_cant_load_non_owned_course()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/config/CourseSecurity::lambda$baseHasManagePermissions$3 &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_131'>131</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_131'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>baseHasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulCourseStaff]/[method:instructor_can_load_owned_course()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@486aedab_133'>133</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@486aedab_133'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>baseHasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulInstructor]/[method:instructor_can_load_owned_course()]</span></span> replaced Boolean return with False for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>baseHasManagePermissions<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:CorrectPassRosterStudent]/[method:returns_properly()]</span></span> replaced Boolean return with True for edu/ucsb/cs156/frontiers/config/CourseSecurity::baseHasManagePermissions &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFoundInstructor]/[method:null_on_null()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFound]/[method:null_on_null()] (2 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdmin]/[method:instructor_can_load_owned_course()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulCourseStaff]/[method:instructor_can_load_owned_course()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulInstructor]/[method:instructor_can_load_owned_course()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:UnsuccessfulInstructor]/[method:instructor_cant_load_non_owned_course()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:CorrectPassRosterStudent]/[method:returns_properly()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:FalseButExistsRosterStudent]/[method:returns_properly()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulAdminPerms]/[method:instructor_can_load_owned_course()] (2 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:SuccessfulInstructorPerms]/[method:instructor_can_load_owned_course()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:UnsuccessfulInstructorPerms]/[method:instructor_cant_load_non_owned_course()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.security.CourseSecurityTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.security.CourseSecurityTests]/[nested-class:NotFoundRosterStudent]/[method:null_on_null()] (2 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.17.0
+
+</body>
+</html>
