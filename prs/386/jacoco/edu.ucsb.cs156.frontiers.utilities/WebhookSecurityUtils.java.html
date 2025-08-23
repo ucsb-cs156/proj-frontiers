@@ -9,7 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 
 /** Utility class for webhook security validation */
 <span class="fc" id="L11">@Slf4j</span>
-<span class="nc" id="L12">public class WebhookSecurityUtils {</span>
+public class WebhookSecurityUtils {
+
+  private WebhookSecurityUtils() {
+    // Utility Class
+  }
 
   private static final String HMAC_SHA256 = &quot;HmacSHA256&quot;;
 
@@ -21,30 +25,26 @@ import lombok.extern.slf4j.Slf4j;
    * @param secret the webhook secret
    * @return true if signature is valid, false otherwise
    */
-  public static boolean validateGitHubSignature(String payload, String signature, String secret) {
-<span class="fc bfc" id="L25" title="All 6 branches covered.">    if (payload == null || signature == null || secret == null) {</span>
-<span class="fc" id="L26">      log.warn(&quot;Null values provided for webhook validation&quot;);</span>
-<span class="fc" id="L27">      return false;</span>
-    }
-
-<span class="fc bfc" id="L30" title="All 2 branches covered.">    if (!signature.startsWith(&quot;sha256=&quot;)) {</span>
-<span class="fc" id="L31">      log.warn(&quot;Invalid signature format: {}&quot;, signature);</span>
+  public static boolean validateGitHubSignature(String payload, String signature, String secret)
+      throws NoSuchAlgorithmException, InvalidKeyException {
+<span class="fc bfc" id="L30" title="All 6 branches covered.">    if (payload == null || signature == null || secret == null) {</span>
+<span class="fc" id="L31">      log.warn(&quot;Null values provided for webhook validation&quot;);</span>
 <span class="fc" id="L32">      return false;</span>
     }
 
-    try {
-<span class="fc" id="L36">      String expectedSignature = &quot;sha256=&quot; + calculateHmacSha256(payload, secret);</span>
-<span class="fc" id="L37">      boolean isValid = safeEquals(signature, expectedSignature);</span>
-
-<span class="fc bfc" id="L39" title="All 2 branches covered.">      if (!isValid) {</span>
-<span class="fc" id="L40">        log.warn(&quot;Webhook signature validation failed&quot;);</span>
-      }
-
-<span class="fc" id="L43">      return isValid;</span>
-<span class="nc" id="L44">    } catch (Exception e) {</span>
-<span class="nc" id="L45">      log.error(&quot;Error validating webhook signature&quot;, e);</span>
-<span class="nc" id="L46">      return false;</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">    if (!signature.startsWith(&quot;sha256=&quot;)) {</span>
+<span class="fc" id="L36">      log.warn(&quot;Invalid signature format: {}&quot;, signature);</span>
+<span class="fc" id="L37">      return false;</span>
     }
+
+<span class="fc" id="L40">    String expectedSignature = &quot;sha256=&quot; + calculateHmacSha256(payload, secret);</span>
+<span class="fc" id="L41">    boolean isValid = safeEquals(signature, expectedSignature);</span>
+
+<span class="fc bfc" id="L43" title="All 2 branches covered.">    if (!isValid) {</span>
+<span class="fc" id="L44">      log.warn(&quot;Webhook signature validation failed&quot;);</span>
+    }
+
+<span class="fc" id="L47">    return isValid;</span>
   }
 
   /**
