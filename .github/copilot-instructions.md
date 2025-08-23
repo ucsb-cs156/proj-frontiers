@@ -30,6 +30,8 @@ Frontiers is a Spring Boot Java backend application with a React frontend that s
 - Format check: `npm run check-format` -- takes ~1 second.
 - Format fix: `npm run format` -- takes ~1 second.
 
+Any time workflow 35-frontend-format.yml fails, please `cd` into `frontend` and use `npm run format` to fix this.
+
 ### Running the Application
 
 #### Development Mode (Two Terminal Windows)
