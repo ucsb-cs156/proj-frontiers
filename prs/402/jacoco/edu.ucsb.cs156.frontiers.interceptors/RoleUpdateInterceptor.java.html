@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoleUpdateInterceptor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.interceptors</a> &gt; <span class="el_source">RoleUpdateInterceptor.java</span></div><h1>RoleUpdateInterceptor.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.interceptors;
+
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
+import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+/**
+ * RoleUpdateInterceptor reloads a user's security context on each request to the backend. This is
+ * necessary to ensure that the user has the correct roles and does not have to log in or out to
+ * have access to restricted endpoints.
+ *
+ * &lt;p&gt;To prevent interference with @WebMvcTest test slices, ControllerTestCase contains a
+ * passthrough RoleUpdateInterceptor MockitoBean so that every ControllerTestCase is not required to
+ * add an AdminRepository and InstructorRepository MockitoBean.
+ */
+@Component
+public class RoleUpdateInterceptor implements HandlerInterceptor {
+
+  private final AdminRepository adminRepository;
+
+  private final InstructorRepository instructorRepository;
+
+  public RoleUpdateInterceptor(
+<span class="fc" id="L37">      AdminRepository adminRepository, InstructorRepository instructorRepository) {</span>
+<span class="fc" id="L38">    this.adminRepository = adminRepository;</span>
+<span class="fc" id="L39">    this.instructorRepository = instructorRepository;</span>
+<span class="fc" id="L40">  }</span>
+
+  @Override
+  public boolean preHandle(
+      HttpServletRequest request, HttpServletResponse response, Object handler) {
+    // Update user's security context on server each time the user makes HTTP request to the backend
+    // If user has admin or instructor status in database, we will update their roles in security
+    // context
+<span class="fc" id="L48">    SecurityContext securityContext = SecurityContextHolder.getContext();</span>
+<span class="fc" id="L49">    Authentication authentication = securityContext.getAuthentication();</span>
+
+<span class="fc bfc" id="L51" title="All 2 branches covered.">    if (authentication instanceof OAuth2AuthenticationToken) {</span>
+<span class="fc" id="L52">      OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">      if (oauthToken.getPrincipal() instanceof OidcUser) {</span>
+<span class="fc" id="L54">        OidcUser oidcUser = (OidcUser) oauthToken.getPrincipal();</span>
+<span class="fc" id="L55">        String email = oidcUser.getEmail();</span>
+<span class="fc" id="L56">        Set&lt;GrantedAuthority&gt; newAuthorities = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L57">        Collection&lt;? extends GrantedAuthority&gt; currentAuthorities = authentication.getAuthorities();</span>
+
+        // Copy all existing authorities except ROLE_ADMIN and ROLE_INSTRUCTOR
+<span class="fc" id="L60">        currentAuthorities.stream()</span>
+<span class="fc" id="L61">            .filter(</span>
+                authority -&gt;
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                    !authority.getAuthority().equals(&quot;ROLE_ADMIN&quot;)</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                        &amp;&amp; !authority.getAuthority().equals(&quot;ROLE_INSTRUCTOR&quot;))</span>
+<span class="fc" id="L65">            .forEach(newAuthorities::add);</span>
+
+        // Check if user is admin or instructor and add appropriate role
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (adminRepository.existsByEmail(email)) {</span>
+<span class="fc" id="L69">          newAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_ADMIN&quot;));</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        } else if (instructorRepository.existsByEmail(email)) {</span>
+<span class="fc" id="L71">          newAuthorities.add(new SimpleGrantedAuthority(&quot;ROLE_INSTRUCTOR&quot;));</span>
+        }
+
+        // Create new authentication with updated authorities
+<span class="fc" id="L75">        Authentication newAuth =</span>
+            new OAuth2AuthenticationToken(
+<span class="fc" id="L77">                oidcUser, newAuthorities, oauthToken.getAuthorizedClientRegistrationId());</span>
+
+<span class="fc" id="L79">        SecurityContextHolder.getContext().setAuthentication(newAuth);</span>
+      }
+    }
+
+<span class="fc" id="L83">    return true;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
