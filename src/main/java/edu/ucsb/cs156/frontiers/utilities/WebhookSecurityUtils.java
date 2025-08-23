@@ -42,9 +42,10 @@ public class WebhookSecurityUtils {
 
     if (!isValid) {
       log.warn("Webhook signature validation failed");
+      return false;
     }
 
-    return isValid;
+    return true;
   }
 
   /**
