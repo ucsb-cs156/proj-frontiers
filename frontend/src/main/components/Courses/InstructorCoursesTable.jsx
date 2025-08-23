@@ -105,9 +105,7 @@ export default function InstructorCoursesTable({
 
   const onCourseUpdateError = (error) => {
     if (error.response?.data?.message)
-      toast(
-        `Was not able to update course:\n${error.response.data.message}`,
-      );
+      toast(`Was not able to update course:\n${error.response.data.message}`);
     else toast(`Was not able to update course:\n${error.message}`);
   };
 
@@ -235,7 +233,11 @@ export default function InstructorCoursesTable({
             </Button>
           );
         } else {
-          return <span data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-no-permission`}></span>;
+          return (
+            <span
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-no-permission`}
+            ></span>
+          );
         }
       },
     },

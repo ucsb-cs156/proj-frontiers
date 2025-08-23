@@ -69,7 +69,9 @@ describe("InstructorCoursesTable tests", () => {
 
       expectedHeaders.forEach((headerText) => {
         if (headerText === "Edit") {
-          const header = screen.getByTestId("InstructorCoursesTable-header-edit-sort-header");
+          const header = screen.getByTestId(
+            "InstructorCoursesTable-header-edit-sort-header",
+          );
           expect(header).toBeInTheDocument();
           expect(header).toHaveTextContent("Edit");
         } else {
@@ -153,16 +155,22 @@ describe("InstructorCoursesTable tests", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
       // Check that Edit buttons are present for courses the instructor can edit
-      const editButton0 = screen.getByTestId(`${testId}-cell-row-0-col-edit-button`);
+      const editButton0 = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
       expect(editButton0).toBeInTheDocument();
       expect(editButton0).toHaveTextContent("Edit");
 
-      const editButton2 = screen.getByTestId(`${testId}-cell-row-2-col-edit-button`);
+      const editButton2 = screen.getByTestId(
+        `${testId}-cell-row-2-col-edit-button`,
+      );
       expect(editButton2).toBeInTheDocument();
       expect(editButton2).toHaveTextContent("Edit");
 
       // Check that instructor cannot edit course they don't own
-      const noEditPermission = screen.getByTestId(`${testId}-cell-row-1-col-edit-no-permission`);
+      const noEditPermission = screen.getByTestId(
+        `${testId}-cell-row-1-col-edit-no-permission`,
+      );
       expect(noEditPermission).toBeInTheDocument();
       expect(noEditPermission).toBeEmptyDOMElement();
     });
@@ -195,15 +203,21 @@ describe("InstructorCoursesTable tests", () => {
       expect(button4).toHaveAttribute("class", "btn btn-primary");
 
       // Check that admin can edit all courses
-      const editButton0 = screen.getByTestId(`${testId}-cell-row-0-col-edit-button`);
+      const editButton0 = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
       expect(editButton0).toBeInTheDocument();
       expect(editButton0).toHaveTextContent("Edit");
 
-      const editButton1 = screen.getByTestId(`${testId}-cell-row-1-col-edit-button`);
+      const editButton1 = screen.getByTestId(
+        `${testId}-cell-row-1-col-edit-button`,
+      );
       expect(editButton1).toBeInTheDocument();
       expect(editButton1).toHaveTextContent("Edit");
 
-      const editButton2 = screen.getByTestId(`${testId}-cell-row-2-col-edit-button`);
+      const editButton2 = screen.getByTestId(
+        `${testId}-cell-row-2-col-edit-button`,
+      );
       expect(editButton2).toBeInTheDocument();
       expect(editButton2).toHaveTextContent("Edit");
     });
@@ -941,7 +955,9 @@ describe("InstructorCoursesTable tests", () => {
 
     test("Edit course modal opens and closes properly", async () => {
       axiosMock = new AxiosMockAdapter(axios);
-      axiosMock.onPut("/api/courses").reply(200, coursesFixtures.severalCourses[0]);
+      axiosMock
+        .onPut("/api/courses")
+        .reply(200, coursesFixtures.severalCourses[0]);
 
       render(
         <QueryClientProvider client={queryClient}>
@@ -959,7 +975,9 @@ describe("InstructorCoursesTable tests", () => {
       expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
 
       // Click the edit button
-      const editButton = screen.getByTestId(`${testId}-cell-row-0-col-edit-button`);
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
       fireEvent.click(editButton);
 
       // Check that modal appears with correct title
@@ -974,7 +992,9 @@ describe("InstructorCoursesTable tests", () => {
       fireEvent.click(closeButton);
 
       await waitFor(() => {
-        expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("CourseModal-base"),
+        ).not.toBeInTheDocument();
       });
     });
   });
