@@ -628,10 +628,20 @@ public class TeamsControllerTests extends ControllerTestCase {
             .githubLogin(null)
             .build();
     TeamMember teamMember2 = TeamMember.builder().id(2L).team(team).rosterStudent(student2).build();
+    RosterStudent student3 =
+        RosterStudent.builder()
+            .id(3L)
+            .email("unassigned@ucsb.edu")
+            .firstName("Una")
+            .lastName("Signed")
+            .githubLogin(null)
+            .build();
     team.setTeamMembers(List.of(teamMember, teamMember2));
     course.setTeams(List.of(team));
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(student, student2, student3));
 
     // act
     MvcResult response =
@@ -646,7 +656,9 @@ public class TeamsControllerTests extends ControllerTestCase {
             new TeamsController.TeamMemberMapping(
                 1L, "s25-01", 1L, "cgaucho@ucsb.edu", "Chris", "Gaucho", "cgaucho"),
             new TeamsController.TeamMemberMapping(
-                1L, "s25-01", 2L, "ldelplaya@ucsb.edu", "Lauren", "DelPlaya", null));
+                1L, "s25-01", 2L, "ldelplaya@ucsb.edu", "Lauren", "DelPlaya", null),
+            new TeamsController.TeamMemberMapping(
+                null, null, 3L, "unassigned@ucsb.edu", "Una", "Signed", null));
 
     String expectedJson = mapper.writeValueAsString(expectedMappings);
     String responseString = response.getResponse().getContentAsString();
@@ -658,7 +670,26 @@ public class TeamsControllerTests extends ControllerTestCase {
   public void testTeamMemberMapping_noTeams() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").teams(List.of()).build();
+    RosterStudent studentA =
+        RosterStudent.builder()
+            .id(10L)
+            .email("a@ucsb.edu")
+            .firstName("A")
+            .lastName("Student")
+            .githubLogin(null)
+            .build();
+    RosterStudent studentB =
+        RosterStudent.builder()
+            .id(11L)
+            .email("b@ucsb.edu")
+            .firstName("B")
+            .lastName("Student")
+            .githubLogin("bgh")
+            .build();
+
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(studentA, studentB));
 
     // act
     MvcResult response =
@@ -668,7 +699,14 @@ public class TeamsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    String expectedJson = mapper.writeValueAsString(List.of());
+    List<TeamsController.TeamMemberMapping> expectedMappings =
+        List.of(
+            new TeamsController.TeamMemberMapping(
+                null, null, 10L, "a@ucsb.edu", "A", "Student", null),
+            new TeamsController.TeamMemberMapping(
+                null, null, 11L, "b@ucsb.edu", "B", "Student", "bgh"));
+
+    String expectedJson = mapper.writeValueAsString(expectedMappings);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
   }

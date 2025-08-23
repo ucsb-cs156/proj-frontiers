@@ -74,6 +74,23 @@ public class TeamsController extends ApiController {
           member.getRosterStudent().getLastName(),
           member.getRosterStudent().getGithubLogin());
     }
+
+    public static TeamMemberMapping from(RosterStudent student, Team teamOrNull) {
+      Long teamId = teamOrNull == null ? null : teamOrNull.getId();
+      String teamName = teamOrNull == null ? null : teamOrNull.getName();
+      return new TeamMemberMapping(
+          teamId,
+          teamName,
+          student.getId(),
+          student.getEmail(),
+          student.getFirstName(),
+          student.getLastName(),
+          student.getGithubLogin());
+    }
+
+    public static TeamMemberMapping from(RosterStudent student) {
+      return from(student, null);
+    }
   }
 
   /**
@@ -181,16 +198,27 @@ public class TeamsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/mapping")
   public Iterable<TeamMemberMapping> teamMemberMapping(@RequestParam Long courseId) {
-    List<Team> teams =
+    Course course =
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId))
-            .getTeams();
-    List<TeamMemberMapping> mappings = new ArrayList<>();
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    // Build a map of rosterStudentId -> Team for quick lookup of team membership
+    Map<Long, Team> membershipByStudentId = new HashMap<>();
+    List<Team> teams = course.getTeams();
     for (Team team : teams) {
       for (TeamMember member : team.getTeamMembers()) {
-        mappings.add(TeamMemberMapping.from(member));
+        Long rsId = member.getRosterStudent().getId();
+        membershipByStudentId.putIfAbsent(rsId, team);
       }
+    }
+
+    // Now produce a mapping for every roster student in the course, with team info or nulls
+    Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
+    List<TeamMemberMapping> mappings = new ArrayList<>();
+    for (RosterStudent rs : rosterStudents) {
+      Team team = membershipByStudentId.get(rs.getId());
+      mappings.add(TeamMemberMapping.from(rs, team));
     }
     return mappings;
   }
