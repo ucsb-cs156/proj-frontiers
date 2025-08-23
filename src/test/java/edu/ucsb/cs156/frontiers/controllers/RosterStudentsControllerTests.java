@@ -186,9 +186,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rsUmail));
 
     String responseString = response.getResponse().getContentAsString();
-    RosterStudentsController.UpsertResponse upsertResponse =
-        mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
-    assertEquals(RosterStudentsController.InsertStatus.INSERTED, upsertResponse.insertStatus());
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
     assertEquals(rsUmail, upsertResponse.rosterStudent());
   }
 
