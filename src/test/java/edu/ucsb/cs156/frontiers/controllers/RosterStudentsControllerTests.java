@@ -145,6 +145,53 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(rs1, upsertResponse.rosterStudent());
   }
 
+  /** Test that the POST endpoint converts @umail.ucsb.edu to @ucsb.edu */
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_withUmail() throws Exception {
+
+    RosterStudent rsUmail =
+        RosterStudent.builder()
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .studentId("A123456")
+            .email("cgaucho@ucsb.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.MANUAL)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.save(eq(rsUmail))).thenReturn(rsUmail);
+    doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@umail.ucsb.edu")
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(rosterStudentRepository, times(1)).save(eq(rsUmail));
+    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rsUmail));
+
+    String responseString = response.getResponse().getContentAsString();
+    RosterStudentsController.UpsertResponse upsertResponse =
+        mapper.readValue(responseString, RosterStudentsController.UpsertResponse.class);
+    assertEquals(RosterStudentsController.InsertStatus.INSERTED, upsertResponse.insertStatus());
+    assertEquals(rsUmail, upsertResponse.rosterStudent());
+  }
+
   /** Test the POST endpoint when installation ID is null. */
   @Test
   @WithInstructorCoursePermissions
