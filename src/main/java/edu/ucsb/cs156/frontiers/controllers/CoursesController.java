@@ -366,7 +366,7 @@ public class CoursesController extends ApiController {
   }
 
   @Operation(summary = "Delete a course")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("")
   public Object deleteCourse(@RequestParam Long courseId)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -374,6 +374,12 @@ public class CoursesController extends ApiController {
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    // Check if course has roster students or staff
+    if (!course.getRosterStudents().isEmpty() || !course.getCourseStaff().isEmpty()) {
+      throw new IllegalArgumentException("Cannot delete course with students or staff");
+    }
+
     linkerService.unenrollOrganization(course);
     courseRepository.delete(course);
     return genericMessage("Course with id %s deleted".formatted(course.getId()));
