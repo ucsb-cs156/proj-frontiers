@@ -59,7 +59,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,47,0,4,0,12,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentRepositoriesJob,0,43,0,8,0,9,0,5,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,17,0,0,0,4,0,3,0,3
-frontiers,edu.ucsb.cs156.frontiers.utilities,WebhookSecurityUtils,0,132,0,18,0,28,0,14,0,5
+frontiers,edu.ucsb.cs156.frontiers.utilities,WebhookSecurityUtils,0,134,0,18,0,29,0,14,0,5
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersApplicationRunner,0,14,0,0,0,5,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.startup,WiremockApplicationRunner,0,17,0,0,0,6,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersStartup,0,72,0,6,0,20,0,8,0,5
