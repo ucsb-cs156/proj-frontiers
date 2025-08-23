@@ -767,7 +767,8 @@ public class WebhookControllerTests extends ControllerTestCase {
 
   @Test
   public void testNullGithubLoginAndInstallationId() throws Exception {
-    // This test creates a situation where the action is recognized but the extraction
+    // This test creates a situation where the action is recognized but the
+    // extraction
     // of githubLogin and installationId fails in an unexpected way
     String sendBody =
         """
@@ -805,7 +806,8 @@ public class WebhookControllerTests extends ControllerTestCase {
   @Test
   public void testMemberRemoved_withValidFields() throws Exception {
     // This test creates a situation where we have a valid action that's not handled
-    // but all fields are present, to test the specific branch where githubLogin and installationId
+    // but all fields are present, to test the specific branch where githubLogin and
+    // installationId
     // are extracted but the action isn't one we process further
     String sendBody =
         """
@@ -857,16 +859,16 @@ public class WebhookControllerTests extends ControllerTestCase {
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
     String sendBody =
         """
-            {
-            "action" : "member_invited",
-            "user": {
-                "login": "testLogin"
-            },
-            "installation":{
-                "id": "1234"
-            }
-            }
-            """;
+                {
+                "action" : "member_invited",
+                "user": {
+                    "login": "testLogin"
+                },
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
 
     String signature = generateValidSignature(sendBody, TEST_SECRET);
 
@@ -993,5 +995,80 @@ public class WebhookControllerTests extends ControllerTestCase {
     verify(courseStaffRepository, times(1)).save(eq(updated));
     String actualBody = response.getResponse().getContentAsString();
     assertEquals(updated.toString(), actualBody);
+  }
+
+  @Test
+  public void unsuccessfulWebhook_invalidSignature() throws Exception {
+
+    String sendBody =
+        """
+                {
+                "action" : "member_added",
+                "membership": {
+                    "role": "admin",
+                    "user": {
+                        "login": "testLogin"
+                    }
+                },
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+    String invalid_signature = "INVALID SIGNATURE";
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", invalid_signature))
+            .andExpect(status().isUnauthorized())
+            .andReturn();
+
+    String actualBody = response.getResponse().getContentAsString();
+    assertEquals("Unauthorized: Invalid signature", actualBody);
+  }
+
+  @Test
+  public void unsuccessfulWebhook_noXHubSignature() throws Exception {
+
+    String sendBody = "{}";
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized())
+            .andReturn();
+
+    String actualBody = response.getResponse().getContentAsString();
+    assertEquals("Unauthorized: Invalid signature", actualBody);
+  }
+
+  @Test
+  public void unsuccessfulWebhook_badJSON() throws Exception {
+
+    String sendBody = """
+                INVALID JSON
+                  """;
+
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    String actualBody = response.getResponse().getContentAsString();
+    assertEquals("Invalid JSON", actualBody);
   }
 }

@@ -57,9 +57,6 @@ public class WebhookController {
       @RequestBody String requestBody,
       @RequestHeader(value = "X-Hub-Signature-256", required = false) String signature)
       throws JsonProcessingException {
-    log.info(
-        "Received GitHub webhook with signature: {}",
-        signature != null ? "[PRESENT]" : "[MISSING]");
 
     // Validate webhook signature
     if (!WebhookSecurityUtils.validateGitHubSignature(requestBody, signature, webhookSecret)) {
