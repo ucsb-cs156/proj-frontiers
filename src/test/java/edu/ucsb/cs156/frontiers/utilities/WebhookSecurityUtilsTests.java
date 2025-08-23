@@ -38,7 +38,7 @@ public class WebhookSecurityUtilsTests {
   }
 
   @Test
-  public void testValidateGitHubSignature_invalidSignature() {
+  public void testValidateGitHubSignature_invalidSignature() throws Exception {
     String payload = "{\"action\":\"opened\"}";
     String wrongSignature = "sha256=wrongsignature";
 
@@ -53,7 +53,7 @@ public class WebhookSecurityUtilsTests {
   }
 
   @Test
-  public void testValidateGitHubSignature_nullSignature() {
+  public void testValidateGitHubSignature_nullSignature() throws Exception {
     String payload = "{\"action\":\"opened\"}";
 
     assertFalse(WebhookSecurityUtils.validateGitHubSignature(payload, null, TEST_SECRET));
@@ -68,7 +68,7 @@ public class WebhookSecurityUtilsTests {
   }
 
   @Test
-  public void testValidateGitHubSignature_invalidSignatureFormat() {
+  public void testValidateGitHubSignature_invalidSignatureFormat() throws Exception {
     String payload = "{\"action\":\"opened\"}";
     String invalidSignature =
         "md5=d57c68ca6f92289e6987922ff26938930f6e66a2d161ef06abdf1859230aa23c";

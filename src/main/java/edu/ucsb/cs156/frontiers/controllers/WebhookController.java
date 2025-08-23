@@ -11,6 +11,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +58,7 @@ public class WebhookController {
   public ResponseEntity<String> createGitHubWebhook(
       @RequestBody String requestBody,
       @RequestHeader(value = "X-Hub-Signature-256", required = false) String signature)
-      throws JsonProcessingException {
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeyException {
 
     // Validate webhook signature
     if (!WebhookSecurityUtils.validateGitHubSignature(requestBody, signature, webhookSecret)) {

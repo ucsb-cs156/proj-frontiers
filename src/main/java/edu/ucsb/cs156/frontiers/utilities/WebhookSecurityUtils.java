@@ -11,6 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebhookSecurityUtils {
 
+  private WebhookSecurityUtils() {
+    // Utility Class
+  }
+
   private static final String HMAC_SHA256 = "HmacSHA256";
 
   /**
@@ -21,7 +25,8 @@ public class WebhookSecurityUtils {
    * @param secret the webhook secret
    * @return true if signature is valid, false otherwise
    */
-  public static boolean validateGitHubSignature(String payload, String signature, String secret) {
+  public static boolean validateGitHubSignature(String payload, String signature, String secret)
+      throws NoSuchAlgorithmException, InvalidKeyException {
     if (payload == null || signature == null || secret == null) {
       log.warn("Null values provided for webhook validation");
       return false;
@@ -32,19 +37,14 @@ public class WebhookSecurityUtils {
       return false;
     }
 
-    try {
-      String expectedSignature = "sha256=" + calculateHmacSha256(payload, secret);
-      boolean isValid = safeEquals(signature, expectedSignature);
+    String expectedSignature = "sha256=" + calculateHmacSha256(payload, secret);
+    boolean isValid = safeEquals(signature, expectedSignature);
 
-      if (!isValid) {
-        log.warn("Webhook signature validation failed");
-      }
-
-      return isValid;
-    } catch (Exception e) {
-      log.error("Error validating webhook signature", e);
-      return false;
+    if (!isValid) {
+      log.warn("Webhook signature validation failed");
     }
+
+    return isValid;
   }
 
   /**
