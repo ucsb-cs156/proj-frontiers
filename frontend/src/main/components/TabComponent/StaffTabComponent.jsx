@@ -81,24 +81,6 @@ export default function StaffTabComponent({
           />
         </ModalBody>
       </Modal>
-      <Row className="mb-1">
-        <Form>
-          <Form.Group as={Row} controlId="searchFilter">
-            <Form.Label column sm={2}>
-              Search Staff:
-            </Form.Label>
-            <Col sm={10}>
-              <Form.Control
-                type="text"
-                placeholder="Search by name, email, or Github Login"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                data-testid={`${testIdPrefix}-search`}
-              />
-            </Col>
-          </Form.Group>
-        </Form>
-      </Row>
       <Row sm={3} className="p-2">
         <Col>
           <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
@@ -138,6 +120,24 @@ export default function StaffTabComponent({
             </span>
           </OverlayTrigger>
         </Col>
+      </Row>
+      <Row className="mb-1">
+        <Form>
+          <Form.Group as={Row} controlId="searchFilter">
+            <Form.Label column sm={2}>
+              Search Staff:
+            </Form.Label>
+            <Col sm={10}>
+              <Form.Control
+                type="text"
+                placeholder="Search by name, email, or Github Login"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid={`${testIdPrefix}-search`}
+              />
+            </Col>
+          </Form.Group>
+        </Form>
       </Row>
       <Row>
         <CourseStaffTable

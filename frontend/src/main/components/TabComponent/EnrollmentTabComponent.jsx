@@ -127,24 +127,6 @@ export default function EnrollmentTabComponent({
           />
         </ModalBody>
       </Modal>
-      <Row className="mb-1">
-        <Form>
-          <Form.Group as={Row} controlId="searchFilter">
-            <Form.Label column sm={2}>
-              Search Students:
-            </Form.Label>
-            <Col sm={10}>
-              <Form.Control
-                type="text"
-                placeholder="Search by name, email, student ID, or Github Login"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                data-testid={`${testIdPrefix}-search`}
-              />
-            </Col>
-          </Form.Group>
-        </Form>
-      </Row>
       <Row sm={3} className="p-2">
         <Col>
           <Button
@@ -169,6 +151,24 @@ export default function EnrollmentTabComponent({
             Download Student CSV
           </Button>
         </Col>
+      </Row>
+      <Row className="mb-1">
+        <Form>
+          <Form.Group as={Row} controlId="searchFilter">
+            <Form.Label column sm={2}>
+              Search Students:
+            </Form.Label>
+            <Col sm={10}>
+              <Form.Control
+                type="text"
+                placeholder="Search by name, email, student ID, or Github Login"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid={`${testIdPrefix}-search`}
+              />
+            </Col>
+          </Form.Group>
+        </Form>
       </Row>
       <Row>
         <RosterStudentTable
