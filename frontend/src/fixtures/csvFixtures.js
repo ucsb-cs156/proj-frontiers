@@ -7,6 +7,10 @@ const csvFixtures = {
 Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
 Homer Simpson,88001,013205354,hsimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
 Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025`,
+  rosterDownload: `id,courseId,studentId,firstName,lastName,email,userId,userGithubId,userGithubLogin,rosterStatus,orgStatus
+1,156,A123456,CHRIS,GAUCHO,cgaucho@ucsb.edu,1001,12345678,cgaucho,ROSTER,MEMBER
+2,156,A987654,LAUREN,DEL PLAYA,ldelplaya@ucsb.edu,1002,87654321,ldelplaya,ROSTER,MEMBER
+3,156,1234567,SABADO,TARDE,sabadotarde@ucsb.edu,1003,11223344,sabadotarde,MANUAL,INVITED`,
 };
 
 export default csvFixtures;

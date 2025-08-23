@@ -110,6 +110,100 @@ export default function HelpCsvPage() {
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
+
+        <h2 className="mt-4">Roster Student CSV Download formats</h2>
+        <p>
+          Instructors can download a course roster as a CSV file. The download
+          will include all roster students with their current status
+          information.
+        </p>
+        <Accordion>
+          <Accordion.Item eventKey="0">
+            <Accordion.Header>Frontiers CSV Download Format</Accordion.Header>
+            <Accordion.Body>
+              <p>
+                When you download a roster as CSV, you will get the following
+                format:
+              </p>
+              <pre
+                className={"csvExample"}
+                data-testid="rosterDownloadCsvExample"
+              >
+                {csvFixtures.rosterDownload}
+              </pre>
+              <p>The fields are described as follows:</p>
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>CSV Field</th>
+                    <th>Description</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>id</td>
+                    <td>Internal database ID</td>
+                    <td>Unique identifier for each roster entry</td>
+                  </tr>
+                  <tr>
+                    <td>courseId</td>
+                    <td>Course database ID</td>
+                    <td>Identifies which course this student is enrolled in</td>
+                  </tr>
+                  <tr>
+                    <td>studentId</td>
+                    <td>Student ID</td>
+                    <td>Student's university ID (e.g., Perm # at UCSB)</td>
+                  </tr>
+                  <tr>
+                    <td>firstName</td>
+                    <td>Student's first name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>lastName</td>
+                    <td>Student's last name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>email</td>
+                    <td>Student's email address</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>userId</td>
+                    <td>Internal user ID</td>
+                    <td>Links to the user account in the system</td>
+                  </tr>
+                  <tr>
+                    <td>userGithubId</td>
+                    <td>GitHub user ID</td>
+                    <td>Student's GitHub account ID, if connected</td>
+                  </tr>
+                  <tr>
+                    <td>userGithubLogin</td>
+                    <td>GitHub username</td>
+                    <td>Student's GitHub username, if connected</td>
+                  </tr>
+                  <tr>
+                    <td>rosterStatus</td>
+                    <td>Roster enrollment status</td>
+                    <td>
+                      ROSTER (from uploaded roster), MANUAL (manually added), or
+                      DROPPED
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>orgStatus</td>
+                    <td>GitHub organization status</td>
+                    <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
+                  </tr>
+                </tbody>
+              </table>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
       </div>
     </BasicLayout>
   );
