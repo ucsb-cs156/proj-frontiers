@@ -22,4 +22,5 @@ permissions:
 jobs:
   call-workflow:
     uses: ucsb-cs156/workflows/.github/workflows/00-all-checks-pass.yml@main
-    secrets: inherit # pass all secrets to called workflow
+    secrets: 
+      GH_TOKEN: ${{ github.token }} # pass GH_TOKEN to called workflow
