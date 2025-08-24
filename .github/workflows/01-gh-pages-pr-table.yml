@@ -27,4 +27,5 @@ permissions:
 jobs:
   call-workflow-passing-data:
     uses: ucsb-cs156/workflows/.github/workflows/01-gh-pages-pr-table.yml@main
-    secrets: inherit # pass all secrets to called workflow
+    secrets: 
+      GH_TOKEN: ${{ github.token }} # pass GH_TOKEN to called workflow
