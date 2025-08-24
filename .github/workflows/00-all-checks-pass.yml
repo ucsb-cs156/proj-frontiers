@@ -29,8 +29,13 @@ permissions:
   pull-requests: read
 
 
+# The name "enforce" for this job is important; do not change it. The
+# ucsb-cs156/workflows repository expects this name in order to
+# identify this job.  It is also used in the "Required checks" section
+# of the branch protection rules for the main branch.
+
 jobs:
-  call-workflow-passing-data:
+  enforce: # the name "enforce" is important here; do not change it (see above)
     uses: ucsb-cs156/workflows/.github/workflows/00-all-checks-pass.yml@main
     secrets: 
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
