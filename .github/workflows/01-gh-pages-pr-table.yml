@@ -26,5 +26,5 @@ jobs:
   call-workflow-passing-data:
     uses: ucsb-cs156/workflows/.github/workflows/01-gh-pages-pr-table.yml@main
     secrets: 
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
 
