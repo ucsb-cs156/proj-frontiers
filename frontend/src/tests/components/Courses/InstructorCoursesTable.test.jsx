@@ -496,6 +496,7 @@ describe("InstructorCoursesTable tests", () => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();
       axiosMock.resetHistory();
+      mockToast.mockClear();
     });
 
     test("Tests instructor email is clickable for admin users when enableInstructorUpdate selected", async () => {
@@ -995,6 +996,179 @@ describe("InstructorCoursesTable tests", () => {
         expect(
           screen.queryByTestId("CourseModal-base"),
         ).not.toBeInTheDocument();
+      });
+    });
+
+    test("Makes successful course update API call and shows success toast", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(200, {});
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out the form using testIds
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Updated Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Fall 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "Updated School" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify API call was made with correct parameters
+      await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+      expect(axiosMock.history.put[0].params).toEqual({
+        courseId: 1,
+        courseName: "Updated Course",
+        term: "Fall 2025",
+        school: "Updated School",
+      });
+
+      // Verify success toast was shown
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith("Course updated successfully");
+      });
+
+      // Verify modal is closed
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("CourseModal-base"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test("Shows error toast when course update API call fails with message", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(400, {
+        message: "Course name already exists",
+        type: "ValidationException",
+      });
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out all required form fields
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Invalid Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Spring 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "UCSB" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify error toast was shown with message
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          "Was not able to update course:\nCourse name already exists",
+        );
+      });
+    });
+
+    test("Shows error toast when course update API call fails without message", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(400, {});
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out all required form fields
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Invalid Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Spring 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "UCSB" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify error toast was shown with generic message
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          "Was not able to update course:\nRequest failed with status code 400",
+        );
       });
     });
   });
