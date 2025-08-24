@@ -14,8 +14,6 @@ on:
     branches:
       - main
           
-env:
-  GH_TOKEN: ${{ github.token }}
 
 permissions:
   contents: write
@@ -23,40 +21,10 @@ permissions:
   id-token: write
   pull-requests: read
 
-jobs: 
-  build-basic-site:
-    name: Build Basic Site
-    runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout local code to establish repo
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
+jobs:
+  call-workflow-passing-data:
+    uses: ucsb-cs156/workflows/.github/workflows/01-gh-pages-pr-table.yml@main
+    secrets: 
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
 
-    - name: Append name of site and prs to _config.yml
-      run: | 
-          CONFIG_YML=frontend/docs-index/_config.yml
-          OWNER_PLUS_REPOSITORY=${{github.repository}}
-          OWNER=${{ github.repository_owner }}
-          REPOSITORY=${OWNER_PLUS_REPOSITORY/$OWNER\//}
-          echo "repo: ${OWNER_PLUS_REPOSITORY}" >> ${CONFIG_YML}
-          echo "owner: ${OWNER}" >> ${CONFIG_YML}
-          echo "repo_name: ${REPOSITORY}" >> ${CONFIG_YML}    
-          echo "pull_requests: $(gh pr list -s open --json url,author,number,title,headRefName)" >> ${CONFIG_YML}
-    - name: Compose web site
-      run: |
-        mkdir -p site
-        cp -r frontend/docs-index/* site
-  
-    - name: Deploy 🚀    
-      if: always() # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
-      with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          folder: site # The folder the action should deploy.
-          branch: gh-pages
-          clean: false # Automatically remove deleted files from the deploy branch
