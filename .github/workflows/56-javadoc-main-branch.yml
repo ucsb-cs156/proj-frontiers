@@ -10,6 +10,8 @@ on:
 
 env:
   GH_TOKEN: ${{ github.token }}
+  JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }} 
+
 
 permissions:
   contents: write
@@ -26,11 +28,12 @@ jobs:
     - name: Set up Java (version from .java-version file)
       uses: actions/setup-java@v4
       with:
-         distribution: semeru # See: https://github.com/actions/setup-java#supported-distributions
+         distribution: ${{ env.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version
-  
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml' 
     - name: Build javadoc
-      run: mvn -ntp -DskipTests javadoc:javadoc
+      run: mvn -ntp -B -DskipTests javadoc:javadoc
 
     - name: Deploy 🚀    
       if: always() # always upload artifacts, even if tests fail

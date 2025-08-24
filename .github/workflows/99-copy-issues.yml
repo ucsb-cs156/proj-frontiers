@@ -24,7 +24,7 @@ jobs:
           GH_REPO=${{env.STARTER}} gh issue list -s open -l ${{env.TAG}} --json number,title,body,labels | jq '[ ( .[] | { number: .number, title: .title , body: .body, labels: ( .labels | [ .[].name ] | join(",") )  } ) ]' > issues.json          
           cat issues.json
           {
-               echo 'issues<<THIS_IS_THIS_EOF_MARKER'
+               echo 'issues<<"THIS_IS_THIS_EOF_MARKER"' # quotes around eof marker disable backtick evaluation https://tldp.org/LDP/abs/html/here-docs.html#EX71C
                cat issues.json
                echo THIS_IS_THIS_EOF_MARKER
           } >> "$GITHUB_OUTPUT"

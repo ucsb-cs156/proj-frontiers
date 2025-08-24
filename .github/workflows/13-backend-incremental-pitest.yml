@@ -3,6 +3,10 @@
 
 name: "13-backend-incremental-pitest: Java Mutation Testing (Pitest)"
 
+env:
+  # See: https://github.com/actions/setup-java#supported-distributions
+  JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }} 
+
 on:
   workflow_dispatch:
   pull_request:
@@ -21,8 +25,10 @@ jobs:
     - name: Set up Java (version from .java-version file)
       uses: actions/setup-java@v4
       with:
-         distribution: semeru # See: https://github.com/actions/setup-java#supported-distributions
+         distribution: ${{ env.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml' 
     - name: Figure out branch name
       id: get-branch-name
       run: | 
@@ -40,7 +46,7 @@ jobs:
           echo "branch_name_cleaned=${BRANCH_CLEANED}" >> "$GITHUB_ENV"  
     - name: Download artifact
       id: download-artifact
-      uses: dawidd6/action-download-artifact@v2.27.0
+      uses: dawidd6/action-download-artifact@v6
       with:
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: ${{ env.branch_name }}

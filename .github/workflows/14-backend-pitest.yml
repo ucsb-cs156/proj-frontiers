@@ -3,6 +3,10 @@
 
 name: "14-backend-pitest: Java Mutation Testing (Pitest)"
 
+env:
+  # See: https://github.com/actions/setup-java#supported-distributions
+  JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }} 
+
 on:
   workflow_dispatch:
   pull_request:
@@ -36,8 +40,10 @@ jobs:
     - name: Set up Java (version from .java-version file)
       uses: actions/setup-java@v4
       with:
-         distribution: semeru # See: https://github.com/actions/setup-java#supported-distributions
+         distribution: ${{ env.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml' 
     - name: Build with Maven
       run: mvn -ntp -B  test 
     

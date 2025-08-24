@@ -3,6 +3,10 @@
 
 name: "41-integration: Integration tests"
 
+env:
+  # See: https://github.com/actions/setup-java#supported-distributions
+  JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }} 
+
 on:
   workflow_dispatch:
   pull_request:
@@ -18,12 +22,15 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Java (version from .java-version file)
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
-         distribution: semeru # See: https://github.com/actions/setup-java#supported-distributions
+         distribution: ${{ env.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version
-  
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml' 
+
     - name: Run IT tests with maven
       run: INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
       
