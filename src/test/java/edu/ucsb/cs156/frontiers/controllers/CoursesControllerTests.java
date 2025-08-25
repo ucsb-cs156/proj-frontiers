@@ -699,7 +699,7 @@ public class CoursesControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithInstructorCoursePermissions
+  @WithMockUser(roles = {"ADMIN"})
   public void delete_not_found_returns_not_found() throws Exception {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
     MvcResult response =
@@ -719,9 +719,14 @@ public class CoursesControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithInstructorCoursePermissions
+  @WithMockUser(roles = {"ADMIN"})
   public void delete_success_returns_ok() throws Exception {
-    Course course = Course.builder().id(1L).build();
+    Course course =
+        Course.builder()
+            .id(1L)
+            .rosterStudents(Collections.emptyList())
+            .courseStaff(Collections.emptyList())
+            .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     MvcResult response =
         mockMvc
@@ -735,6 +740,107 @@ public class CoursesControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(Map.of("message", "Course with id 1 deleted"));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_course_with_students_throws_illegal_argument() throws Exception {
+    RosterStudent student = RosterStudent.builder().id(1L).build();
+    Course course =
+        Course.builder()
+            .id(1L)
+            .rosterStudents(List.of(student))
+            .courseStaff(Collections.emptyList())
+            .build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "IllegalArgumentException",
+            "message", "Cannot delete course with students or staff");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_course_with_staff_throws_illegal_argument() throws Exception {
+    CourseStaff staff = CourseStaff.builder().id(1L).build();
+    Course course =
+        Course.builder()
+            .id(1L)
+            .rosterStudents(Collections.emptyList())
+            .courseStaff(List.of(staff))
+            .build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "IllegalArgumentException",
+            "message", "Cannot delete course with students or staff");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_course_with_students_and_staff_throws_illegal_argument() throws Exception {
+    RosterStudent student = RosterStudent.builder().id(1L).build();
+    CourseStaff staff = CourseStaff.builder().id(1L).build();
+    Course course =
+        Course.builder()
+            .id(1L)
+            .rosterStudents(List.of(student))
+            .courseStaff(List.of(staff))
+            .build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "IllegalArgumentException",
+            "message", "Cannot delete course with students or staff");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void delete_course_non_admin_returns_forbidden() throws Exception {
+    mockMvc
+        .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
+        .andExpect(status().isForbidden());
+
+    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
   }
 
   /**
