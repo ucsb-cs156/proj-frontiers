@@ -301,4 +301,151 @@ public class PushTeamsToGithubJobTests {
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
   }
+
+  @Test
+  public void testAccept_TeamCreationFailure() throws Exception {
+    // Test exception handling when team creation fails (lines 59-60)
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    Team team =
+        Team.builder().name("team1").githubTeamId(null).teamMembers(Arrays.asList()).build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    when(githubTeamService.createOrGetTeamId(team, course))
+        .thenThrow(new RuntimeException("GitHub API error"));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verify(teamRepository).findByCourseId(courseId);
+    verify(githubTeamService).createOrGetTeamId(team, course);
+    // Should not save team or process members when creation fails
+    verify(teamRepository, never()).save(any());
+  }
+
+  @Test
+  public void testAccept_TeamWithNoGithubTeamId() throws Exception {
+    // Test skipping team members when team has no GitHub team ID (lines 66-68)
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    RosterStudent student =
+        RosterStudent.builder().email("student@test.com").githubLogin("student").build();
+    TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
+
+    // Team with null GitHub team ID - this should cause member processing to be skipped
+    Team team =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(null)
+            .teamMembers(Arrays.asList(teamMember))
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    // Make team creation fail so GitHub team ID remains null
+    when(githubTeamService.createOrGetTeamId(team, course))
+        .thenThrow(new RuntimeException("Creation failed"));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verify(teamRepository).findByCourseId(courseId);
+    verify(githubTeamService).createOrGetTeamId(team, course);
+    // Should not process team members when team has no GitHub team ID
+    verify(githubTeamService, never()).getTeamMembershipStatus(any(), any(), any());
+    verify(githubTeamService, never()).addTeamMember(any(), any(), any(), any());
+    verify(teamMemberRepository, never()).save(any());
+  }
+
+  @Test
+  public void testAccept_TeamMemberProcessingFailure() throws Exception {
+    // Test exception handling when team member processing fails (lines 106-115)
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    RosterStudent student =
+        RosterStudent.builder().email("student@test.com").githubLogin("student").build();
+    TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
+
+    Team team =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(123)
+            .teamMembers(Arrays.asList(teamMember))
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    // Make team member processing fail
+    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
+        .thenThrow(new RuntimeException("GitHub API error"));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verify(teamRepository).findByCourseId(courseId);
+    verify(githubTeamService).createOrGetTeamId(team, course);
+    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    // Should set status to NOT_ORG_MEMBER when processing fails
+    verify(teamMemberRepository)
+        .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.NOT_ORG_MEMBER)));
+  }
 }
