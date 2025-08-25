@@ -104,7 +104,7 @@ export default function InstructorCoursesTable({
   };
 
   const onCourseUpdateError = (error) => {
-    if (error.response?.data?.message)
+    if (error.response.data.message)
       toast(`Was not able to update course:\n${error.response.data.message}`);
     else toast(`Was not able to update course:\n${error.message}`);
   };
