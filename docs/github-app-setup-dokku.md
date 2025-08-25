@@ -72,10 +72,8 @@ Under Organization, select the following permissions:
 - Administration: Read and Write
 - Members: Read and Write
 
-![image](https://github.com/user-attachments/assets/5ba94bdb-d4ce-4911-a80f-248e8e231a24)
 
 ## Subscribe to Webhook Events
-
 
 Then, scroll further and under "Subscribe to Events" select "Organization"
 
