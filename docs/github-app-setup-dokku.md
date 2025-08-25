@@ -115,7 +115,7 @@ Note that the file has the current date in the filename; this will help you be s
 Next, we will run a script that converts this private key 
 into a `dokku config:set ...` command.
 
-**NOTE**: The following commands is **not** run on dokku, but rather on your regular computer, inside the directory where you cloned the frontiers repo.
+**NOTE**: Steps 1 and 2 below are **not** run on dokku, but rather on your regular computer, inside the directory where you cloned the frontiers repo.  Step 3 is run on dokku.
 
 1. Copy the key from wherever it downloaded to the *root of the frontiers project*, i.e. the directory where you cloned the repo.
 
