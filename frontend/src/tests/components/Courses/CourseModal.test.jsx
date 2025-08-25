@@ -23,6 +23,9 @@ describe("CourseModal Tests", () => {
       </div>,
     );
 
+    const modalTitle = screen.getByText("Create Course");
+    expect(modalTitle).toBeInTheDocument();
+
     const submitButton = screen.getByTestId(/CourseModal-submit/);
     fireEvent.click(submitButton);
 
