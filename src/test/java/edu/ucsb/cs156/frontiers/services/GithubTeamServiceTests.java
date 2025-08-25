@@ -273,4 +273,50 @@ public class GithubTeamServiceTests {
     // Assert
     assertEquals(TeamStatus.TEAM_MAINTAINER, result);
   }
+
+  @Test
+  public void testGetTeamId_NonNotFoundError() throws Exception {
+    // Test that non-404 errors are re-thrown
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/test-team"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
+
+    // Act & Assert
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> {
+          githubTeamService.getTeamId("test-team", course);
+        });
+  }
+
+  @Test
+  public void testGetTeamMembershipStatus_NonNotFoundError() throws Exception {
+    // Test that non-404 errors are re-thrown
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
+
+    // Act & Assert
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> {
+          githubTeamService.getTeamMembershipStatus("testuser", 456, course);
+        });
+  }
 }

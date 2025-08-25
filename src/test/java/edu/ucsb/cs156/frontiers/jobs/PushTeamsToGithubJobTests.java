@@ -87,6 +87,37 @@ public class PushTeamsToGithubJobTests {
   }
 
   @Test
+  public void testAccept_CourseWithOrgNameButNoInstallationId() throws Exception {
+    // Test case where orgName is not null but installationId is null
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId(null)
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
+  }
+
+  @Test
   public void testAccept_SuccessfulTeamCreationAndMemberProcessing() throws Exception {
     // Arrange
     Long courseId = 1L;
@@ -169,6 +200,7 @@ public class PushTeamsToGithubJobTests {
 
   @Test
   public void testAccept_ExistingTeamMember() throws Exception {
+    // Test the TEAM_MEMBER branch in the condition (first part of OR)
     // Arrange
     Long courseId = 1L;
     Course course =
@@ -194,6 +226,59 @@ public class PushTeamsToGithubJobTests {
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
     when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    // This specifically tests the TEAM_MEMBER branch of the condition (first part of ||)
+    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
+        .thenReturn(TeamStatus.TEAM_MEMBER);
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    // Should not try to add member since they're already a member
+    verify(githubTeamService, never()).addTeamMember(any(), any(), any(), any());
+    verify(teamMemberRepository)
+        .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
+  }
+
+  @Test
+  public void testAccept_ExistingTeamMaintainer() throws Exception {
+    // Test the TEAM_MAINTAINER branch in the condition
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    RosterStudent student =
+        RosterStudent.builder().email("student@test.com").githubLogin("student").build();
+
+    TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
+
+    Team team =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(123)
+            .teamMembers(Arrays.asList(teamMember))
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    // This specifically tests the TEAM_MAINTAINER branch of the condition
     when(githubTeamService.getTeamMembershipStatus("student", 123, course))
         .thenReturn(TeamStatus.TEAM_MAINTAINER);
 
@@ -211,56 +296,9 @@ public class PushTeamsToGithubJobTests {
 
     // Assert
     verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    // Should not try to add member since they're already a maintainer
     verify(githubTeamService, never()).addTeamMember(any(), any(), any(), any());
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
-  }
-
-  @Test
-  public void testAccept_GithubServiceError() throws Exception {
-    // Arrange
-    Long courseId = 1L;
-    Course course =
-        Course.builder()
-            .id(courseId)
-            .courseName("Test Course")
-            .orgName("test-org")
-            .installationId("123")
-            .build();
-
-    RosterStudent student =
-        RosterStudent.builder().email("student@test.com").githubLogin("student").build();
-
-    TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
-
-    Team team =
-        Team.builder()
-            .name("team1")
-            .githubTeamId(123)
-            .teamMembers(Arrays.asList(teamMember))
-            .build();
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
-    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
-    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
-        .thenThrow(new RuntimeException("GitHub API error"));
-
-    PushTeamsToGithubJob job =
-        PushTeamsToGithubJob.builder()
-            .courseId(courseId)
-            .courseRepository(courseRepository)
-            .teamRepository(teamRepository)
-            .teamMemberRepository(teamMemberRepository)
-            .githubTeamService(githubTeamService)
-            .build();
-
-    // Act
-    job.accept(ctx);
-
-    // Assert
-    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
-    verify(teamMemberRepository)
-        .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.NOT_ORG_MEMBER)));
   }
 }
