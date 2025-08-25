@@ -492,11 +492,18 @@ describe("InstructorCoursesTable tests", () => {
   });
 
   describe("InstructorCoursesTable update instructor modal tests", () => {
+    let invalidateQueriesSpy;
+
     beforeEach(() => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();
       axiosMock.resetHistory();
       mockToast.mockClear();
+      invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
+    });
+
+    afterEach(() => {
+      invalidateQueriesSpy.mockRestore();
     });
 
     test("Tests instructor email is clickable for admin users when enableInstructorUpdate selected", async () => {
@@ -1169,6 +1176,115 @@ describe("InstructorCoursesTable tests", () => {
         expect(mockToast).toHaveBeenCalledWith(
           "Was not able to update course:\nRequest failed with status code 400",
         );
+      });
+    });
+
+    test("Instructor update mutation uses correct cache keys for invalidation", async () => {
+      axiosMock.onPut("/api/courses/updateInstructor").reply(200, {});
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              enableInstructorUpdate={true}
+              storybook={false}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const instructorEmailButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-instructorEmail-button`,
+      );
+
+      fireEvent.click(instructorEmailButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByTestId("update-instructor-email-input");
+      const updateButton = screen.getByTestId(
+        "update-instructor-submit-button",
+      );
+
+      fireEvent.change(emailInput, { target: { value: "new@example.com" } });
+      fireEvent.click(updateButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+
+      // Verify that invalidateQueries was called with all expected cache keys
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: [
+          "/api/courses",
+          "/api/courses/allForAdmins",
+          "/api/courses/allForInstructors",
+        ],
+      });
+    });
+
+    test("Course update mutation uses correct cache keys for invalidation", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(200, {});
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out the form using testIds
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Updated Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Fall 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "Updated School" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify API call was made
+      await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+
+      // Verify that invalidateQueries was called with all expected cache keys
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: [
+          "/api/courses",
+          "/api/courses/allForAdmins",
+          "/api/courses/allForInstructors",
+        ],
       });
     });
   });
