@@ -366,7 +366,7 @@ import org.springframework.web.bind.annotation.*;
   }
 
   @Operation(summary = &quot;Delete a course&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;&quot;)
   public Object deleteCourse(@RequestParam Long courseId)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -374,9 +374,15 @@ import org.springframework.web.bind.annotation.*;
         courseRepository
 <span class="fc" id="L375">            .findById(courseId)</span>
 <span class="fc" id="L376">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L377">    linkerService.unenrollOrganization(course);</span>
-<span class="fc" id="L378">    courseRepository.delete(course);</span>
-<span class="fc" id="L379">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
+
+    // Check if course has roster students or staff
+<span class="fc bfc" id="L379" title="All 4 branches covered.">    if (!course.getRosterStudents().isEmpty() || !course.getCourseStaff().isEmpty()) {</span>
+<span class="fc" id="L380">      throw new IllegalArgumentException(&quot;Cannot delete course with students or staff&quot;);</span>
+    }
+
+<span class="fc" id="L383">    linkerService.unenrollOrganization(course);</span>
+<span class="fc" id="L384">    courseRepository.delete(course);</span>
+<span class="fc" id="L385">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
   }
 
   /**
@@ -396,18 +402,18 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
       @Parameter(name = &quot;term&quot;) @RequestParam String term,
       @Parameter(name = &quot;school&quot;) @RequestParam String school) {
-<span class="fc" id="L399">    Course course =</span>
+<span class="fc" id="L405">    Course course =</span>
         courseRepository
-<span class="fc" id="L401">            .findById(courseId)</span>
-<span class="fc" id="L402">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L407">            .findById(courseId)</span>
+<span class="fc" id="L408">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L404">    course.setCourseName(courseName);</span>
-<span class="fc" id="L405">    course.setTerm(term);</span>
-<span class="fc" id="L406">    course.setSchool(school);</span>
+<span class="fc" id="L410">    course.setCourseName(courseName);</span>
+<span class="fc" id="L411">    course.setTerm(term);</span>
+<span class="fc" id="L412">    course.setSchool(school);</span>
 
-<span class="fc" id="L408">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L414">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L410">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L416">    return new InstructorCourseView(savedCourse);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
