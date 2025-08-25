@@ -64,31 +64,39 @@ export default function InstructorCourseShowPage() {
         </Modal.Footer>
       </Modal>
       <h1 data-testid={`${testId}-title`}>
-        Course: {course ? `${course.courseName} (${course.id})` : "Loading..."}
+        {course ?(
+          <>
+            Course:<span style={{color: "blue"}}> {course.courseName}</span> 
+            {"  "}
+            Term:<span style={{color: "blue"}}> {course.term} </span>
+          </>
+         ) : (
+          "Loading..."
+         )}
       </h1>
       <Tabs defaultActiveKey={"default"}>
-        <Tab eventKey={"default"} title={"Management"} className="pt-2">
+        {/* <Tab eventKey={"default"} title={"Management"} className="pt-2">
           <InstructorCoursesTable
             courses={course ? [course] : []}
             currentUser={currentUser}
             testId={testId}
           />
-        </Tab>
-        <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
+        </Tab> */}
+        <Tab eventKey={"enrollment"} title={"Students"} className="pt-2">
           <EnrollmentTabComponent
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
           />
         </Tab>
-        <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
+          <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
           <StaffTabComponent
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
           />
         </Tab>
-        <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
+        <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
           <AssignmentTabComponent courseId={courseId} />
         </Tab>
       </Tabs>
