@@ -115,6 +115,7 @@ Unit tests are any methods labelled with the `@Test` annotation that are under t
 
 To run only the integration tests, use:
 ```
+export WEBHOOK_SECRET=$(openssl rand -base64 32)
 INTEGRATION=true mvn test-compile failsafe:integration-test
 ```
 
@@ -122,19 +123,25 @@ To run only the integration tests *and* see the tests run as you run them,
 use:
 
 ```
+export WEBHOOK_SECRET=$(openssl rand -base64 32)
 INTEGRATION=true HEADLESS=false mvn test-compile failsafe:integration-test
 ```
 
 To run a particular integration test (e.g. only `HomePageWebIT.java`) use `-Dit.test=ClassName`, for example:
 
 ```
+export WEBHOOK_SECRET=$(openssl rand -base64 32)
 INTEGRATION=true mvn test-compile failsafe:integration-test -Dit.test=HomePageWebIT
 ```
 
 or to see it run live:
 ```
+export WEBHOOK_SECRET=$(openssl rand -base64 32)
 INTEGRATION=true HEADLESS=false mvn test-compile failsafe:integration-test -Dit.test=HomePageWebIT
 ```
+
+Note that the `export WEBHOOK_SECRET=$(openssl rand -base64 32)` command only needs to be run
+once per shell; it does not need to be run each time.
 
 Integration tests are any methods labelled with `@Test` annotation, that are under the `/src/test/java` hierarchy, and have names starting with `IT` (specifically capital I, capital T).
 

@@ -32,5 +32,8 @@ jobs:
          cache-dependency-path: 'pom.xml' 
 
     - name: Run IT tests with maven
-      run: INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
+      run: |
+        export WEBHOOK_SECRET=$(openssl rand -base64 32)
+        INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
+
       

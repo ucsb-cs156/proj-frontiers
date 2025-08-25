@@ -9,12 +9,17 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,6 +32,9 @@ public class WebhookController {
   private final CourseRepository courseRepository;
   private final RosterStudentRepository rosterStudentRepository;
   private final CourseStaffRepository courseStaffRepository;
+
+  @Value("${app.webhook.secret}")
+  private String webhookSecret;
 
   public WebhookController(
       CourseRepository courseRepository,
@@ -42,12 +50,31 @@ public class WebhookController {
    *
    * @param jsonBody body of the webhook. The description of the currently used webhook is available
    *     in docs/webhooks.md
+   * @param signature the GitHub webhook signature header for security validation
    * @return either the word success so GitHub will not flag the webhook as a failure, or the
    *     updated RosterStudent
    */
   @PostMapping("/github")
-  public ResponseEntity<String> createGitHubWebhook(@RequestBody JsonNode jsonBody)
-      throws JsonProcessingException {
+  public ResponseEntity<String> createGitHubWebhook(
+      @RequestBody String requestBody,
+      @RequestHeader(value = "X-Hub-Signature-256", required = false) String signature)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeyException {
+
+    // Validate webhook signature
+    if (!WebhookSecurityUtils.validateGitHubSignature(requestBody, signature, webhookSecret)) {
+      log.error("Webhook signature validation failed");
+      return ResponseEntity.status(401).body("Unauthorized: Invalid signature");
+    }
+
+    // Parse JSON after signature validation
+    JsonNode jsonBody;
+    try {
+      jsonBody = new com.fasterxml.jackson.databind.ObjectMapper().readTree(requestBody);
+    } catch (JsonProcessingException e) {
+      log.error("Failed to parse webhook JSON body", e);
+      return ResponseEntity.badRequest().body("Invalid JSON");
+    }
+
     log.info("Received GitHub webhook: {}", jsonBody.toString());
 
     if (!jsonBody.has("action")) {
