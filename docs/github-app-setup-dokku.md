@@ -41,20 +41,21 @@ Scroll further and under webhooks, fill in the following url where *appname* is 
 https://appname.dokku-xx.cs.ucsb.edu/api/webhooks/github
 ```
 
-**IMPORTANT: Set up webhook secret**
+## Generating a value for `WEBHOOK_SECRET`
 
 For security, you must create a webhook secret. This prevents unauthorized parties from sending fake webhook requests to your application.
 
-1. Generate a strong, random secret (at least 10 characters). You can use a password generator or run:
+Generate a strong, random secret (at least 10 characters). On your dokku machine, run this (replacing `appname` with your dokku appname, e.g. `frontiers`, `frontiers-qa`, etc:
    ```bash
-   openssl rand -hex 20
+   dokku config:set appname --no-restart WEBHOOK_SECRET=$(openssl rand -hex 20)
+   dokku config:show appname | grep WEBHOOK_SECRET
    ```
 
-2. In the GitHub App setup page, find the "Webhook secret" field and enter your generated secret.
+In the GitHub App setup page, find the "Webhook secret" field and enter your generated secret.
 
-3. Save this secret - you'll need to configure it on your Dokku app (see below).
+## Set App Permissions
 
-Scroll down to permissions, and under repository, set the following accesses:
+Now, scroll down to permissions, and under repository, set the following accesses:
 - Administration: Read and Write
 - Contents: Read and Write
 - Metadata: Read-only
@@ -64,13 +65,16 @@ Under Organization, select the following permissions:
 - Administration: Read and Write
 - Members: Read and Write
 
-
 ![image](https://github.com/user-attachments/assets/5ba94bdb-d4ce-4911-a80f-248e8e231a24)
+
+## Subscribe to Webhook Events
+
 
 Then, scroll further and under "Subscribe to Events" select "Organization"
 
 ![image](https://github.com/user-attachments/assets/65491ad0-ef2b-4542-891b-852365f2366b)
 
+## Final Settings, Client Id, Client Secret
 
 Then, scroll further and under "Where can this Github App be installed?" select "Any Account"
 
@@ -86,16 +90,6 @@ Then, set your Github Client ID and Github Client Secret with the following comm
 dokku config:set --no-restart <appname> GITHUB_CLIENT_ID=<client-id>
 dokku config:set --no-restart <appname> GITHUB_CLIENT_SECRET=<client-secret>
 ```
-
-## Setting up the webhook secret
-
-You must also configure the webhook secret you created earlier:
-
-```bash
-dokku config:set --no-restart <appname> WEBHOOK_SECRET=<your-webhook-secret>
-```
-
-Replace `<your-webhook-secret>` with the same secret you entered in the GitHub App configuration.
 
 ## Generating a value for `app_private_key`
 
