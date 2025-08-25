@@ -5,7 +5,11 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import jakarta.persistence.*;
 import java.util.List;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -36,7 +40,7 @@ public class RosterStudent {
   private String firstName;
   private String lastName;
   private String email;
-  private String section;
+  @Builder.Default private String section = "";
 
   @ManyToOne
   @JoinColumn(name = "user_id")
