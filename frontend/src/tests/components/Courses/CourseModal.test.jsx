@@ -48,9 +48,13 @@ describe("CourseModal Tests", () => {
           onSubmitAction={mockSubmit}
           initialContents={coursesFixtures.severalCourses[0]}
           buttonText={"Edit"}
+          modalTitle={"Edit Course"}
         />
       </div>,
     );
+
+    const modalTitle = screen.getByText("Edit Course");
+    expect(modalTitle).toBeInTheDocument();
 
     expect(screen.getByDisplayValue("CMPSC 156")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Spring 2025")).toBeInTheDocument();
