@@ -115,27 +115,33 @@ Note that the file has the current date in the filename; this will help you be s
 Next, we will run a script that converts this private key 
 into a `dokku config:set ...` command.
 
-Copy the key from wherever it downloaded to the *root of the frontiers project*, i.e. the directory where you cloned the repo.
+**NOTE**: The following commands is **not** run on dokku, but rather on your regular computer, inside the directory where you cloned the frontiers repo.
 
-For example, if `~/Downloads` is the directory where files are downloaded, then this command will copy all files ending in `.private-key.pem` to your current directory.
+1. Copy the key from wherever it downloaded to the *root of the frontiers project*, i.e. the directory where you cloned the repo.
 
-```
-cp ~/Downloads/*.private-key.pem .
-```
+   For example, if `~/Downloads` is the directory where files are downloaded, then this command will copy all files ending in `.private-key.pem` to your current directory.
 
-Note that you *must not commit* this private key to the Github Repo! The `.gitignore` should handle this, but be careful in any case.
+   ```
+   cp ~/Downloads/*.private-key.pem .
+   ```
 
-Now run this script: 
-```
-./keyconvert.sh
-```
+   Note that you *must not commit* this private key to the Github Repo! The `.gitignore` should handle this, but be careful in any case.
 
-* If there is only one file ending in `private-key.pem` in the current directory, it will be selected automatically. Otherwise, you'll be asked to choose one.
-* The script will then prompt you for the name of your dokku app (e.g. `frontiers`, `frontiers-qa`, etc.)
+2. Now run this script: 
+   ```
+   ./keyconvert.sh
+   ```
 
-The script will then output the command that you should copy to the dokku command line
+   If there is only one file ending in `private-key.pem` in the current directory, it will be selected automatically. Otherwise, you'll be asked to choose one.
 
-As this is a multiline variable, it will need to be between a set of quotes. Make sure that you paste it between the quotes, otherwise the variable will only be set to the first line of the key. Use the following command, replacing <appname> with your app name and <file-output> with the copied output from the previous step:
+   The script will then prompt you for the name of your dokku app (e.g. `frontiers`, `frontiers-qa`, etc.)
+
+   The script will then output the command that you should copy to the dokku command line
+
+3. Now, you need to return to a terminal that's logged into your dokku machine.
+
+   As this is a multiline variable, it will need to be between a set of quotes. Make sure that you paste it between the quotes, otherwise the variable will only be set to the first line of the key. Use the following command, replacing <appname> with your app name and <file-output> with the copied output from the previous step:
+
 ```bash
 dokku config:set frontiers --no-restart app_private_key="-----BEGIN PRIVATE KEY-----
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
