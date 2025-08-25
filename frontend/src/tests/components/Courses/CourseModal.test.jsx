@@ -1,6 +1,12 @@
 import CourseModal from "main/components/Courses/CourseModal";
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  rerender,
+} from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { vi } from "vitest";
 
@@ -112,5 +118,202 @@ describe("CourseModal Tests", () => {
     fireEvent.click(closeButton);
     await waitFor(() => expect(toggleShowModal).toHaveBeenCalledTimes(1));
     expect(toggleShowModal).toHaveBeenCalledWith(false);
+  });
+
+  test("Form starts empty without initialContents", async () => {
+    render(
+      <div
+        className="modal show"
+        style={{ display: "block", position: "initial" }}
+      >
+        <CourseModal
+          showModal={showModal}
+          toggleShowModal={toggleShowModal}
+          onSubmitAction={mockSubmit}
+        />
+      </div>,
+    );
+
+    const courseNameInput = screen.getByTestId("CourseModal-courseName");
+    const termInput = screen.getByTestId("CourseModal-term");
+    const schoolInput = screen.getByTestId("CourseModal-school");
+
+    expect(courseNameInput.value).toBe("");
+    expect(termInput.value).toBe("");
+    expect(schoolInput.value).toBe("");
+  });
+
+  test("Form gets populated when initialContents change from empty to filled", async () => {
+    const MockCourseModal = ({ initialContents }) => (
+      <div
+        className="modal show"
+        style={{ display: "block", position: "initial" }}
+      >
+        <CourseModal
+          showModal={showModal}
+          toggleShowModal={toggleShowModal}
+          onSubmitAction={mockSubmit}
+          initialContents={initialContents}
+        />
+      </div>
+    );
+
+    // Start with no initial contents
+    const { rerender } = render(<MockCourseModal initialContents={null} />);
+
+    const courseNameInput = screen.getByTestId("CourseModal-courseName");
+    const termInput = screen.getByTestId("CourseModal-term");
+    const schoolInput = screen.getByTestId("CourseModal-school");
+
+    // Verify form starts empty
+    expect(courseNameInput.value).toBe("");
+    expect(termInput.value).toBe("");
+    expect(schoolInput.value).toBe("");
+
+    // Change to have initial contents
+    rerender(
+      <MockCourseModal initialContents={coursesFixtures.severalCourses[0]} />,
+    );
+
+    // Verify form gets populated
+    await waitFor(() => {
+      expect(courseNameInput.value).toBe("CMPSC 156");
+      expect(termInput.value).toBe("Spring 2025");
+      expect(schoolInput.value).toBe("UCSB");
+    });
+  });
+
+  test("Form updates when initialContents change from one course to another", async () => {
+    const MockCourseModal = ({ initialContents }) => (
+      <div
+        className="modal show"
+        style={{ display: "block", position: "initial" }}
+      >
+        <CourseModal
+          showModal={showModal}
+          toggleShowModal={toggleShowModal}
+          onSubmitAction={mockSubmit}
+          initialContents={initialContents}
+        />
+      </div>
+    );
+
+    // Start with first course
+    const { rerender } = render(
+      <MockCourseModal initialContents={coursesFixtures.severalCourses[0]} />,
+    );
+
+    const courseNameInput = screen.getByTestId("CourseModal-courseName");
+    const termInput = screen.getByTestId("CourseModal-term");
+    const schoolInput = screen.getByTestId("CourseModal-school");
+
+    // Verify first course data
+    expect(courseNameInput.value).toBe("CMPSC 156");
+    expect(termInput.value).toBe("Spring 2025");
+    expect(schoolInput.value).toBe("UCSB");
+
+    // Change to second course
+    rerender(
+      <MockCourseModal initialContents={coursesFixtures.severalCourses[1]} />,
+    );
+
+    // Verify form updates to second course data
+    await waitFor(() => {
+      expect(courseNameInput.value).toBe("CPTS 489");
+      expect(termInput.value).toBe("Fall 2020");
+      expect(schoolInput.value).toBe("WSU");
+    });
+  });
+
+  test("useEffect handles undefined initialContents correctly", async () => {
+    const MockCourseModal = ({ initialContents }) => (
+      <div
+        className="modal show"
+        style={{ display: "block", position: "initial" }}
+      >
+        <CourseModal
+          showModal={showModal}
+          toggleShowModal={toggleShowModal}
+          onSubmitAction={mockSubmit}
+          initialContents={initialContents}
+        />
+      </div>
+    );
+
+    // Start with undefined initial contents
+    const { rerender } = render(
+      <MockCourseModal initialContents={undefined} />,
+    );
+
+    const courseNameInput = screen.getByTestId("CourseModal-courseName");
+    const termInput = screen.getByTestId("CourseModal-term");
+    const schoolInput = screen.getByTestId("CourseModal-school");
+
+    // Verify form starts empty
+    expect(courseNameInput.value).toBe("");
+    expect(termInput.value).toBe("");
+    expect(schoolInput.value).toBe("");
+
+    // Change to have course data
+    rerender(
+      <MockCourseModal initialContents={coursesFixtures.severalCourses[0]} />,
+    );
+
+    // Verify form gets populated
+    await waitFor(() => {
+      expect(courseNameInput.value).toBe("CMPSC 156");
+      expect(termInput.value).toBe("Spring 2025");
+      expect(schoolInput.value).toBe("UCSB");
+    });
+  });
+
+  test("defaultValues prop works correctly with initialContents", async () => {
+    // This test verifies that the defaultValues prop in useForm works
+    render(
+      <div
+        className="modal show"
+        style={{ display: "block", position: "initial" }}
+      >
+        <CourseModal
+          showModal={showModal}
+          toggleShowModal={toggleShowModal}
+          onSubmitAction={mockSubmit}
+          initialContents={coursesFixtures.severalCourses[0]}
+        />
+      </div>,
+    );
+
+    // The form should be immediately populated due to defaultValues
+    const courseNameInput = screen.getByTestId("CourseModal-courseName");
+    const termInput = screen.getByTestId("CourseModal-term");
+    const schoolInput = screen.getByTestId("CourseModal-school");
+
+    expect(courseNameInput.value).toBe("CMPSC 156");
+    expect(termInput.value).toBe("Spring 2025");
+    expect(schoolInput.value).toBe("UCSB");
+  });
+
+  test("defaultValues uses empty object when initialContents is null", async () => {
+    render(
+      <div
+        className="modal show"
+        style={{ display: "block", position: "initial" }}
+      >
+        <CourseModal
+          showModal={showModal}
+          toggleShowModal={toggleShowModal}
+          onSubmitAction={mockSubmit}
+          initialContents={null}
+        />
+      </div>,
+    );
+
+    const courseNameInput = screen.getByTestId("CourseModal-courseName");
+    const termInput = screen.getByTestId("CourseModal-term");
+    const schoolInput = screen.getByTestId("CourseModal-school");
+
+    expect(courseNameInput.value).toBe("");
+    expect(termInput.value).toBe("");
+    expect(schoolInput.value).toBe("");
   });
 });
