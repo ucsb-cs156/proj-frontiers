@@ -29,9 +29,14 @@ describe("HelpCsvPage tests", () => {
     await screen.findByText(/CSV Upload\/Download Formats/);
     const chicoStateCsvExample = screen.getByTestId("chicoStateCsvExample");
     const ucsbEgradesCsvExample = screen.getByTestId("ucsbEgradesCsvExample");
+    const rosterDownloadCsvExample = screen.getByTestId(
+      "rosterDownloadCsvExample",
+    );
     expect(chicoStateCsvExample).toBeInTheDocument();
     expect(ucsbEgradesCsvExample).toBeInTheDocument();
+    expect(rosterDownloadCsvExample).toBeInTheDocument();
     expect(chicoStateCsvExample).toHaveClass("csvExample");
     expect(ucsbEgradesCsvExample).toHaveClass("csvExample");
+    expect(rosterDownloadCsvExample).toHaveClass("csvExample");
   });
 });
