@@ -35,23 +35,30 @@ As an example, when filled it, it might look like this:
 
 <img width="898" alt="image" src="https://github.com/user-attachments/assets/ee58c776-0e1d-4290-b278-8ea4d87884f0" />
 
+## Set up Webhooks and `WEBHOOK_SECRET`
 
 Scroll further and under webhooks, fill in the following url where *appname* is your appname and *xx* is your dokku server:
 ```
 https://appname.dokku-xx.cs.ucsb.edu/api/webhooks/github
 ```
 
-## Generating a value for `WEBHOOK_SECRET`
-
 For security, you must create a webhook secret. This prevents unauthorized parties from sending fake webhook requests to your application.
 
 Generate a strong, random secret (at least 10 characters). On your dokku machine, run this (replacing `appname` with your dokku appname, e.g. `frontiers`, `frontiers-qa`, etc:
    ```bash
    dokku config:set appname --no-restart WEBHOOK_SECRET=$(openssl rand -hex 20)
-   dokku config:show appname | grep WEBHOOK_SECRET
    ```
 
+You'll see something like this:
+
+<img width="1194" height="115" alt="image" src="https://github.com/user-attachments/assets/baabd62b-6bb6-420f-91ea-5ae635f45946" />
+
 In the GitHub App setup page, find the "Webhook secret" field and enter your generated secret.
+
+Final settings should look like this (with your webhook secret value, not the example one show above.)
+
+<img width="522" height="419" alt="image" src="https://github.com/user-attachments/assets/7102a889-666f-4917-b194-654c7e6f2a52" />
+
 
 ## Set App Permissions
 
