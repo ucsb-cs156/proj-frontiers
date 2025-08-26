@@ -1,0 +1,18 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "1",
+        "author": "daniel",
+        "changes": [
+          {
+            "dropTable": {
+              "tableName": "fakeTable",
+              "cascadeConstraints": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
