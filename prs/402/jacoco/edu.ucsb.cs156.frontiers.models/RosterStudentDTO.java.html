@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
     String firstName,
     String lastName,
     String email,
+    String section,
     long userId,
     Integer userGithubId,
     String userGithubLogin,
@@ -22,18 +23,19 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
     OrgStatus orgStatus) {
 
   public RosterStudentDTO(RosterStudent rosterStudent) {
-<span class="fc" id="L25">    this(</span>
-<span class="fc" id="L26">        rosterStudent.getId(),</span>
-<span class="fc" id="L27">        rosterStudent.getCourse().getId(),</span>
-<span class="fc" id="L28">        rosterStudent.getStudentId(),</span>
-<span class="fc" id="L29">        rosterStudent.getFirstName(),</span>
-<span class="fc" id="L30">        rosterStudent.getLastName(),</span>
-<span class="fc" id="L31">        rosterStudent.getEmail(),</span>
-<span class="fc bfc" id="L32" title="All 2 branches covered.">        rosterStudent.getUser() != null ? rosterStudent.getUser().getId() : 0,</span>
-<span class="fc" id="L33">        rosterStudent.getGithubId(),</span>
-<span class="fc" id="L34">        rosterStudent.getGithubLogin(),</span>
-<span class="fc" id="L35">        rosterStudent.getRosterStatus(),</span>
-<span class="fc" id="L36">        rosterStudent.getOrgStatus());</span>
-<span class="fc" id="L37">  }</span>
+<span class="fc" id="L26">    this(</span>
+<span class="fc" id="L27">        rosterStudent.getId(),</span>
+<span class="fc" id="L28">        rosterStudent.getCourse().getId(),</span>
+<span class="fc" id="L29">        rosterStudent.getStudentId(),</span>
+<span class="fc" id="L30">        rosterStudent.getFirstName(),</span>
+<span class="fc" id="L31">        rosterStudent.getLastName(),</span>
+<span class="fc" id="L32">        rosterStudent.getEmail(),</span>
+<span class="fc" id="L33">        rosterStudent.getSection(),</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        rosterStudent.getUser() != null ? rosterStudent.getUser().getId() : 0,</span>
+<span class="fc" id="L35">        rosterStudent.getGithubId(),</span>
+<span class="fc" id="L36">        rosterStudent.getGithubLogin(),</span>
+<span class="fc" id="L37">        rosterStudent.getRosterStatus(),</span>
+<span class="fc" id="L38">        rosterStudent.getOrgStatus());</span>
+<span class="fc" id="L39">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
