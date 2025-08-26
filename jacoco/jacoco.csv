@@ -63,6 +63,6 @@ frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersApplicationRunner,0,14,0,0,0
 frontiers,edu.ucsb.cs156.frontiers.startup,WiremockApplicationRunner,0,17,0,0,0,6,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersStartup,0,72,0,6,0,20,0,8,0,5
 frontiers,edu.ucsb.cs156.frontiers.models,UpsertResponse,0,12,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,68,0,2,0,14,0,3,0,2
+frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,73,0,2,0,15,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,LoadResult,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,UserDataDTO,0,30,0,0,0,12,0,1,0,1
