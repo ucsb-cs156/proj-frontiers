@@ -12,6 +12,7 @@ services:
     environment:
       # NOTE: POSTGRES_DB/USER/PASSWORD should match values in db container
         DATABASE_URL: postgres://postgres:postgres@postgresdb:5432/postgres
+        PORT: 8080
 
 #    volumes:
 #      - ../..:/workspaces:cached

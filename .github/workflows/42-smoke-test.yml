@@ -9,11 +9,22 @@ on:
 
 jobs:
   smoke-test:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: devcontainers/ci@v0.3
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Start containers
+        run: docker-compose -f "docker-compose.yml" up -d --build
+
+      - name: Run Healthcheck
+        uses: Wandalen/wretry.action@master
         with:
-          configFile: .devcontainer/production/devcontainer.json
-          runCmd: "/home/app/startup.sh /home/app/target/frontiers-1.0.0.jar"
+          command: "curl -s --fail http://localhost:8080/"
+          attempt_limit: 3
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "docker-compose.yml" down
