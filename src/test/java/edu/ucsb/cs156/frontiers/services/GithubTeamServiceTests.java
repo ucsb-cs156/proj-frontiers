@@ -11,10 +11,12 @@ import edu.ucsb.cs156.frontiers.enums.TeamStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -318,5 +320,122 @@ public class GithubTeamServiceTests {
         () -> {
           githubTeamService.getTeamMembershipStatus("testuser", 456, course);
         });
+  }
+
+  @Test
+  public void testGetTeamId_VerifyHeaders() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"id\": 456, \"name\": \"test-team\"}";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/test-team"),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    // Act
+    githubTeamService.getTeamId("test-team", course);
+
+    // Assert
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
+
+  @Test
+  public void testCreateTeam_VerifyHeaders() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    Team team = Team.builder().name("test-team").build();
+    String token = "test-token";
+    String createTeamResponse = "{\"id\": 789, \"name\": \"test-team\"}";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    // First call to getTeamId returns 404
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/test-team"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+    // Second call to createTeam
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams"),
+            eq(HttpMethod.POST),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(createTeamResponse, HttpStatus.CREATED));
+
+    // Act
+    githubTeamService.createOrGetTeamId(team, course);
+
+    // Assert
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
+
+  @Test
+  public void testGetTeamMembershipStatus_VerifyHeaders() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"role\": \"member\", \"state\": \"active\"}";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    // Act
+    githubTeamService.getTeamMembershipStatus("testuser", 456, course);
+
+    // Assert
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
+
+  @Test
+  public void testAddTeamMember_VerifyHeaders() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"role\": \"member\", \"state\": \"active\"}";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq(HttpMethod.PUT),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    // Act
+    githubTeamService.addTeamMember("testuser", 456, "member", course);
+
+    // Assert
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
   }
 }
