@@ -98,19 +98,20 @@ export default function RosterStudentTable({
       accessorKey: "githubLogin",
     },
     {
+      id: "teams",
       header: () => (
         <OverlayTrigger
           placement="right"
           overlay={
             <Tooltip id={`tooltip-team-header`}>
-              Student's team name will appear here once assigned.
+              A list of teams that the student is a member of.
             </Tooltip>
           }
         >
-          <span>Team</span>
+          <span>Teams</span>
         </OverlayTrigger>
       ),
-      accessorKey: "team",
+      accessorFn: (row) => row.teams.join(", "),
     },
   ];
 
