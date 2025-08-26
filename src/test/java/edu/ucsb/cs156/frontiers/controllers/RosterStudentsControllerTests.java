@@ -1979,4 +1979,190 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         .findByCourseIdAndEmail(eq(1L), eq("newemail@ucsb.edu"));
     verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
   }
+
+  // Added tests for section behavior on POST and PUT
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_withSection_setsSectionOnInsert() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+
+    mockMvc
+        .perform(
+            post("/api/rosterstudents/post")
+                .with(csrf())
+                .param("studentId", "A555555")
+                .param("firstName", "Pat")
+                .param("lastName", "Student")
+                .param("email", "pat@ucsb.edu")
+                .param("courseId", "1")
+                .param("section", " 0101 "))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved = captor.getValue();
+    assertEquals("0101", saved.getSection());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_updatesExistingSection_whenProvided() throws Exception {
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(10L)
+            .firstName("Old")
+            .lastName("Name")
+            .studentId("A777777")
+            .email("old@ucsb.edu")
+            .course(course1)
+            .section("OLD")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A777777")))
+        .thenReturn(Optional.of(existing));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("new@ucsb.edu")))
+        .thenReturn(Optional.of(existing));
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+
+    mockMvc
+        .perform(
+            post("/api/rosterstudents/post")
+                .with(csrf())
+                .param("studentId", "A777777")
+                .param("firstName", "New")
+                .param("lastName", "Name")
+                .param("email", "new@umail.ucsb.edu")
+                .param("courseId", "1")
+                .param("section", " NEW "))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository, atLeastOnce()).save(captor.capture());
+    RosterStudent saved2 = captor.getValue();
+    assertEquals("NEW", saved2.getSection());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_doesNotUpdateSection_whenNotProvided() throws Exception {
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(11L)
+            .firstName("Old")
+            .lastName("Name")
+            .studentId("A888888")
+            .email("old2@ucsb.edu")
+            .course(course1)
+            .section("KEEP")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A888888")))
+        .thenReturn(Optional.of(existing));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("old2@ucsb.edu")))
+        .thenReturn(Optional.of(existing));
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+
+    mockMvc
+        .perform(
+            post("/api/rosterstudents/post")
+                .with(csrf())
+                .param("studentId", "A888888")
+                .param("firstName", "New")
+                .param("lastName", "Name")
+                .param("email", "old2@ucsb.edu")
+                .param("courseId", "1"))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository, atLeastOnce()).save(captor.capture());
+    RosterStudent saved3 = captor.getValue();
+    assertEquals("KEEP", saved3.getSection());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_updatesSection_whenProvided() throws Exception {
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(5L)
+            .firstName("Old")
+            .lastName("OldName")
+            .studentId("A222222")
+            .email("old@ucsb.edu")
+            .course(course1)
+            .section("KEEP")
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(5L))).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+
+    mockMvc
+        .perform(
+            put("/api/rosterstudents/update")
+                .with(csrf())
+                .param("id", "5")
+                .param("firstName", "New")
+                .param("lastName", "NewName")
+                .param("studentId", "A222222")
+                .param("section", " 0202 "))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved4 = captor.getValue();
+    assertEquals("0202", saved4.getSection());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_keepsSection_whenNotProvided() throws Exception {
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(6L)
+            .firstName("Old")
+            .lastName("OldName")
+            .studentId("A333333")
+            .email("old@ucsb.edu")
+            .course(course1)
+            .section("KEEP")
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(6L))).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+
+    mockMvc
+        .perform(
+            put("/api/rosterstudents/update")
+                .with(csrf())
+                .param("id", "6")
+                .param("firstName", "New")
+                .param("lastName", "NewName")
+                .param("studentId", "A333333"))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved5 = captor.getValue();
+    assertEquals("KEEP", saved5.getSection());
+  }
 }

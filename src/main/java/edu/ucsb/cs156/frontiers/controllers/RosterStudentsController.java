@@ -73,7 +73,8 @@ public class RosterStudentsController extends ApiController {
       @Parameter(name = "firstName") @RequestParam String firstName,
       @Parameter(name = "lastName") @RequestParam String lastName,
       @Parameter(name = "email") @RequestParam String email,
-      @Parameter(name = "courseId") @RequestParam Long courseId)
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "section") @RequestParam(required = false) String section)
       throws EntityNotFoundException {
 
     // Get Course or else throw an error
@@ -91,9 +92,21 @@ public class RosterStudentsController extends ApiController {
             .email(email)
             .build();
 
+    // only set section on the transient object if provided; otherwise leave null to avoid overwriting during upsert
+    if (section != null) {
+      rosterStudent.setSection(section.trim());
+    } else {
+      rosterStudent.setSection(null);
+    }
+
     UpsertResponse upsertResponse =
         upsertStudent(
-            rosterStudentRepository, updateUserService, rosterStudent, course, RosterStatus.MANUAL);
+            rosterStudentRepository,
+            updateUserService,
+            rosterStudent,
+            course,
+            RosterStatus.MANUAL,
+            section != null);
     if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(upsertResponse);
     } else {
@@ -124,6 +137,22 @@ public class RosterStudentsController extends ApiController {
       RosterStudent student,
       Course course,
       RosterStatus rosterStatus) {
+    return upsertStudent(
+        rosterStudentRepository,
+        updateUserService,
+        student,
+        course,
+        rosterStatus,
+        false);
+  }
+
+  public static UpsertResponse upsertStudent(
+      RosterStudentRepository rosterStudentRepository,
+      UpdateUserService updateUserService,
+      RosterStudent student,
+      Course course,
+      RosterStatus rosterStatus,
+      boolean shouldUpdateSection) {
     String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
     Optional<RosterStudent> existingStudent =
         rosterStudentRepository.findByCourseIdAndStudentId(course.getId(), student.getStudentId());
@@ -135,6 +164,9 @@ public class RosterStudentsController extends ApiController {
         existingStudentObj.setRosterStatus(rosterStatus);
         existingStudentObj.setFirstName(student.getFirstName());
         existingStudentObj.setLastName(student.getLastName());
+        if (shouldUpdateSection && student.getSection() != null) {
+          existingStudentObj.setSection(student.getSection().trim());
+        }
         rosterStudentRepository.save(existingStudentObj);
         return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
       } else {
@@ -148,6 +180,9 @@ public class RosterStudentsController extends ApiController {
       existingStudentObj.setLastName(student.getLastName());
       existingStudentObj.setEmail(convertedEmail);
       existingStudentObj.setStudentId(student.getStudentId());
+      if (shouldUpdateSection && student.getSection() != null) {
+        existingStudentObj.setSection(student.getSection().trim());
+      }
       existingStudentObj = rosterStudentRepository.save(existingStudentObj);
       updateUserService.attachUserToRosterStudent(existingStudentObj);
       return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
@@ -161,6 +196,12 @@ public class RosterStudentsController extends ApiController {
         student.setOrgStatus(OrgStatus.JOINCOURSE);
       } else {
         student.setOrgStatus(OrgStatus.PENDING);
+      }
+      // ensure section is non-null for new inserts
+      if (student.getSection() == null) {
+        student.setSection("");
+      } else {
+        student.setSection(student.getSection().trim());
       }
       student = rosterStudentRepository.save(student);
       updateUserService.attachUserToRosterStudent(student);
@@ -258,7 +299,8 @@ public class RosterStudentsController extends ApiController {
       @Parameter(name = "id") @RequestParam Long id,
       @Parameter(name = "firstName") @RequestParam(required = false) String firstName,
       @Parameter(name = "lastName") @RequestParam(required = false) String lastName,
-      @Parameter(name = "studentId") @RequestParam(required = false) String studentId)
+      @Parameter(name = "studentId") @RequestParam(required = false) String studentId,
+      @Parameter(name = "section") @RequestParam(required = false) String section)
       throws EntityNotFoundException {
 
     if (firstName == null
@@ -288,6 +330,9 @@ public class RosterStudentsController extends ApiController {
     rosterStudent.setFirstName(firstName.trim());
     rosterStudent.setLastName(lastName.trim());
     rosterStudent.setStudentId(studentId.trim());
+    if (section != null) {
+      rosterStudent.setSection(section.trim());
+    }
 
     return rosterStudentRepository.save(rosterStudent);
   }
