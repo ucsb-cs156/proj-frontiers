@@ -156,7 +156,7 @@ public class PushTeamsToGithubJobTests {
     when(githubTeamService.createOrGetTeamId(team2, course)).thenReturn(456);
     when(githubTeamService.getTeamMembershipStatus("student1", 123, course))
         .thenReturn(TeamStatus.NOT_ORG_MEMBER);
-    when(githubTeamService.addTeamMember("student1", 123, "member", course))
+    when(githubTeamService.addMemberToGithubTeam("student1", 123, "member", course))
         .thenReturn(TeamStatus.TEAM_MEMBER);
 
     PushTeamsToGithubJob job =
@@ -177,7 +177,7 @@ public class PushTeamsToGithubJobTests {
     verify(githubTeamService).createOrGetTeamId(team1, course);
     verify(githubTeamService).createOrGetTeamId(team2, course);
     verify(githubTeamService).getTeamMembershipStatus("student1", 123, course);
-    verify(githubTeamService).addTeamMember("student1", 123, "member", course);
+    verify(githubTeamService).addMemberToGithubTeam("student1", 123, "member", course);
 
     // Verify team1 was updated with GitHub team ID
     verify(teamRepository)
@@ -245,7 +245,7 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
     // Should not try to add member since they're already a member
-    verify(githubTeamService, never()).addTeamMember(any(), any(), any(), any());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any());
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
   }
@@ -297,7 +297,7 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
     // Should not try to add member since they're already a maintainer
-    verify(githubTeamService, never()).addTeamMember(any(), any(), any(), any());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any());
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
   }
@@ -392,7 +392,7 @@ public class PushTeamsToGithubJobTests {
     verify(githubTeamService).createOrGetTeamId(team, course);
     // Should not process team members when team has no GitHub team ID
     verify(githubTeamService, never()).getTeamMembershipStatus(any(), any(), any());
-    verify(githubTeamService, never()).addTeamMember(any(), any(), any(), any());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any());
     verify(teamMemberRepository, never()).save(any());
   }
 

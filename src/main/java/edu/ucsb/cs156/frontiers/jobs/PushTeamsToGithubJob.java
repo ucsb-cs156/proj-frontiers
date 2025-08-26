@@ -96,7 +96,7 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
           } else {
             // Add as member
             TeamStatus newStatus =
-                githubTeamService.addTeamMember(
+                githubTeamService.addMemberToGithubTeam(
                     student.getGithubLogin(), team.getGithubTeamId(), "member", course);
             teamMember.setTeamStatus(newStatus);
             teamMemberRepository.save(teamMember);

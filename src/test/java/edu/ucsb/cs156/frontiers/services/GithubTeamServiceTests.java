@@ -248,7 +248,7 @@ public class GithubTeamServiceTests {
         .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
 
     // Act
-    TeamStatus result = githubTeamService.addTeamMember("testuser", 456, "member", course);
+    TeamStatus result = githubTeamService.addMemberToGithubTeam("testuser", 456, "member", course);
 
     // Assert
     assertEquals(TeamStatus.TEAM_MEMBER, result);
@@ -270,7 +270,8 @@ public class GithubTeamServiceTests {
         .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
 
     // Act
-    TeamStatus result = githubTeamService.addTeamMember("testuser", 456, "maintainer", course);
+    TeamStatus result =
+        githubTeamService.addMemberToGithubTeam("testuser", 456, "maintainer", course);
 
     // Assert
     assertEquals(TeamStatus.TEAM_MAINTAINER, result);
@@ -429,7 +430,7 @@ public class GithubTeamServiceTests {
         .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
 
     // Act
-    githubTeamService.addTeamMember("testuser", 456, "member", course);
+    githubTeamService.addMemberToGithubTeam("testuser", 456, "member", course);
 
     // Assert
     HttpEntity<String> capturedEntity = entityCaptor.getValue();

@@ -185,7 +185,8 @@ public class GithubTeamService {
    * @throws NoSuchAlgorithmException if there is an algorithm error
    * @throws InvalidKeySpecException if there is a key specification error
    */
-  public TeamStatus addTeamMember(String githubLogin, Integer teamId, String role, Course course)
+  public TeamStatus addMemberToGithubTeam(
+      String githubLogin, Integer teamId, String role, Course course)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String endpoint =
         "https://api.github.com/orgs/"
