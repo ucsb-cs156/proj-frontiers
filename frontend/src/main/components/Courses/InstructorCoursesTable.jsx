@@ -115,12 +115,7 @@ export default function InstructorCoursesTable({
       onSuccess: onInstructorUpdateSuccess,
       onError: onInstructorUpdateError,
     },
-    // Stryker disable next-line all : set up a test for caching in a future PR
-    [
-      "/api/courses",
-      "/api/courses/allForAdmins",
-      "/api/courses/allForInstructors",
-    ],
+    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
   );
 
   const courseEditMutation = useBackendMutation(
@@ -129,12 +124,7 @@ export default function InstructorCoursesTable({
       onSuccess: onCourseUpdateSuccess,
       onError: onCourseUpdateError,
     },
-    // Stryker disable next-line all : set up a test for caching in a future PR
-    [
-      "/api/courses",
-      "/api/courses/allForAdmins",
-      "/api/courses/allForInstructors",
-    ],
+    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
   );
 
   const handleShowModal = (course) => {
