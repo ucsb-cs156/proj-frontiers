@@ -25,7 +25,7 @@ jobs:
       - name: Run Healthcheck
         uses: Wandalen/wretry.action@master
         with:
-          command: "curl -s --fail http://localhost:8080/"
+          command: "docker exec javadev curl -s --fail http://localhost:8080/"
           attempt_limit: 3
 
       - name: Stop containers
