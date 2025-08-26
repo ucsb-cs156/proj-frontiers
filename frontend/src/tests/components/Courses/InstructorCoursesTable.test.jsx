@@ -1220,10 +1220,8 @@ describe("InstructorCoursesTable tests", () => {
       await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
 
       // Verify that invalidateQueries was called with all expected cache keys
-      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(3);
-      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses"],
-      });
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
+
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
         queryKey: ["/api/courses/allForAdmins"],
       });
@@ -1280,10 +1278,7 @@ describe("InstructorCoursesTable tests", () => {
       await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
 
       // Verify that invalidateQueries was called with all expected cache keys
-      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(3);
-      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses"],
-      });
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
         queryKey: ["/api/courses/allForAdmins"],
       });

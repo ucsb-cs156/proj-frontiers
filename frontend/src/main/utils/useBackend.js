@@ -78,8 +78,6 @@ export function useBackendMutation(
           queryKey.forEach((key) => {
             queryClient.invalidateQueries({ queryKey: [key] });
           });
-        } else {
-          queryClient.invalidateQueries({ queryKey: queryKey });
         }
       }
     },

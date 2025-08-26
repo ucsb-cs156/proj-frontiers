@@ -16,7 +16,7 @@ export default function CoursesIndexPage() {
     error: _error,
     status: _status,
   } = useBackend(
-    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
+    ["/api/courses/allForAdmins"],
     { method: "GET", url: "/api/courses/allForAdmins" },
     [],
   );
