@@ -422,6 +422,7 @@
             <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
             <avoidCallsTo>java.lang.Exception</avoidCallsTo>
             <avoidCallsTo>org.springframework.security.core.context.SecurityContextHolder</avoidCallsTo>
+            <avoidCallsTo>edu.ucsb.cs156.frontiers.services.jobs.JobContext</avoidCallsTo>
           </avoidCallsTo>
           <timestampedReports>false</timestampedReports>
         </configuration>
