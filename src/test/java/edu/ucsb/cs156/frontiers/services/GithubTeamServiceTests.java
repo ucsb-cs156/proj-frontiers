@@ -439,4 +439,31 @@ public class GithubTeamServiceTests {
     assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
     assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
   }
+
+  @Test
+  public void test_getOrgId_whenOrgExists() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>("{\"id\": 12345}", HttpStatus.OK));
+
+    // Act
+    Integer orgId = githubTeamService.getOrgId("test-org", course);
+
+    // Assert
+    assertEquals(Integer.valueOf(12345), orgId);
+    verify(jwtService).getInstallationToken(course);
+    verify(restTemplate)
+        .exchange(
+            eq("https://api.github.com/orgs/test-org"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class));
+  }
 }

@@ -60,6 +60,35 @@ public class GithubTeamService {
   }
 
   /**
+   * Get the org id, given the org name.
+   *
+   * <p>Note: in the future, it would be better to cache this value in the Course row in the
+   * database at the time the Github App is linked to the org, since it doesn't change.
+   *
+   * @param orgName
+   * @param course
+   * @return
+   * @throws JsonProcessingException
+   * @throws NoSuchAlgorithmException
+   * @throws InvalidKeySpecException
+   */
+  public Integer getOrgId(String orgName, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    String endpoint = "https://api.github.com/orgs/" + orgName;
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    ResponseEntity<String> response =
+        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+    JsonNode responseJson = objectMapper.readTree(response.getBody());
+    return responseJson.get("id").asInt();
+  }
+
+  /**
    * Gets the team ID for a team name, returns null if team doesn't exist.
    *
    * @param teamName The name of the team
@@ -177,7 +206,7 @@ public class GithubTeamService {
    * Adds a member to a GitHub team.
    *
    * @param githubLogin The GitHub login of the user to add
-   * @param teamId The GitHub team ID
+   * @param teamSlug The GitHub team slug (name)
    * @param role The role to assign ("member" or "maintainer")
    * @param course The course containing the organization
    * @return The resulting team status
