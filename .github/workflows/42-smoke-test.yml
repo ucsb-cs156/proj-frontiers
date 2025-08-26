@@ -14,13 +14,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@v1
 
       - name: Start containers
-        run: docker-compose -f "docker-compose.yml" up -d --build
+        run: docker compose -f "docker-compose.yml" up -d --build
 
       - name: Run Healthcheck
         uses: Wandalen/wretry.action@master
@@ -30,4 +30,4 @@ jobs:
 
       - name: Stop containers
         if: always()
-        run: docker-compose -f "docker-compose.yml" down
+        run: docker compose -f "docker-compose.yml" down
