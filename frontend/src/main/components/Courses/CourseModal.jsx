@@ -20,9 +20,7 @@ function CourseModal({
 
   // Reset form when initialContents changes (e.g., when editing)
   useEffect(() => {
-    //if (initialContents) {
     reset(initialContents);
-    //}
   }, [initialContents, reset]);
 
   const closeModal = () => {

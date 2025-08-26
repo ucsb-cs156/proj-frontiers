@@ -72,8 +72,16 @@ export function useBackendMutation(
     },
     // Stryker disable all: Not sure how to set up the complex behavior needed to test this
     onSettled: () => {
-      if (queryKey !== null)
-        queryClient.invalidateQueries({ queryKey: queryKey });
+      if (queryKey !== null) {
+        // Handle array of query keys for cache invalidation
+        if (Array.isArray(queryKey)) {
+          queryKey.forEach((key) => {
+            queryClient.invalidateQueries({ queryKey: [key] });
+          });
+        } else {
+          queryClient.invalidateQueries({ queryKey: queryKey });
+        }
+      }
     },
     // Stryker restore all
     retry: false,
