@@ -120,6 +120,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             "Chris",
             "Gaucho",
             "cgaucho@ucsb.edu",
+            "Section A",
             102L,
             12345,
             "cgaucho",
@@ -131,8 +132,8 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     String expectedResponse =
         """
-                "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","STUDENTID","USERGITHUBID","USERGITHUBLOGIN","USERID"
-                "1","cgaucho@ucsb.edu","Chris","42","Gaucho","PENDING","ROSTER","12345","12345","cgaucho","102"
+                "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","SECTION","STUDENTID","USERGITHUBID","USERGITHUBLOGIN","USERID"
+                "1","cgaucho@ucsb.edu","Chris","42","Gaucho","PENDING","ROSTER","Section A","12345","12345","cgaucho","102"
                 """;
 
     MvcResult response =
