@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
+import edu.ucsb.cs156.frontiers.controllers.TeamsController.TeamMemberMapping;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
@@ -629,7 +630,9 @@ public class TeamsControllerTests extends ControllerTestCase {
             .build();
     TeamMember teamMember2 = TeamMember.builder().id(2L).team(team).rosterStudent(student2).build();
     team.setTeamMembers(List.of(teamMember, teamMember2));
-    course.setTeams(List.of(team));
+    student.setTeamMembers(List.of(teamMember));
+    student2.setTeamMembers(List.of(teamMember2));
+    course.setRosterStudents(List.of(student, student2));
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
@@ -658,6 +661,15 @@ public class TeamsControllerTests extends ControllerTestCase {
   public void testTeamMemberMapping_noTeams() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").teams(List.of()).build();
+    RosterStudent student =
+        RosterStudent.builder()
+            .id(1L)
+            .email("cgaucho@ucsb.edu")
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .teamMembers(List.of())
+            .build();
+    course.setRosterStudents(List.of(student));
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
     // act
@@ -668,7 +680,11 @@ public class TeamsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    String expectedJson = mapper.writeValueAsString(List.of());
+    String expectedJson =
+        mapper.writeValueAsString(
+            List.of(
+                new TeamMemberMapping(
+                    null, null, 1L, "cgaucho@ucsb.edu", "Chris", "Gaucho", null)));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
   }

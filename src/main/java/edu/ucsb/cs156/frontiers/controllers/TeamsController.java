@@ -74,6 +74,17 @@ public class TeamsController extends ApiController {
           member.getRosterStudent().getLastName(),
           member.getRosterStudent().getGithubLogin());
     }
+
+    public static TeamMemberMapping from(RosterStudent student) {
+      return new TeamMemberMapping(
+          null,
+          null,
+          student.getId(),
+          student.getEmail(),
+          student.getFirstName(),
+          student.getLastName(),
+          student.getGithubLogin());
+    }
   }
 
   /**
@@ -181,15 +192,18 @@ public class TeamsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/mapping")
   public Iterable<TeamMemberMapping> teamMemberMapping(@RequestParam Long courseId) {
-    List<Team> teams =
+    Course course =
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId))
-            .getTeams();
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     List<TeamMemberMapping> mappings = new ArrayList<>();
-    for (Team team : teams) {
-      for (TeamMember member : team.getTeamMembers()) {
-        mappings.add(TeamMemberMapping.from(member));
+    for (RosterStudent student : course.getRosterStudents()) {
+      if (student.getTeamMembers().isEmpty()) {
+        mappings.add(TeamMemberMapping.from(student));
+      } else {
+        for (TeamMember member : student.getTeamMembers()) {
+          mappings.add(TeamMemberMapping.from(member));
+        }
       }
     }
     return mappings;
