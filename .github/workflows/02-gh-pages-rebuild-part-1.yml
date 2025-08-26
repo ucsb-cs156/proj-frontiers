@@ -511,7 +511,7 @@ jobs:
         check_artifacts: true
         if_no_artifact_found: warn
   
-    - name: Debugging output before mvn pitest ...
+    - name: Debugging output before mvn -ntp pitest ...
       run: |
         ls -lRt target
 
@@ -521,7 +521,7 @@ jobs:
         TEST_PROPERTIES: ${{ secrets.TEST_PROPERTIES }}
       run: mvn -ntp -B test pitest:mutationCoverage -DmutationThreshold=100 
   
-    - name: Debugging output after mvn pitest ...
+    - name: Debugging output after mvn -ntp pitest ...
       run: |
         ls -lRt target
 

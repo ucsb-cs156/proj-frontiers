@@ -11,6 +11,12 @@ Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 362 Computational T
 1,156,A123456,CHRIS,GAUCHO,cgaucho@ucsb.edu,1001,12345678,cgaucho,ROSTER,MEMBER
 2,156,A987654,LAUREN,DEL PLAYA,ldelplaya@ucsb.edu,1002,87654321,ldelplaya,ROSTER,MEMBER
 3,156,1234567,SABADO,TARDE,sabadotarde@ucsb.edu,1003,11223344,sabadotarde,MANUAL,INVITED`,
+  oregonStateCSV: `Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id
+Tom Smith,"Smith, Tom",6056208,96.25,80.4,2-Jul-25,11-Jun-25,21-May-25,tomsmith@oregonstate.edu,931551625
+Martha Washington,"Washington, Martha",9876543,100,100,8-Aug-25,12-Dec-25,5-May-25,martha@oregonstate.edu,123456789
+John Doe,"Doe, John",1234567,88.5,75.0,15-Jul-25,10-Jun-25,5-May-25,johndoe@oregonstate.edu,987654321
+Alice Johnson,"Johnson, Alice",7654321,92.0,85.5,20-Jun-25,18-Jun-25,10-Jun-25,alicejohnson@oregonstate.edu,192837465
+Bob Lee,"Lee, Bob",2468135,78.75,60.0,5-May-25,2-May-25,1-May-25,boblee@oregonstate.edu,564738291`,
 };
 
 export default csvFixtures;

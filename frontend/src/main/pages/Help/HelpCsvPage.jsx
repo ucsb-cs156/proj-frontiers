@@ -17,6 +17,53 @@ export default function HelpCsvPage() {
         </p>
         <Accordion>
           <Accordion.Item eventKey="0">
+            <Accordion.Header>UC Santa Barbara</Accordion.Header>
+            <Accordion.Body>
+              <p>
+                The following CSV format can be obtained from the EGradessystem
+                at UC Santa Barbara:
+              </p>
+              <pre className={"csvExample"} data-testid="ucsbEgradesCsvExample">
+                {csvFixtures.ucsbEgrades}
+              </pre>
+              <p>We map the fields as follows:</p>
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Roster Field</th>
+                    <th>CSV Field</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Student Last</td>
+                    <td>Student Last Name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>Student First</td>
+                    <td>Student First Name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>Perm #</td>
+                    <td>Student ID</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>Email</td>
+                    <td>Email</td>
+                    <td>
+                      We translate all <code> @umail.ucsb.edu </code> addresses
+                      to <code> @ucsb.edu</code>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </Accordion.Body>
+          </Accordion.Item>
+          <Accordion.Item eventKey="1">
             <Accordion.Header>Chico State University</Accordion.Header>
             <Accordion.Body>
               <p>
@@ -62,17 +109,16 @@ export default function HelpCsvPage() {
               </table>
             </Accordion.Body>
           </Accordion.Item>
-          <Accordion.Item eventKey="1">
-            <Accordion.Header>UC Santa Barbara</Accordion.Header>
+          <Accordion.Item eventKey="2">
+            <Accordion.Header>Oregon State University</Accordion.Header>
             <Accordion.Body>
               <p>
-                The following CSV format can be obtained from the EGradessystem
-                at UC Santa Barbara:
+                The following CSV format can be obtained for courses at Oregon
+                State University.
               </p>
-              <pre className={"csvExample"} data-testid="ucsbEgradesCsvExample">
-                {csvFixtures.ucsbEgrades}
+              <pre className={"csvExample"} data-testid="oregonStateCsvExample">
+                {csvFixtures.oregonStateCSV}
               </pre>
-              <p>We map the fields as follows:</p>
               <table className="table table-striped">
                 <thead>
                   <tr>
@@ -83,27 +129,24 @@ export default function HelpCsvPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Student Last</td>
+                    <td>Sortable Name</td>
                     <td>Student Last Name</td>
-                    <td></td>
+                    <td>We split the name at the comma.</td>
                   </tr>
                   <tr>
-                    <td>Student First</td>
+                    <td>Sortable Name</td>
                     <td>Student First Name</td>
-                    <td></td>
+                    <td>See above.</td>
                   </tr>
                   <tr>
-                    <td>Perm #</td>
+                    <td>SIS ID</td>
                     <td>Student ID</td>
                     <td></td>
                   </tr>
                   <tr>
                     <td>Email</td>
                     <td>Email</td>
-                    <td>
-                      We translate all <code> @umail.ucsb.edu </code> addresses
-                      to <code> @ucsb.edu</code>
-                    </td>
+                    <td></td>
                   </tr>
                 </tbody>
               </table>
