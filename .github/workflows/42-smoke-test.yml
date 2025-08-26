@@ -27,6 +27,7 @@ jobs:
         with:
           command: "docker exec javadev curl -s --fail http://localhost:8080/"
           attempt_limit: 3
+          attempt_delay: 15000
 
       - name: Stop containers
         if: always()
