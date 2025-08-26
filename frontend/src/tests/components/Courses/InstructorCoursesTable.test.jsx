@@ -56,6 +56,7 @@ describe("InstructorCoursesTable tests", () => {
         "Course Name",
         "Term",
         "School",
+        "Edit",
         "Instructor",
       ];
       const expectedFields = [
@@ -67,8 +68,16 @@ describe("InstructorCoursesTable tests", () => {
       ];
 
       expectedHeaders.forEach((headerText) => {
-        const header = screen.getByText(headerText);
-        expect(header).toBeInTheDocument();
+        if (headerText === "Edit") {
+          const header = screen.getByTestId(
+            "InstructorCoursesTable-header-edit-sort-header",
+          );
+          expect(header).toBeInTheDocument();
+          expect(header).toHaveTextContent("Edit");
+        } else {
+          const header = screen.getByText(headerText);
+          expect(header).toBeInTheDocument();
+        }
       });
 
       expectedFields.forEach((field) => {
@@ -144,6 +153,26 @@ describe("InstructorCoursesTable tests", () => {
       // Modal should not appear; this kills mutations of this line:
       //   const [showModal, setShowModal] = useState(true);
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+      // Check that Edit buttons are present for courses the instructor can edit
+      const editButton0 = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      expect(editButton0).toBeInTheDocument();
+      expect(editButton0).toHaveTextContent("Edit");
+
+      const editButton2 = screen.getByTestId(
+        `${testId}-cell-row-2-col-edit-button`,
+      );
+      expect(editButton2).toBeInTheDocument();
+      expect(editButton2).toHaveTextContent("Edit");
+
+      // Check that instructor cannot edit course they don't own
+      const noEditPermission = screen.getByTestId(
+        `${testId}-cell-row-1-col-edit-no-permission`,
+      );
+      expect(noEditPermission).toBeInTheDocument();
+      expect(noEditPermission).toBeEmptyDOMElement();
     });
 
     test("Has the expected column headers and content for admin user", async () => {
@@ -172,6 +201,25 @@ describe("InstructorCoursesTable tests", () => {
       expect(button4).toBeInTheDocument();
       expect(button4).toHaveTextContent("Install GitHub App");
       expect(button4).toHaveAttribute("class", "btn btn-primary");
+
+      // Check that admin can edit all courses
+      const editButton0 = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      expect(editButton0).toBeInTheDocument();
+      expect(editButton0).toHaveTextContent("Edit");
+
+      const editButton1 = screen.getByTestId(
+        `${testId}-cell-row-1-col-edit-button`,
+      );
+      expect(editButton1).toBeInTheDocument();
+      expect(editButton1).toHaveTextContent("Edit");
+
+      const editButton2 = screen.getByTestId(
+        `${testId}-cell-row-2-col-edit-button`,
+      );
+      expect(editButton2).toBeInTheDocument();
+      expect(editButton2).toHaveTextContent("Edit");
     });
 
     test("Calls window.alert when the button is pressed on storybook", async () => {
@@ -444,10 +492,18 @@ describe("InstructorCoursesTable tests", () => {
   });
 
   describe("InstructorCoursesTable update instructor modal tests", () => {
+    let invalidateQueriesSpy;
+
     beforeEach(() => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();
       axiosMock.resetHistory();
+      mockToast.mockClear();
+      invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
+    });
+
+    afterEach(() => {
+      invalidateQueriesSpy.mockRestore();
     });
 
     test("Tests instructor email is clickable for admin users when enableInstructorUpdate selected", async () => {
@@ -903,6 +959,332 @@ describe("InstructorCoursesTable tests", () => {
 
       // Test default button text
       expect(updateButton).toHaveTextContent("Update Instructor");
+    });
+
+    test("Edit course modal opens and closes properly", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock
+        .onPut("/api/courses")
+        .reply(200, coursesFixtures.severalCourses[0]);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Verify modal is not initially open
+      expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Check that modal appears with correct title
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+        expect(screen.getByText("Edit Course")).toBeInTheDocument();
+        expect(screen.getByText("Update")).toBeInTheDocument();
+      });
+
+      // Close modal using close button
+      const closeButton = screen.getByTestId("CourseModal-closeButton");
+      fireEvent.click(closeButton);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("CourseModal-base"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test("Makes successful course update API call and shows success toast", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(200, {});
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out the form using testIds
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Updated Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Fall 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "Updated School" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify API call was made with correct parameters
+      await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+      expect(axiosMock.history.put[0].params).toEqual({
+        courseId: 1,
+        courseName: "Updated Course",
+        term: "Fall 2025",
+        school: "Updated School",
+      });
+
+      // Verify success toast was shown
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith("Course updated successfully");
+      });
+
+      // Verify modal is closed
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("CourseModal-base"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test("Shows error toast when course update API call fails with message", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(400, {
+        message: "Course name already exists",
+        type: "ValidationException",
+      });
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out all required form fields
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Invalid Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Spring 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "UCSB" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify error toast was shown with message
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          "Was not able to update course:\nCourse name already exists",
+        );
+      });
+    });
+
+    test("Shows error toast when course update API call fails without message", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(400, {});
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out all required form fields
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Invalid Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Spring 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "UCSB" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify error toast was shown with generic message
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          "Was not able to update course:\nRequest failed with status code 400",
+        );
+      });
+    });
+
+    test("Instructor update mutation uses correct cache keys for invalidation", async () => {
+      axiosMock.onPut("/api/courses/updateInstructor").reply(200, {});
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              enableInstructorUpdate={true}
+              storybook={false}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const instructorEmailButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-instructorEmail-button`,
+      );
+
+      fireEvent.click(instructorEmailButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByTestId("update-instructor-email-input");
+      const updateButton = screen.getByTestId(
+        "update-instructor-submit-button",
+      );
+
+      fireEvent.change(emailInput, { target: { value: "new@example.com" } });
+      fireEvent.click(updateButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+
+      // Verify that invalidateQueries was called with all expected cache keys
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
+
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForAdmins"],
+      });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForInstructors"],
+      });
+    });
+
+    test("Course update mutation uses correct cache keys for invalidation", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onPut("/api/courses").reply(200, {});
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              testId={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the edit button
+      const editButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-edit-button`,
+      );
+      fireEvent.click(editButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-base")).toBeInTheDocument();
+      });
+
+      // Fill out the form using testIds
+      const courseNameInput = screen.getByTestId("CourseModal-courseName");
+      const termInput = screen.getByTestId("CourseModal-term");
+      const schoolInput = screen.getByTestId("CourseModal-school");
+
+      fireEvent.change(courseNameInput, {
+        target: { value: "Updated Course" },
+      });
+      fireEvent.change(termInput, { target: { value: "Fall 2025" } });
+      fireEvent.change(schoolInput, { target: { value: "Updated School" } });
+
+      // Click the Update button
+      const updateButton = screen.getByTestId("CourseModal-submit");
+      fireEvent.click(updateButton);
+
+      // Verify API call was made
+      await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+
+      // Verify that invalidateQueries was called with all expected cache keys
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForAdmins"],
+      });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForInstructors"],
+      });
     });
   });
 });

@@ -7,6 +7,7 @@ import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 import UpdateInstructorForm from "main/components/Courses/UpdateInstructorForm";
+import CourseModal from "main/components/Courses/CourseModal";
 import Modal from "react-bootstrap/Modal";
 import { useLocation } from "react-router";
 
@@ -59,6 +60,8 @@ export default function InstructorCoursesTable({
 
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showCourseEditModal, setShowCourseEditModal] = useState(false);
+  const [selectedCourseForEdit, setSelectedCourseForEdit] = useState(null);
   const cellToAxiosParamsEdit = (formData) => {
     return {
       url: `/api/courses/updateInstructor`,
@@ -66,6 +69,19 @@ export default function InstructorCoursesTable({
       params: {
         courseId: formData.courseId,
         instructorEmail: formData.instructorEmail,
+      },
+    };
+  };
+
+  const cellToAxiosParamsCourseEdit = (formData) => {
+    return {
+      url: `/api/courses`,
+      method: "PUT",
+      params: {
+        courseId: formData.courseId,
+        courseName: formData.courseName,
+        term: formData.term,
+        school: formData.school,
       },
     };
   };
@@ -82,14 +98,33 @@ export default function InstructorCoursesTable({
     else toast(`Was not able to update instructor:\n${error.message}`);
   };
 
+  const onCourseUpdateSuccess = () => {
+    handleCloseCourseEditModal();
+    toast("Course updated successfully");
+  };
+
+  const onCourseUpdateError = (error) => {
+    if (error.response.data.message)
+      toast(`Was not able to update course:\n${error.response.data.message}`);
+    else toast(`Was not able to update course:\n${error.message}`);
+  };
+
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     {
       onSuccess: onInstructorUpdateSuccess,
       onError: onInstructorUpdateError,
     },
-    // Stryker disable next-line all : set up a test for caching in a future PR
-    ["/api/courses/allForAdmins"],
+    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
+  );
+
+  const courseEditMutation = useBackendMutation(
+    cellToAxiosParamsCourseEdit,
+    {
+      onSuccess: onCourseUpdateSuccess,
+      onError: onCourseUpdateError,
+    },
+    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
   );
 
   const handleShowModal = (course) => {
@@ -102,9 +137,24 @@ export default function InstructorCoursesTable({
     setSelectedCourse(null);
   };
 
+  const handleShowCourseEditModal = (course) => {
+    setSelectedCourseForEdit(course);
+    setShowCourseEditModal(true);
+  };
+
+  const handleCloseCourseEditModal = () => {
+    setShowCourseEditModal(false);
+    setSelectedCourseForEdit(null);
+  };
+
   const handleUpdateInstructor = async (formData) => {
     formData.courseId = selectedCourse.id;
     editMutation.mutate(formData);
+  };
+
+  const handleUpdateCourse = async (formData) => {
+    formData.courseId = selectedCourseForEdit.id;
+    courseEditMutation.mutate(formData);
   };
 
   const installCallback = (cell) => {
@@ -135,6 +185,20 @@ export default function InstructorCoursesTable({
     return false;
   };
 
+  const canEdit = (row) => {
+    if (hasRole(currentUser, "ROLE_ADMIN")) {
+      return true;
+    }
+    if (
+      hasRole(currentUser, "ROLE_INSTRUCTOR") &&
+      row.original.instructorEmail === currentUser.root.user.email
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
   const renderTooltip = (cell) => {
     let set_message;
     const result = canInstall(cell.row);
@@ -150,6 +214,31 @@ export default function InstructorCoursesTable({
 
   const columnsWithInstall = [
     ...columns,
+    {
+      header: "Edit",
+      id: "edit",
+      cell: ({ cell }) => {
+        const canEditCourse = canEdit(cell.row);
+        if (canEditCourse) {
+          return (
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={() => handleShowCourseEditModal(cell.row.original)}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-button`}
+            >
+              Edit
+            </Button>
+          );
+        } else {
+          return (
+            <span
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-no-permission`}
+            ></span>
+          );
+        }
+      },
+    },
     {
       header: "GitHub Org",
       id: "orgName",
@@ -266,6 +355,14 @@ export default function InstructorCoursesTable({
           />
         </Modal.Body>
       </Modal>
+      <CourseModal
+        showModal={showCourseEditModal}
+        toggleShowModal={setShowCourseEditModal}
+        onSubmitAction={handleUpdateCourse}
+        initialContents={selectedCourseForEdit}
+        buttonText="Update"
+        modalTitle="Edit Course"
+      />
       <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
     </>
   );

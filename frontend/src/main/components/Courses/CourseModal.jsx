@@ -1,6 +1,7 @@
 import Modal from "react-bootstrap/Modal";
 import { Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 
 function CourseModal({
   onSubmitAction,
@@ -8,12 +9,19 @@ function CourseModal({
   toggleShowModal,
   initialContents,
   buttonText = "Create",
+  modalTitle = "Create Course",
 }) {
   const {
     register,
     formState: { errors },
     handleSubmit,
-  } = useForm({ defaultValues: initialContents || {} });
+    reset,
+  } = useForm({});
+
+  // Reset form when initialContents changes (e.g., when editing)
+  useEffect(() => {
+    reset(initialContents);
+  }, [initialContents, reset]);
 
   const closeModal = () => {
     toggleShowModal(false);
@@ -27,7 +35,7 @@ function CourseModal({
       data-testid={"CourseModal-base"}
     >
       <Modal.Header>
-        <Modal.Title>Create Course</Modal.Title>
+        <Modal.Title>{modalTitle}</Modal.Title>
         <button
           type="button"
           className="btn-close"
