@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
   @Value(&quot;#{'${app.admin.emails}'.split(',')}&quot;)
   List&lt;String&gt; adminEmails;
 
+  @Value(&quot;${app.webhook.secret}&quot;)
+  String webhookSecret;
+
   @Autowired AdminRepository adminRepository;
 
   /**
@@ -23,16 +26,31 @@ import org.springframework.stereotype.Component;
    * the Spring Boot application starts up in all environments.
    */
   public void alwaysRunOnStartup() {
-<span class="fc" id="L26">    log.info(&quot;alwaysRunOnStartup called&quot;);</span>
+<span class="fc" id="L29">    log.info(&quot;alwaysRunOnStartup called&quot;);</span>
+
+<span class="fc" id="L31">    validateWebhookSecret();</span>
+
     try {
-<span class="fc" id="L28">      adminEmails.forEach(</span>
+<span class="fc" id="L34">      adminEmails.forEach(</span>
           (email) -&gt; {
-<span class="fc" id="L30">            Admin admin = new Admin(email);</span>
-<span class="fc" id="L31">            adminRepository.save(admin);</span>
-<span class="fc" id="L32">          });</span>
-<span class="fc" id="L33">    } catch (Exception e) {</span>
-<span class="fc" id="L34">      log.error(&quot;Error in loading all ADMIN_EMAILS:&quot;, e);</span>
-<span class="fc" id="L35">    }</span>
-<span class="fc" id="L36">  }</span>
+<span class="fc" id="L36">            Admin admin = new Admin(email);</span>
+<span class="fc" id="L37">            adminRepository.save(admin);</span>
+<span class="fc" id="L38">          });</span>
+<span class="fc" id="L39">    } catch (Exception e) {</span>
+<span class="fc" id="L40">      log.error(&quot;Error in loading all ADMIN_EMAILS:&quot;, e);</span>
+<span class="fc" id="L41">    }</span>
+<span class="fc" id="L42">  }</span>
+
+  private void validateWebhookSecret() {
+<span class="fc bfc" id="L45" title="All 4 branches covered.">    if (webhookSecret == null || webhookSecret.length() &lt; 10) {</span>
+<span class="fc" id="L46">      String error =</span>
+<span class="fc" id="L47">          String.format(</span>
+              &quot;WEBHOOK_SECRET must be at least 10 characters long. Current length: %d&quot;,
+<span class="fc bfc" id="L49" title="All 2 branches covered.">              webhookSecret == null ? 0 : webhookSecret.length());</span>
+<span class="fc" id="L50">      log.error(error);</span>
+<span class="fc" id="L51">      throw new IllegalStateException(error);</span>
+    }
+<span class="fc" id="L53">    log.info(&quot;Webhook secret validation passed&quot;);</span>
+<span class="fc" id="L54">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

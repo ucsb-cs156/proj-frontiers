@@ -56,16 +56,16 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
 <span class="fc" id="L56">          ctx.log(</span>
 <span class="fc" id="L57">              &quot;Team '&quot; + team.getName() + &quot;' already has correct GitHub team ID: &quot; + githubTeamId);</span>
         }
-<span class="nc" id="L59">      } catch (Exception e) {</span>
-<span class="nc" id="L60">        ctx.log(&quot;ERROR: Failed to create/get team '&quot; + team.getName() + &quot;': &quot; + e.getMessage());</span>
+<span class="fc" id="L59">      } catch (Exception e) {</span>
+<span class="fc" id="L60">        ctx.log(&quot;ERROR: Failed to create/get team '&quot; + team.getName() + &quot;': &quot; + e.getMessage());</span>
 <span class="fc" id="L61">      }</span>
 <span class="fc" id="L62">    }</span>
 
     // Second pass: Process team members
 <span class="fc bfc" id="L65" title="All 2 branches covered.">    for (Team team : teams) {</span>
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">      if (team.getGithubTeamId() == null) {</span>
-<span class="nc" id="L67">        ctx.log(&quot;Skipping team members for '&quot; + team.getName() + &quot;' - no GitHub team ID&quot;);</span>
-<span class="nc" id="L68">        continue;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">      if (team.getGithubTeamId() == null) {</span>
+<span class="fc" id="L67">        ctx.log(&quot;Skipping team members for '&quot; + team.getName() + &quot;' - no GitHub team ID&quot;);</span>
+<span class="fc" id="L68">        continue;</span>
       }
 
 <span class="fc" id="L71">      ctx.log(&quot;Processing members for team: &quot; + team.getName());</span>
@@ -103,16 +103,16 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
 <span class="fc" id="L103">            ctx.log(</span>
 <span class="fc" id="L104">                &quot;Added student &quot; + student.getGithubLogin() + &quot; to team with status: &quot; + newStatus);</span>
           }
-<span class="nc" id="L106">        } catch (Exception e) {</span>
-<span class="nc" id="L107">          ctx.log(</span>
+<span class="fc" id="L106">        } catch (Exception e) {</span>
+<span class="fc" id="L107">          ctx.log(</span>
               &quot;ERROR: Failed to process team member &quot;
-<span class="nc" id="L109">                  + student.getGithubLogin()</span>
+<span class="fc" id="L109">                  + student.getGithubLogin()</span>
                   + &quot; for team '&quot;
-<span class="nc" id="L111">                  + team.getName()</span>
+<span class="fc" id="L111">                  + team.getName()</span>
                   + &quot;': &quot;
-<span class="nc" id="L113">                  + e.getMessage());</span>
-<span class="nc" id="L114">          teamMember.setTeamStatus(TeamStatus.NOT_ORG_MEMBER);</span>
-<span class="nc" id="L115">          teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L113">                  + e.getMessage());</span>
+<span class="fc" id="L114">          teamMember.setTeamStatus(TeamStatus.NOT_ORG_MEMBER);</span>
+<span class="fc" id="L115">          teamMemberRepository.save(teamMember);</span>
 <span class="fc" id="L116">        }</span>
 <span class="fc" id="L117">      }</span>
 <span class="fc" id="L118">    }</span>
