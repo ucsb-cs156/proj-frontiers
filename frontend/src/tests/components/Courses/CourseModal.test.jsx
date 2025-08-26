@@ -5,7 +5,6 @@ import {
   render,
   screen,
   waitFor,
-  rerender,
 } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { vi } from "vitest";
