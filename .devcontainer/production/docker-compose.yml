@@ -13,6 +13,7 @@ services:
       # NOTE: POSTGRES_DB/USER/PASSWORD should match values in db container
         DATABASE_URL: postgres://postgres:postgres@postgresdb:5432/postgres
         PORT: 8080
+        WEBHOOK_SECRET: fake-webhook-secret
 
 #    volumes:
 #      - ../..:/workspaces:cached
