@@ -16,13 +16,13 @@ function CourseModal({
     formState: { errors },
     handleSubmit,
     reset,
-  } = useForm({ defaultValues: initialContents || {} });
+  } = useForm({});
 
   // Reset form when initialContents changes (e.g., when editing)
   useEffect(() => {
-    if (initialContents) {
-      reset(initialContents);
-    }
+    //if (initialContents) {
+    reset(initialContents);
+    //}
   }, [initialContents, reset]);
 
   const closeModal = () => {

@@ -1,11 +1,6 @@
 import CourseModal from "main/components/Courses/CourseModal";
 import React from "react";
-import {
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { vi } from "vitest";
 
