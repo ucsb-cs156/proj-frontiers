@@ -26,6 +26,7 @@ describe("RosterStudentTable tests", () => {
     "Email",
     "Status",
     "GitHub Login",
+    "Team",
   ];
   const expectedFields = [
     "id",
@@ -35,6 +36,7 @@ describe("RosterStudentTable tests", () => {
     "email",
     "orgStatus",
     "githubLogin",
+    "team",
   ];
   const testId = "RosterStudentTable";
 
@@ -305,6 +307,31 @@ describe("RosterStudentTable tests", () => {
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
     expect(axiosMock.history.delete[0].params).toEqual({ id: 3 });
   });
+});
+test("tooltips for Team column name", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  fireEvent.mouseOver(screen.getByText("Team"));
+
+  await waitFor(() => {
+    expect(
+      screen.getByText("Student's team name will appear here once assigned."),
+    ).toBeInTheDocument();
+  });
+  expect(screen.getByRole("tooltip")).toHaveAttribute(
+    "id",
+    "tooltip-team-header",
+  );
 });
 test("tooltips for PENDING status", async () => {
   const currentUser = currentUserFixtures.adminUser;

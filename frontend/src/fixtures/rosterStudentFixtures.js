@@ -71,6 +71,7 @@ const rosterStudentFixtures = {
       lastName: "Snow",
       email: "jonsnow@ucsb.edu",
       githubLogin: "jonsnow",
+      team: "Team A",
       orgStatus: "OWNER",
     },
     {
@@ -89,6 +90,7 @@ const rosterStudentFixtures = {
       lastName: "Sue",
       email: "aryasue@ucsb.edu",
       githubLogin: "aryasue",
+      team: "Team A",
       orgStatus: "Illegal status that will never occur",
     },
   ],
