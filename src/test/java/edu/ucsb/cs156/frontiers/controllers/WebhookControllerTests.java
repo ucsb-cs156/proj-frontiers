@@ -1071,4 +1071,137 @@ public class WebhookControllerTests extends ControllerTestCase {
     String actualBody = response.getResponse().getContentAsString();
     assertEquals("Invalid JSON", actualBody);
   }
+
+  @Test
+  public void uninstall_success_clears_installation_and_orgName() throws Exception {
+    Course course = Course.builder().installationId("1234").orgName("ucsb-cs156-s25").build();
+
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+
+    doReturn(Optional.of(course)).when(courseRepository).findByInstallationId(contains("1234"));
+    doReturn(course).when(courseRepository).save(courseCaptor.capture());
+
+    String sendBody =
+        """
+                {
+                "action" : "deleted",
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
+    verify(courseRepository, times(1)).save(any(Course.class));
+
+    Course saved = courseCaptor.getValue();
+    assertEquals(null, saved.getInstallationId());
+    assertEquals(null, saved.getOrgName());
+
+    String actualBody2 = response.getResponse().getContentAsString();
+    assertEquals("success", actualBody2);
+  }
+
+  @Test
+  public void uninstall_missingInstallationField_returns_success_noops() throws Exception {
+    String sendBody =
+        """
+                {
+                "action" : "deleted"
+                }
+                """;
+
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(0)).findByInstallationId(any());
+    verify(courseRepository, times(0)).save(any());
+
+    String actualBody3 = response.getResponse().getContentAsString();
+    assertEquals("success", actualBody3);
+  }
+
+  @Test
+  public void uninstall_missingInstallationIdField_returns_success_noops() throws Exception {
+    String sendBody =
+        """
+                {
+                "action" : "deleted",
+                "installation":{
+                }
+                }
+                """;
+
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(0)).findByInstallationId(any());
+    verify(courseRepository, times(0)).save(any());
+
+    String actualBody4 = response.getResponse().getContentAsString();
+    assertEquals("success", actualBody4);
+  }
+
+  @Test
+  public void uninstall_noCourseFound_returns_success() throws Exception {
+    doReturn(Optional.empty()).when(courseRepository).findByInstallationId(contains("1234"));
+
+    String sendBody =
+        """
+                {
+                "action" : "deleted",
+                "installation":{
+                    "id": "1234"
+                }
+                }
+                """;
+
+    String signature = generateValidSignature(sendBody, TEST_SECRET);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/webhooks/github")
+                    .content(sendBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Hub-Signature-256", signature))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
+    verify(courseRepository, times(0)).save(any());
+
+    String actualBody5 = response.getResponse().getContentAsString();
+    assertEquals("success", actualBody5);
+  }
 }

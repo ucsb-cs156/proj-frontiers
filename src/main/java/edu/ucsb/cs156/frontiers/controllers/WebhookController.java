@@ -84,6 +84,26 @@ public class WebhookController {
     String action = jsonBody.get("action").asText();
     log.info("Webhook action: {}", action);
 
+    // Handle GitHub App uninstall (installation deleted)
+    if (action.equals("deleted")) {
+      if (!jsonBody.has("installation") || !jsonBody.get("installation").has("id")) {
+        return ResponseEntity.ok().body("success");
+      }
+      String installationIdForUninstall = jsonBody.get("installation").get("id").asText();
+      log.info("Processing uninstall for Installation ID: {}", installationIdForUninstall);
+      Optional<Course> courseForUninstall = courseRepository.findByInstallationId(installationIdForUninstall);
+      log.info("Course found for uninstall: {}", courseForUninstall.isPresent());
+      if (courseForUninstall.isPresent()) {
+        Course c = courseForUninstall.get();
+        c.setInstallationId(null);
+        c.setOrgName(null);
+        courseRepository.save(c);
+      } else {
+        log.warn("No course found with installation ID for uninstall: {}", installationIdForUninstall);
+      }
+      return ResponseEntity.ok().body("success");
+    }
+
     // Early return if not an action we care about
     if (!action.equals("member_added") && !action.equals("member_invited")) {
       return ResponseEntity.ok().body("success");
