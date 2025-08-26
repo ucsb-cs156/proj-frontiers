@@ -18,6 +18,7 @@ export default function CoursesIndexPage() {
   } = useBackend(
     ["/api/courses/allForAdmins"],
     { method: "GET", url: "/api/courses/allForAdmins" },
+    // Stryker disable next-line all : don't test default value of empty list
     [],
   );
 
