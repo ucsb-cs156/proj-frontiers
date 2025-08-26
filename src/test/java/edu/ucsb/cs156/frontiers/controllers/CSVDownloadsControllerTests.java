@@ -125,15 +125,16 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             12345,
             "cgaucho",
             RosterStatus.ROSTER,
-            OrgStatus.PENDING);
+            OrgStatus.PENDING,
+            List.of("Team Alpha", "Team Beta"));
 
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
     doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
 
     String expectedResponse =
         """
-                "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","SECTION","STUDENTID","USERGITHUBID","USERGITHUBLOGIN","USERID"
-                "1","cgaucho@ucsb.edu","Chris","42","Gaucho","PENDING","ROSTER","Section A","12345","12345","cgaucho","102"
+                "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","SECTION","STUDENTID","GITHUBID","GITHUBLOGIN","USERID","TEAMS"
+                "1","cgaucho@ucsb.edu","Chris","42","Gaucho","PENDING","ROSTER","Section A","12345","12345","cgaucho","102","Team Alpha, Team Beta"
                 """;
 
     MvcResult response =

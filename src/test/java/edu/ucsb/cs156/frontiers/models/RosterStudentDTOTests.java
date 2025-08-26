@@ -48,8 +48,8 @@ public class RosterStudentDTOTests {
     assertEquals("johndoe@example.com", dto.email());
     assertEquals("Section A", dto.section());
     assertEquals(2L, dto.userId());
-    assertEquals(12345, dto.userGithubId());
-    assertEquals("testuser", dto.userGithubLogin());
+    assertEquals(12345, dto.githubId());
+    assertEquals("testuser", dto.githubLogin());
     assertEquals(RosterStatus.ROSTER, dto.rosterStatus());
     assertEquals(OrgStatus.PENDING, dto.orgStatus());
   }
@@ -86,8 +86,8 @@ public class RosterStudentDTOTests {
     assertEquals("johndoe@example.com", dto.email());
     assertEquals("Section B", dto.section());
     assertEquals(0L, dto.userId());
-    assertEquals(12345, dto.userGithubId());
-    assertEquals("testuser", dto.userGithubLogin());
+    assertEquals(12345, dto.githubId());
+    assertEquals("testuser", dto.githubLogin());
     assertEquals(RosterStatus.ROSTER, dto.rosterStatus());
     assertEquals(OrgStatus.PENDING, dto.orgStatus());
   }
