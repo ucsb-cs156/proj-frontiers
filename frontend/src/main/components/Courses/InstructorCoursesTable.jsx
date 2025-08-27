@@ -11,52 +11,6 @@ import CourseModal from "main/components/Courses/CourseModal";
 import Modal from "react-bootstrap/Modal";
 import { useLocation } from "react-router";
 
-const columns = [
-  {
-    header: "id",
-    accessorKey: "id", // accessor is the "key" in the data
-  },
-  {
-    header: "Course Name",
-    id: "courseName",
-    cell: ({ cell }) => {
-      return (
-        <OverlayTrigger
-          placement="right"
-          overlay={
-            <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
-              View course details
-            </Tooltip>
-          }
-        >
-          <Link
-            to={`/instructor/courses/${cell.row.original.id}`}
-            data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
-          >
-            {cell.row.original.courseName}
-          </Link>
-        </OverlayTrigger>
-      );
-    },
-  },
-  {
-    header: "Term",
-    accessorKey: "term",
-  },
-  {
-    header: "School",
-    accessorKey: "school",
-  },
-  {
-    header: "Students",
-    accessorKey: "numStudents",
-  },
-  {
-    header: "Staff",
-    accessorKey: "numStaff",
-  },
-];
-
 export default function InstructorCoursesTable({
   courses,
   storybook = false,
@@ -66,10 +20,105 @@ export default function InstructorCoursesTable({
 }) {
   const location = useLocation();
 
+  const canEdit = (row) => {
+    if (hasRole(currentUser, "ROLE_ADMIN")) {
+      return true;
+    }
+    if (
+      hasRole(currentUser, "ROLE_INSTRUCTOR") &&
+      row.original.instructorEmail === currentUser.root.user.email
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showCourseEditModal, setShowCourseEditModal] = useState(false);
   const [selectedCourseForEdit, setSelectedCourseForEdit] = useState(null);
+
+  const handleShowCourseEditModal = (course) => {
+    setSelectedCourseForEdit(course);
+    setShowCourseEditModal(true);
+  };
+
+  const handleCloseCourseEditModal = () => {
+    setShowCourseEditModal(false);
+    setSelectedCourseForEdit(null);
+  };
+
+  const columns = [
+    {
+      header: "id",
+      accessorKey: "id", // accessor is the "key" in the data
+    },
+    {
+      header: "Course Name",
+      id: "courseName",
+      cell: ({ cell }) => {
+        return (
+          <OverlayTrigger
+            placement="right"
+            overlay={
+              <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
+                View course details
+              </Tooltip>
+            }
+          >
+            <Link
+              to={`/instructor/courses/${cell.row.original.id}`}
+              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+            >
+              {cell.row.original.courseName}
+            </Link>
+          </OverlayTrigger>
+        );
+      },
+    },
+    {
+      header: "Term",
+      accessorKey: "term",
+    },
+    {
+      header: "School",
+      accessorKey: "school",
+    },
+    {
+      header: "Edit",
+      id: "edit",
+      cell: ({ cell }) => {
+        const canEditCourse = canEdit(cell.row);
+        if (canEditCourse) {
+          return (
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={() => handleShowCourseEditModal(cell.row.original)}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-button`}
+            >
+              Edit
+            </Button>
+          );
+        } else {
+          return (
+            <span
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-no-permission`}
+            ></span>
+          );
+        }
+      },
+    },
+    {
+      header: "Students",
+      accessorKey: "numStudents",
+    },
+    {
+      header: "Staff",
+      accessorKey: "numStaff",
+    },
+  ];
   const cellToAxiosParamsEdit = (formData) => {
     return {
       url: `/api/courses/updateInstructor`,
@@ -145,16 +194,6 @@ export default function InstructorCoursesTable({
     setSelectedCourse(null);
   };
 
-  const handleShowCourseEditModal = (course) => {
-    setSelectedCourseForEdit(course);
-    setShowCourseEditModal(true);
-  };
-
-  const handleCloseCourseEditModal = () => {
-    setShowCourseEditModal(false);
-    setSelectedCourseForEdit(null);
-  };
-
   const handleUpdateInstructor = async (formData) => {
     formData.courseId = selectedCourse.id;
     editMutation.mutate(formData);
@@ -193,20 +232,6 @@ export default function InstructorCoursesTable({
     return false;
   };
 
-  const canEdit = (row) => {
-    if (hasRole(currentUser, "ROLE_ADMIN")) {
-      return true;
-    }
-    if (
-      hasRole(currentUser, "ROLE_INSTRUCTOR") &&
-      row.original.instructorEmail === currentUser.root.user.email
-    ) {
-      return true;
-    }
-
-    return false;
-  };
-
   const renderTooltip = (cell) => {
     let set_message;
     const result = canInstall(cell.row);
@@ -222,31 +247,6 @@ export default function InstructorCoursesTable({
 
   const columnsWithInstall = [
     ...columns,
-    {
-      header: "Edit",
-      id: "edit",
-      cell: ({ cell }) => {
-        const canEditCourse = canEdit(cell.row);
-        if (canEditCourse) {
-          return (
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={() => handleShowCourseEditModal(cell.row.original)}
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-button`}
-            >
-              Edit
-            </Button>
-          );
-        } else {
-          return (
-            <span
-              data-testid={`${testId}-cell-row-${cell.row.index}-col-edit-no-permission`}
-            ></span>
-          );
-        }
-      },
-    },
     {
       header: "GitHub Org",
       id: "orgName",
