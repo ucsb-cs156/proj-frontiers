@@ -27,4 +27,13 @@ code {
   word-break: break-all; /* Breaks long words */
   font-family: monospace; /* Ensures consistent spacing */
   font-size: 0.8em; /* Smaller font size for better readability */
-} 
+}
+
+/* Instructor Course Show Page - Settings tab flush right */
+.instructor-course-tabs .nav-tabs {
+  display: flex;
+}
+
+.instructor-course-tabs .nav-tabs .nav-item:last-child {
+  margin-left: auto;
+}

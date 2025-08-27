@@ -220,10 +220,6 @@ describe("InstructorCourseShowPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    expect(screen.getByText("Management")).toHaveAttribute(
-      "data-rr-ui-event-key",
-      "default",
-    );
     expect(screen.getByText("Enrollment")).toHaveAttribute(
       "data-rr-ui-event-key",
       "enrollment",
@@ -236,7 +232,11 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "assignments",
     );
-    expect(screen.getByText("Management")).toHaveAttribute(
+    expect(screen.getByText("Settings")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "settings",
+    );
+    expect(screen.getByText("Enrollment")).toHaveAttribute(
       "aria-selected",
       "true",
     );
