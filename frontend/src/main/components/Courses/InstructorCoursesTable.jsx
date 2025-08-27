@@ -47,6 +47,14 @@ const columns = [
     header: "School",
     accessorKey: "school",
   },
+  {
+    header: "Students",
+    accessorKey: "numStudents",
+  },
+  {
+    header: "Staff",
+    accessorKey: "numStaff",
+  },
 ];
 
 export default function InstructorCoursesTable({

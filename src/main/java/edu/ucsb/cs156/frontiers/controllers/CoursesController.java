@@ -91,7 +91,9 @@ public class CoursesController extends ApiController {
       String courseName,
       String term,
       String school,
-      String instructorEmail) {
+      String instructorEmail,
+      int numStudents,
+      int numStaff) {
 
     // Creates view from Course entity
     public InstructorCourseView(Course c) {
@@ -102,7 +104,9 @@ public class CoursesController extends ApiController {
           c.getCourseName(),
           c.getTerm(),
           c.getSchool(),
-          c.getInstructorEmail());
+          c.getInstructorEmail(),
+          c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
+          c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);
     }
   }
 
