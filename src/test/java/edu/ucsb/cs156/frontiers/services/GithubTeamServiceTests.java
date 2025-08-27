@@ -467,4 +467,30 @@ public class GithubTeamServiceTests {
             any(HttpEntity.class),
             eq(String.class));
   }
+
+  @Test
+  public void testGetOrgId_VerifyHeaders() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org"),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>("{\"id\": 12345}", HttpStatus.OK));
+
+    // Act
+    githubTeamService.getOrgId("test-org", course);
+
+    // Assert
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
 }
