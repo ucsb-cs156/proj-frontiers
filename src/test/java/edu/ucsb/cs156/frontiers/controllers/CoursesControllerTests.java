@@ -1221,4 +1221,135 @@ public class CoursesControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
     assertEquals(expectedJson, responseString);
   }
+
+  // Tests for InstructorCourseView constructor with null collections
+  @Test
+  public void testInstructorCourseView_withNullRosterStudents() throws Exception {
+    // arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail("instructor@example.com")
+            .installationId("123")
+            .orgName("test-org")
+            .rosterStudents(null) // explicitly null
+            .courseStaff(List.of()) // empty list
+            .build();
+
+    // act
+    InstructorCourseView view = new InstructorCourseView(course);
+
+    // assert
+    assertEquals(1L, view.id());
+    assertEquals("CS156", view.courseName());
+    assertEquals("S25", view.term());
+    assertEquals("UCSB", view.school());
+    assertEquals("instructor@example.com", view.instructorEmail());
+    assertEquals("123", view.installationId());
+    assertEquals("test-org", view.orgName());
+    assertEquals(0, view.numStudents()); // should be 0 when null
+    assertEquals(0, view.numStaff()); // should be 0 for empty list
+  }
+
+  @Test
+  public void testInstructorCourseView_withNullCourseStaff() throws Exception {
+    // arrange
+    Course course =
+        Course.builder()
+            .id(2L)
+            .courseName("CS148")
+            .term("F25")
+            .school("UCSB")
+            .instructorEmail("instructor@example.com")
+            .installationId("456")
+            .orgName("test-org-2")
+            .rosterStudents(List.of()) // empty list
+            .courseStaff(null) // explicitly null
+            .build();
+
+    // act
+    InstructorCourseView view = new InstructorCourseView(course);
+
+    // assert
+    assertEquals(2L, view.id());
+    assertEquals("CS148", view.courseName());
+    assertEquals("F25", view.term());
+    assertEquals("UCSB", view.school());
+    assertEquals("instructor@example.com", view.instructorEmail());
+    assertEquals("456", view.installationId());
+    assertEquals("test-org-2", view.orgName());
+    assertEquals(0, view.numStudents()); // should be 0 for empty list
+    assertEquals(0, view.numStaff()); // should be 0 when null
+  }
+
+  @Test
+  public void testInstructorCourseView_withBothCollectionsNull() throws Exception {
+    // arrange
+    Course course =
+        Course.builder()
+            .id(3L)
+            .courseName("CS24")
+            .term("W25")
+            .school("UCSB")
+            .instructorEmail("instructor@example.com")
+            .installationId("789")
+            .orgName("test-org-3")
+            .rosterStudents(null) // explicitly null
+            .courseStaff(null) // explicitly null
+            .build();
+
+    // act
+    InstructorCourseView view = new InstructorCourseView(course);
+
+    // assert
+    assertEquals(3L, view.id());
+    assertEquals("CS24", view.courseName());
+    assertEquals("W25", view.term());
+    assertEquals("UCSB", view.school());
+    assertEquals("instructor@example.com", view.instructorEmail());
+    assertEquals("789", view.installationId());
+    assertEquals("test-org-3", view.orgName());
+    assertEquals(0, view.numStudents()); // should be 0 when null
+    assertEquals(0, view.numStaff()); // should be 0 when null
+  }
+
+  @Test
+  public void testInstructorCourseView_withNonNullCollections() throws Exception {
+    // arrange
+    RosterStudent student1 = RosterStudent.builder().id(1L).build();
+    RosterStudent student2 = RosterStudent.builder().id(2L).build();
+    CourseStaff staff1 = CourseStaff.builder().id(1L).build();
+    CourseStaff staff2 = CourseStaff.builder().id(2L).build();
+    CourseStaff staff3 = CourseStaff.builder().id(3L).build();
+
+    Course course =
+        Course.builder()
+            .id(4L)
+            .courseName("CS130A")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail("instructor@example.com")
+            .installationId("101112")
+            .orgName("test-org-4")
+            .rosterStudents(List.of(student1, student2)) // 2 students
+            .courseStaff(List.of(staff1, staff2, staff3)) // 3 staff
+            .build();
+
+    // act
+    InstructorCourseView view = new InstructorCourseView(course);
+
+    // assert
+    assertEquals(4L, view.id());
+    assertEquals("CS130A", view.courseName());
+    assertEquals("S25", view.term());
+    assertEquals("UCSB", view.school());
+    assertEquals("instructor@example.com", view.instructorEmail());
+    assertEquals("101112", view.installationId());
+    assertEquals("test-org-4", view.orgName());
+    assertEquals(2, view.numStudents()); // should match list size
+    assertEquals(3, view.numStaff()); // should match list size
+  }
 }
