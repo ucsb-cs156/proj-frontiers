@@ -7,11 +7,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
+import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -47,6 +51,9 @@ public class JobsController extends ApiController {
   @Autowired private CourseRepository courseRepository;
   @Autowired private OrganizationMemberService organizationMemberService;
   @Autowired private CourseStaffRepository courseStaffRepository;
+  @Autowired private TeamRepository teamRepository;
+  @Autowired private TeamMemberRepository teamMemberRepository;
+  @Autowired private GithubTeamService githubTeamService;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -116,6 +123,22 @@ public class JobsController extends ApiController {
             .courseRepository(courseRepository)
             .organizationMemberService(organizationMemberService)
             .courseStaffRepository(courseStaffRepository)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(summary = "Launch Push Teams to GitHub Job")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/launch/pushTeamsToGithub")
+  public Job launchPushTeamsToGithubJob(@Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
             .build();
     return jobService.runAsJob(job);
   }

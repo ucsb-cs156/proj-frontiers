@@ -1,0 +1,50 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "004-add-github-team-id-to-team",
+      "author": "copilot",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "TEAM",
+            "columns": [
+              {
+                "column": {
+                  "name": "GITHUB_TEAM_ID",
+                  "type": "INTEGER",
+                  "constraints": {
+                    "nullable": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "changeSet": {
+      "id": "004-add-team-status-to-team-member",
+      "author": "copilot",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "TEAM_MEMBER",
+            "columns": [
+              {
+                "column": {
+                  "name": "TEAM_STATUS",
+                  "type": "VARCHAR(255)",
+                  "constraints": {
+                    "nullable": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

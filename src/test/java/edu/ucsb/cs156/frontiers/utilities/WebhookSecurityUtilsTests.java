@@ -103,4 +103,12 @@ public class WebhookSecurityUtilsTests {
     assertFalse(
         WebhookSecurityUtils.validateGitHubSignature(payload, signatureWithoutPrefix, TEST_SECRET));
   }
+
+  @Test
+  public void test_thatConstructorIsPrivate() throws Exception {
+    var constructor = WebhookSecurityUtils.class.getDeclaredConstructor();
+    assertTrue(java.lang.reflect.Modifier.isPrivate(constructor.getModifiers()));
+    constructor.setAccessible(true);
+    constructor.newInstance();
+  }
 }
