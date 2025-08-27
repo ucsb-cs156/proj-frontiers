@@ -271,6 +271,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .lastName("GAUCHO")
             .studentId("A123456")
             .email("cgaucho@ucsb.edu")
+            .section("08235")
             .build();
     RosterStudent rosterStudent2Updated =
         RosterStudent.builder()
@@ -541,5 +542,84 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     assertEquals(
         "UCSB_EGRADES CSV row does not have enough columns. Length = 8 Row content = [[08235, A123456, , 4.0, GAUCHO, CHRIS FAKE, F23, CMPSC156]]",
         ex.getReason());
+  }
+
+  @Test
+  public void test_fromCSVRowUCSB_sectionField() {
+    String row[] = {
+      "08235", // Enrl Cd - position 0 (should become section)
+      "A123456", // Perm #
+      "", // Grade
+      "4.0", // Final Units
+      "GAUCHO", // Student Last
+      "CHRIS FAKE", // Student First Middle
+      "F23", // Quarter
+      "CMPSC156", // Course ID
+      "0100", // Section
+      "T R 2:00- 3:15 SH 1431", // Meeting Time(s) / Location(s)
+      "cgaucho@ucsb.edu", // Email
+      "SR", // ClassLevel
+      "CMPSC", // Major1
+      "", // Major2
+      "9/27/2023 9:39:25 AM", // Date/Time
+      "" // Pronoun
+    };
+
+    RosterStudent rs =
+        RosterStudentsCSVController.fromCSVRow(
+            row, RosterStudentsCSVController.RosterSourceType.UCSB_EGRADES);
+
+    assertEquals("CHRIS FAKE", rs.getFirstName());
+    assertEquals("GAUCHO", rs.getLastName());
+    assertEquals("A123456", rs.getStudentId());
+    assertEquals("cgaucho@ucsb.edu", rs.getEmail());
+    assertEquals(
+        "08235", rs.getSection()); // This is the key test - section should be Enrl Cd (position 0)
+  }
+
+  @Test
+  public void test_fromCSVRowChico_sectionField() {
+    String row[] = {
+      "Marge Simpson", // Student Name
+      "88200", // Student ID
+      "013228559", // Student SIS ID
+      "msimpson@csuchico.edu" // Email
+    };
+
+    RosterStudent rs =
+        RosterStudentsCSVController.fromCSVRow(
+            row, RosterStudentsCSVController.RosterSourceType.CHICO_CANVAS);
+
+    assertEquals("Marge", rs.getFirstName());
+    assertEquals("Simpson", rs.getLastName());
+    assertEquals("013228559", rs.getStudentId());
+    assertEquals("msimpson@csuchico.edu", rs.getEmail());
+    assertEquals("", rs.getSection()); // This is the key test - section should be empty string
+  }
+
+  @Test
+  public void test_fromCSVRowOregonState_sectionField() {
+    String row[] = {
+      "Martha Washington", // Full name
+      "Washington, Martha", // Sortable name
+      "9876543", // Canvas user id
+      "100", // Overall course grade
+      "100", // Assignment on time percent
+      "8-Aug-25", // Last page view time
+      "12-Dec-25", // Last participation time
+      "5-May-25", // Last logged out
+      "martha@oregonstate.edu", // Email
+      "123456789" // SIS Id
+    };
+
+    RosterStudent rs =
+        RosterStudentsCSVController.fromCSVRow(
+            row, RosterStudentsCSVController.RosterSourceType.OREGON_STATE);
+
+    assertEquals("Martha", rs.getFirstName());
+    assertEquals("Washington", rs.getLastName());
+    assertEquals("123456789", rs.getStudentId());
+    assertEquals("martha@oregonstate.edu", rs.getEmail());
+    assertEquals("", rs.getSection()); // This is the key test - section should be empty string
   }
 }
