@@ -1221,4 +1221,41 @@ public class CoursesControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
     assertEquals(expectedJson, responseString);
   }
+
+  /** Test that InstructorCourseView correctly counts students and staff */
+  @Test
+  public void testInstructorCourseView_countsStudentsAndStaff() {
+    // arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail("test@example.com")
+            .build();
+
+    // Test with null lists
+    InstructorCourseView viewWithNulls = new InstructorCourseView(course);
+    assertEquals(0, viewWithNulls.numStudents());
+    assertEquals(0, viewWithNulls.numStaff());
+
+    // Test with empty lists
+    course.setRosterStudents(Collections.emptyList());
+    course.setCourseStaff(Collections.emptyList());
+    InstructorCourseView viewWithEmpty = new InstructorCourseView(course);
+    assertEquals(0, viewWithEmpty.numStudents());
+    assertEquals(0, viewWithEmpty.numStaff());
+
+    // Test with populated lists
+    RosterStudent student1 = RosterStudent.builder().id(1L).build();
+    RosterStudent student2 = RosterStudent.builder().id(2L).build();
+    CourseStaff staff1 = CourseStaff.builder().id(1L).build();
+
+    course.setRosterStudents(List.of(student1, student2));
+    course.setCourseStaff(List.of(staff1));
+    InstructorCourseView viewWithData = new InstructorCourseView(course);
+    assertEquals(2, viewWithData.numStudents());
+    assertEquals(1, viewWithData.numStaff());
+  }
 }
