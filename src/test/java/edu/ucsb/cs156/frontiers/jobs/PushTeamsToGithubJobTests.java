@@ -156,8 +156,9 @@ public class PushTeamsToGithubJobTests {
     when(githubTeamService.createOrGetTeamId(team2, course)).thenReturn(456);
     when(githubTeamService.getTeamMembershipStatus("student1", 123, course))
         .thenReturn(TeamStatus.NOT_ORG_MEMBER);
-    when(githubTeamService.addMemberToGithubTeam("student1", 123, "member", course))
+    when(githubTeamService.addMemberToGithubTeam("student1", 123, "member", course, 1))
         .thenReturn(TeamStatus.TEAM_MEMBER);
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
 
     PushTeamsToGithubJob job =
         PushTeamsToGithubJob.builder()
@@ -177,7 +178,7 @@ public class PushTeamsToGithubJobTests {
     verify(githubTeamService).createOrGetTeamId(team1, course);
     verify(githubTeamService).createOrGetTeamId(team2, course);
     verify(githubTeamService).getTeamMembershipStatus("student1", 123, course);
-    verify(githubTeamService).addMemberToGithubTeam("student1", 123, "member", course);
+    verify(githubTeamService).addMemberToGithubTeam("student1", 123, "member", course, 1);
 
     // Verify team1 was updated with GitHub team ID
     verify(teamRepository)
@@ -245,7 +246,7 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
     // Should not try to add member since they're already a member
-    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
   }
@@ -297,7 +298,7 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
     // Should not try to add member since they're already a maintainer
-    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
   }
@@ -392,7 +393,7 @@ public class PushTeamsToGithubJobTests {
     verify(githubTeamService).createOrGetTeamId(team, course);
     // Should not process team members when team has no GitHub team ID
     verify(githubTeamService, never()).getTeamMembershipStatus(any(), any(), any());
-    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
     verify(teamMemberRepository, never()).save(any());
   }
 
@@ -447,5 +448,39 @@ public class PushTeamsToGithubJobTests {
     // Should set status to NOT_ORG_MEMBER when processing fails
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.NOT_ORG_MEMBER)));
+  }
+
+  @Test
+  public void test_Accept_GetOrgIdFailure() throws Exception {
+    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getOrgId(course.getOrgName(), course))
+        .thenThrow(new RuntimeException("GitHub API error"));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    // Act
+    job.accept(ctx);
+
+    // Assert
+    verify(courseRepository).findById(courseId);
+    verify(githubTeamService).getOrgId(course.getOrgName(), course);
+    verifyNoInteractions(teamRepository, teamMemberRepository);
   }
 }

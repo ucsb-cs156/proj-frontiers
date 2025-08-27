@@ -40,6 +40,21 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
       return;
     }
 
+    // Get the organization id
+
+    Integer orgId = null;
+    try {
+      orgId = githubTeamService.getOrgId(course.getOrgName(), course);
+
+    } catch (Exception e) {
+      ctx.log(
+          "ERROR: Failed to get organization ID for org: "
+              + course.getOrgName()
+              + " - "
+              + e.getMessage());
+      return;
+    }
+
     // Get all teams for this course
     Iterable<Team> teams = teamRepository.findByCourseId(courseId);
 
@@ -97,7 +112,7 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
             // Add as member
             TeamStatus newStatus =
                 githubTeamService.addMemberToGithubTeam(
-                    student.getGithubLogin(), team.getGithubTeamId(), "member", course);
+                    student.getGithubLogin(), team.getGithubTeamId(), "member", course, orgId);
             teamMember.setTeamStatus(newStatus);
             teamMemberRepository.save(teamMember);
             ctx.log(

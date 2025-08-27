@@ -215,12 +215,12 @@ public class GithubTeamService {
    * @throws InvalidKeySpecException if there is a key specification error
    */
   public TeamStatus addMemberToGithubTeam(
-      String githubLogin, Integer teamId, String role, Course course)
+      String githubLogin, Integer teamId, String role, Course course, Integer orgId)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String endpoint =
-        "https://api.github.com/orgs/"
-            + course.getOrgName()
-            + "/teams/"
+        "https://api.github.com/organizations/"
+            + orgId
+            + "/team/"
             + teamId
             + "/memberships/"
             + githubLogin;
