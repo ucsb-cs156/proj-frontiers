@@ -302,7 +302,13 @@ public class RosterStudentsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)")
   @DeleteMapping("/delete")
   @Transactional
-  public ResponseEntity<String> deleteRosterStudent(@Parameter(name = "id") @RequestParam Long id)
+  public ResponseEntity<String> deleteRosterStudent(
+      @Parameter(name = "id") @RequestParam Long id,
+      @Parameter(
+              name = "removeFromOrg",
+              description = "Whether to remove student from GitHub organization")
+          @RequestParam(defaultValue = "true")
+          boolean removeFromOrg)
       throws EntityNotFoundException {
     RosterStudent rosterStudent =
         rosterStudentRepository
@@ -315,7 +321,9 @@ public class RosterStudentsController extends ApiController {
     String orgRemovalErrorMessage = null;
 
     // Try to remove the student from the organization if they have a GitHub login
-    if (rosterStudent.getGithubLogin() != null
+    // and removeFromOrg parameter is true
+    if (removeFromOrg
+        && rosterStudent.getGithubLogin() != null
         && course.getOrgName() != null
         && course.getInstallationId() != null) {
       orgRemovalAttempted = true;
