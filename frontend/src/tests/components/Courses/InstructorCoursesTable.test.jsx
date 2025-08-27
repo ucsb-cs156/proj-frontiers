@@ -58,6 +58,8 @@ describe("InstructorCoursesTable tests", () => {
         "School",
         "Edit",
         "Instructor",
+        "Students",
+        "Staff",
       ];
       const expectedFields = [
         "id",
@@ -65,6 +67,8 @@ describe("InstructorCoursesTable tests", () => {
         "term",
         "school",
         "instructorEmail",
+        "numStudents",
+        "numStaff",
       ];
 
       expectedHeaders.forEach((headerText) => {
