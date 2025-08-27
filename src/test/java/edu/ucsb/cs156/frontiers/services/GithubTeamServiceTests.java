@@ -241,7 +241,7 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.PUT),
             any(HttpEntity.class),
             eq(String.class)))
@@ -264,7 +264,7 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.PUT),
             any(HttpEntity.class),
             eq(String.class)))
@@ -424,7 +424,7 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.PUT),
             entityCaptor.capture(),
             eq(String.class)))
