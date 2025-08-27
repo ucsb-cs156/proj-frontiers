@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>UpsertResponse.java</h1>
+
+<table class="src">
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package edu.ucsb.cs156.frontiers.models;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.entities.RosterStudent;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.enums.InsertStatus;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>public record UpsertResponse(InsertStatus insertStatus, RosterStudent rosterStudent) {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public InsertStatus getInsertStatus() {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_8'/>
+8
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_8'>1</a>
+<span>
+1. getInsertStatus : replaced return value with null for edu/ucsb/cs156/frontiers/models/UpsertResponse::getInsertStatus &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return insertStatus;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@53a86a22_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@53a86a22_8'>8</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@53a86a22_8'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>getInsertStatus<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:test_post_fails_on_matching()]</span></span> replaced return value with null for edu/ucsb/cs156/frontiers/models/UpsertResponse::getInsertStatus &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testPostRosterStudentWithInstallationId()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:test_post_fails_on_matching()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testPostRosterStudent()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testPostRosterStudent_withUmail()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testPostRosterStudentWithNoInstallationId()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpsertStudentUpdatingTheEmail()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsCSVControllerTests]/[method:students_with_non_matching_student_id_and_email_are_rejected()] (14 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsControllerTests]/[method:testUpsertStudentWithDuplicateEmail()] (38 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.RosterStudentsCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.RosterStudentsCSVControllerTests]/[method:instructor_can_upload_students_for_an_existing_course_chico()] (29 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.17.0
+
+</body>
+</html>
