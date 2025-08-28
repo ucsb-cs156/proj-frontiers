@@ -388,4 +388,28 @@ describe("InstructorCourseShowPage tests", () => {
       "Manage settings for association between your GitHub organization and this web application.",
     );
   });
+  test("does not show error modal on initial render", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Course:");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 });
