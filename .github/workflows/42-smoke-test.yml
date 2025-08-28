@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
-    steps:
+    run-smoke-test:
       - name: Run centralized smoke-test workflow
         uses: ucsb-cs156/workflows/.github/workflows/42-smoke-test.yml@main
         with:
