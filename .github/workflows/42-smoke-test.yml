@@ -13,22 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Compose
-        uses: docker/setup-compose-action@v1
-
-      - name: Start containers
-        run: docker compose -f ".devcontainer/production/docker-compose.yml" up -d --build
-
-      - name: Run Healthcheck
-        uses: Wandalen/wretry.action@master
+      - name: Run centralized smoke-test workflow
+        uses: ucsb-cs156/workflows/.github/workflows/42-smoke-test.yml@main
         with:
-          command: "docker exec javadev curl -s --fail http://localhost:8080/"
-          attempt_limit: 3
-          attempt_delay: 15000
-
-      - name: Stop containers
-        if: always()
-        run: docker compose -f ".devcontainer/production/docker-compose.yml" down
+          compose-location: .devcontainer/production/docker-compose.yml
+      
