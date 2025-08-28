@@ -19,8 +19,8 @@ frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeRe
 frontiers,edu.ucsb.cs156.frontiers.services,UpdateUserService,0,124,0,10,0,32,0,11,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,173,0,0,0,41,0,4,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,0,7,0,4
-frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
+frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,JwtService,0,152,0,4,0,37,0,7,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,176,0,2,0,45,0,4,0,3
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,465,0,20,0,105,0,23,0,13
@@ -46,7 +46,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,27,0,0,0,5,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,550,0,68,0,138,0,50,0,16
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,561,0,68,0,142,0,51,0,17
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,0,23,0,5,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,137,0,0,0,23,0,6,0,6
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,53,0,4,0,14,0,5,0,3
@@ -66,6 +66,7 @@ frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersApplicationRunner,0,14,0,0,0
 frontiers,edu.ucsb.cs156.frontiers.startup,WiremockApplicationRunner,0,17,0,0,0,6,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersStartup,0,72,0,6,0,20,0,8,0,5
 frontiers,edu.ucsb.cs156.frontiers.models,UpsertResponse,0,12,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,73,0,2,0,15,0,3,0,2
+frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,78,0,2,0,16,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,LoadResult,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,UserDataDTO,0,30,0,0,0,12,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.entities,RosterStudent,0,16,0,2,0,3,0,3,0,2

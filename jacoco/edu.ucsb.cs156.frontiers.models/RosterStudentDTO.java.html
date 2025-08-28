@@ -3,12 +3,13 @@
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import java.util.List;
 
 /**
  * This is a DTO class that represents a student in the roster. It is used to transfer data between
  * the server and the client.
  */
-<span class="fc" id="L11">public record RosterStudentDTO(</span>
+<span class="fc" id="L12">public record RosterStudentDTO(</span>
     Long id,
     Long courseId,
     String studentId,
@@ -17,25 +18,27 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
     String email,
     String section,
     long userId,
-    Integer userGithubId,
-    String userGithubLogin,
+    Integer githubId,
+    String githubLogin,
     RosterStatus rosterStatus,
-    OrgStatus orgStatus) {
+    OrgStatus orgStatus,
+    List&lt;String&gt; teams) {
 
   public RosterStudentDTO(RosterStudent rosterStudent) {
-<span class="fc" id="L26">    this(</span>
-<span class="fc" id="L27">        rosterStudent.getId(),</span>
-<span class="fc" id="L28">        rosterStudent.getCourse().getId(),</span>
-<span class="fc" id="L29">        rosterStudent.getStudentId(),</span>
-<span class="fc" id="L30">        rosterStudent.getFirstName(),</span>
-<span class="fc" id="L31">        rosterStudent.getLastName(),</span>
-<span class="fc" id="L32">        rosterStudent.getEmail(),</span>
-<span class="fc" id="L33">        rosterStudent.getSection(),</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">        rosterStudent.getUser() != null ? rosterStudent.getUser().getId() : 0,</span>
-<span class="fc" id="L35">        rosterStudent.getGithubId(),</span>
-<span class="fc" id="L36">        rosterStudent.getGithubLogin(),</span>
-<span class="fc" id="L37">        rosterStudent.getRosterStatus(),</span>
-<span class="fc" id="L38">        rosterStudent.getOrgStatus());</span>
-<span class="fc" id="L39">  }</span>
+<span class="fc" id="L28">    this(</span>
+<span class="fc" id="L29">        rosterStudent.getId(),</span>
+<span class="fc" id="L30">        rosterStudent.getCourse().getId(),</span>
+<span class="fc" id="L31">        rosterStudent.getStudentId(),</span>
+<span class="fc" id="L32">        rosterStudent.getFirstName(),</span>
+<span class="fc" id="L33">        rosterStudent.getLastName(),</span>
+<span class="fc" id="L34">        rosterStudent.getEmail(),</span>
+<span class="fc" id="L35">        rosterStudent.getSection(),</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        rosterStudent.getUser() != null ? rosterStudent.getUser().getId() : 0,</span>
+<span class="fc" id="L37">        rosterStudent.getGithubId(),</span>
+<span class="fc" id="L38">        rosterStudent.getGithubLogin(),</span>
+<span class="fc" id="L39">        rosterStudent.getRosterStatus(),</span>
+<span class="fc" id="L40">        rosterStudent.getOrgStatus(),</span>
+<span class="fc" id="L41">        rosterStudent.getTeams());</span>
+<span class="fc" id="L42">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
