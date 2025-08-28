@@ -65,8 +65,8 @@ public class RosterStudentDTOServiceTests {
     assertEquals("Doe", dto.lastName());
     assertEquals("johndoe@example.com", dto.email());
     assertEquals(2L, dto.userId());
-    assertEquals(12345, dto.userGithubId());
-    assertEquals("testuser", dto.userGithubLogin());
+    assertEquals(12345, dto.githubId());
+    assertEquals("testuser", dto.githubLogin());
     assertEquals(RosterStatus.ROSTER, dto.rosterStatus());
     assertEquals(OrgStatus.PENDING, dto.orgStatus());
   }

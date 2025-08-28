@@ -29,6 +29,7 @@ import edu.ucsb.cs156.frontiers.enums.InsertStatus;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
@@ -345,6 +346,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(java.util.List.of(rs1, rs2));
 
+    List<RosterStudentDTO> expectedRosterStudents =
+        java.util.List.of(new RosterStudentDTO(rs1), new RosterStudentDTO(rs2));
+
     // act
 
     MvcResult response =
@@ -353,7 +357,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // assert
 
     String responseString = response.getResponse().getContentAsString();
-    String expectedJson = mapper.writeValueAsString(java.util.List.of(rs1, rs2));
+    String expectedJson = mapper.writeValueAsString(expectedRosterStudents);
     assertEquals(expectedJson, responseString);
   }
 

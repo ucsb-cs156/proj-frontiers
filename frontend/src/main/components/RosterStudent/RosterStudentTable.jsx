@@ -97,6 +97,23 @@ export default function RosterStudentTable({
       header: "GitHub Login",
       accessorKey: "githubLogin",
     },
+    {
+      id: "teams",
+      header: () => (
+        <OverlayTrigger
+          placement="right"
+          overlay={
+            <Tooltip id={`tooltip-teams-header`}>
+              A list of teams that the student is a member of.
+            </Tooltip>
+          }
+        >
+          <span>Teams</span>
+        </OverlayTrigger>
+      ),
+      accessorFn: (row) =>
+        Array.isArray(row.teams) ? row.teams.join(", ") : "",
+    },
   ];
 
   const renderTooltip = (orgStatus) => (props) => {
