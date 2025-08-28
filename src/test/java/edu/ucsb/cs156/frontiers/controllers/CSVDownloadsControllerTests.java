@@ -133,9 +133,9 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     String expectedResponse =
         """
-                "COURSEID","EMAIL","FIRSTNAME","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","SECTION","STUDENTID","GITHUBID","GITHUBLOGIN","USERID","TEAMS"
-                "1","cgaucho@ucsb.edu","Chris","42","Gaucho","PENDING","ROSTER","Section A","12345","12345","cgaucho","102","Team Alpha, Team Beta"
-                """;
+            "COURSEID","EMAIL","FIRSTNAME","GITHUBID","GITHUBLOGIN","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","SECTION","STUDENTID","TEAMS","USERID"
+            "1","cgaucho@ucsb.edu","Chris","12345","cgaucho","42","Gaucho","PENDING","ROSTER","Section A","12345","Team Alpha","102"
+            """;
 
     MvcResult response =
         mockMvc
