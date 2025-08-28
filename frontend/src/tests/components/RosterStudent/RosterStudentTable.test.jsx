@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 
 const queryClient = new QueryClient();
 const axiosMock = new AxiosMockAdapter(axios);
@@ -26,7 +26,7 @@ describe("RosterStudentTable tests", () => {
     "Email",
     "Status",
     "GitHub Login",
-    "Team",
+    "Teams",
   ];
   const expectedFields = [
     "id",
@@ -36,7 +36,7 @@ describe("RosterStudentTable tests", () => {
     "email",
     "orgStatus",
     "githubLogin",
-    "team",
+    "teams",
   ];
   const testId = "RosterStudentTable";
 
@@ -130,6 +130,9 @@ describe("RosterStudentTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-3-col-githubLogin`),
     ).toHaveTextContent("jonsnow");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-3-col-teams`),
+    ).toHaveTextContent("Team A, Team B");
 
     const pending = screen.getByText("Pending");
     expect(pending).toBeInTheDocument();
@@ -321,16 +324,16 @@ test("tooltips for Team column name", async () => {
     </QueryClientProvider>,
   );
 
-  fireEvent.mouseOver(screen.getByText("Team"));
+  fireEvent.mouseOver(screen.getByText("Teams"));
 
   await waitFor(() => {
     expect(
-      screen.getByText("Student's team name will appear here once assigned."),
+      screen.getByText("A list of teams that the student is a member of."),
     ).toBeInTheDocument();
   });
   expect(screen.getByRole("tooltip")).toHaveAttribute(
     "id",
-    "tooltip-team-header",
+    "tooltip-teams-header",
   );
 });
 test("tooltips for PENDING status", async () => {
@@ -486,4 +489,21 @@ test("expect the correct tooltip ID", async () => {
 
   const tooltip = await screen.findByRole("tooltip");
   expect(tooltip).toHaveAttribute("id", "member-tooltip");
+});
+test("if teams is null, shows empty string", async () => {
+  const currentUser = currentUserFixtures.adminUser;
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <RosterStudentTable
+          students={rosterStudentFixtures.studentsWithEachStatus}
+          currentUser={currentUser}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  expect(
+    screen.getByTestId("RosterStudentTable-cell-row-0-col-teams"),
+  ).toHaveTextContent("");
 });

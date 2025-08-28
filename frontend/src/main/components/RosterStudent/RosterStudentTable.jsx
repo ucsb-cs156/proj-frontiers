@@ -103,7 +103,7 @@ export default function RosterStudentTable({
         <OverlayTrigger
           placement="right"
           overlay={
-            <Tooltip id={`tooltip-team-header`}>
+            <Tooltip id={`tooltip-teams-header`}>
               A list of teams that the student is a member of.
             </Tooltip>
           }
@@ -111,7 +111,8 @@ export default function RosterStudentTable({
           <span>Teams</span>
         </OverlayTrigger>
       ),
-      accessorFn: (row) => row.teams.join(", "),
+      accessorFn: (row) =>
+        Array.isArray(row.teams) ? row.teams.join(", ") : "",
     },
   ];
 
