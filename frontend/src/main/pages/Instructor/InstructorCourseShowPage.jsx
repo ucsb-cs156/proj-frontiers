@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { useCurrentUser } from "main/utils/currentUser";
 import { useNavigate, useParams } from "react-router";
 
@@ -11,6 +10,8 @@ import { Button, Tab, Tabs } from "react-bootstrap";
 import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
 import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabComponent";
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -63,25 +64,62 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <h1 data-testid={`${testId}-title`}>
-        {course ?(
+      <h1
+        data-testid={`${testId}-title`}
+        style={{
+          display: "flex",
+          gap: "1.5rem",
+          justifyContent: "flex-start",
+        }}
+      >
+        {course ? (
           <>
-            Course:<span style={{color: "blue"}}> {course.courseName}</span> 
-            {"  "}
-            Term:<span style={{color: "blue"}}> {course.term} </span>
+            <span>
+              Course:
+              <a
+                href={`https://github.com/${course.orgName}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={`${testId}-github-org-link`}
+              >
+                {course.courseName}
+              </a>
+            </span>
+            <span>
+              Term:
+              <span style={{ color: "blue" }} data-testid={`${testId}-term`}>
+                {course.term}
+              </span>
+            </span>
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id={`${testId}-tooltip-github-settings`}>
+                  Manage settings for association between your GitHub
+                  organization and this web application.
+                </Tooltip>
+              }
+            >
+              <span>
+                <a
+                  href={`https://github.com/organizations/${course.orgName}/settings/installations/${course.installationId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`${testId}-github-settings-link`}
+                >
+                  <GithubSettingIcon
+                    size={35}
+                    data-testid={`${testId}-github-settings-icon`}
+                  />
+                </a>
+              </span>
+            </OverlayTrigger>
           </>
-         ) : (
-          "Loading..."
-         )}
+        ) : (
+          "Course: Loading..."
+        )}
       </h1>
       <Tabs defaultActiveKey={"default"}>
-        {/* <Tab eventKey={"default"} title={"Management"} className="pt-2">
-          <InstructorCoursesTable
-            courses={course ? [course] : []}
-            currentUser={currentUser}
-            testId={testId}
-          />
-        </Tab> */}
         <Tab eventKey={"enrollment"} title={"Students"} className="pt-2">
           <EnrollmentTabComponent
             courseId={courseId}
@@ -89,7 +127,7 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           />
         </Tab>
-          <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
+        <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
           <StaffTabComponent
             courseId={courseId}
             testIdPrefix={testId}
