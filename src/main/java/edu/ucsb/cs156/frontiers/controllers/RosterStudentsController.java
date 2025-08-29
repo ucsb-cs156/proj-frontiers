@@ -14,6 +14,7 @@ import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -54,6 +55,8 @@ public class RosterStudentsController extends ApiController {
   @Autowired private RosterStudentRepository rosterStudentRepository;
 
   @Autowired private CourseRepository courseRepository;
+
+  @Autowired private TeamMemberRepository teamMemberRepository;
 
   @Autowired private UpdateUserService updateUserService;
 
@@ -331,9 +334,9 @@ public class RosterStudentsController extends ApiController {
       }
     }
 
-    course.getRosterStudents().remove(rosterStudent);
+    // Delete the roster student from the database
+    // The cascade relationship will automatically handle deleting associated TeamMember records
     rosterStudentRepository.delete(rosterStudent);
-    courseRepository.save(course);
 
     if (!orgRemovalAttempted) {
       return ResponseEntity.ok(

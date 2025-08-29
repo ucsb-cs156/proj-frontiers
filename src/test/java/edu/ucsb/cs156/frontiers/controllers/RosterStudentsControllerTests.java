@@ -32,6 +32,7 @@ import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -57,6 +58,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   @MockitoBean private CourseRepository courseRepository;
 
   @MockitoBean private RosterStudentRepository rosterStudentRepository;
+
+  @MockitoBean private TeamMemberRepository teamMemberRepository;
 
   @Autowired private CurrentUserService currentUserService;
 
@@ -1583,9 +1586,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Since the student doesn't have a GitHub login, removeOrganizationMember should not be called
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -1633,9 +1634,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Verify that removeOrganizationMember is called since the student has a GitHub login
     verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
 
@@ -1682,9 +1681,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Verify that removeOrganizationMember is NOT called since the course has no org name
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -1731,9 +1728,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Verify that removeOrganizationMember is NOT called since the course has no installation ID
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -1786,9 +1781,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Verify that removeOrganizationMember is called but throws an exception
     verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
 
@@ -1811,7 +1804,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     verify(rosterStudentRepository).findById(eq(99L));
     verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
-    verify(courseRepository, never()).save(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1831,7 +1823,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     verify(rosterStudentRepository, never()).findById(any());
     verify(rosterStudentRepository, never()).delete(any(RosterStudent.class));
-    verify(courseRepository, never()).save(any(Course.class));
   }
 
   @Test
@@ -2022,9 +2013,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Verify that removeOrganizationMember is NOT called when removeFromOrg is false
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -2076,9 +2065,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Verify that removeOrganizationMember IS called when removeFromOrg is true
     verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
 
@@ -2130,9 +2117,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
     // Verify that removeOrganizationMember is NOT called (student has no GitHub login)
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
