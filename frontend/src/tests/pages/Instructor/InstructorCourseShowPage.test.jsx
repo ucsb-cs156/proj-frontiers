@@ -76,19 +76,14 @@ describe("InstructorCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
-    // expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-
     await waitFor(() => {
       screen.getByText("Individual Assignment");
     });
 
-    // const orgName = screen.getByText("ucsb-cs156-s25");
-    // expect(orgName).toBeInTheDocument();
-
-    // expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
-    // vi.advanceTimersByTime(3000);
-    // expect(mockedNavigate).not.toHaveBeenCalled();
-    // vi.useRealTimers();
+    expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
+    vi.advanceTimersByTime(3000);
+    expect(mockedNavigate).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   test("Returns to course page on timeout", async () => {
