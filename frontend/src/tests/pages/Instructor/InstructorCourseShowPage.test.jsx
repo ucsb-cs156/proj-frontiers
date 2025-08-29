@@ -228,7 +228,7 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "enrollment",
     );
-    expect(screen.getByText("Staff")).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Staff" })).toHaveAttribute(
       "data-rr-ui-event-key",
       "staff",
     );

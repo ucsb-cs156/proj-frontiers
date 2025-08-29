@@ -8,6 +8,8 @@ const coursesFixtures = {
       term: "Spring 2025",
       school: "UCSB",
       instructorEmail: "diba@ucsb.edu",
+      numStudents: 25,
+      numStaff: 3,
     },
     {
       id: 2,
@@ -17,6 +19,8 @@ const coursesFixtures = {
       term: "Fall 2020",
       school: "WSU",
       instructorEmail: "phtcon@ucsb.edu",
+      numStudents: 18,
+      numStaff: 2,
     },
     {
       id: 3,
@@ -24,6 +28,8 @@ const coursesFixtures = {
       term: "Fall 2025",
       school: "UCSB",
       instructorEmail: "diba@ucsb.edu",
+      numStudents: 0,
+      numStaff: 0,
     },
     {
       id: 4,
@@ -31,6 +37,8 @@ const coursesFixtures = {
       term: "Spring 2026",
       school: "UCSB",
       instructorEmail: "phtcon@ucsb.edu",
+      numStudents: 30,
+      numStaff: 4,
     },
   ],
   oneCourseWithEachStatus: [
