@@ -86,7 +86,7 @@ public abstract class ApiController {
    * @param e the exception
    * @return a map with the type and message of the exception
    */
-  @ExceptionHandler({NoLinkedOrganizationException.class})
+      @ExceptionHandler({NoLinkedOrganizationException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleNoLinkedOrgException(Throwable e) {
     return Map.of(
