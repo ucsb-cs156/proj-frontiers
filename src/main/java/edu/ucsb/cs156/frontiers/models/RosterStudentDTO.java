@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.models;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import java.util.List;
 
 /**
  * This is a DTO class that represents a student in the roster. It is used to transfer data between
@@ -17,10 +18,11 @@ public record RosterStudentDTO(
     String email,
     String section,
     long userId,
-    Integer userGithubId,
-    String userGithubLogin,
+    Integer githubId,
+    String githubLogin,
     RosterStatus rosterStatus,
-    OrgStatus orgStatus) {
+    OrgStatus orgStatus,
+    List<String> teams) {
 
   public RosterStudentDTO(RosterStudent rosterStudent) {
     this(
@@ -35,6 +37,7 @@ public record RosterStudentDTO(
         rosterStudent.getGithubId(),
         rosterStudent.getGithubLogin(),
         rosterStudent.getRosterStatus(),
-        rosterStudent.getOrgStatus());
+        rosterStudent.getOrgStatus(),
+        rosterStudent.getTeams());
   }
 }

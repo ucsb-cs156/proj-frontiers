@@ -220,12 +220,12 @@ export default function HelpCsvPage() {
                     <td>Links to the user account in the system</td>
                   </tr>
                   <tr>
-                    <td>userGithubId</td>
+                    <td>githubId</td>
                     <td>GitHub user ID</td>
                     <td>Student's GitHub account ID, if connected</td>
                   </tr>
                   <tr>
-                    <td>userGithubLogin</td>
+                    <td>githubLogin</td>
                     <td>GitHub username</td>
                     <td>Student's GitHub username, if connected</td>
                   </tr>

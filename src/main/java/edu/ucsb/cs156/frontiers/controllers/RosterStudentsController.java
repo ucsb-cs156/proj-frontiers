@@ -11,6 +11,7 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
+import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
@@ -109,13 +110,18 @@ public class RosterStudentsController extends ApiController {
   @Operation(summary = "List all roster students for a course")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/course/{courseId}")
-  public Iterable<RosterStudent> rosterStudentForCourse(
+  public Iterable<RosterStudentDTO> rosterStudentForCourse(
       @Parameter(name = "courseId") @PathVariable Long courseId) throws EntityNotFoundException {
     courseRepository
         .findById(courseId)
         .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
-    return rosterStudents;
+    Iterable<RosterStudentDTO> rosterStudentDTOs =
+        () ->
+            java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)
+                .map(RosterStudentDTO::new)
+                .iterator();
+    return rosterStudentDTOs;
   }
 
   public static UpsertResponse upsertStudent(

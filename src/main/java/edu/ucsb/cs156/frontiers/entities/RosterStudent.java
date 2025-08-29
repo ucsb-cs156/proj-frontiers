@@ -61,4 +61,12 @@ public class RosterStudent {
 
   private Integer githubId;
   private String githubLogin;
+
+  public List<String> getTeams() {
+    if (teamMembers == null) {
+      return List.of();
+    } else {
+      return teamMembers.stream().map(tm -> tm.getTeam().getName()).toList();
+    }
+  }
 }

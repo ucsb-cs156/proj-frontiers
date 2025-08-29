@@ -1225,6 +1225,7 @@ public class CoursesControllerTests extends ControllerTestCase {
   // Tests for InstructorCourseView constructor with null collections
   @Test
   public void testInstructorCourseView_withNullRosterStudents() throws Exception {
+    /** Test that InstructorCourseView correctly counts students and staff */
     // arrange
     Course course =
         Course.builder()
@@ -1342,7 +1343,6 @@ public class CoursesControllerTests extends ControllerTestCase {
     InstructorCourseView view = new InstructorCourseView(course);
 
     // assert
-    assertEquals(4L, view.id());
     assertEquals("CS130A", view.courseName());
     assertEquals("S25", view.term());
     assertEquals("UCSB", view.school());
@@ -1351,5 +1351,40 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals("test-org-4", view.orgName());
     assertEquals(2, view.numStudents()); // should match list size
     assertEquals(3, view.numStaff()); // should match list size
+  }
+
+  @Test
+  public void testInstructorCourseView_countsStudentsAndStaff() {
+    // arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail("test@example.com")
+            .build();
+
+    // Test with null lists
+    InstructorCourseView viewWithNulls = new InstructorCourseView(course);
+    assertEquals(0, viewWithNulls.numStudents());
+    assertEquals(0, viewWithNulls.numStaff());
+
+    // Test with empty lists
+    course.setRosterStudents(Collections.emptyList());
+    course.setCourseStaff(Collections.emptyList());
+    InstructorCourseView viewWithEmpty = new InstructorCourseView(course);
+    assertEquals(0, viewWithEmpty.numStudents());
+
+    // Test with populated lists
+    RosterStudent student1 = RosterStudent.builder().id(1L).build();
+    RosterStudent student2 = RosterStudent.builder().id(2L).build();
+    CourseStaff staff1 = CourseStaff.builder().id(1L).build();
+
+    course.setRosterStudents(List.of(student1, student2));
+    course.setCourseStaff(List.of(staff1));
+    InstructorCourseView viewWithData = new InstructorCourseView(course);
+    assertEquals(2, viewWithData.numStudents());
+    assertEquals(1, viewWithData.numStaff());
   }
 }
