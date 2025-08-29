@@ -66,17 +66,14 @@ export default function InstructorCourseShowPage() {
       </Modal>
       <h1
         data-testid={`${testId}-title`}
-        style={{
-          display: "flex",
-          gap: "1.5rem",
-          justifyContent: "flex-start",
-        }}
+        className="d-flex align-items-center lh-1 gap-3"
       >
         {course ? (
           <>
             <span>
               Course:
               <a
+                className="ms-2"
                 href={`https://github.com/${course.orgName}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -87,7 +84,11 @@ export default function InstructorCourseShowPage() {
             </span>
             <span>
               Term:
-              <span style={{ color: "blue" }} data-testid={`${testId}-term`}>
+              <span
+                className="ms-2"
+                style={{ color: "blue" }}
+                data-testid={`${testId}-term`}
+              >
                 {course.term}
               </span>
             </span>
@@ -100,19 +101,17 @@ export default function InstructorCourseShowPage() {
                 </Tooltip>
               }
             >
-              <span>
-                <a
-                  href={`https://github.com/organizations/${course.orgName}/settings/installations/${course.installationId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid={`${testId}-github-settings-link`}
-                >
-                  <GithubSettingIcon
-                    size={35}
-                    data-testid={`${testId}-github-settings-icon`}
-                  />
-                </a>
-              </span>
+              <a
+                href={`https://github.com/organizations/${course.orgName}/settings/installations/${course.installationId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={`${testId}-github-settings-link`}
+              >
+                <GithubSettingIcon
+                  size={45}
+                  data-testid={`${testId}-github-settings-icon`}
+                />
+              </a>
             </OverlayTrigger>
           </>
         ) : (

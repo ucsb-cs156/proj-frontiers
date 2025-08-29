@@ -294,16 +294,6 @@ describe("InstructorCourseShowPage tests", () => {
     expect(
       screen.getByTestId("InstructorCourseShowPage-title"),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("InstructorCourseShowPage-title")).toHaveStyle({
-      display: "flex",
-    });
-    expect(screen.getByTestId("InstructorCourseShowPage-title")).toHaveStyle({
-      gap: "1.5rem",
-    });
-    expect(screen.getByTestId("InstructorCourseShowPage-title")).toHaveStyle({
-      justifyContent: "flex-start",
-    });
-
     expect(
       screen.getByTestId("InstructorCourseShowPage-github-org-link"),
     ).toBeInTheDocument();
