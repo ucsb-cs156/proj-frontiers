@@ -29,7 +29,7 @@ public class Course {
 
   private String school;
 
-  private String canvasApiToken;
+  @JsonIgnore private String canvasApiToken;
 
   private String canvasCourseId;
 
