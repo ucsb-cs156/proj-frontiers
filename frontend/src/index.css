@@ -29,11 +29,16 @@ code {
   font-size: 0.8em; /* Smaller font size for better readability */
 }
 
-/* Instructor Course Show Page - Settings tab flush right */
+/* Instructor Course Show Page - Settings tab flush right with larger gap */
 .instructor-course-tabs .nav-tabs {
   display: flex;
+  gap: 0.5rem; /* Add spacing between tabs */
 }
 
 .instructor-course-tabs .nav-tabs .nav-item:last-child {
   margin-left: auto;
+  /* Create a larger visual separation before the Settings tab */
+  border-left: 1px solid #dee2e6;
+  margin-left: auto;
+  padding-left: 1.5rem;
 }
