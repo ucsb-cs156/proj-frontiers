@@ -141,6 +141,7 @@ public class RosterStudentsController extends ApiController {
         existingStudentObj.setRosterStatus(rosterStatus);
         existingStudentObj.setFirstName(student.getFirstName());
         existingStudentObj.setLastName(student.getLastName());
+        existingStudentObj.setSection(student.getSection());
         rosterStudentRepository.save(existingStudentObj);
         return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
       } else {
@@ -152,6 +153,7 @@ public class RosterStudentsController extends ApiController {
       existingStudentObj.setRosterStatus(rosterStatus);
       existingStudentObj.setFirstName(student.getFirstName());
       existingStudentObj.setLastName(student.getLastName());
+      existingStudentObj.setSection(student.getSection());
       existingStudentObj.setEmail(convertedEmail);
       existingStudentObj.setStudentId(student.getStudentId());
       existingStudentObj = rosterStudentRepository.save(existingStudentObj);

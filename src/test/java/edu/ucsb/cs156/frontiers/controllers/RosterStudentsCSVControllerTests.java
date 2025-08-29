@@ -280,6 +280,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .lastName("DEL PLAYA")
             .email("ldelplaya@ucsb.edu")
             .studentId("A987654")
+            .section("08250")
             .rosterStatus(RosterStatus.ROSTER)
             .build();
 
