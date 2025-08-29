@@ -242,6 +242,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     RosterStudent student1Email = RosterStudent.builder().id(2L).email("cgaucho@ucsb.edu").build();
     RosterStudent student2 =
         RosterStudent.builder().id(3L).studentId("A987654").email("ldelplaya@ucsb.edu").build();
+    RosterStudent student3 = RosterStudent.builder().id(4L).email("sabadotarde@ucsb.edu").build();
     Course course1 = Course.builder().id(1L).build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
@@ -252,6 +253,8 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         .thenReturn(Optional.of(student2));
     when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("ldelplaya@ucsb.edu")))
         .thenReturn(Optional.of(student2));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("sabadotarde@ucsb.edu")))
+        .thenReturn(Optional.of(student3));
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
@@ -284,10 +287,22 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .rosterStatus(RosterStatus.ROSTER)
             .build();
 
+    RosterStudent rosterStudent3Updated =
+        RosterStudent.builder()
+            .id(4L)
+            .firstName("SABADO")
+            .lastName("TARDE")
+            .email("sabadotarde@ucsb.edu")
+            .studentId("1234567")
+            .section("08243")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
     verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
     verify(rosterStudentRepository, atLeastOnce()).save(eq(rosterStudent2Updated));
+    verify(rosterStudentRepository, atLeastOnce()).save(eq(rosterStudent3Updated));
     String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 1, List.of(rosterStudentRejected));
+    LoadResult expectedResult = new LoadResult(0, 2, List.of(rosterStudentRejected));
     String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
