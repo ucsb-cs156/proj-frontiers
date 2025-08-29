@@ -91,7 +91,8 @@ public class WebhookController {
       }
       String installationIdForUninstall = jsonBody.get("installation").get("id").asText();
       log.info("Processing uninstall for Installation ID: {}", installationIdForUninstall);
-      Optional<Course> courseForUninstall = courseRepository.findByInstallationId(installationIdForUninstall);
+      Optional<Course> courseForUninstall =
+          courseRepository.findByInstallationId(installationIdForUninstall);
       log.info("Course found for uninstall: {}", courseForUninstall.isPresent());
       if (courseForUninstall.isPresent()) {
         Course c = courseForUninstall.get();
@@ -99,7 +100,8 @@ public class WebhookController {
         c.setOrgName(null);
         courseRepository.save(c);
       } else {
-        log.warn("No course found with installation ID for uninstall: {}", installationIdForUninstall);
+        log.warn(
+            "No course found with installation ID for uninstall: {}", installationIdForUninstall);
       }
       return ResponseEntity.ok().body("success");
     }
