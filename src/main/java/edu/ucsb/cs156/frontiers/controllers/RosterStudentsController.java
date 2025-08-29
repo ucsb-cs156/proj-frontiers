@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -55,6 +56,8 @@ public class RosterStudentsController extends ApiController {
   @Autowired private RosterStudentRepository rosterStudentRepository;
 
   @Autowired private CourseRepository courseRepository;
+
+  @Autowired private TeamMemberRepository teamMemberRepository;
 
   @Autowired private UpdateUserService updateUserService;
 
@@ -302,7 +305,13 @@ public class RosterStudentsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)")
   @DeleteMapping("/delete")
   @Transactional
-  public ResponseEntity<String> deleteRosterStudent(@Parameter(name = "id") @RequestParam Long id)
+  public ResponseEntity<String> deleteRosterStudent(
+      @Parameter(name = "id") @RequestParam Long id,
+      @Parameter(
+              name = "removeFromOrg",
+              description = "Whether to remove student from GitHub organization")
+          @RequestParam(defaultValue = "true")
+          boolean removeFromOrg)
       throws EntityNotFoundException {
     RosterStudent rosterStudent =
         rosterStudentRepository
@@ -315,7 +324,9 @@ public class RosterStudentsController extends ApiController {
     String orgRemovalErrorMessage = null;
 
     // Try to remove the student from the organization if they have a GitHub login
-    if (rosterStudent.getGithubLogin() != null
+    // and removeFromOrg parameter is true
+    if (removeFromOrg
+        && rosterStudent.getGithubLogin() != null
         && course.getOrgName() != null
         && course.getInstallationId() != null) {
       orgRemovalAttempted = true;
@@ -329,9 +340,9 @@ public class RosterStudentsController extends ApiController {
       }
     }
 
-    course.getRosterStudents().remove(rosterStudent);
+    // Delete the roster student from the database
+    // The cascade relationship will automatically handle deleting associated TeamMember records
     rosterStudentRepository.delete(rosterStudent);
-    courseRepository.save(course);
 
     if (!orgRemovalAttempted) {
       return ResponseEntity.ok(
