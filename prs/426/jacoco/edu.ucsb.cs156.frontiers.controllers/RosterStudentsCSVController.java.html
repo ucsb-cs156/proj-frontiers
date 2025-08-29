@@ -191,32 +191,35 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L191">        .lastName(row[4])</span>
 <span class="fc" id="L192">        .studentId(row[1])</span>
 <span class="fc" id="L193">        .email(row[10])</span>
-<span class="fc" id="L194">        .build();</span>
+<span class="fc" id="L194">        .section(row[0])</span>
+<span class="fc" id="L195">        .build();</span>
   }
 
   public static RosterStudent fromChicoCanvasCSVRow(String[] row) {
-<span class="fc" id="L198">    checkRowLength(row, 4, RosterSourceType.CHICO_CANVAS);</span>
-<span class="fc" id="L199">    return RosterStudent.builder()</span>
-<span class="fc" id="L200">        .firstName(getFirstName(row[0]))</span>
-<span class="fc" id="L201">        .lastName(getLastName(row[0]))</span>
-<span class="fc" id="L202">        .studentId(row[2])</span>
-<span class="fc" id="L203">        .email(row[3])</span>
-<span class="fc" id="L204">        .build();</span>
+<span class="fc" id="L199">    checkRowLength(row, 4, RosterSourceType.CHICO_CANVAS);</span>
+<span class="fc" id="L200">    return RosterStudent.builder()</span>
+<span class="fc" id="L201">        .firstName(getFirstName(row[0]))</span>
+<span class="fc" id="L202">        .lastName(getLastName(row[0]))</span>
+<span class="fc" id="L203">        .studentId(row[2])</span>
+<span class="fc" id="L204">        .email(row[3])</span>
+<span class="fc" id="L205">        .section(&quot;&quot;)</span>
+<span class="fc" id="L206">        .build();</span>
   }
 
   public static RosterStudent fromOregonStateCSVRow(String[] row) {
 
-<span class="fc" id="L209">    checkRowLength(row, 10, RosterSourceType.OREGON_STATE);</span>
-<span class="fc" id="L210">    String sortableName = row[1];</span>
-<span class="fc" id="L211">    String sortableNameParts[] = sortableName.split(&quot;,&quot;);</span>
-<span class="fc" id="L212">    String lastName = sortableNameParts[0].trim();</span>
-<span class="fc bfc" id="L213" title="All 2 branches covered.">    String firstName = sortableNameParts.length &gt; 1 ? sortableNameParts[1].trim() : &quot;&quot;;</span>
-<span class="fc" id="L214">    return RosterStudent.builder()</span>
-<span class="fc" id="L215">        .firstName(firstName)</span>
-<span class="fc" id="L216">        .lastName(lastName)</span>
-<span class="fc" id="L217">        .studentId(row[9])</span>
-<span class="fc" id="L218">        .email(row[8])</span>
-<span class="fc" id="L219">        .build();</span>
+<span class="fc" id="L211">    checkRowLength(row, 10, RosterSourceType.OREGON_STATE);</span>
+<span class="fc" id="L212">    String sortableName = row[1];</span>
+<span class="fc" id="L213">    String sortableNameParts[] = sortableName.split(&quot;,&quot;);</span>
+<span class="fc" id="L214">    String lastName = sortableNameParts[0].trim();</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">    String firstName = sortableNameParts.length &gt; 1 ? sortableNameParts[1].trim() : &quot;&quot;;</span>
+<span class="fc" id="L216">    return RosterStudent.builder()</span>
+<span class="fc" id="L217">        .firstName(firstName)</span>
+<span class="fc" id="L218">        .lastName(lastName)</span>
+<span class="fc" id="L219">        .studentId(row[9])</span>
+<span class="fc" id="L220">        .email(row[8])</span>
+<span class="fc" id="L221">        .section(&quot;&quot;)</span>
+<span class="fc" id="L222">        .build();</span>
   }
 
   /**
@@ -227,11 +230,11 @@ import org.springframework.web.server.ResponseStatusException;
    * @return
    */
   public static String getFirstName(String fullName) {
-<span class="fc" id="L230">    int lastSpaceIndex = fullName.lastIndexOf(&quot; &quot;);</span>
-<span class="fc bfc" id="L231" title="All 2 branches covered.">    if (lastSpaceIndex == -1) {</span>
-<span class="fc" id="L232">      return &quot;&quot;; // No spaces found, return empty string</span>
+<span class="fc" id="L233">    int lastSpaceIndex = fullName.lastIndexOf(&quot; &quot;);</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">    if (lastSpaceIndex == -1) {</span>
+<span class="fc" id="L235">      return &quot;&quot;; // No spaces found, return empty string</span>
     }
-<span class="fc" id="L234">    return fullName.substring(0, lastSpaceIndex).trim(); // Return everything before the last space</span>
+<span class="fc" id="L237">    return fullName.substring(0, lastSpaceIndex).trim(); // Return everything before the last space</span>
   }
 
   /**
@@ -242,11 +245,11 @@ import org.springframework.web.server.ResponseStatusException;
    * @return best estimate of last name
    */
   public static String getLastName(String fullName) {
-<span class="fc" id="L245">    int lastSpaceIndex = fullName.lastIndexOf(&quot; &quot;);</span>
-<span class="fc bfc" id="L246" title="All 2 branches covered.">    if (lastSpaceIndex == -1) {</span>
-<span class="fc" id="L247">      return fullName; // No spaces found, return the entire string</span>
+<span class="fc" id="L248">    int lastSpaceIndex = fullName.lastIndexOf(&quot; &quot;);</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">    if (lastSpaceIndex == -1) {</span>
+<span class="fc" id="L250">      return fullName; // No spaces found, return the entire string</span>
     }
-<span class="fc" id="L249">    return fullName.substring(lastSpaceIndex + 1).trim(); // Return everything after the last space</span>
+<span class="fc" id="L252">    return fullName.substring(lastSpaceIndex + 1).trim(); // Return everything after the last space</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
