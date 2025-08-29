@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>97/97</span>
+                <span class='fraction'>96/96</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>97/97</span>
+                <span class='fraction'>96/96</span>
             </div>
         
             
@@ -205,8 +205,7 @@
 <a name='L140'></a><a href='#L140'>140</a>
 <a name='L141'></a><a href='#L141'>141</a>
 <a name='L142'></a><a href='#L142'>142</a>
-<a name='L143'></a><a href='#L143'>143</a>
-<a name='L144'></a><a href='#L144'>144</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L143'></a><a href='#L143'>143</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -275,10 +274,6 @@
 <span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">19x</span>
-<span class="cline-any cline-yes">19x</span>
-<span class="cline-any cline-yes">19x</span>
-<span class="cline-any cline-yes">19x</span>
-<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">5x</span>
@@ -289,36 +284,39 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -417,17 +415,14 @@ export default function InstructorCourseShowPage() {
       &lt;/Modal&gt;
       &lt;h1
         data-testid={`${testId}-title`}
-        style={{
-          display: "flex",
-          gap: "1.5rem",
-          justifyContent: "flex-start",
-        }}
+        className="d-flex align-items-center lh-1 gap-3"
       &gt;
         {course ? (
           &lt;&gt;
             &lt;span&gt;
               Course:
               &lt;a
+                className="ms-2"
                 href={`https://github.com/${course.orgName}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -438,7 +433,11 @@ export default function InstructorCourseShowPage() {
             &lt;/span&gt;
             &lt;span&gt;
               Term:
-              &lt;span style={{ color: "blue" }} data-testid={`${testId}-term`}&gt;
+              &lt;span
+                className="ms-2"
+                style={{ color: "blue" }}
+                data-testid={`${testId}-term`}
+              &gt;
                 {course.term}
               &lt;/span&gt;
             &lt;/span&gt;
@@ -451,19 +450,17 @@ export default function InstructorCourseShowPage() {
                 &lt;/Tooltip&gt;
               }
             &gt;
-              &lt;span&gt;
-                &lt;a
-                  href={`https://github.com/organizations/${course.orgName}/settings/installations/${course.installationId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid={`${testId}-github-settings-link`}
-                &gt;
-                  &lt;GithubSettingIcon
-                    size={35}
-                    data-testid={`${testId}-github-settings-icon`}
-                  /&gt;
-                &lt;/a&gt;
-              &lt;/span&gt;
+              &lt;a
+                href={`https://github.com/organizations/${course.orgName}/settings/installations/${course.installationId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={`${testId}-github-settings-link`}
+              &gt;
+                &lt;GithubSettingIcon
+                  size={45}
+                  data-testid={`${testId}-github-settings-icon`}
+                /&gt;
+              &lt;/a&gt;
             &lt;/OverlayTrigger&gt;
           &lt;/&gt;
         ) : (
@@ -499,7 +496,7 @@ export default function InstructorCourseShowPage() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-29T00:51:54.807Z
+                at 2025-08-29T16:25:55.220Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
