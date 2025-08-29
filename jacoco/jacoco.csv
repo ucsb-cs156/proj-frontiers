@@ -52,7 +52,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,137,0,0
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,53,0,4,0,14,0,5,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffController,0,306,0,34,0,83,0,29,0,12
 frontiers,edu.ucsb.cs156.frontiers.controllers,UsersController,0,8,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,371,0,46,0,86,0,26,0,3
+frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,438,0,54,0,102,0,30,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberResult,0,24,0,0,0,5,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,7,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToGithubJob,0,262,0,22,0,72,0,12,0,1
