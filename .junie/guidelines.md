@@ -11,6 +11,8 @@ Note that you should look for the simplest solution and attempt to avoid adding 
 
 Please avoid leaving comments where the code is self explanatory: only add comments that may help illuminate what is occurring in difficult code chunks.
 
+Additionally, when adding code, attempt to pattern match to existing code in the codebase. Specifically, when testing, attempt to create tests that match existing patterns over creating tests that are mocked or performed differently.
+
 If `<issue_description>` directly contradicts any of these steps, follow the instructions from `<issue_description>` first.
 
 # Information
