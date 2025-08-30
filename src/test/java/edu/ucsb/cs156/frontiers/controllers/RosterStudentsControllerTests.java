@@ -24,6 +24,8 @@ import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.InsertStatus;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
@@ -44,7 +46,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -1567,6 +1568,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .email("test@ucsb.edu")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
+            .teamMembers(List.of())
             .orgStatus(OrgStatus.PENDING)
             .build();
 
@@ -1574,11 +1576,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
-
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-    when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
     MvcResult response =
         mockMvc
@@ -1587,9 +1585,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    assertEquals(course1.getRosterStudents(), List.of());
     // Since the student doesn't have a GitHub login, removeOrganizationMember should not be called
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -1619,15 +1616,38 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .githubLogin("teststudent")
             .build();
 
+    Team team1 = Team.builder().id(1L).name("Test Team").course(course1).build();
+
+    TeamMember teamMember1 = TeamMember.builder().id(1L).team(team1).build();
+
+    List<TeamMember> teamMembers = new ArrayList<>();
+    teamMembers.add(teamMember1);
+    team1.setTeamMembers(teamMembers);
+    rosterStudent.setTeamMembers(List.of(teamMember1));
+
     List<RosterStudent> students = new ArrayList<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
+    RosterStudent rosterStudentUpdated =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststudent")
+            .teamMembers(List.of())
+            .build();
+
+    TeamMember teamMember1Updated = TeamMember.builder().id(1L).build();
+
+    rosterStudentUpdated.setTeamMembers(List.of(teamMember1Updated));
 
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-    when(courseRepository.save(any(Course.class))).thenReturn(course1);
     doNothing().when(organizationMemberService).removeOrganizationMember(any(RosterStudent.class));
 
     MvcResult response =
@@ -1637,9 +1657,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    verify(rosterStudentRepository).delete(eq(rosterStudentUpdated));
+    assertEquals(course1.getRosterStudents(), List.of());
+    assertEquals(team1.getTeamMembers(), List.of());
     // Verify that removeOrganizationMember is called since the student has a GitHub login
     verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
 
@@ -1664,6 +1684,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .email("test@ucsb.edu")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
+            .teamMembers(List.of())
             .orgStatus(OrgStatus.MEMBER)
             .githubId(67890)
             .githubLogin("teststudent")
@@ -1673,11 +1694,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
-
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-    when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
     MvcResult response =
         mockMvc
@@ -1686,9 +1703,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    assertEquals(course1.getRosterStudents(), List.of());
+
     // Verify that removeOrganizationMember is NOT called since the course has no org name
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -1714,6 +1731,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
@@ -1721,12 +1739,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> students = new ArrayList<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
-
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
-
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-    when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
     MvcResult response =
         mockMvc
@@ -1735,9 +1748,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    assertEquals(course1.getRosterStudents(), List.of());
+
     // Verify that removeOrganizationMember is NOT called since the course has no installation ID
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -1762,6 +1775,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .email("test@ucsb.edu")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
+            .teamMembers(List.of())
             .orgStatus(OrgStatus.MEMBER)
             .githubId(67890)
             .githubLogin("teststudent")
@@ -1770,12 +1784,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> students = new ArrayList<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
-
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
-
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-    when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
     // Simulate an exception when trying to remove the student from the organization
     String errorMessage = "API rate limit exceeded";
@@ -1790,9 +1799,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
     verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    assertEquals(course1.getRosterStudents(), List.of());
     // Verify that removeOrganizationMember is called but throws an exception
     verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
 
