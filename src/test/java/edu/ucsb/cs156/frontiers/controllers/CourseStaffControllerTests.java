@@ -26,7 +26,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -873,11 +872,18 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
-    List<CourseStaff> staffListSpy = Mockito.spy(staffList);
-    course1.setCourseStaff(staffListSpy);
-
     when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
     when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    CourseStaff staffMemberUpdated =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
 
     MvcResult response =
         mockMvc
@@ -890,9 +896,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(courseStaffRepository).delete(eq(staffMember));
-    verify(staffListSpy).remove(eq(staffMember));
+    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    assertEquals(course1.getCourseStaff(), List.of());
     // Since the staff member doesn't have a GitHub login, removeOrganizationMember
     // should not be called
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
@@ -924,12 +929,21 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
-    List<CourseStaff> staffListSpy = Mockito.spy(staffList);
-    course1.setCourseStaff(staffListSpy);
-
     when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
     when(courseRepository.save(any(Course.class))).thenReturn(course1);
     doNothing().when(organizationMemberService).removeOrganizationMember(any(CourseStaff.class));
+
+    CourseStaff staffMemberUpdated =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
 
     MvcResult response =
         mockMvc
@@ -942,9 +956,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(courseStaffRepository).delete(eq(staffMember));
-    verify(staffListSpy).remove(eq(staffMember));
+    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    assertEquals(course1.getCourseStaff(), List.of());
     verify(organizationMemberService).removeOrganizationMember(eq(staffMember));
 
     assertEquals(
@@ -974,11 +987,20 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
-    List<CourseStaff> staffListSpy = Mockito.spy(staffList);
-    course1.setCourseStaff(staffListSpy);
-
     when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
     when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    CourseStaff staffMemberUpdated =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
 
     MvcResult response =
         mockMvc
@@ -991,9 +1013,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(courseStaffRepository).delete(eq(staffMember));
-    verify(staffListSpy).remove(eq(staffMember));
+    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    assertEquals(course1.getCourseStaff(), List.of());
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
     assertEquals(
@@ -1023,11 +1044,20 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
-    List<CourseStaff> staffListSpy = Mockito.spy(staffList);
-    course1.setCourseStaff(staffListSpy);
-
     when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
     when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    CourseStaff staffMemberUpdated =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
 
     MvcResult response =
         mockMvc
@@ -1040,9 +1070,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(courseStaffRepository).delete(eq(staffMember));
-    verify(staffListSpy).remove(eq(staffMember));
+    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    assertEquals(course1.getCourseStaff(), List.of());
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
     assertEquals(
@@ -1072,16 +1101,24 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
-    List<CourseStaff> staffListSpy = Mockito.spy(staffList);
-    course1.setCourseStaff(staffListSpy);
-
     when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
-    when(courseRepository.save(any(Course.class))).thenReturn(course1);
 
     String errorMessage = "API rate limit exceeded";
     doThrow(new RuntimeException(errorMessage))
         .when(organizationMemberService)
         .removeOrganizationMember(any(CourseStaff.class));
+
+    CourseStaff staffMemberUpdated =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
 
     MvcResult response =
         mockMvc
@@ -1094,9 +1131,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(courseStaffRepository).delete(eq(staffMember));
-    verify(staffListSpy).remove(eq(staffMember));
+    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    assertEquals(course1.getCourseStaff(), List.of());
     verify(organizationMemberService).removeOrganizationMember(eq(staffMember));
 
     assertEquals(
@@ -1122,7 +1158,6 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
     verify(courseStaffRepository).findById(eq(99L));
     verify(courseStaffRepository, never()).delete(any(CourseStaff.class));
-    verify(courseRepository, never()).save(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1148,6 +1183,5 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
     verify(courseStaffRepository, never()).findById(any());
     verify(courseStaffRepository, never()).delete(any(CourseStaff.class));
-    verify(courseRepository, never()).save(any(Course.class));
   }
 }

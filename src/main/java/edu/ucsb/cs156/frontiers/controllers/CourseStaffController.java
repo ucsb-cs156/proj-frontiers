@@ -202,7 +202,7 @@ public class CourseStaffController extends ApiController {
     }
 
     course.getCourseStaff().remove(staffMember);
-    courseRepository.save(course);
+    staffMember.setCourse(null);
     courseStaffRepository.delete(staffMember);
 
     if (!orgRemovalAttempted) {

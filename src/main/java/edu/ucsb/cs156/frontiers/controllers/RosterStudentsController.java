@@ -329,9 +329,19 @@ public class RosterStudentsController extends ApiController {
       }
     }
 
-    course.getRosterStudents().remove(rosterStudent);
+    if (!rosterStudent.getTeamMembers().isEmpty()) {
+      rosterStudent
+          .getTeamMembers()
+          .forEach(
+              teamMember -> {
+                teamMember.getTeam().getTeamMembers().remove(teamMember);
+                teamMember.setTeam(null);
+              });
+    }
+
+    rosterStudent.getCourse().getRosterStudents().remove(rosterStudent);
+    rosterStudent.setCourse(null);
     rosterStudentRepository.delete(rosterStudent);
-    courseRepository.save(course);
 
     if (!orgRemovalAttempted) {
       return ResponseEntity.ok(
