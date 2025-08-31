@@ -4,7 +4,7 @@ import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 
 import { hasRole, useCurrentUser } from "main/utils/currentUser";
 
-import "bootstrap/dist/css/bootstrap.css";
+		import "bootstrap/dist/css/bootstrap.css";
 import "react-toastify/dist/ReactToastify.css";
 
 import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";

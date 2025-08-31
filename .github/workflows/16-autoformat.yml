@@ -1,0 +1,13 @@
+name: 16-autoformat.yml
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  smoke-test:
+    uses: ucsb-cs156/workflows/.github/workflows/42-smoke-test.yml@main
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
