@@ -7,7 +7,7 @@ on:
 
 jobs:
   smoke-test:
-    uses: ucsb-cs156/workflows/.github/workflows/42-smoke-test.yml@main
+    uses: ucsb-cs156/workflows/.github/workflows/16-autoformat.yml@dj-autoFormatWithApp
     secrets:
       APP_ID: ${{ secrets.APP_ID }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
