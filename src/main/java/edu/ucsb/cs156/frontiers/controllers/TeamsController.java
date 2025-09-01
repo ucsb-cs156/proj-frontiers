@@ -233,9 +233,6 @@ public class TeamsController extends ApiController {
               teamMember -> {
                 // Remove from roster student's team members list
                 teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
-                // Clear the team member's references
-                teamMember.setTeam(null);
-                teamMember.setRosterStudent(null);
               });
     }
 
@@ -314,9 +311,9 @@ public class TeamsController extends ApiController {
     RosterStudent rosterStudent = teamMember.getRosterStudent();
     team.getTeamMembers().remove(teamMember);
     rosterStudent.getTeamMembers().remove(teamMember);
-    teamMember.setTeam(null);
-    teamMember.setRosterStudent(null);
     teamMemberRepository.delete(teamMember);
+    teamRepository.save(team);
+    rosterStudentRepository.save(rosterStudent);
     return genericMessage("Team member with id %s deleted".formatted(teamMemberId));
   }
 
