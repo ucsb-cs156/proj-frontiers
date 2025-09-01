@@ -227,15 +227,12 @@ public class TeamsController extends ApiController {
         teamRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(Team.class, id));
 
     // Handle team members that reference this team
-    if (team.getTeamMembers() != null && !team.getTeamMembers().isEmpty()) {
+    if (!team.getTeamMembers().isEmpty()) {
       team.getTeamMembers()
           .forEach(
               teamMember -> {
                 // Remove from roster student's team members list
-                if (teamMember.getRosterStudent() != null
-                    && teamMember.getRosterStudent().getTeamMembers() != null) {
-                  teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
-                }
+                teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
                 // Clear the team member's references
                 teamMember.setTeam(null);
                 teamMember.setRosterStudent(null);
@@ -243,9 +240,7 @@ public class TeamsController extends ApiController {
     }
 
     // Disconnect from course
-    if (team.getCourse() != null && team.getCourse().getTeams() != null) {
-      team.getCourse().getTeams().remove(team);
-    }
+    team.getCourse().getTeams().remove(team);
     team.setCourse(null);
 
     teamRepository.delete(team);

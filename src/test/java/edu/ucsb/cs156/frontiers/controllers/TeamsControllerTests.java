@@ -351,6 +351,40 @@ public class TeamsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void testDeleteTeam_withEmptyTeamMembers() throws Exception {
+    // arrange
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+    Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
+
+    // Initialize with empty lists to match Hibernate behavior
+    team.setTeamMembers(List.of());
+    course.setTeams(new ArrayList<>(List.of(team)));
+
+    Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(null).build();
+    teamUpdated.setTeamMembers(List.of());
+
+    when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/teams").param("id", "1").param("courseId", "1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(teamRepository, times(1)).findById(1L);
+    verify(teamRepository, times(1)).delete(teamUpdated);
+    assertEquals(course.getTeams(), List.of());
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap = Map.of("message", "Team with id 1 deleted");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(responseString, expectedJson);
+  }
+
   // Tests for POST /api/teams/addMember
 
   @WithInstructorCoursePermissions
