@@ -295,13 +295,8 @@ public class TeamsControllerTests extends ControllerTestCase {
     rs2.setTeamMembers(new ArrayList<>(List.of(teamMember2)));
     course.setTeams(new ArrayList<>(List.of(team)));
 
-    TeamMember teamMember1Updated =
-        TeamMember.builder().id(1L).team(null).rosterStudent(null).build();
-    TeamMember teamMember2Updated =
-        TeamMember.builder().id(2L).team(null).rosterStudent(null).build();
-
-    Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(null).build();
-    teamUpdated.setTeamMembers(List.of(teamMember1Updated, teamMember2Updated));
+    Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(course).build();
+    teamUpdated.setTeamMembers(List.of(teamMember1, teamMember2));
 
     when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
 
@@ -314,7 +309,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(teamRepository, times(1)).findById(1L);
-    verify(teamRepository, times(1)).delete(teamUpdated);
+    verify(teamRepository, times(1)).delete(team);
     assertEquals(course.getTeams(), List.of());
     assertEquals(rs1.getTeamMembers(), List.of());
     assertEquals(rs2.getTeamMembers(), List.of());
@@ -602,8 +597,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     RosterStudent rsUpdated = RosterStudent.builder().id(2L).course(course).build();
     rsUpdated.setTeamMembers(List.of());
 
-    TeamMember teamMemberUpdated =
-        TeamMember.builder().id(1L).team(null).rosterStudent(null).build();
+    TeamMember teamMemberUpdated = teamMember;
 
     when(teamMemberRepository.findById(eq(1L))).thenReturn(Optional.of(teamMember));
 
@@ -621,6 +615,8 @@ public class TeamsControllerTests extends ControllerTestCase {
     // assert
     verify(teamMemberRepository, times(1)).findById(1L);
     verify(teamMemberRepository, times(1)).delete(teamMemberUpdated);
+    verify(teamRepository, times(1)).save(team);
+    verify(rosterStudentRepository, times(1)).save(rs);
     assertEquals(team.getTeamMembers(), List.of());
     assertEquals(rs.getTeamMembers(), List.of());
 
