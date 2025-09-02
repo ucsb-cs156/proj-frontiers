@@ -33,13 +33,16 @@ describe("HelpCsvPage tests", () => {
     const rosterDownloadCsvExample = screen.getByTestId(
       "rosterDownloadCsvExample",
     );
+    const teamsCsvExample = screen.getByTestId("teamsCsvExample");
     expect(chicoStateCsvExample).toBeInTheDocument();
     expect(oregonStateCsvExample).toBeInTheDocument();
     expect(rosterDownloadCsvExample).toBeInTheDocument();
     expect(ucsbEgradesCsvExample).toBeInTheDocument();
+    expect(teamsCsvExample).toBeInTheDocument();
     expect(chicoStateCsvExample).toHaveClass("csvExample");
     expect(oregonStateCsvExample).toHaveClass("csvExample");
     expect(rosterDownloadCsvExample).toHaveClass("csvExample");
     expect(ucsbEgradesCsvExample).toHaveClass("csvExample");
+    expect(teamsCsvExample).toHaveClass("csvExample");
   });
 });
