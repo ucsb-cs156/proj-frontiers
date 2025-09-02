@@ -329,18 +329,28 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L329">      }</span>
     }
 
-<span class="fc" id="L332">    course.getRosterStudents().remove(rosterStudent);</span>
-<span class="fc" id="L333">    rosterStudentRepository.delete(rosterStudent);</span>
-<span class="fc" id="L334">    courseRepository.save(course);</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">    if (!rosterStudent.getTeamMembers().isEmpty()) {</span>
+<span class="fc" id="L333">      rosterStudent</span>
+<span class="fc" id="L334">          .getTeamMembers()</span>
+<span class="fc" id="L335">          .forEach(</span>
+              teamMember -&gt; {
+<span class="fc" id="L337">                teamMember.getTeam().getTeamMembers().remove(teamMember);</span>
+<span class="fc" id="L338">                teamMember.setTeam(null);</span>
+<span class="fc" id="L339">              });</span>
+    }
 
-<span class="fc bfc" id="L336" title="All 2 branches covered.">    if (!orgRemovalAttempted) {</span>
-<span class="fc" id="L337">      return ResponseEntity.ok(</span>
+<span class="fc" id="L342">    rosterStudent.getCourse().getRosterStudents().remove(rosterStudent);</span>
+<span class="fc" id="L343">    rosterStudent.setCourse(null);</span>
+<span class="fc" id="L344">    rosterStudentRepository.delete(rosterStudent);</span>
+
+<span class="fc bfc" id="L346" title="All 2 branches covered.">    if (!orgRemovalAttempted) {</span>
+<span class="fc" id="L347">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted roster student and removed him/her from the course list&quot;);
-<span class="fc bfc" id="L339" title="All 2 branches covered.">    } else if (orgRemovalSuccessful) {</span>
-<span class="fc" id="L340">      return ResponseEntity.ok(</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">    } else if (orgRemovalSuccessful) {</span>
+<span class="fc" id="L350">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted roster student and removed him/her from the course list and organization&quot;);
     } else {
-<span class="fc" id="L343">      return ResponseEntity.ok(</span>
+<span class="fc" id="L353">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted roster student but there was an error removing them from the course organization: &quot;
               + orgRemovalErrorMessage);
     }

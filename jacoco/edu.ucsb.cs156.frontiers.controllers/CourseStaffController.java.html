@@ -202,7 +202,7 @@ import org.springframework.web.bind.annotation.*;
     }
 
 <span class="fc" id="L204">    course.getCourseStaff().remove(staffMember);</span>
-<span class="fc" id="L205">    courseRepository.save(course);</span>
+<span class="fc" id="L205">    staffMember.setCourse(null);</span>
 <span class="fc" id="L206">    courseStaffRepository.delete(staffMember);</span>
 
 <span class="fc bfc" id="L208" title="All 2 branches covered.">    if (!orgRemovalAttempted) {</span>
