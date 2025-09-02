@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -313,6 +314,8 @@ public class TeamsControllerTests extends ControllerTestCase {
     assertEquals(course.getTeams(), List.of());
     assertEquals(rs1.getTeamMembers(), List.of());
     assertEquals(rs2.getTeamMembers(), List.of());
+    assertNull(teamMember1.getRosterStudent());
+    assertNull(teamMember2.getRosterStudent());
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team with id 1 deleted");

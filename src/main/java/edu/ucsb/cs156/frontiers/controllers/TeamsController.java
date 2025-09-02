@@ -233,6 +233,7 @@ public class TeamsController extends ApiController {
               teamMember -> {
                 // Remove from roster student's team members list
                 teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
+                teamMember.setRosterStudent(null);
               });
     }
 
