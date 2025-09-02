@@ -15,7 +15,7 @@ export default function HelpCsvPage() {
           be supported, please contact the Frontiers development team, supplying
           a sample CSV (with fictional data).
         </p>
-        <Accordion>
+        <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
             <Accordion.Header>UC Santa Barbara</Accordion.Header>
             <Accordion.Body>
@@ -152,7 +152,15 @@ export default function HelpCsvPage() {
               </table>
             </Accordion.Body>
           </Accordion.Item>
-          <Accordion.Item eventKey="3">
+        </Accordion>
+
+        <h2 className="mt-4">Team Information</h2>
+        <p>
+          Teams can be managed using a simple CSV upload with the following
+          format.
+        </p>
+        <Accordion data-testid="teamsAccordion">
+          <Accordion.Item eventKey="0">
             <Accordion.Header>Teams (by Email)</Accordion.Header>
             <Accordion.Body>
               <p>
