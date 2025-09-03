@@ -11,6 +11,7 @@ import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShow
 import coursesFixtures from "fixtures/coursesFixtures";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
+import { teamsFixtures } from "fixtures/TeamsFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -179,6 +180,9 @@ ExampleCourseThreeStudentsThreeStaff.parameters = {
           });
         }
         return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/teams/all", () => {
+        return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
       }),
     ],
   },
