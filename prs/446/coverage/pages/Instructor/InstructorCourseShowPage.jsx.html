@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>99/99</span>
+                <span class='fraction'>97/97</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/10</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>99/99</span>
+                <span class='fraction'>97/97</span>
             </div>
         
             
@@ -202,11 +202,7 @@
 <a name='L137'></a><a href='#L137'>137</a>
 <a name='L138'></a><a href='#L138'>138</a>
 <a name='L139'></a><a href='#L139'>139</a>
-<a name='L140'></a><a href='#L140'>140</a>
-<a name='L141'></a><a href='#L141'>141</a>
-<a name='L142'></a><a href='#L142'>142</a>
-<a name='L143'></a><a href='#L143'>143</a>
-<a name='L144'></a><a href='#L144'>144</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L140'></a><a href='#L140'>140</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -286,8 +282,6 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
@@ -317,17 +311,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
@@ -344,6 +332,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -427,9 +419,7 @@ export default function InstructorCourseShowPage() {
           &lt;/span&gt;
         ) : (
           &lt;&gt;
-            &lt;span&gt;
-              {course.courseName}&amp;nbsp;&amp;nbsp;{course.term}
-            &lt;/span&gt;
+            &lt;span&gt;{course.courseName}&lt;/span&gt;
             &lt;a
               className="ms-2"
               href={`https://github.com/${course.orgName}`}
@@ -460,18 +450,12 @@ export default function InstructorCourseShowPage() {
                 /&gt;
               &lt;/a&gt;
             &lt;/OverlayTrigger&gt;
+            &lt;span&gt; {course.term} &lt;/span&gt;
           &lt;/&gt;
         )}
       &lt;/h1&gt;
       &lt;Tabs defaultActiveKey={"default"}&gt;
-        &lt;Tab eventKey={"default"} title={"Management"} className="pt-2"&gt;
-          &lt;InstructorCoursesTable
-            courses={course ? [course] : []}
-            currentUser={currentUser}
-            testId={testId}
-          /&gt;
-        &lt;/Tab&gt;
-        &lt;Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2"&gt;
+        &lt;Tab eventKey={"students"} title={"Students"} className="pt-2"&gt;
           &lt;EnrollmentTabComponent
             courseId={courseId}
             testIdPrefix={testId}
@@ -485,8 +469,12 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           /&gt;
         &lt;/Tab&gt;
-        &lt;Tab eventKey={"assignments"} title={"Assignments"} className="pt-2"&gt;
-          &lt;AssignmentTabComponent courseId={courseId} /&gt;
+        &lt;Tab eventKey={"default"} title={"Assignments"} className="pt-2"&gt;
+          &lt;AssignmentTabComponent
+            courseId={courseId}
+            testIdPrefix={testId}
+            currentUser={currentUser}
+          /&gt;
         &lt;/Tab&gt;
       &lt;/Tabs&gt;
     &lt;/BasicLayout&gt;
@@ -499,7 +487,7 @@ export default function InstructorCourseShowPage() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-02T04:25:41.941Z
+                at 2025-09-04T00:36:12.892Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
