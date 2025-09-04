@@ -80,12 +80,11 @@ describe("InstructorCourseShowPage tests", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
-        "CMPSC 156 Spring 2025",
+        "CMPSC 156",
       );
     });
 
-    const orgName = screen.getByText("ucsb-cs156-s25");
-    expect(orgName).toBeInTheDocument();
+    expect(screen.queryByText("ucsb-cs156-s25")).not.toBeInTheDocument();
 
     expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
     vi.advanceTimersByTime(3000);
@@ -220,13 +219,10 @@ describe("InstructorCourseShowPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    expect(screen.getByText("Management")).toHaveAttribute(
+
+    expect(screen.getByText("Students")).toHaveAttribute(
       "data-rr-ui-event-key",
-      "default",
-    );
-    expect(screen.getByText("Enrollment")).toHaveAttribute(
-      "data-rr-ui-event-key",
-      "enrollment",
+      "students",
     );
     expect(screen.getByRole("tab", { name: "Staff" })).toHaveAttribute(
       "data-rr-ui-event-key",
@@ -234,13 +230,13 @@ describe("InstructorCourseShowPage tests", () => {
     );
     expect(screen.getByText("Assignments")).toHaveAttribute(
       "data-rr-ui-event-key",
-      "assignments",
+      "default",
     );
-    expect(screen.getByText("Management")).toHaveAttribute(
+    expect(screen.getByText("Assignments")).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    const changeTabs = screen.getByText("Enrollment");
+    const changeTabs = screen.getByText("Students");
     fireEvent.click(changeTabs);
   });
 
@@ -307,6 +303,9 @@ describe("InstructorCourseShowPage tests", () => {
     expect(
       screen.queryByTestId("InstructorCourseShowPage-github-org-link"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-tooltip-github-settings"),
+    ).not.toBeInTheDocument();
   });
   test("header displays correct info when course is loaded", async () => {
     setupInstructorUser();
@@ -328,7 +327,7 @@ describe("InstructorCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
-    await screen.findByText("CMPSC 156 Spring 2025");
+    await screen.findByText("CMPSC 156");
 
     expect(
       screen.getByTestId("InstructorCourseShowPage-title"),
@@ -339,6 +338,7 @@ describe("InstructorCourseShowPage tests", () => {
     expect(
       screen.getByTestId("InstructorCourseShowPage-github-org-link"),
     ).toHaveAttribute("href", "https://github.com/ucsb-cs156-s25");
+    expect(screen.getByText("Spring 2025")).toBeInTheDocument();
   });
   test("expect the correct URL to the organization for the course", async () => {
     setupInstructorUser();
@@ -392,6 +392,10 @@ describe("InstructorCourseShowPage tests", () => {
     );
 
     await screen.findByText("CMPSC 156");
+
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-github-settings-icon"),
+    ).toBeInTheDocument();
 
     fireEvent.mouseOver(
       screen.getByTestId(`InstructorCourseShowPage-github-settings-icon`),

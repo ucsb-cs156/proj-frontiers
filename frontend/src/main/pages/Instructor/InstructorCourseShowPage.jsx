@@ -76,9 +76,7 @@ export default function InstructorCourseShowPage() {
           </span>
         ) : (
           <>
-            <span>
-              {course.courseName}&nbsp;&nbsp;{course.term}
-            </span>
+            <span>{course.courseName}</span>
             <a
               className="ms-2"
               href={`https://github.com/${course.orgName}`}
@@ -109,18 +107,12 @@ export default function InstructorCourseShowPage() {
                 />
               </a>
             </OverlayTrigger>
+            <span> {course.term} </span>
           </>
         )}
       </h1>
       <Tabs defaultActiveKey={"default"}>
-        <Tab eventKey={"default"} title={"Management"} className="pt-2">
-          <InstructorCoursesTable
-            courses={course ? [course] : []}
-            currentUser={currentUser}
-            testId={testId}
-          />
-        </Tab>
-        <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
+        <Tab eventKey={"students"} title={"Students"} className="pt-2">
           <EnrollmentTabComponent
             courseId={courseId}
             testIdPrefix={testId}
@@ -134,8 +126,12 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           />
         </Tab>
-        <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
-          <AssignmentTabComponent courseId={courseId} />
+        <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
+          <AssignmentTabComponent
+            courseId={courseId}
+            testIdPrefix={testId}
+            currentUser={currentUser}
+          />
         </Tab>
       </Tabs>
     </BasicLayout>
