@@ -5,7 +5,12 @@ import { useBackendMutation } from "main/utils/useBackend";
 import { onDeleteSuccess } from "main/utils/rosterStudentUtils";
 import { hasRole } from "main/utils/currentUser";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
-import { test } from "vitest";
+import { toast } from "react-toastify";
+import { useState } from "react";
+
+import Modal from "react-bootstrap/Modal";
+import { ModalBody, ModalHeader } from "react-bootstrap";
+import TeamMemberForm from "main/components/Teams/TeamMemberForm";
 
 export default function TeamsTable({
   teams,
@@ -13,6 +18,24 @@ export default function TeamsTable({
   courseId,
   testIdPrefix = "TeamsTable",
 }) {
+  const [postModal, setPostModal] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
+  const onSuccessTeams = (modalFn) => {
+    toast("Member added successfully");
+    modalFn(false);
+  };
+
+  const objectToAxiosParamsPost = (data) => ({
+    url: `/api/teams/addMember`,
+    method: "POST",
+    params: {
+      courseId: courseId,
+      teamId: selectedTeam.id,
+      rosterStudentId: data.rosterStudentId,
+    },
+  });
+
   const cellToAxiosParamDeleteTeam = (team) => ({
     method: "DELETE",
     url: `/api/teams`,
@@ -37,11 +60,24 @@ export default function TeamsTable({
     [`/api/teams/all?courseId=${courseId}`],
   );
 
+  const memberPostMutation = useBackendMutation(
+    objectToAxiosParamsPost,
+    {
+      onSuccess: () => onSuccessTeams(setPostModal),
+    },
+    [`/api/teams/all?courseId=${courseId}`],
+  );
+
+  const handlePostSubmit = (data) => {
+    memberPostMutation.mutate(data);
+  };
+
   const deleteTeamCallback = async (team) => {
     deleteTeamMutation.mutate(team);
   };
 
-  const deleteMemberCallback = async (member) => {
+  const deleteMemberCallback = async (cell) => {
+    const member = cell.row.original;
     deleteMemberMutation.mutate(member);
   };
 
@@ -63,47 +99,74 @@ export default function TeamsTable({
       accessor: "rosterStudent.githubLogin",
     },
   ];
-  if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
-    memberColumns.push(
-      ButtonColumn(
-        "Remove",
-        "danger",
-        deleteMemberCallback,
-        testIdPrefix
-      ),
-    );
-  }
 
   return (
     <>
+      <Modal
+        show={postModal}
+        onHide={() => {
+          setPostModal(false);
+          setSelectedTeam(null);
+        }}
+        centered={true}
+        data-testid={`${testIdPrefix}-post-modal`}
+      >
+        <ModalHeader closeButton>Add Team Member</ModalHeader>
+        <ModalBody>
+          <TeamMemberForm submitAction={handlePostSubmit} />
+        </ModalBody>
+      </Modal>
       <Accordion data-testid={`${testIdPrefix}-accordion`}>
         {teams.map((team, index) => (
           <Accordion.Item eventKey={index.toString()} key={team.id}>
             <Accordion.Header>
               <span className="d-flex align-items-center justify-content-between w-100">
                 <h3 data-testid={`${testIdPrefix}-${team.id}-name`}>
-                  {team.name}{" "}
+                  {team.name}
                 </h3>
 
                 {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
-                  <Button
-                    variant="danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteTeamCallback(team);
-                    }}
-                    data-testid={`${testIdPrefix}-${team.id}-delete-button`}
-                    className="ms-auto me-3"
-                  >
-                    Delete
-                  </Button>
+                  <span className="ms-auto me-3">
+                    <Button
+                      onClick={() => {
+                        setPostModal(true);
+                        setSelectedTeam(team);
+                      }}
+                      data-testid={`${testIdPrefix}-${team.id}-add-member-button`}
+                      className="me-3"
+                    >
+                      Add Team Member
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTeamCallback(team);
+                      }}
+                      data-testid={`${testIdPrefix}-${team.id}-delete-button`}
+                    >
+                      Delete
+                    </Button>
+                  </span>
                 )}
               </span>
             </Accordion.Header>
             <Accordion.Body>
               <OurTable
                 data={team.teamMembers}
-                columns={memberColumns}
+                columns={[
+                  ...memberColumns,
+                  ...(hasRole(currentUser, "ROLE_INSTRUCTOR")
+                    ? [
+                        ButtonColumn(
+                          "Remove",
+                          "danger",
+                          deleteMemberCallback,
+                          `${testIdPrefix}-${team.id}`,
+                        ),
+                      ]
+                    : []),
+                ]}
                 testid={`${testIdPrefix}-${team.id}-members-table`}
               />
             </Accordion.Body>
