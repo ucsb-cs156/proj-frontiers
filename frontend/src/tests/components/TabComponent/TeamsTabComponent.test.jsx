@@ -7,14 +7,12 @@ import {
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
-import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabComponent";
 import userEvent from "@testing-library/user-event";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
-import { describe, expect, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { toast } from "react-toastify";
 import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { MemoryRouter } from "react-router";
-import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
@@ -173,7 +171,7 @@ describe("TeamTabComponent tests", () => {
       });
     });
     expect(axiosMock.history.post[0].data.get("file")).toEqual(file);
-    expect(toast).toBeCalledWith("Teams successfully updated.");
+    expect(toast).toBeCalledWith("Team successfully added.");
     expect(
       queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
     ).toBe(arbitraryUpdateCount);
@@ -214,6 +212,10 @@ describe("TeamTabComponent tests", () => {
         </QueryClientProvider>
       </MemoryRouter>,
     );
+
+    expect(
+      screen.getByTestId(`${testId}-teams-tab-component`),
+    ).toBeInTheDocument();
 
     //Great time to check initial values
     expect(
@@ -508,53 +510,34 @@ describe("TeamTabComponent tests", () => {
         screen.queryByTestId(`InstructorCourseShowPage-teams-table-3-name`),
       ).not.toBeInTheDocument();
     });
+  });
+  test("Renders correctly when teams data is null/undefined", async () => {
+    axiosMock.onGet("/api/teams/all?courseId=1").reply(200, null);
 
-    // test("GitHub Login, Student ID", async () => {
-    //   render(
-    //     <QueryClientProvider client={queryClient}>
-    //       <EnrollmentTabComponent
-    //         courseId={1}
-    //         testIdPrefix={testId}
-    //         currentUser={currentUserFixtures.instructorUser}
-    //       />
-    //     </QueryClientProvider>,
-    //   );
-    //   await waitFor(() => {
-    //     expect(
-    //       screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
-    //     ).toBeInTheDocument();
-    //   });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TeamsTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
 
-    //   const searchInput = screen.getByTestId(`${testId}-search`);
-    //   const studentWithGithub = studentList[6].githubLogin;
-    //   fireEvent.change(searchInput, {
-    //     target: { value: studentWithGithub.toUpperCase() },
-    //   });
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-teams-tab-component`),
+      ).toBeInTheDocument();
+    });
 
-    //   expect(
-    //     screen.getByTestId(`${rsTestId}-cell-row-0-col-githubLogin`),
-    //   ).toHaveTextContent(studentWithGithub);
-    //   expect(
-    //     screen.queryByTestId(`${rsTestId}-cell-row-1-col-firstName`),
-    //   ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-teams-table-accordion`),
+    ).toBeInTheDocument();
 
-    //   fireEvent.change(searchInput, { target: { value: "" } });
+    expect(screen.queryByText("team1")).not.toBeInTheDocument();
 
-    //   fireEvent.change(searchInput, {
-    //     target: {
-    //       value:
-    //         rosterStudentFixtures.studentsWithEachStatus[1].studentId.toUpperCase(),
-    //     },
-    //   });
-
-    //   expect(
-    //     screen.getByTestId(`${rsTestId}-cell-row-0-col-studentId`),
-    //   ).toHaveTextContent(
-    //     rosterStudentFixtures.studentsWithEachStatus[1].studentId,
-    //   );
-    //   expect(
-    //     screen.queryByTestId(`${rsTestId}-cell-row-1-col-studentId`),
-    //   ).not.toBeInTheDocument();
-    // });
+    const searchInput = screen.getByTestId(`${testId}-search`);
+    fireEvent.change(searchInput, { target: { value: "test" } });
+    expect(searchInput.value).toBe("test");
   });
 });

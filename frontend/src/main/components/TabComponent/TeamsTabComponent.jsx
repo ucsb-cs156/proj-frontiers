@@ -53,8 +53,7 @@ export default function TeamsTabComponent({
   });
 
   const onSuccessTeams = (modalFn) => {
-    toast("Teams successfully updated.");
-    // Clear the search filter to show the updated teams
+    toast("Team successfully added.");
     setSearchTeams("");
     modalFn(false);
   };
@@ -166,7 +165,7 @@ export default function TeamsTabComponent({
       </Row>
       <Row>
         <TeamsTable
-          teams={teams.filter((team) => {
+          teams={(teams || []).filter((team) => {
             const searchTermLower = searchTeams.toLowerCase();
             if (team.name.toLowerCase().includes(searchTermLower)) {
               return true;
