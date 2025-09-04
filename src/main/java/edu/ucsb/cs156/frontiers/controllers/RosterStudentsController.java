@@ -92,12 +92,12 @@ public class RosterStudentsController extends ApiController {
             .email(email)
             .build();
 
-    UpsertResponse upsertResponse =
-        upsertStudent(
-            rosterStudentRepository, updateUserService, rosterStudent, course, RosterStatus.MANUAL);
+    UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
     if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(upsertResponse);
     } else {
+      rosterStudent = rosterStudentRepository.save(upsertResponse.rosterStudent());
+      updateUserService.attachUserToRosterStudent(rosterStudent);
       return ResponseEntity.ok(upsertResponse);
     }
   }
@@ -125,16 +125,17 @@ public class RosterStudentsController extends ApiController {
   }
 
   public static UpsertResponse upsertStudent(
-      RosterStudentRepository rosterStudentRepository,
-      UpdateUserService updateUserService,
-      RosterStudent student,
-      Course course,
-      RosterStatus rosterStatus) {
+      RosterStudent student, Course course, RosterStatus rosterStatus) {
     String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
     Optional<RosterStudent> existingStudent =
-        rosterStudentRepository.findByCourseIdAndStudentId(course.getId(), student.getStudentId());
+        course.getRosterStudents().stream()
+            .filter(
+                filteringStudent -> student.getStudentId().equals(filteringStudent.getStudentId()))
+            .findFirst();
     Optional<RosterStudent> existingStudentByEmail =
-        rosterStudentRepository.findByCourseIdAndEmail(course.getId(), convertedEmail);
+        course.getRosterStudents().stream()
+            .filter(filteringStudent -> convertedEmail.equals(filteringStudent.getEmail()))
+            .findFirst();
     if (existingStudent.isPresent() && existingStudentByEmail.isPresent()) {
       if (existingStudent.get().getId().equals(existingStudentByEmail.get().getId())) {
         RosterStudent existingStudentObj = existingStudent.get();
@@ -142,7 +143,6 @@ public class RosterStudentsController extends ApiController {
         existingStudentObj.setFirstName(student.getFirstName());
         existingStudentObj.setLastName(student.getLastName());
         existingStudentObj.setSection(student.getSection());
-        rosterStudentRepository.save(existingStudentObj);
         return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
       } else {
         return new UpsertResponse(InsertStatus.REJECTED, student);
@@ -156,8 +156,6 @@ public class RosterStudentsController extends ApiController {
       existingStudentObj.setSection(student.getSection());
       existingStudentObj.setEmail(convertedEmail);
       existingStudentObj.setStudentId(student.getStudentId());
-      existingStudentObj = rosterStudentRepository.save(existingStudentObj);
-      updateUserService.attachUserToRosterStudent(existingStudentObj);
       return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
     } else {
       student.setCourse(course);
@@ -170,8 +168,6 @@ public class RosterStudentsController extends ApiController {
       } else {
         student.setOrgStatus(OrgStatus.PENDING);
       }
-      student = rosterStudentRepository.save(student);
-      updateUserService.attachUserToRosterStudent(student);
       return new UpsertResponse(InsertStatus.INSERTED, student);
     }
   }

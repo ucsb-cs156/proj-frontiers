@@ -2,10 +2,9 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -179,25 +178,16 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .orgStatus(OrgStatus.PENDING)
             .build();
 
+    course1.setRosterStudents(List.of(rs1BeforeWithId, rs2BeforeWithId));
+
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsChico.getBytes());
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("013228559")))
-        .thenReturn(Optional.of(rs1BeforeWithId));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("013205354")))
-        .thenReturn(Optional.of(rs2BeforeWithId));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("013251642")))
-        .thenReturn(Optional.empty());
 
-    when(rosterStudentRepository.save(eq(rs1AfterWithId))).thenReturn(rs1AfterWithId);
-    when(rosterStudentRepository.save(eq(rs2AfterWithId))).thenReturn(rs2AfterWithId);
-    when(rosterStudentRepository.save(eq(rs3NoId))).thenReturn(rs3WithId);
-
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs1AfterWithId));
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs2AfterWithId));
-    doNothing().when(updateUserService).attachUserToRosterStudent(eq(rs3WithId));
+    when(rosterStudentRepository.saveAll(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)))
+        .thenReturn(List.of(rs1AfterWithId, rs2AfterWithId, rs3WithId));
 
     // act
 
@@ -214,19 +204,10 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("013228559"));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("013205354"));
-    verify(rosterStudentRepository, atLeastOnce())
-        .findByCourseIdAndStudentId(eq(1L), eq("013251642"));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs1AfterWithId));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs2AfterWithId));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rs3NoId));
-
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1AfterWithId));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs2AfterWithId));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs3WithId));
+    verify(rosterStudentRepository, times(1))
+        .saveAll(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
+    verify(updateUserService, times(1))
+        .attachUsersToRosterStudents(List.of(rs1AfterWithId, rs2AfterWithId, rs3WithId));
 
     String responseString = response.getResponse().getContentAsString();
     LoadResult expectedResult = new LoadResult(1, 2, List.of());
@@ -242,19 +223,12 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     RosterStudent student1Email = RosterStudent.builder().id(2L).email("cgaucho@ucsb.edu").build();
     RosterStudent student2 =
         RosterStudent.builder().id(3L).studentId("A987654").email("ldelplaya@ucsb.edu").build();
-    RosterStudent student3 = RosterStudent.builder().id(4L).email("sabadotarde@ucsb.edu").build();
-    Course course1 = Course.builder().id(1L).build();
+    Course course1 =
+        Course.builder()
+            .id(1L)
+            .rosterStudents(List.of(student1ID, student1Email, student2))
+            .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
-        .thenReturn(Optional.of(student1ID));
-    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@ucsb.edu")))
-        .thenReturn(Optional.of(student1Email));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A987654")))
-        .thenReturn(Optional.of(student2));
-    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("ldelplaya@ucsb.edu")))
-        .thenReturn(Optional.of(student2));
-    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("sabadotarde@ucsb.edu")))
-        .thenReturn(Optional.of(student3));
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
@@ -298,11 +272,9 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .rosterStatus(RosterStatus.ROSTER)
             .build();
 
-    verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rosterStudent2Updated));
-    verify(rosterStudentRepository, atLeastOnce()).save(eq(rosterStudent3Updated));
+    verify(rosterStudentRepository, never()).saveAll(List.of());
     String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(0, 2, List.of(rosterStudentRejected));
+    LoadResult expectedResult = new LoadResult(1, 1, List.of(rosterStudentRejected));
     String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
