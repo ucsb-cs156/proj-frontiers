@@ -74,6 +74,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
       Course.builder()
           .id(1L)
           .courseName("CS156")
+          .rosterStudents(List.of())
           .orgName("ucsb-cs156-s25")
           .term("S25")
           .school("UCSB")
@@ -84,6 +85,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
           .id(2L)
           .courseName("CS156")
           .orgName("ucsb-cs156-s25")
+          .rosterStudents(List.of())
           .term("S25")
           .school("UCSB")
           .installationId("12345")
@@ -144,7 +146,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
     assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
-    assertEquals(rs1, upsertResponse.rosterStudent());
   }
 
   /** Test that the POST endpoint converts @umail.ucsb.edu to @ucsb.edu */
@@ -190,7 +191,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
     assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
-    assertEquals(rsUmail, upsertResponse.rosterStudent());
   }
 
   /** Test the POST endpoint when installation ID is null. */
@@ -231,8 +231,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
     assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
-    assertEquals(rs1, upsertResponse.rosterStudent());
-    assertEquals(rosterStudentSaved, upsertResponse.rosterStudent());
   }
 
   /** Test the POST endpoint when installation ID exists. */
@@ -316,11 +314,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         RosterStudent.builder().id(1L).studentId("A123456").course(course1).build();
     RosterStudent rosterStudent2 =
         RosterStudent.builder().id(2L).email("cgaucho@example.org").course(course1).build();
+    course1.setRosterStudents(List.of(rosterStudent1, rosterStudent2));
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("A123456")))
-        .thenReturn(Optional.of(rosterStudent1));
-    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("cgaucho@example.org")))
-        .thenReturn(Optional.of(rosterStudent2));
     // act
 
     MvcResult response =
@@ -1881,13 +1876,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .rosterStatus(RosterStatus.MANUAL)
             .build();
 
+    course1.setRosterStudents(List.of(existingStudent));
+
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(
-            eq(course1.getId()), eq(newStudent.getStudentId())))
-        .thenReturn(Optional.empty());
-    when(rosterStudentRepository.findByCourseIdAndEmail(
-            eq(course1.getId()), eq("cgaucho@ucsb.edu")))
-        .thenReturn(Optional.of(existingStudent));
     when(rosterStudentRepository.save(eq(expectedSaved))).thenReturn(expectedSaved);
     doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
 
@@ -1911,11 +1902,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
     assertEquals(InsertStatus.UPDATED, upsertResponse.insertStatus());
-    assertEquals(expectedSaved, upsertResponse.rosterStudent());
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(rosterStudentRepository, times(1)).findByCourseIdAndStudentId(eq(1L), eq("A123457"));
-    verify(rosterStudentRepository, times(1))
-        .findByCourseIdAndEmail(eq(1L), eq("cgaucho@ucsb.edu"));
     verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
   }
 
@@ -1933,34 +1920,19 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .build();
-    RosterStudent updatedStudent =
-        RosterStudent.builder()
-            .id(1L)
-            .firstName("New")
-            .lastName("Student")
-            .studentId("A123456")
-            .email("newemail@umail.ucsb.edu")
-            .course(course1)
-            .rosterStatus(RosterStatus.MANUAL)
-            .build();
     RosterStudent expectedSaved =
         RosterStudent.builder()
             .id(1L)
             .firstName("New")
-            .lastName("Student")
+            .lastName("But Same Student")
             .studentId("A123456")
             .email("newemail@ucsb.edu")
             .course(course1)
             .rosterStatus(RosterStatus.MANUAL)
             .build();
 
+    course1.setRosterStudents(List.of(existingStudent));
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdAndStudentId(
-            eq(course1.getId()), eq(updatedStudent.getStudentId())))
-        .thenReturn(Optional.of(existingStudent));
-    when(rosterStudentRepository.findByCourseIdAndEmail(
-            eq(course1.getId()), eq(updatedStudent.getEmail())))
-        .thenReturn(Optional.of(existingStudent));
     when(rosterStudentRepository.save(eq(expectedSaved))).thenReturn(expectedSaved);
     doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
 
@@ -1973,7 +1945,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .with(csrf())
                     .param("studentId", "A123456")
                     .param("firstName", "New")
-                    .param("lastName", "Student")
+                    .param("lastName", "But Same Student")
                     .param("email", "newemail@umail.ucsb.edu")
                     .param("courseId", "1"))
             .andExpect(status().isOk())
@@ -1984,11 +1956,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
     assertEquals(InsertStatus.UPDATED, upsertResponse.insertStatus());
-    assertEquals(expectedSaved, upsertResponse.rosterStudent());
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(rosterStudentRepository, times(1)).findByCourseIdAndStudentId(eq(1L), eq("A123456"));
-    verify(rosterStudentRepository, times(1))
-        .findByCourseIdAndEmail(eq(1L), eq("newemail@ucsb.edu"));
     verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
   }
 

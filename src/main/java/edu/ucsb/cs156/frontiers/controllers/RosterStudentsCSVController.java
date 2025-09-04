@@ -119,6 +119,7 @@ public class RosterStudentsCSVController extends ApiController {
 
     int counts[] = {0, 0};
     List<RosterStudent> rejectedStudents = new ArrayList<>();
+    List<RosterStudent> saveableStudents = new ArrayList<>();
 
     try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
         InputStreamReader reader = new InputStreamReader(inputStream);
@@ -136,15 +137,11 @@ public class RosterStudentsCSVController extends ApiController {
       for (String[] row : myEntries) {
         RosterStudent rosterStudent = fromCSVRow(row, sourceType);
         UpsertResponse upsertResponse =
-            RosterStudentsController.upsertStudent(
-                rosterStudentRepository,
-                updateUserService,
-                rosterStudent,
-                course,
-                RosterStatus.ROSTER);
+            RosterStudentsController.upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
         if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
-          rejectedStudents.add(rosterStudent);
+          rejectedStudents.add(upsertResponse.rosterStudent());
         } else {
+          saveableStudents.add(upsertResponse.rosterStudent());
           InsertStatus s = upsertResponse.getInsertStatus();
           counts[s.ordinal()]++;
         }
@@ -156,6 +153,8 @@ public class RosterStudentsCSVController extends ApiController {
             counts[InsertStatus.UPDATED.ordinal()],
             rejectedStudents);
     if (rejectedStudents.isEmpty()) {
+      saveableStudents = rosterStudentRepository.saveAll(saveableStudents);
+      updateUserService.attachUsersToRosterStudents(saveableStudents);
       return ResponseEntity.ok(loadResult);
     } else {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(loadResult);
