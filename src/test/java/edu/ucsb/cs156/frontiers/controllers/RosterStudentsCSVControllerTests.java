@@ -210,7 +210,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         .attachUsersToRosterStudents(List.of(rs1AfterWithId, rs2AfterWithId, rs3WithId));
 
     String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 2, List.of());
+    LoadResult expectedResult = new LoadResult(1, 2, 0, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
@@ -262,7 +262,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     verify(rosterStudentRepository, never()).saveAll(List.of());
     String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 1, List.of(rosterStudentRejected));
+    LoadResult expectedResult = new LoadResult(1, 1, 0, List.of(rosterStudentRejected));
     String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
