@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -283,7 +284,20 @@ public class TeamsControllerTests extends ControllerTestCase {
   public void testDeleteTeam_success() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").build();
+    RosterStudent rs1 = RosterStudent.builder().id(1L).course(course).build();
+    RosterStudent rs2 = RosterStudent.builder().id(2L).course(course).build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
+
+    TeamMember teamMember1 = TeamMember.builder().id(1L).team(team).rosterStudent(rs1).build();
+    TeamMember teamMember2 = TeamMember.builder().id(2L).team(team).rosterStudent(rs2).build();
+
+    team.setTeamMembers(new ArrayList<>(List.of(teamMember1, teamMember2)));
+    rs1.setTeamMembers(new ArrayList<>(List.of(teamMember1)));
+    rs2.setTeamMembers(new ArrayList<>(List.of(teamMember2)));
+    course.setTeams(new ArrayList<>(List.of(team)));
+
+    Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(course).build();
+    teamUpdated.setTeamMembers(List.of(teamMember1, teamMember2));
 
     when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
 
@@ -297,6 +311,11 @@ public class TeamsControllerTests extends ControllerTestCase {
     // assert
     verify(teamRepository, times(1)).findById(1L);
     verify(teamRepository, times(1)).delete(team);
+    assertEquals(course.getTeams(), List.of());
+    assertEquals(rs1.getTeamMembers(), List.of());
+    assertEquals(rs2.getTeamMembers(), List.of());
+    assertNull(teamMember1.getRosterStudent());
+    assertNull(teamMember2.getRosterStudent());
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team with id 1 deleted");
@@ -328,6 +347,40 @@ public class TeamsControllerTests extends ControllerTestCase {
             "type", "EntityNotFoundException");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void testDeleteTeam_withEmptyTeamMembers() throws Exception {
+    // arrange
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+    Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
+
+    // Initialize with empty lists to match Hibernate behavior
+    team.setTeamMembers(List.of());
+    course.setTeams(new ArrayList<>(List.of(team)));
+
+    Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(null).build();
+    teamUpdated.setTeamMembers(List.of());
+
+    when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/teams").param("id", "1").param("courseId", "1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(teamRepository, times(1)).findById(1L);
+    verify(teamRepository, times(1)).delete(teamUpdated);
+    assertEquals(course.getTeams(), List.of());
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap = Map.of("message", "Team with id 1 deleted");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(responseString, expectedJson);
   }
 
   // Tests for POST /api/teams/addMember
@@ -547,6 +600,8 @@ public class TeamsControllerTests extends ControllerTestCase {
     RosterStudent rsUpdated = RosterStudent.builder().id(2L).course(course).build();
     rsUpdated.setTeamMembers(List.of());
 
+    TeamMember teamMemberUpdated = teamMember;
+
     when(teamMemberRepository.findById(eq(1L))).thenReturn(Optional.of(teamMember));
 
     // act
@@ -562,9 +617,11 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(teamMemberRepository, times(1)).findById(1L);
-    verify(teamMemberRepository, times(1)).delete(teamMember);
-    verify(teamRepository, times(1)).save(eq(updatedTeam));
-    verify(rosterStudentRepository, times(1)).save(eq(rsUpdated));
+    verify(teamMemberRepository, times(1)).delete(teamMemberUpdated);
+    verify(teamRepository, times(1)).save(team);
+    verify(rosterStudentRepository, times(1)).save(rs);
+    assertEquals(team.getTeamMembers(), List.of());
+    assertEquals(rs.getTeamMembers(), List.of());
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team member with id 1 deleted");

@@ -220,10 +220,27 @@ public class TeamsController extends ApiController {
   @Operation(summary = "Delete a team")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @DeleteMapping("")
+  @Transactional
   public Object deleteTeam(
       @Parameter(name = "id") @RequestParam Long id, @RequestParam Long courseId) {
     Team team =
         teamRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(Team.class, id));
+
+    // Handle team members that reference this team
+    if (!team.getTeamMembers().isEmpty()) {
+      team.getTeamMembers()
+          .forEach(
+              teamMember -> {
+                // Remove from roster student's team members list
+                teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
+                teamMember.setRosterStudent(null);
+              });
+    }
+
+    // Disconnect from course
+    team.getCourse().getTeams().remove(team);
+    team.setCourse(null);
+
     teamRepository.delete(team);
     return genericMessage("Team with id %s deleted".formatted(id));
   }
