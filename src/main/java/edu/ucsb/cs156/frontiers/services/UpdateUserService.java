@@ -36,7 +36,7 @@ public class UpdateUserService {
   /**
    * This method attaches the CourseStaff to the User based on their email.
    *
-   * @param user The user to whom the RosterStudents will be attached
+   * @param user The user to whom the CourseStaff will be attached
    */
   public void attachCourseStaff(User user) {
     List<CourseStaff> matchedStaff = courseStaffRepository.findAllByEmail(user.getEmail());
@@ -66,6 +66,13 @@ public class UpdateUserService {
   }
 
   /** This method attaches a SingleRoster student to the User based on their email. */
+  public void attachUsersToRosterStudents(List<RosterStudent> rosterStudents) {
+    for (RosterStudent matchedStudent : rosterStudents) {
+      attachUserToRosterStudent(matchedStudent);
+    }
+  }
+
+  /** This method attaches a Single Course Staff member to the User based on their email. */
   public void attachUserToCourseStaff(CourseStaff courseStaff) {
     String email = courseStaff.getEmail();
     Optional<User> optionalUser = userRepository.findByEmail(email);

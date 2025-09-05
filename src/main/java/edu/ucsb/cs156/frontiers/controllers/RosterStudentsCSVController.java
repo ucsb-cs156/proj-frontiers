@@ -117,8 +117,13 @@ public class RosterStudentsCSVController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
 
+    course.getRosterStudents().stream()
+        .filter(filteredStudent -> filteredStudent.getRosterStatus() == RosterStatus.ROSTER)
+        .forEach(student -> student.setRosterStatus(RosterStatus.DROPPED));
+
     int counts[] = {0, 0};
     List<RosterStudent> rejectedStudents = new ArrayList<>();
+    List<RosterStudent> saveableStudents = new ArrayList<>();
 
     try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
         InputStreamReader reader = new InputStreamReader(inputStream);
@@ -136,29 +141,29 @@ public class RosterStudentsCSVController extends ApiController {
       for (String[] row : myEntries) {
         RosterStudent rosterStudent = fromCSVRow(row, sourceType);
         UpsertResponse upsertResponse =
-            RosterStudentsController.upsertStudent(
-                rosterStudentRepository,
-                updateUserService,
-                rosterStudent,
-                course,
-                RosterStatus.ROSTER);
+            RosterStudentsController.upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
         if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
-          rejectedStudents.add(rosterStudent);
+          rejectedStudents.add(upsertResponse.rosterStudent());
         } else {
+          saveableStudents.add(upsertResponse.rosterStudent());
           InsertStatus s = upsertResponse.getInsertStatus();
           counts[s.ordinal()]++;
         }
       }
     }
-    LoadResult loadResult =
-        new LoadResult(
-            counts[InsertStatus.INSERTED.ordinal()],
-            counts[InsertStatus.UPDATED.ordinal()],
-            rejectedStudents);
     if (rejectedStudents.isEmpty()) {
-      return ResponseEntity.ok(loadResult);
+      LoadResult successfulResult =
+          new LoadResult(
+              counts[InsertStatus.INSERTED.ordinal()],
+              counts[InsertStatus.UPDATED.ordinal()],
+              0,
+              List.of());
+      saveableStudents = rosterStudentRepository.saveAll(saveableStudents);
+      updateUserService.attachUsersToRosterStudents(saveableStudents);
+      return ResponseEntity.ok(successfulResult);
     } else {
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(loadResult);
+      LoadResult conflictResult = new LoadResult(0, 0, 0, rejectedStudents);
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(conflictResult);
     }
   }
 
