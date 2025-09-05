@@ -2009,6 +2009,22 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
+            .githubId(67890)
+            .githubLogin("teststudent")
+            .build();
+
+    RosterStudent rosterStudentDeleted =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(null)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
@@ -2016,9 +2032,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> students = new ArrayList<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
-
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
 
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
     when(courseRepository.save(any(Course.class))).thenReturn(course1);
@@ -2033,10 +2046,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
     // Verify that removeOrganizationMember is NOT called when removeFromOrg is false
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -2062,6 +2072,22 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
+            .githubId(67890)
+            .githubLogin("teststudent")
+            .build();
+
+    RosterStudent rosterStudentDeleted =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(null)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
@@ -2069,9 +2095,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> students = new ArrayList<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
-
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
 
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
     when(courseRepository.save(any(Course.class))).thenReturn(course1);
@@ -2087,12 +2110,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
     // Verify that removeOrganizationMember IS called when removeFromOrg is true
-    verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
+    verify(organizationMemberService).removeOrganizationMember(eq(rosterStudentDeleted));
 
     assertEquals(
         "Successfully deleted roster student and removed him/her from the course list and organization",
@@ -2117,6 +2137,22 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
+            .teamMembers(List.of())
+            .githubId(null)
+            .githubLogin(null) // No GitHub login
+            .build();
+
+    RosterStudent rosterStudentDeleted =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(null)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .teamMembers(List.of())
             .githubId(null)
             .githubLogin(null) // No GitHub login
             .build();
@@ -2124,9 +2160,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> students = new ArrayList<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
-
-    List<RosterStudent> studentsSpy = Mockito.spy(students);
-    course1.setRosterStudents(studentsSpy);
 
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
     when(courseRepository.save(any(Course.class))).thenReturn(course1);
@@ -2141,10 +2174,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentRepository).findById(eq(1L));
-    verify(courseRepository).save(any(Course.class));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
-    verify(studentsSpy).remove(eq(rosterStudent));
+    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
     // Verify that removeOrganizationMember is NOT called (student has no GitHub login)
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
