@@ -11,6 +11,7 @@ import { Button, Tab, Tabs } from "react-bootstrap";
 import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
 import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabComponent";
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
+import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -90,6 +91,13 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
           <AssignmentTabComponent courseId={courseId} />
+        </Tab>
+        <Tab eventKey={"teams"} title={"Teams"} className="pt-2">
+          <TeamsTabComponent
+            courseId={courseId}
+            testIdPrefix={testId}
+            currentUser={currentUser}
+          />
         </Tab>
       </Tabs>
     </BasicLayout>

@@ -236,6 +236,13 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "assignments",
     );
+
+    expect(screen.getByRole("tab", { name: "Teams" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Teams" })).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "teams",
+    );
+
     expect(screen.getByText("Management")).toHaveAttribute(
       "aria-selected",
       "true",
