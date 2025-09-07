@@ -2,6 +2,8 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
@@ -19,6 +21,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
@@ -26,11 +29,13 @@ import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -91,6 +96,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             Name,ID,SIS ID,University Email,Invalid Column Name
             Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
             """;
+  @Autowired private JobService jobService;
 
   @Test
   @WithInstructorCoursePermissions
@@ -178,7 +184,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .orgStatus(OrgStatus.PENDING)
             .build();
 
-    course1.setRosterStudents(List.of(rs1BeforeWithId, rs2BeforeWithId));
+    course1.setRosterStudents(new ArrayList<>(List.of(rs1BeforeWithId, rs2BeforeWithId)));
 
     MockMultipartFile file =
         new MockMultipartFile(
@@ -205,12 +211,12 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     verify(courseRepository, atLeastOnce()).findById(eq(1L));
     verify(rosterStudentRepository, times(1))
-        .saveAll(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
+        .saveAll(new ArrayList<>(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)));
     verify(updateUserService, times(1))
-        .attachUsersToRosterStudents(List.of(rs1AfterWithId, rs2AfterWithId, rs3WithId));
+        .attachUsersToRosterStudents(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
 
     String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 2, List.of());
+    LoadResult expectedResult = new LoadResult(1, 2, 0, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
@@ -226,7 +232,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     Course course1 =
         Course.builder()
             .id(1L)
-            .rosterStudents(List.of(student1ID, student1Email, student2))
+            .rosterStudents(new ArrayList<>(List.of(student1ID, student1Email, student2)))
             .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     MockMultipartFile file =
@@ -274,7 +280,72 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     verify(rosterStudentRepository, never()).saveAll(List.of());
     String responseString = response.getResponse().getContentAsString();
-    LoadResult expectedResult = new LoadResult(1, 1, List.of(rosterStudentRejected));
+    LoadResult expectedResult = new LoadResult(0, 0, 0, List.of(rosterStudentRejected));
+    String expectedJson = mapper.writeValueAsString(expectedResult);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void drops_handled_correctly() throws Exception {
+    RosterStudent noUpdateNoDrop =
+        RosterStudent.builder()
+            .id(5L)
+            .studentId("A123489138507")
+            .email("stayincourse")
+            .rosterStatus(RosterStatus.MANUAL)
+            .build();
+
+    RosterStudent droppedStudent =
+        RosterStudent.builder()
+            .id(4L)
+            .studentId("3323748")
+            .email("dropped@ucsb.edu")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
+    RosterStudent droppedStudentUpdated =
+        RosterStudent.builder()
+            .id(4L)
+            .studentId("3323748")
+            .email("dropped@ucsb.edu")
+            .rosterStatus(RosterStatus.DROPPED)
+            .build();
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .rosterStudents(new ArrayList<>(List.of(noUpdateNoDrop, droppedStudent)))
+            .build();
+
+    when(rosterStudentRepository.saveAll(any()))
+        .thenReturn(List.of(droppedStudentUpdated, noUpdateNoDrop));
+
+    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/rosterstudents/upload/csv")
+                    .file(file)
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(rosterStudentRepository, times(1)).saveAll(rosterStudentCaptor.capture());
+    verify(jobService, times(1)).runAsJob(any(RemoveStudentsJob.class));
+
+    System.out.println("rosterStudentCaptor.getValue() = " + rosterStudentCaptor.getValue());
+    assertTrue(rosterStudentCaptor.getValue().contains(droppedStudentUpdated));
+    assertTrue(rosterStudentCaptor.getValue().contains(noUpdateNoDrop));
+    String responseString = response.getResponse().getContentAsString();
+    LoadResult expectedResult = new LoadResult(3, 0, 1, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
@@ -290,6 +361,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .orgName("osu-101-s25")
             .term("S25")
             .school("Oregon State")
+            .rosterStudents(List.of())
             .build();
     MockMultipartFile file =
         new MockMultipartFile(
