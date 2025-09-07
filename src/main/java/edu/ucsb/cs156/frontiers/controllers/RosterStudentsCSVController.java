@@ -58,6 +58,7 @@ public class RosterStudentsCSVController extends ApiController {
     UCSB_EGRADES,
     CHICO_CANVAS,
     OREGON_STATE,
+    ROSTER_DOWNLOAD,
     UNKNOWN
   }
 
@@ -67,6 +68,8 @@ public class RosterStudentsCSVController extends ApiController {
       "Student Name,Student ID,Student SIS ID,Email,Section Name";
   public static final String OREGON_STATE_HEADERS =
       "Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id";
+  public static final String ROSTER_DOWNLOAD_HEADERS =
+      "COURSEID,EMAIL,FIRSTNAME,GITHUBID,GITHUBLOGIN,ID,LASTNAME,ORGSTATUS,ROSTERSTATUS,SECTION,STUDENTID,TEAMS,USERID";
 
   public static RosterSourceType getRosterSourceType(String[] headers) {
 
@@ -75,6 +78,7 @@ public class RosterStudentsCSVController extends ApiController {
     sourceTypeToHeaders.put(RosterSourceType.UCSB_EGRADES, UCSB_EGRADES_HEADERS.split(","));
     sourceTypeToHeaders.put(RosterSourceType.CHICO_CANVAS, CHICO_CANVAS_HEADERS.split(","));
     sourceTypeToHeaders.put(RosterSourceType.OREGON_STATE, OREGON_STATE_HEADERS.split(","));
+    sourceTypeToHeaders.put(RosterSourceType.ROSTER_DOWNLOAD, ROSTER_DOWNLOAD_HEADERS.split(","));
 
     for (Map.Entry<RosterSourceType, String[]> entry : sourceTypeToHeaders.entrySet()) {
       RosterSourceType type = entry.getKey();
@@ -191,6 +195,8 @@ public class RosterStudentsCSVController extends ApiController {
       return fromChicoCanvasCSVRow(row);
     } else if (sourceType == RosterSourceType.OREGON_STATE) {
       return fromOregonStateCSVRow(row);
+    } else if (sourceType == RosterSourceType.ROSTER_DOWNLOAD) {
+      return fromRosterDownloadCSVRow(row);
     } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CSV format not recognized");
     }
@@ -241,6 +247,19 @@ public class RosterStudentsCSVController extends ApiController {
         .studentId(row[9])
         .email(row[8])
         .section("")
+        .build();
+  }
+
+  public static RosterStudent fromRosterDownloadCSVRow(String[] row) {
+    // Header order: COURSEID, EMAIL, FIRSTNAME, GITHUBID, GITHUBLOGIN, ID, LASTNAME,
+    // ORGSTATUS, ROSTERSTATUS, SECTION, STUDENTID, TEAMS, USERID
+    checkRowLength(row, 13, RosterSourceType.ROSTER_DOWNLOAD);
+    return RosterStudent.builder()
+        .firstName(row[2])
+        .lastName(row[6])
+        .studentId(row[10])
+        .email(row[1])
+        .section(row[9])
         .build();
   }
 
