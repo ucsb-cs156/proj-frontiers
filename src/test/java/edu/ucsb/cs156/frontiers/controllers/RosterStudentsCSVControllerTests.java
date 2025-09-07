@@ -750,19 +750,19 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
   @Test
   public void test_fromCSVRowRosterDownload() {
     String row[] = {
-      "1",               // COURSEID
-      "cgaucho@ucsb.edu",// EMAIL
-      "Chris",           // FIRSTNAME
-      "12345",           // GITHUBID
-      "cgaucho",         // GITHUBLOGIN
-      "42",              // ID
-      "Gaucho",          // LASTNAME
-      "PENDING",         // ORGSTATUS
-      "ROSTER",          // ROSTERSTATUS
-      "Section A",       // SECTION
-      "12345",           // STUDENTID
-      "Team Alpha",      // TEAMS
-      "102"              // USERID
+      "1", // COURSEID
+      "cgaucho@ucsb.edu", // EMAIL
+      "Chris", // FIRSTNAME
+      "12345", // GITHUBID
+      "cgaucho", // GITHUBLOGIN
+      "42", // ID
+      "Gaucho", // LASTNAME
+      "PENDING", // ORGSTATUS
+      "ROSTER", // ROSTERSTATUS
+      "Section A", // SECTION
+      "12345", // STUDENTID
+      "Team Alpha", // TEAMS
+      "102" // USERID
     };
 
     RosterStudent rs =
@@ -794,19 +794,19 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
   @Test
   public void test_fromCSVRowRosterDownload_sectionField() {
     String row[] = {
-      "99",                 // COURSEID
-      "jane@ucsb.edu",      // EMAIL
-      "Jane",               // FIRSTNAME
-      "",                   // GITHUBID
-      "",                   // GITHUBLOGIN
-      "1001",               // ID
-      "Doe",                // LASTNAME
-      "PENDING",            // ORGSTATUS
-      "ROSTER",             // ROSTERSTATUS
-      "0100",               // SECTION
-      "A01234567",          // STUDENTID
-      "Team Beta",          // TEAMS
-      "100"                 // USERID
+      "99", // COURSEID
+      "jane@ucsb.edu", // EMAIL
+      "Jane", // FIRSTNAME
+      "", // GITHUBID
+      "", // GITHUBLOGIN
+      "1001", // ID
+      "Doe", // LASTNAME
+      "PENDING", // ORGSTATUS
+      "ROSTER", // ROSTERSTATUS
+      "0100", // SECTION
+      "A01234567", // STUDENTID
+      "Team Beta", // TEAMS
+      "100" // USERID
     };
 
     RosterStudent rs =
