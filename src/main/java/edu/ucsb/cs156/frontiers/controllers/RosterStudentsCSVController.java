@@ -174,6 +174,7 @@ public class RosterStudentsCSVController extends ApiController {
           RemoveStudentsJob.builder()
               .students(droppedStudents)
               .organizationMemberService(organizationMemberService)
+              .rosterStudentRepository(rosterStudentRepository)
               .build();
       jobService.runAsJob(job);
       return ResponseEntity.ok(successfulResult);
