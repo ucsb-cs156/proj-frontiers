@@ -1991,4 +1991,195 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         .findByCourseIdAndEmail(eq(1L), eq("newemail@ucsb.edu"));
     verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteRosterStudent_withRemoveFromOrgFalse_success() throws Exception {
+    // Set up course with org name and installation ID
+    course1.setOrgName("test-org");
+    course1.setInstallationId("12345");
+
+    RosterStudent rosterStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
+            .githubId(67890)
+            .githubLogin("teststudent")
+            .build();
+
+    RosterStudent rosterStudentDeleted =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(null)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
+            .githubId(67890)
+            .githubLogin("teststudent")
+            .build();
+
+    List<RosterStudent> students = new ArrayList<>();
+    students.add(rosterStudent);
+    course1.setRosterStudents(students);
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/rosterstudents/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("removeFromOrg", "false"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
+    // Verify that removeOrganizationMember is NOT called when removeFromOrg is false
+    verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
+
+    assertEquals(
+        "Successfully deleted roster student and removed him/her from the course list",
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteRosterStudent_withRemoveFromOrgTrue_success() throws Exception {
+    // Set up course with org name and installation ID
+    course1.setOrgName("test-org");
+    course1.setInstallationId("12345");
+
+    RosterStudent rosterStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
+            .githubId(67890)
+            .githubLogin("teststudent")
+            .build();
+
+    RosterStudent rosterStudentDeleted =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(null)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.MEMBER)
+            .teamMembers(List.of())
+            .githubId(67890)
+            .githubLogin("teststudent")
+            .build();
+
+    List<RosterStudent> students = new ArrayList<>();
+    students.add(rosterStudent);
+    course1.setRosterStudents(students);
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
+    doNothing().when(organizationMemberService).removeOrganizationMember(any(RosterStudent.class));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/rosterstudents/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("removeFromOrg", "true"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
+    // Verify that removeOrganizationMember IS called when removeFromOrg is true
+    verify(organizationMemberService).removeOrganizationMember(eq(rosterStudentDeleted));
+
+    assertEquals(
+        "Successfully deleted roster student and removed him/her from the course list and organization",
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteRosterStudent_withRemoveFromOrgFalse_noGithubLogin_success()
+      throws Exception {
+    // Set up course with org name and installation ID but student without GitHub login
+    course1.setOrgName("test-org");
+    course1.setInstallationId("12345");
+
+    RosterStudent rosterStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .teamMembers(List.of())
+            .githubId(null)
+            .githubLogin(null) // No GitHub login
+            .build();
+
+    RosterStudent rosterStudentDeleted =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("test@ucsb.edu")
+            .course(null)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .teamMembers(List.of())
+            .githubId(null)
+            .githubLogin(null) // No GitHub login
+            .build();
+
+    List<RosterStudent> students = new ArrayList<>();
+    students.add(rosterStudent);
+    course1.setRosterStudents(students);
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/rosterstudents/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("removeFromOrg", "false"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
+    // Verify that removeOrganizationMember is NOT called (student has no GitHub login)
+    verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
+
+    assertEquals(
+        "Successfully deleted roster student and removed him/her from the course list",
+        response.getResponse().getContentAsString());
+  }
 }
