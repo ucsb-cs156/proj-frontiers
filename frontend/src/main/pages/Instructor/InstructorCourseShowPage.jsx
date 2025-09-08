@@ -66,14 +66,7 @@ export default function InstructorCourseShowPage() {
       <h1 data-testid={`${testId}-title`}>
         Course: {course ? `${course.courseName} (${course.id})` : "Loading..."}
       </h1>
-      <Tabs defaultActiveKey={"default"}>
-        <Tab eventKey={"default"} title={"Management"} className="pt-2">
-          <InstructorCoursesTable
-            courses={course ? [course] : []}
-            currentUser={currentUser}
-            testId={testId}
-          />
-        </Tab>
+      <Tabs defaultActiveKey={"enrollment"} className="instructor-course-tabs">
         <Tab eventKey={"enrollment"} title={"Enrollment"} className="pt-2">
           <EnrollmentTabComponent
             courseId={courseId}
@@ -90,6 +83,13 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
           <AssignmentTabComponent courseId={courseId} />
+        </Tab>
+        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
+          <InstructorCoursesTable
+            courses={course ? [course] : []}
+            currentUser={currentUser}
+            testId={testId}
+          />
         </Tab>
       </Tabs>
     </BasicLayout>
