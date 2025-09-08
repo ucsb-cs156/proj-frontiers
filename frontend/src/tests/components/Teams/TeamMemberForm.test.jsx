@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router";
 
-import TeamsForm from "main/components/Teams/TeamMemberForm";
 import { teamsFixtures } from "fixtures/TeamsFixtures";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
