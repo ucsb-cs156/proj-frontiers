@@ -145,7 +145,7 @@ export default function TeamsTabComponent({
           </Button>
         </Col>
       </Row>
-      <Row className="mb-1">
+      <Row className="mb-1 py-2">
         <Form>
           <Form.Group as={Row} controlId="searchFilter">
             <Form.Label column sm={2}>
