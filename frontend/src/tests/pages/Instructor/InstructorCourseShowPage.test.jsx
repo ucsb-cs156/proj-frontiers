@@ -80,12 +80,11 @@ describe("InstructorCourseShowPage tests", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
-        "Course: CMPSC 156 (1)",
+        "CMPSC 156",
       );
     });
 
-    const orgName = screen.getByText("ucsb-cs156-s25");
-    expect(orgName).toBeInTheDocument();
+    expect(screen.queryByText("ucsb-cs156-s25")).not.toBeInTheDocument();
 
     expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
     vi.advanceTimersByTime(3000);
@@ -220,13 +219,10 @@ describe("InstructorCourseShowPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    expect(screen.getByText("Management")).toHaveAttribute(
+
+    expect(screen.getByText("Students")).toHaveAttribute(
       "data-rr-ui-event-key",
-      "default",
-    );
-    expect(screen.getByText("Enrollment")).toHaveAttribute(
-      "data-rr-ui-event-key",
-      "enrollment",
+      "students",
     );
     expect(screen.getByRole("tab", { name: "Staff" })).toHaveAttribute(
       "data-rr-ui-event-key",
@@ -234,13 +230,13 @@ describe("InstructorCourseShowPage tests", () => {
     );
     expect(screen.getByText("Assignments")).toHaveAttribute(
       "data-rr-ui-event-key",
-      "assignments",
+      "default",
     );
-    expect(screen.getByText("Management")).toHaveAttribute(
+    expect(screen.getByText("Assignments")).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    const changeTabs = screen.getByText("Enrollment");
+    const changeTabs = screen.getByText("Students");
     fireEvent.click(changeTabs);
   });
 
@@ -278,5 +274,164 @@ describe("InstructorCourseShowPage tests", () => {
     expect(
       screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
     ).toBeInTheDocument();
+  });
+  test("header displays correct info when course is loaded without an installationId", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[2]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156 Fall 2025");
+
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-title"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-github-org-link"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-tooltip-github-settings"),
+    ).not.toBeInTheDocument();
+  });
+  test("header displays correct info when course is loaded", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-title"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-github-org-link"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-github-org-link"),
+    ).toHaveAttribute("href", "https://github.com/ucsb-cs156-s25");
+    expect(screen.getByText("Spring 2025")).toBeInTheDocument();
+  });
+  test("expect the correct URL to the organization for the course", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+
+    const githubLink = screen.getByTestId(
+      `InstructorCourseShowPage-github-settings-link`,
+    );
+    expect(githubLink).toBeInTheDocument();
+    expect(githubLink).toHaveAttribute(
+      "href",
+      "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
+    );
+  });
+  test("expect the correct tooltip ID and message for the github icon (that redirects to github installation settings)", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-github-settings-icon"),
+    ).toBeInTheDocument();
+
+    fireEvent.mouseOver(
+      screen.getByTestId(`InstructorCourseShowPage-github-settings-icon`),
+    );
+
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveAttribute(
+      "id",
+      "InstructorCourseShowPage-tooltip-github-settings",
+    );
+    expect(tooltip).toHaveTextContent(
+      "Manage settings for association between your GitHub organization and this web application.",
+    );
+  });
+  test("does not show error modal on initial render", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
