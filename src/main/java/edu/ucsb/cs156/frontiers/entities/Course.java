@@ -29,6 +29,10 @@ public class Course {
 
   private String school;
 
+  @JsonIgnore private String canvasApiToken;
+
+  private String canvasCourseId;
+
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore

@@ -1,0 +1,50 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "005-add-canvas-api-token-to-course",
+      "author": "copilot",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "CANVAS_API_TOKEN",
+                  "type": "VARCHAR(255)",
+                  "constraints": {
+                    "nullable": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "changeSet": {
+      "id": "005-add-canvas-course-id-to-course",
+      "author": "copilot",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "CANVAS_COURSE_ID",
+                  "type": "VARCHAR(255)",
+                  "constraints": {
+                    "nullable": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}
