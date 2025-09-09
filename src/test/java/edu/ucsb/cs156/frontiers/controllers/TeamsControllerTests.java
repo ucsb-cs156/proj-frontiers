@@ -764,7 +764,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void testUploadTeamsCsv_success() throws Exception {
+  public void csv_rejected_returns_conflict() throws Exception {
     // arrange
     Course course = Course.builder().id(1L).courseName("CS156").build();
     RosterStudent student1 =
@@ -805,7 +805,7 @@ public class TeamsControllerTests extends ControllerTestCase {
                     .file("file", file.getBytes())
                     .param("courseId", "1")
                     .with(csrf()))
-            .andExpect(status().isOk())
+            .andExpect(status().isConflict())
             .andReturn();
 
     // assert
@@ -817,6 +817,74 @@ public class TeamsControllerTests extends ControllerTestCase {
     TeamsController.TeamCreationResponse expectedResponse =
         new TeamsController.TeamCreationResponse(
             TeamsController.TeamSourceType.SIMPLE, 2, 1, List.of("nors@ucsb.edu"));
+    String expectedJson = mapper.writeValueAsString(expectedResponse);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  public static String successfulCSVContents =
+      """
+          team,email
+          team1,fakestudent1@ucsb.edu
+          team2,fakestudent2@ucsb.edu
+          team1,existingstudent@ucsb.edu
+          """;
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void testUploadTeamsCsv_success_noRejectedStudents() throws Exception {
+    // arrange
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+    RosterStudent student1 =
+        RosterStudent.builder().email("fakestudent1@ucsb.edu").course(course).build();
+    RosterStudent student2 =
+        RosterStudent.builder().email("fakestudent2@ucsb.edu").course(course).build();
+    RosterStudent student3 =
+        RosterStudent.builder().email("existingstudent@ucsb.edu").course(course).build();
+    Team team1 = Team.builder().id(1L).name("team1").course(course).build();
+    TeamMember teamMemberFor3 = TeamMember.builder().team(team1).rosterStudent(student3).build();
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "egrades.csv", MediaType.TEXT_PLAIN_VALUE, successfulCSVContents.getBytes());
+
+    TeamMember teamMemberCreated1 =
+        TeamMember.builder().team(team1).rosterStudent(student1).build();
+    TeamMember teamMemberCreated2 = TeamMember.builder().rosterStudent(student2).build();
+    Team team2Created = Team.builder().name("team2").course(course).build();
+    teamMemberCreated2.setTeam(team2Created);
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("fakestudent1@ucsb.edu")))
+        .thenReturn(Optional.of(student1));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("fakestudent2@ucsb.edu")))
+        .thenReturn(Optional.of(student2));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("existingstudent@ucsb.edu")))
+        .thenReturn(Optional.of(student3));
+    when(teamRepository.findByCourseIdAndName(eq(1L), eq("team1"))).thenReturn(Optional.of(team1));
+    when(teamMemberRepository.findByTeamAndRosterStudent(eq(team1), eq(student3)))
+        .thenReturn(Optional.of(teamMemberFor3));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/teams/upload/csv")
+                    .file("file", file.getBytes())
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated1));
+    verify(teamRepository).save(eq(team2Created));
+    verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated2));
+    verify(teamMemberRepository, never()).save(eq(teamMemberFor3));
+
+    TeamsController.TeamCreationResponse expectedResponse =
+        new TeamsController.TeamCreationResponse(
+            TeamsController.TeamSourceType.SIMPLE, 2, 1, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResponse);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);

@@ -22,6 +22,7 @@ import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -120,7 +121,7 @@ public class TeamsController extends ApiController {
   @PostMapping(
       value = "/upload/csv",
       consumes = {"multipart/form-data"})
-  public TeamCreationResponse uploadTeamsCsv(
+  public ResponseEntity<TeamCreationResponse> uploadTeamsCsv(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "file") @RequestParam("file") MultipartFile file)
       throws IOException, CsvException {
@@ -149,11 +150,18 @@ public class TeamsController extends ApiController {
           counts[rowResult.status.ordinal()]++;
         }
       }
-      return new TeamCreationResponse(
-          sourceType,
-          counts[TeamMemberStatus.CREATED.ordinal()],
-          counts[TeamMemberStatus.EXISTS.ordinal()],
-          failed);
+      TeamCreationResponse response =
+          new TeamCreationResponse(
+              sourceType,
+              counts[TeamMemberStatus.CREATED.ordinal()],
+              counts[TeamMemberStatus.EXISTS.ordinal()],
+              failed);
+
+      if (!failed.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+      } else {
+        return ResponseEntity.ok(response);
+      }
     }
   }
 
