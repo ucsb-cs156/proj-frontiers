@@ -15,7 +15,7 @@ export default function HelpCsvPage() {
           be supported, please contact the Frontiers development team, supplying
           a sample CSV (with fictional data).
         </p>
-        <Accordion>
+        <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
             <Accordion.Header>UC Santa Barbara</Accordion.Header>
             <Accordion.Body>
@@ -147,6 +147,52 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td>Email</td>
                     <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+
+        <h2 className="mt-4">Team Information</h2>
+        <p>
+          Teams can be managed using a simple CSV upload with the following
+          format.
+        </p>
+        <Accordion data-testid="teamsAccordion">
+          <Accordion.Item eventKey="0">
+            <Accordion.Header>Teams (by Email)</Accordion.Header>
+            <Accordion.Body>
+              <p>
+                You can upload teams using a simple CSV with the following
+                format:
+              </p>
+              <pre className={"csvExample"} data-testid="teamsCsvExample">
+                {csvFixtures.teamsByEmail}
+              </pre>
+              <p>We interpret the fields as follows:</p>
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Roster Field</th>
+                    <th>CSV Field</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Team Name</td>
+                    <td>team</td>
+                    <td>
+                      Rows with the same team value belong to the same team.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Email</td>
+                    <td>email</td>
+                    <td>
+                      Student's email address used to match to the roster.
+                    </td>
                   </tr>
                 </tbody>
               </table>
