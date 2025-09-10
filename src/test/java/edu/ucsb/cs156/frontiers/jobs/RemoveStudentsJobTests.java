@@ -1,7 +1,10 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -17,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 public class RemoveStudentsJobTests {
 
@@ -72,6 +77,62 @@ public class RemoveStudentsJobTests {
     verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
     verify(rosterStudentRepository, atLeastOnce()).save(student1Updated);
     verify(rosterStudentRepository, atLeastOnce()).save(student2Updated);
+  }
+
+  @Test
+  public void not_in_organization_handled_correctly() throws Exception {
+    Course course = Course.builder().orgName("testOrg").installationId("123456").build();
+    RosterStudent student1 =
+        RosterStudent.builder()
+            .course(course)
+            .githubLogin("testLogin1")
+            .githubId(123545)
+            .orgStatus(OrgStatus.MEMBER)
+            .build();
+    RosterStudent student1Updated =
+        RosterStudent.builder().course(course).orgStatus(OrgStatus.REMOVED).build();
+
+    removeStudentsJob =
+        RemoveStudentsJob.builder()
+            .organizationMemberService(organizationMemberService)
+            .rosterStudentRepository(rosterStudentRepository)
+            .students(List.of(student1))
+            .build();
+
+    doThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND))
+        .when(organizationMemberService)
+        .removeOrganizationMember(eq(student1));
+    removeStudentsJob.accept(jobContext);
+    verify(organizationMemberService, times(1)).removeOrganizationMember(eq(student1));
+    verify(rosterStudentRepository, times(1)).save(student1Updated);
+  }
+
+  @Test
+  public void spammed_stops_job() throws Exception {
+    Course course = Course.builder().orgName("testOrg").installationId("123456").build();
+    RosterStudent student1 =
+        RosterStudent.builder()
+            .course(course)
+            .githubLogin("testLogin1")
+            .githubId(123545)
+            .orgStatus(OrgStatus.MEMBER)
+            .build();
+    RosterStudent student1Updated =
+        RosterStudent.builder().course(course).orgStatus(OrgStatus.REMOVED).build();
+
+    removeStudentsJob =
+        RemoveStudentsJob.builder()
+            .organizationMemberService(organizationMemberService)
+            .rosterStudentRepository(rosterStudentRepository)
+            .students(List.of(student1))
+            .build();
+
+    doThrow(new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS))
+        .when(organizationMemberService)
+        .removeOrganizationMember(eq(student1));
+    assertThrows(RuntimeException.class, () -> removeStudentsJob.accept(jobContext));
+    verify(organizationMemberService, times(1)).removeOrganizationMember(eq(student1));
+    verify(rosterStudentRepository, never()).save(student1Updated);
   }
 
   @Test

@@ -9,6 +9,8 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpStatusCodeException;
 
 @Builder
 @EqualsAndHashCode
@@ -23,11 +25,19 @@ public class RemoveStudentsJob implements JobContextConsumer {
       if (student.getCourse().getOrgName() != null
           && student.getCourse().getInstallationId() != null) {
         if (student.getGithubLogin() != null && student.getGithubId() != null) {
-          organizationMemberService.removeOrganizationMember(student);
-          c.log("Removed student %s from Organization".formatted(student.getGithubLogin()));
-          student.setOrgStatus(OrgStatus.REMOVED);
+          try {
+            organizationMemberService.removeOrganizationMember(student);
+            c.log("Removed student %s from Organization".formatted(student.getGithubLogin()));
+          } catch (HttpStatusCodeException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+              c.log("Student %s not in Organization".formatted(student.getGithubLogin()));
+            } else {
+              throw new RuntimeException(e);
+            }
+          }
           student.setGithubId(null);
           student.setGithubLogin(null);
+          student.setOrgStatus(OrgStatus.REMOVED);
           rosterStudentRepository.save(student);
         }
       }
