@@ -9,6 +9,8 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpStatusCodeException;
 
 @Builder
 @EqualsAndHashCode
@@ -19,19 +21,27 @@ public class RemoveStudentsJob implements JobContextConsumer {
 
   @Override
   public void accept(JobContext c) throws Exception {
-<span class="fc bfc" id="L22" title="All 2 branches covered.">    for (RosterStudent student : students) {</span>
-<span class="fc bfc" id="L23" title="All 2 branches covered.">      if (student.getCourse().getOrgName() != null</span>
-<span class="fc bfc" id="L24" title="All 2 branches covered.">          &amp;&amp; student.getCourse().getInstallationId() != null) {</span>
-<span class="fc bfc" id="L25" title="All 4 branches covered.">        if (student.getGithubLogin() != null &amp;&amp; student.getGithubId() != null) {</span>
-<span class="fc" id="L26">          organizationMemberService.removeOrganizationMember(student);</span>
-<span class="fc" id="L27">          c.log(&quot;Removed student %s from Organization&quot;.formatted(student.getGithubLogin()));</span>
-<span class="fc" id="L28">          student.setOrgStatus(OrgStatus.REMOVED);</span>
-<span class="fc" id="L29">          student.setGithubId(null);</span>
-<span class="fc" id="L30">          student.setGithubLogin(null);</span>
-<span class="fc" id="L31">          rosterStudentRepository.save(student);</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">    for (RosterStudent student : students) {</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">      if (student.getCourse().getOrgName() != null</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">          &amp;&amp; student.getCourse().getInstallationId() != null) {</span>
+<span class="fc bfc" id="L27" title="All 4 branches covered.">        if (student.getGithubLogin() != null &amp;&amp; student.getGithubId() != null) {</span>
+          try {
+<span class="fc" id="L29">            organizationMemberService.removeOrganizationMember(student);</span>
+<span class="fc" id="L30">            c.log(&quot;Removed student %s from Organization&quot;.formatted(student.getGithubLogin()));</span>
+<span class="fc" id="L31">          } catch (HttpStatusCodeException e) {</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {</span>
+<span class="fc" id="L33">              c.log(&quot;Student %s not in Organization&quot;.formatted(student.getGithubLogin()));</span>
+            } else {
+<span class="fc" id="L35">              throw new RuntimeException(e);</span>
+            }
+<span class="fc" id="L37">          }</span>
+<span class="fc" id="L38">          student.setGithubId(null);</span>
+<span class="fc" id="L39">          student.setGithubLogin(null);</span>
+<span class="fc" id="L40">          student.setOrgStatus(OrgStatus.REMOVED);</span>
+<span class="fc" id="L41">          rosterStudentRepository.save(student);</span>
         }
       }
-<span class="fc" id="L34">    }</span>
-<span class="fc" id="L35">  }</span>
+<span class="fc" id="L44">    }</span>
+<span class="fc" id="L45">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
