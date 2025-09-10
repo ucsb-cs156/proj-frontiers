@@ -2,7 +2,6 @@ import React from "react";
 import { Accordion, Button } from "react-bootstrap";
 
 import { useBackendMutation } from "main/utils/useBackend";
-import { onDeleteSuccess } from "main/utils/rosterStudentUtils";
 import { hasRole } from "main/utils/currentUser";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { toast } from "react-toastify";
@@ -20,13 +19,23 @@ export default function TeamsTable({
 }) {
   const [postModal, setPostModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [errorPostMemberModal, setErrorPostMemberModal] = useState(false);
 
-  const onSuccessTeams = (modalFn) => {
+  const onSuccessMember = (modalFn) => {
     toast("Member added successfully");
     modalFn(false);
   };
 
-  const objectToAxiosParamsPost = (data) => ({
+  const onDeleteMember = () => {
+    toast("Member removed successfully");
+  };
+
+  const onDeleteTeam = () => {
+    toast("Team removed successfully");
+  };
+
+
+  const cellToAxiosParamsPost = (data) => ({
     url: `/api/teams/addMember`,
     method: "POST",
     params: {
@@ -50,20 +59,32 @@ export default function TeamsTable({
 
   const deleteTeamMutation = useBackendMutation(
     cellToAxiosParamDeleteTeam,
-    { onSuccess: onDeleteSuccess },
+    { onSuccess: onDeleteTeam },
     [`/api/teams/all?courseId=${courseId}`],
   );
 
   const deleteMemberMutation = useBackendMutation(
     cellToAxiosParamDeleteMember,
-    { onSuccess: onDeleteSuccess },
+    { onSuccess: onDeleteMember },
     [`/api/teams/all?courseId=${courseId}`],
   );
 
   const memberPostMutation = useBackendMutation(
-    objectToAxiosParamsPost,
+    cellToAxiosParamsPost,
     {
-      onSuccess: () => onSuccessTeams(setPostModal),
+      onSuccess: () => onSuccessMember(setPostModal),
+      onError: (error) => {
+        setPostModal(false);
+        if (error.response.status === 409) {
+          setErrorPostMemberModal({
+            message: `This member is already in this team.`,
+          });
+        } else {
+          setErrorPostMemberModal({
+            message: `${JSON.stringify(error.response.data.status)} error occurred while adding Member. ${JSON.stringify(error.response.data, null, 2)}`,
+          });
+        }
+      }
     },
     [`/api/teams/all?courseId=${courseId}`],
   );
@@ -73,7 +94,7 @@ export default function TeamsTable({
   };
 
   const deleteTeamCallback = async (team) => {
-    deleteTeamMutation.mutate(team);
+    deleteTeamMutation.mutate(team);  
   };
 
   const deleteMemberCallback = async (cell) => {
@@ -115,6 +136,17 @@ export default function TeamsTable({
         <ModalBody>
           <TeamMemberForm submitAction={handlePostSubmit} />
         </ModalBody>
+      </Modal>
+       <Modal
+        show={errorPostMemberModal}
+        onHide={() => setErrorPostMemberModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-error-post-member-modal`}
+      >
+        <ModalHeader closeButton>
+          <h4 className="text-danger"> Error Creating Member </h4>
+        </ModalHeader>
+        <ModalBody>{errorPostMemberModal.message}</ModalBody>
       </Modal>
       <Accordion data-testid={`${testIdPrefix}-accordion`}>
         {teams.map((team, index) => (
