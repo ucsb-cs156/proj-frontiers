@@ -350,6 +350,64 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
+  @Test
+  @WithInstructorCoursePermissions
+  public void updates_in_upsert_correctly() throws Exception {
+    RosterStudent student1Email = RosterStudent.builder().id(2L).email("cgaucho@ucsb.edu").build();
+    RosterStudent student2 =
+        RosterStudent.builder().id(3L).studentId("A987654").email("ldelplaya@ucsb.edu").build();
+    Course course1 =
+        Course.builder()
+            .id(1L)
+            .rosterStudents(new ArrayList<>(List.of(student1Email, student2)))
+            .build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
+
+    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/rosterstudents/upload/csv")
+                    .file(file)
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    RosterStudent rosterStudent1Updated =
+        RosterStudent.builder()
+            .id(2L)
+            .firstName("CHRIS FAKE")
+            .lastName("GAUCHO")
+            .studentId("A123456")
+            .email("cgaucho@ucsb.edu")
+            .section("08235")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
+    RosterStudent rosterStudent2Updated =
+        RosterStudent.builder()
+            .id(3L)
+            .firstName("LAUREN")
+            .lastName("DEL PLAYA")
+            .email("ldelplaya@ucsb.edu")
+            .studentId("A987654")
+            .section("08250")
+            .rosterStatus(RosterStatus.ROSTER)
+            .build();
+
+    verify(rosterStudentRepository, times(1)).saveAll(rosterStudentCaptor.capture());
+    assertTrue(rosterStudentCaptor.getValue().contains(rosterStudent1Updated));
+    assertTrue(rosterStudentCaptor.getValue().contains(rosterStudent2Updated));
+    String responseString = response.getResponse().getContentAsString();
+    LoadResult expectedResult = new LoadResult(1, 2, 0, List.of());
+    String expectedJson = mapper.writeValueAsString(expectedResult);
+    assertEquals(expectedJson, responseString);
+  }
+
   @WithInstructorCoursePermissions
   @Test
   public void unrecognized_csv_format_throws_an_exception() throws Exception {
