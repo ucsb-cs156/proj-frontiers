@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import java.util.List;
+import com.opencsv.bean.CsvCustomBindByName;
 
 /**
  * This is a DTO class that represents a student in the roster. It is used to transfer data between
@@ -22,7 +23,7 @@ public record RosterStudentDTO(
     String githubLogin,
     RosterStatus rosterStatus,
     OrgStatus orgStatus,
-    List<String> teams) {
+    @CsvCustomBindByName(converter = TeamsListToCsvConverter.class) List<String> teams) {
 
   public RosterStudentDTO(RosterStudent rosterStudent) {
     this(

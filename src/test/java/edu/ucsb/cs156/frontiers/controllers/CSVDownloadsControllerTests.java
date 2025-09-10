@@ -134,7 +134,53 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
     String expectedResponse =
         """
             "COURSEID","EMAIL","FIRSTNAME","GITHUBID","GITHUBLOGIN","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","SECTION","STUDENTID","TEAMS","USERID"
-            "1","cgaucho@ucsb.edu","Chris","12345","cgaucho","42","Gaucho","PENDING","ROSTER","Section A","12345","Team Alpha","102"
+            "1","cgaucho@ucsb.edu","Chris","12345","cgaucho","42","Gaucho","PENDING","ROSTER","Section A","12345","Team Alpha;Team Beta","102"
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/rosterstudents?courseId=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(rosterStudentDTOService, times(1)).getRosterStudentDTOs(eq(1L));
+    verify(rosterStudentDTOService, times(1)).getStatefulBeanToCSV(any());
+
+    assertEquals(expectedResponse, response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+  @WithInstructorCoursePermissions
+  public void mockMvcSRBTest_emptyTeams() throws Exception {
+    Course course =
+        Course.builder().id(1L).courseName("ucsb-cs156-s25").term("S25").school("UCSB").build();
+
+    RosterStudentDTO rosterStudentDTO =
+        new RosterStudentDTO(
+            42L,
+            course.getId(),
+            "12345",
+            "Chris",
+            "Gaucho",
+            "cgaucho@ucsb.edu",
+            "Section A",
+            102L,
+            12345,
+            "cgaucho",
+            RosterStatus.ROSTER,
+            OrgStatus.PENDING,
+            List.of());
+
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
+
+    String expectedResponse =
+        """
+            "COURSEID","EMAIL","FIRSTNAME","GITHUBID","GITHUBLOGIN","ID","LASTNAME","ORGSTATUS","ROSTERSTATUS","SECTION","STUDENTID","TEAMS","USERID"
+            "1","cgaucho@ucsb.edu","Chris","12345","cgaucho","42","Gaucho","PENDING","ROSTER","Section A","12345","","102"
             """;
 
     MvcResult response =
