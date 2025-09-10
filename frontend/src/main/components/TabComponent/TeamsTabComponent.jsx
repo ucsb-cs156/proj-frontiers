@@ -21,6 +21,9 @@ export default function TeamsTabComponent({
 }) {
   const [postModal, setPostModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
+  const [errorPostTeamModal, setErrorPostTeamModal] = useState(false);
+  const [errorPostCSVTeamModal, setErrorPostCSVTeamModal] = useState(false);
+
   const { data: teams } = useBackend(
     [`/api/teams/all?courseId=${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -58,14 +61,27 @@ export default function TeamsTabComponent({
     modalFn(false);
   };
 
+  const onSuccessTeamsCSV = (modalFn) => {
+    toast("Teams successfully added through CSV.");
+    setSearchTeams("");
+    modalFn(false);
+  };
+
   const teamPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
     {
       onSuccess: () => onSuccessTeams(setPostModal),
       onError: (error) => {
-        toast.error(
-          `Error adding team: ${JSON.stringify(error.response.data, null, 2)}`,
-        );
+        setPostModal(false);
+        if (error.response.status === 409) {
+          setErrorPostTeamModal({
+            message: `Team name already exists. Please choose a different name.`,
+          });
+        } else {
+          setErrorPostTeamModal({
+            message: `${JSON.stringify(error.response.data.status)} error occurred while adding team. ${JSON.stringify(error.response.data, null, 2)}`,
+          });
+        }
       },
     },
     [`/api/teams/all?courseId=${courseId}`],
@@ -74,7 +90,17 @@ export default function TeamsTabComponent({
   const teamCsvMutation = useBackendMutation(
     objectToAxiosParamsCSV,
     {
-      onSuccess: () => onSuccessTeams(setCsvModal),
+      onSuccess: ( data ) =>  {
+        if(data.rejected && data.rejected.length > 0 ) {
+          setCsvModal(false);
+          setErrorPostCSVTeamModal({
+            message: `Rejected members: ${data.rejected.join(", ")}`
+          });
+        }
+        else {
+          onSuccessTeamsCSV(setCsvModal);
+        }
+      },
       onError: (error) => {
         toast.error(
           `Error uploading CSV: ${JSON.stringify(error.response.data, null, 2)}`,
@@ -118,7 +144,34 @@ export default function TeamsTabComponent({
         <ModalHeader closeButton>Add Individual Team</ModalHeader>
         <ModalBody>
           <TeamsForm submitAction={handlePostSubmit} cancelDisabled={true} />
+          {/* {teamAlreadyExistsError && (
+            <div className="alert alert-danger mt-3" role="alert" data-testid={`${testIdPrefix}-team-exists-error`}>
+              Team name already exists. Please choose a different name.
+            </div>
+          )} */}
         </ModalBody>
+      </Modal>
+      <Modal
+        show={errorPostTeamModal}
+        onHide={() => setErrorPostTeamModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-error-post-team-modal`}
+      >
+        <ModalHeader closeButton>
+          <h4 className="text-danger"> Error Creating Team </h4>
+        </ModalHeader>
+        <ModalBody>{errorPostTeamModal.message}</ModalBody>
+      </Modal>
+       <Modal
+        show={errorPostCSVTeamModal}
+        onHide={() => setErrorPostCSVTeamModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-error-post-csv-team-modal`}
+      >
+        <ModalHeader closeButton>
+          <h4 className="text-danger"> Error Creating Adding All Members by CSV </h4>
+        </ModalHeader>
+        <ModalBody>{errorPostCSVTeamModal.message}</ModalBody>
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
@@ -140,7 +193,7 @@ export default function TeamsTabComponent({
           </Button>
         </Col>
         <Col>
-          <Button onClick={downloadCsv} className="w-100">
+          <Button onClick={downloadCsv} className="w-100" data-testid={`${testIdPrefix}-download-button`}>
             Download Team CSV
           </Button>
         </Col>

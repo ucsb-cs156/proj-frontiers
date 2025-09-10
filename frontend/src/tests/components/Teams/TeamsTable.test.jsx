@@ -155,7 +155,7 @@ describe("TeamsTable tests", () => {
       queryKey: ["/api/teams/all?courseId=12"],
     });
 
-    expect(mockToast).toHaveBeenCalledWith({ successMessage });
+    expect(mockToast).toHaveBeenCalledWith(successMessage);
   });
   test("delete member calls correct API endpoint with correct params", async () => {
     const successMessage = "Member removed successfully";
