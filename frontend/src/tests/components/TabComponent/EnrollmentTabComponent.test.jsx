@@ -315,7 +315,11 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(screen.getByTestId(`${testId}-csv-error-modal`)).toHaveClass(
       "modal-dialog modal-dialog-centered",
     );
-    expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     await waitFor(() =>
       expect(
