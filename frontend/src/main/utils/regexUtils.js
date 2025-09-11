@@ -1,5 +1,5 @@
-const RegexUtils = {
+const regexUtils = {
   email: /\S+@\S+\.\S+/,
 };
 
-export default RegexUtils;
+export default regexUtils;

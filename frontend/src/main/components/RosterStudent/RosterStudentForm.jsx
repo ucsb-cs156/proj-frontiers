@@ -1,7 +1,7 @@
 import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import RegexUtils from "../../utils/RegexUtils";
+import regexUtils from "main/utils/regexUtils";
 
 function RosterStudentForm({
   initialContents,
@@ -81,7 +81,7 @@ function RosterStudentForm({
             {...register("email", {
               required: "Email is required.",
               pattern: {
-                value: RegexUtils.email,
+                value: regexUtils.email,
                 message: "Please enter a valid email.",
               },
             })}
