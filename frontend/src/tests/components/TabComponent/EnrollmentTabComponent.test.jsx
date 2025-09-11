@@ -312,6 +312,9 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(
       screen.getByText(loadResultFixtures.failed.rejected[0].studentId),
     ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-RosterStudentTable-csv-error`),
+    ).toBeInTheDocument();
     expect(screen.getByTestId(`${testId}-csv-error-modal`)).toHaveClass(
       "modal-dialog modal-dialog-centered",
     );
