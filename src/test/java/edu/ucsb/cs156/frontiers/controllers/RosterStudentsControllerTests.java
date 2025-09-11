@@ -2190,4 +2190,88 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         "Successfully deleted roster student and removed him/her from the course list",
         response.getResponse().getContentAsString());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testRestoreRosterStudent_success() throws Exception {
+    // Arrange
+    RosterStudent droppedStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Dropped")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("dropped@ucsb.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.DROPPED)
+            .build();
+
+    RosterStudent restoredStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Dropped")
+            .lastName("Student")
+            .studentId("A123456")
+            .email("dropped@ucsb.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.MANUAL)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(droppedStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(restoredStudent);
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(put("/api/rosterstudents/restore").with(csrf()).param("id", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // Assert
+    verify(rosterStudentRepository).findById(eq(1L));
+    verify(rosterStudentRepository).save(eq(restoredStudent));
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(restoredStudent);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testRestoreRosterStudent_notFound() throws Exception {
+    // Arrange
+    when(rosterStudentRepository.findById(eq(99L))).thenReturn(Optional.empty());
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(put("/api/rosterstudents/restore").with(csrf()).param("id", "99"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // Assert
+    verify(rosterStudentRepository, times(1)).findById(eq(99L));
+    verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "RosterStudent with id 99 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testRestoreRosterStudent_unauthorized() throws Exception {
+    // Act
+    mockMvc
+        .perform(put("/api/rosterstudents/restore").with(csrf()).param("id", "1"))
+        .andExpect(status().isForbidden());
+
+    // Assert
+    verify(rosterStudentRepository, never()).findById(any());
+    verify(rosterStudentRepository, never()).save(any());
+  }
 }
