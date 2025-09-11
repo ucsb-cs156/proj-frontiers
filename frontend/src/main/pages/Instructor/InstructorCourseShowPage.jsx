@@ -127,15 +127,15 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           />
         </Tab>
-        <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
-          <AssignmentTabComponent
+        <Tab eventKey={"teams"} title={"Teams"} className="pt-2">
+          <TeamsTabComponent
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
           />
         </Tab>
-        <Tab eventKey={"teams"} title={"Teams"} className="pt-2">
-          <TeamsTabComponent
+        <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
+          <AssignmentTabComponent
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}

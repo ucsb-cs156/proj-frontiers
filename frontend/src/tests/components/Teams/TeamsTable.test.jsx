@@ -25,8 +25,15 @@ describe("TeamsTable tests", () => {
     "rosterStudent.lastName",
     "rosterStudent.email",
     "rosterStudent.githubLogin",
+    "rosterStudent.id",
   ];
-  const expectedFields = ["First Name", "Last Name", "Email", "GitHub Login"];
+  const expectedFields = [
+    "Roster Student ID",
+    "First Name",
+    "Last Name",
+    "Email",
+    "GitHub Login",
+  ];
 
   const testId = "TeamsTable";
 
@@ -265,6 +272,138 @@ describe("TeamsTable tests", () => {
     await waitFor(() => {
       expect(
         screen.queryByTestId("TeamsTable-post-modal"),
+      ).not.toBeInTheDocument();
+    });
+  });
+  test("add member returns 409 error modal when member is already in the team", async () => {
+    axiosMock.onPost("/api/teams/addMember").reply(409);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <TeamsTable
+            teams={teamsFixtures.teams}
+            currentUser={currentUserFixtures.instructorUser}
+            courseId="12"
+            testIdPrefix="TeamsTable"
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Wait for the add button to appear and get the element
+    const addButton = await screen.findByTestId(
+      "TeamsTable-3-add-member-button",
+    );
+
+    expect(addButton).toHaveClass("me-3");
+
+    expect(
+      screen.queryByTestId("TeamsTable-post-modal"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(addButton);
+
+    const input = await screen.findByTestId("TeamMemberForm-rosterStudentId");
+    fireEvent.change(input, { target: { value: 4 } });
+
+    expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
+
+    const submitButton = screen.getByTestId("TeamMemberForm-submit");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("TeamsTable-post-modal"),
+      ).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-error-post-member-modal`),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId(`${testId}-error-post-member-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+
+    expect(
+      screen.getByTestId(`${testId}-error-post-member-modal`),
+    ).toHaveTextContent("This member is already in this team.");
+
+    const closeButton = screen.getByLabelText("Close");
+    fireEvent.click(closeButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-error-post-member-modal`),
+      ).not.toBeInTheDocument();
+    });
+  });
+  test("add member returns generic error modal an unexpected error occurs", async () => {
+    axiosMock.onPost("/api/teams/addMember").reply(500);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <TeamsTable
+            teams={teamsFixtures.teams}
+            currentUser={currentUserFixtures.instructorUser}
+            courseId="12"
+            testIdPrefix="TeamsTable"
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Wait for the add button to appear and get the element
+    const addButton = await screen.findByTestId(
+      "TeamsTable-3-add-member-button",
+    );
+
+    expect(addButton).toHaveClass("me-3");
+
+    expect(
+      screen.queryByTestId("TeamsTable-post-modal"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(addButton);
+
+    const input = await screen.findByTestId("TeamMemberForm-rosterStudentId");
+    fireEvent.change(input, { target: { value: 4 } });
+
+    expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
+
+    const submitButton = screen.getByTestId("TeamMemberForm-submit");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("TeamsTable-post-modal"),
+      ).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-error-post-member-modal`),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId(`${testId}-error-post-member-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+
+    expect(
+      screen.getByTestId(`${testId}-error-post-member-modal`),
+    ).toHaveTextContent("500 error occurred while adding member to the team.");
+
+    const closeButton = screen.getByLabelText("Close");
+    fireEvent.click(closeButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-error-post-member-modal`),
       ).not.toBeInTheDocument();
     });
   });
