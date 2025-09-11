@@ -21,6 +21,9 @@ export default function EnrollmentTabComponent({
 }) {
   const [postModal, setPostModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
+  const [csvErrorModal, setCsvErrorModal] = useState(false);
+  const [csvErrorModalData, setCsvErrorModalData] = useState(null);
+
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -80,9 +83,15 @@ export default function EnrollmentTabComponent({
     {
       onSuccess: () => onSuccessRoster(setCsvModal),
       onError: (error) => {
-        toast.error(
-          `Error uploading CSV: ${JSON.stringify(error.response.data, null, 2)}`,
-        );
+        if (error.response.status !== 409) {
+          toast.error(
+            `Error uploading CSV: ${JSON.stringify(error.response.data, null, 2)}`,
+          );
+        } else {
+          setCsvErrorModal(true);
+          setCsvErrorModalData(error.response.data.rejected);
+          setCsvModal(false);
+        }
       },
     },
     [`/api/rosterstudents/course/${courseId}`],
@@ -102,6 +111,25 @@ export default function EnrollmentTabComponent({
 
   return (
     <div data-testid={`${testIdPrefix}-EnrollmentTabComponent`}>
+      <Modal
+        show={csvErrorModal}
+        onHide={() => setCsvErrorModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-csv-error-modal`}
+        size="lg"
+      >
+        <ModalHeader closeButton>Upload CSV Roster</ModalHeader>
+        <ModalBody>
+          <p>
+            The following students couldn't be uploaded to the roster as their
+            emails and student IDs match two separate students:
+          </p>
+          <RosterStudentTable
+            students={csvErrorModalData}
+            testIdPrefix={`${testIdPrefix}-RosterStudentTable-csv-error`}
+          />
+        </ModalBody>
+      </Modal>
       <Modal
         show={csvModal}
         onHide={() => setCsvModal(false)}
