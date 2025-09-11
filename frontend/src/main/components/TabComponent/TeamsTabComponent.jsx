@@ -70,7 +70,7 @@ export default function TeamsTabComponent({
         setPostTeamModal(false);
         if (error.response.status === 409) {
           setErrorPostTeamModal({
-            message: `Team name already exists. Please choose a different name.)} `,
+            message: `Team name already exists. Please choose a different name.`,
           });
         } else {
           setErrorPostTeamModal({
