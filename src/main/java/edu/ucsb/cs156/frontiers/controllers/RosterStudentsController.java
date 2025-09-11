@@ -301,6 +301,21 @@ public class RosterStudentsController extends ApiController {
     return rosterStudentRepository.save(rosterStudent);
   }
 
+  @Operation(
+      summary = "Restore a roster student",
+      description = "Makes a student who previously dropped the course able to join and interact")
+  @PreAuthorize("@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)")
+  @PutMapping("/restore")
+  public RosterStudent restoreRosterStudent(@Parameter(name = "id") @RequestParam Long id)
+      throws EntityNotFoundException {
+    RosterStudent rosterStudent =
+        rosterStudentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+    rosterStudent.setRosterStatus(RosterStatus.MANUAL);
+    return rosterStudentRepository.save(rosterStudent);
+  }
+
   @Operation(summary = "Delete a roster student")
   @PreAuthorize("@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)")
   @DeleteMapping("/delete")
