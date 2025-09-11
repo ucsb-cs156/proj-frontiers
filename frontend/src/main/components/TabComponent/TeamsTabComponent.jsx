@@ -19,10 +19,11 @@ export default function TeamsTabComponent({
   testIdPrefix,
   currentUser,
 }) {
-  const [postModal, setPostModal] = useState(false);
+  const [postTeamModal, setPostTeamModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
   const [errorPostTeamModal, setErrorPostTeamModal] = useState(false);
   const [errorPostCSVTeamModal, setErrorPostCSVTeamModal] = useState(false);
+  const [successPostCSVTeamModal, setSuccessPostCSVTeamModal] = useState(false);
 
   const { data: teams } = useBackend(
     [`/api/teams/all?courseId=${courseId}`],
@@ -61,25 +62,19 @@ export default function TeamsTabComponent({
     modalFn(false);
   };
 
-  const onSuccessTeamsCSV = (modalFn) => {
-    toast("Teams successfully added through CSV.");
-    setSearchTeams("");
-    modalFn(false);
-  };
-
   const teamPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
     {
-      onSuccess: () => onSuccessTeams(setPostModal),
+      onSuccess: () => onSuccessTeams(setPostTeamModal),
       onError: (error) => {
-        setPostModal(false);
+        setPostTeamModal(false);
         if (error.response.status === 409) {
           setErrorPostTeamModal({
-            message: `Team name already exists. Please choose a different name.`,
+            message: `Team name already exists. Please choose a different name.)} `,
           });
         } else {
           setErrorPostTeamModal({
-            message: `${JSON.stringify(error.response.data.status)} error occurred while adding team. ${JSON.stringify(error.response.data, null, 2)}`,
+            message: `${JSON.stringify(error.response.status)} error occurred while attempting to create team.`,
           });
         }
       },
@@ -90,21 +85,29 @@ export default function TeamsTabComponent({
   const teamCsvMutation = useBackendMutation(
     objectToAxiosParamsCSV,
     {
-      onSuccess: ( data ) =>  {
-        if(data.rejected && data.rejected.length > 0 ) {
-          setCsvModal(false);
-          setErrorPostCSVTeamModal({
-            message: `Rejected members: ${data.rejected.join(", ")}`
-          });
-        }
-        else {
-          onSuccessTeamsCSV(setCsvModal);
-        }
+      onSuccess: (data) => {
+        setCsvModal(false);
+        setSearchTeams("");
+        setSuccessPostCSVTeamModal({
+          message: `New members: ${data.created}, Existing members: ${data.existing}`,
+        });
       },
       onError: (error) => {
-        toast.error(
-          `Error uploading CSV: ${JSON.stringify(error.response.data, null, 2)}`,
-        );
+        setCsvModal(false);
+        setSearchTeams("");
+        if (error.response.status === 400) {
+          setErrorPostCSVTeamModal({
+            message: `Upload failed (Error 400). Please ensure your CSV follows one of the formats documented in the 'Help' section.`,
+          });
+        } else if (error.response.status === 409) {
+          setErrorPostCSVTeamModal({
+            message: `CSV Import Complete with Rejected Members (Error 409). Rejected Students: ${JSON.stringify(error.response.data.rejected, null, 2)}, Existing Students: ${JSON.stringify(error.response.data.existing, null, 2)}, New Students: ${JSON.stringify(error.response.data.created, null, 2)}`,
+          });
+        } else {
+          setErrorPostCSVTeamModal({
+            message: `${JSON.stringify(error.response.status, null, 2)} error occurred while processing the CSV file.`,
+          });
+        }
       },
     },
     [`/api/teams/all?courseId=${courseId}`],
@@ -116,10 +119,6 @@ export default function TeamsTabComponent({
 
   const handlePostSubmit = (team) => {
     teamPostMutation.mutate(team);
-  };
-
-  const downloadCsv = () => {
-    window.open(`/api/csv/teams?courseId=${courseId}`, "_blank");
   };
 
   return (
@@ -136,19 +135,14 @@ export default function TeamsTabComponent({
         </ModalBody>
       </Modal>
       <Modal
-        show={postModal}
-        onHide={() => setPostModal(false)}
+        show={postTeamModal}
+        onHide={() => setPostTeamModal(false)}
         centered={true}
         data-testid={`${testIdPrefix}-post-modal`}
       >
         <ModalHeader closeButton>Add Individual Team</ModalHeader>
         <ModalBody>
           <TeamsForm submitAction={handlePostSubmit} cancelDisabled={true} />
-          {/* {teamAlreadyExistsError && (
-            <div className="alert alert-danger mt-3" role="alert" data-testid={`${testIdPrefix}-team-exists-error`}>
-              Team name already exists. Please choose a different name.
-            </div>
-          )} */}
         </ModalBody>
       </Modal>
       <Modal
@@ -162,16 +156,27 @@ export default function TeamsTabComponent({
         </ModalHeader>
         <ModalBody>{errorPostTeamModal.message}</ModalBody>
       </Modal>
-       <Modal
+      <Modal
         show={errorPostCSVTeamModal}
         onHide={() => setErrorPostCSVTeamModal(false)}
         centered={true}
         data-testid={`${testIdPrefix}-error-post-csv-team-modal`}
       >
         <ModalHeader closeButton>
-          <h4 className="text-danger"> Error Creating Adding All Members by CSV </h4>
+          <h4 className="text-danger"> CSV Import Unsuccessful </h4>
         </ModalHeader>
         <ModalBody>{errorPostCSVTeamModal.message}</ModalBody>
+      </Modal>
+      <Modal
+        show={successPostCSVTeamModal}
+        onHide={() => setSuccessPostCSVTeamModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-success-post-csv-team-modal`}
+      >
+        <ModalHeader closeButton>
+          <h4 className="text-success"> CSV Import Successful </h4>
+        </ModalHeader>
+        <ModalBody>{successPostCSVTeamModal.message}</ModalBody>
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
@@ -185,7 +190,7 @@ export default function TeamsTabComponent({
         </Col>
         <Col>
           <Button
-            onClick={() => setPostModal(true)}
+            onClick={() => setPostTeamModal(true)}
             data-testid={`${testIdPrefix}-post-button`}
             className="w-100"
           >
@@ -193,7 +198,11 @@ export default function TeamsTabComponent({
           </Button>
         </Col>
         <Col>
-          <Button onClick={downloadCsv} className="w-100" data-testid={`${testIdPrefix}-download-button`}>
+          <Button
+            className="w-100"
+            data-testid={`${testIdPrefix}-download-button`}
+            disabled
+          >
             Download Team CSV
           </Button>
         </Col>

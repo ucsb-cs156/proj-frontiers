@@ -17,7 +17,7 @@ export default function TeamsTable({
   courseId,
   testIdPrefix = "TeamsTable",
 }) {
-  const [postModal, setPostModal] = useState(false);
+  const [postMemberModal, setPostMemberModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [errorPostMemberModal, setErrorPostMemberModal] = useState(false);
 
@@ -33,7 +33,6 @@ export default function TeamsTable({
   const onDeleteTeam = () => {
     toast("Team removed successfully");
   };
-
 
   const cellToAxiosParamsPost = (data) => ({
     url: `/api/teams/addMember`,
@@ -72,19 +71,19 @@ export default function TeamsTable({
   const memberPostMutation = useBackendMutation(
     cellToAxiosParamsPost,
     {
-      onSuccess: () => onSuccessMember(setPostModal),
+      onSuccess: () => onSuccessMember(setPostMemberModal),
       onError: (error) => {
-        setPostModal(false);
+        setPostMemberModal(false);
         if (error.response.status === 409) {
           setErrorPostMemberModal({
             message: `This member is already in this team.`,
           });
         } else {
           setErrorPostMemberModal({
-            message: `${JSON.stringify(error.response.data.status)} error occurred while adding Member. ${JSON.stringify(error.response.data, null, 2)}`,
+            message: `${JSON.stringify(error.status)} error occurred while adding member to the team.`,
           });
         }
-      }
+      },
     },
     [`/api/teams/all?courseId=${courseId}`],
   );
@@ -94,7 +93,7 @@ export default function TeamsTable({
   };
 
   const deleteTeamCallback = async (team) => {
-    deleteTeamMutation.mutate(team);  
+    deleteTeamMutation.mutate(team);
   };
 
   const deleteMemberCallback = async (cell) => {
@@ -103,6 +102,10 @@ export default function TeamsTable({
   };
 
   const memberColumns = [
+    {
+      Header: "Roster Student ID",
+      accessor: "rosterStudent.id",
+    },
     {
       Header: "First Name",
       accessor: "rosterStudent.firstName",
@@ -124,9 +127,9 @@ export default function TeamsTable({
   return (
     <>
       <Modal
-        show={postModal}
+        show={postMemberModal}
         onHide={() => {
-          setPostModal(false);
+          setPostMemberModal(false);
           setSelectedTeam(null);
         }}
         centered={true}
@@ -137,7 +140,7 @@ export default function TeamsTable({
           <TeamMemberForm submitAction={handlePostSubmit} />
         </ModalBody>
       </Modal>
-       <Modal
+      <Modal
         show={errorPostMemberModal}
         onHide={() => setErrorPostMemberModal(false)}
         centered={true}
@@ -160,8 +163,9 @@ export default function TeamsTable({
                 {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
                   <span className="ms-auto me-3">
                     <Button
-                      onClick={() => {
-                        setPostModal(true);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPostMemberModal(true);
                         setSelectedTeam(team);
                       }}
                       data-testid={`${testIdPrefix}-${team.id}-add-member-button`}
