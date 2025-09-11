@@ -102,5 +102,14 @@ describe("RosterStudentForm tests", () => {
     expect(screen.getByText(/First Name is required/)).toBeInTheDocument();
     expect(screen.getByText(/Last Name is required/)).toBeInTheDocument();
     expect(screen.getByText(/Email is required/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: {
+        value: "invalidemail",
+      },
+    });
+
+    fireEvent.click(submitButton);
+    await screen.findByText(/Please enter a valid email/);
   });
 });

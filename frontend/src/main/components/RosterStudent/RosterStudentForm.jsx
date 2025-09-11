@@ -1,6 +1,7 @@
 import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
+import regexUtils from "main/utils/regexUtils";
 
 function RosterStudentForm({
   initialContents,
@@ -79,6 +80,10 @@ function RosterStudentForm({
             isInvalid={Boolean(errors.email)}
             {...register("email", {
               required: "Email is required.",
+              pattern: {
+                value: regexUtils.email,
+                message: "Please enter a valid email.",
+              },
             })}
           />
           <Form.Control.Feedback type="invalid">
