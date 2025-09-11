@@ -301,6 +301,21 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L301">    return rosterStudentRepository.save(rosterStudent);</span>
   }
 
+  @Operation(
+      summary = &quot;Restore a roster student&quot;,
+      description = &quot;Makes a student who previously dropped the course able to join and interact&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)&quot;)
+  @PutMapping(&quot;/restore&quot;)
+  public RosterStudent restoreRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id)
+      throws EntityNotFoundException {
+<span class="fc" id="L311">    RosterStudent rosterStudent =</span>
+        rosterStudentRepository
+<span class="fc" id="L313">            .findById(id)</span>
+<span class="fc" id="L314">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+<span class="fc" id="L315">    rosterStudent.setRosterStatus(RosterStatus.MANUAL);</span>
+<span class="fc" id="L316">    return rosterStudentRepository.save(rosterStudent);</span>
+  }
+
   @Operation(summary = &quot;Delete a roster student&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)&quot;)
   @DeleteMapping(&quot;/delete&quot;)
@@ -313,55 +328,55 @@ import org.springframework.web.server.ResponseStatusException;
           @RequestParam(defaultValue = &quot;true&quot;)
           boolean removeFromOrg)
       throws EntityNotFoundException {
-<span class="fc" id="L316">    RosterStudent rosterStudent =</span>
+<span class="fc" id="L331">    RosterStudent rosterStudent =</span>
         rosterStudentRepository
-<span class="fc" id="L318">            .findById(id)</span>
-<span class="fc" id="L319">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
-<span class="fc" id="L320">    Course course = rosterStudent.getCourse();</span>
+<span class="fc" id="L333">            .findById(id)</span>
+<span class="fc" id="L334">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+<span class="fc" id="L335">    Course course = rosterStudent.getCourse();</span>
 
-<span class="fc" id="L322">    boolean orgRemovalAttempted = false;</span>
-<span class="fc" id="L323">    boolean orgRemovalSuccessful = false;</span>
-<span class="fc" id="L324">    String orgRemovalErrorMessage = null;</span>
+<span class="fc" id="L337">    boolean orgRemovalAttempted = false;</span>
+<span class="fc" id="L338">    boolean orgRemovalSuccessful = false;</span>
+<span class="fc" id="L339">    String orgRemovalErrorMessage = null;</span>
 
     // Try to remove the student from the organization if they have a GitHub login
     // and removeFromOrg parameter is true
-<span class="fc bfc" id="L328" title="All 2 branches covered.">    if (removeFromOrg</span>
-<span class="fc bfc" id="L329" title="All 2 branches covered.">        &amp;&amp; rosterStudent.getGithubLogin() != null</span>
-<span class="fc bfc" id="L330" title="All 2 branches covered.">        &amp;&amp; course.getOrgName() != null</span>
-<span class="fc bfc" id="L331" title="All 2 branches covered.">        &amp;&amp; course.getInstallationId() != null) {</span>
-<span class="fc" id="L332">      orgRemovalAttempted = true;</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">    if (removeFromOrg</span>
+<span class="fc bfc" id="L344" title="All 2 branches covered.">        &amp;&amp; rosterStudent.getGithubLogin() != null</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        &amp;&amp; course.getOrgName() != null</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        &amp;&amp; course.getInstallationId() != null) {</span>
+<span class="fc" id="L347">      orgRemovalAttempted = true;</span>
       try {
-<span class="fc" id="L334">        organizationMemberService.removeOrganizationMember(rosterStudent);</span>
-<span class="fc" id="L335">        orgRemovalSuccessful = true;</span>
-<span class="fc" id="L336">      } catch (Exception e) {</span>
-<span class="fc" id="L337">        log.error(&quot;Error removing student from organization: {}&quot;, e.getMessage());</span>
-<span class="fc" id="L338">        orgRemovalErrorMessage = e.getMessage();</span>
+<span class="fc" id="L349">        organizationMemberService.removeOrganizationMember(rosterStudent);</span>
+<span class="fc" id="L350">        orgRemovalSuccessful = true;</span>
+<span class="fc" id="L351">      } catch (Exception e) {</span>
+<span class="fc" id="L352">        log.error(&quot;Error removing student from organization: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L353">        orgRemovalErrorMessage = e.getMessage();</span>
         // Continue with deletion even if organization removal fails
-<span class="fc" id="L340">      }</span>
+<span class="fc" id="L355">      }</span>
     }
 
-<span class="fc bfc" id="L343" title="All 2 branches covered.">    if (!rosterStudent.getTeamMembers().isEmpty()) {</span>
-<span class="fc" id="L344">      rosterStudent</span>
-<span class="fc" id="L345">          .getTeamMembers()</span>
-<span class="fc" id="L346">          .forEach(</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">    if (!rosterStudent.getTeamMembers().isEmpty()) {</span>
+<span class="fc" id="L359">      rosterStudent</span>
+<span class="fc" id="L360">          .getTeamMembers()</span>
+<span class="fc" id="L361">          .forEach(</span>
               teamMember -&gt; {
-<span class="fc" id="L348">                teamMember.getTeam().getTeamMembers().remove(teamMember);</span>
-<span class="fc" id="L349">                teamMember.setTeam(null);</span>
-<span class="fc" id="L350">              });</span>
+<span class="fc" id="L363">                teamMember.getTeam().getTeamMembers().remove(teamMember);</span>
+<span class="fc" id="L364">                teamMember.setTeam(null);</span>
+<span class="fc" id="L365">              });</span>
     }
 
-<span class="fc" id="L353">    rosterStudent.getCourse().getRosterStudents().remove(rosterStudent);</span>
-<span class="fc" id="L354">    rosterStudent.setCourse(null);</span>
-<span class="fc" id="L355">    rosterStudentRepository.delete(rosterStudent);</span>
+<span class="fc" id="L368">    rosterStudent.getCourse().getRosterStudents().remove(rosterStudent);</span>
+<span class="fc" id="L369">    rosterStudent.setCourse(null);</span>
+<span class="fc" id="L370">    rosterStudentRepository.delete(rosterStudent);</span>
 
-<span class="fc bfc" id="L357" title="All 2 branches covered.">    if (!orgRemovalAttempted) {</span>
-<span class="fc" id="L358">      return ResponseEntity.ok(</span>
+<span class="fc bfc" id="L372" title="All 2 branches covered.">    if (!orgRemovalAttempted) {</span>
+<span class="fc" id="L373">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted roster student and removed him/her from the course list&quot;);
-<span class="fc bfc" id="L360" title="All 2 branches covered.">    } else if (orgRemovalSuccessful) {</span>
-<span class="fc" id="L361">      return ResponseEntity.ok(</span>
+<span class="fc bfc" id="L375" title="All 2 branches covered.">    } else if (orgRemovalSuccessful) {</span>
+<span class="fc" id="L376">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted roster student and removed him/her from the course list and organization&quot;);
     } else {
-<span class="fc" id="L364">      return ResponseEntity.ok(</span>
+<span class="fc" id="L379">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted roster student but there was an error removing them from the course organization: &quot;
               + orgRemovalErrorMessage);
     }
