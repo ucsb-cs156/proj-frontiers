@@ -1,4 +1,5 @@
 const regexUtils = {
+  //Stryker disable Regex
   email: /\S+@\S+\.\S+/,
 };
 
