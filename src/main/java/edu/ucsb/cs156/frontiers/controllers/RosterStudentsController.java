@@ -218,6 +218,11 @@ public class RosterStudentsController extends ApiController {
       throw new AccessDeniedException("User not authorized join the course as this roster student");
     }
 
+    if (rosterStudent.getRosterStatus() == RosterStatus.DROPPED) {
+      throw new AccessDeniedException(
+          "You have dropped this course. Please contact your instructor.");
+    }
+
     if (rosterStudent.getGithubId() != null
         && rosterStudent.getGithubLogin() != null
         && (rosterStudent.getOrgStatus() == OrgStatus.MEMBER
