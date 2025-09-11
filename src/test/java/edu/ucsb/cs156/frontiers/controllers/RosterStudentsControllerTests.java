@@ -629,6 +629,46 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"USER", "GITHUB"})
+  public void access_denied_on_dropped() throws Exception {
+    User currentUser = currentUserService.getUser();
+
+    Course course2 =
+        Course.builder()
+            .id(2L)
+            .installationId("1234")
+            .orgName("ucsb-cs156")
+            .courseName("course")
+            .instructorEmail("instructoremail@ucsb.edu")
+            .build();
+
+    RosterStudent rosterStudent =
+        RosterStudent.builder()
+            .id(3L)
+            .firstName("Test")
+            .lastName("User")
+            .studentId("A555555")
+            .email("testuser@ucsb.edu")
+            .course(course2)
+            .rosterStatus(RosterStatus.DROPPED)
+            .orgStatus(OrgStatus.JOINCOURSE)
+            .githubId(null) // Not linked yet
+            .githubLogin(null) // Not linked yet
+            .user(currentUser) // Current user owns this roster entry
+            .build();
+
+    when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/joinCourse").with(csrf()).param("rosterStudentId", "3"))
+            .andExpect(status().isForbidden())
+            .andReturn();
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER", "GITHUB"})
   public void no_fire_on_no_org_name() throws Exception {
     User currentUser = currentUserService.getUser();
 
