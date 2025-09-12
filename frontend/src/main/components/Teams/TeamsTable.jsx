@@ -78,6 +78,10 @@ export default function TeamsTable({
           setErrorPostMemberModal({
             message: `This member is already in this team.`,
           });
+        } else if (error.response.status === 404) {
+          setErrorPostMemberModal({
+            message: `No student with Roster Student ID ${JSON.stringify(error.config.params.rosterStudentId)} found.`,
+          });
         } else {
           setErrorPostMemberModal({
             message: `${JSON.stringify(error.status)} error occurred while adding member to the team.`,

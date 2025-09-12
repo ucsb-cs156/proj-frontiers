@@ -23,6 +23,8 @@ export default function TeamsTabComponent({
   const [csvModal, setCsvModal] = useState(false);
   const [errorPostTeamModal, setErrorPostTeamModal] = useState(false);
   const [errorPostCSVTeamModal, setErrorPostCSVTeamModal] = useState(false);
+  const [partialSuccessPostCSVTeamModal, setPartialSuccessPostCSVTeamModal] =
+    useState(false);
   const [successPostCSVTeamModal, setSuccessPostCSVTeamModal] = useState(false);
 
   const { data: teams } = useBackend(
@@ -100,7 +102,7 @@ export default function TeamsTabComponent({
             message: `Upload failed (Error 400). Please ensure your CSV follows one of the formats documented in the 'Help' section.`,
           });
         } else if (error.response.status === 409) {
-          setErrorPostCSVTeamModal({
+          setPartialSuccessPostCSVTeamModal({
             message: `CSV Import Complete with Rejected Members (Error 409). Rejected Students: ${JSON.stringify(error.response.data.rejected, null, 2)}, Existing Students: ${JSON.stringify(error.response.data.existing, null, 2)}, New Students: ${JSON.stringify(error.response.data.created, null, 2)}`,
           });
         } else {
@@ -177,6 +179,17 @@ export default function TeamsTabComponent({
           <h4 className="text-success"> CSV Import Successful </h4>
         </ModalHeader>
         <ModalBody>{successPostCSVTeamModal.message}</ModalBody>
+      </Modal>
+      <Modal
+        show={partialSuccessPostCSVTeamModal}
+        onHide={() => setPartialSuccessPostCSVTeamModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-partial-success-post-csv-team-modal`}
+      >
+        <ModalHeader closeButton>
+          <h4 className="text-danger"> CSV Import Completed with Errors </h4>
+        </ModalHeader>
+        <ModalBody>{partialSuccessPostCSVTeamModal.message}</ModalBody>
       </Modal>
       <Row sm={3} className="p-2">
         <Col>

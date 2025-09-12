@@ -298,24 +298,25 @@ describe("TeamTabComponent tests", () => {
     // Verify that error modal appears
     await waitFor(() => {
       expect(
-        screen.getByTestId(`${testId}-error-post-csv-team-modal`),
+        screen.getByTestId(`${testId}-partial-success-post-csv-team-modal`),
       ).toBeInTheDocument();
     });
 
     const responseModal = screen.getByTestId(
-      `${testId}-error-post-csv-team-modal`,
+      `${testId}-partial-success-post-csv-team-modal`,
     );
-    expect(responseModal).toHaveTextContent("CSV Import Unsuccessful");
+    expect(responseModal).toHaveTextContent("CSV Import Completed with Errors");
     expect(responseModal).toHaveTextContent(
-      'Import Complete with Rejected Members (Error 409). Rejected Students: [ "user@ucsb.edu", "user2@ucsb.edu" ], Existing Students: 0, New Students: 5',
+      'CSV Import Complete with Rejected Members (Error 409). Rejected Students: [ "user@ucsb.edu", "user2@ucsb.edu" ], Existing Students: 0, New Students: 5',
     );
+    expect(responseModal).toHaveClass("modal-dialog modal-dialog-centered");
 
     // Close the success modal
     let closeButton = await screen.findByRole("button", { name: "Close" });
     fireEvent.click(closeButton);
     await waitFor(() => {
       expect(
-        screen.queryByTestId(`${testId}-error-post-csv-team-modal`),
+        screen.queryByTestId(`${testId}-partial-success-post-csv-team-modal`),
       ).not.toBeInTheDocument();
     });
 
@@ -799,7 +800,7 @@ describe("TeamTabComponent tests", () => {
     fireEvent.click(submitButton);
 
     const errorModal = await screen.findByTestId(
-      `${testId}-error-post-csv-team-modal`,
+      `${testId}-partial-success-post-csv-team-modal`,
     );
     expect(errorModal).toBeInTheDocument();
     const closeButton = await screen.findByRole("button", { name: "Close" });

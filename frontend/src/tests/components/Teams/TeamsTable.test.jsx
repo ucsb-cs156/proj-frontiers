@@ -341,6 +341,72 @@ describe("TeamsTable tests", () => {
       ).not.toBeInTheDocument();
     });
   });
+  test("add member returns correct error modal when roster student does not exist", async () => {
+    axiosMock.onPost("/api/teams/addMember").reply(404);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <TeamsTable
+            teams={teamsFixtures.teams}
+            currentUser={currentUserFixtures.instructorUser}
+            courseId="12"
+            testIdPrefix="TeamsTable"
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Wait for the add button to appear and get the element
+    const addButton = await screen.findByTestId(
+      "TeamsTable-3-add-member-button",
+    );
+
+    expect(addButton).toHaveClass("me-3");
+
+    expect(
+      screen.queryByTestId("TeamsTable-post-modal"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(addButton);
+
+    const input = await screen.findByTestId("TeamMemberForm-rosterStudentId");
+    fireEvent.change(input, { target: { value: 100 } });
+
+    expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
+
+    const submitButton = screen.getByTestId("TeamMemberForm-submit");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("TeamsTable-post-modal"),
+      ).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-error-post-member-modal`),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId(`${testId}-error-post-member-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+
+    expect(
+      screen.getByTestId(`${testId}-error-post-member-modal`),
+    ).toHaveTextContent('No student with Roster Student ID "100" found.');
+
+    const closeButton = screen.getByLabelText("Close");
+    fireEvent.click(closeButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-error-post-member-modal`),
+      ).not.toBeInTheDocument();
+    });
+  });
   test("add member returns generic error modal an unexpected error occurs", async () => {
     axiosMock.onPost("/api/teams/addMember").reply(500);
 
