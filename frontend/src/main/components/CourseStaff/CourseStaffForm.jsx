@@ -1,7 +1,7 @@
 import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import regexUtils from "../../utils/regexUtils";
+import regexUtils from "main/utils/regexUtils";
 
 function CourseStaffForm({
   initialContents,
