@@ -131,6 +131,9 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(
       screen.queryByTestId(`${testId}-post-modal`),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-csv-error-modal`),
+    ).not.toBeInTheDocument();
   });
 
   test("Successfully makes a call to the backend on submit and clears search filter", async () => {
@@ -220,7 +223,7 @@ describe("EnrollmentTabComponent Tests", () => {
 
     axiosMock
       .onPost("/api/rosterstudents/upload/csv")
-      .reply(409, loadResultFixtures.failed);
+      .reply(400, loadResultFixtures.failed);
 
     const user = userEvent.setup();
     render(
@@ -256,6 +259,75 @@ describe("EnrollmentTabComponent Tests", () => {
       expect(toast.error).toHaveBeenCalledWith(
         `Error uploading CSV: ${JSON.stringify(loadResultFixtures.failed, null, 2)}`,
       ),
+    );
+  });
+
+  test("CsvForm rejected shows modal", async () => {
+    const file = new File(["there"], "egrades.csv", { type: "text/csv" });
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    axiosMock
+      .onPost("/api/rosterstudents/upload/csv")
+      .reply(409, loadResultFixtures.failed);
+
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+    const openModal = await screen.findByTestId(`${testId}-csv-button`);
+
+    // Get the search input and set a search term
+    const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(searchInput.value).toBe("test search");
+
+    fireEvent.click(openModal);
+    expect(screen.getByTestId(`${testId}-csv-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+
+    const upload = await screen.findByTestId(
+      "RosterStudentCSVUploadForm-upload",
+    );
+    const submitButton = screen.getByTestId(
+      "RosterStudentCSVUploadForm-submit",
+    );
+    await user.upload(upload, file);
+    fireEvent.click(submitButton);
+    await screen.findByTestId("InstructorCourseShowPage-csv-error-modal");
+    expect(
+      screen.getByText(
+        "The following students couldn't be uploaded to the roster as their emails and student IDs match two separate students:",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(loadResultFixtures.failed.rejected[0].studentId),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-RosterStudentTable-csv-error`),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-csv-error-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-csv-error-modal`),
+      ).not.toBeInTheDocument(),
     );
   });
 
