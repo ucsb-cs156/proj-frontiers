@@ -13,6 +13,7 @@ import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStud
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
+import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsTable";
 
 export default function EnrollmentTabComponent({
   courseId,
@@ -172,25 +173,38 @@ export default function EnrollmentTabComponent({
       </Row>
       <Row>
         <RosterStudentTable
-          students={rosterStudents.filter((student) => {
-            const searchTermLower = searchTerm.toLowerCase();
-            const fullName = `${student.firstName} ${student.lastName}`;
-            if (student.studentId.toLowerCase().includes(searchTermLower)) {
-              return true;
-            } else if (student.email.toLowerCase().includes(searchTermLower)) {
-              return true;
-            } else if (
-              student.githubLogin?.toLowerCase().includes(searchTermLower)
-            ) {
-              return true;
-            } else if (fullName.toLowerCase().includes(searchTermLower)) {
-              return true;
-            }
-            return false;
-          })}
+          students={rosterStudents
+            .filter((student) => {
+              const searchTermLower = searchTerm.toLowerCase();
+              const fullName = `${student.firstName} ${student.lastName}`;
+              if (student.studentId.toLowerCase().includes(searchTermLower)) {
+                return true;
+              } else if (
+                student.email.toLowerCase().includes(searchTermLower)
+              ) {
+                return true;
+              } else if (
+                student.githubLogin?.toLowerCase().includes(searchTermLower)
+              ) {
+                return true;
+              } else if (fullName.toLowerCase().includes(searchTermLower)) {
+                return true;
+              }
+              return false;
+            })
+            .filter((student) => student.rosterStatus !== "DROPPED")}
           currentUser={currentUser}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-RosterStudentTable`}
+        />
+      </Row>
+      <Row>
+        <h2>Dropped Students</h2>
+        <DroppedStudentsTable
+          students={rosterStudents.filter(
+            (student) => student.rosterStatus === "DROPPED",
+          )}
+          courseId={courseId}
         />
       </Row>
     </div>
