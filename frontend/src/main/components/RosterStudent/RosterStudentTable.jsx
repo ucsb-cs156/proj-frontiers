@@ -3,14 +3,12 @@ import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { Tooltip, OverlayTrigger } from "react-bootstrap";
 
 import { useBackendMutation } from "main/utils/useBackend";
-import {
-  cellToAxiosParamsDelete,
-  onDeleteSuccess,
-} from "main/utils/rosterStudentUtils";
+import { cellToAxiosParamsDelete } from "main/utils/rosterStudentUtils";
 import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import { toast } from "react-toastify";
+import RosterStudentDeleteModal from "main/components/RosterStudent/RosterStudentDeleteModal";
 
 export default function RosterStudentTable({
   students,
@@ -20,14 +18,8 @@ export default function RosterStudentTable({
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStudent, setEditStudent] = React.useState(null);
-
-  // Stryker disable all : hard to test for query caching
-  const deleteMutation = useBackendMutation(
-    cellToAxiosParamsDelete,
-    { onSuccess: onDeleteSuccess },
-    [`/api/rosterstudents/course/${courseId}`],
-  );
-  // Stryker restore all
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [deleteStudent, setDeleteStudent] = React.useState(null);
 
   const cellToAxiosParamsEdit = (formData) => ({
     url: `/api/rosterstudents/update`,
@@ -40,18 +32,40 @@ export default function RosterStudentTable({
     },
   });
 
-  const hideModal = () => {
+  const hideEditModal = () => {
     setShowEditModal(false);
+  };
+
+  const hideDeleteModal = () => {
+    setShowDeleteModal(false);
   };
 
   const onEditSuccess = () => {
     toast("Student updated successfully.");
-    hideModal();
+    hideEditModal();
   };
 
-  // Stryker disable next-line all
+  const onDeleteSuccess = () => {
+    toast("Student deleted successfully.");
+    hideDeleteModal();
+  };
+
+  const deleteMutation = useBackendMutation(
+    cellToAxiosParamsDelete,
+    { onSuccess: onDeleteSuccess },
+    [`/api/rosterstudents/course/${courseId}`],
+  );
+
   const deleteCallback = async (cell) => {
-    deleteMutation.mutate(cell);
+    setShowDeleteModal(true);
+    setDeleteStudent(cell.row.original.id);
+  };
+
+  const submitDeleteForm = (data) => {
+    deleteMutation.mutate({
+      id: deleteStudent,
+      ...data,
+    });
   };
 
   const editMutation = useBackendMutation(
@@ -210,7 +224,7 @@ export default function RosterStudentTable({
 
   return (
     <>
-      <Modal show={showEditModal} onHide={hideModal}>
+      <Modal show={showEditModal} onHide={hideEditModal}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Student</Modal.Title>
         </Modal.Header>
@@ -226,6 +240,11 @@ export default function RosterStudentTable({
           />
         </Modal.Body>
       </Modal>
+      <RosterStudentDeleteModal
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
+      />
       <OurTable data={students} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}
