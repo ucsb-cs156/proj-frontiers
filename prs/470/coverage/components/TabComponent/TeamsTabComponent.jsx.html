@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>188/188</span>
+                <span class='fraction'>198/198</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>27/27</span>
+                <span class='fraction'>28/28</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>18/18</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>188/188</span>
+                <span class='fraction'>198/198</span>
             </div>
         
             
@@ -307,7 +307,20 @@
 <a name='L242'></a><a href='#L242'>242</a>
 <a name='L243'></a><a href='#L243'>243</a>
 <a name='L244'></a><a href='#L244'>244</a>
-<a name='L245'></a><a href='#L245'>245</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -324,6 +337,8 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-yes">74x</span>
@@ -453,6 +468,17 @@
 <span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-yes">74x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-yes">74x</span>
@@ -576,6 +602,8 @@ export default function TeamsTabComponent({
   const [csvModal, setCsvModal] = useState(false);
   const [errorPostTeamModal, setErrorPostTeamModal] = useState(false);
   const [errorPostCSVTeamModal, setErrorPostCSVTeamModal] = useState(false);
+  const [partialSuccessPostCSVTeamModal, setPartialSuccessPostCSVTeamModal] =
+    useState(false);
   const [successPostCSVTeamModal, setSuccessPostCSVTeamModal] = useState(false);
 &nbsp;
   const { data: teams } = useBackend(
@@ -653,7 +681,7 @@ export default function TeamsTabComponent({
             message: `Upload failed (Error 400). Please ensure your CSV follows one of the formats documented in the 'Help' section.`,
           });
         } else if (error.response.status === 409) {
-          setErrorPostCSVTeamModal({
+          setPartialSuccessPostCSVTeamModal({
             message: `CSV Import Complete with Rejected Members (Error 409). Rejected Students: ${JSON.stringify(error.response.data.rejected, null, 2)}, Existing Students: ${JSON.stringify(error.response.data.existing, null, 2)}, New Students: ${JSON.stringify(error.response.data.created, null, 2)}`,
           });
         } else {
@@ -731,6 +759,17 @@ export default function TeamsTabComponent({
         &lt;/ModalHeader&gt;
         &lt;ModalBody&gt;{successPostCSVTeamModal.message}&lt;/ModalBody&gt;
       &lt;/Modal&gt;
+      &lt;Modal
+        show={partialSuccessPostCSVTeamModal}
+        onHide={() =&gt; setPartialSuccessPostCSVTeamModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-partial-success-post-csv-team-modal`}
+      &gt;
+        &lt;ModalHeader closeButton&gt;
+          &lt;h4 className="text-danger"&gt; CSV Import Completed with Errors &lt;/h4&gt;
+        &lt;/ModalHeader&gt;
+        &lt;ModalBody&gt;{partialSuccessPostCSVTeamModal.message}&lt;/ModalBody&gt;
+      &lt;/Modal&gt;
       &lt;Row sm={3} className="p-2"&gt;
         &lt;Col&gt;
           &lt;Button
@@ -802,7 +841,7 @@ export default function TeamsTabComponent({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-12T00:47:52.464Z
+                at 2025-09-12T01:48:55.075Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
