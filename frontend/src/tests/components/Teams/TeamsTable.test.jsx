@@ -7,6 +7,7 @@ import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { expect, test, vi } from "vitest";
+import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 
 const queryClient = new QueryClient();
 const axiosMock = new AxiosMockAdapter(axios);
@@ -217,6 +218,10 @@ describe("TeamsTable tests", () => {
     const successMessage = "Member added successfully";
     axiosMock.onPost("/api/teams/addMember").reply(200, { successMessage });
 
+    axiosMock
+      .onGet("/api/rosterstudents/course/12")
+      .reply(200, rosterStudentFixtures.studentsWithEachStatus);
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -243,8 +248,8 @@ describe("TeamsTable tests", () => {
 
     fireEvent.click(addButton);
 
-    const input = await screen.findByTestId("TeamMemberForm-rosterStudentId");
-    fireEvent.change(input, { target: { value: 4 } });
+    const input = await screen.findByTestId("RosterStudentDropdown");
+    fireEvent.change(input, { target: { value: "4" } });
 
     expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
 
@@ -278,6 +283,10 @@ describe("TeamsTable tests", () => {
   test("add member returns 409 error modal when member is already in the team", async () => {
     axiosMock.onPost("/api/teams/addMember").reply(409);
 
+    axiosMock
+      .onGet("/api/rosterstudents/course/12")
+      .reply(200, rosterStudentFixtures.studentsWithEachStatus);
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -304,8 +313,8 @@ describe("TeamsTable tests", () => {
 
     fireEvent.click(addButton);
 
-    const input = await screen.findByTestId("TeamMemberForm-rosterStudentId");
-    fireEvent.change(input, { target: { value: 4 } });
+    const input = await screen.findByTestId("RosterStudentDropdown");
+    fireEvent.change(input, { target: { value: "1" } });
 
     expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
 
@@ -341,75 +350,13 @@ describe("TeamsTable tests", () => {
       ).not.toBeInTheDocument();
     });
   });
-  test("add member returns correct error modal when roster student does not exist", async () => {
-    axiosMock.onPost("/api/teams/addMember").reply(404);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <TeamsTable
-            teams={teamsFixtures.teams}
-            currentUser={currentUserFixtures.instructorUser}
-            courseId="12"
-            testIdPrefix="TeamsTable"
-          />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    // Wait for the add button to appear and get the element
-    const addButton = await screen.findByTestId(
-      "TeamsTable-3-add-member-button",
-    );
-
-    expect(addButton).toHaveClass("me-3");
-
-    expect(
-      screen.queryByTestId("TeamsTable-post-modal"),
-    ).not.toBeInTheDocument();
-
-    fireEvent.click(addButton);
-
-    const input = await screen.findByTestId("TeamMemberForm-rosterStudentId");
-    fireEvent.change(input, { target: { value: 100 } });
-
-    expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
-
-    const submitButton = screen.getByTestId("TeamMemberForm-submit");
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId("TeamsTable-post-modal"),
-      ).not.toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(
-        screen.getByTestId(`${testId}-error-post-member-modal`),
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByTestId(`${testId}-error-post-member-modal`)).toHaveClass(
-      "modal-dialog modal-dialog-centered",
-    );
-
-    expect(
-      screen.getByTestId(`${testId}-error-post-member-modal`),
-    ).toHaveTextContent('No student with Roster Student ID "100" found.');
-
-    const closeButton = screen.getByLabelText("Close");
-    fireEvent.click(closeButton);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId(`${testId}-error-post-member-modal`),
-      ).not.toBeInTheDocument();
-    });
-  });
   test("add member returns generic error modal an unexpected error occurs", async () => {
     axiosMock.onPost("/api/teams/addMember").reply(500);
 
+    axiosMock
+      .onGet("/api/rosterstudents/course/12")
+      .reply(200, rosterStudentFixtures.studentsWithEachStatus);
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -436,8 +383,9 @@ describe("TeamsTable tests", () => {
 
     fireEvent.click(addButton);
 
-    const input = await screen.findByTestId("TeamMemberForm-rosterStudentId");
-    fireEvent.change(input, { target: { value: 4 } });
+    const input = await screen.findByTestId("RosterStudentDropdown");
+    expect(input).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "1" } });
 
     expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
 
@@ -536,10 +484,40 @@ describe("TeamsTable tests", () => {
     ).not.toBeInTheDocument();
 
     fireEvent.click(addButton);
-    await screen.findByLabelText("Roster Student ID");
+    await screen.findByLabelText("Select Student");
 
     expect(screen.getByTestId(`${testId}-post-modal`)).toHaveClass(
       "modal-dialog modal-dialog-centered",
     );
+  });
+
+  test("Uses correct query key for roster students", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    axiosMock.onGet("/api/rosterstudents/course/12").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <MemoryRouter>
+          <TeamsTable
+            teams={teamsFixtures.teams}
+            currentUser={currentUserFixtures.instructorUser}
+            courseId="12"
+            testIdPrefix="TeamsTable"
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    //Great time to check initial values
+    expect(
+      queryClientSpecific.getQueryData(["/api/rosterstudents/course/12"]),
+    ).toStrictEqual([]);
   });
 });

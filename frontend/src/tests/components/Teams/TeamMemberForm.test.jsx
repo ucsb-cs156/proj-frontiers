@@ -1,11 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router";
 
-import { teamsFixtures } from "fixtures/TeamsFixtures";
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 import TeamMemberForm from "main/components/Teams/TeamMemberForm";
+import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 
 const mockedNavigate = vi.fn();
 vi.mock("react-router", async (importOriginal) => ({
@@ -16,40 +15,24 @@ vi.mock("react-router", async (importOriginal) => ({
 describe("TeamMemberForm tests", () => {
   const queryClient = new QueryClient();
 
-  const expectedHeaders = ["Roster Student ID"];
+  const expectedHeaders = ["Select Student"];
   const testId = "TeamMemberForm";
-
-  test("renders correctly with no initialContents", async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <TeamMemberForm />
-        </Router>
-      </QueryClientProvider>,
-    );
-
-    expect(await screen.findByText(/Create/)).toBeInTheDocument();
-
-    expectedHeaders.forEach((headerText) => {
-      const header = screen.getByText(headerText);
-      expect(header).toBeInTheDocument();
-    });
-  });
-
   test("renders correctly when passing in initialContents", async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
           <TeamMemberForm
-            initialContents={
-              teamsFixtures.teams[0].teamMembers[0].rosterStudent.id
-            }
+            initialContents={{
+              rosterStudentId:
+                rosterStudentFixtures.studentsWithEachStatus[0].id,
+            }}
+            rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
           />
         </Router>
       </QueryClientProvider>,
     );
 
-    expect(await screen.findByText(/Create/)).toBeInTheDocument();
+    expect(await screen.findByText(/Select Student/)).toBeInTheDocument();
 
     expectedHeaders.forEach((headerText) => {
       const header = screen.getByText(headerText);
@@ -57,7 +40,7 @@ describe("TeamMemberForm tests", () => {
     });
 
     expect(
-      await screen.findByTestId(`${testId}-rosterStudentId`),
+      await screen.findByTestId("RosterStudentDropdown"),
     ).toBeInTheDocument();
     expect(await screen.findByTestId(`${testId}-submit`)).toBeInTheDocument();
   });
@@ -66,7 +49,9 @@ describe("TeamMemberForm tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <TeamMemberForm />
+          <TeamMemberForm
+            rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
+          />
         </Router>
       </QueryClientProvider>,
     );
@@ -78,19 +63,25 @@ describe("TeamMemberForm tests", () => {
     await waitFor(() => expect(mockedNavigate).toHaveBeenCalledWith(-1));
   });
 
-  test("that the correct validations are performed", async () => {
+  test("displays error message when no student is selected", async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <TeamMemberForm />
+          <TeamMemberForm
+            rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
+          />
         </Router>
       </QueryClientProvider>,
     );
 
-    expect(await screen.findByText(/Create/)).toBeInTheDocument();
-    const submitButton = screen.getByText(/Create/);
+    expect(await screen.findByText(/Select Student/)).toBeInTheDocument();
+    const submitButton = screen.getByText(/Add Member/);
     fireEvent.click(submitButton);
 
-    await screen.findByText(/Roster Student ID is required/);
+    await screen.findByText(/Select a student./);
+
+    await waitFor(() =>
+      expect(screen.getByText(/Please select a student/)).toBeInTheDocument(),
+    );
   });
 });

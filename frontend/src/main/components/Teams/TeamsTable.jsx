@@ -6,6 +6,7 @@ import { hasRole } from "main/utils/currentUser";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { toast } from "react-toastify";
 import { useState } from "react";
+import { useBackend } from "main/utils/useBackend";
 
 import Modal from "react-bootstrap/Modal";
 import { ModalBody, ModalHeader } from "react-bootstrap";
@@ -21,6 +22,13 @@ export default function TeamsTable({
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [errorPostMemberModal, setErrorPostMemberModal] = useState(false);
 
+  const { data: rosterStudents } = useBackend(
+    [`/api/rosterstudents/course/${courseId}`],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: `/api/rosterstudents/course/${courseId}` },
+    [],
+    true,
+  );
   const onSuccessMember = (modalFn) => {
     toast("Member added successfully");
     modalFn(false);
@@ -77,10 +85,6 @@ export default function TeamsTable({
         if (error.response.status === 409) {
           setErrorPostMemberModal({
             message: `This member is already in this team.`,
-          });
-        } else if (error.response.status === 404) {
-          setErrorPostMemberModal({
-            message: `No student with Roster Student ID ${JSON.stringify(error.config.params.rosterStudentId)} found.`,
           });
         } else {
           setErrorPostMemberModal({
@@ -141,7 +145,10 @@ export default function TeamsTable({
       >
         <ModalHeader closeButton>Add Team Member</ModalHeader>
         <ModalBody>
-          <TeamMemberForm submitAction={handlePostSubmit} />
+          <TeamMemberForm
+            submitAction={handlePostSubmit}
+            rosterStudents={rosterStudents}
+          />
         </ModalBody>
       </Modal>
       <Modal
