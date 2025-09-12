@@ -9,5 +9,7 @@ import org.springframework.stereotype.Repository;
 public interface TeamRepository extends JpaRepository<Team, Long> {
   Iterable<Team> findByCourseId(Long courseId);
 
+  Iterable<Team> findByCourseIdOrderByNameAsc(Long courseId);
+
   Optional<Team> findByCourseIdAndName(Long courseId, String name);
 }
