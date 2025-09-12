@@ -42,6 +42,9 @@ describe("DroppedStudentsTable tests", () => {
         screen.getByTestId(`DroppedStudentsTable-cell-row-0-col-${accessor}`),
       ).toBeInTheDocument();
     });
+    expect(
+      screen.getByTestId("DroppedStudentsTable-cell-row-0-col-id"),
+    ).toHaveTextContent("3");
   });
   test("restore works correctly", async () => {
     const queryClientSpecific = new QueryClient({
@@ -70,6 +73,7 @@ describe("DroppedStudentsTable tests", () => {
     const restoreButton = await screen.findByTestId(
       "RestoreButton-cell-row-0-col-Restore-button",
     );
+    expect(restoreButton).toHaveClass("btn-primary");
     fireEvent.click(restoreButton);
     await waitFor(() => expect(axiosMock.history.put.length).toEqual(1));
     expect(mockToast).toBeCalledWith(
