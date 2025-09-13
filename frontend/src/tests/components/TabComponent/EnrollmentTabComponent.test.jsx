@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import {
   loadResultFixtures,
   rosterStudentFixtures,
@@ -130,6 +136,41 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
     expect(
       screen.queryByTestId(`${testId}-post-modal`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("Dropped Students appear correctly", async () => {
+    axiosMock
+      .onGet("/api/rosterstudents/course/1")
+      .reply(200, rosterStudentFixtures.fourStudentsOneDropped);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-RosterStudentTable-cell-row-0-col-id`),
+      ).toHaveTextContent(rosterStudentFixtures.fourStudentsOneDropped[0].id);
+    });
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`DroppedStudentsTable-cell-row-0-col-studentId`),
+      ).toHaveTextContent(
+        rosterStudentFixtures.fourStudentsOneDropped[3].studentId,
+      );
+    });
+    const table = screen.getByTestId(
+      "InstructorCourseShowPage-RosterStudentTable",
+    );
+    expect(
+      within(table).queryByText("aryasue@ucsb.edu"),
     ).not.toBeInTheDocument();
   });
 

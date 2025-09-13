@@ -94,6 +94,42 @@ const rosterStudentFixtures = {
       orgStatus: "Illegal status that will never occur",
     },
   ],
+  fourStudentsOneDropped: [
+    {
+      id: 3,
+      studentId: "A123456",
+      firstName: "Alice",
+      lastName: "Brown",
+      email: "alicebrown@ucsb.edu",
+    },
+
+    {
+      id: 4,
+      studentId: "X123456",
+      firstName: "Tom",
+      lastName: "Hanks",
+      email: "tomhanks@ucsb.edu",
+    },
+
+    {
+      id: 6,
+      studentId: "Z123456",
+      firstName: "Emma",
+      lastName: "Watson",
+      email: "emmawatson@ucsb.edu",
+    },
+    {
+      id: 8,
+      studentId: "D123456",
+      firstName: "Arya",
+      lastName: "Sue",
+      email: "aryasue@ucsb.edu",
+      githubLogin: "aryasue",
+      teams: "Team A",
+      orgStatus: "Illegal status that will never occur",
+      rosterStatus: "DROPPED",
+    },
+  ],
 };
 
 const loadResultFixtures = {
