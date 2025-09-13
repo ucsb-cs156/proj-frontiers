@@ -174,7 +174,7 @@ public class TeamsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/all")
   public Iterable<Team> allTeams(@RequestParam Long courseId) {
-    Iterable<Team> teams = teamRepository.findByCourseId(courseId);
+    Iterable<Team> teams = teamRepository.findByCourseIdOrderByNameAsc(courseId);
     return teams;
   }
 
