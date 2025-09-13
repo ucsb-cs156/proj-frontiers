@@ -5,5 +5,6 @@ public enum OrgStatus {
   JOINCOURSE,
   INVITED,
   MEMBER,
-  OWNER
+  OWNER,
+  REMOVED
 }

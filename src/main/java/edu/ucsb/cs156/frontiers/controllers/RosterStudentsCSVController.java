@@ -8,11 +8,14 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.InsertStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,6 +51,8 @@ public class RosterStudentsCSVController extends ApiController {
   @Autowired private CourseRepository courseRepository;
 
   @Autowired private UpdateUserService updateUserService;
+  @Autowired private OrganizationMemberService organizationMemberService;
+  @Autowired private JobService jobService;
 
   public enum RosterSourceType {
     UCSB_EGRADES,
@@ -117,6 +122,10 @@ public class RosterStudentsCSVController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
 
+    course.getRosterStudents().stream()
+        .filter(filteredStudent -> filteredStudent.getRosterStatus() == RosterStatus.ROSTER)
+        .forEach(student -> student.setRosterStatus(RosterStatus.DROPPED));
+
     int counts[] = {0, 0};
     List<RosterStudent> rejectedStudents = new ArrayList<>();
 
@@ -136,29 +145,42 @@ public class RosterStudentsCSVController extends ApiController {
       for (String[] row : myEntries) {
         RosterStudent rosterStudent = fromCSVRow(row, sourceType);
         UpsertResponse upsertResponse =
-            RosterStudentsController.upsertStudent(
-                rosterStudentRepository,
-                updateUserService,
-                rosterStudent,
-                course,
-                RosterStatus.ROSTER);
+            RosterStudentsController.upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
         if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
-          rejectedStudents.add(rosterStudent);
+          rejectedStudents.add(upsertResponse.rosterStudent());
         } else {
           InsertStatus s = upsertResponse.getInsertStatus();
+          if (s == InsertStatus.INSERTED) {
+            course.getRosterStudents().add(upsertResponse.rosterStudent());
+          }
           counts[s.ordinal()]++;
         }
       }
     }
-    LoadResult loadResult =
-        new LoadResult(
-            counts[InsertStatus.INSERTED.ordinal()],
-            counts[InsertStatus.UPDATED.ordinal()],
-            rejectedStudents);
     if (rejectedStudents.isEmpty()) {
-      return ResponseEntity.ok(loadResult);
+      List<RosterStudent> droppedStudents =
+          course.getRosterStudents().stream()
+              .filter(student -> student.getRosterStatus() == RosterStatus.DROPPED)
+              .toList();
+      LoadResult successfulResult =
+          new LoadResult(
+              counts[InsertStatus.INSERTED.ordinal()],
+              counts[InsertStatus.UPDATED.ordinal()],
+              droppedStudents.size(),
+              List.of());
+      rosterStudentRepository.saveAll(course.getRosterStudents());
+      updateUserService.attachUsersToRosterStudents(course.getRosterStudents());
+      RemoveStudentsJob job =
+          RemoveStudentsJob.builder()
+              .students(droppedStudents)
+              .organizationMemberService(organizationMemberService)
+              .rosterStudentRepository(rosterStudentRepository)
+              .build();
+      jobService.runAsJob(job);
+      return ResponseEntity.ok(successfulResult);
     } else {
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(loadResult);
+      LoadResult conflictResult = new LoadResult(0, 0, 0, rejectedStudents);
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(conflictResult);
     }
   }
 
