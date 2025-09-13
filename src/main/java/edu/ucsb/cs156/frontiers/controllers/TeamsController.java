@@ -328,6 +328,7 @@ public class TeamsController extends ApiController {
 
   public enum TeamSourceType {
     SIMPLE,
+    CANVAS,
     UNKNOWN
   }
 
@@ -339,11 +340,16 @@ public class TeamsController extends ApiController {
 
   public static final String SIMPLE_HEADERS = "team,email";
 
+  public static final String CANVAS_HEADERS =
+      "name,canvas_user_id,user_id,login_id,sections,group_name,canvas_group_id,group_id";
+
   public TeamSourceType getRosterSourceType(String[] headers) {
 
     Map<TeamSourceType, String[]> sourceTypeToHeaders = new HashMap<>();
 
     sourceTypeToHeaders.put(TeamSourceType.SIMPLE, SIMPLE_HEADERS.split(","));
+
+    sourceTypeToHeaders.put(TeamSourceType.CANVAS, CANVAS_HEADERS.split(","));
 
     for (Map.Entry<TeamSourceType, String[]> entry : sourceTypeToHeaders.entrySet()) {
       TeamSourceType type = entry.getKey();
@@ -366,10 +372,11 @@ public class TeamsController extends ApiController {
   }
 
   public TeamMemberResult fromCSVRow(String[] row, TeamSourceType sourceType, Course course) {
-    // No if statements because this is the only possible value to enter here at the moment. Replace
-    // with if when more
-    // Formats are added.
-    return teamMemberFromSimpleCsv(row, course);
+    if (sourceType == TeamSourceType.SIMPLE) {
+      return teamMemberFromSimpleCsv(row, course);
+    } else {
+      return teamMemberFromCanvasCsv(row, course);
+    }
   }
 
   public TeamMemberResult teamMemberFromSimpleCsv(String[] row, Course course) {
@@ -396,6 +403,33 @@ public class TeamsController extends ApiController {
       return new TeamMemberResult(saveTeamMember, TeamMemberStatus.CREATED);
     } else {
       return new TeamMemberResult(row[1]);
+    }
+  }
+
+  public TeamMemberResult teamMemberFromCanvasCsv(String[] row, Course course) {
+    Optional<RosterStudent> student =
+        rosterStudentRepository.findByCourseIdAndStudentId(course.getId(), row[2]);
+    Optional<Team> team = teamRepository.findByCourseIdAndName(course.getId(), row[5]);
+    if (student.isPresent() && team.isPresent()) {
+      Optional<TeamMember> teamMember =
+          teamMemberRepository.findByTeamAndRosterStudent(team.get(), student.get());
+      if (teamMember.isPresent()) {
+        return new TeamMemberResult(teamMember.get(), TeamMemberStatus.EXISTS);
+      } else {
+        TeamMember teamMemberToSave =
+            TeamMember.builder().team(team.get()).rosterStudent(student.get()).build();
+        TeamMember savedTeamMember = teamMemberRepository.save(teamMemberToSave);
+        return new TeamMemberResult(savedTeamMember, TeamMemberStatus.CREATED);
+      }
+    } else if (student.isPresent()) {
+      Team teamToSave = Team.builder().name(row[5]).course(course).build();
+      teamRepository.save(teamToSave);
+      TeamMember saveTeamMember =
+          TeamMember.builder().team(teamToSave).rosterStudent(student.get()).build();
+      teamMemberRepository.save(saveTeamMember);
+      return new TeamMemberResult(saveTeamMember, TeamMemberStatus.CREATED);
+    } else {
+      return new TeamMemberResult(row[2]);
     }
   }
 }

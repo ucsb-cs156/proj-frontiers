@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
+import edu.ucsb.cs156.frontiers.controllers.TeamsController.TeamSourceType;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
@@ -817,6 +818,55 @@ public class TeamsControllerTests extends ControllerTestCase {
     TeamsController.TeamCreationResponse expectedResponse =
         new TeamsController.TeamCreationResponse(
             TeamsController.TeamSourceType.SIMPLE, 2, 1, List.of("nors@ucsb.edu"));
+    String expectedJson = mapper.writeValueAsString(expectedResponse);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  public static String sampleCanvasCSVContents =
+      """
+          name,canvas_user_id,user_id,login_id,sections,group_name,canvas_group_id,group_id
+          "Wiggum, Ralph J",12345,01520524,01520524,CSCI 430 Software Engineering,BestTeamEver,4235,
+          """;
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpload_canvas_csv() throws Exception {
+    // arrange
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+    RosterStudent student1 = RosterStudent.builder().studentId("01520524").course(course).build();
+
+    Team team1 = Team.builder().id(1L).name("BestTeamEver").course(course).build();
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "egrades.csv", MediaType.TEXT_PLAIN_VALUE, sampleCanvasCSVContents.getBytes());
+
+    TeamMember teamMemberCreated1 =
+        TeamMember.builder().team(team1).rosterStudent(student1).build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseIdAndStudentId(eq(1L), eq("01520524")))
+        .thenReturn(Optional.of(student1));
+    when(teamRepository.findByCourseIdAndName(eq(1L), eq("BestTeamEver")))
+        .thenReturn(Optional.of(team1));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/teams/upload/csv")
+                    .file("file", file.getBytes())
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated1));
+
+    TeamsController.TeamCreationResponse expectedResponse =
+        new TeamsController.TeamCreationResponse(TeamSourceType.CANVAS, 1, 0, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResponse);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
