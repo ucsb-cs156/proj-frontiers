@@ -273,42 +273,54 @@ describe("RosterStudentTable tests", () => {
   });
 
   test("Delete button calls delete callback", async () => {
-    // arrange
     const currentUser = currentUserFixtures.adminUser;
-
-    axiosMock
-      .onDelete("/api/rosterstudents/delete")
-      .reply(200, { message: "Student deleted" });
-
-    // act - render the component
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    queryClientSpecific.setQueryData(
+      ["/api/rosterstudents/course/7"],
+      rosterStudentFixtures.threeStudents,
+    );
+    queryClientSpecific.setQueryData(["mock queryData"], null);
+    axiosMock.onDelete("/api/rosterstudents/delete").reply(200);
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClientSpecific}>
         <MemoryRouter>
           <RosterStudentTable
             students={rosterStudentFixtures.threeStudents}
             currentUser={currentUser}
+            courseId={7}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    // assert - check that the expected content is rendered
-    expect(
-      await screen.findByTestId(`${testId}-cell-row-0-col-studentId`),
-    ).toHaveTextContent("2");
-
     const deleteButton = screen.getByTestId(
-      `${testId}-cell-row-0-col-Delete-button`,
+      "RosterStudentTable-cell-row-0-col-Delete-button",
     );
-    expect(deleteButton).toBeInTheDocument();
-
-    // act - click the delete button
     fireEvent.click(deleteButton);
-
-    // assert - check that the delete endpoint was called
-
-    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].params).toEqual({ id: 3 });
+    await screen.findByTestId("RosterStudentDeleteModal");
+    fireEvent.click(screen.getByText("Delete Student"));
+    await waitFor(() => axiosMock.history.delete.length === 1);
+    expect(axiosMock.history.delete[0].params).toEqual({
+      id: 3,
+      removeFromOrg: "false",
+    });
+    await waitFor(() =>
+      expect(screen.queryByText("Delete Student")).not.toBeInTheDocument(),
+    );
+    expect(mockToast).toBeCalledWith("Student deleted successfully.");
+    expect(
+      queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
+        .isInvalidated,
+    ).toBe(true);
+    expect(
+      queryClientSpecific.getQueryState(["mock queryData"]).isInvalidated,
+    ).toBe(false);
   });
 });
 test("tooltips for Team column name", async () => {
