@@ -516,6 +516,12 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         RosterStudentsCSVController.RosterSourceType.OREGON_STATE,
         RosterStudentsCSVController.getRosterSourceType(oregonStateHeader));
 
+    // Test with Roster Download header
+    String[] rosterDownloadHeader = RosterStudentsCSVController.ROSTER_DOWNLOAD_HEADERS.split(",");
+    assertEquals(
+        RosterStudentsCSVController.RosterSourceType.ROSTER_DOWNLOAD,
+        RosterStudentsCSVController.getRosterSourceType(rosterDownloadHeader));
+
     // Test with unknown header
     String[] unknownHeader = {"Unknown Header 1", "Unknown Header 2"};
     assertEquals(
@@ -739,5 +745,74 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     assertEquals("123456789", rs.getStudentId());
     assertEquals("martha@oregonstate.edu", rs.getEmail());
     assertEquals("", rs.getSection()); // This is the key test - section should be empty string
+  }
+
+  @Test
+  public void test_fromCSVRowRosterDownload() {
+    String row[] = {
+      "1", // COURSEID
+      "cgaucho@ucsb.edu", // EMAIL
+      "Chris", // FIRSTNAME
+      "12345", // GITHUBID
+      "cgaucho", // GITHUBLOGIN
+      "42", // ID
+      "Gaucho", // LASTNAME
+      "PENDING", // ORGSTATUS
+      "ROSTER", // ROSTERSTATUS
+      "Section A", // SECTION
+      "12345", // STUDENTID
+      "Team Alpha", // TEAMS
+      "102" // USERID
+    };
+
+    RosterStudent rs =
+        RosterStudentsCSVController.fromCSVRow(
+            row, RosterStudentsCSVController.RosterSourceType.ROSTER_DOWNLOAD);
+
+    assertEquals("Chris", rs.getFirstName());
+    assertEquals("Gaucho", rs.getLastName());
+    assertEquals("12345", rs.getStudentId());
+    assertEquals("cgaucho@ucsb.edu", rs.getEmail());
+    assertEquals("Section A", rs.getSection());
+  }
+
+  @Test
+  public void test_fromCSVRowRosterDownload_notEnoughColumns() {
+    String row[] = {
+      "1", "email@example.com", "Chris" // way too few columns
+    };
+
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class,
+            () ->
+                RosterStudentsCSVController.fromCSVRow(
+                    row, RosterStudentsCSVController.RosterSourceType.ROSTER_DOWNLOAD));
+    assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
+  }
+
+  @Test
+  public void test_fromCSVRowRosterDownload_sectionField() {
+    String row[] = {
+      "99", // COURSEID
+      "jane@ucsb.edu", // EMAIL
+      "Jane", // FIRSTNAME
+      "", // GITHUBID
+      "", // GITHUBLOGIN
+      "1001", // ID
+      "Doe", // LASTNAME
+      "PENDING", // ORGSTATUS
+      "ROSTER", // ROSTERSTATUS
+      "0100", // SECTION
+      "A01234567", // STUDENTID
+      "Team Beta", // TEAMS
+      "100" // USERID
+    };
+
+    RosterStudent rs =
+        RosterStudentsCSVController.fromCSVRow(
+            row, RosterStudentsCSVController.RosterSourceType.ROSTER_DOWNLOAD);
+
+    assertEquals("0100", rs.getSection());
   }
 }
