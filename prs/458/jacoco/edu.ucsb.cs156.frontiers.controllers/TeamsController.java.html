@@ -174,7 +174,7 @@ import org.springframework.web.server.ResponseStatusException;
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;Team&gt; allTeams(@RequestParam Long courseId) {
-<span class="fc" id="L177">    Iterable&lt;Team&gt; teams = teamRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L177">    Iterable&lt;Team&gt; teams = teamRepository.findByCourseIdOrderByNameAsc(courseId);</span>
 <span class="fc" id="L178">    return teams;</span>
   }
 
