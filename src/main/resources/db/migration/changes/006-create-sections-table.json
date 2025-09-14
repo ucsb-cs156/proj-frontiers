@@ -1,0 +1,59 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "Section-0",
+      "author": "Division7",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "SECTIONS_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_SECTION_COURSE_ID",
+                    "referencedTableName": "COURSE",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "COURSE_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "SECTION",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "LABEL",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ],
+            "tableName": "SECTIONS"
+          }
+        }
+      ]
+    }
+  }
+]}
