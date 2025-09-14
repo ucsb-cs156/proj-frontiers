@@ -183,7 +183,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     List<Team> expectedTeams = Arrays.asList(team1, team2);
 
-    when(teamRepository.findByCourseId(eq(1L))).thenReturn(expectedTeams);
+    when(teamRepository.findByCourseIdOrderByNameAsc(eq(1L))).thenReturn(expectedTeams);
 
     // act
     MvcResult response =
@@ -193,7 +193,7 @@ public class TeamsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(teamRepository, times(1)).findByCourseId(eq(1L));
+    verify(teamRepository, times(1)).findByCourseIdOrderByNameAsc(eq(1L));
 
     String expectedJson = mapper.writeValueAsString(expectedTeams);
     String responseString = response.getResponse().getContentAsString();
@@ -209,7 +209,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     List<Team> expectedTeams = Arrays.asList(team);
 
-    when(teamRepository.findByCourseId(eq(1L))).thenReturn(expectedTeams);
+    when(teamRepository.findByCourseIdOrderByNameAsc(eq(1L))).thenReturn(expectedTeams);
 
     // act
     MvcResult response =
@@ -219,7 +219,7 @@ public class TeamsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(teamRepository, times(1)).findByCourseId(eq(1L));
+    verify(teamRepository, times(1)).findByCourseIdOrderByNameAsc(eq(1L));
 
     String expectedJson = mapper.writeValueAsString(expectedTeams);
     String responseString = response.getResponse().getContentAsString();
