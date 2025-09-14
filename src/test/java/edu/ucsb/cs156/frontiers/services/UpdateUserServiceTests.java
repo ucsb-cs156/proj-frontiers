@@ -191,4 +191,24 @@ public class UpdateUserServiceTests {
     assertEquals(user, staff1.getUser());
     assertEquals(user, staff2.getUser());
   }
+
+  @Test
+  public void testAttachUsesrToRosterStudents_userExists() {
+    // Arrange
+    String email = "test@example.com";
+    User user = User.builder().email(email).build();
+
+    RosterStudent rosterStudent = new RosterStudent();
+    rosterStudent.setEmail(email);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+    // Act
+    updateUserService.attachUsersToRosterStudents(List.of(rosterStudent));
+
+    // Assert
+    verify(userRepository, times(1)).findByEmail(email);
+    verify(rosterStudentRepository, times(1)).save(rosterStudent);
+    assertEquals(rosterStudent.getUser(), user);
+  }
 }
