@@ -2274,4 +2274,178 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository, never()).findById(any());
     verify(rosterStudentRepository, never()).save(any());
   }
+
+  /** Test the POST endpoint with section parameter */
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudentWithSection() throws Exception {
+    RosterStudent rs1WithSection =
+        RosterStudent.builder()
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .studentId("A123456")
+            .email("cgaucho@example.org")
+            .section("08235")
+            .course(course1)
+            .rosterStatus(RosterStatus.MANUAL)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rs1WithSection);
+    doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@example.org")
+                    .param("courseId", "1")
+                    .param("section", "08235"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved = captor.getValue();
+    assertEquals("08235", saved.getSection());
+
+    String responseString = response.getResponse().getContentAsString();
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
+  }
+
+  /** Test the POST endpoint without section parameter (backward compatibility) */
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudentWithoutSection() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rs1);
+    doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@example.org")
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved = captor.getValue();
+    assertEquals("", saved.getSection()); // Should default to empty string
+
+    String responseString = response.getResponse().getContentAsString();
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
+  }
+
+  /** Test the PUT endpoint with section parameter */
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testUpdateRosterStudentWithSection() throws Exception {
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("OldName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("08235")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    RosterStudent updatedStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("New")
+            .lastName("NewName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("08250")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(updatedStudent);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/update")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("firstName", "New")
+                    .param("lastName", "NewName")
+                    .param("studentId", "A123456")
+                    .param("section", "08250"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved = captor.getValue();
+    assertEquals("New", saved.getFirstName());
+    assertEquals("NewName", saved.getLastName());
+    assertEquals("A123456", saved.getStudentId());
+    assertEquals("08250", saved.getSection());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(updatedStudent);
+    assertEquals(expectedJson, responseString);
+  }
+
+  /** Test the PUT endpoint without section parameter (backward compatibility) */
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testUpdateRosterStudentWithoutSection() throws Exception {
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("OldName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("08235")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/update")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("firstName", "New")
+                    .param("lastName", "NewName")
+                    .param("studentId", "A123456"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved = captor.getValue();
+    assertEquals("New", saved.getFirstName());
+    assertEquals("NewName", saved.getLastName());
+    assertEquals("A123456", saved.getStudentId());
+    assertEquals("08235", saved.getSection()); // Should retain existing section value
+  }
 }
