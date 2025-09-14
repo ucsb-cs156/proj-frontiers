@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
   /**
    * This method attaches the CourseStaff to the User based on their email.
    *
-   * @param user The user to whom the RosterStudents will be attached
+   * @param user The user to whom the CourseStaff will be attached
    */
   public void attachCourseStaff(User user) {
 <span class="fc" id="L42">    List&lt;CourseStaff&gt; matchedStaff = courseStaffRepository.findAllByEmail(user.getEmail());</span>
@@ -66,14 +66,21 @@ import org.springframework.stereotype.Service;
 <span class="fc" id="L66">  }</span>
 
   /** This method attaches a SingleRoster student to the User based on their email. */
+  public void attachUsersToRosterStudents(List&lt;RosterStudent&gt; rosterStudents) {
+<span class="fc bfc" id="L70" title="All 2 branches covered.">    for (RosterStudent matchedStudent : rosterStudents) {</span>
+<span class="fc" id="L71">      attachUserToRosterStudent(matchedStudent);</span>
+<span class="fc" id="L72">    }</span>
+<span class="fc" id="L73">  }</span>
+
+  /** This method attaches a Single Course Staff member to the User based on their email. */
   public void attachUserToCourseStaff(CourseStaff courseStaff) {
-<span class="fc" id="L70">    String email = courseStaff.getEmail();</span>
-<span class="fc" id="L71">    Optional&lt;User&gt; optionalUser = userRepository.findByEmail(email);</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">    if (optionalUser.isPresent()) {</span>
-<span class="fc" id="L73">      User matchedUser = optionalUser.get();</span>
-<span class="fc" id="L74">      courseStaff.setUser(matchedUser);</span>
-<span class="fc" id="L75">      courseStaffRepository.save(courseStaff);</span>
+<span class="fc" id="L77">    String email = courseStaff.getEmail();</span>
+<span class="fc" id="L78">    Optional&lt;User&gt; optionalUser = userRepository.findByEmail(email);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">    if (optionalUser.isPresent()) {</span>
+<span class="fc" id="L80">      User matchedUser = optionalUser.get();</span>
+<span class="fc" id="L81">      courseStaff.setUser(matchedUser);</span>
+<span class="fc" id="L82">      courseStaffRepository.save(courseStaff);</span>
     }
-<span class="fc" id="L77">  }</span>
+<span class="fc" id="L84">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
