@@ -142,7 +142,7 @@ function App() {
           element={
             <ProtectedPage
               component={<InstructorCourseShowPage />}
-              enforceRole={"ROLE_ADMIN"}
+              enforceRole={"ROLE_INSTRUCTOR"}
               currentUser={currentUser}
             />
           }
