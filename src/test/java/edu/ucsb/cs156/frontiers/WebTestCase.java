@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.wiremock.extension.jwt.JwtExtensionFactory;
 
 @ActiveProfiles("integration")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -32,7 +33,9 @@ public abstract class WebTestCase {
 
   @BeforeAll
   public static void setupWireMock() {
-    wireMockServer = new WireMockServer(options().port(8090).globalTemplating(true));
+    wireMockServer =
+        new WireMockServer(
+            options().port(8090).globalTemplating(true).extensions(new JwtExtensionFactory()));
 
     WiremockServiceImpl.setupOauthMocks(wireMockServer, false);
 

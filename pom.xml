@@ -140,6 +140,11 @@
       <artifactId>wiremock-jetty12</artifactId>
       <version>3.9.1</version>
     </dependency>
+    <dependency>
+      <groupId>org.wiremock.extensions</groupId>
+      <artifactId>wiremock-jwt-extension</artifactId>
+      <version>0.3.0</version>
+    </dependency>
 
     <!-- https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api -->
     <dependency>

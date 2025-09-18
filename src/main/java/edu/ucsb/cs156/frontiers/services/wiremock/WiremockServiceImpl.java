@@ -7,14 +7,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.temporaryRedirect;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.junit.Stubbing;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.wiremock.extension.jwt.JwtExtensionFactory;
 
 /**
  * This is a service for mocking authentication using wiremock
@@ -52,20 +54,67 @@ public class WiremockServiceImpl extends WiremockService {
                 aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "text/html")
+                    .withHeader("Set-Cookie", "nonce={{request.query.nonce}};path=/")
                     .withBodyFile("login.html")));
 
     s.stubFor(
         post(urlPathEqualTo("/login"))
             .willReturn(
                 temporaryRedirect(
-                    "{{formData request.body 'form' urlDecode=true}}{{{form.redirectUri}}}?code={{{randomValue length=30 type='ALPHANUMERIC'}}}&state={{{form.state}}}")));
+                    "{{formData request.body 'form' urlDecode=true}}{{{form.redirectUri}}}?code={{{request.cookies.nonce}}}&state={{{form.state}}}")));
 
-    s.stubFor(
-        post(urlPathEqualTo("/oauth/token"))
-            .willReturn(
-                okJson(
-                    "{\"access_token\":\"{{randomValue length=20 type='ALPHANUMERIC'}}\",\"token_type\": \"Bearer\",\"expires_in\":\"3600\",\"scope\":\"https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid\"}")));
+    String emailAddress = "cgaucho@ucsb.edu";
+    if (isAdmin) {
+      emailAddress = "admingaucho@ucsb.edu";
+    }
 
+    if (isAdmin) {
+      s.stubFor(
+          post(urlPathEqualTo("/oauth/token"))
+              .willReturn(
+                  okJson(
+                      """
+                          {{#trim}}
+                          {{formData request.body 'form'}}
+                          {{#assign 'emailAddress'}}admingaucho@ucsb.edu{{/assign}}
+                          {{#assign 'subject'}}{{{base64 emailAddress padding=false}}}{{/assign}}
+                          {{#assign 'accessToken'}}{{{base64 (stringFormat 'access..%s' emailAddress) padding=false}}}{{/assign}}
+                          {{#assign 'submittedNonce'}}{{form.code}}{{/assign}}
+                          {{#assign 'idToken'}}{{#trim}}
+                          {{{jwt alg='RS256' email=emailAddress iss=request.baseUrl aud='integrationtest' nonce=submittedNonce sub=subject}}}
+                          {{/trim}}{{/assign}}
+
+                          {
+                          "access_token":"{{{accessToken}}}",
+                          "token_type": "Bearer",
+                          "id_token": "{{{idToken}}}"
+                          }
+  {{/trim}}
+                           """)));
+    } else {
+      s.stubFor(
+          post(urlPathEqualTo("/oauth/token"))
+              .willReturn(
+                  okJson(
+                      """
+                          {{#trim}}
+                          {{formData request.body 'form'}}
+                          {{#assign 'emailAddress'}}cgaucho@ucsb.edu{{/assign}}
+                          {{#assign 'subject'}}{{{base64 emailAddress padding=false}}}{{/assign}}
+                          {{#assign 'accessToken'}}{{{base64 (stringFormat 'access..%s' emailAddress) padding=false}}}{{/assign}}
+                          {{#assign 'submittedNonce'}}{{form.code}}{{/assign}}
+                          {{#assign 'idToken'}}{{#trim}}
+                          {{{jwt alg='RS256' email=emailAddress iss=request.baseUrl aud='integrationtest' nonce=submittedNonce sub=subject}}}
+                          {{/trim}}{{/assign}}
+
+                          {
+                          "access_token":"{{{accessToken}}}",
+                          "token_type": "Bearer",
+                          "id_token": "{{{idToken}}}"
+                          }
+  {{/trim}}
+                           """)));
+    }
     if (isAdmin) {
       s.stubFor(
           get(urlPathMatching("/userinfo"))
@@ -75,17 +124,16 @@ public class WiremockServiceImpl extends WiremockService {
                       .withHeader("Content-Type", "application/json")
                       .withBody(
                           """
-                      {
-                        "sub": "107126842018026740288",
-                        "name": "Admin GaucSho",
-                        "given_name": "Admin",
-                        "family_name": "Gaucho",
-                        "picture": "https://lh3.googleusercontent.com/a/ACg8ocJpOe2SqIpirdIMx7KTj1W4OQ45t6FwpUo40K2V2JON=s96-c",
-                        "email": "admingaucho@ucsb.edu",
-                        "email_verified": true,
-                        "locale": "en",
-                        "hd": "ucsb.edu"
-                      }
+                              {{#trim}}
+                                   {{#assign 'accessToken'}}{{{regexExtract request.headers.Authorization.0 '[^\\s]*$'}}}{{/assign}}
+                                   {{regexExtract (base64 accessToken decode=true) '(.+?)\\.\\.(.+?)$' 'parts'}}
+                                   {{#assign 'email'}}admingaucho@ucsb.edu{{/assign}}
+                                   {{#assign 'sub'}}{{{base64 email padding=false}}}{{/assign}}
+                                   {
+                                   "email": "{{{email}}}",
+                                   "sub": "{{{sub}}}"
+                                   }
+                               {{/trim}}
                       """)));
     } else {
       s.stubFor(
@@ -96,26 +144,39 @@ public class WiremockServiceImpl extends WiremockService {
                       .withHeader("Content-Type", "application/json")
                       .withBody(
                           """
-                      {
-                        "sub": "107126842018026740288",
-                        "name": "Chris Gaucho",
-                        "given_name": "Chris",
-                        "family_name": "Gaucho",
-                        "picture": "https://lh3.googleusercontent.com/a/ACg8ocJpOe2SqIpirdIMx7KTj1W4OQ45t6FwpUo40K2V2JON=s96-c",
-                        "email": "cgaucho@ucsb.edu",
-                        "email_verified": true,
-                        "locale": "en",
-                        "hd": "ucsb.edu"
-                      }
+                              {{#trim}}
+                                   {{#assign 'accessToken'}}{{{regexExtract request.headers.Authorization.0 '[^\\s]*$'}}}{{/assign}}
+                                   {{regexExtract (base64 accessToken decode=true) '(.+?)\\.\\.(.+?)$' 'parts'}}
+                                   {{#assign 'email'}}cgaucho@ucsb.edu{{/assign}}
+                                   {{#assign 'sub'}}{{{base64 email padding=false}}}{{/assign}}
+                                   {
+                                   "email": "{{{email}}}",
+                                   "sub": "{{{sub}}}"
+                                   }
+                               {{/trim}}
                       """)));
     }
+
+    s.stubFor(
+        get(urlPathMatching("/.well-known/jwks\\.json"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{{{jwks}}}")));
   }
 
   /** This method initializes the WireMockServer */
   public void init() {
     log.info("WiremockServiceImpl.init() called");
 
-    WireMockServer wireMockServer = new WireMockServer(options().port(8090).globalTemplating(true));
+    WireMockServer wireMockServer =
+        new WireMockServer(
+            wireMockConfig()
+                .port(8090)
+                .globalTemplating(true)
+                .extensions(new JwtExtensionFactory())
+                .notifier(new ConsoleNotifier(true)));
     setupOauthMocks(wireMockServer, true);
 
     wireMockServer.start();
