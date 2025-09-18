@@ -1,7 +1,7 @@
 { "databaseChangeLog": [
   {
     "changeSet": {
-      "id": "Section-0",
+      "id": "006-create-sections-table",
       "author": "copilot",
       "changes": [
         {
