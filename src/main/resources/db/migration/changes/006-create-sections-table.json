@@ -2,7 +2,7 @@
   {
     "changeSet": {
       "id": "Section-0",
-      "author": "Division7",
+      "author": "copilot",
       "changes": [
         {
           "createTable": {
