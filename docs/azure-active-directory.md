@@ -18,6 +18,8 @@ In order to use Active Directory as a sign-on, the following steps need to be ta
 
 1. Sign up for an Azure account.
 
+   * <https://azure.microsoft.com/en-us/get-started/azure-portal>
+
    This may require a credit card, as Azure will use it to identify that you are a real person, and will reverse the charge shortly after.
 
    Currently, it is not possible to use your UCSB Account.
@@ -26,34 +28,34 @@ In order to use Active Directory as a sign-on, the following steps need to be ta
 
    <img width="50%" height="50%" alt="image" src="https://github.com/user-attachments/assets/34fcd148-8b1c-46eb-a11f-24cf9b932165" />
 
-2.  Select App Registrations
+3.  Select App Registrations
 
     <img width="50%" height="50%" alt="image" src="https://github.com/user-attachments/assets/20f99256-e82e-42ae-af17-a760dfbb09e2" />
 
-3.  Select New Registration
+4.  Select New Registration
 
     <img width="1000" height="435" alt="image" src="https://github.com/user-attachments/assets/f8ae7a65-c0e8-4d69-86b1-d9a6fef18a8f" />
 
-4.  Fill in a name, and select "Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant)"
+5.  Fill in a name, and select "Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant)"
 
     <img width="1378" height="976" alt="image" src="https://github.com/user-attachments/assets/9fb52c95-b655-4b1f-9a3a-425adb919c04" />
 
-5.  Then, fill in a Redirect URI:
+6.  Then, fill in a Redirect URI:
     ```web
     http://localhost:8080/login/oauth2/code/azure-dev
     ```
     Select web as the platform.
 
-6.  Click create.
+7.  Click create.
 
-7.  From this next screen, for running on localhost, copy your Application ID and Directory (tenant) ID to their places in `.env` respectively:
+8.  From this next screen, for running on localhost, copy your Application ID and Directory (tenant) ID to their places in `.env` respectively:
 
     ```env
     MICROSOFT_TENANT_ID=<tenant-id>
     MICROSOFT_CLIENT_ID=<client-id>
     ```
 
-8.  Next, let's add a client secret. Select "Add a certificate or secret", then select "New Client Secret".
+9.  Next, let's add a client secret. Select "Add a certificate or secret", then select "New Client Secret".
 
     Give it a name and an expiry date. Click add, and copy the value to its respective place in .env:
     
