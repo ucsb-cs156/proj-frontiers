@@ -581,9 +581,7 @@ describe("TeamTabComponent tests", () => {
       screen.queryByTestId(`${testId}-post-modal`),
     ).not.toBeInTheDocument();
   });
-  test("Modals close on close buttons, download button is disabled", async () => {
-    const download = vi.fn();
-    window.open = (a, b) => download(a, b);
+  test("Modals close on close buttons, push teams button is enabled", async () => {
     axiosMock
       .onGet("/api/teams/all?courseId=1")
       .reply(200, teamsFixtures.teams);
@@ -620,11 +618,11 @@ describe("TeamTabComponent tests", () => {
       ).not.toBeInTheDocument(),
     );
 
-    const downloadButton = await screen.findByTestId(
-      `${testId}-download-button`,
+    const pushTeamsButton = await screen.findByTestId(
+      `${testId}-push-teams-button`,
     );
-    expect(downloadButton).toBeInTheDocument();
-    expect(downloadButton).toBeDisabled();
+    expect(pushTeamsButton).toBeInTheDocument();
+    expect(pushTeamsButton).toBeEnabled();
   });
   test("TeamForm (adding individual team) returns correct error when team already exists", async () => {
     const queryClientSpecific = new QueryClient({
@@ -927,5 +925,58 @@ describe("TeamTabComponent tests", () => {
     const searchInput = screen.getByTestId(`${testId}-search`);
     fireEvent.change(searchInput, { target: { value: "test" } });
     expect(searchInput.value).toBe("test");
+  });
+  test("Push teams to Github button works correctly", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    axiosMock
+      .onGet("/api/teams/all?courseId=1")
+      .reply(200, teamsFixtures.teams);
+
+    axiosMock.onPost("/api/jobs/launch/pushTeamsToGithub").reply(200, {
+      id: 1,
+      status: "running",
+    });
+
+    render(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClientSpecific}>
+          <TeamsTabComponent
+            courseId={1}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+
+    const pushTeamsButton = await screen.findByTestId(
+      `${testId}-push-teams-button`,
+    );
+    expect(pushTeamsButton).toBeInTheDocument();
+    expect(pushTeamsButton).toBeEnabled();
+
+    fireEvent.click(pushTeamsButton);
+
+    await waitFor(() => {
+      expect(axiosMock.history.post.length).toEqual(1);
+    });
+
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/jobs/launch/pushTeamsToGithub",
+    );
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: 1,
+    });
+
+    expect(toast).toBeCalledWith(
+      "Push teams to Github job successfully started.",
+    );
   });
 });
