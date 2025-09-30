@@ -32,6 +32,11 @@ In order to use Active Directory as a sign-on, the following steps need to be ta
 
     <img width="50%" height="50%" alt="image" src="https://github.com/user-attachments/assets/20f99256-e82e-42ae-af17-a760dfbb09e2" />
 
+
+    It might also be at the bottom of the page and look like this:
+
+    <img width="550" height="150" alt="image" src="https://github.com/user-attachments/assets/1126f188-a814-4b8b-8d0b-eb258a921d7d" />
+
 4.  Select New Registration
 
     <img width="1000" height="435" alt="image" src="https://github.com/user-attachments/assets/f8ae7a65-c0e8-4d69-86b1-d9a6fef18a8f" />
