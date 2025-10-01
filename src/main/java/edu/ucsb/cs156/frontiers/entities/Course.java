@@ -50,4 +50,10 @@ public class Course {
   @JsonIgnore
   @ToString.Exclude
   private List<Team> teams;
+
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
+  @Fetch(FetchMode.JOIN)
+  @JsonIgnore
+  @ToString.Exclude
+  private List<Section> sections;
 }
