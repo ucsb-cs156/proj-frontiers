@@ -58,10 +58,22 @@ export default function TeamsTabComponent({
     },
   });
 
+  const objectToAxiosParamsPushTeamsToGithub = () => ({
+    url: `/api/jobs/launch/pushTeamsToGithub`,
+    method: "POST",
+    params: {
+      courseId: courseId,
+    },
+  });
+
   const onSuccessTeams = (modalFn) => {
     toast("Team successfully added.");
     setSearchTeams("");
     modalFn(false);
+  };
+
+  const onSuccessPushTeamsToGithub = () => {
+    toast("Push teams to Github job successfully started.");
   };
 
   const teamPostMutation = useBackendMutation(
@@ -115,12 +127,21 @@ export default function TeamsTabComponent({
     [`/api/teams/all?courseId=${courseId}`],
   );
 
+  const pushTeamsToGithubMutation = useBackendMutation(
+    objectToAxiosParamsPushTeamsToGithub,
+    { onSuccess: onSuccessPushTeamsToGithub },
+  );
+
   const handleCsvSubmit = (formData) => {
     teamCsvMutation.mutate(formData);
   };
 
   const handlePostSubmit = (team) => {
     teamPostMutation.mutate(team);
+  };
+
+  const handlePushTeamsToGithub = () => {
+    pushTeamsToGithubMutation.mutate();
   };
 
   return (
@@ -212,11 +233,11 @@ export default function TeamsTabComponent({
         </Col>
         <Col>
           <Button
+            onClick={handlePushTeamsToGithub}
             className="w-100"
-            data-testid={`${testIdPrefix}-download-button`}
-            disabled
+            data-testid={`${testIdPrefix}-push-teams-button`}
           >
-            Download Team CSV
+            Push Teams to Github
           </Button>
         </Col>
       </Row>
