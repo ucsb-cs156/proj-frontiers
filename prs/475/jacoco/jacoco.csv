@@ -30,7 +30,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CustomErrorController,0,129,0,14,
 frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,66,0,2,0,15,0,6,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController,0,492,0,40,0,117,0,35,0,15
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController,0,532,0,42,0,128,0,37,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,668,0,38,0,126,0,41,0,22
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,449,0,14,0,123,0,30,0,23
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
@@ -45,7 +45,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,134,0,2,0,31,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,27,0,0,0,5,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,633,0,78,0,163,0,61,0,22
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,0,23,0,5,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,137,0,0,0,23,0,6,0,6
