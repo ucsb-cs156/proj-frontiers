@@ -24,7 +24,7 @@ jobs:
             --method POST \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/ucsb-cs156-s25/dokku-sync/actions/workflows/00-sync-a-PR.yml/dispatches \
+            /repos/ucsb-cs156-f25/dokku-sync/actions/workflows/00-sync-a-PR.yml/dispatches \
             -f ref='main' \
             -f "inputs[pr_url]=$PR_URL"
           else
