@@ -31,7 +31,7 @@ dokku config:set --no-restart frontiers PRODUCTION=true
 dokku config:set --no-restart frontiers SOURCE_REPO=https://github.com/ucsb-cs156-f25/proj-frontiers-f25-xx
 dokku postgres:create frontiers-db
 dokku postgres:link frontiers-db frontiers
-dokku git:sync frontiers https://github.com/ucsb-cs156/proj-frontiers main
+dokku git:sync frontiers https://github.com/ucsb-cs156-f25/proj-frontiers-f25-xx main
 dokku ps:rebuild frontiers
 dokku letsencrypt:set frontiers email yourEmail@ucsb.edu
 dokku letsencrypt:enable frontiers
