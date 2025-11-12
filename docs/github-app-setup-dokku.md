@@ -85,7 +85,7 @@ Then, scroll further and under "Where can this Github App be installed?" select 
 
 Click "Create".
 
-<img width="492" height="179" alt="image" src="https://github.com/user-attachments/assets/bb300f26-749c-41d2-87a3-71995171086a" />
+<img width="518" height="204" alt="image" src="https://github.com/user-attachments/assets/2df7b8e8-4bf7-4d59-bc0c-ec8f1adff9da" />
 
 
 Now, select "Generate Client Secret". 
