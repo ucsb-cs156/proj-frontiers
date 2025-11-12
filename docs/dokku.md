@@ -16,23 +16,26 @@ You will also need the command:
 This short version omits many details, but if you are already familiar with the process of deploying applications, you may be able to use this.
 
 Note that you may need to modify:
-* `frontiers` to `frontiers-qa` or `frontiers-cgaucho` (where `cgaucho` is your github id)
-* `https://github.com/ucsb-cs156/proj-frontiers` to `https://github.com/ucsb-cs156-f25/proj-frontiers-f24-17` or whatever your repo's url is
+* `frontiers` to `frontiers-qa` or `frontiers-dev-cgaucho` (where `cgaucho` is your github id)
+* `https://github.com/ucsb-cs156-f25/proj-frontiers-f25-xx` to `https://github.com/ucsb-cs156-f25/proj-frontiers-f25-17` or whatever your repo's url is
 * `main` to `my-branch-name` for your feature branch
 * `yourEmail@ucsb.edu` to your own email
 * values for `CLIENT_ID`, `CLIENT_SECRET` etc from [Google](https://github.com/ucsb-cs156/proj-frontiers/blob/main/docs/oauth.md) or [Github](https://github.com/ucsb-cs156/proj-frontiers/blob/main/docs/github-app-setup-dokku.md) as appropriate
+
+### setup `frontiers`
 
 ```
 dokku apps:create frontiers
 dokku git:set frontiers keep-git-dir true
 dokku config:set --no-restart frontiers PRODUCTION=true
-dokku config:set --no-restart frontiers SOURCE_REPO=https://github.com/ucsb-cs156/proj-frontiers
+dokku config:set --no-restart frontiers SOURCE_REPO=https://github.com/ucsb-cs156-f25/proj-frontiers-f25-xx
 dokku postgres:create frontiers-db
 dokku postgres:link frontiers-db frontiers
 dokku git:sync frontiers https://github.com/ucsb-cs156/proj-frontiers main
 dokku ps:rebuild frontiers
 dokku letsencrypt:set frontiers email yourEmail@ucsb.edu
 dokku letsencrypt:enable frontiers
+dokku config:set frontiers --no-restart WEBHOOK_SECRET=$(openssl rand -hex 20)
 dokku config:set frontiers --no-restart GOOGLE_CLIENT_ID=get-value-from-google
 dokku config:set frontiers --no-restart GOOGLE_CLIENT_SECRET=get-value-from-google
 dokku config:set frontiers --no-restart GITHUB_CLIENT_ID=get-value-from-github
@@ -46,3 +49,29 @@ xxxxxxxxxxxxxxxxxxxxxxxxx
 dokku ps:rebuild frontiers
 ```
 
+### setup `frontiers-qa`
+
+```
+dokku apps:create frontiers-qa
+dokku git:set frontiers-qa keep-git-dir true
+dokku config:set --no-restart frontiers-qa PRODUCTION=true
+dokku config:set --no-restart frontiers-qa SOURCE_REPO=https://github.com/ucsb-cs156-f25/proj-frontiers-f25-xx
+dokku postgres:create frontiers-qa-db
+dokku postgres:link frontiers-qa-db frontiers-qa
+dokku git:sync frontiers-qa https://github.com/ucsb-cs156-f25/proj-frontiers-f25-xx main
+dokku ps:rebuild frontiers-qa
+dokku letsencrypt:set frontiers-qa email yourEmail@ucsb.edu
+dokku letsencrypt:enable frontiers-qa
+dokku config:set frontiers-qa --no-restart WEBHOOK_SECRET=$(openssl rand -hex 20)
+dokku config:set frontiers-qa --no-restart GOOGLE_CLIENT_ID=get-value-from-google
+dokku config:set frontiers-qa --no-restart GOOGLE_CLIENT_SECRET=get-value-from-google
+dokku config:set frontiers-qa --no-restart GITHUB_CLIENT_ID=get-value-from-github
+dokku config:set frontiers-qa --no-restart GITHUB_CLIENT_SECRET=get-value-from-github
+dokku config:set frontiers-qa --no-restart app_private_key="-----BEGIN PRIVATE KEY-----
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+see detailed instructions in github-app-setup-dokku.md
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxx
+-----END PRIVATE KEY-----"
+dokku ps:rebuild frontiers-qa
+```
