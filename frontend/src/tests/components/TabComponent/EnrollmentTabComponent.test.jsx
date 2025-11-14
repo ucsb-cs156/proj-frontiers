@@ -603,12 +603,12 @@ describe("EnrollmentTabComponent Tests", () => {
 
     const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
     expect(infoIcon).toBeInTheDocument();
-    expect(infoIcon).toHaveTextContent("ℹ");
+    expect(infoIcon).toHaveTextContent("\u2139");
 
     await user.hover(infoIcon);
 
     await waitFor(() => {
-      expect(screen.getByText("CSV Upload format Help")).toBeInTheDocument();
+      expect(screen.getByText("CSV Upload Format Help")).toBeInTheDocument();
     });
 
     fireEvent.click(infoIcon);

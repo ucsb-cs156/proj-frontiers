@@ -176,7 +176,7 @@ export default function EnrollmentTabComponent({
               placement="right"
               overlay={
                 <Tooltip id="csv-help-tooltip">
-                  CSV Upload format Help
+                  CSV Upload Format Help
                 </Tooltip>
               }
             >
