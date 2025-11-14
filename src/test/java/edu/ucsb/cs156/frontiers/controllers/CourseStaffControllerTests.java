@@ -951,7 +951,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
                 delete("/api/coursestaff/delete")
                     .with(csrf())
                     .param("id", "1")
-                    .param("courseId", "7"))
+                    .param("courseId", "7")
+                    .param("removeFromOrg", "true"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -1126,7 +1127,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
                 delete("/api/coursestaff/delete")
                     .with(csrf())
                     .param("id", "1")
-                    .param("courseId", "1"))
+                    .param("courseId", "1")
+                    .param("removeFromOrg", "true"))
             .andExpect(status().isOk())
             .andReturn();
 

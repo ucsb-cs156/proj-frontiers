@@ -174,7 +174,12 @@ public class CourseStaffController extends ApiController {
   @Transactional
   public ResponseEntity<String> deleteStaffMember(
       @Parameter(name = "id") @RequestParam Long id,
-      @Parameter(name = "courseId") @RequestParam Long courseId)
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(
+              name = "removeFromOrg",
+              description = "Whether to remove course staff from GitHub organization")
+          @RequestParam(defaultValue = "false")
+          boolean removeFromOrg)
       throws EntityNotFoundException {
     CourseStaff staffMember =
         courseStaffRepository
@@ -187,7 +192,8 @@ public class CourseStaffController extends ApiController {
     String orgRemovalErrorMessage = null;
 
     // Try to remove the student from the organization if they have a GitHub login
-    if (staffMember.getGithubLogin() != null
+    if (removeFromOrg
+        && staffMember.getGithubLogin() != null
         && course.getOrgName() != null
         && course.getInstallationId() != null) {
       orgRemovalAttempted = true;
