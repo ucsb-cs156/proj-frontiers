@@ -175,9 +175,7 @@ export default function EnrollmentTabComponent({
             <OverlayTrigger
               placement="right"
               overlay={
-                <Tooltip id="csv-help-tooltip">
-                  CSV Upload Format Help
-                </Tooltip>
+                <Tooltip id="csv-help-tooltip">CSV Upload Format Help</Tooltip>
               }
             >
               <span
@@ -189,7 +187,7 @@ export default function EnrollmentTabComponent({
                 }}
                 data-testid={`${testIdPrefix}-csv-info-icon`}
               >
-                {'\u2139'}
+                {"\u2139"}
               </span>
             </OverlayTrigger>
           </div>
