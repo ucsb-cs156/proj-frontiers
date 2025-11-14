@@ -577,6 +577,47 @@ describe("EnrollmentTabComponent Tests", () => {
     );
   });
 
+  test("Info icon displays tooltip and opens help page on click", async () => {
+    const openMock = vi.fn();
+    window.open = openMock;
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    const user = userEvent.setup();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-csv-button`)).toBeInTheDocument();
+    });
+
+    const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
+    expect(infoIcon).toBeInTheDocument();
+    expect(infoIcon).toHaveTextContent("ℹ");
+
+    await user.hover(infoIcon);
+
+    await waitFor(() => {
+      expect(screen.getByText("CSV Upload format Help")).toBeInTheDocument();
+    });
+
+    fireEvent.click(infoIcon);
+
+    await waitFor(() => {
+      expect(openMock).toHaveBeenCalledWith("/help/csv", "_blank");
+    });
+  });
+
   describe("Search filter works correctly", () => {
     const testId = "InstructorCourseShowPage";
     const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
