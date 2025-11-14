@@ -39,7 +39,7 @@ export default defineConfig([
     rules: {
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
       "react/jsx-uses-react": "off", 
-      "react/react-in-jsx-scope": "off",
+      "react/react-in-jsx-scope": "off", //Recomended by React - https://legacy.reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html#eslint
       "react/prop-types": "off",           
       "react/display-name": "off",         
       "react/no-unescaped-entities": "off" 
