@@ -603,6 +603,9 @@ describe("EnrollmentTabComponent Tests", () => {
 
     const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
     expect(infoIcon).toBeInTheDocument();
+    expect(infoIcon).toHaveStyle({ cursor: "pointer" });
+    expect(infoIcon).toHaveStyle({ fontSize: "0.85rem" });
+    expect(infoIcon).toHaveStyle({ userSelect: "none" });
     expect(infoIcon).toHaveTextContent("\u2139");
 
     await user.hover(infoIcon);
