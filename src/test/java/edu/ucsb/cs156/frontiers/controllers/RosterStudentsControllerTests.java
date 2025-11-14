@@ -2357,4 +2357,38 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Assert
     assertEquals("0101", saved.getSection());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_withSection() throws Exception {
+    // Arrange
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+
+    ArgumentCaptor<RosterStudent> rosterStudentCaptor =
+        ArgumentCaptor.forClass(RosterStudent.class);
+
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+
+    // Act
+    mockMvc
+        .perform(
+            post("/api/rosterstudents/post")
+                .with(csrf())
+                .param("studentId", "A123456")
+                .param("firstName", "Chris")
+                .param("lastName", "Gaucho")
+                .param("email", "cgaucho@example.org")
+                .param("courseId", "1")
+                .param("section", "0101"))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository).save(rosterStudentCaptor.capture());
+    RosterStudent saved = rosterStudentCaptor.getValue();
+
+    // Assert
+    assertEquals("0101", saved.getSection());
+  }
 }
