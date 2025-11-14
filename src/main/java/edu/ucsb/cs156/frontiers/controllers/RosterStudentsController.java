@@ -89,7 +89,7 @@ public class RosterStudentsController extends ApiController {
             .studentId(studentId)
             .firstName(firstName)
             .lastName(lastName)
-            .email(email)
+            .email(email.strip())
             .build();
 
     UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
