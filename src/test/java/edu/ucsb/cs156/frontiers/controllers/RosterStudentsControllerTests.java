@@ -2274,4 +2274,87 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository, never()).findById(any());
     verify(rosterStudentRepository, never()).save(any());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_updatesSectionWhenProvided() throws Exception {
+    // Arrange
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .studentId("A123456")
+            .email("cgaucho@example.org")
+            .course(course1)
+            .section("0101")
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existing));
+
+    ArgumentCaptor<RosterStudent> rosterStudentCaptor =
+        ArgumentCaptor.forClass(RosterStudent.class);
+
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    // Act
+    mockMvc
+        .perform(
+            put("/api/rosterstudents/update")
+                .with(csrf())
+                .param("id", "1")
+                .param("firstName", "ChrisNew")
+                .param("lastName", "GauchoNew")
+                .param("studentId", "A123456")
+                .param("section", "0202"))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository).save(rosterStudentCaptor.capture());
+    RosterStudent saved = rosterStudentCaptor.getValue();
+
+    // Assert
+    assertEquals("0202", saved.getSection());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_doesNotChangeSectionWhenNotProvided() throws Exception {
+    // Arrange
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .studentId("A123456")
+            .email("cgaucho@example.org")
+            .course(course1)
+            .section("0101")
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existing));
+
+    ArgumentCaptor<RosterStudent> rosterStudentCaptor =
+        ArgumentCaptor.forClass(RosterStudent.class);
+
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    // Act
+    mockMvc
+        .perform(
+            put("/api/rosterstudents/update")
+                .with(csrf())
+                .param("id", "1")
+                .param("firstName", "ChrisNew")
+                .param("lastName", "GauchoNew")
+                .param("studentId", "A123456"))
+        .andExpect(status().isOk());
+
+    verify(rosterStudentRepository).save(rosterStudentCaptor.capture());
+    RosterStudent saved = rosterStudentCaptor.getValue();
+
+    // Assert
+    assertEquals("0101", saved.getSection());
+  }
 }
