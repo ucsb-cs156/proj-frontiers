@@ -1239,7 +1239,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
     assertEquals(
-        "Successfully deleted course staff and removed him/her from the course list",
+        "Successfully deleted staff member and removed them from the staff roster.",
         response.getResponse().getContentAsString());
   }
 
@@ -1298,7 +1298,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     verify(organizationMemberService).removeOrganizationMember(eq(staffMemberDeleted));
 
     assertEquals(
-        "Successfully deleted course staff and removed him/her from the course list and organization",
+        "Successfully deleted staff member and removed them from the staff roster and organization.",
         response.getResponse().getContentAsString());
   }
 
@@ -1318,8 +1318,8 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .email("teststaff@ucsb.edu")
             .course(course1)
             .orgStatus(OrgStatus.MEMBER)
-            .githubId(67890)
-            .githubLogin("teststaff")
+            .githubId(null)
+            .githubLogin(null)
             .build();
 
     CourseStaff staffMemberDeleted =
@@ -1357,7 +1357,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
     assertEquals(
-        "Successfully deleted course staff and removed him/her from the course list",
+        "Successfully deleted staff member and removed them from the staff roster.",
         response.getResponse().getContentAsString());
   }
 }
