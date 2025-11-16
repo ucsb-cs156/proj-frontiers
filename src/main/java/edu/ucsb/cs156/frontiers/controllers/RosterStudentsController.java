@@ -117,7 +117,8 @@ public class RosterStudentsController extends ApiController {
     courseRepository
         .findById(courseId)
         .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-    Iterable<RosterStudent> rosterStudents = rosterStudentRepository.findByCourseId(courseId);
+    Iterable<RosterStudent> rosterStudents =
+        rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(courseId);
     Iterable<RosterStudentDTO> rosterStudentDTOs =
         () ->
             java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)

@@ -340,8 +340,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // arrange
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(java.util.List.of(rs1, rs2));
-
+    when(rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(eq(1L)))
+        .thenReturn(java.util.List.of(rs1, rs2));
     List<RosterStudentDTO> expectedRosterStudents =
         java.util.List.of(new RosterStudentDTO(rs1), new RosterStudentDTO(rs2));
 
