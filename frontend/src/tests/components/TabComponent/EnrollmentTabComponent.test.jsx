@@ -760,7 +760,7 @@ describe("EnrollmentTabComponent Tests", () => {
           testIdPrefix={testId}
           currentUser={currentUserFixtures.instructorUser}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const helpIcon = await screen.findByTitle("CSV Upload format Help");
@@ -769,8 +769,6 @@ describe("EnrollmentTabComponent Tests", () => {
 
     fireEvent.click(helpIcon);
 
-    await waitFor(() =>
-      expect(helpOpen).toBeCalledWith("/help/csv", "_blank")
-    );
+    await waitFor(() => expect(helpOpen).toBeCalledWith("/help/csv", "_blank"));
   });
 });
