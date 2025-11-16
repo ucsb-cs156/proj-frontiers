@@ -744,4 +744,33 @@ describe("EnrollmentTabComponent Tests", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  test("Upload CSV Roster help icon opens /help/csv in a new tab", async () => {
+    const helpOpen = vi.fn();
+    window.open = (a, b) => helpOpen(a, b);
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>
+    );
+
+    const helpIcon = await screen.findByTitle("CSV Upload format Help");
+    expect(helpIcon).toBeInTheDocument();
+    expect(helpIcon).toHaveStyle("cursor: pointer");
+
+    fireEvent.click(helpIcon);
+
+    await waitFor(() =>
+      expect(helpOpen).toBeCalledWith("/help/csv", "_blank")
+    );
+  });
 });
