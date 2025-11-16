@@ -1,47 +1,93 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router";
 import RosterStudentDropdown from "main/components/RosterStudent/RosterStudentDropdown";
+
+const firstStudent = rosterStudentFixtures.studentsWithEachStatus[0];
+const expectedFullName = `${firstStudent.firstName} ${firstStudent.lastName}`;
+
+// Mock Typeahead
+vi.mock("react-bootstrap-typeahead", () => ({
+  Typeahead: (props) => {
+    const {
+      onChange,
+      onInputChange,
+      inputProps,
+      placeholder,
+      options,
+      selected,
+    } = props;
+
+    expect(options.length).toBeGreaterThan(0);
+    expect(options[0]).toHaveProperty("id");
+    expect(options[0].fullName).toBe(expectedFullName);
+
+    if (options.length > 0) {
+      expect(selected.length).toBe(1);
+      expect(selected[0].id).toBe(1);
+    }
+
+    onChange([{ id: 1, fullName: "Test Student" }]);
+    onChange([]);
+
+    if (onInputChange) {
+      onInputChange("typed text");
+    }
+
+    // Render a simple input
+    return (
+      <input
+        data-testid={inputProps["data-testid"]}
+        placeholder={placeholder}
+        aria-label={inputProps["aria-label"]}
+        className={inputProps.className}
+      />
+    );
+  },
+}));
 
 const queryClient = new QueryClient();
 describe("RosterStudentForm tests", () => {
   beforeEach(() => {
     queryClient.clear();
   });
-  test("that the dropdown renders correctly and handles selection", async () => {
-    const mockRegister = vi.fn(() => ({
-      name: "rosterStudentId",
-      onChange: vi.fn(),
-      onBlur: vi.fn(),
-    }));
+  test("renders invalid state and calls onChange correctly", () => {
+    const mockOnChange = vi.fn();
 
     render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <RosterStudentDropdown
-            rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
-            register={mockRegister}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
+      <RosterStudentDropdown
+        rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
+        value={1}
+        onChange={mockOnChange}
+        isInvalid={true}
+      />
     );
 
-    // Test that it renders with the default option
-    expect(screen.getByText(/Select a student\./)).toBeInTheDocument();
+    expect(mockOnChange).toHaveBeenCalledWith(1);
+    expect(mockOnChange).toHaveBeenCalledWith("");
+    expect(mockOnChange).toHaveBeenCalledWith("typed text");
 
-    // Test that all student options are rendered
-    expect(screen.getByText("Alice Brown")).toBeInTheDocument();
-    expect(screen.getByText("Tom Hanks")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Select a student.")
+    ).toBeInTheDocument();
 
-    // Test that register was called with correct validation rules
-    expect(mockRegister).toHaveBeenCalledWith("rosterStudentId", {
-      required: "Please select a student",
-    });
+    const input = screen.getByTestId("RosterStudentDropdown");
+    expect(input.className).toBe("form-control is-invalid");
+  });
 
-    // Test selection
-    const dropdown = screen.getByTestId("RosterStudentDropdown");
-    fireEvent.change(dropdown, { target: { value: "1" } });
-    expect(dropdown.value).toBe("1");
+  test("renders valid state with normal className", () => {
+    const mockOnChange = vi.fn();
+
+    render(
+      <RosterStudentDropdown
+        rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
+        value={1}
+        onChange={mockOnChange}
+        isInvalid={false}
+      />
+    );
+
+    const input = screen.getByTestId("RosterStudentDropdown");
+    expect(input.className).toBe("form-control");
   });
 });
