@@ -192,10 +192,10 @@ public class CourseStaffController extends ApiController {
     String orgRemovalErrorMessage = null;
 
     // Try to remove the student from the organization if they have a GitHub login
-    if (removeFromOrg
-        && staffMember.getGithubLogin() != null
+    if (staffMember.getGithubLogin() != null
         && course.getOrgName() != null
-        && course.getInstallationId() != null) {
+        && course.getInstallationId() != null
+        && removeFromOrg) {
       orgRemovalAttempted = true;
       try {
         organizationMemberService.removeOrganizationMember(staffMember);
