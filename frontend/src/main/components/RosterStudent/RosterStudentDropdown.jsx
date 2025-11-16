@@ -2,7 +2,12 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { Form } from "react-bootstrap";
 import "react-bootstrap-typeahead/css/Typeahead.css";
 
-export default function RosterStudentDropdown({ rosterStudents, value, onChange, isInvalid }) {
+export default function RosterStudentDropdown({
+  rosterStudents,
+  value,
+  onChange,
+  isInvalid,
+}) {
   const options = rosterStudents.map((student) => ({
     id: student.id,
     fullName: `${student.firstName} ${student.lastName}`,

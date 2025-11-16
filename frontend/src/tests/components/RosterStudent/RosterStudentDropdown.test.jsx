@@ -60,7 +60,7 @@ describe("RosterStudentForm tests", () => {
         value={1}
         onChange={mockOnChange}
         isInvalid={true}
-      />
+      />,
     );
 
     expect(mockOnChange).toHaveBeenCalledWith(1);
@@ -68,7 +68,7 @@ describe("RosterStudentForm tests", () => {
     expect(mockOnChange).toHaveBeenCalledWith("typed text");
 
     expect(
-      screen.getByPlaceholderText("Select a student.")
+      screen.getByPlaceholderText("Select a student."),
     ).toBeInTheDocument();
 
     const input = screen.getByTestId("RosterStudentDropdown");
@@ -84,7 +84,7 @@ describe("RosterStudentForm tests", () => {
         value={1}
         onChange={mockOnChange}
         isInvalid={false}
-      />
+      />,
     );
 
     const input = screen.getByTestId("RosterStudentDropdown");
