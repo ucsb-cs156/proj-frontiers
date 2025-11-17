@@ -13,26 +13,28 @@ import lombok.*;
 @Entity
 @Table(name = "assignment")
 public class Assignment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
+  @ManyToOne
+  @JoinColumn(name = "course_id", nullable = false)
+  private Course course;
 
-    @NotBlank(message = "Name must not be blank")
-    private String name;
+  @NotBlank(message = "Name must not be blank")
+  private String name;
 
-    @NotNull
-    @Pattern(regexp = "individual|team", message = "asn_type must be 'individual' or 'team'")
-    private String asn_type;
+  @NotNull
+  @Pattern(regexp = "individual|team", message = "asn_type must be 'individual' or 'team'")
+  private String asn_type;
 
-    @NotNull
-    @Pattern(regexp = "public|private", message = "visibility must be 'public' or 'private'")
-    private String visibility;
+  @NotNull
+  @Pattern(regexp = "public|private", message = "visibility must be 'public' or 'private'")
+  private String visibility;
 
-    @NotNull
-    @Pattern(regexp = "read|write|maintain|admin", message = "permission must be 'read', 'write', 'maintain', or 'admin'")
-    private String permission;
+  @NotNull
+  @Pattern(
+      regexp = "read|write|maintain|admin",
+      message = "permission must be 'read', 'write', 'maintain', or 'admin'")
+  private String permission;
 }
