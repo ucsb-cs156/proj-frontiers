@@ -8,8 +8,8 @@ import {
   ModalBody,
   ModalHeader,
   Row,
-  OverlayTrigger, 
-  Tooltip,        
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
@@ -165,7 +165,7 @@ export default function EnrollmentTabComponent({
             <Button
               onClick={() => setCsvModal(true)}
               data-testid={`${testIdPrefix}-csv-button`}
-              className="flex-grow-1" 
+              className="flex-grow-1"
             >
               Upload CSV Roster
             </Button>
@@ -179,13 +179,15 @@ export default function EnrollmentTabComponent({
                 </Tooltip>
               }
             >
-              <a  href="/help/csv"
+              <a
+                href="/help/csv"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="CSV Upload format Help"
                 style={{
                   textDecoration: "none",
-                }}>
+                }}
+              >
                 ℹ️
               </a>
             </OverlayTrigger>

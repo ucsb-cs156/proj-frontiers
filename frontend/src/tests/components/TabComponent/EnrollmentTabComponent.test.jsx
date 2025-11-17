@@ -56,9 +56,7 @@ describe("EnrollmentTabComponent Tests", () => {
     vi.resetAllMocks();
   });
   test("renders Upload CSV button with help icon and tooltip", async () => {
-    axiosMock
-      .onGet("/api/rosterstudents/course/1")
-      .reply(200, []); 
+    axiosMock.onGet("/api/rosterstudents/course/1").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -80,11 +78,10 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(screen.getByText("ℹ️")).toBeInTheDocument();
 
     fireEvent.mouseOver(helpIconLink);
-    
+
     await waitFor(() => {
       expect(screen.getByText("CSV Upload format Help")).toBeInTheDocument();
     });
-
   });
   test("Table Renders", async () => {
     axiosMock
