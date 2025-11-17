@@ -74,6 +74,7 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(helpIconLink).toHaveAttribute("href", "/help/csv");
     expect(helpIconLink).toHaveAttribute("target", "_blank");
     expect(helpIconLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(helpIconLink).toHaveStyle("text-decoration: none");
 
     expect(screen.getByText("ℹ️")).toBeInTheDocument();
 
