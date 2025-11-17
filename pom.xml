@@ -667,7 +667,6 @@
       </activation>
       <properties>
         <springProfiles>production</springProfiles>
-        <git-code-format.skip>true</git-code-format.skip>
       </properties>
       <dependencies>
         <dependency>
