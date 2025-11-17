@@ -83,6 +83,8 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(screen.getByText("CSV Upload format Help")).toBeInTheDocument();
     });
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveAttribute("id", `${testId}-csv-help-tooltip`);
   });
   test("Table Renders", async () => {
     axiosMock
