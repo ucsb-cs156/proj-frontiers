@@ -8,7 +8,7 @@ import { FcGoogle } from "react-icons/fc";
 export default function SignInProviders({ onClick }) {
   const microsoftIcon = () => {
     return (
-      <span data-testid="SignInPage-microsoftIcon">
+      <span data-testid="SignInProvider-microsoftIcon">
         <FaMicrosoft size="10em" role="img" />
       </span>
     );
@@ -18,7 +18,7 @@ export default function SignInProviders({ onClick }) {
 
   const googleIcon = () => {
     return (
-      <span data-testid="SignInPage-googleIcon">
+      <span data-testid="SignInProvider-googleIcon">
         <FcGoogle size="10em" role="img" />
       </span>
     );
@@ -29,7 +29,7 @@ export default function SignInProviders({ onClick }) {
       xs={1}
       md={2}
       className="g-5 d-flex gap-5 justify-content-center align-items-center"
-      data-testid="SignInPage-cardDisplay"
+      data-testid="SignInProvider-cardDisplay"
     >
       {systemInfo.oauthLogin && (
         <SignInCard
