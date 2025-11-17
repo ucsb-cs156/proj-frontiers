@@ -8,8 +8,8 @@ import { FcGoogle } from "react-icons/fc";
 export default function SignInProviders({ onClick }) {
   const microsoftIcon = () => {
     return (
-      <span data-testid={"SignInPage-microsoftIcon"}>
-        <FaMicrosoft size={"10em"} role={"img"} />
+      <span data-testid="SignInPage-microsoftIcon">
+        <FaMicrosoft size="10em" role="img" />
       </span>
     );
   };
@@ -18,8 +18,8 @@ export default function SignInProviders({ onClick }) {
 
   const googleIcon = () => {
     return (
-      <span data-testid={"SignInPage-googleIcon"}>
-        <FcGoogle size={"10em"} role={"img"} />
+      <span data-testid="SignInPage-googleIcon">
+        <FcGoogle size="10em" role="img" />
       </span>
     );
   };
@@ -28,13 +28,13 @@ export default function SignInProviders({ onClick }) {
     <Row
       xs={1}
       md={2}
-      className={"g-5 d-flex gap-5 justify-content-center align-items-center"}
-      data-testid={"SignInPage-cardDisplay"}
+      className="g-5 d-flex gap-5 justify-content-center align-items-center"
+      data-testid="SignInPage-cardDisplay"
     >
       {systemInfo.oauthLogin && (
         <SignInCard
           Icon={googleIcon}
-          title={"Sign in with Google"}
+          title="Sign in with Google"
           description={
             <>
               If you have credentials with these schools, sign in with Google
@@ -46,14 +46,14 @@ export default function SignInProviders({ onClick }) {
             </>
           }
           url={systemInfo.oauthLogin}
-          testid={"google"}
+          testid="google"
           onClick={onClick}
         />
       )}
       {systemInfo.activeDirectoryUrl && (
         <SignInCard
           Icon={microsoftIcon}
-          title={"Sign in with Microsoft"}
+          title="Sign in with Microsoft"
           description={
             <>
               If you have credentials with these schools, sign in with Microsoft
@@ -65,12 +65,10 @@ export default function SignInProviders({ onClick }) {
             </>
           }
           url={systemInfo.activeDirectoryUrl}
-          testid={"microsoft"}
+          testid="microsoft"
           onClick={onClick}
         />
       )}
     </Row>
   );
 }
-
-
