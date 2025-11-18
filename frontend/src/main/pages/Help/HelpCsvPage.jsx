@@ -263,7 +263,10 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>section</td>
                     <td>Course section name/time</td>
-                    <td>Identifies which section of the course this student is enrolled in</td>
+                    <td>
+                      Identifies which section of the course this student is
+                      enrolled in
+                    </td>
                   </tr>
                   <tr>
                     <td>userId</td>
@@ -296,7 +299,9 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>teams</td>
                     <td>List of team names</td>
-                    <td>Identifies which team(s) the student is a part of, if any</td>
+                    <td>
+                      Identifies which team(s) the student is a part of, if any
+                    </td>
                   </tr>
                 </tbody>
               </table>
