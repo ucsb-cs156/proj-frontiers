@@ -278,6 +278,9 @@ describe("CourseStaffTable tests", () => {
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
     expect(axiosMock.history.delete[0].params).toEqual({ id: 1 });
+    await waitFor(() =>
+      expect(screen.queryByText("Delete Staff")).not.toBeInTheDocument(),
+    );
     expect(mockToast).toBeCalledWith("Staff deleted successfully.");
   });
 

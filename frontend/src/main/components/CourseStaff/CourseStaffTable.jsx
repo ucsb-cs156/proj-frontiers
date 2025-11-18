@@ -22,9 +22,9 @@ export default function CourseStaffTable({
 
   // Stryker disable all
   const onDeleteSuccess = () => {
-      toast("Staff deleted successfully.");
-      hideDeleteModal();
-    };
+    toast("Staff deleted successfully.");
+    hideDeleteModal();
+  };
   // Stryker restore all
 
   function cellToAxiosParamsDelete(cell) {
@@ -80,15 +80,15 @@ export default function CourseStaffTable({
   };
 
   const submitDeleteForm = (data) => {
-  deleteMutation.mutate({
-    row: {
-      original: {
-        id: deleteStaff,
+    deleteMutation.mutate({
+      row: {
+        original: {
+          id: deleteStaff,
+        },
       },
-    },
-    ...data, 
-  });
-};
+      ...data,
+    });
+  };
 
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
@@ -241,10 +241,10 @@ export default function CourseStaffTable({
         </Modal.Body>
       </Modal>
       <CourseStaffDeleteModal
-              showModal={showDeleteModal}
-              toggleShowModal={setShowDeleteModal}
-              onSubmitAction={submitDeleteForm}
-            />
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
+      />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}
