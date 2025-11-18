@@ -41,9 +41,10 @@ ThreeItemsAdminUser.parameters = {
     http.delete("/api/coursestaff/delete", ({ request }) => {
       const url = new URL(request.url);
       const params = Object.fromEntries(new URL(request.url).searchParams);
-      const message = params.removeFromOrg === "true" 
-        ? "Staff member deleted and removed from organization"
-        : "Staff member deleted successfully";
+      const message =
+        params.removeFromOrg === "true"
+          ? "Staff member deleted and removed from organization"
+          : "Staff member deleted successfully";
       window.alert(
         "Invoked delete with URL: " +
           url +
@@ -70,9 +71,10 @@ ItemWithEachStatusAdminUser.parameters = {
     http.delete("/api/coursestaff/delete", ({ request }) => {
       const url = new URL(request.url);
       const params = Object.fromEntries(new URL(request.url).searchParams);
-      const message = params.removeFromOrg === "true" 
-        ? "Staff member deleted and removed from organization"
-        : "Staff member deleted successfully";
+      const message =
+        params.removeFromOrg === "true"
+          ? "Staff member deleted and removed from organization"
+          : "Staff member deleted successfully";
       window.alert(
         "Invoked delete with URL: " +
           url +

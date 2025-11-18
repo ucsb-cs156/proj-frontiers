@@ -275,7 +275,9 @@ describe("CourseStaffTable tests", () => {
       expect(screen.getByTestId("CourseStaffDeleteModal")).toBeInTheDocument();
     });
     expect(
-      screen.getByText("Are you sure you want to delete this course staff member?"),
+      screen.getByText(
+        "Are you sure you want to delete this course staff member?",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -413,12 +415,16 @@ describe("CourseStaffTable tests", () => {
 
     // assert - check that the modal is closed and toast is called
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith("Staff member deleted successfully");
+      expect(mockToast).toHaveBeenCalledWith(
+        "Staff member deleted successfully",
+      );
     });
 
     // Modal should be closed
     await waitFor(() => {
-      expect(screen.queryByTestId("CourseStaffDeleteModal")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("CourseStaffDeleteModal"),
+      ).not.toBeInTheDocument();
     });
   });
 
