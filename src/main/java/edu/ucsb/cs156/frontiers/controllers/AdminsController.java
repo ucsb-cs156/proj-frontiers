@@ -47,7 +47,7 @@ public class AdminsController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/post")
   public Admin postAdmin(@Parameter(name = "email") @RequestParam String email) {
-    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);
+    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email).strip();
     Admin admin = new Admin(convertedEmail);
     Admin savedAdmin = adminRepository.save(admin);
     return savedAdmin;

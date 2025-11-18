@@ -89,7 +89,7 @@ public class RosterStudentsController extends ApiController {
             .studentId(studentId)
             .firstName(firstName)
             .lastName(lastName)
-            .email(email)
+            .email(email.strip())
             .build();
 
     UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
@@ -126,7 +126,7 @@ public class RosterStudentsController extends ApiController {
 
   public static UpsertResponse upsertStudent(
       RosterStudent student, Course course, RosterStatus rosterStatus) {
-    String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
+    String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail()).strip();
     Optional<RosterStudent> existingStudent =
         course.getRosterStudents().stream()
             .filter(
