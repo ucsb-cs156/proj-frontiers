@@ -261,6 +261,11 @@ export default function HelpCsvPage() {
                     <td></td>
                   </tr>
                   <tr>
+                    <td>section</td>
+                    <td>Course section name/time</td>
+                    <td>Identifies which section of the course this student is enrolled in</td>
+                  </tr>
+                  <tr>
                     <td>userId</td>
                     <td>Internal user ID</td>
                     <td>Links to the user account in the system</td>
@@ -287,6 +292,11 @@ export default function HelpCsvPage() {
                     <td>orgStatus</td>
                     <td>GitHub organization status</td>
                     <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
+                  </tr>
+                  <tr>
+                    <td>teams</td>
+                    <td>List of team names</td>
+                    <td>Identifies which team(s) the student is a part of, if any</td>
                   </tr>
                 </tbody>
               </table>
