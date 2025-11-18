@@ -191,7 +191,7 @@ public class CourseStaffController extends ApiController {
     boolean orgRemovalSuccessful = false;
     String orgRemovalErrorMessage = null;
 
-    // Try to remove the student from the organization if they have a GitHub login
+    // Try to remove the course staff from the organization if they have a GitHub login
     if (staffMember.getGithubLogin() != null
         && course.getOrgName() != null
         && course.getInstallationId() != null
@@ -201,7 +201,7 @@ public class CourseStaffController extends ApiController {
         organizationMemberService.removeOrganizationMember(staffMember);
         orgRemovalSuccessful = true;
       } catch (Exception e) {
-        log.error("Error removing student from organization: {}", e.getMessage());
+        log.error("Error removing course staff from organization: {}", e.getMessage());
         orgRemovalErrorMessage = e.getMessage();
         // Continue with deletion even if organization removal fails
       }
