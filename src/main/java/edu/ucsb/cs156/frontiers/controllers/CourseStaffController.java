@@ -178,7 +178,7 @@ public class CourseStaffController extends ApiController {
       @Parameter(
               name = "removeFromOrg",
               description = "Whether to remove staff from GitHub organization")
-          @RequestParam(defaultValue = "true")
+          @RequestParam(defaultValue = "false")
           boolean removeFromOrg)
       throws EntityNotFoundException {
     CourseStaff staffMember =

@@ -272,11 +272,13 @@ describe("CourseStaffTable tests", () => {
 
     // act - click the delete button
     fireEvent.click(deleteButton);
-
+    await screen.findByTestId("CourseStaffDeleteModal");
+    fireEvent.click(screen.getByText("Delete Staff"));
     // assert - check that the delete endpoint was called
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
     expect(axiosMock.history.delete[0].params).toEqual({ id: 1 });
+    expect(mockToast).toBeCalledWith("Staff deleted successfully.");
   });
 
   test("tooltips for PENDING status", async () => {

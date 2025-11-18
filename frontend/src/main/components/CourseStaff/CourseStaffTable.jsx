@@ -7,6 +7,7 @@ import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import { toast } from "react-toastify";
+import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal";
 
 export default function CourseStaffTable({
   staff,
@@ -16,12 +17,14 @@ export default function CourseStaffTable({
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStaff, setEditStaff] = React.useState(null);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [deleteStaff, setDeleteStaff] = React.useState(null);
 
   // Stryker disable all
-  function onDeleteSuccess(message) {
-    console.log(message);
-    toast(message);
-  }
+  const onDeleteSuccess = () => {
+      toast("Staff deleted successfully.");
+      hideDeleteModal();
+    };
   // Stryker restore all
 
   function cellToAxiosParamsDelete(cell) {
@@ -66,10 +69,26 @@ export default function CourseStaffTable({
     hideModal();
   };
 
+  const hideDeleteModal = () => {
+    setShowDeleteModal(false);
+  };
+
   // Stryker disable next-line all
   const deleteCallback = async (cell) => {
-    deleteMutation.mutate(cell);
+    setShowDeleteModal(true);
+    setDeleteStaff(cell.row.original.id);
   };
+
+  const submitDeleteForm = (data) => {
+  deleteMutation.mutate({
+    row: {
+      original: {
+        id: deleteStaff,
+      },
+    },
+    ...data, 
+  });
+};
 
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
@@ -221,7 +240,11 @@ export default function CourseStaffTable({
           />
         </Modal.Body>
       </Modal>
-
+      <CourseStaffDeleteModal
+              showModal={showDeleteModal}
+              toggleShowModal={setShowDeleteModal}
+              onSubmitAction={submitDeleteForm}
+            />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}
