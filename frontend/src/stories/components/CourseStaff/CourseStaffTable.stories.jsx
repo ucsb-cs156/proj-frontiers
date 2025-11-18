@@ -40,18 +40,21 @@ ThreeItemsAdminUser.parameters = {
   msw: [
     http.delete("/api/coursestaff/delete", ({ request }) => {
       const url = new URL(request.url);
+      const params = Object.fromEntries(new URL(request.url).searchParams);
+      const message = params.removeFromOrg === "true" 
+        ? "Staff member deleted and removed from organization"
+        : "Staff member deleted successfully";
       window.alert(
         "Invoked delete with URL: " +
           url +
           " and params: " +
-          JSON.stringify(Object.fromEntries(url.searchParams)),
+          JSON.stringify(params) +
+          "\nResponse message: " +
+          message,
       );
-      return HttpResponse.json(
-        {},
-        {
-          status: 200,
-        },
-      );
+      return HttpResponse.json(message, {
+        status: 200,
+      });
     }),
   ],
 };
@@ -66,18 +69,21 @@ ItemWithEachStatusAdminUser.parameters = {
   msw: [
     http.delete("/api/coursestaff/delete", ({ request }) => {
       const url = new URL(request.url);
+      const params = Object.fromEntries(new URL(request.url).searchParams);
+      const message = params.removeFromOrg === "true" 
+        ? "Staff member deleted and removed from organization"
+        : "Staff member deleted successfully";
       window.alert(
         "Invoked delete with URL: " +
           url +
           " and params: " +
-          JSON.stringify(Object.fromEntries(url.searchParams)),
+          JSON.stringify(params) +
+          "\nResponse message: " +
+          message,
       );
-      return HttpResponse.json(
-        {},
-        {
-          status: 200,
-        },
-      );
+      return HttpResponse.json(message, {
+        status: 200,
+      });
     }),
   ],
 };
