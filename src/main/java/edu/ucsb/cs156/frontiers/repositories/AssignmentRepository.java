@@ -1,7 +1,7 @@
 package edu.ucsb.cs156.frontiers.repositories;
 
 import edu.ucsb.cs156.frontiers.entities.Assignment;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 @Repository
-public interface AssignmentRepository extends CrudRepository<Assignment, Long> {}
+public interface AssignmentRepository extends JpaRepository<Assignment, Long> {}
