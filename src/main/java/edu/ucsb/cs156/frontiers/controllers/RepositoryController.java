@@ -47,7 +47,8 @@ public class RepositoryController extends ApiController {
       @RequestParam String repoPrefix,
       @RequestParam Optional<Boolean> isPrivate,
       @RequestParam RepositoryPermissions permissions,
-      @RequestParam Optional<RepositoryCreationOption> creationOption) {
+      @RequestParam(required = false, defaultValue = "STUDENTS_ONLY")
+          RepositoryCreationOption creationOption) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -62,7 +63,7 @@ public class RepositoryController extends ApiController {
               .repositoryService(repositoryService)
               .course(course)
               .permissions(permissions)
-              .creationOption(creationOption.orElse(RepositoryCreationOption.STUDENTS_ONLY))
+              .creationOption(creationOption)
               .build();
       return jobService.runAsJob(job);
     }

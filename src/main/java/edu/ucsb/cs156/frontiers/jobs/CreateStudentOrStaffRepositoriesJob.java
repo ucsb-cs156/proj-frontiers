@@ -18,17 +18,15 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
   String repositoryPrefix;
   Boolean isPrivate;
   RepositoryPermissions permissions;
-  RepositoryCreationOption creationOption;
+
+  @Builder.Default RepositoryCreationOption creationOption = RepositoryCreationOption.STUDENTS_ONLY;
 
   @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Processing...");
 
-    RepositoryCreationOption option =
-        (creationOption != null) ? creationOption : RepositoryCreationOption.STUDENTS_ONLY;
-
-    if (option == RepositoryCreationOption.STUDENTS_ONLY
-        || option == RepositoryCreationOption.STUDENTS_AND_STAFF) {
+    if (creationOption == RepositoryCreationOption.STUDENTS_ONLY
+        || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
       for (RosterStudent student : course.getRosterStudents()) {
         if (student.getGithubLogin() != null
             && (student.getOrgStatus() == OrgStatus.MEMBER
@@ -39,8 +37,8 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
       }
     }
 
-    if (option == RepositoryCreationOption.STAFF_ONLY
-        || option == RepositoryCreationOption.STUDENTS_AND_STAFF) {
+    if (creationOption == RepositoryCreationOption.STAFF_ONLY
+        || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
       for (CourseStaff staff : course.getCourseStaff()) {
         if (staff.getGithubLogin() != null
             && (staff.getOrgStatus() == OrgStatus.MEMBER
