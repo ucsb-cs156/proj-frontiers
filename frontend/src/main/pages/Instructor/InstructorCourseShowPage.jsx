@@ -141,6 +141,10 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           />
         </Tab>
+        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
+          {/*TODO: eventually add a settings tab component*/}
+          Coming Soon
+        </Tab>
       </Tabs>
     </BasicLayout>
   );
