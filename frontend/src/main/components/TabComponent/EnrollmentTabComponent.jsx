@@ -18,7 +18,6 @@ import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsT
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 
-
 export default function EnrollmentTabComponent({
   courseId,
   testIdPrefix,
@@ -194,7 +193,7 @@ export default function EnrollmentTabComponent({
               </span>
             </OverlayTrigger>
           </div>
-        </Col>        
+        </Col>
         <Col>
           <Button
             onClick={() => setPostModal(true)}

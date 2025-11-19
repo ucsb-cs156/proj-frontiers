@@ -23,7 +23,6 @@ import { vi } from "vitest";
 import { toast } from "react-toastify";
 import { MemoryRouter } from "react-router";
 
-
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
@@ -72,8 +71,7 @@ describe("EnrollmentTabComponent Tests", () => {
             currentUser={currentUserFixtures.instructorUser}
           />
         </QueryClientProvider>
-      </MemoryRouter>
-
+      </MemoryRouter>,
     );
 
     const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
@@ -101,15 +99,14 @@ describe("EnrollmentTabComponent Tests", () => {
 
     render(
       <MemoryRouter>
-      <QueryClientProvider client={queryClient}>
-        <EnrollmentTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>
-      </MemoryRouter>
-
+        <QueryClientProvider client={queryClient}>
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
 
     await waitFor(() => {
@@ -157,14 +154,13 @@ describe("EnrollmentTabComponent Tests", () => {
 
     render(
       <MemoryRouter>
-
-      <QueryClientProvider client={queryClient}>
-        <EnrollmentTabComponent
-          courseId={1}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          <EnrollmentTabComponent
+            courseId={1}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
       </MemoryRouter>,
     );
 
@@ -207,16 +203,15 @@ describe("EnrollmentTabComponent Tests", () => {
 
     const user = userEvent.setup();
     render(
-        <MemoryRouter>
-
-      <QueryClientProvider client={queryClientSpecific}>
-        <ArbitraryTestQueryComponent />
-        <EnrollmentTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>  
+      <MemoryRouter>
+        <QueryClientProvider client={queryClientSpecific}>
+          <ArbitraryTestQueryComponent />
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
       </MemoryRouter>,
     );
     const openModal = await screen.findByTestId(`${testId}-csv-button`);
@@ -282,16 +277,15 @@ describe("EnrollmentTabComponent Tests", () => {
 
     const user = userEvent.setup();
     render(
-        <MemoryRouter>
-
-      <QueryClientProvider client={queryClient}>
-        <EnrollmentTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>
-        </MemoryRouter>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
     const openModal = await screen.findByTestId(`${testId}-csv-button`);
 
@@ -333,15 +327,15 @@ describe("EnrollmentTabComponent Tests", () => {
 
     const user = userEvent.setup();
     render(
-        <MemoryRouter>
-      <QueryClientProvider client={queryClient}>
-        <EnrollmentTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>
-        </MemoryRouter>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
     const openModal = await screen.findByTestId(`${testId}-csv-button`);
 
@@ -406,16 +400,16 @@ describe("EnrollmentTabComponent Tests", () => {
 
     axiosMock.onPost("/api/rosterstudents/post").reply(200);
     render(
-        <MemoryRouter>
-      <QueryClientProvider client={queryClientSpecific}>
-        <ArbitraryTestQueryComponent />
-        <EnrollmentTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>
-        </MemoryRouter>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClientSpecific}>
+          <ArbitraryTestQueryComponent />
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
 
     //Great time to check initial values
@@ -503,16 +497,16 @@ describe("EnrollmentTabComponent Tests", () => {
 
     axiosMock.onPost("/api/rosterstudents/post").reply(409, postResponse);
     render(
-        <MemoryRouter>
-      <QueryClientProvider client={queryClientSpecific}>
-        <ArbitraryTestQueryComponent />
-        <EnrollmentTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>
-              </MemoryRouter>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClientSpecific}>
+          <ArbitraryTestQueryComponent />
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
 
     //Great time to check initial values
@@ -565,15 +559,14 @@ describe("EnrollmentTabComponent Tests", () => {
 
     render(
       <MemoryRouter>
-
-      <QueryClientProvider client={queryClient}>
-        <ArbitraryTestQueryComponent />
-        <EnrollmentTabComponent
-          courseId={7}
-          testIdPrefix={testId}
-          currentUser={currentUserFixtures.instructorUser}
-        />
-      </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          <ArbitraryTestQueryComponent />
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
       </MemoryRouter>,
     );
 
@@ -625,13 +618,13 @@ describe("EnrollmentTabComponent Tests", () => {
     test("PLaceholder, initial check", async () => {
       render(
         <MemoryRouter>
-        <QueryClientProvider client={queryClient}>
-          <EnrollmentTabComponent
-            courseId={1}
-            testIdPrefix={testId}
-            currentUser={currentUserFixtures.instructorUser}
-          />
-        </QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            <EnrollmentTabComponent
+              courseId={1}
+              testIdPrefix={testId}
+              currentUser={currentUserFixtures.instructorUser}
+            />
+          </QueryClientProvider>
         </MemoryRouter>,
       );
       await waitFor(() => {
@@ -660,13 +653,13 @@ describe("EnrollmentTabComponent Tests", () => {
     test("First Name, Email", async () => {
       render(
         <MemoryRouter>
-        <QueryClientProvider client={queryClient}>
-          <EnrollmentTabComponent
-            courseId={1}
-            testIdPrefix={testId}
-            currentUser={currentUserFixtures.instructorUser}
-          />
-        </QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            <EnrollmentTabComponent
+              courseId={1}
+              testIdPrefix={testId}
+              currentUser={currentUserFixtures.instructorUser}
+            />
+          </QueryClientProvider>
         </MemoryRouter>,
       );
 
@@ -729,13 +722,13 @@ describe("EnrollmentTabComponent Tests", () => {
     test("GitHub Login, Student ID", async () => {
       render(
         <MemoryRouter>
-        <QueryClientProvider client={queryClient}>
-          <EnrollmentTabComponent
-            courseId={1}
-            testIdPrefix={testId}
-            currentUser={currentUserFixtures.instructorUser}
-          />
-        </QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            <EnrollmentTabComponent
+              courseId={1}
+              testIdPrefix={testId}
+              currentUser={currentUserFixtures.instructorUser}
+            />
+          </QueryClientProvider>
         </MemoryRouter>,
       );
       await waitFor(() => {
