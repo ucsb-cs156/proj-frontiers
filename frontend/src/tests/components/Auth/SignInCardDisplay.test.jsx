@@ -101,9 +101,9 @@ describe("SignInCardDisplay Tests", () => {
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
-    
+
     const mockOnClick = vi.fn();
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <SignInCardDisplay onClick={mockOnClick} />
@@ -111,8 +111,10 @@ describe("SignInCardDisplay Tests", () => {
     );
 
     await screen.findByText("Sign in with Google");
-    const button = within(screen.getByTestId("SignInCard-base-google")).getByText("Log In");
-    
+    const button = within(
+      screen.getByTestId("SignInCard-base-google"),
+    ).getByText("Log In");
+
     fireEvent.click(button);
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
