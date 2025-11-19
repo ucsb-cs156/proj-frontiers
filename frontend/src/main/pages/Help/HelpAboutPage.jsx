@@ -112,7 +112,7 @@ export default function HelpAboutPage() {
                 </li>
                 <li>
                   Instructors will be able to calculate interrater reliability
-                  using metrics such as Cohen's Kappa and Kronbach's Alpha to
+                  using metrics such as Cohen&apos;s Kappa and Kronbach&apos;s Alpha to
                   determine whether students are applying the rubric in a way
                   that is consistent with experts.
                 </li>

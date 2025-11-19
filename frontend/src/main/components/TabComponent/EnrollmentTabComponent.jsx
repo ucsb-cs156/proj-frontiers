@@ -122,7 +122,7 @@ export default function EnrollmentTabComponent({
         <ModalHeader closeButton>Upload CSV Roster</ModalHeader>
         <ModalBody>
           <p>
-            The following students couldn't be uploaded to the roster as their
+            The following students couldn&apos;t be uploaded to the roster as their
             emails and student IDs match two separate students:
           </p>
           <RosterStudentTable
