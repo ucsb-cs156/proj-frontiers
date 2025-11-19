@@ -179,20 +179,22 @@ export default function EnrollmentTabComponent({
                 </Tooltip>
               }
             >
-              {/* Stryker disable next-line ObjectLiteral,StringLiteral: layout-only styling */}
-              <span className="d-inline-block" style={{ position: "relative" }}>
-                <Link
-                  to="/help/csv"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="CSV upload help"
-                  data-testid={`${testIdPrefix}-csv-info-link`}
-                  className="d-flex align-items-center text-decoration-none text-primary"
-                  style={{ cursor: "pointer", fontSize: "1.4rem" }}
-                >
-                  ℹ️
-                </Link>
-              </span>
+              {
+                // Stryker disable next-line ObjectLiteral,StringLiteral: layout-only styling 
+                <span className="d-inline-block" style={{ position: "relative" }}>
+                  <Link
+                    to="/help/csv"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="CSV upload help"
+                    data-testid={`${testIdPrefix}-csv-info-link`}
+                    className="d-flex align-items-center text-decoration-none text-primary"
+                    style={{ cursor: "pointer", fontSize: "1.4rem" }}
+                  >
+                    ℹ️
+                  </Link>
+                </span>
+              }
             </OverlayTrigger>
           </div>
         </Col>
