@@ -59,6 +59,66 @@ export default function HelpCsvPage() {
                       to <code> @ucsb.edu</code>
                     </td>
                   </tr>
+                  <tr>
+                    <td>Enrl Cd</td>
+                    <td>Section</td>
+                    <td>Enrollment Code is used for Section</td>
+                  </tr>
+                  <tr>
+                    <td>Course ID</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Grade</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Final Units</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Quarter</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Section</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Meeting Time(s) / Location(s)</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>ClassLevel</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Major1</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Major2</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Date/Time</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Pronoun</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
                 </tbody>
               </table>
             </Accordion.Body>
@@ -105,6 +165,16 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td></td>
                   </tr>
+                  <tr>
+                    <td>Student ID</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Section Name</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
                 </tbody>
               </table>
             </Accordion.Body>
@@ -147,6 +217,41 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td>Email</td>
                     <td></td>
+                  </tr>
+                  <tr>
+                    <td>Full Name</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Canvas user id</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Overall course grade</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Assignment on time percent</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Last page view time</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Last participation time</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Last logged out</td>
+                    <td></td>
+                    <td>Ignored</td>
                   </tr>
                 </tbody>
               </table>
