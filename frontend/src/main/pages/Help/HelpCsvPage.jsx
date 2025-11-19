@@ -11,9 +11,9 @@ export default function HelpCsvPage() {
         <h2>Roster Student CSV Upload formats</h2>
         <p>
           Instructors can upload a course roster from a CSV file. The following
-          formats are supported. If you would like your university&apos;s format to
-          be supported, please contact the Frontiers development team, supplying
-          a sample CSV (with fictional data).
+          formats are supported. If you would like your university&apos;s format
+          to be supported, please contact the Frontiers development team,
+          supplying a sample CSV (with fictional data).
         </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
