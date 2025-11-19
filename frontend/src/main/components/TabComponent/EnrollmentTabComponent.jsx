@@ -173,11 +173,13 @@ export default function EnrollmentTabComponent({
             <OverlayTrigger
               placement="right"
               overlay={
+                // Stryker disable next-line StringLiteral: tooltip id is not behaviorally significant
                 <Tooltip id={`${testIdPrefix}-csv-help-tooltip`}>
                   CSV Upload format Help
                 </Tooltip>
               }
             >
+              {/* Stryker disable next-line ObjectLiteral,StringLiteral: layout-only styling */}
               <span className="d-inline-block" style={{ position: "relative" }}>
                 <Link
                   to="/help/csv"
