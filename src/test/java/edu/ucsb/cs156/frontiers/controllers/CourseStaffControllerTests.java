@@ -1362,4 +1362,181 @@ public class CourseStaffControllerTests extends ControllerTestCase {
         "Successfully deleted staff member and removed them from the staff roster.",
         response.getResponse().getContentAsString());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteCourseStaff_withRemoveFromOrgTrue_noGithubLogin_success() throws Exception {
+    // Set up course with org name and installation ID and staff member without GitHub login
+    course1.setOrgName("test-org");
+    course1.setInstallationId("12345");
+
+    CourseStaff staffMember =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(course1)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(null)
+            .githubLogin(null)
+            .build();
+
+    CourseStaff staffMemberDeleted =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(null)
+            .githubLogin(null)
+            .build();
+
+    List<CourseStaff> staffList = new ArrayList<>();
+    staffList.add(staffMember);
+    course1.setCourseStaff(staffList);
+
+    when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/coursestaff/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("courseId", "1")
+                    .param("removeFromOrg", "true"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseStaffRepository).delete(eq(staffMemberDeleted));
+    // Verify that removeOrganizationMember is NOT called (student has no GitHub login)
+    verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
+
+    assertEquals(
+        "Successfully deleted staff member and removed them from the staff roster.",
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteCourseStaff_withRemoveFromOrgTrue_noOrgName_success() throws Exception {
+    // Course has no org name but staff member has GitHub login; removeFromOrg=true should not
+    // attempt org removal
+    course1.setOrgName(null);
+    course1.setInstallationId("12345");
+
+    CourseStaff staffMember =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(course1)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
+
+    CourseStaff staffMemberDeleted =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
+
+    List<CourseStaff> staffList = new ArrayList<>();
+    staffList.add(staffMember);
+    course1.setCourseStaff(staffList);
+
+    when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/coursestaff/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("courseId", "1")
+                    .param("removeFromOrg", "true"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseStaffRepository).delete(eq(staffMemberDeleted));
+    // Verify that removeOrganizationMember is NOT called (course has no org name)
+    verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
+
+    assertEquals(
+        "Successfully deleted staff member and removed them from the staff roster.",
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testDeleteCourseStaff_withRemoveFromOrgTrue_noInstallationId_success()
+      throws Exception {
+    // Course has no installation id but staff member has GitHub login; removeFromOrg=true should
+    // not attempt org removal
+    course1.setOrgName("test-org");
+    course1.setInstallationId(null);
+
+    CourseStaff staffMember =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(course1)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
+
+    CourseStaff staffMemberDeleted =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("Staff")
+            .email("teststaff@ucsb.edu")
+            .course(null)
+            .orgStatus(OrgStatus.MEMBER)
+            .githubId(67890)
+            .githubLogin("teststaff")
+            .build();
+
+    List<CourseStaff> staffList = new ArrayList<>();
+    staffList.add(staffMember);
+    course1.setCourseStaff(staffList);
+
+    when(courseStaffRepository.findById(eq(1L))).thenReturn(Optional.of(staffMember));
+    when(courseRepository.save(any(Course.class))).thenReturn(course1);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/coursestaff/delete")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("courseId", "1")
+                    .param("removeFromOrg", "true"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseStaffRepository).delete(eq(staffMemberDeleted));
+    // Verify that removeOrganizationMember is NOT called (course has no installation id)
+    verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
+
+    assertEquals(
+        "Successfully deleted staff member and removed them from the staff roster.",
+        response.getResponse().getContentAsString());
+  }
 }
