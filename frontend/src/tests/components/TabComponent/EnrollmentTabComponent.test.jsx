@@ -477,6 +477,53 @@ describe("EnrollmentTabComponent Tests", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("CSV info icon renders with tooltip and correct styles", async () => {
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    render(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <EnrollmentTabComponent
+            courseId={7}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+
+    // Wait for table to load so the component is fully rendered
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(
+          "InstructorCourseShowPage-RosterStudentTable-cell-row-0-col-id",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    const infoIcon = screen.getByTestId(
+      "InstructorCourseShowPage-csv-info-link",
+    );
+    expect(infoIcon).toBeInTheDocument();
+
+    // Style assertions (kills ObjectLiteral / StringLiteral mutants on style)
+    expect(infoIcon).toHaveStyle("cursor: pointer");
+
+    // Depending on whether style is on the <a> or inner <span>, you can
+    // also assert font size (adjust selector if needed):
+    expect(infoIcon).toHaveStyle("font-size: 1.4rem");
+
+    // Tooltip behavior (hover → text appears)
+    const user = userEvent.setup();
+    await user.hover(infoIcon);
+
+    await waitFor(() => {
+      expect(screen.getByText("CSV Upload format Help")).toBeInTheDocument();
+    });
+  });
+
   test("RosterStudentForm works on error", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
