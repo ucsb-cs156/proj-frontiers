@@ -1,5 +1,6 @@
 import { toast } from "react-toastify";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
+import { Link } from "react-router";
 import React, { useState } from "react";
 import {
   Button,
@@ -14,6 +15,9 @@ import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
 import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsTable";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
+
 
 export default function EnrollmentTabComponent({
   courseId,
@@ -158,14 +162,39 @@ export default function EnrollmentTabComponent({
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
-          <Button
-            onClick={() => setCsvModal(true)}
-            data-testid={`${testIdPrefix}-csv-button`}
-            className="w-100"
-          >
-            Upload CSV Roster
-          </Button>
-        </Col>
+          <div className="d-flex align-items-center gap-2">
+            <Button
+              onClick={() => setCsvModal(true)}
+              data-testid={`${testIdPrefix}-csv-button`}
+              className="flex-grow-1"
+            >
+              Upload CSV Roster
+            </Button>
+
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id={`${testIdPrefix}-csv-help-tooltip`}>
+                  CSV Upload format Help
+                </Tooltip>
+              }
+            >
+              <span className="d-inline-block" style={{ position: "relative" }}>
+                <Link
+                  to="/help/csv"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="CSV upload help"
+                  data-testid={`${testIdPrefix}-csv-info-link`}
+                  className="d-flex align-items-center text-decoration-none text-primary"
+                  style={{ cursor: "pointer", fontSize: "1.4rem" }}
+                >
+                  ℹ️
+                </Link>
+              </span>
+            </OverlayTrigger>
+          </div>
+        </Col>        
         <Col>
           <Button
             onClick={() => setPostModal(true)}
