@@ -180,9 +180,9 @@ export default function EnrollmentTabComponent({
               }
             >
               {
-                // Stryker disable next-line ObjectLiteral,StringLiteral: layout-only styling
                 <span
                   className="d-inline-block"
+                  // Stryker disable next-line ObjectLiteral,StringLiteral: layout-only styling
                   style={{ position: "relative" }}
                 >
                   <Link
