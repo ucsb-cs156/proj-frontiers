@@ -17,8 +17,9 @@ export default function HelpCsvPage() {
         </p>
         <h3>How "Dropped" Students Are Handled</h3>
         <p>
-          Only students that appeared in an uploaded CSV and then did NOT appear in a subsequent CSV upload
-          are considered dropped; manually added students are never put into the dropped section
+          Only students that appeared in an uploaded CSV and then did NOT appear
+          in a subsequent CSV upload are considered dropped; manually added
+          students are never put into the dropped section
         </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
