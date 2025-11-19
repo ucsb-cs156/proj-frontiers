@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
-
 describe("index.html", () => {
   // tests that the title is Frontiers; fails if it is not
   it("has the expected <title> Frontiers", () => {
@@ -16,4 +15,3 @@ describe("index.html", () => {
     expect(title).toBe("Frontiers");
   });
 });
-
