@@ -166,7 +166,7 @@ export default function EnrollmentTabComponent({
             <Button
               onClick={() => setCsvModal(true)}
               data-testid={`${testIdPrefix}-csv-button`}
-              className="flex-grow-1"
+              className="w-100"
             >
               Upload CSV Roster
             </Button>
