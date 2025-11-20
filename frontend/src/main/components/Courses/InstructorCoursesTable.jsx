@@ -17,6 +17,7 @@ export default function InstructorCoursesTable({
   currentUser,
   testId = "InstructorCoursesTable",
   enableInstructorUpdate = false,
+  deleteCourseButton = false,
 }) {
   const location = useLocation();
 
@@ -34,10 +35,24 @@ export default function InstructorCoursesTable({
     return false;
   };
 
+  const canDelete = (row) => {
+    if (
+      hasRole(currentUser, "ROLE_ADMIN") &&
+      row.original.numStudents === 0 &&
+      row.original.numStaff === 0
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showCourseEditModal, setShowCourseEditModal] = useState(false);
   const [selectedCourseForEdit, setSelectedCourseForEdit] = useState(null);
+  const [showCourseDeleteModal, setShowCourseDeleteModal] = useState(false);
+  const [selectedCourseForDelete, setSelectedCourseForDelete] = useState(null);
 
   const handleShowCourseEditModal = (course) => {
     setSelectedCourseForEdit(course);
@@ -47,6 +62,16 @@ export default function InstructorCoursesTable({
   const handleCloseCourseEditModal = () => {
     setShowCourseEditModal(false);
     setSelectedCourseForEdit(null);
+  };
+
+  const handleShowCourseDeleteModal = (course) => {
+    setSelectedCourseForDelete(course);
+    setShowCourseDeleteModal(true);
+  };
+
+  const handleCloseCourseDeleteModal = () => {
+    setShowCourseDeleteModal(false);
+    setSelectedCourseForDelete(null);
   };
 
   const columns = [
@@ -111,6 +136,48 @@ export default function InstructorCoursesTable({
       },
     },
     {
+      header: "Delete",
+      id: "delete",
+      cell: ({ cell }) => {
+        const canDeleteCourse = canDelete(cell.row);
+        if (canDeleteCourse) {
+          return (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => handleShowCourseDeleteModal(cell.row.original)}
+              data-testid={`${testId}-cell-row-${cell.row.index}-col-delete-button`}
+            >
+              Delete
+            </Button>
+          );
+        } else {
+          return (
+            <OverlayTrigger
+              placement="top"
+              overlay={
+                <Tooltip id="tooltip-disabled">
+                  Cannot delete a course with active students or staff
+                </Tooltip>
+              }
+            >
+              <span className="d-inline-block">
+                <Button
+                  variant="light"
+                  size="sm"
+                  disabled
+                  style={{ pointerEvents: "none" }}
+                  data-testid={`${testId}-cell-row-${cell.row.index}-col-delete-no-permission`}
+                >
+                  Delete
+                </Button>
+              </span>
+            </OverlayTrigger>
+          );
+        }
+      },
+    },
+    {
       header: "Students",
       accessorKey: "numStudents",
     },
@@ -143,6 +210,16 @@ export default function InstructorCoursesTable({
     };
   };
 
+  const cellToAxiosParamsCourseDelete = (formData) => {
+    return {
+      url: `/api/courses`,
+      method: "DELETE",
+      params: {
+        courseId: formData.courseId,
+      },
+    };
+  };
+
   const onInstructorUpdateSuccess = () => {
     handleCloseModal();
   };
@@ -166,6 +243,17 @@ export default function InstructorCoursesTable({
     else toast(`Was not able to update course:\n${error.message}`);
   };
 
+  const onCourseDeleteSuccess = () => {
+    handleCloseCourseDeleteModal();
+    toast("Course deleted successfully");
+  };
+
+  const onCourseDeleteError = (error) => {
+    if (error.response.data.message)
+      toast (`Was not able to delete course:\n${error.response.data.message}`);
+    else toast(`Was not able to delete course:\n${error.message}`);
+  };
+
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     {
@@ -180,6 +268,15 @@ export default function InstructorCoursesTable({
     {
       onSuccess: onCourseUpdateSuccess,
       onError: onCourseUpdateError,
+    },
+    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
+  );
+
+  const courseDeleteMutation = useBackendMutation(
+    cellToAxiosParamsCourseDelete,
+    {
+      onSuccess: onCourseDeleteSuccess,
+      onError: onCourseDeleteError,
     },
     ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
   );
@@ -202,6 +299,11 @@ export default function InstructorCoursesTable({
   const handleUpdateCourse = async (formData) => {
     formData.courseId = selectedCourseForEdit.id;
     courseEditMutation.mutate(formData);
+  };
+
+  const handleDeleteCourse = async (formData) => {
+    formData.courseId = selectedCourseForDelete.id;
+    courseDeleteMutation.mutate(formData);
   };
 
   const installCallback = (cell) => {
@@ -371,6 +473,39 @@ export default function InstructorCoursesTable({
         buttonText="Update"
         modalTitle="Edit Course"
       />
+      <Modal
+        show={showCourseDeleteModal}
+        onHide={handleCloseCourseDeleteModal}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Course</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {selectedCourseForDelete && (
+            <p>
+              Please confirm that you really want to delete course <strong>{selectedCourseForDelete.courseName}</strong>. This action cannot be undone.
+            </p>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseCourseDeleteModal}>
+            Do not delete
+          </Button>
+
+          <Button
+            variant="danger"
+            onClick={() =>
+              handleDeleteCourse({ courseId: selectedCourseForDelete.id })
+            }
+            data-testid="confirm-delete-yes"
+          >
+            Yes, Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
       <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
     </>
   );
