@@ -9,4 +9,3 @@ import org.springframework.stereotype.Repository;
 public interface AssignmentRepository extends CrudRepository<Assignment, Long> {
   List<Assignment> findByCourseId(Long courseId);
 }
-
