@@ -193,4 +193,97 @@ public class RepositoryControllerTests extends ControllerTestCase {
     assertEquals("EntityNotFoundException", json.get("type"));
     assertEquals("Course with id 2 not found", json.get("message"));
   }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void job_fires_with_creationTarget_STAFF_ONLY() throws Exception {
+    Course course =
+        Course.builder()
+            .id(2L)
+            .orgName("ucsb-cs156")
+            .installationId("1234")
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    Job job = Job.builder().status("processing").build();
+    doReturn(job).when(service).runAsJob(any(CreateStudentRepositoriesJob.class));
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE")
+                    .param("creationTarget", "STAFF_ONLY"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String expectedJson = objectMapper.writeValueAsString(job);
+    String actualJson = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, actualJson);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void job_fires_with_creationTarget_STUDENTS_AND_STAFF() throws Exception {
+    Course course =
+        Course.builder()
+            .id(2L)
+            .orgName("ucsb-cs156")
+            .installationId("1234")
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    Job job = Job.builder().status("processing").build();
+    doReturn(job).when(service).runAsJob(any(CreateStudentRepositoriesJob.class));
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE")
+                    .param("creationTarget", "STUDENTS_AND_STAFF"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String expectedJson = objectMapper.writeValueAsString(job);
+    String actualJson = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, actualJson);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void job_fires_with_default_creationTarget() throws Exception {
+    Course course =
+        Course.builder()
+            .id(2L)
+            .orgName("ucsb-cs156")
+            .installationId("1234")
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    Job job = Job.builder().status("processing").build();
+    doReturn(job).when(service).runAsJob(any(CreateStudentRepositoriesJob.class));
+    // Passing without parameter to check if it defaults to STUDENTS_ONLY
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String expectedJson = objectMapper.writeValueAsString(job);
+    String actualJson = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, actualJson);
+  }
 }
