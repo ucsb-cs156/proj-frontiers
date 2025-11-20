@@ -22,7 +22,7 @@ test("Calls successfully", async () => {
   render(
     <QueryClientProvider client={client}>
       <AssignmentTabComponent courseId={7} />
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 
   await screen.findByTestId("IndividualAssignmentForm-submit");
@@ -48,7 +48,7 @@ test("Sends non-default creation option to backend", async () => {
   render(
     <QueryClientProvider client={client}>
       <AssignmentTabComponent courseId={7} />
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 
   await screen.findByTestId("IndividualAssignmentForm-submit");
@@ -59,7 +59,7 @@ test("Sends non-default creation option to backend", async () => {
 
   fireEvent.change(
     screen.getByTestId("IndividualAssignmentForm-creationOption"),
-    { target: { value: "STAFF_ONLY" } }
+    { target: { value: "STAFF_ONLY" } },
   );
   fireEvent.click(screen.getByTestId("IndividualAssignmentForm-submit"));
   await waitFor(() => expect(mockToast).toHaveBeenCalled());

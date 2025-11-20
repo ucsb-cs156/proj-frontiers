@@ -22,7 +22,7 @@ export default function AssignmentTabComponent({ courseId }) {
 
   const indvidiualAssignmentMutation = useBackendMutation(
     objectToAxiosParamsIndividualAssignment,
-    { onSuccess: onSuccessAssignment }
+    { onSuccess: onSuccessAssignment },
   );
 
   const postIndividualAssignment = (assignment) => {
