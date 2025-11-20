@@ -7,7 +7,7 @@ import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import { toast } from "react-toastify";
-import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal"
+import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal";
 
 export default function CourseStaffTable({
   staff,
@@ -61,7 +61,7 @@ export default function CourseStaffTable({
   const onDeleteSuccess = () => {
     toast("Staff member deleted successfully.");
     hideDeleteModal();
-  }; 
+  };
 
   // Stryker disable all : hard to test for query caching
   const deleteMutation = useBackendMutation(
@@ -236,9 +236,9 @@ export default function CourseStaffTable({
         </Modal.Body>
       </Modal>
       <CourseStaffDeleteModal
-          showModal={showDeleteModal}
-          toggleShowModal={setShowDeleteModal}
-          onSubmitAction={submitDeleteForm}
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
       />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
