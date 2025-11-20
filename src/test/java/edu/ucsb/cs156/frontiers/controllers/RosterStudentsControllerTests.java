@@ -233,6 +233,49 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
   }
 
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_withSection() throws Exception {
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+
+    ArgumentCaptor<RosterStudent> rosterStudentCaptor =
+        ArgumentCaptor.forClass(RosterStudent.class);
+
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@example.org")
+                    .param("courseId", "1")
+                    .param("section", "0200"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor.capture());
+
+    RosterStudent saved = rosterStudentCaptor.getValue();
+    assertEquals("A123456", saved.getStudentId());
+    assertEquals("Chris", saved.getFirstName());
+    assertEquals("Gaucho", saved.getLastName());
+    assertEquals("cgaucho@example.org", saved.getEmail());
+    assertEquals("0200", saved.getSection());
+    assertEquals(OrgStatus.PENDING, saved.getOrgStatus());
+
+    String responseString = response.getResponse().getContentAsString();
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
+  }
+
   /** Test the POST endpoint when installation ID exists. */
   @Test
   @WithInstructorCoursePermissions
@@ -1207,6 +1250,121 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testUpdateRosterStudent_updatesProvidedSection() throws Exception {
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("OldName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("0100")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    RosterStudent updatedStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("New")
+            .lastName("NewName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("0200")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(updatedStudent);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/update")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("firstName", "   New   ")
+                    .param("lastName", "   NewName   ")
+                    .param("studentId", "   A123456   ")
+                    .param("section", "0200"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved = captor.getValue();
+    assertEquals("New", saved.getFirstName());
+    assertEquals("NewName", saved.getLastName());
+    assertEquals("A123456", saved.getStudentId());
+    assertEquals("0200", saved.getSection());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(updatedStudent);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testUpdateRosterStudent_noProvidedSection() throws Exception {
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("OldName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("0100")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    RosterStudent updatedStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("New")
+            .lastName("NewName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("0100")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(updatedStudent);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/update")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("firstName", "   New   ")
+                    .param("lastName", "   NewName   ")
+                    .param("studentId", "   A123456   "))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    RosterStudent saved = captor.getValue();
+    assertEquals("New", saved.getFirstName());
+    assertEquals("NewName", saved.getLastName());
+    assertEquals("A123456", saved.getStudentId());
+    assertEquals("0100", saved.getSection());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(updatedStudent);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
   @WithInstructorCoursePermissions
   public void testUpdateRosterStudent_duplicateStudentId() throws Exception {
     RosterStudent existingStudent =
@@ -1958,6 +2116,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .studentId("A123456")
             .email("oldemail@ucsb.edu")
             .course(course1)
+            .section("0000")
             .rosterStatus(RosterStatus.ROSTER)
             .build();
     RosterStudent expectedSaved =
@@ -1968,6 +2127,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .studentId("A123456")
             .email("newemail@ucsb.edu")
             .course(course1)
+            .section("0400")
             .rosterStatus(RosterStatus.MANUAL)
             .build();
 
@@ -1987,7 +2147,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "New")
                     .param("lastName", "But Same Student")
                     .param("email", "newemail@umail.ucsb.edu")
-                    .param("courseId", "1"))
+                    .param("courseId", "1")
+                    .param("section", "0400"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -1998,6 +2159,70 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(InsertStatus.UPDATED, upsertResponse.insertStatus());
     verify(courseRepository, times(1)).findById(eq(1L));
     verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
+  }
+
+  @Test
+  public void testUpsertStudent_updatesSection_whenIdAndEmailMatch() {
+    Course course = Course.builder().id(1L).rosterStudents(new ArrayList<>()).build();
+
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(1L)
+            .studentId("A123456")
+            .email("student@ucsb.edu")
+            .section("0100")
+            .build();
+
+    course.setRosterStudents(List.of(existing));
+
+    RosterStudent incoming =
+        RosterStudent.builder()
+            .studentId("A123456")
+            .email("student@ucsb.edu")
+            .section("0200")
+            .firstName("New")
+            .lastName("Name")
+            .build();
+
+    UpsertResponse response =
+        RosterStudentsController.upsertStudent(incoming, course, RosterStatus.MANUAL);
+
+    assertEquals(InsertStatus.UPDATED, response.insertStatus());
+    RosterStudent updated = response.rosterStudent();
+    assertEquals("0200", updated.getSection());
+  }
+
+  @Test
+  public void testUpsertStudent_updatesSection_whenOnlyEmailMatches() {
+    // course with existing student matched by email only
+    Course course = Course.builder().id(1L).rosterStudents(new ArrayList<>()).build();
+
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(1L)
+            .studentId("A999999")
+            .email("student@ucsb.edu")
+            .section("0100")
+            .build();
+
+    course.setRosterStudents(List.of(existing));
+
+    RosterStudent incoming =
+        RosterStudent.builder()
+            .studentId("A123456")
+            .email("student@umail.ucsb.edu")
+            .section("0300")
+            .firstName("New")
+            .lastName("Name")
+            .build();
+
+    UpsertResponse response =
+        RosterStudentsController.upsertStudent(incoming, course, RosterStatus.MANUAL);
+
+    assertEquals(InsertStatus.UPDATED, response.insertStatus());
+    RosterStudent updated = response.rosterStudent();
+    assertEquals("0300", updated.getSection());
+    assertEquals("A123456", updated.getStudentId());
   }
 
   @Test

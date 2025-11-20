@@ -93,7 +93,6 @@ public class RosterStudentsController extends ApiController {
             .email(email)
             .build();
 
-    // only set if present (optional, but nice for clarity)
     if (section != null) {
       rosterStudent.setSection(section);
     }
