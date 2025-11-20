@@ -16,12 +16,13 @@ export default function AssignmentTabComponent({ courseId }) {
       repoPrefix: assignment.repoPrefix,
       isPrivate: assignment.assignmentPrivacy,
       permissions: assignment.permissions,
+      creationOption: assignment.creationOption,
     },
   });
 
   const indvidiualAssignmentMutation = useBackendMutation(
     objectToAxiosParamsIndividualAssignment,
-    { onSuccess: onSuccessAssignment },
+    { onSuccess: onSuccessAssignment }
   );
 
   const postIndividualAssignment = (assignment) => {
