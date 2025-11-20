@@ -128,6 +128,58 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
+  /** Test the POST endpoint email sanitization */
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testPostCourseStaffEmailSanitized() throws Exception {
+
+    Course course2 =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .orgName("ucsb-cs156-s25")
+            .term("S25")
+            .school("UCSB")
+            .build();
+
+    CourseStaff cs2 =
+        CourseStaff.builder()
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .email("cgaucho@example.org")
+            .course(course2)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course2));
+    when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(cs2);
+
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/coursestaff/post")
+                    .with(csrf())
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", " cgaucho@example.org ") // Expect the spaces to be stripped
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseStaffRepository, times(1)).save(eq(cs2));
+
+    verify(updateUserService).attachUserToCourseStaff(any(CourseStaff.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(cs2);
+    assertEquals(expectedJson, responseString);
+  }
+
   /** Test the POST endpoint */
   @Test
   @WithMockUser(roles = {"ADMIN"})
