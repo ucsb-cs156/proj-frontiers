@@ -20,13 +20,6 @@ export default function CourseStaffTable({
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [deleteStaff, setDeleteStaff] = React.useState(null);
 
-  // Stryker disable all
-  /*function onDeleteSuccess(message) {
-    console.log(message);
-    toast(message);
-  }*/
-  // Stryker restore all
-
   function cellToAxiosParamsDelete(formData) {
     return {
       // Stryker disable next-line StringLiteral
