@@ -45,7 +45,7 @@ export default function InstructorCoursesTable({
     }
 
     return false;
-  }
+  };
 
   const [showModal, setShowModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -136,6 +136,16 @@ export default function InstructorCoursesTable({
       },
     },
     {
+      header: "Students",
+      accessorKey: "numStudents",
+    },
+    {
+      header: "Staff",
+      accessorKey: "numStaff",
+    },
+  ];
+  if (deleteCourseButton) {
+    columns.push({
       header: "Delete",
       id: "delete",
       cell: ({ cell }) => {
@@ -176,16 +186,8 @@ export default function InstructorCoursesTable({
           );
         }
       },
-    },
-    {
-      header: "Students",
-      accessorKey: "numStudents",
-    },
-    {
-      header: "Staff",
-      accessorKey: "numStaff",
-    },
-  ];
+    });
+  }
   const cellToAxiosParamsEdit = (formData) => {
     return {
       url: `/api/courses/updateInstructor`,
@@ -250,7 +252,7 @@ export default function InstructorCoursesTable({
 
   const onCourseDeleteError = (error) => {
     if (error.response.data.message)
-      toast (`Was not able to delete course:\n${error.response.data.message}`);
+      toast(`Was not able to delete course:\n${error.response.data.message}`);
     else toast(`Was not able to delete course:\n${error.message}`);
   };
 
@@ -485,7 +487,9 @@ export default function InstructorCoursesTable({
         <Modal.Body>
           {selectedCourseForDelete && (
             <p>
-              Please confirm that you really want to delete course <strong>{selectedCourseForDelete.courseName}</strong>. This action cannot be undone.
+              Please confirm that you really want to delete course{" "}
+              <strong>{selectedCourseForDelete.courseName}</strong>. This action
+              cannot be undone.
             </p>
           )}
         </Modal.Body>
