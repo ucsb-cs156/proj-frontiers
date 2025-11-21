@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
+import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import mockConsole from "tests/testutils/mockConsole";
@@ -179,5 +180,66 @@ describe("CoursesIndexPage tests", () => {
       queryClient.getQueryState(["/api/courses/allForAdmins"]),
     ).toBeTruthy();
     expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+  });
+
+  test("Delete column does appear when deleteCourseButton is true", async () => {
+    setupAdminUser();
+
+    axiosMock
+      .onGet("/api/courses/allForAdmins")
+      .reply(200, coursesFixtures.severalCourses);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    // Row must be present first
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("InstructorCoursesTable-cell-row-0-col-id")
+      ).toBeInTheDocument()
+    );
+
+    // The Delete column SHOULD appear
+    const deleteHeader = screen.getByTestId(
+      "InstructorCoursesTable-header-delete-sort-header"
+    );
+    expect(deleteHeader).toBeInTheDocument();
+  });
+
+  test("Delete column does not appear when deleteCourseButton is false", async () => {
+    setupAdminUser();
+
+    axiosMock
+      .onGet("/api/courses/allForAdmins")
+      .reply(200, coursesFixtures.severalCourses);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <InstructorCoursesTable
+            courses={coursesFixtures.severalCourses}
+            currentUser={apiCurrentUserFixtures.adminUser}
+            enableInstructorUpdate={true}
+            deleteCourseButton={false}   // ← forced false
+          />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("InstructorCoursesTable-cell-row-0-col-id")
+      ).toBeInTheDocument()
+    );
+
+    const deleteHeader = screen.queryByTestId(
+      "InstructorCoursesTable-header-delete-sort-header"
+    );
+    expect(deleteHeader).not.toBeInTheDocument();
   });
 });
