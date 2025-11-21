@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Comparator;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,6 +120,7 @@ public class RosterStudentsController extends ApiController {
     Iterable<RosterStudentDTO> rosterStudentDTOs =
         () ->
             java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)
+                .sorted(Comparator.comparing(RosterStudent::getFirstName))
                 .map(RosterStudentDTO::new)
                 .iterator();
     return rosterStudentDTOs;
