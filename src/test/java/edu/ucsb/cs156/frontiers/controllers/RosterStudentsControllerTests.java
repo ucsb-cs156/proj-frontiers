@@ -97,6 +97,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
           .lastName("Gaucho")
           .studentId("A123456")
           .email("cgaucho@example.org")
+          .section("A")
           .course(course1)
           .rosterStatus(RosterStatus.MANUAL)
           .orgStatus(OrgStatus.PENDING)
@@ -133,6 +134,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "Chris")
                     .param("lastName", "Gaucho")
                     .param("email", "cgaucho@example.org")
+                    .param("section", "A")
                     .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
@@ -159,6 +161,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("Gaucho")
             .studentId("A123456")
             .email("cgaucho@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.MANUAL)
             .orgStatus(OrgStatus.PENDING)
@@ -178,6 +181,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "Chris")
                     .param("lastName", "Gaucho")
                     .param("email", "cgaucho@umail.ucsb.edu")
+                    .param("section", "A")
                     .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
@@ -217,6 +221,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "Chris")
                     .param("lastName", "Gaucho")
                     .param("email", "cgaucho@example.org")
+                    .param("section", "A")
                     .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
@@ -257,6 +262,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "Chris")
                     .param("lastName", "Gaucho")
                     .param("email", "cgaucho@example.org")
+                    .param("section", "param")
                     .param("courseId", "2"))
             .andExpect(status().isOk())
             .andReturn();
@@ -290,6 +296,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "Chris")
                     .param("lastName", "Gaucho")
                     .param("email", "cgaucho@example.org")
+                    .param("section", "A")
                     .param("courseId", "1"))
             .andExpect(status().isNotFound())
             .andReturn();
@@ -327,6 +334,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "Chris")
                     .param("lastName", "Gaucho")
                     .param("email", "cgaucho@example.org")
+                    .param("section", "A")
                     .param("courseId", "1"))
             .andExpect(status().isConflict())
             .andReturn();
@@ -1162,6 +1170,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("OldName")
             .studentId("A123456")
             .email("old@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1174,6 +1183,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("NewName")
             .studentId("A123456")
             .email("old@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1190,7 +1200,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("id", "1")
                     .param("firstName", "   New   ")
                     .param("lastName", "   NewName   ")
-                    .param("studentId", "   A123456   "))
+                    .param("studentId", "   A123456   ")
+                    .param("section", "   A   "))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -1216,6 +1227,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("OldName")
             .studentId("A123456")
             .email("old@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1228,6 +1240,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("Student")
             .studentId("A789012")
             .email("other@ucsb.edu")
+            .section("B")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1245,7 +1258,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("id", "1")
                     .param("firstName", "New")
                     .param("lastName", "NewName")
-                    .param("studentId", "A789012"))
+                    .param("studentId", "A789012")
+                    .param("section", "A"))
             .andExpect(status().isBadRequest())
             .andReturn();
 
@@ -1270,7 +1284,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("id", "99")
                     .param("firstName", "New")
                     .param("lastName", "Name")
-                    .param("studentId", "A123456"))
+                    .param("studentId", "A123456")
+                    .param("section", "A"))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -1313,6 +1328,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("OldName")
             .studentId("A123456")
             .email("old@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1325,6 +1341,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("NewName")
             .studentId("A999999")
             .email("old@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1343,7 +1360,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("id", "1")
                     .param("firstName", "   New   ")
                     .param("lastName", "   NewName   ")
-                    .param("studentId", "   A999999   "))
+                    .param("studentId", "   A999999   ")
+                    .param("section", "   A   "))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -1369,6 +1387,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("OldName")
             .studentId("A123456")
             .email("old@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1381,6 +1400,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("NewName")
             .studentId("A123456")
             .email("old@ucsb.edu")
+            .section("B")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
@@ -1397,7 +1417,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("id", "1")
                     .param("firstName", "  New  ")
                     .param("lastName", "  NewName  ")
-                    .param("studentId", "  A123456  "))
+                    .param("studentId", "  A123456  ")
+                    .param("section", "   B   "))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -1892,6 +1913,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("Student")
             .studentId("A123456")
             .email("cgaucho@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .build();
@@ -1902,6 +1924,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("Student")
             .studentId("A123457")
             .email("cgaucho@umail.ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.MANUAL)
             .build();
@@ -1912,6 +1935,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("Student")
             .studentId("A123457")
             .email("cgaucho@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.MANUAL)
             .build();
@@ -1933,6 +1957,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "New")
                     .param("lastName", "Student")
                     .param("email", "cgaucho@umail.ucsb.edu")
+                    .param("section", "A")
                     .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
@@ -1957,6 +1982,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("Student")
             .studentId("A123456")
             .email("oldemail@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .build();
@@ -1967,6 +1993,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .lastName("But Same Student")
             .studentId("A123456")
             .email("newemail@ucsb.edu")
+            .section("A")
             .course(course1)
             .rosterStatus(RosterStatus.MANUAL)
             .build();
@@ -1987,7 +2014,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
                     .param("firstName", "New")
                     .param("lastName", "But Same Student")
                     .param("email", "newemail@umail.ucsb.edu")
-                    .param("courseId", "1"))
+                    .param("courseId", "1")
+                    .param("section", "A"))
             .andExpect(status().isOk())
             .andReturn();
 
