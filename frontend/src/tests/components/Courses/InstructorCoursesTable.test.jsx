@@ -1337,21 +1337,22 @@ describe("InstructorCoursesTable tests", () => {
               storybook={true}
             />
           </BrowserRouter>
-        </QueryClientProvider>
+        </QueryClientProvider>,
       );
 
       expect(
-        screen.queryByTestId("InstructorCoursesTable-header-delete-sort-header")
+        screen.queryByTestId(
+          "InstructorCoursesTable-header-delete-sort-header",
+        ),
       ).not.toBeInTheDocument();
 
       const deleteButtons = screen.queryAllByRole("button", { name: "Delete" });
       expect(deleteButtons.length).toBe(0);
 
       expect(
-        screen.queryByTestId(/col-delete-button/i)
+        screen.queryByTestId(/col-delete-button/i),
       ).not.toBeInTheDocument();
     });
-
 
     test("Delete button is enabled only when course has no students or staff", async () => {
       render(
@@ -1435,16 +1436,18 @@ describe("InstructorCoursesTable tests", () => {
             storybook={false}
           />
         </BrowserRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Open the delete modal
     fireEvent.click(
-      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button")
+      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button"),
     );
 
     // Confirm delete
-    const yesButton = await screen.findByRole("button", { name: "Yes, Delete" });
+    const yesButton = await screen.findByRole("button", {
+      name: "Yes, Delete",
+    });
     fireEvent.click(yesButton);
 
     // Wait for request
@@ -1569,11 +1572,11 @@ describe("InstructorCoursesTable tests", () => {
             deleteCourseButton={true}
           />
         </BrowserRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const deleteButton = screen.getByTestId(
-      "InstructorCoursesTable-cell-row-2-col-delete-button"
+      "InstructorCoursesTable-cell-row-2-col-delete-button",
     );
     fireEvent.click(deleteButton);
 
@@ -1583,7 +1586,7 @@ describe("InstructorCoursesTable tests", () => {
     fireEvent.click(closeButton);
 
     await waitFor(() =>
-      expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument()
+      expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument(),
     );
   });
 
@@ -1597,13 +1600,13 @@ describe("InstructorCoursesTable tests", () => {
             deleteCourseButton={true}
           />
         </BrowserRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Open modal
-    fireEvent.click(screen.getByTestId(
-      "InstructorCoursesTable-cell-row-2-col-delete-button"
-    ));
+    fireEvent.click(
+      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button"),
+    );
 
     // Text should appear
     expect(await screen.findByText(/Please confirm/)).toBeInTheDocument();
@@ -1612,7 +1615,7 @@ describe("InstructorCoursesTable tests", () => {
     fireEvent.click(screen.getByRole("button", { name: "Do not delete" }));
 
     await waitFor(() =>
-      expect(screen.queryByText(/Please confirm/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Please confirm/)).not.toBeInTheDocument(),
     );
   });
 });
