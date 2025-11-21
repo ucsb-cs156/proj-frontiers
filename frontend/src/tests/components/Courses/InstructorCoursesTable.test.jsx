@@ -187,10 +187,19 @@ describe("InstructorCoursesTable tests", () => {
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
+              deleteCourseButton={true}
             />
           </BrowserRouter>
         </QueryClientProvider>,
       );
+
+      // has column with delete button
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      expect(deleteButton).toBeInTheDocument();
+      expect(deleteButton).toHaveTextContent("Delete");
+      expect(deleteButton).toHaveAttribute("class", "btn btn-danger btn-sm");
 
       const button3 = screen.getByTestId(
         `${testId}-cell-row-2-col-orgName-button`,
@@ -224,6 +233,19 @@ describe("InstructorCoursesTable tests", () => {
       );
       expect(editButton2).toBeInTheDocument();
       expect(editButton2).toHaveTextContent("Edit");
+
+      // Check that admin can delete deletable courses (vice versa)
+      const deleteButton3 = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      expect(deleteButton3).toBeInTheDocument();
+      expect(deleteButton3).toHaveTextContent("Delete");
+
+      const deleteButton1 = screen.getByTestId(
+        `${testId}-cell-row-0-col-delete-no-permission`,
+      );
+      expect(deleteButton1).toBeInTheDocument();
+      expect(deleteButton1).toHaveTextContent("Delete");
     });
 
     test("Calls window.alert when the button is pressed on storybook", async () => {
