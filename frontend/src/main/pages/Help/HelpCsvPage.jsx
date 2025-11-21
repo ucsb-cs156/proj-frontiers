@@ -202,7 +202,7 @@ export default function HelpCsvPage() {
             status and are never moved to DROPPED by an upload.
           </li>
           <li>
-            After the upload finishes, anyone still marked <code>DROPPED</code>{" "}
+            After the upload finishes, anyone still marked <code>DROPPED</code>
             is listed in the Dropped tab, and Frontiers queues them for removal
             from the linked GitHub organization.
           </li>
