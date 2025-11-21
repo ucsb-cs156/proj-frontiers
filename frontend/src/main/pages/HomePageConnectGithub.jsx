@@ -47,7 +47,7 @@ export default function HomePageConnectGithub() {
           />
         </Row>
         <div className="mt-4">
-          <p>Don't have a GitHub account?</p>
+          <p>Don&apos;t have a GitHub account?</p>
           <Button
             variant="outline-primary"
             href="https://github.com/signup"
