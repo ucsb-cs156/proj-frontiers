@@ -1,21 +1,26 @@
-import { Form } from "react-bootstrap";
+import { Typeahead } from 'react-bootstrap-typeahead';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 
-export default function RosterStudentDropdown({ rosterStudents, register }) {
+export default function RosterStudentDropdown({ rosterStudents, setValue, isInvalid }) {
+  const options = rosterStudents.map((student) => ({
+    id: student.id,
+    label: `${student.firstName} ${student.lastName}`,
+  }));
+
   return (
-    <Form.Control
-      as="select"
-      data-testid="RosterStudentDropdown"
+    <Typeahead
       id="rosterStudentId"
-      {...register("rosterStudentId", {
-        required: "Please select a student",
-      })}
-    >
-      <option value="">Select a student.</option>
-      {rosterStudents.map((student) => (
-        <option key={student.id} value={student.id}>
-          {student.firstName} {student.lastName}
-        </option>
-      ))}
-    </Form.Control>
+      inputProps={{ "data-testid": "RosterStudentDropdown" }}
+      options={options}
+      placeholder="Select a student..."
+      isInvalid={isInvalid}
+      onChange={(selected) => {
+        if (selected.length > 0) {
+          setValue("rosterStudentId", selected[0].id, { shouldValidate: true });
+        } else {
+          setValue("rosterStudentId", "", { shouldValidate: true });
+        }
+      }}
+    />
   );
 }

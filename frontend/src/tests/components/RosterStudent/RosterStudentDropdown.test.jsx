@@ -1,47 +1,46 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router";
 import RosterStudentDropdown from "main/components/RosterStudent/RosterStudentDropdown";
 
 const queryClient = new QueryClient();
-describe("RosterStudentForm tests", () => {
+describe("RosterStudentDropdown tests", () => {
   beforeEach(() => {
     queryClient.clear();
   });
   test("that the dropdown renders correctly and handles selection", async () => {
-    const mockRegister = vi.fn(() => ({
-      name: "rosterStudentId",
-      onChange: vi.fn(),
-      onBlur: vi.fn(),
-    }));
+    const mockSetValue = vi.fn();
 
     render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <RosterStudentDropdown
             rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
-            register={mockRegister}
+            setValue={mockSetValue}
           />
         </BrowserRouter>
       </QueryClientProvider>,
     );
 
-    // Test that it renders with the default option
-    expect(screen.getByText(/Select a student\./)).toBeInTheDocument();
+    // Test that it renders with the placeholder
+    expect(screen.getByPlaceholderText(/Select a student.../)).toBeInTheDocument();
 
-    // Test that all student options are rendered
-    expect(screen.getByText("Alice Brown")).toBeInTheDocument();
-    expect(screen.getByText("Tom Hanks")).toBeInTheDocument();
+    // Test that the dropdown input is rendered
+    const dropdown = screen.getByTestId("RosterStudentDropdown");
+    expect(dropdown).toBeInTheDocument();
 
-    // Test that register was called with correct validation rules
-    expect(mockRegister).toHaveBeenCalledWith("rosterStudentId", {
-      required: "Please select a student",
+    // Test typing and selecting an option
+    fireEvent.change(dropdown, { target: { value: "Alice" } });
+
+    // Wait for the option to appear and click it
+    await waitFor(() => {
+      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
     });
 
-    // Test selection
-    const dropdown = screen.getByTestId("RosterStudentDropdown");
-    fireEvent.change(dropdown, { target: { value: "1" } });
-    expect(dropdown.value).toBe("1");
+    fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
+
+    // Test that setValue was called with correct parameters
+    expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", 1, { shouldValidate: true });
   });
 });

@@ -249,7 +249,12 @@ describe("TeamsTable tests", () => {
     fireEvent.click(addButton);
 
     const input = await screen.findByTestId("RosterStudentDropdown");
-    fireEvent.change(input, { target: { value: "4" } });
+    fireEvent.change(input, { target: { value: "Jon" } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("option", { name: "Jon Snow" })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("option", { name: "Jon Snow" }));
 
     expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
 
@@ -262,7 +267,7 @@ describe("TeamsTable tests", () => {
 
     expect(axiosMock.history.post[0].url).toBe("/api/teams/addMember");
     expect(axiosMock.history.post[0].params).toEqual({
-      rosterStudentId: "4",
+      rosterStudentId: 4,
       courseId: "12",
       teamId: 3,
     });
@@ -314,7 +319,12 @@ describe("TeamsTable tests", () => {
     fireEvent.click(addButton);
 
     const input = await screen.findByTestId("RosterStudentDropdown");
-    fireEvent.change(input, { target: { value: "1" } });
+    fireEvent.change(input, { target: { value: "Alice" } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
 
     expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
 
@@ -385,7 +395,12 @@ describe("TeamsTable tests", () => {
 
     const input = await screen.findByTestId("RosterStudentDropdown");
     expect(input).toBeInTheDocument();
-    fireEvent.change(input, { target: { value: "1" } });
+    fireEvent.change(input, { target: { value: "Alice" } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
 
     expect(screen.queryByTestId("TeamsTable-post-modal")).toBeInTheDocument();
 
@@ -484,7 +499,7 @@ describe("TeamsTable tests", () => {
     ).not.toBeInTheDocument();
 
     fireEvent.click(addButton);
-    await screen.findByLabelText("Select Student");
+    await screen.findByTestId("RosterStudentDropdown");
 
     expect(screen.getByTestId(`${testId}-post-modal`)).toHaveClass(
       "modal-dialog modal-dialog-centered",
