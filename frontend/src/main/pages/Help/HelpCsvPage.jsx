@@ -15,7 +15,7 @@ export default function HelpCsvPage() {
           to be supported, please contact the Frontiers development team,
           supplying a sample CSV (with fictional data).
         </p>
-        <h3>How "Dropped" Students Are Handled</h3>
+        <h3>How &quot;Dropped&quot; Students Are Handled</h3>
         <p>
           Only students that appeared in an uploaded CSV and then did NOT appear
           in a subsequent CSV upload are considered dropped; manually added
