@@ -16,6 +16,7 @@ import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -355,15 +356,17 @@ public class CoursesController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
+    String sanitizedEmail = CanonicalFormConverter.convertToValidEmail(instructorEmail);
+
     // Validate that the email exists in either instructor or admin table
-    boolean isInstructor = instructorRepository.existsByEmail(instructorEmail);
-    boolean isAdmin = adminRepository.existsByEmail(instructorEmail);
+    boolean isInstructor = instructorRepository.existsByEmail(sanitizedEmail);
+    boolean isAdmin = adminRepository.existsByEmail(sanitizedEmail);
 
     if (!isInstructor && !isAdmin) {
       throw new IllegalArgumentException("Email must belong to either an instructor or admin");
     }
 
-    course.setInstructorEmail(instructorEmail);
+    course.setInstructorEmail(sanitizedEmail);
     Course savedCourse = courseRepository.save(course);
 
     return new InstructorCourseView(savedCourse);
