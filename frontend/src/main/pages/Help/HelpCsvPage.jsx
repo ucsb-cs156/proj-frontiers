@@ -15,6 +15,12 @@ export default function HelpCsvPage() {
           to be supported, please contact the Frontiers development team,
           supplying a sample CSV (with fictional data).
         </p>
+        <h3>How &quot;Dropped&quot; Students Are Handled</h3>
+        <p>
+          Only students that appeared in an uploaded CSV and then did NOT appear
+          in a subsequent CSV upload are considered dropped; manually added
+          students are never put into the dropped section
+        </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
             <Accordion.Header>UC Santa Barbara</Accordion.Header>
