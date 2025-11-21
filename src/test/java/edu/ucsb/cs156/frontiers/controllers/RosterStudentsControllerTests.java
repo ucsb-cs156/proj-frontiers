@@ -2226,6 +2226,69 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
+  public void testUpsertStudent_doesNotChangeSection_whenIdAndEmailMatch_andSectionNull() {
+    Course course = Course.builder().id(1L).rosterStudents(new ArrayList<>()).build();
+
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(1L)
+            .studentId("A123456")
+            .email("student@ucsb.edu")
+            .section("0100")
+            .build();
+
+    course.setRosterStudents(List.of(existing));
+
+    RosterStudent incoming =
+        RosterStudent.builder()
+            .studentId("A123456")
+            .email("student@ucsb.edu")
+            .firstName("New")
+            .lastName("Name")
+            .section(null)
+            .build();
+
+    UpsertResponse response =
+        RosterStudentsController.upsertStudent(incoming, course, RosterStatus.MANUAL);
+
+    assertEquals(InsertStatus.UPDATED, response.insertStatus());
+    RosterStudent updated = response.rosterStudent();
+    assertEquals("0100", updated.getSection());
+  }
+
+  @Test
+  public void testUpsertStudent_doesNotChangeSection_whenOnlyEmailMatches_andSectionNull() {
+    Course course = Course.builder().id(1L).rosterStudents(new ArrayList<>()).build();
+
+    RosterStudent existing =
+        RosterStudent.builder()
+            .id(1L)
+            .studentId("A999999")
+            .email("student@ucsb.edu")
+            .section("0100")
+            .build();
+
+    course.setRosterStudents(List.of(existing));
+
+    RosterStudent incoming =
+        RosterStudent.builder()
+            .studentId("A123456")
+            .email("student@umail.ucsb.edu")
+            .firstName("New")
+            .lastName("Name")
+            .section(null)
+            .build();
+
+    UpsertResponse response =
+        RosterStudentsController.upsertStudent(incoming, course, RosterStatus.MANUAL);
+
+    assertEquals(InsertStatus.UPDATED, response.insertStatus());
+    RosterStudent updated = response.rosterStudent();
+    assertEquals("0100", updated.getSection());
+    assertEquals("A123456", updated.getStudentId());
+  }
+
+  @Test
   @WithInstructorCoursePermissions
   public void testDeleteRosterStudent_withRemoveFromOrgFalse_success() throws Exception {
     // Set up course with org name and installation ID
