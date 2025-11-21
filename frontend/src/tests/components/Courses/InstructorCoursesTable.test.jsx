@@ -1032,6 +1032,52 @@ describe("InstructorCoursesTable tests", () => {
       });
     });
 
+    test("Delete course modal opens and closes properly", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock
+        .onDelete("/api/courses")
+        .reply(200, coursesFixtures.severalCourses[2]);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              testId={testId}
+              deleteCourseButton={true}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Verify modal is not initially open
+      expect(screen.queryByTestId("CourseModal-delete")).not.toBeInTheDocument();
+
+      // Click the delete button
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      fireEvent.click(deleteButton);
+
+      // Check that modal appears with correct title
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-delete")).toBeInTheDocument();
+        expect(screen.getByText("Delete Course")).toBeInTheDocument();
+        expect(screen.getByText("Yes, Delete")).toBeInTheDocument();
+      });
+
+      // Close modal using close button
+      const closeButton = screen.getByTestId("CourseModal-closeButton");
+      fireEvent.click(closeButton);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("CourseModal-delete"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
     test("Makes successful course update API call and shows success toast", async () => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();

@@ -479,6 +479,7 @@ export default function InstructorCoursesTable({
         show={showCourseDeleteModal}
         onHide={handleCloseCourseDeleteModal}
         centered
+        data-testid="CourseModal-delete"
       >
         <Modal.Header closeButton>
           <Modal.Title>Delete Course</Modal.Title>
@@ -495,7 +496,11 @@ export default function InstructorCoursesTable({
         </Modal.Body>
 
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseCourseDeleteModal}>
+          <Button
+            variant="secondary"
+            onClick={handleCloseCourseDeleteModal}
+            data-testId="CourseModal-closeButton"
+          >
             Do not delete
           </Button>
 
