@@ -43,4 +43,44 @@ describe("RosterStudentDropdown tests", () => {
     // Test that setValue was called with correct parameters
     expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", 1, { shouldValidate: true });
   });
+
+  test("that clearing the selection sets rosterStudentId to empty string", async () => {
+    const mockSetValue = vi.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <RosterStudentDropdown
+            rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
+            setValue={mockSetValue}
+          />
+        </BrowserRouter>
+      </QueryClientProvider>,
+    );
+
+    const dropdown = screen.getByTestId("RosterStudentDropdown");
+
+    // First select an option
+    fireEvent.change(dropdown, { target: { value: "Alice" } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
+
+    expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", 1, { shouldValidate: true });
+
+    // Clear the selection by focusing and clearing the input
+    fireEvent.focus(dropdown);
+    fireEvent.change(dropdown, { target: { value: "" } });
+
+    // Blur to trigger the onChange with empty selection
+    fireEvent.blur(dropdown);
+
+    // Test that setValue was called with empty string when cleared
+    await waitFor(() => {
+      expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", "", { shouldValidate: true });
+    });
+  });
 });
