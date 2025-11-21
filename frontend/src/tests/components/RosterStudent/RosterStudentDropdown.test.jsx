@@ -24,7 +24,9 @@ describe("RosterStudentDropdown tests", () => {
     );
 
     // Test that it renders with the placeholder
-    expect(screen.getByPlaceholderText(/Select a student.../)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Select a student.../),
+    ).toBeInTheDocument();
 
     // Test that the dropdown input is rendered
     const dropdown = screen.getByTestId("RosterStudentDropdown");
@@ -35,13 +37,17 @@ describe("RosterStudentDropdown tests", () => {
 
     // Wait for the option to appear and click it
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Alice Brown" }),
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
 
     // Test that setValue was called with correct parameters
-    expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", 1, { shouldValidate: true });
+    expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", 1, {
+      shouldValidate: true,
+    });
   });
 
   test("that clearing the selection sets rosterStudentId to empty string", async () => {
@@ -64,12 +70,16 @@ describe("RosterStudentDropdown tests", () => {
     fireEvent.change(dropdown, { target: { value: "Alice" } });
 
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Alice Brown" }),
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
 
-    expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", 1, { shouldValidate: true });
+    expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", 1, {
+      shouldValidate: true,
+    });
 
     // Clear the selection by focusing and clearing the input
     fireEvent.focus(dropdown);
@@ -80,7 +90,9 @@ describe("RosterStudentDropdown tests", () => {
 
     // Test that setValue was called with empty string when cleared
     await waitFor(() => {
-      expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", "", { shouldValidate: true });
+      expect(mockSetValue).toHaveBeenCalledWith("rosterStudentId", "", {
+        shouldValidate: true,
+      });
     });
   });
 });

@@ -252,7 +252,9 @@ describe("TeamsTable tests", () => {
     fireEvent.change(input, { target: { value: "Jon" } });
 
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Jon Snow" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Jon Snow" }),
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("option", { name: "Jon Snow" }));
 
@@ -322,7 +324,9 @@ describe("TeamsTable tests", () => {
     fireEvent.change(input, { target: { value: "Alice" } });
 
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Alice Brown" }),
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
 
@@ -398,7 +402,9 @@ describe("TeamsTable tests", () => {
     fireEvent.change(input, { target: { value: "Alice" } });
 
     await waitFor(() => {
-      expect(screen.getByRole("option", { name: "Alice Brown" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "Alice Brown" }),
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("option", { name: "Alice Brown" }));
 
