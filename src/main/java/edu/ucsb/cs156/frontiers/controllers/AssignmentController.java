@@ -25,7 +25,7 @@ public class AssignmentController extends ApiController {
 
   /** Create a new assignment */
   @Operation(summary = "Create a new assignment")
-  @PreAuthorize("@CourseSecurity.hasStaffPermissions(#root, #courseId)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("")
   public Assignment postAssignment(
       @Parameter(name = "courseId") @RequestParam Long courseId,
@@ -33,11 +33,14 @@ public class AssignmentController extends ApiController {
       @Parameter(name = "asn_type") @RequestParam String asn_type,
       @Parameter(name = "visibility") @RequestParam String visibility,
       @Parameter(name = "permission") @RequestParam String permission) {
+
+    // Find the course or throw 404
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
+    // Build the Assignment object
     Assignment assignment =
         Assignment.builder()
             .course(course)
@@ -47,6 +50,7 @@ public class AssignmentController extends ApiController {
             .permission(permission)
             .build();
 
+    // Save and return
     Assignment savedAssignment = assignmentRepository.save(assignment);
     return savedAssignment;
   }
