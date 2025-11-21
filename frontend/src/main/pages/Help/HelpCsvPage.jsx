@@ -198,14 +198,13 @@ export default function HelpCsvPage() {
             dropped section automatically.
           </li>
           <li>
-            Students that you added manually keep their{" "}
-            <code>MANUAL</code> status and are never moved to DROPPED by an
-            upload.
+            Students that you added manually keep their <code>MANUAL</code>{" "}
+            status and are never moved to DROPPED by an upload.
           </li>
           <li>
-            After the upload finishes, anyone still marked{" "}
-            <code>DROPPED</code> is listed in the Dropped tab, and Frontiers
-            queues them for removal from the linked GitHub organization.
+            After the upload finishes, anyone still marked <code>DROPPED</code>{" "}
+            is listed in the Dropped tab, and Frontiers queues them for removal
+            from the linked GitHub organization.
           </li>
         </ul>
         <p>
@@ -275,8 +274,8 @@ export default function HelpCsvPage() {
                 format:
               </p>
               <p>
-                The header row uses uppercase names and the columns appear in the
-                exact order shown below.
+                The header row uses uppercase names and the columns appear in
+                the exact order shown below.
               </p>
               <pre
                 className={"csvExample"}
@@ -341,7 +340,9 @@ export default function HelpCsvPage() {
                       <code>SECTION</code>
                     </td>
                     <td>Section value (if supplied in the original upload)</td>
-                    <td>May be blank for formats that do not contain sections.</td>
+                    <td>
+                      May be blank for formats that do not contain sections.
+                    </td>
                   </tr>
                   <tr>
                     <td>
@@ -395,12 +396,26 @@ export default function HelpCsvPage() {
               </table>
               <p>
                 When you re-upload a file that originated from this download,
-                Frontiers only reads the <code>EMAIL</code>,{" "}
-                <code>FIRSTNAME</code>, <code>LASTNAME</code>,{" "}
-                <code>STUDENTID</code>, and <code>SECTION</code> columns. GitHub
-                metadata, <code>TEAMS</code>, and status columns are ignored, so
-                you do not need to remove them before uploading.
+                Frontiers only reads the following columns; everything else is
+                ignored, so you can upload the file without trimming it.
               </p>
+              <ul>
+                <li>
+                  <code>EMAIL</code>
+                </li>
+                <li>
+                  <code>FIRSTNAME</code>
+                </li>
+                <li>
+                  <code>LASTNAME</code>
+                </li>
+                <li>
+                  <code>STUDENTID</code>
+                </li>
+                <li>
+                  <code>SECTION</code>
+                </li>
+              </ul>
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
