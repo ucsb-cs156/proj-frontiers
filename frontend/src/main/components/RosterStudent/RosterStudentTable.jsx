@@ -53,7 +53,7 @@ export default function RosterStudentTable({
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
-    [`/api/rosterstudents/course/${courseId}`],
+    [`/api/rosterstudents/course/${courseId}`]
   );
 
   const deleteCallback = async (cell) => {
@@ -71,7 +71,7 @@ export default function RosterStudentTable({
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     { onSuccess: onEditSuccess },
-    [`/api/rosterstudents/course/${courseId}`],
+    [`/api/rosterstudents/course/${courseId}`]
   );
 
   const editCallback = (cell) => {
@@ -130,40 +130,41 @@ export default function RosterStudentTable({
     },
   ];
 
-  const renderTooltip = (orgStatus) => (props) => {
-    let set_message;
+  const renderTooltip = (orgStatus) =>
+    function TooltipWrapper(props) {
+      let set_message;
 
-    switch (orgStatus) {
-      case "PENDING":
-        set_message =
-          "Student cannot join the course until it has been completely set up.";
-        break;
-      case "JOINCOURSE":
-        set_message =
-          "Student has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
-        break;
-      case "INVITED":
-        set_message =
-          "Student has generated an invite, but has not yet accepted or declined the invitation.";
-        break;
-      case "OWNER":
-        set_message =
-          "Student is an owner of the GitHub organization associated with this course.";
-        break;
-      case "MEMBER":
-        set_message =
-          "Student is a member of the GitHub organization associated with this course.";
-        break;
-      default:
-        set_message = "Tooltip for illegal status that will never occur";
-        break;
-    }
-    return (
-      <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
-        {set_message}
-      </Tooltip>
-    );
-  };
+      switch (orgStatus) {
+        case "PENDING":
+          set_message =
+            "Student cannot join the course until it has been completely set up.";
+          break;
+        case "JOINCOURSE":
+          set_message =
+            "Student has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
+          break;
+        case "INVITED":
+          set_message =
+            "Student has generated an invite, but has not yet accepted or declined the invitation.";
+          break;
+        case "OWNER":
+          set_message =
+            "Student is an owner of the GitHub organization associated with this course.";
+          break;
+        case "MEMBER":
+          set_message =
+            "Student is a member of the GitHub organization associated with this course.";
+          break;
+        default:
+          set_message = "Tooltip for illegal status that will never occur";
+          break;
+      }
+      return (
+        <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
+          {set_message}
+        </Tooltip>
+      );
+    };
 
   columns.push({
     header: "Status",
@@ -218,7 +219,7 @@ export default function RosterStudentTable({
   if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
-      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
+      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix)
     );
   }
 

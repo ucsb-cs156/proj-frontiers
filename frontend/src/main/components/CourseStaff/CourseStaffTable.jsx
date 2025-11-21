@@ -41,7 +41,7 @@ export default function CourseStaffTable({
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
     // Stryker disable next-line all
-    [`/api/coursestaff/course?courseId=${courseId}`],
+    [`/api/coursestaff/course?courseId=${courseId}`]
   );
   // Stryker restore all
 
@@ -75,7 +75,7 @@ export default function CourseStaffTable({
     cellToAxiosParamsEdit,
     { onSuccess: onEditSuccess },
     // Stryker disable next-line all
-    [`/api/coursestaff/course?courseId=${courseId}`],
+    [`/api/coursestaff/course?courseId=${courseId}`]
   );
 
   const editCallback = (cell) => {
@@ -111,40 +111,41 @@ export default function CourseStaffTable({
     },
   ];
 
-  const renderTooltip = (orgStatus) => (props) => {
-    let set_message;
+  const renderTooltip = (orgStatus) =>
+    function TooltipWrapper(props) {
+      let set_message;
 
-    switch (orgStatus) {
-      case "PENDING":
-        set_message =
-          "Staff member cannot join the course until it has been completely set up.";
-        break;
-      case "JOINCOURSE":
-        set_message =
-          "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
-        break;
-      case "INVITED":
-        set_message =
-          "Staff member has generated an invite, but has not yet accepted or declined the invitation.";
-        break;
-      case "OWNER":
-        set_message =
-          "Staff member is an owner of the GitHub organization associated with this course.";
-        break;
-      case "MEMBER":
-        set_message =
-          "Staff member is a member of the GitHub organization associated with this course.";
-        break;
-      default:
-        set_message = "Tooltip for illegal status that will never occur";
-        break;
-    }
-    return (
-      <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
-        {set_message}
-      </Tooltip>
-    );
-  };
+      switch (orgStatus) {
+        case "PENDING":
+          set_message =
+            "Staff member cannot join the course until it has been completely set up.";
+          break;
+        case "JOINCOURSE":
+          set_message =
+            "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
+          break;
+        case "INVITED":
+          set_message =
+            "Staff member has generated an invite, but has not yet accepted or declined the invitation.";
+          break;
+        case "OWNER":
+          set_message =
+            "Staff member is an owner of the GitHub organization associated with this course.";
+          break;
+        case "MEMBER":
+          set_message =
+            "Staff member is a member of the GitHub organization associated with this course.";
+          break;
+        default:
+          set_message = "Tooltip for illegal status that will never occur";
+          break;
+      }
+      return (
+        <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
+          {set_message}
+        </Tooltip>
+      );
+    };
 
   columns.push({
     header: "Status",
@@ -199,7 +200,7 @@ export default function CourseStaffTable({
   if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
-      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
+      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix)
     );
   }
 
