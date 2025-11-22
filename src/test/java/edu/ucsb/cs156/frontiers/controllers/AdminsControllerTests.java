@@ -108,6 +108,25 @@ public class AdminsControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
+  public void an_admin_user_can_post_a_new_admin_and_email_is_sanitized() throws Exception {
+    Admin admin =
+        Admin.builder().email("acdamstedt@ucsb.edu").build(); // Expect spaces to get sanitized
+    when(adminRepository.save(eq(admin))).thenReturn(admin);
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/admin/post?email= acdamstedt@ucsb.edu ").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+    // assert
+    verify(adminRepository, times(1)).save(admin);
+    String expectedJson = mapper.writeValueAsString(admin);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
   public void logged_in_admin_can_get_all_admins() throws Exception {
     List<String> adminEmails = Arrays.asList("acdamstedt@ucsb.edu");
 
