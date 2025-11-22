@@ -95,9 +95,9 @@ export default function HelpCsvPage() {
                     <td>Student Last</td>
                     <td>Student Name</td>
                     <td>
-                      We split the value at the last space; double-check suffixes
-                      such as Jr. or III to ensure they end up on the correct
-                      side.
+                      We split the value at the last space; double-check
+                      suffixes such as Jr. or III to ensure they end up on the
+                      correct side.
                     </td>
                   </tr>
                   <tr>
@@ -122,8 +122,9 @@ export default function HelpCsvPage() {
                     <td>Section</td>
                     <td>&mdash;</td>
                     <td>
-                      Canvas includes a Section Name column, but Frontiers ignores
-                      it and leaves the Section field blank for this format.
+                      Canvas includes a Section Name column, but Frontiers
+                      ignores it and leaves the Section field blank for this
+                      format.
                     </td>
                   </tr>
                 </tbody>
@@ -203,8 +204,7 @@ export default function HelpCsvPage() {
             status and are never moved to DROPPED by an upload.
           </li>
           <li>
-            After the upload finishes, anyone still marked <code>DROPPED</code>
-            {" "}
+            After the upload finishes, anyone still marked <code>DROPPED</code>{" "}
             is listed in the Dropped tab, and Frontiers queues them for removal
             from the linked GitHub organization.
           </li>
