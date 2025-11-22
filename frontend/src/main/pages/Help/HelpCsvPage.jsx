@@ -95,14 +95,18 @@ export default function HelpCsvPage() {
                     <td>Student Last</td>
                     <td>Student Name</td>
                     <td>
-                      We take everything after the last space; review students
-                      with suffixes to ensure accuracy.
+                      We split the value at the last space; double-check suffixes
+                      such as Jr. or III to ensure they end up on the correct
+                      side.
                     </td>
                   </tr>
                   <tr>
                     <td>Student First</td>
                     <td>Student Name</td>
-                    <td>Everything before the last space.</td>
+                    <td>
+                      Everything before the final space (blank if no space is
+                      present).
+                    </td>
                   </tr>
                   <tr>
                     <td>Student ID</td>
@@ -116,17 +120,18 @@ export default function HelpCsvPage() {
                   </tr>
                   <tr>
                     <td>Section</td>
-                    <td>Section Name</td>
+                    <td>&mdash;</td>
                     <td>
-                      Ignored; Frontiers leaves the Section field blank for this
-                      format.
+                      Canvas includes a Section Name column, but Frontiers ignores
+                      it and leaves the Section field blank for this format.
                     </td>
                   </tr>
                 </tbody>
               </table>
               <p className="text-muted">
                 All other columns from the Canvas “New Analytics” export are
-                ignored, so you can upload the file as-is.
+                ignored, so you can upload the file as-is; this includes Section
+                Name, so roster sections remain blank after the upload.
               </p>
             </Accordion.Body>
           </Accordion.Item>
@@ -169,16 +174,12 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td></td>
                   </tr>
-                  <tr>
-                    <td>Section</td>
-                    <td>(not provided)</td>
-                    <td>Left blank; Canvas analytics columns are ignored.</td>
-                  </tr>
                 </tbody>
               </table>
               <p className="text-muted">
                 Other analytics columns (grades, participation timestamps, etc.)
-                are ignored when the CSV is processed.
+                are ignored when the CSV is processed, so the Section column in
+                Frontiers remains blank for this format.
               </p>
             </Accordion.Body>
           </Accordion.Item>
@@ -203,6 +204,7 @@ export default function HelpCsvPage() {
           </li>
           <li>
             After the upload finishes, anyone still marked <code>DROPPED</code>
+            {" "}
             is listed in the Dropped tab, and Frontiers queues them for removal
             from the linked GitHub organization.
           </li>
