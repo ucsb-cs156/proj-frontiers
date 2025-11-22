@@ -9,10 +9,5 @@ export default function PromptSignInPage() {
     sessionStorage.setItem("redirect", location.pathname);
   };
 
-  return (
-    <SignInContent
-      showPromptAlert={true}
-      onCardClick={setRedirect}
-    />
-  );
+  return <SignInContent showPromptAlert={true} onCardClick={setRedirect} />;
 }
