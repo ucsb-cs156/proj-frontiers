@@ -148,6 +148,40 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
   }
 
+  /** Test the POST endpoint to make sure emails are sanitized when posting */
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_emailSanitized() throws Exception {
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rs1);
+    doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", " cgaucho@example.org ")
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(rosterStudentRepository, times(1)).save(eq(rs1));
+    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1));
+
+    String responseString = response.getResponse().getContentAsString();
+    UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
+    assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
+  }
+
   /** Test that the POST endpoint converts @umail.ucsb.edu to @ucsb.edu */
   @Test
   @WithInstructorCoursePermissions
