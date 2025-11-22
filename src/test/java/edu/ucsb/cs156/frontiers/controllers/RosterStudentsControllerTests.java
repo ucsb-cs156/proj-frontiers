@@ -1083,6 +1083,50 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_updatesSection() throws Exception {
+
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("OldName")
+            .studentId("A123456")
+            .email("old@ucsb.edu")
+            .section("A")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/update")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("firstName", "NewFirst")
+                    .param("lastName", "NewLast")
+                    .param("studentId", "A123456")
+                    .param("section", "B"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String json = response.getResponse().getContentAsString();
+
+    RosterStudent updated = mapper.readValue(json, RosterStudent.class);
+
+    assertEquals("NewFirst", updated.getFirstName());
+    assertEquals("NewLast", updated.getLastName());
+    assertEquals("A123456", updated.getStudentId());
+    assertEquals("B", updated.getSection());
+  }
+
+  @Test
   @WithMockUser(roles = {"USER", "GITHUB"})
   public void cant_invite() throws Exception {
     User currentUser = currentUserService.getUser();
