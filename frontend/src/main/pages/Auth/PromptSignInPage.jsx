@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation } from "react-router";
-import SignInContent from "main/components/Auth/SignInContent";
+import SignInContent from "main/pages/Auth/SignInContent.jsx";
 
 export default function PromptSignInPage() {
   const location = useLocation();
