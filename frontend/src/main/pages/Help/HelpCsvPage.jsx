@@ -288,6 +288,11 @@ export default function HelpCsvPage() {
                     <td>GitHub organization status</td>
                     <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
                   </tr>
+                  <tr>
+                    <td>teams</td>
+                    <td>List of team names the Student belongs to</td>
+                    <td></td>
+                  </tr>
                 </tbody>
               </table>
             </Accordion.Body>
