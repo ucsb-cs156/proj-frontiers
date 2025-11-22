@@ -89,7 +89,7 @@ public class RosterStudentsController extends ApiController {
             .studentId(studentId)
             .firstName(firstName)
             .lastName(lastName)
-            .email(email)
+            .email(email.strip())
             .build();
 
     UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
@@ -119,6 +119,9 @@ public class RosterStudentsController extends ApiController {
     Iterable<RosterStudentDTO> rosterStudentDTOs =
         () ->
             java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)
+                .sorted(
+                    java.util.Comparator.comparing(RosterStudent::getLastName)
+                        .thenComparing(RosterStudent::getFirstName))
                 .map(RosterStudentDTO::new)
                 .iterator();
     return rosterStudentDTOs;
@@ -126,7 +129,7 @@ public class RosterStudentsController extends ApiController {
 
   public static UpsertResponse upsertStudent(
       RosterStudent student, Course course, RosterStatus rosterStatus) {
-    String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail());
+    String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail().strip());
     Optional<RosterStudent> existingStudent =
         course.getRosterStudents().stream()
             .filter(
@@ -154,12 +157,12 @@ public class RosterStudentsController extends ApiController {
       existingStudentObj.setFirstName(student.getFirstName());
       existingStudentObj.setLastName(student.getLastName());
       existingStudentObj.setSection(student.getSection());
-      existingStudentObj.setEmail(convertedEmail);
+      existingStudentObj.setEmail(convertedEmail.strip());
       existingStudentObj.setStudentId(student.getStudentId());
       return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);
     } else {
       student.setCourse(course);
-      student.setEmail(convertedEmail);
+      student.setEmail(convertedEmail.strip());
       student.setRosterStatus(rosterStatus);
       // if an installationID exists, orgStatus should be set to JOINCOURSE. if it doesn't exist
       // (null), set orgStatus to PENDING.
