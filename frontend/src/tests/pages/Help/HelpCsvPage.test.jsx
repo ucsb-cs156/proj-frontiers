@@ -92,5 +92,13 @@ describe("HelpCsvPage tests", () => {
         ),
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        textContentEquals(
+          "After the upload finishes, anyone still marked DROPPED is listed in the Dropped tab, and Frontiers queues them for removal from the linked GitHub organization.",
+          "LI",
+        ),
+      ),
+    ).toBeInTheDocument();
   });
 });
