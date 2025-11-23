@@ -481,9 +481,7 @@ export default function InstructorCoursesTable({
         <Modal.Body>
           {selectedCourseForDelete && (
             <p>
-              Please confirm that you really want to delete course{" "}
-              <strong>{selectedCourseForDelete.courseName}</strong>. This action
-              cannot be undone.
+              Please confirm that you really want to delete course <strong>{selectedCourseForDelete.courseName}</strong>. This action cannot be undone.
             </p>
           )}
         </Modal.Body>
@@ -499,9 +497,7 @@ export default function InstructorCoursesTable({
 
           <Button
             variant="danger"
-            onClick={() =>
-              handleDeleteCourse({ courseId: selectedCourseForDelete.id })
-            }
+            onClick={handleDeleteCourse}
             data-testid="CourseModal-confirm"
           >
             Yes, Delete
