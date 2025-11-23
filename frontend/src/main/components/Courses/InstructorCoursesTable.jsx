@@ -481,7 +481,7 @@ export default function InstructorCoursesTable({
         <Modal.Body>
           {selectedCourseForDelete && (
             <p>
-              Please confirm that you really want to delete course{" "}
+              Please confirm that you really want to delete course&nbsp;
               <strong>{selectedCourseForDelete.courseName}</strong>. This action
               cannot be undone.
             </p>
