@@ -41,7 +41,7 @@ export default function CourseStaffTable({
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
     // Stryker disable next-line all
-    [`/api/coursestaff/course?courseId=${courseId}`]
+    [`/api/coursestaff/course?courseId=${courseId}`],
   );
   // Stryker restore all
 
@@ -75,7 +75,7 @@ export default function CourseStaffTable({
     cellToAxiosParamsEdit,
     { onSuccess: onEditSuccess },
     // Stryker disable next-line all
-    [`/api/coursestaff/course?courseId=${courseId}`]
+    [`/api/coursestaff/course?courseId=${courseId}`],
   );
 
   const editCallback = (cell) => {
@@ -200,7 +200,7 @@ export default function CourseStaffTable({
   if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
-      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix)
+      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
     );
   }
 

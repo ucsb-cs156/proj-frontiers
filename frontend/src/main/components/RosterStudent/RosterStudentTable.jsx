@@ -53,7 +53,7 @@ export default function RosterStudentTable({
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
-    [`/api/rosterstudents/course/${courseId}`]
+    [`/api/rosterstudents/course/${courseId}`],
   );
 
   const deleteCallback = async (cell) => {
@@ -71,7 +71,7 @@ export default function RosterStudentTable({
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     { onSuccess: onEditSuccess },
-    [`/api/rosterstudents/course/${courseId}`]
+    [`/api/rosterstudents/course/${courseId}`],
   );
 
   const editCallback = (cell) => {
@@ -219,7 +219,7 @@ export default function RosterStudentTable({
   if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
-      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix)
+      ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
     );
   }
 
