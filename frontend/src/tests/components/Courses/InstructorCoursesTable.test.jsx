@@ -41,7 +41,7 @@ describe("InstructorCoursesTable tests", () => {
 
     test("Instructor user cannot delete courses", async () => {
       render(
-        <QueryClientProvider client={(queryClient)}>
+        <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <InstructorCoursesTable
               courses={coursesFixtures.severalCourses}
@@ -50,7 +50,7 @@ describe("InstructorCoursesTable tests", () => {
               deleteCourseButton={true}
             />
           </BrowserRouter>
-        </QueryClientProvider>
+        </QueryClientProvider>,
       );
 
       // Check that instructor cannot delete course
@@ -74,7 +74,7 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       expect(
-        screen.queryByTestId("InstructorCoursesTable-header-delete")
+        screen.queryByTestId("InstructorCoursesTable-header-delete"),
       ).not.toBeInTheDocument();
     });
 
@@ -91,7 +91,7 @@ describe("InstructorCoursesTable tests", () => {
           numStaff: 0,
         },
       ];
-      
+
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
@@ -128,13 +128,13 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       expect(
-        screen.getByRole("columnheader", { name: /Delete/i })
+        screen.getByRole("columnheader", { name: /Delete/i }),
       ).toBeInTheDocument();
     });
 
     test("Tooltip has correct style", async () => {
       render(
-        <QueryClientProvider client={(queryClient)}>
+        <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <InstructorCoursesTable
               courses={coursesFixtures.severalCourses}
@@ -143,11 +143,11 @@ describe("InstructorCoursesTable tests", () => {
               deleteCourseButton={true}
             />
           </BrowserRouter>
-        </QueryClientProvider>
+        </QueryClientProvider>,
       );
 
       const deleteButton = screen.getByTestId(
-        `${testId}-cell-row-0-col-delete-no-permission`
+        `${testId}-cell-row-0-col-delete-no-permission`,
       );
 
       expect(deleteButton).toBeInTheDocument();
@@ -1181,7 +1181,9 @@ describe("InstructorCoursesTable tests", () => {
         expect(screen.getByText("Delete Course")).toBeInTheDocument();
         expect(screen.getByText("Yes, Delete")).toBeInTheDocument();
         // Check that modal appears with correct content
-        expect(screen.getByText("CMPSC 156", { selector: "strong" })).toBeInTheDocument();
+        expect(
+          screen.getByText("CMPSC 156", { selector: "strong" }),
+        ).toBeInTheDocument();
       });
 
       // Close modal using close button
