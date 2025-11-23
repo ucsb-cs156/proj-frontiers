@@ -1144,6 +1144,59 @@ describe("InstructorCoursesTable tests", () => {
       });
     });
 
+    test("Makes successful course delete API call and shows success toast", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onDelete("/api/courses").reply(200, {});
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              testId={testId}
+              deleteCourseButton={true}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the delete button
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      fireEvent.click(deleteButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-delete")).toBeInTheDocument();
+      });
+
+      // Click the Delete button
+      const confirmButton = screen.getByTestId("CourseModal-confirm");
+      fireEvent.click(confirmButton);
+
+      // Verify API call was made with correct parameters
+      await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+      expect(axiosMock.history.delete[0].params).toEqual({
+        courseId: 3,
+      });
+
+      // Verify success toast was shown
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith("Course deleted successfully");
+      });
+
+      // Verify modal is closed
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("CourseModal-delete"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
     test("Shows error toast when course update API call fails with message", async () => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();
@@ -1198,7 +1251,7 @@ describe("InstructorCoursesTable tests", () => {
         );
       });
     });
-
+    
     test("Shows error toast when course update API call fails without message", async () => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();

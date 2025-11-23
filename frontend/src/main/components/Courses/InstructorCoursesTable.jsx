@@ -250,12 +250,6 @@ export default function InstructorCoursesTable({
     toast("Course deleted successfully");
   };
 
-  const onCourseDeleteError = (error) => {
-    if (error.response.data.message)
-      toast(`Was not able to delete course:\n${error.response.data.message}`);
-    else toast(`Was not able to delete course:\n${error.message}`);
-  };
-
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     {
@@ -278,7 +272,6 @@ export default function InstructorCoursesTable({
     cellToAxiosParamsCourseDelete,
     {
       onSuccess: onCourseDeleteSuccess,
-      onError: onCourseDeleteError,
     },
     ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
   );
@@ -509,7 +502,7 @@ export default function InstructorCoursesTable({
             onClick={() =>
               handleDeleteCourse({ courseId: selectedCourseForDelete.id })
             }
-            data-testid="confirm-delete-yes"
+            data-testid="CourseModal-confirm"
           >
             Yes, Delete
           </Button>
