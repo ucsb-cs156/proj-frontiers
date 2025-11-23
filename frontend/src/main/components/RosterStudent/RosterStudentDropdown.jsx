@@ -1,21 +1,42 @@
+import { Typeahead } from "react-bootstrap-typeahead";
 import { Form } from "react-bootstrap";
+import "react-bootstrap-typeahead/css/Typeahead.css";
 
-export default function RosterStudentDropdown({ rosterStudents, register }) {
+export default function RosterStudentDropdown({
+  rosterStudents,
+  value,
+  onChange,
+  isInvalid,
+}) {
+  const options = rosterStudents.map((student) => ({
+    id: student.id,
+    fullName: `${student.firstName} ${student.lastName}`,
+  }));
+
+  const selectedOption = options.filter((opt) => opt.id === value);
+
+  const handleSelectionChange = (selected) => {
+    const id = selected.length > 0 ? selected[0].id : "";
+    onChange(id);
+  };
+
   return (
-    <Form.Control
-      as="select"
-      data-testid="RosterStudentDropdown"
-      id="rosterStudentId"
-      {...register("rosterStudentId", {
-        required: "Please select a student",
-      })}
-    >
-      <option value="">Select a student.</option>
-      {rosterStudents.map((student) => (
-        <option key={student.id} value={student.id}>
-          {student.firstName} {student.lastName}
-        </option>
-      ))}
-    </Form.Control>
+    <Form.Group controlId="rosterStudentId">
+      <Typeahead
+        id="rosterStudentId-typeahead"
+        options={options}
+        labelKey="fullName"
+        placeholder="Select a student."
+        selected={selectedOption}
+        onChange={handleSelectionChange}
+        highlightOnlyResult
+        onInputChange={(text) => onChange(text)}
+        inputProps={{
+          "aria-label": "Select Student",
+          "data-testid": "RosterStudentDropdown",
+          className: isInvalid ? "form-control is-invalid" : "form-control",
+        }}
+      />
+    </Form.Group>
   );
 }
