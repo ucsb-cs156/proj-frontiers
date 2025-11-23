@@ -6,6 +6,7 @@ import { useBackendMutation } from "main/utils/useBackend";
 import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
+import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal";
 import { toast } from "react-toastify";
 
 export default function CourseStaffTable({
@@ -16,22 +17,26 @@ export default function CourseStaffTable({
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStaff, setEditStaff] = React.useState(null);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [deleteStaff, setDeleteStaff] = React.useState(null);
 
   // Stryker disable all
   function onDeleteSuccess(message) {
     console.log(message);
     toast(message);
+    setShowDeleteModal(false);
   }
   // Stryker restore all
 
-  function cellToAxiosParamsDelete(cell) {
+  function cellToAxiosParamsDelete(data) {
     return {
       // Stryker disable next-line StringLiteral
       url: "/api/coursestaff/delete",
       method: "DELETE",
       params: {
-        id: cell.row.original.id,
+        id: data.id,
         courseId: courseId,
+        removeFromOrg: data.removeFromOrg === "true",
       },
     };
   }
@@ -66,9 +71,16 @@ export default function CourseStaffTable({
     hideModal();
   };
 
-  // Stryker disable next-line all
   const deleteCallback = async (cell) => {
-    deleteMutation.mutate(cell);
+    setShowDeleteModal(true);
+    setDeleteStaff(cell.row.original.id);
+  };
+
+  const submitDeleteForm = (data) => {
+    deleteMutation.mutate({
+      id: deleteStaff,
+      ...data,
+    });
   };
 
   const editMutation = useBackendMutation(
@@ -221,7 +233,11 @@ export default function CourseStaffTable({
           />
         </Modal.Body>
       </Modal>
-
+      <CourseStaffDeleteModal
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
+      />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}
