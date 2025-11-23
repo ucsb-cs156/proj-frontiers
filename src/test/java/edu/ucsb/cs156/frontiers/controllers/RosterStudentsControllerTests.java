@@ -995,27 +995,6 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
   }
 
   @Test
-  @WithInstructorCoursePermissions
-  public void testUpdateRosterStudent_missingRequiredSection() throws Exception {
-    MvcResult response =
-        mockMvc
-            .perform(
-                put("/api/rosterstudents/update")
-                    .with(csrf())
-                    .param("id", "1")
-                    .param("firstName", "Jeff")
-                    .param("lastName", "Buckley")
-                    .param("studentId", "324")
-                    .param("email", "notanemail@gmail.com")
-                    .param("section", ""))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-
-    String errorMessage = response.getResponse().getErrorMessage();
-    assertEquals("Required fields cannot be empty", errorMessage);
-  }
-
-  @Test
   @WithMockUser(roles = {"USER", "GITHUB"})
   public void test_already_part_is_owner() throws Exception {
     User currentUser = currentUserService.getUser();

@@ -74,7 +74,7 @@ public class RosterStudentsController extends ApiController {
       @Parameter(name = "firstName") @RequestParam String firstName,
       @Parameter(name = "lastName") @RequestParam String lastName,
       @Parameter(name = "email") @RequestParam String email,
-      @Parameter(name = "section") @RequestParam String section,
+      @Parameter(name = "section", required = false) @RequestParam String section,
       @Parameter(name = "courseId") @RequestParam Long courseId)
       throws EntityNotFoundException {
 
@@ -279,7 +279,6 @@ public class RosterStudentsController extends ApiController {
         || section == null
         || firstName.trim().isEmpty()
         || lastName.trim().isEmpty()
-        || section.trim().isEmpty()
         || studentId.trim().isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Required fields cannot be empty");
     }
