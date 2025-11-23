@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import java.security.NoSuchAlgorithmException;
@@ -23,32 +24,39 @@ public class RepositoryService {
   private final RestTemplate restTemplate;
   private final ObjectMapper mapper;
 
-  public RepositoryService(
-      JwtService jwtService, RestTemplateBuilder restTemplateBuilder, ObjectMapper mapper) {
-    this.jwtService = jwtService;
-    this.restTemplate = restTemplateBuilder.build();
-    this.mapper = mapper;
-  }
-
   /**
-   * Creates a single student repository if it doesn't already exist, and provisions access to the
-   * repository by that student
+   * Creates a GitHub repository for a user (student or staff), given only their GitHub login.
    *
-   * @param course The Course in question
-   * @param student RosterStudent of the student the repository should be created for
-   * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
-   *     format repoPrefix-githubLogin
-   * @param isPrivate Whether the repository is private or not
+   * <p>This helper method contains the shared logic used by both {@link
+   * #createStudentRepository(Course, RosterStudent, String, Boolean, RepositoryPermissions)} and
+   * {@link #createStaffRepository(Course, CourseStaff, String, Boolean, RepositoryPermissions)}.
+   *
+   * <ul>
+   *   <li>Checks whether the repository already exists.
+   *   <li>If not, creates a new repository under the course's organization.
+   *   <li>Adds the user as a collaborator with the given permission level.
+   * </ul>
+   *
+   * @param course the course whose organization the repo belongs to
+   * @param githubLogin GitHub username of the student or staff member
+   * @param repoPrefix prefix for the repository name (repoPrefix-githubLogin)
+   * @param isPrivate whether the created repository should be private
+   * @param permissions collaborator permissions to grant the user
+   * @throws NoSuchAlgorithmException if signing fails
+   * @throws InvalidKeySpecException if signing fails
+   * @throws JsonProcessingException if JSON serialization fails
    */
-  public void createStudentRepository(
+  private void createRepositoryForStudentOrStaff(
       Course course,
-      RosterStudent student,
+      String githubLogin,
       String repoPrefix,
       Boolean isPrivate,
       RepositoryPermissions permissions)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-    String newRepoName = repoPrefix + "-" + student.getGithubLogin();
+
+    String newRepoName = repoPrefix + "-" + githubLogin;
     String token = jwtService.getInstallationToken(course);
+
     String existenceEndpoint =
         "https://api.github.com/repos/" + course.getOrgName() + "/" + newRepoName;
     String createEndpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos";
@@ -58,7 +66,8 @@ public class RepositoryService {
             + "/"
             + newRepoName
             + "/collaborators/"
-            + student.getGithubLogin();
+            + githubLogin;
+
     HttpHeaders existenceHeaders = new HttpHeaders();
     existenceHeaders.add("Authorization", "Bearer " + token);
     existenceHeaders.add("Accept", "application/vnd.github+json");
@@ -91,6 +100,7 @@ public class RepositoryService {
         return;
       }
     }
+
     try {
       Map<String, Object> provisionBody = new HashMap<>();
       provisionBody.put("permission", permissions.getApiName());
@@ -99,7 +109,57 @@ public class RepositoryService {
       HttpEntity<String> provisionEntity = new HttpEntity<>(provisionAsJson, existenceHeaders);
       restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);
     } catch (HttpClientErrorException ignored) {
-
+      // silently ignore if provisioning fails (same as before)
     }
+  }
+
+  public RepositoryService(
+      JwtService jwtService, RestTemplateBuilder restTemplateBuilder, ObjectMapper mapper) {
+    this.jwtService = jwtService;
+    this.restTemplate = restTemplateBuilder.build();
+    this.mapper = mapper;
+  }
+
+  /**
+   * Creates a single student repository if it doesn't already exist, and provisions access to the
+   * repository by that student
+   *
+   * @param course The Course in question
+   * @param student RosterStudent of the student the repository should be created for
+   * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
+   *     format repoPrefix-githubLogin
+   * @param isPrivate Whether the repository is private or not
+   */
+  public void createStudentRepository(
+      Course course,
+      RosterStudent student,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    createRepositoryForStudentOrStaff(
+        course, student.getGithubLogin(), repoPrefix, isPrivate, permissions);
+  }
+
+  /**
+   * Creates a single staff repository if it doesn't already exist, and provisions access to the
+   * repository by that staff member
+   *
+   * @param course The Course in question
+   * @param staff CourseStaff of the staff the repository should be created for
+   * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
+   *     format repoPrefix-githubLogin
+   * @param isPrivate Whether the repository is private or not
+   */
+  public void createStaffRepository(
+      Course course,
+      CourseStaff staff,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+    createRepositoryForStudentOrStaff(
+        course, staff.getGithubLogin(), repoPrefix, isPrivate, permissions);
   }
 }
