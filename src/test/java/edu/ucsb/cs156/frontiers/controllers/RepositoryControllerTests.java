@@ -13,7 +13,7 @@ import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.jobs.CreateStudentRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
@@ -123,7 +123,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     Job job = Job.builder().status("processing").build();
-    doReturn(job).when(service).runAsJob(any(CreateStudentRepositoriesJob.class));
+    doReturn(job).when(service).runAsJob(any(CreateStudentOrStaffRepositoriesJob.class));
     MvcResult response =
         mockMvc
             .perform(
@@ -153,7 +153,7 @@ public class RepositoryControllerTests extends ControllerTestCase {
             .build();
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
     Job job = Job.builder().status("processing").build();
-    doReturn(job).when(service).runAsJob(any(CreateStudentRepositoriesJob.class));
+    doReturn(job).when(service).runAsJob(any(CreateStudentOrStaffRepositoriesJob.class));
     MvcResult response =
         mockMvc
             .perform(

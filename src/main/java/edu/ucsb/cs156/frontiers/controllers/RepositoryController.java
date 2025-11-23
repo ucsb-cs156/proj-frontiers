@@ -2,10 +2,11 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
-import edu.ucsb.cs156.frontiers.jobs.CreateStudentRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -45,7 +46,9 @@ public class RepositoryController extends ApiController {
       @RequestParam Long courseId,
       @RequestParam String repoPrefix,
       @RequestParam Optional<Boolean> isPrivate,
-      @RequestParam RepositoryPermissions permissions) {
+      @RequestParam RepositoryPermissions permissions,
+      @RequestParam(required = false, defaultValue = "STUDENTS_ONLY")
+          RepositoryCreationOption creationOption) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -53,13 +56,14 @@ public class RepositoryController extends ApiController {
     if (course.getOrgName() == null || course.getInstallationId() == null) {
       throw new NoLinkedOrganizationException(course.getCourseName());
     } else {
-      CreateStudentRepositoriesJob job =
-          CreateStudentRepositoriesJob.builder()
+      CreateStudentOrStaffRepositoriesJob job =
+          CreateStudentOrStaffRepositoriesJob.builder()
               .repositoryPrefix(repoPrefix)
               .isPrivate(isPrivate.orElse(false))
               .repositoryService(repositoryService)
               .course(course)
               .permissions(permissions)
+              .creationOption(creationOption)
               .build();
       return jobService.runAsJob(job);
     }
