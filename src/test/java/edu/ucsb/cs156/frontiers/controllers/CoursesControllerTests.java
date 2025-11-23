@@ -976,6 +976,55 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
+  /** Test that updating an instructor email sanitizes the address properly */
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testUpdateInstructorEmail_byAdmin_email_is_sanitized() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail("old-instructor@example.com")
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(instructorRepository.existsByEmail(eq("new-instructor@example.com"))).thenReturn(false);
+    when(adminRepository.existsByEmail(eq("new-instructor@example.com"))).thenReturn(true);
+
+    Course updatedCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail("new-instructor@example.com")
+            .build();
+
+    when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateInstructor")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("instructorEmail", " new-instructor@example.com "))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(instructorRepository, times(1)).existsByEmail(eq("new-instructor@example.com"));
+    verify(courseRepository, times(1)).save(eq(updatedCourse));
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+    assertEquals(expectedJson, responseString);
+  }
+
   /**
    * Test that updateInstructorEmail fails when email doesn't exist in instructor or admin tables
    */

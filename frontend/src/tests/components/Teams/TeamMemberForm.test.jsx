@@ -81,7 +81,9 @@ describe("TeamMemberForm tests", () => {
     await screen.findByText(/Select a student./);
 
     await waitFor(() =>
-      expect(screen.getByText(/Please select a student/)).toBeInTheDocument(),
+      expect(
+        screen.getByPlaceholderText("Select a student."),
+      ).toBeInTheDocument(),
     );
   });
 });
