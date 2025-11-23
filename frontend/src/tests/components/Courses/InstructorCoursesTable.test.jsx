@@ -1052,7 +1052,9 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       // Verify modal is not initially open
-      expect(screen.queryByTestId("CourseModal-delete")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("CourseModal-delete"),
+      ).not.toBeInTheDocument();
 
       // Click the delete button
       const deleteButton = screen.getByTestId(
@@ -1251,7 +1253,7 @@ describe("InstructorCoursesTable tests", () => {
         );
       });
     });
-    
+
     test("Shows error toast when course update API call fails without message", async () => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();
