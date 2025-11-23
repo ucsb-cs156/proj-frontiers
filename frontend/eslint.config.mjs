@@ -26,6 +26,7 @@ export default defineConfig([
       reactHooks.configs["recommended-latest"],
       reactRefresh.configs.vite,
       reactPlugin.configs.flat.recommended,
+      reactPlugin.configs.flat["jsx-runtime"],
     ],
     languageOptions: {
       ecmaVersion: 2020,
@@ -39,7 +40,6 @@ export default defineConfig([
     rules: {
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
       "react/prop-types": "off",
-      "react/react-in-jsx-scope": "off",
     },
     settings: {
       react: {
