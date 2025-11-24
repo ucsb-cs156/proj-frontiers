@@ -1,0 +1,77 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "007-create-assignment-table",
+      "author": "samc005",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "ASSIGNMENT_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_ASSIGNMENT_COURSE_ID",
+                    "referencedTableName": "COURSE",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "COURSE_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "ASN_TYPE",
+                  "type": "VARCHAR(50)"
+                }
+              },
+            {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "VISIBILITY",
+                  "type": "VARCHAR(50)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "PERMISSION",
+                  "type": "VARCHAR(50)"
+                }
+              }
+            ],
+            "tableName": "ASSIGNMENT"
+          }
+        }
+      ]
+    }
+  }
+]}
