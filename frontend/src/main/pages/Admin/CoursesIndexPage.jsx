@@ -72,6 +72,7 @@ export default function CoursesIndexPage() {
           courses={courses}
           currentUser={currentUser}
           enableInstructorUpdate={true}
+          deleteCourseButton={true}
         />
       </div>
     </BasicLayout>
