@@ -7,6 +7,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
@@ -210,6 +211,52 @@ public class RepositoryServiceTests {
 
     repositoryService.createStudentRepository(
         course, student, "repo1", false, RepositoryPermissions.WRITE);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void successfully_creates_staff_repo_public() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-staff1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withResourceNotFound());
+
+    Map<String, Object> createBody = new HashMap<>();
+    createBody.put("name", "repo1-staff1");
+    createBody.put("private", false);
+    String createBodyJson = objectMapper.writeValueAsString(createBody);
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().json(createBodyJson))
+        .andRespond(withSuccess());
+
+    Map<String, Object> provisionBody = new HashMap<>();
+    provisionBody.put("permission", "admin");
+    String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
+
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/repo1-staff1/collaborators/staff1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(content().json(provisionBodyJson))
+        .andRespond(withSuccess());
+
+    CourseStaff staff = CourseStaff.builder().githubLogin("staff1").build();
+
+    repositoryService.createStaffRepository(
+        course, staff, "repo1", false, RepositoryPermissions.ADMIN);
+
     mockRestServiceServer.verify();
   }
 }

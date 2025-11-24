@@ -240,6 +240,10 @@ describe("InstructorCourseShowPage tests", () => {
       "aria-selected",
       "true",
     );
+    expect(screen.getByText("Settings")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "settings",
+    );
     const changeTabs = screen.getByText("Students");
     fireEvent.click(changeTabs);
   });
