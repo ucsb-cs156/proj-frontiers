@@ -141,6 +141,9 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           />
         </Tab>
+        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
+          Coming Soon
+        </Tab>
       </Tabs>
     </BasicLayout>
   );

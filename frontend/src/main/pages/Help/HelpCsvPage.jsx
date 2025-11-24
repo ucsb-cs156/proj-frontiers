@@ -15,6 +15,13 @@ export default function HelpCsvPage() {
           to be supported, please contact the Frontiers development team,
           supplying a sample CSV (with fictional data).
         </p>
+        <p>
+          <b>Note about "dropped" students:</b> dropped students are
+          automatically handled by the system which marks a student as "dropped"
+          if their name previously appeared in an uploaded CSV but not in the
+          current upload. Manually added students are never dropped, even if
+          their name is missing from the current CSV.
+        </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
             <Accordion.Header>UC Santa Barbara</Accordion.Header>
@@ -61,6 +68,11 @@ export default function HelpCsvPage() {
                   </tr>
                 </tbody>
               </table>
+              <p>
+                <b>Ignored Fields:</b> Enrl Cd, Grade, Final Units, Middle,
+                Quarter, Course ID, Section, Meeting Time(s) / Location(s),
+                ClassLevel, Major1, Major2, Date/Time, Pronoun
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="1">
@@ -107,6 +119,9 @@ export default function HelpCsvPage() {
                   </tr>
                 </tbody>
               </table>
+              <p>
+                <b>Ignored Fields:</b> Student ID, ID, Section Name
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="2">
@@ -150,6 +165,11 @@ export default function HelpCsvPage() {
                   </tr>
                 </tbody>
               </table>
+              <p>
+                <b>Ignored Fields:</b> Full name, Canvas user id, Overall course
+                grade, Assignment on time percent, Last page view time, Last
+                participation time, Last logged out
+              </p>
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
