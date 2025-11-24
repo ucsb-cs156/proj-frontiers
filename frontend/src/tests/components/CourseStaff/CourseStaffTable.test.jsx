@@ -241,42 +241,48 @@ describe("CourseStaffTable tests", () => {
   });
 
   test("Delete button calls delete callback", async () => {
-    // arrange
     const currentUser = currentUserFixtures.adminUser;
-
-    axiosMock
-      .onDelete("/api/coursestaff/delete")
-      .reply(200, { message: "Staff member deleted" });
-
-    // act - render the component
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    queryClientSpecific.setQueryData(
+      ["/api/coursestaff/course/7"],
+      courseStaffFixtures.threeStaff,
+    );
+    queryClientSpecific.setQueryData(["mock queryData"], null);
+    axiosMock.onDelete("/api/coursestaff/delete").reply(200);
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClientSpecific}>
         <MemoryRouter>
           <CourseStaffTable
             staff={courseStaffFixtures.threeStaff}
             currentUser={currentUser}
+            courseId={7}
           />
         </MemoryRouter>
       </QueryClientProvider>,
     );
-
-    // assert - check that the expected content is rendered
-    expect(
-      await screen.findByTestId(`${testId}-cell-row-0-col-id`),
-    ).toHaveTextContent("1");
-
     const deleteButton = screen.getByTestId(
-      `${testId}-cell-row-0-col-Delete-button`,
+      "CourseStaffTable-cell-row-0-col-Delete-button",
     );
-    expect(deleteButton).toBeInTheDocument();
-
-    // act - click the delete button
     fireEvent.click(deleteButton);
-
-    // assert - check that the delete endpoint was called
-
-    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].params).toEqual({ id: 1 });
+    await screen.findByTestId("CourseStaffDeleteModal");
+    fireEvent.click(screen.getByText("Delete Staff"));
+    await waitFor(() => axiosMock.history.delete.length === 1);
+    expect(axiosMock.history.delete[0].params).toEqual({
+      id: 1,
+      courseId: 7,
+      removeFromOrg: "false",
+    });
+    await waitFor(() =>
+      expect(screen.queryByText("Delete Staff")).not.toBeInTheDocument(),
+    );
+    expect(mockToast).toBeCalledWith("Staff member deleted successfully.");
   });
 
   test("tooltips for PENDING status", async () => {
