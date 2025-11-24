@@ -119,6 +119,9 @@ public class RosterStudentsController extends ApiController {
     Iterable<RosterStudentDTO> rosterStudentDTOs =
         () ->
             java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)
+                .sorted(
+                    java.util.Comparator.comparing(RosterStudent::getLastName)
+                        .thenComparing(RosterStudent::getFirstName))
                 .map(RosterStudentDTO::new)
                 .iterator();
     return rosterStudentDTOs;
