@@ -1,0 +1,84 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "Assignment-0",
+      "author": "joshua-dev-codes",
+      "changes": [
+        {
+          "createTable": {
+            "columns": [
+              {
+                "column": {
+                  "autoIncrement": true,
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "ASSIGNMENTS_PK"
+                  },
+                  "name": "ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_ASSIGNMENT_COURSE_ID",
+                    "referencedTableName": "COURSE",
+                    "referencedColumnName": "ID"
+                  },
+                  "name": "COURSE_ID",
+                  "type": "BIGINT"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "NAME",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "ASN_TYPE",
+                  "type": "VARCHAR(50)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "VISIBILITY",
+                  "type": "VARCHAR(50)"
+                }
+              },
+              {
+                "column": {
+                  "constraints": {
+                    "nullable": false
+                  },
+                  "name": "PERMISSION",
+                  "type": "VARCHAR(50)"
+                }
+              }
+            ],
+            "tableName": "ASSIGNMENT"
+          }
+        },
+        {
+          "addUniqueConstraint": {
+            "columnNames": "NAME, COURSE_ID",
+            "constraintName": "UC_ASSIGNMENT_NAME_COURSE",
+            "tableName": "ASSIGNMENT"
+          }
+        }
+      ]
+    }
+  }
+]}
