@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.enums.RepositoryCreationTarget;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
@@ -30,13 +31,15 @@ public class RepositoryController extends ApiController {
   @Autowired CourseRepository courseRepository;
 
   /**
-   * Fires a job that creates a repo for every RosterStudent with a linked user with a GitHub
-   * account.
+   * Fires a job that creates a repo for students and/or staff members with GitHub accounts.
    *
    * @param courseId ID of course to create repos for
    * @param repoPrefix each repo created will begin with this prefix, followed by a dash and the
-   *     student's GitHub username
+   *     GitHub username
    * @param isPrivate determines whether the repository being created is private
+   * @param permissions the permissions level to grant to the repository collaborators
+   * @param creationTarget determines who gets repositories: STUDENTS_ONLY (default), STAFF_ONLY, or
+   *     STUDENTS_AND_STAFF
    * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
    */
   @PostMapping("/createRepos")
@@ -45,7 +48,8 @@ public class RepositoryController extends ApiController {
       @RequestParam Long courseId,
       @RequestParam String repoPrefix,
       @RequestParam Optional<Boolean> isPrivate,
-      @RequestParam RepositoryPermissions permissions) {
+      @RequestParam RepositoryPermissions permissions,
+      @RequestParam Optional<RepositoryCreationTarget> creationTarget) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -60,6 +64,7 @@ public class RepositoryController extends ApiController {
               .repositoryService(repositoryService)
               .course(course)
               .permissions(permissions)
+              .creationTarget(creationTarget.orElse(RepositoryCreationTarget.STUDENTS_ONLY))
               .build();
       return jobService.runAsJob(job);
     }
