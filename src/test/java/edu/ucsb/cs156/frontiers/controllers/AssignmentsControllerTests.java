@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -158,5 +159,27 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorAssignmentView(assignment));
     assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testPostAssigment_courseNotFound_throwsException() throws Exception {
+    when(courseRepository.findById(999L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/assignments/post")
+                    .with(csrf())
+                    .param("courseId", "999")
+                    .param("name", "Assignment X")
+                    .param("asn_type", "individual")
+                    .param("visibility", "public")
+                    .param("permission", "write"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    String responseBody = response.getResponse().getContentAsString();
+    assertTrue(responseBody.contains("Course not found: 999"));
   }
 }
