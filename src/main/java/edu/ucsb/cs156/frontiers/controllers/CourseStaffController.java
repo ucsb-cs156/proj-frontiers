@@ -174,7 +174,12 @@ public class CourseStaffController extends ApiController {
   @Transactional
   public ResponseEntity<String> deleteStaffMember(
       @Parameter(name = "id") @RequestParam Long id,
-      @Parameter(name = "courseId") @RequestParam Long courseId)
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(
+              name = "removeFromOrg",
+              description = "Whether to remove staff member from GitHub organization")
+          @RequestParam(defaultValue = "false")
+          boolean removeFromOrg)
       throws EntityNotFoundException {
     CourseStaff staffMember =
         courseStaffRepository
@@ -186,8 +191,10 @@ public class CourseStaffController extends ApiController {
     boolean orgRemovalSuccessful = false;
     String orgRemovalErrorMessage = null;
 
-    // Try to remove the student from the organization if they have a GitHub login
-    if (staffMember.getGithubLogin() != null
+    // Try to remove the student from the organization if they have a GitHub login and removefromorg
+    // is true
+    if (removeFromOrg
+        && staffMember.getGithubLogin() != null
         && course.getOrgName() != null
         && course.getInstallationId() != null) {
       orgRemovalAttempted = true;
@@ -195,12 +202,13 @@ public class CourseStaffController extends ApiController {
         organizationMemberService.removeOrganizationMember(staffMember);
         orgRemovalSuccessful = true;
       } catch (Exception e) {
-        log.error("Error removing student from organization: {}", e.getMessage());
+        log.error("Error removing staff from organization: {}", e.getMessage());
         orgRemovalErrorMessage = e.getMessage();
         // Continue with deletion even if organization removal fails
       }
     }
 
+    // delete even if not deleted from org
     course.getCourseStaff().remove(staffMember);
     staffMember.setCourse(null);
     courseStaffRepository.delete(staffMember);
