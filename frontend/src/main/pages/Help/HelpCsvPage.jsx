@@ -321,21 +321,21 @@ export default function HelpCsvPage() {
                       <code>FIRSTNAME</code>
                     </td>
                     <td>Student's first name</td>
-                    <td></td>
+                    <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
                     <td>
                       <code>LASTNAME</code>
                     </td>
                     <td>Student's last name</td>
-                    <td></td>
+                    <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
                     <td>
                       <code>EMAIL</code>
                     </td>
                     <td>Student's email address</td>
-                    <td></td>
+                    <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
                     <td>
