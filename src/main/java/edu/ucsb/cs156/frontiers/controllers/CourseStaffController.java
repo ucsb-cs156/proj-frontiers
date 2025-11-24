@@ -61,7 +61,7 @@ public class CourseStaffController extends ApiController {
         CourseStaff.builder()
             .firstName(firstName)
             .lastName(lastName)
-            .email(email)
+            .email(email.strip())
             .course(course)
             .build();
 
