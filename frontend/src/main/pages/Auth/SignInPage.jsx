@@ -1,6 +1,11 @@
 import React from "react";
-import SignInContent from "main/pages/Auth/SignInContent.jsx";
+import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
+import SignInContent from "main/pages/Auth/SignInContent";
 
 export default function SignInPage() {
-  return <SignInContent />;
+  return (
+    <BasicLayout>
+      <SignInContent />
+    </BasicLayout>
+  );
 }

@@ -1,5 +1,7 @@
 import React from "react";
 import { useLocation } from "react-router";
+import { Row, Alert } from "react-bootstrap";
+import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import SignInContent from "main/pages/Auth/SignInContent.jsx";
 
 export default function PromptSignInPage() {
@@ -9,5 +11,14 @@ export default function PromptSignInPage() {
     sessionStorage.setItem("redirect", location.pathname);
   };
 
-  return <SignInContent showPromptAlert={true} onCardClick={setRedirect} />;
+  return (
+    <BasicLayout>
+      <Row className="p-3">
+        <Alert variant="danger">
+          Please sign in before accessing this page.
+        </Alert>
+      </Row>
+      <SignInContent onCardClick={setRedirect} />
+    </BasicLayout>
+  );
 }
