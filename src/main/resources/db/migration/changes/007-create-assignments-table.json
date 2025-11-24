@@ -1,0 +1,67 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "007-create-assignments-table",
+        "author": "KEIGOOMURA",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "ASSIGNMENTS",
+              "columns": [
+                {
+                  "column": {
+                    "name": "ID",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "ASSIGNMENTS_PK"
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "COURSE_ID",
+                    "type": "BIGINT",
+                    "constraints": {
+                      "nullable": false,
+                      "foreignKeyName": "FK_ASSIGNMENT_COURSE_ID",
+                      "referencedTableName": "COURSE",
+                      "referencedColumnName": "ID"
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "NAME",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ASN_TYPE",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "VISIBILITY",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "PERMISSION",
+                    "type": "VARCHAR(255)"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
