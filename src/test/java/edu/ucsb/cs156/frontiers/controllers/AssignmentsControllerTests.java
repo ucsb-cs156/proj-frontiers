@@ -49,8 +49,6 @@ public class AssignmentsControllerTests extends ControllerTestCase {
   @MockitoBean private JobService service;
 
   final String assignmentPostEndpoint = "/api/assignments/post";
-  final String assignmentGetEndpoint = "/api/assignments/";
-  final String assignmentGetAllEndpoint = "/api/assignments/get";
 
   Course course1 =
       Course.builder()
@@ -63,7 +61,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
           .assignments(null)
           .build();
 
-  // POST /api/assignments/post
+  // POST
   @Test
   @WithInstructorCoursePermissions
   public void logged_in_instructor_can_post() throws Exception {
