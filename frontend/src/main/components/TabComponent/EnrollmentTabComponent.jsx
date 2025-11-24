@@ -158,13 +158,23 @@ export default function EnrollmentTabComponent({
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
-          <Button
-            onClick={() => setCsvModal(true)}
-            data-testid={`${testIdPrefix}-csv-button`}
-            className="w-100"
-          >
-            Upload CSV Roster
-          </Button>
+          <div className="d-flex align-items-center">
+            <Button
+              onClick={() => setCsvModal(true)}
+              data-testid={`${testIdPrefix}-csv-button`}
+              className="w-100"
+            >
+              Upload CSV Roster
+            </Button>
+
+            <span
+              title="CSV Upload format Help"
+              onClick={() => window.open("/help/csv", "_blank")}
+              style={{ cursor: "pointer" }}
+            >
+              ℹ️
+            </span>
+          </div>
         </Col>
         <Col>
           <Button
