@@ -76,7 +76,7 @@ public class CoursesController extends ApiController {
             .courseName(courseName)
             .term(term)
             .school(school)
-            .instructorEmail(currentUser.getUser().getEmail())
+            .instructorEmail(currentUser.getUser().getEmail().strip())
             .build();
     Course savedCourse = courseRepository.save(course);
 
@@ -349,6 +349,8 @@ public class CoursesController extends ApiController {
   public InstructorCourseView updateInstructorEmail(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "instructorEmail") @RequestParam String instructorEmail) {
+
+    instructorEmail = instructorEmail.strip();
 
     Course course =
         courseRepository

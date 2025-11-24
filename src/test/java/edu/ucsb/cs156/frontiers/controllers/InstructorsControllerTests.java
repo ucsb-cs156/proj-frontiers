@@ -71,6 +71,27 @@ public class InstructorsControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void logged_in_admins_can_post_and_email_is_sanitized() throws Exception {
+    // arrage
+    Instructor instructor = Instructor.builder().email("ins@ucsb.edu").build();
+    when(instructorRepository.findAll()).thenReturn(new ArrayList<>(Arrays.asList(instructor)));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/admin/instructors/post?email= ins@ucsb.edu ").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(instructorRepository, times(1)).save(eq(instructor));
+    String expectedJson = mapper.writeValueAsString(instructor);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
   // Tests for the GET endpoint
   @Test
   public void logged_out_users_cannot_get() throws Exception {

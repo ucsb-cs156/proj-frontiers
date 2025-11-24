@@ -1,5 +1,5 @@
 import { Button, Form } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router";
 import RosterStudentDropdown from "main/components/RosterStudent/RosterStudentDropdown";
 
@@ -12,7 +12,7 @@ function TeamMemberForm({
 }) {
   // Stryker disable all
   const {
-    register,
+    control,
     formState: { errors },
     handleSubmit,
   } = useForm({ defaultValues: initialContents || {} });
@@ -22,14 +22,25 @@ function TeamMemberForm({
 
   const testIdPrefix = "TeamMemberForm";
 
+  const onSubmit = (data) => {
+    submitAction(data);
+  };
+
   return (
-    <Form onSubmit={handleSubmit(submitAction)}>
+    <Form onSubmit={handleSubmit(onSubmit)}>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="rosterStudentId">Select Student</Form.Label>
-        <RosterStudentDropdown
-          rosterStudents={rosterStudents}
-          register={register}
-          isInvalid={Boolean(errors.rosterStudentId)}
+        <Controller
+          name="rosterStudentId"
+          control={control}
+          rules={{ required: "Select a student." }}
+          render={({ field }) => (
+            <RosterStudentDropdown
+              rosterStudents={rosterStudents}
+              {...field}
+              isInvalid={Boolean(errors.rosterStudentId)}
+            />
+          )}
         />
         {errors.rosterStudentId && (
           <Form.Control.Feedback type="invalid">
