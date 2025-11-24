@@ -11,9 +11,9 @@ export default function HelpCsvPage() {
         <h2>Roster Student CSV Upload formats</h2>
         <p>
           Instructors can upload a course roster from a CSV file. The following
-          formats are supported. If you would like your university's format to
-          be supported, please contact the Frontiers development team, supplying
-          a sample CSV (with fictional data).
+          formats are supported. If you would like your university&apos;s format
+          to be supported, please contact the Frontiers development team,
+          supplying a sample CSV (with fictional data).
         </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
@@ -77,7 +77,7 @@ export default function HelpCsvPage() {
             <Accordion.Body>
               <p>
                 The following CSV format can be obtained from the Canvas system
-                at Chico State, through the "New Analytics" feature:
+                at Chico State, through the &quot;New Analytics&quot; feature:
               </p>
               <pre className={"csvExample"} data-testid="chicoStateCsvExample">
                 {csvFixtures.chicoStateCanvas}
@@ -252,7 +252,7 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td>email</td>
                     <td>
-                      Student's email address used to match to the roster.
+                      Student&apos;s email address used to match to the roster.
                     </td>
                   </tr>
                 </tbody>
@@ -314,37 +314,28 @@ export default function HelpCsvPage() {
                       <code>STUDENTID</code>
                     </td>
                     <td>Student ID</td>
-                    <td>Student's university ID (e.g., Perm # at UCSB)</td>
+                    <td>Student&apos;s university ID (e.g., Perm # at UCSB)</td>
                   </tr>
                   <tr>
                     <td>
                       <code>FIRSTNAME</code>
                     </td>
-                    <td>Student's first name</td>
+                    <td>Student&apos;s first name</td>
                     <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
                     <td>
                       <code>LASTNAME</code>
                     </td>
-                    <td>Student's last name</td>
+                    <td>Student&apos;s last name</td>
                     <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
                     <td>
                       <code>EMAIL</code>
                     </td>
-                    <td>Student's email address</td>
+                    <td>Student&apos;s email address</td>
                     <td>Required when re-uploading this CSV.</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <code>SECTION</code>
-                    </td>
-                    <td>Section value (if supplied in the original upload)</td>
-                    <td>
-                      May be blank for formats that do not contain sections.
-                    </td>
                   </tr>
                   <tr>
                     <td>
@@ -358,14 +349,14 @@ export default function HelpCsvPage() {
                       <code>GITHUBID</code>
                     </td>
                     <td>GitHub user ID</td>
-                    <td>Student's GitHub account ID, if connected</td>
+                    <td>Student&apos;s GitHub account ID, if connected</td>
                   </tr>
                   <tr>
                     <td>
                       <code>GITHUBLOGIN</code>
                     </td>
                     <td>GitHub username</td>
-                    <td>Student's GitHub username, if connected</td>
+                    <td>Student&apos;s GitHub username, if connected</td>
                   </tr>
                   <tr>
                     <td>
