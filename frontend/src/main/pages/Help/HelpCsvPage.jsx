@@ -16,8 +16,8 @@ export default function HelpCsvPage() {
           supplying a sample CSV (with fictional data).
         </p>
         <p>
-          <b>Note about "dropped" students:</b> dropped students are
-          automatically handled by the system which marks a student as "dropped"
+          <b>Note about &quot;dropped&quot; students:</b> dropped students are
+          automatically handled by the system which marks a student as &quot;dropped&quot;
           if their name previously appeared in an uploaded CSV but not in the
           current upload. Manually added students are never dropped, even if
           their name is missing from the current CSV.
