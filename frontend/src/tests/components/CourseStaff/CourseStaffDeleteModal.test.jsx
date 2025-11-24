@@ -27,7 +27,7 @@ describe("CourseStaffDeleteModal tests", () => {
       "modal-dialog-centered",
     );
 
-    const submitButton = await screen.getByText("Delete Staff");
+    const submitButton = await screen.getByText("Delete Staff Member");
     fireEvent.click(submitButton);
     await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
     expect(mockSubmit).toHaveBeenCalledWith(
@@ -52,7 +52,7 @@ describe("CourseStaffDeleteModal tests", () => {
       </div>,
     );
 
-    const submitButton = await screen.findByText("Delete Staff");
+    const submitButton = await screen.findByText("Delete Staff Member");
     fireEvent.click(
       screen.getByLabelText(
         "Yes, I'd like to remove them from the GitHub Organization",

@@ -21,20 +21,22 @@ export default function CourseStaffTable({
   const [deleteStaff, setDeleteStaff] = React.useState(null);
 
   // Stryker disable all
-  const onDeleteSuccess = () => {
-    toast("Staff deleted successfully.");
-    hideDeleteModal();
-  };
+  function onDeleteSuccess(message) {
+    console.log(message);
+    toast(message);
+    setShowDeleteModal(false);
+  }
   // Stryker restore all
 
-  function cellToAxiosParamsDelete(cell) {
+  function cellToAxiosParamsDelete(data) {
     return {
       // Stryker disable next-line StringLiteral
       url: "/api/coursestaff/delete",
       method: "DELETE",
       params: {
-        id: cell.row.original.id,
+        id: data.id,
         courseId: courseId,
+        removeFromOrg: data.removeFromOrg === "true",
       },
     };
   }
@@ -69,10 +71,6 @@ export default function CourseStaffTable({
     hideModal();
   };
 
-  const hideDeleteModal = () => {
-    setShowDeleteModal(false);
-  };
-
   // Stryker disable next-line all
   const deleteCallback = async (cell) => {
     setShowDeleteModal(true);
@@ -81,11 +79,7 @@ export default function CourseStaffTable({
 
   const submitDeleteForm = (data) => {
     deleteMutation.mutate({
-      row: {
-        original: {
-          id: deleteStaff,
-        },
-      },
+      id: deleteStaff,
       ...data,
     });
   };

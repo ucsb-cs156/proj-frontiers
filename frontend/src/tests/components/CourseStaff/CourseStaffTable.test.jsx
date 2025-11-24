@@ -240,13 +240,9 @@ describe("CourseStaffTable tests", () => {
     await waitFor(() => axiosMock.history.put.length === 1);
   });
 
-  test("Delete button calls delete callback", async () => {
+  test("Delete button opens delete modal", async () => {
     // arrange
     const currentUser = currentUserFixtures.adminUser;
-
-    axiosMock
-      .onDelete("/api/coursestaff/delete")
-      .reply(200, { message: "Staff member deleted" });
 
     // act - render the component
     render(
@@ -255,6 +251,7 @@ describe("CourseStaffTable tests", () => {
           <CourseStaffTable
             staff={courseStaffFixtures.threeStaff}
             currentUser={currentUser}
+            courseId={7}
           />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -272,16 +269,163 @@ describe("CourseStaffTable tests", () => {
 
     // act - click the delete button
     fireEvent.click(deleteButton);
-    await screen.findByTestId("CourseStaffDeleteModal");
-    fireEvent.click(screen.getByText("Delete Staff"));
-    // assert - check that the delete endpoint was called
 
-    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].params).toEqual({ id: 1 });
-    await waitFor(() =>
-      expect(screen.queryByText("Delete Staff")).not.toBeInTheDocument(),
+    // assert - check that the modal appears
+    await waitFor(() => {
+      expect(screen.getByTestId("CourseStaffDeleteModal")).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText(
+        "Are you sure you want to delete this course staff member?",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  test("Delete modal submits with removeFromOrg=false by default", async () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    axiosMock
+      .onDelete("/api/coursestaff/delete")
+      .reply(200, "Staff member deleted successfully");
+
+    // act - render the component
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.threeStaff}
+            currentUser={currentUser}
+            courseId={7}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
-    expect(mockToast).toBeCalledWith("Staff deleted successfully.");
+
+    // Click delete button to open modal
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    // Wait for modal to appear
+    await waitFor(() => {
+      expect(screen.getByTestId("CourseStaffDeleteModal")).toBeInTheDocument();
+    });
+
+    // Click the submit button without changing the default
+    const submitButton = screen.getByText("Delete Staff Member");
+    fireEvent.click(submitButton);
+
+    // assert - check that the delete endpoint was called with correct params
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+    expect(axiosMock.history.delete[0].params).toEqual({
+      id: 1,
+      courseId: 7,
+      removeFromOrg: false,
+    });
+  });
+
+  test("Delete modal submits with removeFromOrg=true when selected", async () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    axiosMock
+      .onDelete("/api/coursestaff/delete")
+      .reply(200, "Staff member deleted and removed from organization");
+
+    // act - render the component
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.threeStaff}
+            currentUser={currentUser}
+            courseId={7}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Click delete button to open modal
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    // Wait for modal to appear
+    await waitFor(() => {
+      expect(screen.getByTestId("CourseStaffDeleteModal")).toBeInTheDocument();
+    });
+
+    // Select the "Yes, remove from org" option
+    const removeYesRadio = screen.getByLabelText(
+      "Yes, I'd like to remove them from the GitHub Organization",
+    );
+    fireEvent.click(removeYesRadio);
+
+    // Click the submit button
+    const submitButton = screen.getByText("Delete Staff Member");
+    fireEvent.click(submitButton);
+
+    // assert - check that the delete endpoint was called with correct params
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+    expect(axiosMock.history.delete[0].params).toEqual({
+      id: 1,
+      courseId: 7,
+      removeFromOrg: true,
+    });
+  });
+
+  test("Delete modal closes after successful deletion", async () => {
+    // arrange
+    const currentUser = currentUserFixtures.adminUser;
+
+    axiosMock
+      .onDelete("/api/coursestaff/delete")
+      .reply(200, "Staff member deleted successfully");
+
+    // act - render the component
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.threeStaff}
+            currentUser={currentUser}
+            courseId={7}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Click delete button to open modal
+    const deleteButton = screen.getByTestId(
+      `${testId}-cell-row-0-col-Delete-button`,
+    );
+    fireEvent.click(deleteButton);
+
+    // Wait for modal to appear
+    await waitFor(() => {
+      expect(screen.getByTestId("CourseStaffDeleteModal")).toBeInTheDocument();
+    });
+
+    // Click the submit button
+    const submitButton = screen.getByText("Delete Staff Member");
+    fireEvent.click(submitButton);
+
+    // assert - check that the modal is closed and toast is called
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        "Staff member deleted successfully",
+      );
+    });
+
+    // Modal should be closed
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("CourseStaffDeleteModal"),
+      ).not.toBeInTheDocument();
+    });
   });
 
   test("tooltips for PENDING status", async () => {

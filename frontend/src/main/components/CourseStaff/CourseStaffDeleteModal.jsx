@@ -24,7 +24,7 @@ export default function CourseStaffDeleteModal({
       <Form onSubmit={handleSubmit(onSubmitAction)}>
         <Modal.Body>
           <Form.Text>
-            Are you sure you want to delete this course staff?
+            Are you sure you want to delete this course staff member?
           </Form.Text>
           <Form.Group>
             <Form.Check
@@ -46,7 +46,7 @@ export default function CourseStaffDeleteModal({
         </Modal.Body>
         <Modal.Footer>
           <button type="submit" className="btn btn-primary">
-            Delete Staff
+            Delete Staff Member
           </button>
         </Modal.Footer>
       </Form>
