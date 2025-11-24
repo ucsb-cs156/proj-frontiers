@@ -218,7 +218,7 @@ public class RosterStudentsCSVController extends ApiController {
         .firstName(row[5])
         .lastName(row[4])
         .studentId(row[1])
-        .email(row[10])
+        .email(row[10].strip())
         .section(row[0])
         .build();
   }
@@ -229,7 +229,7 @@ public class RosterStudentsCSVController extends ApiController {
         .firstName(getFirstName(row[0]))
         .lastName(getLastName(row[0]))
         .studentId(row[2])
-        .email(row[3])
+        .email(row[3].strip())
         .section("")
         .build();
   }
@@ -245,7 +245,7 @@ public class RosterStudentsCSVController extends ApiController {
         .firstName(firstName)
         .lastName(lastName)
         .studentId(row[9])
-        .email(row[8])
+        .email(row[8].strip())
         .section("")
         .build();
   }
@@ -258,7 +258,7 @@ public class RosterStudentsCSVController extends ApiController {
         .firstName(row[2])
         .lastName(row[6])
         .studentId(row[10])
-        .email(row[1])
+        .email(row[1].strip())
         .section(row[9])
         .build();
   }

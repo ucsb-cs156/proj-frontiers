@@ -8,6 +8,8 @@ import {
   ModalBody,
   ModalHeader,
   Row,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
@@ -110,6 +112,10 @@ export default function EnrollmentTabComponent({
     window.open(`/api/csv/rosterstudents?courseId=${courseId}`, "_blank");
   };
 
+  const openCsvHelp = () => {
+    window.open("/help/csv", "_blank");
+  };
+
   return (
     <div data-testid={`${testIdPrefix}-EnrollmentTabComponent`}>
       <Modal
@@ -158,13 +164,33 @@ export default function EnrollmentTabComponent({
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
-          <Button
-            onClick={() => setCsvModal(true)}
-            data-testid={`${testIdPrefix}-csv-button`}
-            className="w-100"
-          >
-            Upload CSV Roster
-          </Button>
+          <div className="d-flex align-items-center gap-2">
+            <Button
+              onClick={() => setCsvModal(true)}
+              data-testid={`${testIdPrefix}-csv-button`}
+              className="w-100"
+            >
+              Upload CSV Roster
+            </Button>
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="csv-help-tooltip">CSV Upload Format Help</Tooltip>
+              }
+            >
+              <span
+                onClick={openCsvHelp}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  userSelect: "none",
+                }}
+                data-testid={`${testIdPrefix}-csv-info-icon`}
+              >
+                {"\u2139"}
+              </span>
+            </OverlayTrigger>
+          </div>
         </Col>
         <Col>
           <Button
