@@ -55,7 +55,37 @@ describe("EnrollmentTabComponent Tests", () => {
     queryClient.clear();
     vi.resetAllMocks();
   });
+  test("renders Upload CSV button with help icon and tooltip", async () => {
+    axiosMock.onGet("/api/rosterstudents/course/1").reply(200, []);
 
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const helpIconLink = screen.getByLabelText("CSV Upload format Help");
+    expect(helpIconLink).toBeInTheDocument();
+
+    expect(helpIconLink).toHaveAttribute("href", "/help/csv");
+    expect(helpIconLink).toHaveAttribute("target", "_blank");
+    expect(helpIconLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(helpIconLink).toHaveStyle("text-decoration: none");
+
+    expect(screen.getByText("ℹ️")).toBeInTheDocument();
+
+    fireEvent.mouseOver(helpIconLink);
+
+    await waitFor(() => {
+      expect(screen.getByText("CSV Upload format Help")).toBeInTheDocument();
+    });
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveAttribute("id", `${testId}-csv-help-tooltip`);
+  });
   test("Table Renders", async () => {
     axiosMock
       .onGet("/api/rosterstudents/course/1")

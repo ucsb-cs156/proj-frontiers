@@ -7,6 +7,7 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.services.*;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -57,11 +58,13 @@ public class CourseStaffController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
+    String sanitizedEmail = CanonicalFormConverter.convertToValidEmail(email);
+
     CourseStaff courseStaff =
         CourseStaff.builder()
             .firstName(firstName)
             .lastName(lastName)
-            .email(email)
+            .email(sanitizedEmail)
             .course(course)
             .build();
 

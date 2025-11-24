@@ -47,7 +47,6 @@ export default defineConfig([
       "react/jsx-uses-react": "off", //Recomended by React - https://legacy.reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html#eslint
       "react/prop-types": "off",           
       "react/display-name": "off",         
-      "react/no-unescaped-entities": "off" 
     },
   },
   {
