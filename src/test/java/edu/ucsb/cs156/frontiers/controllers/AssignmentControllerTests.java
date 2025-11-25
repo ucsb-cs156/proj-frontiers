@@ -174,7 +174,6 @@ public class AssignmentControllerTests extends ControllerTestCase {
             put("/api/assignments/{id}", 1L)
                 .with(csrf())
                 .param("courseId", "1")
-                .param("name", "HW1")
                 .param("asn_type", "individual")
                 .param("visibility", "public")
                 .param("permission", "read"))
@@ -197,25 +196,13 @@ public class AssignmentControllerTests extends ControllerTestCase {
             .canvasCourseId("12345")
             .build();
 
-    Course course1 =
-        Course.builder()
-            .id(2L)
-            .installationId("INST444")
-            .orgName("MIT")
-            .instructorEmail("viktor@ucsb.edu")
-            .courseName("CMPSC196")
-            .term("S25")
-            .school("Engineering")
-            .canvasCourseId("1231")
-            .build();
-
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     Assignment assignment =
         Assignment.builder()
             .id(1L)
-            .course(course1)
-            .name("Old Assignment")
+            .course(course)
+            .name("HW1")
             .asn_type("team")
             .visibility("private")
             .permission("write")
@@ -241,7 +228,6 @@ public class AssignmentControllerTests extends ControllerTestCase {
                 put("/api/assignments/1")
                     .with(csrf())
                     .param("courseId", "1")
-                    .param("name", "HW1")
                     .param("asn_type", "individual")
                     .param("visibility", "public")
                     .param("permission", "read"))
@@ -280,7 +266,7 @@ public class AssignmentControllerTests extends ControllerTestCase {
         Assignment.builder()
             .id(1L)
             .course(course)
-            .name("Old Assignment")
+            .name("HW1")
             .asn_type("team")
             .visibility("private")
             .permission("admin")
@@ -306,7 +292,6 @@ public class AssignmentControllerTests extends ControllerTestCase {
                 put("/api/assignments/1")
                     .with(csrf())
                     .param("courseId", "1")
-                    .param("name", "HW1")
                     .param("asn_type", "individual")
                     .param("visibility", "public")
                     .param("permission", "admin"))
@@ -315,6 +300,8 @@ public class AssignmentControllerTests extends ControllerTestCase {
 
     verify(assignmentRepository, times(1)).findById(1L);
     verify(assignmentRepository, times(1)).save(any(Assignment.class));
+
+    assertEquals(updatedAssignment, assignment);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(updatedAssignment);
@@ -333,7 +320,6 @@ public class AssignmentControllerTests extends ControllerTestCase {
                 put("/api/assignments/1")
                     .with(csrf())
                     .param("courseId", "999")
-                    .param("name", "HW1")
                     .param("asn_type", "individual")
                     .param("visibility", "public")
                     .param("permission", "write"))
@@ -369,7 +355,6 @@ public class AssignmentControllerTests extends ControllerTestCase {
             put("/api/assignments/999")
                 .with(csrf())
                 .param("courseId", "1")
-                .param("name", "HW1")
                 .param("asn_type", "individual")
                 .param("visibility", "public")
                 .param("permission", "read"))

@@ -62,16 +62,14 @@ public class AssignmentController extends ApiController {
   public Assignment putAssignment(
       @Parameter(name = "id") @PathVariable Long id,
       @Parameter(name = "courseId") @RequestParam Long courseId,
-      @Parameter(name = "name") @RequestParam String name,
       @Parameter(name = "asn_type") @RequestParam String asn_type,
       @Parameter(name = "visibility") @RequestParam String visibility,
       @Parameter(name = "permission") @RequestParam String permission) {
 
-    // Find the course or throw 404
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    // Validate that the course exists
+    courseRepository
+        .findById(courseId)
+        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
     // Find the Assignment object
     Assignment assignment =
@@ -80,8 +78,6 @@ public class AssignmentController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Assignment.class, id));
 
     // Update Assignment object
-    assignment.setCourse(course);
-    assignment.setName(name);
     assignment.setAsn_type(asn_type);
     assignment.setVisibility(visibility);
     assignment.setPermission(permission);
