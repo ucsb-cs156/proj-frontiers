@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Assignment;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.enums.AssignmentType;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.AssignmentRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,12 +39,14 @@ public class AssignmentsController extends ApiController {
   @Operation(summary = "Create a new assignment")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/post")
-  public ResponseEntity<UpsertResponse> postRosterStudent(
-      @Parameter(name = "course") @RequestParam Long courseId,
+  public Assignment postAssignment(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "name") @RequestParam String name,
-      @Parameter(name = "asnType") @RequestParam String asnType,
-      @Parameter(name = "visibility") @RequestParam String visibility,
-      @Parameter(name = "permission") @RequestParam String permission)
+      @Parameter(name = "asnType") @RequestParam AssignmentType asnType,
+      @Parameter(name = "visibility") @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Visibility visibility,
+      @Parameter(name = "permission") @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Permission permission)
       throws EntityNotFoundException {
 
     // Get Course or else throw an error
@@ -56,10 +58,10 @@ public class AssignmentsController extends ApiController {
 
     Assignment assignment =
         Assignment.builder()
-            .courseId(courseId)
+            .course(course)
             .name(name)
             .asnType(asnType)
-            .visbility(visibility)
+            .visibility(visibility)
             .permission(permission)
             .build();
 

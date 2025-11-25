@@ -2,19 +2,26 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Assignment;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.AssignmentType;
 import edu.ucsb.cs156.frontiers.enums.Permission;
 import edu.ucsb.cs156.frontiers.enums.Visibility;
 import edu.ucsb.cs156.frontiers.repositories.AssignmentRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,32 +30,49 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 @Slf4j
-@WebMvcTest(controllers = AssignmentController.class)
-public class AssignmentControllerTests extends ControllerTestCase {
+@WebMvcTest(controllers = AssignmentsController.class)
+public class AssignmentsControllerTests extends ControllerTestCase {
   @MockitoBean private CourseRepository courseRepository;
 
   @MockitoBean private AssignmentRepository assignmentRepository;
 
+  // Tests for the POST endpoint
+  @Test
+  public void logged_out_users_cannot_post() throws Exception {
+    mockMvc
+        .perform(post("/api/admin/assignments/post"))
+        .andExpect(status().is(403)); // logged out users cannot post
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_users_cannot_post() throws Exception {
+    mockMvc
+        .perform(post("/api/admin/assignments/post"))
+        .andExpect(status().is(403)); // logged in users cannot post
+  }
+
   /** Test that ROLE_INSTRUCTOR can create an assignment */
   @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   public void testPostAssignment_byInstructor() throws Exception {
     User user = currentUserService.getCurrentUser().getUser();
 
     // Arrange
     Course course =
         Course.builder()
+            .id(1L)
             .courseName("CS156")
             .term("S25")
             .school("UCSB")
             .instructorEmail(user.getEmail())
             .build();
 
-    when(courseRepository.save(any(Course.class))).thenReturn(course);
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
     Assignment assignment =
         Assignment.builder()
-            .courseId(course)
+            .course(course)
             .name("HW1")
             .asnType(AssignmentType.INDIVIDUAL)
             .visibility(Visibility.PUBLIC)
@@ -77,5 +101,41 @@ public class AssignmentControllerTests extends ControllerTestCase {
     // Assert returned JSON
     String expectedJson = mapper.writeValueAsString(assignment);
     assertEquals(expectedJson, response.getResponse().getContentAsString());
+  }
+
+  /**
+   * Test that you cannot post a single roster student for a course that does not exist
+   *
+   * @throws Exception
+   */
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_AdminCannotPostAssignmentForCourseThatDoesNotExist() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/assignments/post")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("name", "HW1")
+                    .param("asnType", "INDIVIDUAL")
+                    .param("visibility", "PUBLIC")
+                    .param("permission", "READ"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 1 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
   }
 }
