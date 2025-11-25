@@ -25,7 +25,6 @@ export default function CourseStaffTable({
   };
   // Stryker disable all
   function onDeleteSuccess(message) {
-    console.log("YAY WE SUCCEEDED IN DELETION!");
     console.log(message);
     toast(message);
     hideDeleteModal();

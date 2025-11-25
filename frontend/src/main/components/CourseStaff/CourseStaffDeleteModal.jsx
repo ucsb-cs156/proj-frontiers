@@ -46,7 +46,7 @@ export default function CourseStaffDeleteModal({
         </Modal.Body>
         <Modal.Footer>
           <button type="submit" className="btn btn-primary">
-            Delete Course Staff
+            Delete Staff
           </button>
         </Modal.Footer>
       </Form>
