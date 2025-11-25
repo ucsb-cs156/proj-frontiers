@@ -54,4 +54,36 @@ public class AssignmentController extends ApiController {
     Assignment savedAssignment = assignmentRepository.save(assignment);
     return savedAssignment;
   }
+
+  /** Edit an assignment */
+  @Operation(summary = "Edit an assignment")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("/{id}")
+  public Assignment putAssignment(
+      @Parameter(name = "id") @PathVariable Long id,
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "asn_type") @RequestParam String asn_type,
+      @Parameter(name = "visibility") @RequestParam String visibility,
+      @Parameter(name = "permission") @RequestParam String permission) {
+
+    // Validate that the course exists
+    courseRepository
+        .findById(courseId)
+        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    // Find the Assignment object
+    Assignment assignment =
+        assignmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(Assignment.class, id));
+
+    // Update Assignment object
+    assignment.setAsn_type(asn_type);
+    assignment.setVisibility(visibility);
+    assignment.setPermission(permission);
+
+    // Save and return
+    Assignment savedAssignment = assignmentRepository.save(assignment);
+    return savedAssignment;
+  }
 }
