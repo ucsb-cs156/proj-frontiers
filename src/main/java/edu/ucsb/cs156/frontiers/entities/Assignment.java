@@ -19,7 +19,7 @@ public class Assignment {
 
   @ManyToOne
   @JoinColumn(name = "course_id")
-  private Course course;
+  private Long courseId;
 
   private String name;
 
