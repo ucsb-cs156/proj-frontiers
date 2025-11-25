@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Assignment;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.AssignmentRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +46,7 @@ public class AssignmentsController extends ApiController {
     Course course =
         courseRepository
             .findById(courseId)
-            .orElseThrow(() -> new IllegalArgumentException("Course not found: " + courseId));
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     Assignment assignment =
         Assignment.builder()
             .course(course)
@@ -73,5 +74,37 @@ public class AssignmentsController extends ApiController {
           a.getVisibility(),
           a.getPermission());
     }
+  }
+
+  /**
+   * This method updates an existing assignment.
+   *
+   * @param id the id of the assignment
+   * @param asn_type the new type of the assignment
+   * @param visibility the new visibility of the assignment
+   * @param permission the new permission on the assignment
+   * @return the updated assignment
+   */
+  @Operation(summary = "Update an existing assignment")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #id)")
+  @PutMapping("")
+  public InstructorAssignmentView updateAssignment(
+      @Parameter(name = "id") @RequestParam Long id,
+      @Parameter(name = "asn_type") @RequestParam String asn_type,
+      @Parameter(name = "visibility") @RequestParam String visibility,
+      @Parameter(name = "permission") @RequestParam String permission) {
+
+    Assignment assignment =
+        assignmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(Assignment.class, id));
+
+    assignment.setAsnType(asn_type);
+    assignment.setVisibility(visibility);
+    assignment.setPermission(permission);
+
+    Assignment savedAssignment = assignmentRepository.save(assignment);
+
+    return new InstructorAssignmentView(savedAssignment);
   }
 }

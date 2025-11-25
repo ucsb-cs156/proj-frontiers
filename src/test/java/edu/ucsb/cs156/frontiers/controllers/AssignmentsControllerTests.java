@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.controllers.AssignmentsController.InstructorAssignmentView;
 import edu.ucsb.cs156.frontiers.entities.Assignment;
 import edu.ucsb.cs156.frontiers.entities.Course;
@@ -23,6 +24,7 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -176,10 +178,162 @@ public class AssignmentsControllerTests extends ControllerTestCase {
                     .param("asn_type", "individual")
                     .param("visibility", "public")
                     .param("permission", "write"))
-            .andExpect(status().isBadRequest())
+            .andExpect(status().isNotFound())
             .andReturn();
 
     String responseBody = response.getResponse().getContentAsString();
-    assertTrue(responseBody.contains("Course not found: 999"));
+    assertTrue(responseBody.contains("Course with id 999 not found"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void updateAssignment_success_admin() throws Exception {
+
+    Assignment assignment =
+        Assignment.builder()
+            .id(1L)
+            .name("Assignment 1")
+            .asnType("individual")
+            .visibility("public")
+            .permission("write")
+            .build();
+
+    Assignment updatedAssignment =
+        Assignment.builder()
+            .id(1L)
+            .name("Assignment 1")
+            .asnType("group")
+            .visibility("private")
+            .permission("read")
+            .build();
+
+    when(assignmentRepository.findById(eq(1L))).thenReturn(Optional.of(assignment));
+    when(assignmentRepository.save(any(Assignment.class))).thenReturn(updatedAssignment);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/api/assignments")
+                    .param("id", "1")
+                    .param("asn_type", "group")
+                    .param("visibility", "private")
+                    .param("permission", "read")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(assignmentRepository, times(1)).findById(eq(1L));
+    verify(assignmentRepository, times(1)).save(any(Assignment.class));
+
+    String expectedJson =
+        mapper.writeValueAsString(new InstructorAssignmentView(updatedAssignment));
+    assertEquals(expectedJson, result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  public void updateAssignment_notFound() throws Exception {
+    when(assignmentRepository.findById(eq(2L))).thenReturn(Optional.empty());
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/api/assignments")
+                    .param("id", "2")
+                    .param("asn_type", "individual")
+                    .param("visibility", "public")
+                    .param("permission", "write")
+                    .with(csrf()))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+    verify(assignmentRepository, never()).save(any(Assignment.class));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void updateAssignment_forbidden_for_non_instructor() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/assignments")
+                .param("id", "1")
+                .param("asn_type", "group")
+                .param("visibility", "private")
+                .param("permission", "read")
+                .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_assignment_not_found_returns_not_found() throws Exception {
+    when(assignmentRepository.findById(eq(1L))).thenReturn(Optional.empty());
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/assignments")
+                    .param("id", "1")
+                    .param("asn_type", "group")
+                    .param("visibility", "private")
+                    .param("permission", "read")
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Assignment with id 1 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+    verify(assignmentRepository).findById(eq(1L));
+    verifyNoMoreInteractions(assignmentRepository);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_assignment_success_returns_ok() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
+
+    Assignment originalAssignment =
+        Assignment.builder()
+            .id(1L)
+            .name("Assignment")
+            .asnType("individual")
+            .visibility("public")
+            .permission("write")
+            .build();
+
+    Assignment updatedAssignment =
+        Assignment.builder()
+            .id(1L)
+            .name("Assignment")
+            .asnType("group")
+            .visibility("private")
+            .permission("read")
+            .build();
+
+    when(assignmentRepository.findById(eq(1L))).thenReturn(Optional.of(originalAssignment));
+    when(assignmentRepository.save(any(Assignment.class))).thenReturn(updatedAssignment);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/assignments")
+                    .param("id", "1")
+                    .param("asn_type", "group")
+                    .param("visibility", "private")
+                    .param("permission", "read")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(assignmentRepository).findById(eq(1L));
+    verify(assignmentRepository).save(updatedAssignment);
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(new InstructorAssignmentView(updatedAssignment));
+    assertEquals(expectedJson, responseString);
   }
 }
