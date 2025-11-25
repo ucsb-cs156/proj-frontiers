@@ -197,12 +197,24 @@ public class AssignmentControllerTests extends ControllerTestCase {
             .canvasCourseId("12345")
             .build();
 
+    Course course1 =
+        Course.builder()
+            .id(2L)
+            .installationId("INST444")
+            .orgName("MIT")
+            .instructorEmail("viktor@ucsb.edu")
+            .courseName("CMPSC196")
+            .term("S25")
+            .school("Engineering")
+            .canvasCourseId("1231")
+            .build();
+
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     Assignment assignment =
         Assignment.builder()
             .id(1L)
-            .course(course)
+            .course(course1)
             .name("Old Assignment")
             .asn_type("team")
             .visibility("private")
@@ -239,103 +251,130 @@ public class AssignmentControllerTests extends ControllerTestCase {
     verify(assignmentRepository, times(1)).findById(1L);
     verify(assignmentRepository, times(1)).save(any(Assignment.class));
 
+    assertEquals(updatedAssignment, assignment);
+
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(updatedAssignment);
     assertEquals(expectedJson, responseString);
   }
 
-  //   @Test
-  //   @WithStaffCoursePermissions
-  //   public void edit_assignment_team_with_admin_permission_returns_success() throws Exception {
+  @Test
+  @WithStaffCoursePermissions
+  public void edit_assignment_team_with_admin_permission_returns_success() throws Exception {
 
-  //     Course course =
-  //         Course.builder()
-  //             .id(1L)
-  //             .installationId("INST123")
-  //             .orgName("UCSB")
-  //             .instructorEmail("prof@ucsb.edu")
-  //             .courseName("CMPSC156")
-  //             .term("F25")
-  //             .school("Engineering")
-  //             .canvasCourseId("12345")
-  //             .build();
+    Course course =
+        Course.builder()
+            .id(1L)
+            .installationId("INST123")
+            .orgName("UCSB")
+            .instructorEmail("prof@ucsb.edu")
+            .courseName("CMPSC156")
+            .term("F25")
+            .school("Engineering")
+            .canvasCourseId("12345")
+            .build();
 
-  //     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
-  //     Assignment assignment =
-  //         Assignment.builder()
-  //             .id(2L)
-  //             .course(course)
-  //             .name("Team Project")
-  //             .asn_type("team")
-  //             .visibility("private")
-  //             .permission("admin")
-  //             .build();
+    Assignment assignment =
+        Assignment.builder()
+            .id(1L)
+            .course(course)
+            .name("Old Assignment")
+            .asn_type("team")
+            .visibility("private")
+            .permission("admin")
+            .build();
 
-  //     when(assignmentRepository.save(any(Assignment.class))).thenReturn(assignment);
+    when(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment));
 
-  //     MvcResult response =
-  //         mockMvc
-  //             .perform(
-  //                 post("/api/assignments")
-  //                     .with(csrf())
-  //                     .param("courseId", "1")
-  //                     .param("name", "Team Project")
-  //                     .param("asn_type", "team")
-  //                     .param("visibility", "private")
-  //                     .param("permission", "admin"))
-  //             .andExpect(status().isOk())
-  //             .andReturn();
+    Assignment updatedAssignment =
+        Assignment.builder()
+            .id(1L)
+            .course(course)
+            .name("HW1")
+            .asn_type("individual")
+            .visibility("public")
+            .permission("admin")
+            .build();
 
-  //     verify(assignmentRepository, times(1)).save(any(Assignment.class));
+    when(assignmentRepository.save(any(Assignment.class))).thenReturn(updatedAssignment);
 
-  //     String responseString = response.getResponse().getContentAsString();
-  //     String expectedJson = mapper.writeValueAsString(assignment);
-  //     assertEquals(expectedJson, responseString);
-  //   }
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/assignments/1")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("name", "HW1")
+                    .param("asn_type", "individual")
+                    .param("visibility", "public")
+                    .param("permission", "admin"))
+            .andExpect(status().isOk())
+            .andReturn();
 
-  //   @Test
-  //   @WithStaffCoursePermissions
-  //   public void edit_assignment_returns_404_when_course_not_found() throws Exception {
+    verify(assignmentRepository, times(1)).findById(1L);
+    verify(assignmentRepository, times(1)).save(any(Assignment.class));
 
-  //     when(courseRepository.findById(999L)).thenReturn(Optional.empty());
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(updatedAssignment);
+    assertEquals(expectedJson, responseString);
+  }
 
-  //     MvcResult response =
-  //         mockMvc
-  //             .perform(
-  //                 post("/api/assignments")
-  //                     .with(csrf())
-  //                     .param("courseId", "999")
-  //                     .param("name", "HW1")
-  //                     .param("asn_type", "individual")
-  //                     .param("visibility", "public")
-  //                     .param("permission", "write"))
-  //             .andExpect(status().isNotFound())
-  //             .andReturn();
+  @Test
+  @WithStaffCoursePermissions
+  public void edit_assignment_returns_404_when_course_not_found() throws Exception {
 
-  //     verify(assignmentRepository, never()).save(any(Assignment.class));
-  //   }
+    when(courseRepository.findById(999L)).thenReturn(Optional.empty());
 
-  //   // Add case edit assignment returns 404 when assignemnt not found
-  //   @Test
-  //   @WithStaffCoursePermissions
-  //   public void edit_assignment_returns_404_when_assignment_not_found() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/assignments/1")
+                    .with(csrf())
+                    .param("courseId", "999")
+                    .param("name", "HW1")
+                    .param("asn_type", "individual")
+                    .param("visibility", "public")
+                    .param("permission", "write"))
+            .andExpect(status().isNotFound())
+            .andReturn();
 
-  //     when(courseRepository.findById(999L)).thenReturn(Optional.empty());
+    verify(assignmentRepository, never()).save(any(Assignment.class));
+  }
 
-  //     MvcResult response =
-  //         mockMvc
-  //             .perform(
-  //                 post("/api/assignments")
-  //                     .with(csrf())
-  //                     .param("courseId", "999")
-  //                     .param("name", "HW1")
-  //                     .param("asn_type", "individual")
-  //                     .param("visibility", "public")
-  //                     .param("permission", "write"))
-  //             .andExpect(status().isNotFound())
-  //             .andReturn();
+  // Add case edit assignment returns 404 when assignemnt not found
+  @Test
+  @WithStaffCoursePermissions
+  public void edit_assignment_returns_404_when_assignment_not_found() throws Exception {
 
-  //     verify(assignmentRepository, never()).save(any(Assignment.class));
-  //   }
+    Course course =
+        Course.builder()
+            .id(1L)
+            .installationId("INST123")
+            .orgName("UCSB")
+            .instructorEmail("prof@ucsb.edu")
+            .courseName("CMPSC156")
+            .term("F25")
+            .school("Engineering")
+            .canvasCourseId("12345")
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    when(assignmentRepository.findById(999L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            put("/api/assignments/999")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("name", "HW1")
+                .param("asn_type", "individual")
+                .param("visibility", "public")
+                .param("permission", "read"))
+        .andExpect(status().isNotFound());
+
+    verify(assignmentRepository, never()).save(any(Assignment.class));
+  }
 }
