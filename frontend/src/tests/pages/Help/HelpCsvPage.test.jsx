@@ -18,6 +18,16 @@ describe("HelpCsvPage tests", () => {
     .reply(200, systemInfoFixtures.showingNeither);
 
   const queryClient = new QueryClient();
+  const normalize = (text) => text.replace(/\s+/g, " ").trim();
+  const textContentEquals = (text, tagName) => (_, node) => {
+    if (!node) {
+      return false;
+    }
+    if (tagName && node.tagName !== tagName) {
+      return false;
+    }
+    return normalize(node.textContent || "") === normalize(text);
+  };
   test("renders with separate Team Information section and examples", async () => {
     render(
       <QueryClientProvider client={queryClient}>
@@ -64,5 +74,31 @@ describe("HelpCsvPage tests", () => {
     expect(
       within(rosterUploadsAccordion).queryByText("Teams (by Email)"),
     ).not.toBeInTheDocument();
+
+    // Dropped students section describes space-sensitive phrases
+    expect(
+      screen.getByText(
+        textContentEquals(
+          "Each time you upload a roster CSV, Frontiers temporarily marks every roster student that originally came from a CSV (status ROSTER) as DROPPED. As rows from your new file are processed, matching students are switched back to ROSTER (or inserted if they were new).",
+          "P",
+        ),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        textContentEquals(
+          "Students that you added manually keep their MANUAL status and are never moved to DROPPED by an upload.",
+          "LI",
+        ),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        textContentEquals(
+          "After the upload finishes, anyone still marked DROPPED is listed in the Dropped tab, and Frontiers queues them for removal from the linked GitHub organization.",
+          "LI",
+        ),
+      ),
+    ).toBeInTheDocument();
   });
 });

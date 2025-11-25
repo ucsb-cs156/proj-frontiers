@@ -59,8 +59,17 @@ export default function HelpCsvPage() {
                       to <code> @ucsb.edu</code>
                     </td>
                   </tr>
+                  <tr>
+                    <td>Section</td>
+                    <td>Enrl Cd</td>
+                    <td>We keep the enrollment code for the Section column.</td>
+                  </tr>
                 </tbody>
               </table>
+              <p className="text-muted">
+                All other columns exported by eGrades (Grade, Units, Quarter,
+                etc.) are ignored.
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="1">
@@ -83,30 +92,48 @@ export default function HelpCsvPage() {
                 </thead>
                 <tbody>
                   <tr>
+                    <td>Student Last</td>
                     <td>Student Name</td>
-                    <td>Student Last Name</td>
                     <td>
-                      We split the name at the last space; instructors may have
-                      to correct this for some students.
+                      We split the value at the last space; double-check
+                      suffixes such as Jr. or III to ensure they end up on the
+                      correct side.
                     </td>
                   </tr>
                   <tr>
+                    <td>Student First</td>
                     <td>Student Name</td>
-                    <td>Student First Name</td>
-                    <td>See above.</td>
+                    <td>
+                      Everything before the final space (blank if no space is
+                      present).
+                    </td>
                   </tr>
                   <tr>
-                    <td>Student SIS ID</td>
                     <td>Student ID</td>
-                    <td></td>
+                    <td>Student SIS ID</td>
+                    <td>The “Student ID” column from Canvas is ignored.</td>
                   </tr>
                   <tr>
                     <td>Email</td>
                     <td>Email</td>
                     <td></td>
+                  </tr>
+                  <tr>
+                    <td>Section</td>
+                    <td>&mdash;</td>
+                    <td>
+                      Canvas includes a Section Name column, but Frontiers
+                      ignores it and leaves the Section field blank for this
+                      format.
+                    </td>
                   </tr>
                 </tbody>
               </table>
+              <p className="text-muted">
+                All other columns from the Canvas “New Analytics” export are
+                ignored, so you can upload the file as-is; this includes Section
+                Name, so roster sections remain blank after the upload.
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="2">
@@ -129,18 +156,18 @@ export default function HelpCsvPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Sortable Name</td>
-                    <td>Student Last Name</td>
-                    <td>We split the name at the comma.</td>
+                    <td>Student Last</td>
+                    <td>Sortable name</td>
+                    <td>Everything before the comma.</td>
                   </tr>
                   <tr>
-                    <td>Sortable Name</td>
-                    <td>Student First Name</td>
-                    <td>See above.</td>
+                    <td>Student First</td>
+                    <td>Sortable name</td>
+                    <td>Everything after the comma (or blank if none).</td>
                   </tr>
                   <tr>
-                    <td>SIS ID</td>
                     <td>Student ID</td>
+                    <td>SIS Id</td>
                     <td></td>
                   </tr>
                   <tr>
@@ -150,9 +177,43 @@ export default function HelpCsvPage() {
                   </tr>
                 </tbody>
               </table>
+              <p className="text-muted">
+                Other analytics columns (grades, participation timestamps, etc.)
+                are ignored when the CSV is processed, so the Section column in
+                Frontiers remains blank for this format.
+              </p>
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
+
+        <h3 className="mt-4">How Frontiers handles dropped students</h3>
+        <p>
+          Each time you upload a roster CSV, Frontiers temporarily marks every
+          roster student that originally came from a CSV (status{" "}
+          <code>ROSTER</code>) as <code>DROPPED</code>. As rows from your new
+          file are processed, matching students are switched back to{" "}
+          <code>ROSTER</code> (or inserted if they were new).
+        </p>
+        <ul>
+          <li>
+            Only students that appeared in a prior CSV upload can move into the
+            dropped section automatically.
+          </li>
+          <li>
+            Students that you added manually keep their <code>MANUAL</code>{" "}
+            status and are never moved to DROPPED by an upload.
+          </li>
+          <li>
+            After the upload finishes, anyone still marked <code>DROPPED</code>{" "}
+            is listed in the Dropped tab, and Frontiers queues them for removal
+            from the linked GitHub organization.
+          </li>
+        </ul>
+        <p>
+          If a student disappears from your roster because their identifier
+          changed, update the CSV before uploading so that they are not treated
+          as dropped.
+        </p>
 
         <h2 className="mt-4">Team Information</h2>
         <p>
@@ -214,6 +275,10 @@ export default function HelpCsvPage() {
                 When you download a roster as CSV, you will get the following
                 format:
               </p>
+              <p>
+                The header row uses uppercase names and the columns appear in
+                the exact order shown below.
+              </p>
               <pre
                 className={"csvExample"}
                 data-testid="rosterDownloadCsvExample"
@@ -231,52 +296,72 @@ export default function HelpCsvPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>id</td>
+                    <td>
+                      <code>ID</code>
+                    </td>
                     <td>Internal database ID</td>
                     <td>Unique identifier for each roster entry</td>
                   </tr>
                   <tr>
-                    <td>courseId</td>
+                    <td>
+                      <code>COURSEID</code>
+                    </td>
                     <td>Course database ID</td>
                     <td>Identifies which course this student is enrolled in</td>
                   </tr>
                   <tr>
-                    <td>studentId</td>
+                    <td>
+                      <code>STUDENTID</code>
+                    </td>
                     <td>Student ID</td>
                     <td>Student&apos;s university ID (e.g., Perm # at UCSB)</td>
                   </tr>
                   <tr>
-                    <td>firstName</td>
+                    <td>
+                      <code>FIRSTNAME</code>
+                    </td>
                     <td>Student&apos;s first name</td>
-                    <td></td>
+                    <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
-                    <td>lastName</td>
+                    <td>
+                      <code>LASTNAME</code>
+                    </td>
                     <td>Student&apos;s last name</td>
-                    <td></td>
+                    <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
-                    <td>email</td>
+                    <td>
+                      <code>EMAIL</code>
+                    </td>
                     <td>Student&apos;s email address</td>
-                    <td></td>
+                    <td>Required when re-uploading this CSV.</td>
                   </tr>
                   <tr>
-                    <td>userId</td>
+                    <td>
+                      <code>USERID</code>
+                    </td>
                     <td>Internal user ID</td>
                     <td>Links to the user account in the system</td>
                   </tr>
                   <tr>
-                    <td>githubId</td>
+                    <td>
+                      <code>GITHUBID</code>
+                    </td>
                     <td>GitHub user ID</td>
                     <td>Student&apos;s GitHub account ID, if connected</td>
                   </tr>
                   <tr>
-                    <td>githubLogin</td>
+                    <td>
+                      <code>GITHUBLOGIN</code>
+                    </td>
                     <td>GitHub username</td>
                     <td>Student&apos;s GitHub username, if connected</td>
                   </tr>
                   <tr>
-                    <td>rosterStatus</td>
+                    <td>
+                      <code>ROSTERSTATUS</code>
+                    </td>
                     <td>Roster enrollment status</td>
                     <td>
                       ROSTER (from uploaded roster), MANUAL (manually added), or
@@ -284,12 +369,46 @@ export default function HelpCsvPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td>orgStatus</td>
+                    <td>
+                      <code>ORGSTATUS</code>
+                    </td>
                     <td>GitHub organization status</td>
                     <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
                   </tr>
+                  <tr>
+                    <td>
+                      <code>TEAMS</code>
+                    </td>
+                    <td>Team names</td>
+                    <td>
+                      A comma-separated list showing every team assigned to the
+                      student.
+                    </td>
+                  </tr>
                 </tbody>
               </table>
+              <p>
+                When you re-upload a file that originated from this download,
+                Frontiers only reads the following columns; everything else is
+                ignored, so you can upload the file without trimming it.
+              </p>
+              <ul>
+                <li>
+                  <code>EMAIL</code>
+                </li>
+                <li>
+                  <code>FIRSTNAME</code>
+                </li>
+                <li>
+                  <code>LASTNAME</code>
+                </li>
+                <li>
+                  <code>STUDENTID</code>
+                </li>
+                <li>
+                  <code>SECTION</code>
+                </li>
+              </ul>
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
