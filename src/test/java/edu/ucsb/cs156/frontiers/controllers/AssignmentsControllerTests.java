@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -135,6 +137,98 @@ public class AssignmentsControllerTests extends ControllerTestCase {
         Map.of(
             "type", "EntityNotFoundException",
             "message", "Course with id 1 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateAssignment_success() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail(user.getEmail())
+            .build();
+
+    Assignment assignment =
+        Assignment.builder()
+            .course(course)
+            .name("HW1")
+            .asnType(AssignmentType.INDIVIDUAL)
+            .visibility(Visibility.PUBLIC)
+            .permission(Permission.READ)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(assignmentRepository.findById(eq(1L))).thenReturn(Optional.of(assignment));
+
+    Assignment updatedAssignment =
+        Assignment.builder()
+            .course(course)
+            .name("HW1")
+            .asnType(AssignmentType.TEAM)
+            .visibility(Visibility.PRIVATE)
+            .permission(Permission.WRITE)
+            .build();
+
+    when(assignmentRepository.save(any(Assignment.class))).thenReturn(updatedAssignment);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/assignments/put")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("name", "HW1")
+                    .param("asnType", "TEAM")
+                    .param("visibility", "PRIVATE")
+                    .param("permission", "WRITE"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<Assignment> captor = ArgumentCaptor.forClass(Assignment.class);
+    verify(assignmentRepository).save(captor.capture());
+    Assignment saved = captor.getValue();
+    assertEquals(AssignmentType.TEAM, saved.getAsnType());
+    assertEquals(Visibility.PRIVATE, saved.getVisibility());
+    assertEquals(Permission.WRITE, saved.getPermission());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(updatedAssignment);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateAssignment_course_not_found() throws Exception {
+
+    when(courseRepository.findById(eq(42L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/assignments/put")
+                    .with(csrf())
+                    .param("courseId", "42")
+                    .param("name", "HW1")
+                    .param("asnType", "INDIVIDUAL")
+                    .param("visibility", "PUBLIC")
+                    .param("permission", "READ"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 42 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
   }

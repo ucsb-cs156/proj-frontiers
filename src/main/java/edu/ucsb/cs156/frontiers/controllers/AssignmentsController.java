@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -68,5 +69,39 @@ public class AssignmentsController extends ApiController {
     Assignment savedAssignment = assignmentRepository.save(assignment);
 
     return savedAssignment;
+  }
+
+  /**
+   * This method updates an Assignment.
+   *
+   * @param courseId the ID of the course the assignment is associated with
+   * @param name the name of the assignment
+   * @param asnType the assignment type (individual vs team)
+   * @param visibility the visbility of the assignment (public vs private)
+   * @param permission the permissions for the assignment (read, write, maintain, admin)
+   * @return the created Assignment
+   */
+  @Operation(summary = "Update an assignment")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("/put")
+  public Assignment updateAssignment(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "name") @RequestParam String name,
+      @Parameter(name = "asnType") @RequestParam AssignmentType asnType,
+      @Parameter(name = "visibility") @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Visibility visibility,
+      @Parameter(name = "permission") @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Permission permission)
+      throws EntityNotFoundException {
+
+    Assignment assignment =
+        assignmentRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    assignment.setAsnType(asnType);
+    assignment.setVisibility(visibility);
+    assignment.setPermission(permission);
+    return assignmentRepository.save(assignment);
   }
 }
