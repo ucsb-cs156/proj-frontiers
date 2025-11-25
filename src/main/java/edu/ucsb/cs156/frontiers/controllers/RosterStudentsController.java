@@ -164,7 +164,8 @@ public class RosterStudentsController extends ApiController {
       student.setCourse(course);
       student.setEmail(convertedEmail.strip());
       student.setRosterStatus(rosterStatus);
-      // if an installationID exists, orgStatus should be set to JOINCOURSE. if it doesn't exist
+      // if an installationID exists, orgStatus should be set to JOINCOURSE. if it
+      // doesn't exist
       // (null), set orgStatus to PENDING.
       if (course.getInstallationId() != null) {
         student.setOrgStatus(OrgStatus.JOINCOURSE);
