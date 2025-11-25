@@ -86,4 +86,29 @@ public class AssignmentController extends ApiController {
     Assignment savedAssignment = assignmentRepository.save(assignment);
     return savedAssignment;
   }
+
+  /** Delete an an assignment */
+  @Operation(summary = "Delete an assignment")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @DeleteMapping("/{id}")
+  public Object deleteAssignment(
+      @Parameter(name = "id") @PathVariable Long id,
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    // Validate that the course exists
+    courseRepository
+        .findById(courseId)
+        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    // Find the Assignment object
+    Assignment assignment =
+        assignmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(Assignment.class, id));
+
+    // Delete the assignment
+    assignmentRepository.delete(assignment);
+
+    return genericMessage(String.format("Assignment with id %s deleted", id));
+  }
 }
