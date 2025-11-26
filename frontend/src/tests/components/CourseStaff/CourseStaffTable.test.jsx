@@ -246,7 +246,10 @@ describe("CourseStaffTable tests", () => {
 
     axiosMock
       .onDelete("/api/coursestaff/delete")
-      .reply(200, "Successfully deleted staff member and removed them from the staff roster.");
+      .reply(
+        200,
+        "Successfully deleted staff member and removed them from the staff roster.",
+      );
 
     // act - render the component
     render(
@@ -274,23 +277,24 @@ describe("CourseStaffTable tests", () => {
     // act - click the delete button
     fireEvent.click(deleteButton);
 
-    await screen.findByTestId("CourseStaffDeleteModal");    
-    
+    await screen.findByTestId("CourseStaffDeleteModal");
+
     fireEvent.click(screen.getByText("Delete Staff"));
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].params).toEqual({ 
-      id: 1, 
+    expect(axiosMock.history.delete[0].params).toEqual({
+      id: 1,
       courseId: 7,
-      removeFromOrg: "false"
+      removeFromOrg: "false",
     });
 
     // expect MODAL TO NOT BE ON THE SCREEN ANYMORE
 
-    await waitFor(() => {expect(screen.queryByTestId("CourseStaffDeleteModal")).not.toBeInTheDocument()})
-
-
-
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("CourseStaffDeleteModal"),
+      ).not.toBeInTheDocument();
+    });
   });
 
   test("tooltips for PENDING status", async () => {

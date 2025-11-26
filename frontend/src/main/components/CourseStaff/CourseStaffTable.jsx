@@ -19,7 +19,7 @@ export default function CourseStaffTable({
   const [editStaff, setEditStaff] = React.useState(null);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [deleteCourseStaff, setDeleteCourseStaff] = React.useState(null);
-  
+
   const hideDeleteModal = () => {
     setShowDeleteModal(false);
   };
@@ -31,7 +31,6 @@ export default function CourseStaffTable({
   }
   // Stryker restore all
 
-
   function cellToAxiosParamsDelete(cell) {
     console.log(cell);
     return {
@@ -41,14 +40,13 @@ export default function CourseStaffTable({
       params: {
         id: cell.id,
         courseId: cell.courseId,
-        removeFromOrg: cell.removeFromOrg
+        removeFromOrg: cell.removeFromOrg,
       },
     };
 
     // why is this a bad request?
   }
 
-  
   // Stryker disable all : hard to test for query caching
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
@@ -82,15 +80,14 @@ export default function CourseStaffTable({
   // Stryker disable next-line all
   const deleteCallback = async (cell) => {
     setShowDeleteModal(true);
-    setDeleteCourseStaff(cell.row.original.id);  
+    setDeleteCourseStaff(cell.row.original.id);
   };
 
   const submitDeleteForm = (data) => {
-    
     deleteMutation.mutate({
       id: deleteCourseStaff,
       courseId: courseId,
-      removeFromOrg: data.removeFromOrg
+      removeFromOrg: data.removeFromOrg,
     });
   };
 
@@ -136,15 +133,14 @@ export default function CourseStaffTable({
     //   header: "courseId",
     //   accessorKey: "courseId",
     //   id: "courseId",
-    //   enableHiding: true,     
+    //   enableHiding: true,
     // },
     // {
     //   header: "removeFromOrg",
     //   accessorKey: "removeFromOrg",
     //   id: "removeFromOrg",
-    //   enableHiding: true,     
+    //   enableHiding: true,
     // }
-
   ];
 
   const renderTooltip = (orgStatus) => (props) => {
@@ -258,9 +254,9 @@ export default function CourseStaffTable({
         </Modal.Body>
       </Modal>
       <CourseStaffDeleteModal
-          showModal={showDeleteModal}
-          toggleShowModal={setShowDeleteModal}
-          onSubmitAction={submitDeleteForm}
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
       />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
