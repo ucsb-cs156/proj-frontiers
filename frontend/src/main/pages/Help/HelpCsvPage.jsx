@@ -11,9 +11,15 @@ export default function HelpCsvPage() {
         <h2>Roster Student CSV Upload formats</h2>
         <p>
           Instructors can upload a course roster from a CSV file. The following
-          formats are supported. If you would like your university's format to
-          be supported, please contact the Frontiers development team, supplying
-          a sample CSV (with fictional data).
+          formats are supported. If you would like your university&apos;s format
+          to be supported, please contact the Frontiers development team,
+          supplying a sample CSV (with fictional data).
+        </p>
+        <h3>How &quot;Dropped&quot; Students Are Handled</h3>
+        <p>
+          Only students that appeared in an uploaded CSV and then did NOT appear
+          in a subsequent CSV upload are considered dropped; manually added
+          students are never put into the dropped section
         </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
@@ -42,9 +48,9 @@ export default function HelpCsvPage() {
                     <td></td>
                   </tr>
                   <tr>
-                    <td>Student First</td>
+                    <td>Student First Middle</td>
                     <td>Student First Name</td>
-                    <td></td>
+                    <td>We only keep the First Name</td>
                   </tr>
                   <tr>
                     <td>Perm #</td>
@@ -59,8 +65,17 @@ export default function HelpCsvPage() {
                       to <code> @ucsb.edu</code>
                     </td>
                   </tr>
+                  <tr>
+                    <td>Section</td>
+                    <td>Enrl Cd</td>
+                    <td>Section is kept as an enrollment code</td>
+                  </tr>
                 </tbody>
               </table>
+              <p className="text-muted">
+                All other columns obtained from the EGradessystem at UCSB are
+                ignored.
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="1">
@@ -68,7 +83,7 @@ export default function HelpCsvPage() {
             <Accordion.Body>
               <p>
                 The following CSV format can be obtained from the Canvas system
-                at Chico State, through the "New Analytics" feature:
+                at Chico State, through the New &quot;Analytics&quot; feature:
               </p>
               <pre className={"csvExample"} data-testid="chicoStateCsvExample">
                 {csvFixtures.chicoStateCanvas}
@@ -83,30 +98,44 @@ export default function HelpCsvPage() {
                 </thead>
                 <tbody>
                   <tr>
+                    <td>Student Last</td>
                     <td>Student Name</td>
-                    <td>Student Last Name</td>
                     <td>
-                      We split the name at the last space; instructors may have
-                      to correct this for some students.
+                      We take everything after the last space. Instructors may
+                      need to review to ensure correct names
                     </td>
                   </tr>
                   <tr>
+                    <td>Student First</td>
                     <td>Student Name</td>
-                    <td>Student First Name</td>
-                    <td>See above.</td>
+                    <td>
+                      We take everything before the last space. Instructors may
+                      need to review to ensure correct names
+                    </td>
                   </tr>
                   <tr>
-                    <td>Student SIS ID</td>
                     <td>Student ID</td>
-                    <td></td>
+                    <td>Student SIS ID</td>
+                    <td>
+                      Student SIS ID is taken instead of Student ID from the CSV
+                    </td>
                   </tr>
                   <tr>
                     <td>Email</td>
                     <td>Email</td>
                     <td></td>
+                  </tr>
+                  <tr>
+                    <td>Section</td>
+                    <td>Ignored</td>
+                    <td>Left Blank</td>
                   </tr>
                 </tbody>
               </table>
+              <p className="text-muted">
+                All other columns obtained from the Canvas System at Chico State
+                are ignored.
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="2">
@@ -129,27 +158,36 @@ export default function HelpCsvPage() {
                 </thead>
                 <tbody>
                   <tr>
+                    <td>Student Last</td>
                     <td>Sortable Name</td>
-                    <td>Student Last Name</td>
-                    <td>We split the name at the comma.</td>
+                    <td>We take everything after the comma</td>
                   </tr>
                   <tr>
+                    <td>Student First</td>
                     <td>Sortable Name</td>
-                    <td>Student First Name</td>
-                    <td>See above.</td>
+                    <td>We take everything before the comma</td>
                   </tr>
                   <tr>
-                    <td>SIS ID</td>
                     <td>Student ID</td>
+                    <td>SIS ID</td>
                     <td></td>
                   </tr>
                   <tr>
                     <td>Email</td>
                     <td>Email</td>
                     <td></td>
+                  </tr>
+                  <tr>
+                    <td>Section</td>
+                    <td>N/A</td>
+                    <td>Not provided from CSV</td>
                   </tr>
                 </tbody>
               </table>
+              <p className="text-muted">
+                All other columns obtained from Orgeon State University are
+                ignored.
+              </p>
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
@@ -191,7 +229,7 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td>email</td>
                     <td>
-                      Student's email address used to match to the roster.
+                      Student&apos;s email address used to match to the roster.
                     </td>
                   </tr>
                 </tbody>
@@ -231,52 +269,57 @@ export default function HelpCsvPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>id</td>
+                    <td>ID</td>
                     <td>Internal database ID</td>
                     <td>Unique identifier for each roster entry</td>
                   </tr>
                   <tr>
-                    <td>courseId</td>
+                    <td>COURSEID</td>
                     <td>Course database ID</td>
                     <td>Identifies which course this student is enrolled in</td>
                   </tr>
                   <tr>
-                    <td>studentId</td>
+                    <td>STUDENTID</td>
                     <td>Student ID</td>
-                    <td>Student's university ID (e.g., Perm # at UCSB)</td>
+                    <td>Student&apos;s university ID (e.g., Perm # at UCSB)</td>
                   </tr>
                   <tr>
-                    <td>firstName</td>
-                    <td>Student's first name</td>
+                    <td>FIRSTNAME</td>
+                    <td>Student&apos;s first name</td>
                     <td></td>
                   </tr>
                   <tr>
-                    <td>lastName</td>
-                    <td>Student's last name</td>
+                    <td>LASTNAME</td>
+                    <td>Student&apos;s last name</td>
                     <td></td>
                   </tr>
                   <tr>
-                    <td>email</td>
-                    <td>Student's email address</td>
+                    <td>EMAIL</td>
+                    <td>Student&apos;s email address</td>
                     <td></td>
                   </tr>
                   <tr>
-                    <td>userId</td>
+                    <td>SECTION</td>
+                    <td>Student&apos;s section time</td>
+                    <td>Date, Time, and Location of Section</td>
+                  </tr>
+                  <tr>
+                    <td>USERID</td>
                     <td>Internal user ID</td>
                     <td>Links to the user account in the system</td>
                   </tr>
                   <tr>
-                    <td>githubId</td>
+                    <td>GITHUBID</td>
                     <td>GitHub user ID</td>
-                    <td>Student's GitHub account ID, if connected</td>
+                    <td>Student&apos;s GitHub account ID, if connected</td>
                   </tr>
                   <tr>
-                    <td>githubLogin</td>
+                    <td>GITHUBLOGIN</td>
                     <td>GitHub username</td>
-                    <td>Student's GitHub username, if connected</td>
+                    <td>Student&apos;s GitHub username, if connected</td>
                   </tr>
                   <tr>
-                    <td>rosterStatus</td>
+                    <td>ROSTERSTATUS</td>
                     <td>Roster enrollment status</td>
                     <td>
                       ROSTER (from uploaded roster), MANUAL (manually added), or
@@ -284,9 +327,14 @@ export default function HelpCsvPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td>orgStatus</td>
+                    <td>ORGSTATUS</td>
                     <td>GitHub organization status</td>
                     <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
+                  </tr>
+                  <tr>
+                    <td>TEAMS</td>
+                    <td>Student&apos;s Team(s)</td>
+                    <td>Name of Team(s)</td>
                   </tr>
                 </tbody>
               </table>

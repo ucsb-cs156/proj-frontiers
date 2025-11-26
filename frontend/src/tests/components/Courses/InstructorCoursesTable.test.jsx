@@ -7,6 +7,7 @@ import { BrowserRouter, MemoryRouter } from "react-router";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { vi } from "vitest";
+import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 
 window.alert = vi.fn();
 
@@ -36,6 +37,124 @@ describe("InstructorCoursesTable tests", () => {
     afterEach(() => {
       // Restore original window.location
       window.location = originalLocation;
+    });
+
+    test("Instructor user cannot delete courses", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              storybook={true}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      // Check that instructor cannot delete course
+      const noDeletePermission = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-no-permission`,
+      );
+      expect(noDeletePermission).toBeInTheDocument();
+    });
+
+    test("InstructorCoursesTable has no delete column by default", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              storybook={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.queryByTestId("InstructorCoursesTable-header-delete"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("Admin user cannot delete courses with students or staff", async () => {
+      const courses = [
+        {
+          ...coursesFixtures.severalCourses[0],
+          numStudents: 0,
+          numStaff: 1,
+        },
+        {
+          ...coursesFixtures.severalCourses[1],
+          numStudents: 1,
+          numStaff: 0,
+        },
+      ];
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={courses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={true}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const deleteButton1 = screen.getByTestId(
+        `${testId}-cell-row-0-col-delete-no-permission`,
+      );
+      expect(deleteButton1).toBeInTheDocument();
+      expect(deleteButton1).toHaveTextContent("Delete");
+
+      const deleteButton2 = screen.getByTestId(
+        `${testId}-cell-row-1-col-delete-no-permission`,
+      );
+      expect(deleteButton2).toBeInTheDocument();
+      expect(deleteButton2).toHaveTextContent("Delete");
+    });
+
+    test("Has Delete column header on CoursesIndexPage", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <CoursesIndexPage />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.getByRole("columnheader", { name: /Delete/i }),
+      ).toBeInTheDocument();
+    });
+
+    test("Tooltip has correct style", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.instructorUser}
+              storybook={true}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-0-col-delete-no-permission`,
+      );
+
+      expect(deleteButton).toBeInTheDocument();
+
+      expect(deleteButton).toHaveStyle({
+        pointerEvents: "none",
+      });
     });
 
     test("Has the expected column headers and content for instructor user", async () => {
@@ -187,10 +306,19 @@ describe("InstructorCoursesTable tests", () => {
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
+              deleteCourseButton={true}
             />
           </BrowserRouter>
         </QueryClientProvider>,
       );
+
+      // has column with delete button
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      expect(deleteButton).toBeInTheDocument();
+      expect(deleteButton).toHaveTextContent("Delete");
+      expect(deleteButton).toHaveAttribute("class", "btn btn-danger btn-sm");
 
       const button3 = screen.getByTestId(
         `${testId}-cell-row-2-col-orgName-button`,
@@ -224,6 +352,13 @@ describe("InstructorCoursesTable tests", () => {
       );
       expect(editButton2).toBeInTheDocument();
       expect(editButton2).toHaveTextContent("Edit");
+
+      // Check that admin can delete deletable course
+      const deleteButton3 = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      expect(deleteButton3).toBeInTheDocument();
+      expect(deleteButton3).toHaveTextContent("Delete");
     });
 
     test("Calls window.alert when the button is pressed on storybook", async () => {
@@ -1010,6 +1145,58 @@ describe("InstructorCoursesTable tests", () => {
       });
     });
 
+    test("Delete course modal opens and closes properly", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock
+        .onDelete("/api/courses")
+        .reply(200, coursesFixtures.severalCourses[2]);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              testId={testId}
+              deleteCourseButton={true}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Verify modal is not initially open
+      expect(
+        screen.queryByTestId("CourseModal-delete"),
+      ).not.toBeInTheDocument();
+
+      // Click the delete button
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      fireEvent.click(deleteButton);
+
+      // Check that modal appears with correct title
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-delete")).toBeInTheDocument();
+        expect(screen.getByText("Delete Course")).toBeInTheDocument();
+        expect(screen.getByText("Yes, Delete")).toBeInTheDocument();
+        // Check that modal appears with correct content
+        expect(
+          screen.getByText("CMPSC 156", { selector: "strong" }),
+        ).toBeInTheDocument();
+      });
+
+      // Close modal using close button
+      const closeButton = screen.getByTestId("CourseModal-closeButton");
+      fireEvent.click(closeButton);
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("CourseModal-delete"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
     test("Makes successful course update API call and shows success toast", async () => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();
@@ -1072,6 +1259,59 @@ describe("InstructorCoursesTable tests", () => {
       await waitFor(() => {
         expect(
           screen.queryByTestId("CourseModal-base"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test("Makes successful course delete API call and shows success toast", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onDelete("/api/courses").reply(200, {});
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              testId={testId}
+              deleteCourseButton={true}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the delete button
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      fireEvent.click(deleteButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-delete")).toBeInTheDocument();
+      });
+
+      // Click the Delete button
+      const confirmButton = screen.getByTestId("CourseModal-confirm");
+      fireEvent.click(confirmButton);
+
+      // Verify API call was made with correct parameters
+      await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+      expect(axiosMock.history.delete[0].params).toEqual({
+        courseId: 3,
+      });
+
+      // Verify success toast was shown
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith("Course deleted successfully");
+      });
+
+      // Verify modal is closed
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("CourseModal-delete"),
         ).not.toBeInTheDocument();
       });
     });
@@ -1280,6 +1520,53 @@ describe("InstructorCoursesTable tests", () => {
 
       // Verify API call was made
       await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+
+      // Verify that invalidateQueries was called with all expected cache keys
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForAdmins"],
+      });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForInstructors"],
+      });
+    });
+
+    test("Course delete mutation uses correct cache keys for invalidation", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onDelete("/api/courses").reply(200, {});
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              testId={testId}
+              deleteCourseButton={true}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // Click the delete button
+      const deleteButton = screen.getByTestId(
+        `${testId}-cell-row-2-col-delete-button`,
+      );
+      fireEvent.click(deleteButton);
+
+      // Wait for modal to appear
+      await waitFor(() => {
+        expect(screen.getByTestId("CourseModal-delete")).toBeInTheDocument();
+      });
+
+      // Click the Confirm button
+      const confirmButton = screen.getByTestId("CourseModal-confirm");
+      fireEvent.click(confirmButton);
+
+      // Verify API call was made
+      await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
 
       // Verify that invalidateQueries was called with all expected cache keys
       expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);

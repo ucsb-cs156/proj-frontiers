@@ -7,10 +7,10 @@ const csvFixtures = {
 Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
 Homer Simpson,88001,013205354,hsimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
 Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025`,
-  rosterDownload: `id,courseId,studentId,firstName,lastName,email,userId,githubId,githubLogin,rosterStatus,orgStatus
-1,156,A123456,CHRIS,GAUCHO,cgaucho@ucsb.edu,1001,12345678,cgaucho,ROSTER,MEMBER
-2,156,A987654,LAUREN,DEL PLAYA,ldelplaya@ucsb.edu,1002,87654321,ldelplaya,ROSTER,MEMBER
-3,156,1234567,SABADO,TARDE,sabadotarde@ucsb.edu,1003,11223344,sabadotarde,MANUAL,INVITED`,
+  rosterDownload: `id,courseId,studentId,firstName,lastName,email,section,userId,githubId,githubLogin,rosterStatus,orgStatus,teams
+1,156,A123456,CHRIS,GAUCHO,cgaucho@ucsb.edu,T R   2:00- 3:15 SH 1431,1001,12345678,cgaucho,ROSTER,MEMBER,Team1,
+2,156,A987654,LAUREN,DEL PLAYA,ldelplaya@ucsb.edu,T R   2:00- 3:15 SH 1431,1002,87654321,ldelplaya,ROSTER,MEMBER,Team1,
+3,156,1234567,SABADO,TARDE,sabadotarde@ucsb.edu,T R   2:00- 3:15 SH 1431, 1003,11223344,sabadotarde,MANUAL,INVITED,Team1`,
   oregonStateCSV: `Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id
 Tom Smith,"Smith, Tom",6056208,96.25,80.4,2-Jul-25,11-Jun-25,21-May-25,tomsmith@oregonstate.edu,931551625
 Martha Washington,"Washington, Martha",9876543,100,100,8-Aug-25,12-Dec-25,5-May-25,martha@oregonstate.edu,123456789
