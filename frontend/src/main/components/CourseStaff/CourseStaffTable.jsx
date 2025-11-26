@@ -86,7 +86,7 @@ export default function CourseStaffTable({
   };
 
   const submitDeleteForm = (data) => {
-    console.log("data", data);
+    
     deleteMutation.mutate({
       id: deleteCourseStaff,
       courseId: courseId,
@@ -132,18 +132,18 @@ export default function CourseStaffTable({
       header: "GitHub Login",
       accessorKey: "githubLogin",
     },
-    {
-      header: "courseId",
-      accessorKey: "courseId",
-      id: "courseId",
-      enableHiding: true,     
-    },
-    {
-      header: "removeFromOrg",
-      accessorKey: "removeFromOrg",
-      id: "removeFromOrg",
-      enableHiding: true,     
-    }
+    // {
+    //   header: "courseId",
+    //   accessorKey: "courseId",
+    //   id: "courseId",
+    //   enableHiding: true,     
+    // },
+    // {
+    //   header: "removeFromOrg",
+    //   accessorKey: "removeFromOrg",
+    //   id: "removeFromOrg",
+    //   enableHiding: true,     
+    // }
 
   ];
 

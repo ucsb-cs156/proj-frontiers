@@ -284,6 +284,13 @@ describe("CourseStaffTable tests", () => {
       courseId: 7,
       removeFromOrg: "false"
     });
+
+    // expect MODAL TO NOT BE ON THE SCREEN ANYMORE
+
+    await waitFor(() => {expect(screen.queryByTestId("CourseStaffDeleteModal")).not.toBeInTheDocument()})
+
+
+
   });
 
   test("tooltips for PENDING status", async () => {
