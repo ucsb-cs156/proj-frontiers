@@ -232,7 +232,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
   }
 
   /**
-   * Test that you cannot post a single roster student for a course that does not exist
+   * Test that you cannot post a single course staff for a course that does not exist
    *
    * @throws Exception
    */
@@ -841,7 +841,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void testUpdateRosterStudent_success() throws Exception {
+  public void testUpdateCourseStaff_success() throws Exception {
     CourseStaff existingStaffMember =
         CourseStaff.builder()
             .id(1L)
@@ -890,7 +890,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void testUpdateRosterStudent_course_not_found() throws Exception {
+  public void testUpdateCourseStaff_course_not_found() throws Exception {
 
     when(courseRepository.findById(eq(42L))).thenReturn(Optional.empty());
 
