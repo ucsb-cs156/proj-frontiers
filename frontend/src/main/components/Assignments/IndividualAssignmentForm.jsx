@@ -53,6 +53,21 @@ export default function IndividualAssignmentForm({ submitAction }) {
           <option value="ADMIN">Admin</option>
         </Form.Control>
       </Form.Group>
+      <Form.Group className="mb-3">
+        <Form.Label htmlFor="creationTarget">
+          Repository Creation Target
+        </Form.Label>
+        <Form.Control
+          as="select"
+          defaultValue={"STUDENTS_ONLY"}
+          data-testid={"IndividualAssignmentForm-creationTarget"}
+          {...register("creationTarget")}
+        >
+          <option value="STUDENTS_ONLY">Students Only</option>
+          <option value="STAFF_ONLY">Staff Only</option>
+          <option value="STUDENTS_AND_STAFF">Both Students and Staff</option>
+        </Form.Control>
+      </Form.Group>
       <Form.Group>
         <Button type="submit" data-testid="IndividualAssignmentForm-submit">
           Create

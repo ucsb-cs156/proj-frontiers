@@ -35,5 +35,6 @@ test("Calls successfully", async () => {
     repoPrefix: "test",
     isPrivate: false,
     permissions: "MAINTAIN",
+    creationTarget: "STUDENTS_ONLY",
   });
 });
