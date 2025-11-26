@@ -183,7 +183,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             .perform(
                 put("/api/assignments/put")
                     .with(csrf())
-                    .param("courseId", "1")
+                    .param("assignmentId", "1")
                     .param("name", "HW1")
                     .param("asnType", "TEAM")
                     .param("visibility", "PRIVATE")
@@ -214,7 +214,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             .perform(
                 put("/api/assignments/put")
                     .with(csrf())
-                    .param("courseId", "42")
+                    .param("assignmentId", "42")
                     .param("name", "HW1")
                     .param("asnType", "INDIVIDUAL")
                     .param("visibility", "PUBLIC")
@@ -228,7 +228,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     Map<String, String> expectedMap =
         Map.of(
             "type", "EntityNotFoundException",
-            "message", "Course with id 42 not found");
+            "message", "Assignment with id 42 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
   }

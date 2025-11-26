@@ -97,7 +97,7 @@ public class AssignmentsController extends ApiController {
     Assignment assignment =
         assignmentRepository
             .findById(assignmentId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, assignmentId));
+            .orElseThrow(() -> new EntityNotFoundException(Assignment.class, assignmentId));
 
     assignment.setAsnType(asnType);
     assignment.setVisibility(visibility);
