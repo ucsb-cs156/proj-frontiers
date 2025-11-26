@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -103,5 +105,29 @@ public class AssignmentsController extends ApiController {
     assignment.setVisibility(visibility);
     assignment.setPermission(permission);
     return assignmentRepository.save(assignment);
+  }
+    
+  @Operation(summary = "Delete an assignment")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @DeleteMapping("/{id}")
+  public Object deleteAssignment(
+      @Parameter(name = "id") @PathVariable Long id,
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    // check course exists
+    courseRepository
+        .findById(courseId)
+        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    // find assignment or throw error
+    Assignment assignment =
+        assignmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(Assignment.class, id));
+
+    // delete the assignment
+    assignmentRepository.delete(assignment);
+
+    return genericMessage(String.format("Assignment with id %s deleted", id));
   }
 }

@@ -3,10 +3,12 @@ package edu.ucsb.cs156.frontiers.controllers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -202,6 +204,51 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(updatedAssignment);
     assertEquals(expectedJson, responseString);
   }
+  
+  // DELETE endpoint tests
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/assignments/10").param("courseId", "1").with(csrf()))
+        .andExpect(status().is(403)); // forbidden
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void logged_in_users_without_permission_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/assignments/10").param("courseId", "1").with(csrf()))
+        .andExpect(status().is(403));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_delete_assignment() throws Exception {
+    // Arrange course
+    Course course = Course.builder().id(1L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    // Arrange assignment
+    Assignment assignment = Assignment.builder().id(10L).name("HW1").course(course).build();
+    when(assignmentRepository.findById(10L)).thenReturn(Optional.of(assignment));
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/assignments/10").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // Assert interactions
+    verify(courseRepository, times(1)).findById(1L);
+    verify(assignmentRepository, times(1)).findById(10L);
+    verify(assignmentRepository, times(1)).delete(assignment);
+
+    // Assert message
+    String expectedJson =
+        mapper.writeValueAsString(Map.of("message", "Assignment with id 10 deleted"));
+    assertEquals(expectedJson, response.getResponse().getContentAsString());
+  }
 
   @Test
   @WithInstructorCoursePermissions
@@ -231,5 +278,33 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             "message", "Assignment with id 42 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
+  }
+    
+  public void delete_assignment_returns_404_when_course_not_found() throws Exception {
+    when(courseRepository.findById(999L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(delete("/api/assignments/10").with(csrf()).param("courseId", "999"))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(999L);
+    verify(assignmentRepository, never()).findById(any());
+    verify(assignmentRepository, never()).delete(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void delete_assignment_returns_404_when_assignment_not_found() throws Exception {
+    Course course = Course.builder().id(1L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(assignmentRepository.findById(10L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(delete("/api/assignments/10").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(1L);
+    verify(assignmentRepository, times(1)).findById(10L);
+    verify(assignmentRepository, never()).delete(any());
   }
 }
