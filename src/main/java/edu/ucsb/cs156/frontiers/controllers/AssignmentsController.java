@@ -106,7 +106,7 @@ public class AssignmentsController extends ApiController {
     assignment.setPermission(permission);
     return assignmentRepository.save(assignment);
   }
-    
+
   @Operation(summary = "Delete an assignment")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @DeleteMapping("/{id}")
