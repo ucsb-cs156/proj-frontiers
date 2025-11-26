@@ -11,9 +11,12 @@ export default function HelpCsvPage() {
         <h2>Roster Student CSV Upload formats</h2>
         <p>
           Instructors can upload a course roster from a CSV file. The following
-          formats are supported. If you would like your university's format to
-          be supported, please contact the Frontiers development team, supplying
-          a sample CSV (with fictional data).
+          formats are supported. When a new roster CSV is uploaded, any student
+          who appeared in a previous upload but does not appear in the new CSV
+          is automatically marked as DROPPED. Students who were manually added
+          are never marked as DROPPED. If you would like your university's
+          format to be supported, please contact the Frontiers development team,
+          supplying a sample CSV (with fictional data).
         </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
@@ -58,6 +61,66 @@ export default function HelpCsvPage() {
                       We translate all <code> @umail.ucsb.edu </code> addresses
                       to <code> @ucsb.edu</code>
                     </td>
+                  </tr>
+                  <tr>
+                    <td>Enrl Cd</td>
+                    <td>Section</td>
+                    <td>Enrollment Code is used for Section</td>
+                  </tr>
+                  <tr>
+                    <td>Course ID</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Grade</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Final Units</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Quarter</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Section</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Meeting Time(s) / Location(s)</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>ClassLevel</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Major1</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Major2</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Date/Time</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Pronoun</td>
+                    <td></td>
+                    <td>Ignored</td>
                   </tr>
                 </tbody>
               </table>
@@ -105,6 +168,16 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td></td>
                   </tr>
+                  <tr>
+                    <td>Student ID</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Section Name</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
                 </tbody>
               </table>
             </Accordion.Body>
@@ -147,6 +220,41 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td>Email</td>
                     <td></td>
+                  </tr>
+                  <tr>
+                    <td>Full Name</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Canvas user id</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Overall course grade</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Assignment on time percent</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Last page view time</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Last participation time</td>
+                    <td></td>
+                    <td>Ignored</td>
+                  </tr>
+                  <tr>
+                    <td>Last logged out</td>
+                    <td></td>
+                    <td>Ignored</td>
                   </tr>
                 </tbody>
               </table>
@@ -287,6 +395,11 @@ export default function HelpCsvPage() {
                     <td>orgStatus</td>
                     <td>GitHub organization status</td>
                     <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
+                  </tr>
+                  <tr>
+                    <td>teams</td>
+                    <td>List of team names the Student belongs to</td>
+                    <td></td>
                   </tr>
                 </tbody>
               </table>
