@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -361,5 +362,100 @@ public class AssignmentControllerTests extends ControllerTestCase {
         .andExpect(status().isNotFound());
 
     verify(assignmentRepository, never()).save(any(Assignment.class));
+  }
+
+  // DELETE tests
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/assignments/1").with(csrf()).param("courseId", "1"))
+        .andExpect(status().is(403));
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void delete_assignment_returns_success() throws Exception {
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .installationId("INST123")
+            .orgName("UCSB")
+            .instructorEmail("prof@ucsb.edu")
+            .courseName("CMPSC156")
+            .term("F25")
+            .school("Engineering")
+            .canvasCourseId("12345")
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    Assignment assignment =
+        Assignment.builder()
+            .id(1L)
+            .course(course)
+            .name("HW1")
+            .asn_type("individual")
+            .visibility("public")
+            .permission("read")
+            .build();
+
+    when(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/assignments/1").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findById(1L);
+    verify(assignmentRepository, times(1)).findById(1L);
+    verify(assignmentRepository, times(1)).delete(assignment);
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = "{\"message\":\"Assignment with id 1 deleted\"}";
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void delete_assignment_returns_404_when_course_not_found() throws Exception {
+
+    when(courseRepository.findById(999L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(delete("/api/assignments/1").with(csrf()).param("courseId", "999"))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(999L);
+    verify(assignmentRepository, never()).findById(any(Long.class));
+    verify(assignmentRepository, never()).delete(any(Assignment.class));
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void delete_assignment_returns_404_when_assignment_not_found() throws Exception {
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .installationId("INST123")
+            .orgName("UCSB")
+            .instructorEmail("prof@ucsb.edu")
+            .courseName("CMPSC156")
+            .term("F25")
+            .school("Engineering")
+            .canvasCourseId("12345")
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(assignmentRepository.findById(999L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(delete("/api/assignments/999").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(1L);
+    verify(assignmentRepository, never()).delete(any(Assignment.class));
   }
 }
