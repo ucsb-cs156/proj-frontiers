@@ -8,6 +8,8 @@ import {
   ModalBody,
   ModalHeader,
   Row,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
@@ -122,8 +124,8 @@ export default function EnrollmentTabComponent({
         <ModalHeader closeButton>Upload CSV Roster</ModalHeader>
         <ModalBody>
           <p>
-            The following students couldn't be uploaded to the roster as their
-            emails and student IDs match two separate students:
+            The following students couldn&apos;t be uploaded to the roster as
+            their emails and student IDs match two separate students:
           </p>
           <RosterStudentTable
             students={csvErrorModalData}
@@ -158,13 +160,38 @@ export default function EnrollmentTabComponent({
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
-          <Button
-            onClick={() => setCsvModal(true)}
-            data-testid={`${testIdPrefix}-csv-button`}
-            className="w-100"
-          >
-            Upload CSV Roster
-          </Button>
+          {}
+          <div className="d-flex align-items-center gap-2 w-100">
+            <Button
+              onClick={() => setCsvModal(true)}
+              data-testid={`${testIdPrefix}-csv-button`}
+              className="flex-grow-1"
+            >
+              Upload CSV Roster
+            </Button>
+
+            {}
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id={`${testIdPrefix}-csv-help-tooltip`}>
+                  CSV Upload format Help
+                </Tooltip>
+              }
+            >
+              <a
+                href="/help/csv"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="CSV Upload format Help"
+                style={{
+                  textDecoration: "none",
+                }}
+              >
+                ℹ️
+              </a>
+            </OverlayTrigger>
+          </div>
         </Col>
         <Col>
           <Button

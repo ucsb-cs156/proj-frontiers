@@ -120,6 +120,9 @@ public class RosterStudentsController extends ApiController {
         () ->
             java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)
                 .map(RosterStudentDTO::new)
+                .sorted(
+                    java.util.Comparator.comparing(RosterStudentDTO::lastName)
+                        .thenComparing(RosterStudentDTO::firstName))
                 .iterator();
     return rosterStudentDTOs;
   }
