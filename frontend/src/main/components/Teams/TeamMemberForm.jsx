@@ -12,23 +12,32 @@ function TeamMemberForm({
 }) {
   // Stryker disable all
   const {
-    register,
+    setValue,
+    setError,
     formState: { errors },
     handleSubmit,
   } = useForm({ defaultValues: initialContents || {} });
   // Stryker restore all
+
+  const onSubmit = (data) => {
+    if (!data.rosterStudentId) {
+      setError("rosterStudentId", { message: "Please select a student" });
+      return;
+    }
+    submitAction(data);
+  };
 
   const navigate = useNavigate();
 
   const testIdPrefix = "TeamMemberForm";
 
   return (
-    <Form onSubmit={handleSubmit(submitAction)}>
+    <Form onSubmit={handleSubmit(onSubmit)}>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="rosterStudentId">Select Student</Form.Label>
         <RosterStudentDropdown
           rosterStudents={rosterStudents}
-          register={register}
+          setValue={setValue}
           isInvalid={Boolean(errors.rosterStudentId)}
         />
         {errors.rosterStudentId && (

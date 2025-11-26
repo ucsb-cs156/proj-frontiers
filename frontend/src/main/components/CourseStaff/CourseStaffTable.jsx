@@ -7,6 +7,7 @@ import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import { toast } from "react-toastify";
+import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal";
 
 export default function CourseStaffTable({
   staff,
@@ -16,24 +17,34 @@ export default function CourseStaffTable({
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStaff, setEditStaff] = React.useState(null);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [deleteCourseStaff, setDeleteCourseStaff] = React.useState(null);
 
+  const hideDeleteModal = () => {
+    setShowDeleteModal(false);
+  };
   // Stryker disable all
   function onDeleteSuccess(message) {
     console.log(message);
     toast(message);
+    hideDeleteModal();
   }
   // Stryker restore all
 
   function cellToAxiosParamsDelete(cell) {
+    console.log(cell);
     return {
       // Stryker disable next-line StringLiteral
       url: "/api/coursestaff/delete",
       method: "DELETE",
       params: {
-        id: cell.row.original.id,
-        courseId: courseId,
+        id: cell.id,
+        courseId: cell.courseId,
+        removeFromOrg: cell.removeFromOrg,
       },
     };
+
+    // why is this a bad request?
   }
 
   // Stryker disable all : hard to test for query caching
@@ -68,7 +79,16 @@ export default function CourseStaffTable({
 
   // Stryker disable next-line all
   const deleteCallback = async (cell) => {
-    deleteMutation.mutate(cell);
+    setShowDeleteModal(true);
+    setDeleteCourseStaff(cell.row.original.id);
+  };
+
+  const submitDeleteForm = (data) => {
+    deleteMutation.mutate({
+      id: deleteCourseStaff,
+      courseId: courseId,
+      removeFromOrg: data.removeFromOrg,
+    });
   };
 
   const editMutation = useBackendMutation(
@@ -109,6 +129,18 @@ export default function CourseStaffTable({
       header: "GitHub Login",
       accessorKey: "githubLogin",
     },
+    // {
+    //   header: "courseId",
+    //   accessorKey: "courseId",
+    //   id: "courseId",
+    //   enableHiding: true,
+    // },
+    // {
+    //   header: "removeFromOrg",
+    //   accessorKey: "removeFromOrg",
+    //   id: "removeFromOrg",
+    //   enableHiding: true,
+    // }
   ];
 
   const renderTooltip = (orgStatus) => (props) => {
@@ -221,7 +253,11 @@ export default function CourseStaffTable({
           />
         </Modal.Body>
       </Modal>
-
+      <CourseStaffDeleteModal
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
+      />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}

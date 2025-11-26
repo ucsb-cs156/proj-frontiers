@@ -40,7 +40,7 @@ public class InstructorsController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/post")
   public Instructor postInstructor(@RequestParam String email) {
-    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);
+    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email.strip());
     Instructor instructor = Instructor.builder().email(convertedEmail).build();
     instructorRepository.save(instructor);
     return instructor;

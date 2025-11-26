@@ -78,8 +78,6 @@ describe("TeamMemberForm tests", () => {
     const submitButton = screen.getByText(/Add Member/);
     fireEvent.click(submitButton);
 
-    await screen.findByText(/Select a student./);
-
     await waitFor(() =>
       expect(screen.getByText(/Please select a student/)).toBeInTheDocument(),
     );
