@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RosterStudentsCSVController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">RosterStudentsCSVController.java</span></div><h1>RosterStudentsCSVController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.InsertStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
+import edu.ucsb.cs156.frontiers.models.LoadResult;
+import edu.ucsb.cs156.frontiers.models.UpsertResponse;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+@Tag(name = &quot;RosterStudents&quot;)
+@RequestMapping(&quot;/api/rosterstudents&quot;)
+@RestController
+<span class="fc" id="L46">@Slf4j</span>
+<span class="fc" id="L47">public class RosterStudentsCSVController extends ApiController {</span>
+
+  @Autowired private RosterStudentRepository rosterStudentRepository;
+
+  @Autowired private CourseRepository courseRepository;
+
+  @Autowired private UpdateUserService updateUserService;
+  @Autowired private OrganizationMemberService organizationMemberService;
+  @Autowired private JobService jobService;
+
+<span class="fc" id="L57">  public enum RosterSourceType {</span>
+<span class="fc" id="L58">    UCSB_EGRADES,</span>
+<span class="fc" id="L59">    CHICO_CANVAS,</span>
+<span class="fc" id="L60">    OREGON_STATE,</span>
+<span class="fc" id="L61">    ROSTER_DOWNLOAD,</span>
+<span class="fc" id="L62">    UNKNOWN</span>
+  }
+
+  public static final String UCSB_EGRADES_HEADERS =
+      &quot;Enrl Cd,Perm #,Grade,Final Units,Student Last,Student First Middle,Quarter,Course ID,Section,Meeting Time(s) / Location(s),Email,ClassLevel,Major1,Major2,Date/Time,Pronoun&quot;;
+  public static final String CHICO_CANVAS_HEADERS =
+      &quot;Student Name,Student ID,Student SIS ID,Email,Section Name&quot;;
+  public static final String OREGON_STATE_HEADERS =
+      &quot;Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id&quot;;
+  public static final String ROSTER_DOWNLOAD_HEADERS =
+      &quot;COURSEID,EMAIL,FIRSTNAME,GITHUBID,GITHUBLOGIN,ID,LASTNAME,ORGSTATUS,ROSTERSTATUS,SECTION,STUDENTID,TEAMS,USERID&quot;;
+
+  public static RosterSourceType getRosterSourceType(String[] headers) {
+
+<span class="fc" id="L76">    Map&lt;RosterSourceType, String[]&gt; sourceTypeToHeaders = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L78">    sourceTypeToHeaders.put(RosterSourceType.UCSB_EGRADES, UCSB_EGRADES_HEADERS.split(&quot;,&quot;));</span>
+<span class="fc" id="L79">    sourceTypeToHeaders.put(RosterSourceType.CHICO_CANVAS, CHICO_CANVAS_HEADERS.split(&quot;,&quot;));</span>
+<span class="fc" id="L80">    sourceTypeToHeaders.put(RosterSourceType.OREGON_STATE, OREGON_STATE_HEADERS.split(&quot;,&quot;));</span>
+<span class="fc" id="L81">    sourceTypeToHeaders.put(RosterSourceType.ROSTER_DOWNLOAD, ROSTER_DOWNLOAD_HEADERS.split(&quot;,&quot;));</span>
+
+<span class="fc bfc" id="L83" title="All 2 branches covered.">    for (Map.Entry&lt;RosterSourceType, String[]&gt; entry : sourceTypeToHeaders.entrySet()) {</span>
+<span class="fc" id="L84">      RosterSourceType type = entry.getKey();</span>
+<span class="fc" id="L85">      String[] expectedHeaders = entry.getValue();</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">      if (headers.length &gt;= expectedHeaders.length) {</span>
+<span class="fc" id="L87">        boolean matches = true;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        for (int i = 0; i &lt; expectedHeaders.length; i++) {</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">          if (!expectedHeaders[i].trim().equalsIgnoreCase(headers[i].trim())) {</span>
+<span class="fc" id="L90">            matches = false;</span>
+<span class="fc" id="L91">            break;</span>
+          }
+        }
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (matches) {</span>
+<span class="fc" id="L95">          return type;</span>
+        }
+      }
+<span class="fc" id="L98">    }</span>
+    // If no known type matches, return UNKNOWN
+<span class="fc" id="L100">    return RosterSourceType.UNKNOWN;</span>
+  }
+
+  /**
+   * Upload Roster students for Course in any supported format. It is important to keep the code in
+   * this method consistent with the code for adding a single roster student
+   *
+   * @param courseId
+   * @param file
+   * @return
+   * @throws JsonProcessingException
+   * @throws IOException
+   * @throws CsvException
+   */
+  @Operation(summary = &quot;Upload Roster students for Course in any supported Format&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(
+      value = &quot;/upload/csv&quot;,
+      consumes = {&quot;multipart/form-data&quot;})
+  public ResponseEntity&lt;LoadResult&gt; uploadRosterStudentsCSV(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;file&quot;) @RequestParam(&quot;file&quot;) MultipartFile file)
+      throws JsonProcessingException, IOException, CsvException {
+
+<span class="fc" id="L124">    Course course =</span>
+        courseRepository
+<span class="fc" id="L126">            .findById(courseId)</span>
+<span class="fc" id="L127">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
+
+<span class="fc" id="L129">    course.getRosterStudents().stream()</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        .filter(filteredStudent -&gt; filteredStudent.getRosterStatus() == RosterStatus.ROSTER)</span>
+<span class="fc" id="L131">        .forEach(student -&gt; student.setRosterStatus(RosterStatus.DROPPED));</span>
+
+<span class="fc" id="L133">    int counts[] = {0, 0};</span>
+<span class="fc" id="L134">    List&lt;RosterStudent&gt; rejectedStudents = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L136">    try (InputStream inputStream = new BufferedInputStream(file.getInputStream());</span>
+<span class="fc" id="L137">        InputStreamReader reader = new InputStreamReader(inputStream);</span>
+<span class="fc" id="L138">        CSVReader csvReader = new CSVReader(reader); ) {</span>
+
+<span class="fc" id="L140">      String[] headers = csvReader.readNext();</span>
+<span class="fc" id="L141">      RosterSourceType sourceType = getRosterSourceType(headers);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">      if (sourceType == RosterSourceType.UNKNOWN) {</span>
+<span class="fc" id="L143">        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Unknown Roster Source Type&quot;);</span>
+      }
+<span class="fc bfc" id="L145" title="All 2 branches covered.">      if (sourceType == RosterSourceType.UCSB_EGRADES) {</span>
+<span class="fc" id="L146">        csvReader.skip(1);</span>
+      }
+<span class="fc" id="L148">      List&lt;String[]&gt; myEntries = csvReader.readAll();</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">      for (String[] row : myEntries) {</span>
+<span class="fc" id="L150">        RosterStudent rosterStudent = fromCSVRow(row, sourceType);</span>
+<span class="fc" id="L151">        UpsertResponse upsertResponse =</span>
+<span class="fc" id="L152">            RosterStudentsController.upsertStudent(rosterStudent, course, RosterStatus.ROSTER);</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {</span>
+<span class="fc" id="L154">          rejectedStudents.add(upsertResponse.rosterStudent());</span>
+        } else {
+<span class="fc" id="L156">          InsertStatus s = upsertResponse.getInsertStatus();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">          if (s == InsertStatus.INSERTED) {</span>
+<span class="fc" id="L158">            course.getRosterStudents().add(upsertResponse.rosterStudent());</span>
+          }
+<span class="fc" id="L160">          counts[s.ordinal()]++;</span>
+        }
+<span class="fc" id="L162">      }</span>
+    }
+<span class="fc bfc" id="L164" title="All 2 branches covered.">    if (rejectedStudents.isEmpty()) {</span>
+<span class="fc" id="L165">      List&lt;RosterStudent&gt; droppedStudents =</span>
+<span class="fc" id="L166">          course.getRosterStudents().stream()</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">              .filter(student -&gt; student.getRosterStatus() == RosterStatus.DROPPED)</span>
+<span class="fc" id="L168">              .toList();</span>
+<span class="fc" id="L169">      LoadResult successfulResult =</span>
+          new LoadResult(
+<span class="fc" id="L171">              counts[InsertStatus.INSERTED.ordinal()],</span>
+<span class="fc" id="L172">              counts[InsertStatus.UPDATED.ordinal()],</span>
+<span class="fc" id="L173">              droppedStudents.size(),</span>
+<span class="fc" id="L174">              List.of());</span>
+<span class="fc" id="L175">      rosterStudentRepository.saveAll(course.getRosterStudents());</span>
+<span class="fc" id="L176">      updateUserService.attachUsersToRosterStudents(course.getRosterStudents());</span>
+      RemoveStudentsJob job =
+<span class="fc" id="L178">          RemoveStudentsJob.builder()</span>
+<span class="fc" id="L179">              .students(droppedStudents)</span>
+<span class="fc" id="L180">              .organizationMemberService(organizationMemberService)</span>
+<span class="fc" id="L181">              .rosterStudentRepository(rosterStudentRepository)</span>
+<span class="fc" id="L182">              .build();</span>
+<span class="fc" id="L183">      jobService.runAsJob(job);</span>
+<span class="fc" id="L184">      return ResponseEntity.ok(successfulResult);</span>
+    } else {
+<span class="fc" id="L186">      LoadResult conflictResult = new LoadResult(0, 0, 0, rejectedStudents);</span>
+<span class="fc" id="L187">      return ResponseEntity.status(HttpStatus.CONFLICT).body(conflictResult);</span>
+    }
+  }
+
+  public static RosterStudent fromCSVRow(String[] row, RosterSourceType sourceType) {
+<span class="fc bfc" id="L192" title="All 2 branches covered.">    if (sourceType == RosterSourceType.UCSB_EGRADES) {</span>
+<span class="fc" id="L193">      return fromUCSBEgradesCSVRow(row);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">    } else if (sourceType == RosterSourceType.CHICO_CANVAS) {</span>
+<span class="fc" id="L195">      return fromChicoCanvasCSVRow(row);</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">    } else if (sourceType == RosterSourceType.OREGON_STATE) {</span>
+<span class="fc" id="L197">      return fromOregonStateCSVRow(row);</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">    } else if (sourceType == RosterSourceType.ROSTER_DOWNLOAD) {</span>
+<span class="fc" id="L199">      return fromRosterDownloadCSVRow(row);</span>
+    } else {
+<span class="fc" id="L201">      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;CSV format not recognized&quot;);</span>
+    }
+  }
+
+  public static void checkRowLength(String[] row, int expectedLength, RosterSourceType sourceType) {
+<span class="fc bfc" id="L206" title="All 2 branches covered.">    if (row.length &lt; expectedLength) {</span>
+<span class="fc" id="L207">      throw new ResponseStatusException(</span>
+          HttpStatus.BAD_REQUEST,
+<span class="fc" id="L209">          String.format(</span>
+              &quot;%s CSV row does not have enough columns. Length = %d Row content = [%s]&quot;,
+<span class="fc" id="L211">              sourceType.toString(), row.length, Arrays.toString(row)));</span>
+    }
+<span class="fc" id="L213">  }</span>
+
+  public static RosterStudent fromUCSBEgradesCSVRow(String[] row) {
+<span class="fc" id="L216">    checkRowLength(row, 11, RosterSourceType.UCSB_EGRADES);</span>
+<span class="fc" id="L217">    return RosterStudent.builder()</span>
+<span class="fc" id="L218">        .firstName(row[5])</span>
+<span class="fc" id="L219">        .lastName(row[4])</span>
+<span class="fc" id="L220">        .studentId(row[1])</span>
+<span class="fc" id="L221">        .email(row[10])</span>
+<span class="fc" id="L222">        .section(row[0])</span>
+<span class="fc" id="L223">        .build();</span>
+  }
+
+  public static RosterStudent fromChicoCanvasCSVRow(String[] row) {
+<span class="fc" id="L227">    checkRowLength(row, 4, RosterSourceType.CHICO_CANVAS);</span>
+<span class="fc" id="L228">    return RosterStudent.builder()</span>
+<span class="fc" id="L229">        .firstName(getFirstName(row[0]))</span>
+<span class="fc" id="L230">        .lastName(getLastName(row[0]))</span>
+<span class="fc" id="L231">        .studentId(row[2])</span>
+<span class="fc" id="L232">        .email(row[3])</span>
+<span class="fc" id="L233">        .section(&quot;&quot;)</span>
+<span class="fc" id="L234">        .build();</span>
+  }
+
+  public static RosterStudent fromOregonStateCSVRow(String[] row) {
+
+<span class="fc" id="L239">    checkRowLength(row, 10, RosterSourceType.OREGON_STATE);</span>
+<span class="fc" id="L240">    String sortableName = row[1];</span>
+<span class="fc" id="L241">    String sortableNameParts[] = sortableName.split(&quot;,&quot;);</span>
+<span class="fc" id="L242">    String lastName = sortableNameParts[0].trim();</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">    String firstName = sortableNameParts.length &gt; 1 ? sortableNameParts[1].trim() : &quot;&quot;;</span>
+<span class="fc" id="L244">    return RosterStudent.builder()</span>
+<span class="fc" id="L245">        .firstName(firstName)</span>
+<span class="fc" id="L246">        .lastName(lastName)</span>
+<span class="fc" id="L247">        .studentId(row[9])</span>
+<span class="fc" id="L248">        .email(row[8])</span>
+<span class="fc" id="L249">        .section(&quot;&quot;)</span>
+<span class="fc" id="L250">        .build();</span>
+  }
+
+  public static RosterStudent fromRosterDownloadCSVRow(String[] row) {
+    // Header order: COURSEID, EMAIL, FIRSTNAME, GITHUBID, GITHUBLOGIN, ID, LASTNAME,
+    // ORGSTATUS, ROSTERSTATUS, SECTION, STUDENTID, TEAMS, USERID
+<span class="fc" id="L256">    checkRowLength(row, 13, RosterSourceType.ROSTER_DOWNLOAD);</span>
+<span class="fc" id="L257">    return RosterStudent.builder()</span>
+<span class="fc" id="L258">        .firstName(row[2])</span>
+<span class="fc" id="L259">        .lastName(row[6])</span>
+<span class="fc" id="L260">        .studentId(row[10])</span>
+<span class="fc" id="L261">        .email(row[1])</span>
+<span class="fc" id="L262">        .section(row[9])</span>
+<span class="fc" id="L263">        .build();</span>
+  }
+
+  /**
+   * Get everything except up to and not including the last space in the full name. If the string
+   * contains no spaces, return an empty string.
+   *
+   * @param fullName
+   * @return
+   */
+  public static String getFirstName(String fullName) {
+<span class="fc" id="L274">    int lastSpaceIndex = fullName.lastIndexOf(&quot; &quot;);</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">    if (lastSpaceIndex == -1) {</span>
+<span class="fc" id="L276">      return &quot;&quot;; // No spaces found, return empty string</span>
+    }
+<span class="fc" id="L278">    return fullName.substring(0, lastSpaceIndex).trim(); // Return everything before the last space</span>
+  }
+
+  /**
+   * Get everything after the last space in the full name. If the string contains no spaces, return
+   * the entire input string as the result.
+   *
+   * @param fullName
+   * @return best estimate of last name
+   */
+  public static String getLastName(String fullName) {
+<span class="fc" id="L289">    int lastSpaceIndex = fullName.lastIndexOf(&quot; &quot;);</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">    if (lastSpaceIndex == -1) {</span>
+<span class="fc" id="L291">      return fullName; // No spaces found, return the entire string</span>
+    }
+<span class="fc" id="L293">    return fullName.substring(lastSpaceIndex + 1).trim(); // Return everything after the last space</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
