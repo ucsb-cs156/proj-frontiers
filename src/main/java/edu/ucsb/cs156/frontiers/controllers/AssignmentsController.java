@@ -82,7 +82,7 @@ public class AssignmentsController extends ApiController {
    * @return the created Assignment
    */
   @Operation(summary = "Update an assignment")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #assignmentId)")
   @PutMapping("/put")
   public Assignment updateAssignment(
       @Parameter(name = "assignmentId") @RequestParam Long assignmentId,
