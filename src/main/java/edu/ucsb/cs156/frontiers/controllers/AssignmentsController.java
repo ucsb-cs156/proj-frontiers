@@ -74,7 +74,7 @@ public class AssignmentsController extends ApiController {
   /**
    * This method updates an Assignment.
    *
-   * @param courseId the ID of the course the assignment is associated with
+   * @param assignmentId the ID of the course the assignment is associated with
    * @param name the name of the assignment
    * @param asnType the assignment type (individual vs team)
    * @param visibility the visbility of the assignment (public vs private)
@@ -85,7 +85,7 @@ public class AssignmentsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PutMapping("/put")
   public Assignment updateAssignment(
-      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "assignmentId") @RequestParam Long assignmentId,
       @Parameter(name = "name") @RequestParam String name,
       @Parameter(name = "asnType") @RequestParam AssignmentType asnType,
       @Parameter(name = "visibility") @RequestParam
@@ -96,8 +96,8 @@ public class AssignmentsController extends ApiController {
 
     Assignment assignment =
         assignmentRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+            .findById(assignmentId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, assignmentId));
 
     assignment.setAsnType(asnType);
     assignment.setVisibility(visibility);
