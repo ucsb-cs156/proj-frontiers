@@ -74,6 +74,7 @@ public class RosterStudentsController extends ApiController {
       @Parameter(name = "firstName") @RequestParam String firstName,
       @Parameter(name = "lastName") @RequestParam String lastName,
       @Parameter(name = "email") @RequestParam String email,
+      @Parameter(name = "section") @RequestParam(required = false) String section,
       @Parameter(name = "courseId") @RequestParam Long courseId)
       throws EntityNotFoundException {
 
@@ -90,6 +91,7 @@ public class RosterStudentsController extends ApiController {
             .firstName(firstName)
             .lastName(lastName)
             .email(email)
+            .section(section != null ? section : "")
             .build();
 
     UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);
@@ -270,7 +272,8 @@ public class RosterStudentsController extends ApiController {
       @Parameter(name = "id") @RequestParam Long id,
       @Parameter(name = "firstName") @RequestParam(required = false) String firstName,
       @Parameter(name = "lastName") @RequestParam(required = false) String lastName,
-      @Parameter(name = "studentId") @RequestParam(required = false) String studentId)
+      @Parameter(name = "studentId") @RequestParam(required = false) String studentId,
+      @Parameter(name = "section") @RequestParam(required = false) String section)
       throws EntityNotFoundException {
 
     if (firstName == null
@@ -300,6 +303,10 @@ public class RosterStudentsController extends ApiController {
     rosterStudent.setFirstName(firstName.trim());
     rosterStudent.setLastName(lastName.trim());
     rosterStudent.setStudentId(studentId.trim());
+
+    if (section != null) {
+      rosterStudent.setSection(section.trim());
+    }
 
     return rosterStudentRepository.save(rosterStudent);
   }
