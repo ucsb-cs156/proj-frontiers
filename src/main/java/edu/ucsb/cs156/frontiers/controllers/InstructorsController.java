@@ -64,15 +64,16 @@ public class InstructorsController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("/delete")
   public ResponseEntity<String> deleteInstructor(@RequestParam String email) {
-    Instructor instructor = instructorRepository.findById(email).orElse(null);
+    String sanitizedEmail = CanonicalFormConverter.convertToValidEmail(email);
+    Instructor instructor = instructorRepository.findById(sanitizedEmail).orElse(null);
 
     if (instructor == null) {
       return ResponseEntity.status(404)
-          .body(String.format("Instructor with email %s not found.", email));
+          .body(String.format("Instructor with email %s not found.", sanitizedEmail));
     }
 
     instructorRepository.delete(instructor);
     return ResponseEntity.status(200)
-        .body(String.format("Instructor with email %s deleted.", email));
+        .body(String.format("Instructor with email %s deleted.", sanitizedEmail));
   }
 }

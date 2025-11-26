@@ -39,7 +39,7 @@ export default function ConfirmationModal({
           }}
           variant={"danger"}
         >
-          Yes, I'd like to do this
+          Yes, I&apos;d like to do this
         </Button>
       </Modal.Footer>
     </Modal>

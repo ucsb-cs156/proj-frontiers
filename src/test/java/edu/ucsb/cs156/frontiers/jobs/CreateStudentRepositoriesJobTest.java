@@ -7,9 +7,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RepositoryCreationTarget;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
@@ -178,5 +180,217 @@ public class CreateStudentRepositoriesJobTest {
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  public void testCreationTargetStaffOnly() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    RosterStudent student =
+        RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
+    CourseStaff staff =
+        CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
+    course.setRosterStudents(List.of(student));
+    course.setCourseStaff(List.of(staff));
+
+    var repoJob =
+        spy(
+            CreateStudentRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .creationTarget(RepositoryCreationTarget.STAFF_ONLY)
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+                Processing...
+                Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    // Verify staff repository is created
+    verify(service, times(1))
+        .createStaffRepository(
+            eq(course),
+            eq(staff),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE));
+
+    // Verify student repository is NOT created
+    verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  public void testCreationTargetStudentsAndStaff() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    RosterStudent student =
+        RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
+    CourseStaff staff =
+        CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
+    course.setRosterStudents(List.of(student));
+    course.setCourseStaff(List.of(staff));
+
+    var repoJob =
+        spy(
+            CreateStudentRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(true)
+                .permissions(RepositoryPermissions.MAINTAIN)
+                .creationTarget(RepositoryCreationTarget.STUDENTS_AND_STAFF)
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+                Processing...
+                Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    // Verify student repository is created
+    verify(service, times(1))
+        .createStudentRepository(
+            eq(course),
+            eq(student),
+            contains("repo-prefix"),
+            eq(true),
+            eq(RepositoryPermissions.MAINTAIN));
+
+    // Verify staff repository is also created
+    verify(service, times(1))
+        .createStaffRepository(
+            eq(course),
+            eq(staff),
+            contains("repo-prefix"),
+            eq(true),
+            eq(RepositoryPermissions.MAINTAIN));
+  }
+
+  @Test
+  public void testCreationTargetDefaultsToStudentsOnly() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    RosterStudent student =
+        RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
+    CourseStaff staff =
+        CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
+    course.setRosterStudents(List.of(student));
+    course.setCourseStaff(List.of(staff));
+
+    // Build job without specifying creationTarget (to test that it defaults to STUDENTS_ONLY)
+    var repoJob =
+        spy(
+            CreateStudentRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+                Processing...
+                Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    // Verify student repository is created
+    verify(service, times(1))
+        .createStudentRepository(
+            eq(course),
+            eq(student),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE));
+
+    // Verify staff repository is NOT created
+    verify(service, times(0)).createStaffRepository(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  public void testStaffOnlyDoesntCallForNoLogin() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    CourseStaff staff = CourseStaff.builder().build(); // No GitHub login
+    course.setCourseStaff(List.of(staff));
+
+    var repoJob =
+        spy(
+            CreateStudentRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .isPrivate(false)
+                .course(course)
+                .permissions(RepositoryPermissions.WRITE)
+                .creationTarget(RepositoryCreationTarget.STAFF_ONLY)
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+                Processing...
+                Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(0)).createStaffRepository(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  public void testStaffOnlyDoesntCallForNotMember() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    CourseStaff staff =
+        CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.PENDING).build();
+    course.setCourseStaff(List.of(staff));
+
+    var repoJob =
+        spy(
+            CreateStudentRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .isPrivate(false)
+                .course(course)
+                .permissions(RepositoryPermissions.WRITE)
+                .creationTarget(RepositoryCreationTarget.STAFF_ONLY)
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+                Processing...
+                Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(0)).createStaffRepository(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  public void testStaffOnlyOwnerStatus() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    CourseStaff staff =
+        CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.OWNER).build();
+    course.setCourseStaff(List.of(staff));
+
+    var repoJob =
+        spy(
+            CreateStudentRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(true)
+                .permissions(RepositoryPermissions.ADMIN)
+                .creationTarget(RepositoryCreationTarget.STAFF_ONLY)
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+                Processing...
+                Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(1))
+        .createStaffRepository(
+            eq(course),
+            eq(staff),
+            contains("repo-prefix"),
+            eq(true),
+            eq(RepositoryPermissions.ADMIN));
   }
 }

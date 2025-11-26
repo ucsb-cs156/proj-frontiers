@@ -32,39 +32,44 @@ export default function CoursesTable({
     window.open(gitInvite, "_blank");
   };
 
-  const renderTooltip = (studentStatus) => (props) => {
-    let set_message;
+  const renderTooltip = (studentStatus) => {
+    const TooltipComponent = (props) => {
+      let set_message;
 
-    switch (studentStatus) {
-      case "PENDING":
-        set_message =
-          "This course has not been completely set up by your instructor yet.";
-        break;
-      case "JOINCOURSE":
-        set_message =
-          "Clicking this button will generate an invitation to the GitHub organization associated with this course.";
-        break;
-      case "INVITED":
-        set_message =
-          "You have been invited to the GitHub organization associated with this course, but you still need to accept or decline the invitation. Please accept it if you plan to stay enrolled, and decline only if you plan to withdraw from the course.";
-        break;
-      case "OWNER":
-        set_message =
-          "You are an owner of the GitHub organization associated with this course.";
-        break;
-      case "MEMBER":
-        set_message =
-          "You are a member of the GitHub organization associated with this course.";
-        break;
-      default:
-        set_message = "Tooltip for illegal status that will never occur";
-        break;
-    }
-    return (
-      <Tooltip id={`${studentStatus.toLowerCase()}-tooltip`} {...props}>
-        {set_message}
-      </Tooltip>
-    );
+      switch (studentStatus) {
+        case "PENDING":
+          set_message =
+            "This course has not been completely set up by your instructor yet.";
+          break;
+        case "JOINCOURSE":
+          set_message =
+            "Clicking this button will generate an invitation to the GitHub organization associated with this course.";
+          break;
+        case "INVITED":
+          set_message =
+            "You have been invited to the GitHub organization associated with this course, but you still need to accept or decline the invitation. Please accept it if you plan to stay enrolled, and decline only if you plan to withdraw from the course.";
+          break;
+        case "OWNER":
+          set_message =
+            "You are an owner of the GitHub organization associated with this course.";
+          break;
+        case "MEMBER":
+          set_message =
+            "You are a member of the GitHub organization associated with this course.";
+          break;
+        default:
+          set_message = "Tooltip for illegal status that will never occur";
+          break;
+      }
+      return (
+        <Tooltip id={`${studentStatus.toLowerCase()}-tooltip`} {...props}>
+          {set_message}
+        </Tooltip>
+      );
+    };
+    // Stryker disable next-line all: DisplayName is for debugging purposes and not tested
+    TooltipComponent.displayName = "RenderTooltip";
+    return TooltipComponent;
   };
 
   const columnsWithStatus = [

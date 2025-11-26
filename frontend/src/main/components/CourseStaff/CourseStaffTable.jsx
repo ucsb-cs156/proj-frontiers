@@ -6,6 +6,7 @@ import { useBackendMutation } from "main/utils/useBackend";
 import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
+import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal";
 import { toast } from "react-toastify";
 
 export default function CourseStaffTable({
@@ -16,22 +17,26 @@ export default function CourseStaffTable({
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStaff, setEditStaff] = React.useState(null);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [deleteStaff, setDeleteStaff] = React.useState(null);
 
   // Stryker disable all
   function onDeleteSuccess(message) {
     console.log(message);
     toast(message);
+    setShowDeleteModal(false);
   }
   // Stryker restore all
 
-  function cellToAxiosParamsDelete(cell) {
+  function cellToAxiosParamsDelete(data) {
     return {
       // Stryker disable next-line StringLiteral
       url: "/api/coursestaff/delete",
       method: "DELETE",
       params: {
-        id: cell.row.original.id,
+        id: data.id,
         courseId: courseId,
+        removeFromOrg: data.removeFromOrg === "true",
       },
     };
   }
@@ -66,9 +71,16 @@ export default function CourseStaffTable({
     hideModal();
   };
 
-  // Stryker disable next-line all
   const deleteCallback = async (cell) => {
-    deleteMutation.mutate(cell);
+    setShowDeleteModal(true);
+    setDeleteStaff(cell.row.original.id);
+  };
+
+  const submitDeleteForm = (data) => {
+    deleteMutation.mutate({
+      id: deleteStaff,
+      ...data,
+    });
   };
 
   const editMutation = useBackendMutation(
@@ -111,39 +123,44 @@ export default function CourseStaffTable({
     },
   ];
 
-  const renderTooltip = (orgStatus) => (props) => {
-    let set_message;
+  const renderTooltip = (orgStatus) => {
+    const TooltipComponent = (props) => {
+      let set_message;
 
-    switch (orgStatus) {
-      case "PENDING":
-        set_message =
-          "Staff member cannot join the course until it has been completely set up.";
-        break;
-      case "JOINCOURSE":
-        set_message =
-          "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
-        break;
-      case "INVITED":
-        set_message =
-          "Staff member has generated an invite, but has not yet accepted or declined the invitation.";
-        break;
-      case "OWNER":
-        set_message =
-          "Staff member is an owner of the GitHub organization associated with this course.";
-        break;
-      case "MEMBER":
-        set_message =
-          "Staff member is a member of the GitHub organization associated with this course.";
-        break;
-      default:
-        set_message = "Tooltip for illegal status that will never occur";
-        break;
-    }
-    return (
-      <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
-        {set_message}
-      </Tooltip>
-    );
+      switch (orgStatus) {
+        case "PENDING":
+          set_message =
+            "Staff member cannot join the course until it has been completely set up.";
+          break;
+        case "JOINCOURSE":
+          set_message =
+            "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
+          break;
+        case "INVITED":
+          set_message =
+            "Staff member has generated an invite, but has not yet accepted or declined the invitation.";
+          break;
+        case "OWNER":
+          set_message =
+            "Staff member is an owner of the GitHub organization associated with this course.";
+          break;
+        case "MEMBER":
+          set_message =
+            "Staff member is a member of the GitHub organization associated with this course.";
+          break;
+        default:
+          set_message = "Tooltip for illegal status that will never occur";
+          break;
+      }
+      return (
+        <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
+          {set_message}
+        </Tooltip>
+      );
+    };
+    // Stryker disable next-line all: DisplayName is for debugging purposes and not tested
+    TooltipComponent.displayName = "RenderTooltip";
+    return TooltipComponent;
   };
 
   columns.push({
@@ -221,7 +238,11 @@ export default function CourseStaffTable({
           />
         </Modal.Body>
       </Modal>
-
+      <CourseStaffDeleteModal
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
+      />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}

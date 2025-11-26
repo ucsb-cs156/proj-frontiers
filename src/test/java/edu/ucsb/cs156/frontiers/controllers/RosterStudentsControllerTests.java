@@ -148,6 +148,40 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(InsertStatus.INSERTED, upsertResponse.insertStatus());
   }
 
+  /** Test the POST endpoint with the optional section parameter */
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostRosterStudent_withSection() throws Exception {
+
+    // arrange
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rs1);
+    doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
+
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/rosterstudents/post")
+                    .with(csrf())
+                    .param("studentId", "A123456")
+                    .param("firstName", "Chris")
+                    .param("lastName", "Gaucho")
+                    .param("email", "cgaucho@example.org")
+                    .param("section", "5pm Section")
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    assertEquals("5pm Section", captor.getValue().getSection());
+  }
+
   /** Test that the POST endpoint converts @umail.ucsb.edu to @ucsb.edu */
   @Test
   @WithInstructorCoursePermissions
@@ -269,6 +303,99 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(OrgStatus.JOINCOURSE, rosterStudentSaved.getOrgStatus());
   }
 
+  /** Test the PUT endpoint updates the section field */
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_updatesSection() throws Exception {
+
+    // arrange
+
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("Name")
+            .studentId("A123456")
+            .section("Old Section")
+            .course(course1)
+            .build();
+
+    RosterStudent updatedStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("New")
+            .lastName("Name")
+            .studentId("A123456")
+            .section("New Section")
+            .course(course1)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(updatedStudent);
+
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/update")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("firstName", "New")
+                    .param("lastName", "Name")
+                    .param("studentId", "A123456")
+                    .param("section", "New Section"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    assertEquals("New Section", captor.getValue().getSection());
+  }
+
+  /** Test the PUT endpoint preserves the existing section if the parameter is missing */
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUpdateRosterStudent_preservesSectionWhenParamMissing() throws Exception {
+
+    // arrange
+
+    RosterStudent existingStudent =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Old")
+            .lastName("Name")
+            .studentId("A123456")
+            .section("Keep This Section")
+            .course(course1)
+            .build();
+
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(existingStudent));
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(existingStudent);
+
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/rosterstudents/update")
+                    .with(csrf())
+                    .param("id", "1")
+                    .param("firstName", "New")
+                    .param("lastName", "Name")
+                    .param("studentId", "A123456"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    assertEquals("Keep This Section", captor.getValue().getSection());
+  }
+
   /**
    * Test that you cannot post a single roster student for a course that does not exist
    *
@@ -343,7 +470,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(java.util.List.of(rs1, rs2));
 
     List<RosterStudentDTO> expectedRosterStudents =
-        java.util.List.of(new RosterStudentDTO(rs1), new RosterStudentDTO(rs2));
+        java.util.List.of(new RosterStudentDTO(rs2), new RosterStudentDTO(rs1));
 
     // act
 

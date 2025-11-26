@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import reactPlugin from "eslint-plugin-react";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 // Import the vitest plugin
@@ -24,6 +25,7 @@ export default defineConfig([
       js.configs.recommended,
       reactHooks.configs["recommended-latest"],
       reactRefresh.configs.vite,
+      reactPlugin.configs.flat.recommended,
     ],
     languageOptions: {
       ecmaVersion: 2020,
@@ -34,8 +36,16 @@ export default defineConfig([
         sourceType: "module",
       },
     },
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
     rules: {
       "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
+      "react/react-in-jsx-scope": "off", //Recomended by React - https://legacy.reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html#eslint
+      "react/jsx-uses-react": "off", //Recomended by React - https://legacy.reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html#eslint
+      "react/prop-types": "off",                
     },
   },
   {
@@ -46,7 +56,7 @@ export default defineConfig([
     },
     languageOptions: {
       globals: vitest.environments.env.globals, // Use vitest's globals
-    },
+    },    
     rules: {
       // Vitest recommended rules
       ...vitest.configs.recommended.rules,
