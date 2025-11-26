@@ -204,7 +204,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(updatedAssignment);
     assertEquals(expectedJson, responseString);
   }
-  
+
   // DELETE endpoint tests
   @Test
   public void logged_out_users_cannot_delete() throws Exception {
@@ -279,7 +279,9 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
   }
-    
+
+  @Test
+  @WithInstructorCoursePermissions
   public void delete_assignment_returns_404_when_course_not_found() throws Exception {
     when(courseRepository.findById(999L)).thenReturn(Optional.empty());
 
