@@ -89,8 +89,7 @@ public class WiremockServiceImpl extends WiremockService {
                           "token_type": "Bearer",
                           "id_token": "{{{idToken}}}"
                           }
-  {{/trim}}
-                           """)));
+  {{/trim}}""")));
     } else {
       s.stubFor(
           post(urlPathEqualTo("/oauth/token"))
@@ -112,8 +111,7 @@ public class WiremockServiceImpl extends WiremockService {
                           "token_type": "Bearer",
                           "id_token": "{{{idToken}}}"
                           }
-  {{/trim}}
-                           """)));
+  {{/trim}}""")));
     }
     if (isAdmin) {
       s.stubFor(
