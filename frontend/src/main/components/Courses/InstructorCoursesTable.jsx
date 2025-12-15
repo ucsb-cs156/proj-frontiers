@@ -17,6 +17,7 @@ export default function InstructorCoursesTable({
   currentUser,
   testId = "InstructorCoursesTable",
   enableInstructorUpdate = false,
+  deleteCourseButton = false,
 }) {
   const location = useLocation();
 
@@ -38,6 +39,8 @@ export default function InstructorCoursesTable({
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showCourseEditModal, setShowCourseEditModal] = useState(false);
   const [selectedCourseForEdit, setSelectedCourseForEdit] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState(null);
 
   const handleShowCourseEditModal = (course) => {
     setSelectedCourseForEdit(course);
@@ -143,6 +146,14 @@ export default function InstructorCoursesTable({
     };
   };
 
+  const cellToAxiosParamsDelete = (course) => ({
+    url: "/api/courses",
+    method: "DELETE",
+    params: {
+      courseId: course.id,
+    },
+  });
+
   const onInstructorUpdateSuccess = () => {
     handleCloseModal();
   };
@@ -166,6 +177,18 @@ export default function InstructorCoursesTable({
     else toast(`Was not able to update course:\n${error.message}`);
   };
 
+  const onDeleteSuccess = () => {
+    toast("Course deleted successfully");
+    setShowDeleteModal(false);
+    setCourseToDelete(null);
+  };
+
+  const onDeleteError = (error) => {
+    if (error.response?.data?.message)
+      toast(`Could not delete course:\n${error.response.data.message}`);
+    else toast(`Could not delete course:\n${error.message}`);
+  };
+
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     {
@@ -180,6 +203,15 @@ export default function InstructorCoursesTable({
     {
       onSuccess: onCourseUpdateSuccess,
       onError: onCourseUpdateError,
+    },
+    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
+  );
+
+  const deleteMutation = useBackendMutation(
+    cellToAxiosParamsDelete,
+    {
+      onSuccess: onDeleteSuccess,
+      onError: onDeleteError,
     },
     ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
   );
@@ -343,6 +375,60 @@ export default function InstructorCoursesTable({
         }
       },
     },
+    ...(deleteCourseButton
+      ? [
+          {
+            header: "Delete",
+            id: "delete",
+            cell: ({ cell }) => {
+              const canDelete =
+                cell.row.original.numStudents === 0 &&
+                cell.row.original.numStaff === 0;
+
+              if (!canDelete) {
+                return (
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={
+                      <Tooltip>
+                        Cannot delete a course with active students or staff
+                      </Tooltip>
+                    }
+                  >
+                    <span className="d-inline-block">
+                      <div
+                        style={{
+                          background: "#A0A0A0",
+                          padding: "1px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        <Button variant="light" size="sm" disabled>
+                          Delete
+                        </Button>
+                      </div>
+                    </span>
+                  </OverlayTrigger>
+                );
+              }
+
+              return (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  data-testid={`${testId}-cell-row-${cell.row.index}-col-delete-button`}
+                  onClick={() => {
+                    setCourseToDelete(cell.row.original);
+                    setShowDeleteModal(true);
+                  }}
+                >
+                  Delete
+                </Button>
+              );
+            },
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -371,6 +457,41 @@ export default function InstructorCoursesTable({
         buttonText="Update"
         modalTitle="Edit Course"
       />
+
+      <Modal
+        data-testid="InstructorCoursesTable-delete-modal"
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {courseToDelete && (
+            <p>
+              Please confirm that you really want to delete course{" "}
+              <strong>{courseToDelete.courseName}</strong>. This action cannot
+              be undone.
+            </p>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Do not delete
+          </Button>
+
+          <Button
+            variant="danger"
+            onClick={() => deleteMutation.mutate(courseToDelete)}
+          >
+            Yes, Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <OurTable data={courses} columns={columnsWithInstall} testid={testId} />
     </>
   );
