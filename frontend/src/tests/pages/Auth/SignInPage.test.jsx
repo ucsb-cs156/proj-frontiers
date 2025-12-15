@@ -32,7 +32,7 @@ describe("SignInPage Tests", () => {
     );
 
     await screen.findByText("Sign in with Google");
-    expect(screen.getByTestId("SignInPage-googleIcon")).toBeInTheDocument();
+    expect(screen.getByTestId("SignInOptions-googleIcon")).toBeInTheDocument();
     expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -62,7 +62,9 @@ describe("SignInPage Tests", () => {
       </QueryClientProvider>,
     );
     await screen.findByText("Sign in with Microsoft");
-    expect(screen.getByTestId("SignInPage-microsoftIcon")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("SignInOptions-microsoftIcon"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("SignInCard-base-microsoft")).toBeInTheDocument();
     expect(screen.getByText("Sign in with Microsoft")).toBeInTheDocument();
     expect(
@@ -90,7 +92,7 @@ describe("SignInPage Tests", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByTestId("SignInPage-cardDisplay")).toHaveClass(
+    expect(screen.getByTestId("SignInOptions-cardDisplay")).toHaveClass(
       "g-5 justify-content-center align-items-center",
       "d-flex",
       "gap-5",

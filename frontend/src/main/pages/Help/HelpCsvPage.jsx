@@ -11,9 +11,16 @@ export default function HelpCsvPage() {
         <h2>Roster Student CSV Upload formats</h2>
         <p>
           Instructors can upload a course roster from a CSV file. The following
-          formats are supported. If you would like your university's format to
-          be supported, please contact the Frontiers development team, supplying
-          a sample CSV (with fictional data).
+          formats are supported. If you would like your university&apos;s format
+          to be supported, please contact the Frontiers development team,
+          supplying a sample CSV (with fictional data).
+        </p>
+        <p>
+          <b>Note about &quot;dropped&quot; students:</b> dropped students are
+          automatically handled by the system which marks a student as
+          &quot;dropped&quot; if their name previously appeared in an uploaded
+          CSV but not in the current upload. Manually added students are never
+          dropped, even if their name is missing from the current CSV.
         </p>
         <Accordion data-testid="rosterUploadsAccordion">
           <Accordion.Item eventKey="0">
@@ -61,6 +68,11 @@ export default function HelpCsvPage() {
                   </tr>
                 </tbody>
               </table>
+              <p>
+                <b>Ignored Fields:</b> Enrl Cd, Grade, Final Units, Middle,
+                Quarter, Course ID, Section, Meeting Time(s) / Location(s),
+                ClassLevel, Major1, Major2, Date/Time, Pronoun
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="1">
@@ -68,7 +80,7 @@ export default function HelpCsvPage() {
             <Accordion.Body>
               <p>
                 The following CSV format can be obtained from the Canvas system
-                at Chico State, through the "New Analytics" feature:
+                at Chico State, through the &quot;New Analytics&quot; feature:
               </p>
               <pre className={"csvExample"} data-testid="chicoStateCsvExample">
                 {csvFixtures.chicoStateCanvas}
@@ -107,6 +119,9 @@ export default function HelpCsvPage() {
                   </tr>
                 </tbody>
               </table>
+              <p>
+                <b>Ignored Fields:</b> Student ID, ID, Section Name
+              </p>
             </Accordion.Body>
           </Accordion.Item>
           <Accordion.Item eventKey="2">
@@ -150,6 +165,11 @@ export default function HelpCsvPage() {
                   </tr>
                 </tbody>
               </table>
+              <p>
+                <b>Ignored Fields:</b> Full name, Canvas user id, Overall course
+                grade, Assignment on time percent, Last page view time, Last
+                participation time, Last logged out
+              </p>
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
@@ -191,7 +211,7 @@ export default function HelpCsvPage() {
                     <td>Email</td>
                     <td>email</td>
                     <td>
-                      Student's email address used to match to the roster.
+                      Student&apos;s email address used to match to the roster.
                     </td>
                   </tr>
                 </tbody>
@@ -243,22 +263,30 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>studentId</td>
                     <td>Student ID</td>
-                    <td>Student's university ID (e.g., Perm # at UCSB)</td>
+                    <td>Student&apos;s university ID (e.g., Perm # at UCSB)</td>
                   </tr>
                   <tr>
                     <td>firstName</td>
-                    <td>Student's first name</td>
+                    <td>Student&apos;s first name</td>
                     <td></td>
                   </tr>
                   <tr>
                     <td>lastName</td>
-                    <td>Student's last name</td>
+                    <td>Student&apos;s last name</td>
                     <td></td>
                   </tr>
                   <tr>
                     <td>email</td>
-                    <td>Student's email address</td>
+                    <td>Student&apos;s email address</td>
                     <td></td>
+                  </tr>
+                  <tr>
+                    <td>section</td>
+                    <td>Course section name/time</td>
+                    <td>
+                      Identifies which section of the course this student is
+                      enrolled in
+                    </td>
                   </tr>
                   <tr>
                     <td>userId</td>
@@ -268,12 +296,12 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>githubId</td>
                     <td>GitHub user ID</td>
-                    <td>Student's GitHub account ID, if connected</td>
+                    <td>Student&apos;s GitHub account ID, if connected</td>
                   </tr>
                   <tr>
                     <td>githubLogin</td>
                     <td>GitHub username</td>
-                    <td>Student's GitHub username, if connected</td>
+                    <td>Student&apos;s GitHub username, if connected</td>
                   </tr>
                   <tr>
                     <td>rosterStatus</td>
@@ -287,6 +315,13 @@ export default function HelpCsvPage() {
                     <td>orgStatus</td>
                     <td>GitHub organization status</td>
                     <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
+                  </tr>
+                  <tr>
+                    <td>teams</td>
+                    <td>List of team names</td>
+                    <td>
+                      Identifies which team(s) the student is a part of, if any
+                    </td>
                   </tr>
                 </tbody>
               </table>

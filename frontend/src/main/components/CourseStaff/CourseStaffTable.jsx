@@ -7,6 +7,7 @@ import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import { toast } from "react-toastify";
+import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal";
 
 export default function CourseStaffTable({
   staff,
@@ -16,34 +17,21 @@ export default function CourseStaffTable({
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStaff, setEditStaff] = React.useState(null);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [deleteStaff, setDeleteStaff] = React.useState(null);
 
-  // Stryker disable all
-  function onDeleteSuccess(message) {
-    console.log(message);
-    toast(message);
-  }
-  // Stryker restore all
-
-  function cellToAxiosParamsDelete(cell) {
+  function cellToAxiosParamsDelete(formData) {
     return {
       // Stryker disable next-line StringLiteral
       url: "/api/coursestaff/delete",
       method: "DELETE",
       params: {
-        id: cell.row.original.id,
+        id: formData.id,
         courseId: courseId,
+        removeFromOrg: formData.removeFromOrg,
       },
     };
   }
-
-  // Stryker disable all : hard to test for query caching
-  const deleteMutation = useBackendMutation(
-    cellToAxiosParamsDelete,
-    { onSuccess: onDeleteSuccess },
-    // Stryker disable next-line all
-    [`/api/coursestaff/course?courseId=${courseId}`],
-  );
-  // Stryker restore all
 
   const cellToAxiosParamsEdit = (formData) => ({
     url: `/api/coursestaff`,
@@ -61,14 +49,40 @@ export default function CourseStaffTable({
     setShowEditModal(false);
   };
 
+  const hideDeleteModal = () => {
+    setShowDeleteModal(false);
+  };
+
   const onEditSuccess = () => {
     toast("Staff member updated successfully.");
     hideModal();
   };
 
+  const onDeleteSuccess = () => {
+    toast("Staff member deleted successfully.");
+    hideDeleteModal();
+  };
+
+  // Stryker disable all : hard to test for query caching
+  const deleteMutation = useBackendMutation(
+    cellToAxiosParamsDelete,
+    { onSuccess: onDeleteSuccess },
+    // Stryker disable next-line all
+    [`/api/coursestaff/course?courseId=${courseId}`],
+  );
+  // Stryker restore all
+
   // Stryker disable next-line all
   const deleteCallback = async (cell) => {
-    deleteMutation.mutate(cell);
+    setShowDeleteModal(true);
+    setDeleteStaff(cell.row.original.id);
+  };
+
+  const submitDeleteForm = (data) => {
+    deleteMutation.mutate({
+      id: deleteStaff,
+      ...data,
+    });
   };
 
   const editMutation = useBackendMutation(
@@ -111,40 +125,41 @@ export default function CourseStaffTable({
     },
   ];
 
-  const renderTooltip = (orgStatus) => (props) => {
-    let set_message;
+  const renderTooltip = (orgStatus) =>
+    function TooltipWrapper(props) {
+      let set_message;
 
-    switch (orgStatus) {
-      case "PENDING":
-        set_message =
-          "Staff member cannot join the course until it has been completely set up.";
-        break;
-      case "JOINCOURSE":
-        set_message =
-          "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
-        break;
-      case "INVITED":
-        set_message =
-          "Staff member has generated an invite, but has not yet accepted or declined the invitation.";
-        break;
-      case "OWNER":
-        set_message =
-          "Staff member is an owner of the GitHub organization associated with this course.";
-        break;
-      case "MEMBER":
-        set_message =
-          "Staff member is a member of the GitHub organization associated with this course.";
-        break;
-      default:
-        set_message = "Tooltip for illegal status that will never occur";
-        break;
-    }
-    return (
-      <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
-        {set_message}
-      </Tooltip>
-    );
-  };
+      switch (orgStatus) {
+        case "PENDING":
+          set_message =
+            "Staff member cannot join the course until it has been completely set up.";
+          break;
+        case "JOINCOURSE":
+          set_message =
+            "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
+          break;
+        case "INVITED":
+          set_message =
+            "Staff member has generated an invite, but has not yet accepted or declined the invitation.";
+          break;
+        case "OWNER":
+          set_message =
+            "Staff member is an owner of the GitHub organization associated with this course.";
+          break;
+        case "MEMBER":
+          set_message =
+            "Staff member is a member of the GitHub organization associated with this course.";
+          break;
+        default:
+          set_message = "Tooltip for illegal status that will never occur";
+          break;
+      }
+      return (
+        <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
+          {set_message}
+        </Tooltip>
+      );
+    };
 
   columns.push({
     header: "Status",
@@ -221,7 +236,11 @@ export default function CourseStaffTable({
           />
         </Modal.Body>
       </Modal>
-
+      <CourseStaffDeleteModal
+        showModal={showDeleteModal}
+        toggleShowModal={setShowDeleteModal}
+        onSubmitAction={submitDeleteForm}
+      />
       <OurTable data={staff} columns={columns} testid={testIdPrefix} />
       <div
         style={{ display: "none" }}
