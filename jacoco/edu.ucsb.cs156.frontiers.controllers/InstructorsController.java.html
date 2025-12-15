@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @PostMapping(&quot;/post&quot;)
   public Instructor postInstructor(@RequestParam String email) {
-<span class="fc" id="L43">    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);</span>
+<span class="fc" id="L43">    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email).strip();</span>
 <span class="fc" id="L44">    Instructor instructor = Instructor.builder().email(convertedEmail).build();</span>
 <span class="fc" id="L45">    instructorRepository.save(instructor);</span>
 <span class="fc" id="L46">    return instructor;</span>

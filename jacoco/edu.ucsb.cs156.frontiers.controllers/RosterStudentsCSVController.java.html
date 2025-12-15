@@ -218,7 +218,7 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L218">        .firstName(row[5])</span>
 <span class="fc" id="L219">        .lastName(row[4])</span>
 <span class="fc" id="L220">        .studentId(row[1])</span>
-<span class="fc" id="L221">        .email(row[10])</span>
+<span class="fc" id="L221">        .email(row[10].strip())</span>
 <span class="fc" id="L222">        .section(row[0])</span>
 <span class="fc" id="L223">        .build();</span>
   }
@@ -229,7 +229,7 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L229">        .firstName(getFirstName(row[0]))</span>
 <span class="fc" id="L230">        .lastName(getLastName(row[0]))</span>
 <span class="fc" id="L231">        .studentId(row[2])</span>
-<span class="fc" id="L232">        .email(row[3])</span>
+<span class="fc" id="L232">        .email(row[3].strip())</span>
 <span class="fc" id="L233">        .section(&quot;&quot;)</span>
 <span class="fc" id="L234">        .build();</span>
   }
@@ -245,7 +245,7 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L245">        .firstName(firstName)</span>
 <span class="fc" id="L246">        .lastName(lastName)</span>
 <span class="fc" id="L247">        .studentId(row[9])</span>
-<span class="fc" id="L248">        .email(row[8])</span>
+<span class="fc" id="L248">        .email(row[8].strip())</span>
 <span class="fc" id="L249">        .section(&quot;&quot;)</span>
 <span class="fc" id="L250">        .build();</span>
   }
@@ -258,7 +258,7 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L258">        .firstName(row[2])</span>
 <span class="fc" id="L259">        .lastName(row[6])</span>
 <span class="fc" id="L260">        .studentId(row[10])</span>
-<span class="fc" id="L261">        .email(row[1])</span>
+<span class="fc" id="L261">        .email(row[1].strip())</span>
 <span class="fc" id="L262">        .section(row[9])</span>
 <span class="fc" id="L263">        .build();</span>
   }

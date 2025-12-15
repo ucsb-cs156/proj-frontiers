@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @PostMapping(&quot;/post&quot;)
   public Admin postAdmin(@Parameter(name = &quot;email&quot;) @RequestParam String email) {
-<span class="fc" id="L50">    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email);</span>
+<span class="fc" id="L50">    String convertedEmail = CanonicalFormConverter.convertToValidEmail(email).strip();</span>
 <span class="fc" id="L51">    Admin admin = new Admin(convertedEmail);</span>
 <span class="fc" id="L52">    Admin savedAdmin = adminRepository.save(admin);</span>
 <span class="fc" id="L53">    return savedAdmin;</span>

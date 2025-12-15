@@ -76,7 +76,7 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L76">            .courseName(courseName)</span>
 <span class="fc" id="L77">            .term(term)</span>
 <span class="fc" id="L78">            .school(school)</span>
-<span class="fc" id="L79">            .instructorEmail(currentUser.getUser().getEmail())</span>
+<span class="fc" id="L79">            .instructorEmail(currentUser.getUser().getEmail().strip())</span>
 <span class="fc" id="L80">            .build();</span>
 <span class="fc" id="L81">    Course savedCourse = courseRepository.save(course);</span>
 
@@ -350,23 +350,25 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
       @Parameter(name = &quot;instructorEmail&quot;) @RequestParam String instructorEmail) {
 
-<span class="fc" id="L353">    Course course =</span>
+<span class="fc" id="L353">    instructorEmail = instructorEmail.strip();</span>
+
+<span class="fc" id="L355">    Course course =</span>
         courseRepository
-<span class="fc" id="L355">            .findById(courseId)</span>
-<span class="fc" id="L356">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L357">            .findById(courseId)</span>
+<span class="fc" id="L358">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
     // Validate that the email exists in either instructor or admin table
-<span class="fc" id="L359">    boolean isInstructor = instructorRepository.existsByEmail(instructorEmail);</span>
-<span class="fc" id="L360">    boolean isAdmin = adminRepository.existsByEmail(instructorEmail);</span>
+<span class="fc" id="L361">    boolean isInstructor = instructorRepository.existsByEmail(instructorEmail);</span>
+<span class="fc" id="L362">    boolean isAdmin = adminRepository.existsByEmail(instructorEmail);</span>
 
-<span class="fc bfc" id="L362" title="All 4 branches covered.">    if (!isInstructor &amp;&amp; !isAdmin) {</span>
-<span class="fc" id="L363">      throw new IllegalArgumentException(&quot;Email must belong to either an instructor or admin&quot;);</span>
+<span class="fc bfc" id="L364" title="All 4 branches covered.">    if (!isInstructor &amp;&amp; !isAdmin) {</span>
+<span class="fc" id="L365">      throw new IllegalArgumentException(&quot;Email must belong to either an instructor or admin&quot;);</span>
     }
 
-<span class="fc" id="L366">    course.setInstructorEmail(instructorEmail);</span>
-<span class="fc" id="L367">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L368">    course.setInstructorEmail(instructorEmail);</span>
+<span class="fc" id="L369">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L369">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L371">    return new InstructorCourseView(savedCourse);</span>
   }
 
   @Operation(summary = &quot;Delete a course&quot;)
@@ -374,19 +376,19 @@ import org.springframework.web.bind.annotation.*;
   @DeleteMapping(&quot;&quot;)
   public Object deleteCourse(@RequestParam Long courseId)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc" id="L377">    Course course =</span>
+<span class="fc" id="L379">    Course course =</span>
         courseRepository
-<span class="fc" id="L379">            .findById(courseId)</span>
-<span class="fc" id="L380">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L381">            .findById(courseId)</span>
+<span class="fc" id="L382">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
     // Check if course has roster students or staff
-<span class="fc bfc" id="L383" title="All 4 branches covered.">    if (!course.getRosterStudents().isEmpty() || !course.getCourseStaff().isEmpty()) {</span>
-<span class="fc" id="L384">      throw new IllegalArgumentException(&quot;Cannot delete course with students or staff&quot;);</span>
+<span class="fc bfc" id="L385" title="All 4 branches covered.">    if (!course.getRosterStudents().isEmpty() || !course.getCourseStaff().isEmpty()) {</span>
+<span class="fc" id="L386">      throw new IllegalArgumentException(&quot;Cannot delete course with students or staff&quot;);</span>
     }
 
-<span class="fc" id="L387">    linkerService.unenrollOrganization(course);</span>
-<span class="fc" id="L388">    courseRepository.delete(course);</span>
-<span class="fc" id="L389">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
+<span class="fc" id="L389">    linkerService.unenrollOrganization(course);</span>
+<span class="fc" id="L390">    courseRepository.delete(course);</span>
+<span class="fc" id="L391">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
   }
 
   /**
@@ -406,18 +408,18 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
       @Parameter(name = &quot;term&quot;) @RequestParam String term,
       @Parameter(name = &quot;school&quot;) @RequestParam String school) {
-<span class="fc" id="L409">    Course course =</span>
+<span class="fc" id="L411">    Course course =</span>
         courseRepository
-<span class="fc" id="L411">            .findById(courseId)</span>
-<span class="fc" id="L412">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L413">            .findById(courseId)</span>
+<span class="fc" id="L414">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L414">    course.setCourseName(courseName);</span>
-<span class="fc" id="L415">    course.setTerm(term);</span>
-<span class="fc" id="L416">    course.setSchool(school);</span>
+<span class="fc" id="L416">    course.setCourseName(courseName);</span>
+<span class="fc" id="L417">    course.setTerm(term);</span>
+<span class="fc" id="L418">    course.setSchool(school);</span>
 
-<span class="fc" id="L418">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L420">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L420">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L422">    return new InstructorCourseView(savedCourse);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

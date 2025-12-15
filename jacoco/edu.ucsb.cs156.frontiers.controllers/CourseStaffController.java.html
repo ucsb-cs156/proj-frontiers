@@ -61,7 +61,7 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L61">        CourseStaff.builder()</span>
 <span class="fc" id="L62">            .firstName(firstName)</span>
 <span class="fc" id="L63">            .lastName(lastName)</span>
-<span class="fc" id="L64">            .email(email)</span>
+<span class="fc" id="L64">            .email(email.strip())</span>
 <span class="fc" id="L65">            .course(course)</span>
 <span class="fc" id="L66">            .build();</span>
 
@@ -174,45 +174,51 @@ import org.springframework.web.bind.annotation.*;
   @Transactional
   public ResponseEntity&lt;String&gt; deleteStaffMember(
       @Parameter(name = &quot;id&quot;) @RequestParam Long id,
-      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId)
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(
+              name = &quot;removeFromOrg&quot;,
+              description = &quot;Whether to remove course staff from GitHub organization&quot;)
+          @RequestParam(defaultValue = &quot;false&quot;)
+          boolean removeFromOrg)
       throws EntityNotFoundException {
-<span class="fc" id="L179">    CourseStaff staffMember =</span>
+<span class="fc" id="L184">    CourseStaff staffMember =</span>
         courseStaffRepository
-<span class="fc" id="L181">            .findById(id)</span>
-<span class="fc" id="L182">            .orElseThrow(() -&gt; new EntityNotFoundException(CourseStaff.class, id));</span>
-<span class="fc" id="L183">    Course course = staffMember.getCourse();</span>
+<span class="fc" id="L186">            .findById(id)</span>
+<span class="fc" id="L187">            .orElseThrow(() -&gt; new EntityNotFoundException(CourseStaff.class, id));</span>
+<span class="fc" id="L188">    Course course = staffMember.getCourse();</span>
 
-<span class="fc" id="L185">    boolean orgRemovalAttempted = false;</span>
-<span class="fc" id="L186">    boolean orgRemovalSuccessful = false;</span>
-<span class="fc" id="L187">    String orgRemovalErrorMessage = null;</span>
+<span class="fc" id="L190">    boolean orgRemovalAttempted = false;</span>
+<span class="fc" id="L191">    boolean orgRemovalSuccessful = false;</span>
+<span class="fc" id="L192">    String orgRemovalErrorMessage = null;</span>
 
-    // Try to remove the student from the organization if they have a GitHub login
-<span class="fc bfc" id="L190" title="All 2 branches covered.">    if (staffMember.getGithubLogin() != null</span>
-<span class="fc bfc" id="L191" title="All 2 branches covered.">        &amp;&amp; course.getOrgName() != null</span>
-<span class="fc bfc" id="L192" title="All 2 branches covered.">        &amp;&amp; course.getInstallationId() != null) {</span>
-<span class="fc" id="L193">      orgRemovalAttempted = true;</span>
+    // Try to remove the course staff from the organization if they have a GitHub login
+<span class="fc bfc" id="L195" title="All 2 branches covered.">    if (staffMember.getGithubLogin() != null</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        &amp;&amp; course.getOrgName() != null</span>
+<span class="fc bfc" id="L197" title="All 4 branches covered.">        &amp;&amp; course.getInstallationId() != null</span>
+        &amp;&amp; removeFromOrg) {
+<span class="fc" id="L199">      orgRemovalAttempted = true;</span>
       try {
-<span class="fc" id="L195">        organizationMemberService.removeOrganizationMember(staffMember);</span>
-<span class="fc" id="L196">        orgRemovalSuccessful = true;</span>
-<span class="fc" id="L197">      } catch (Exception e) {</span>
-<span class="fc" id="L198">        log.error(&quot;Error removing student from organization: {}&quot;, e.getMessage());</span>
-<span class="fc" id="L199">        orgRemovalErrorMessage = e.getMessage();</span>
+<span class="fc" id="L201">        organizationMemberService.removeOrganizationMember(staffMember);</span>
+<span class="fc" id="L202">        orgRemovalSuccessful = true;</span>
+<span class="fc" id="L203">      } catch (Exception e) {</span>
+<span class="fc" id="L204">        log.error(&quot;Error removing course staff from organization: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L205">        orgRemovalErrorMessage = e.getMessage();</span>
         // Continue with deletion even if organization removal fails
-<span class="fc" id="L201">      }</span>
+<span class="fc" id="L207">      }</span>
     }
 
-<span class="fc" id="L204">    course.getCourseStaff().remove(staffMember);</span>
-<span class="fc" id="L205">    staffMember.setCourse(null);</span>
-<span class="fc" id="L206">    courseStaffRepository.delete(staffMember);</span>
+<span class="fc" id="L210">    course.getCourseStaff().remove(staffMember);</span>
+<span class="fc" id="L211">    staffMember.setCourse(null);</span>
+<span class="fc" id="L212">    courseStaffRepository.delete(staffMember);</span>
 
-<span class="fc bfc" id="L208" title="All 2 branches covered.">    if (!orgRemovalAttempted) {</span>
-<span class="fc" id="L209">      return ResponseEntity.ok(</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">    if (!orgRemovalAttempted) {</span>
+<span class="fc" id="L215">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted staff member and removed them from the staff roster.&quot;);
-<span class="fc bfc" id="L211" title="All 2 branches covered.">    } else if (orgRemovalSuccessful) {</span>
-<span class="fc" id="L212">      return ResponseEntity.ok(</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">    } else if (orgRemovalSuccessful) {</span>
+<span class="fc" id="L218">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted staff member and removed them from the staff roster and organization.&quot;);
     } else {
-<span class="fc" id="L215">      return ResponseEntity.ok(</span>
+<span class="fc" id="L221">      return ResponseEntity.ok(</span>
           &quot;Successfully deleted staff member but there was an error removing them from the course organization: &quot;
               + orgRemovalErrorMessage);
     }
