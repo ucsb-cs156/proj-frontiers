@@ -194,19 +194,19 @@ describe("CoursesIndexPage tests", () => {
         <MemoryRouter>
           <CoursesIndexPage />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Row must be present first
     await waitFor(() =>
       expect(
-        screen.getByTestId("InstructorCoursesTable-cell-row-0-col-id")
-      ).toBeInTheDocument()
+        screen.getByTestId("InstructorCoursesTable-cell-row-0-col-id"),
+      ).toBeInTheDocument(),
     );
 
     // The Delete column SHOULD appear
     const deleteHeader = screen.getByTestId(
-      "InstructorCoursesTable-header-delete-sort-header"
+      "InstructorCoursesTable-header-delete-sort-header",
     );
     expect(deleteHeader).toBeInTheDocument();
   });
@@ -225,20 +225,20 @@ describe("CoursesIndexPage tests", () => {
             courses={coursesFixtures.severalCourses}
             currentUser={apiCurrentUserFixtures.adminUser}
             enableInstructorUpdate={true}
-            deleteCourseButton={false}   // ← forced false
+            deleteCourseButton={false} // ← forced false
           />
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     await waitFor(() =>
       expect(
-        screen.getByTestId("InstructorCoursesTable-cell-row-0-col-id")
-      ).toBeInTheDocument()
+        screen.getByTestId("InstructorCoursesTable-cell-row-0-col-id"),
+      ).toBeInTheDocument(),
     );
 
     const deleteHeader = screen.queryByTestId(
-      "InstructorCoursesTable-header-delete-sort-header"
+      "InstructorCoursesTable-header-delete-sort-header",
     );
     expect(deleteHeader).not.toBeInTheDocument();
   });
