@@ -5,12 +5,11 @@ name: "02-gh-pages-rebuild: Rebuild gh-pages site"
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths: [.github/workflows/02-gh-pages-rebuild.yml]
-  push:
-    branches: [ main ]
-    paths: [.github/workflows/02-gh-pages-rebuild.yml]
-
+     inputs:
+        reset:
+            type: boolean
+            description: full reset of site?
+ 
 permissions:
   contents: write
   pages: write
@@ -24,8 +23,9 @@ jobs:
     uses: ucsb-cs156/workflows/.github/workflows/02-gh-pages-rebuild.yml@main
     with:
       JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }}
-      TIMEOUT_PITEST: 45
-      TIMEOUT_STRYKER: 90
+      TIMEOUT_PITEST: 30
+      TIMEOUT_STRYKER: 80
+      RESET_GH_PAGES: ${{ inputs.reset }}
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
