@@ -1,0 +1,42 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: "02-gh-pages-rebuild: Rebuild gh-pages site"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: [.github/workflows/02-gh-pages-rebuild.yml]
+  push:
+    branches: [ main ]
+    paths: [.github/workflows/02-gh-pages-rebuild.yml]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: read
+
+
+jobs:
+  call-workflow-02:
+    # Directly invoke the reusable workflow
+    uses: ucsb-cs156/workflows/.github/workflows/02-gh-pages-rebuild-part-1.yml@main
+    with:
+      JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }}
+      TIMEOUT_PITEST: 45
+      TIMEOUT_STRYKER: 90
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+  call-another-reusable-workflow:
+    needs: call-workflow-02
+    # Conditional execution if the previous workflow completes successfully
+    if: ${{ needs.call-workflow-02.result == 'success' }}
+    uses: ucsb-cs156/workflows/.github/workflows/04-gh-pages-rebuild-part-2.yml@main
+    with:
+      JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }}
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
