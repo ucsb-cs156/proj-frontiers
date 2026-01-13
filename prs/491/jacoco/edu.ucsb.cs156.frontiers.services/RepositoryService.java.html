@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepositoryService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">RepositoryService.java</span></div><h1>RepositoryService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+<span class="fc" id="L21">@Slf4j</span>
+public class RepositoryService {
+  private final JwtService jwtService;
+  private final RestTemplate restTemplate;
+  private final ObjectMapper mapper;
+
+  public RepositoryService(
+<span class="fc" id="L28">      JwtService jwtService, RestTemplateBuilder restTemplateBuilder, ObjectMapper mapper) {</span>
+<span class="fc" id="L29">    this.jwtService = jwtService;</span>
+<span class="fc" id="L30">    this.restTemplate = restTemplateBuilder.build();</span>
+<span class="fc" id="L31">    this.mapper = mapper;</span>
+<span class="fc" id="L32">  }</span>
+
+  /**
+   * Creates a single student repository if it doesn't already exist, and provisions access to the
+   * repository by that student
+   *
+   * @param course The Course in question
+   * @param student RosterStudent of the student the repository should be created for
+   * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
+   *     format repoPrefix-githubLogin
+   * @param isPrivate Whether the repository is private or not
+   */
+  public void createStudentRepository(
+      Course course,
+      RosterStudent student,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L51">    String newRepoName = repoPrefix + &quot;-&quot; + student.getGithubLogin();</span>
+<span class="fc" id="L52">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L53">    String existenceEndpoint =</span>
+<span class="fc" id="L54">        &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + newRepoName;</span>
+<span class="fc" id="L55">    String createEndpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/repos&quot;;</span>
+<span class="fc" id="L56">    String provisionEndpoint =</span>
+        &quot;https://api.github.com/repos/&quot;
+<span class="fc" id="L58">            + course.getOrgName()</span>
+            + &quot;/&quot;
+            + newRepoName
+            + &quot;/collaborators/&quot;
+<span class="fc" id="L62">            + student.getGithubLogin();</span>
+<span class="fc" id="L63">    HttpHeaders existenceHeaders = new HttpHeaders();</span>
+<span class="fc" id="L64">    existenceHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L65">    existenceHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L66">    existenceHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+
+<span class="fc" id="L68">    HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
+
+    try {
+<span class="fc" id="L71">      restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
+<span class="fc" id="L72">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">      if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+<span class="fc" id="L74">        HttpHeaders createHeaders = new HttpHeaders();</span>
+<span class="fc" id="L75">        createHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L76">        createHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L77">        createHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+
+<span class="fc" id="L79">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L80">        body.put(&quot;name&quot;, newRepoName);</span>
+<span class="fc" id="L81">        body.put(&quot;private&quot;, isPrivate);</span>
+<span class="fc" id="L82">        String bodyAsJson = mapper.writeValueAsString(body);</span>
+
+<span class="fc" id="L84">        HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
+
+<span class="fc" id="L86">        restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
+<span class="fc" id="L87">      } else {</span>
+<span class="fc" id="L88">        log.warn(</span>
+            &quot;Unexpected response code {} when checking for existence of repository {}&quot;,
+<span class="fc" id="L90">            e.getStatusCode(),</span>
+            newRepoName);
+<span class="fc" id="L92">        return;</span>
+      }
+<span class="fc" id="L94">    }</span>
+    try {
+<span class="fc" id="L96">      Map&lt;String, Object&gt; provisionBody = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L97">      provisionBody.put(&quot;permission&quot;, permissions.getApiName());</span>
+<span class="fc" id="L98">      String provisionAsJson = mapper.writeValueAsString(provisionBody);</span>
+
+<span class="fc" id="L100">      HttpEntity&lt;String&gt; provisionEntity = new HttpEntity&lt;&gt;(provisionAsJson, existenceHeaders);</span>
+<span class="fc" id="L101">      restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
+<span class="fc" id="L102">    } catch (HttpClientErrorException ignored) {</span>
+
+<span class="fc" id="L104">    }</span>
+<span class="fc" id="L105">  }</span>
+
+  /**
+   * Creates a single staff repository if it doesn't already exist, and provisions access to the
+   * repository by that staff member
+   *
+   * @param course The Course in question
+   * @param staff CourseStaff of the staff member the repository should be created for
+   * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
+   *     format repoPrefix-githubLogin
+   * @param isPrivate Whether the repository is private or not
+   * @param permissions The permissions level to grant to the staff member
+   */
+  public void createStaffRepository(
+      Course course,
+      CourseStaff staff,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L125">    String newRepoName = repoPrefix + &quot;-&quot; + staff.getGithubLogin();</span>
+<span class="fc" id="L126">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L127">    String existenceEndpoint =</span>
+<span class="fc" id="L128">        &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + newRepoName;</span>
+<span class="fc" id="L129">    String createEndpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/repos&quot;;</span>
+<span class="fc" id="L130">    String provisionEndpoint =</span>
+        &quot;https://api.github.com/repos/&quot;
+<span class="fc" id="L132">            + course.getOrgName()</span>
+            + &quot;/&quot;
+            + newRepoName
+            + &quot;/collaborators/&quot;
+<span class="fc" id="L136">            + staff.getGithubLogin();</span>
+<span class="fc" id="L137">    HttpHeaders existenceHeaders = new HttpHeaders();</span>
+<span class="fc" id="L138">    existenceHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L139">    existenceHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L140">    existenceHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+
+<span class="fc" id="L142">    HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
+
+    try {
+<span class="fc" id="L145">      restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
+<span class="fc" id="L146">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">      if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+<span class="fc" id="L148">        HttpHeaders createHeaders = new HttpHeaders();</span>
+<span class="fc" id="L149">        createHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L150">        createHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L151">        createHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+
+<span class="fc" id="L153">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L154">        body.put(&quot;name&quot;, newRepoName);</span>
+<span class="fc" id="L155">        body.put(&quot;private&quot;, isPrivate);</span>
+<span class="fc" id="L156">        String bodyAsJson = mapper.writeValueAsString(body);</span>
+
+<span class="fc" id="L158">        HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
+
+<span class="fc" id="L160">        restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
+<span class="fc" id="L161">      } else {</span>
+<span class="fc" id="L162">        log.warn(</span>
+            &quot;Unexpected response code {} when checking for existence of repository {}&quot;,
+<span class="fc" id="L164">            e.getStatusCode(),</span>
+            newRepoName);
+<span class="fc" id="L166">        return;</span>
+      }
+<span class="fc" id="L168">    }</span>
+    try {
+<span class="fc" id="L170">      Map&lt;String, Object&gt; provisionBody = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L171">      provisionBody.put(&quot;permission&quot;, permissions.getApiName());</span>
+<span class="fc" id="L172">      String provisionAsJson = mapper.writeValueAsString(provisionBody);</span>
+
+<span class="fc" id="L174">      HttpEntity&lt;String&gt; provisionEntity = new HttpEntity&lt;&gt;(provisionAsJson, existenceHeaders);</span>
+<span class="fc" id="L175">      restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
+<span class="fc" id="L176">    } catch (HttpClientErrorException ignored) {</span>
+
+<span class="fc" id="L178">    }</span>
+<span class="fc" id="L179">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
