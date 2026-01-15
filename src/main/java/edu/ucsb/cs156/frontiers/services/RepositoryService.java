@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -161,5 +163,100 @@ public class RepositoryService {
 
     createRepositoryForStudentOrStaff(
         course, staff.getGithubLogin(), repoPrefix, isPrivate, permissions);
+  }
+
+  /**
+   * Creates a GitHub repository for a team (student or staff), given only their team name.
+   *
+   * <ul>
+   *   <li>Checks whether the repository already exists.
+   *   <li>If not, creates a new repository under the course's organization.
+   *   <li>Adds all team members as collaborators with the given permission level.
+   * </ul>
+   *
+   * @param course the course whose organization the repo belongs to
+   * @param team the team for which the repo is being created
+   * @param repoPrefix prefix for the repository name (repoPrefix-teamName)
+   * @param isPrivate whether the created repository should be private
+   * @param permissions collaborator permissions to grant the user
+   * @throws NoSuchAlgorithmException if signing fails
+   * @throws InvalidKeySpecException if signing fails
+   * @throws JsonProcessingException if JSON serialization fails
+   */
+  public void createTeamRepository(
+      Course course,
+      Team team,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+    String newRepoName = repoPrefix + "-" + team.getName();
+    String token = jwtService.getInstallationToken(course);
+
+    String existenceEndpoint =
+        "https://api.github.com/repos/" + course.getOrgName() + "/" + newRepoName;
+    String createEndpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos";
+
+    HttpHeaders existenceHeaders = new HttpHeaders();
+    existenceHeaders.add("Authorization", "Bearer " + token);
+    existenceHeaders.add("Accept", "application/vnd.github+json");
+    existenceHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+
+    HttpEntity<String> existenceEntity = new HttpEntity<>(existenceHeaders);
+
+    try {
+      restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+        HttpHeaders createHeaders = new HttpHeaders();
+        createHeaders.add("Authorization", "Bearer " + token);
+        createHeaders.add("Accept", "application/vnd.github+json");
+        createHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("name", newRepoName);
+        body.put("private", isPrivate);
+        String bodyAsJson = mapper.writeValueAsString(body);
+
+        HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, createHeaders);
+
+        restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);
+      } else {
+        log.warn(
+            "Unexpected response code {} when checking for existence of repository {}",
+            e.getStatusCode(),
+            newRepoName);
+        return;
+      }
+    }
+
+    if (team.getTeamMembers() != null) {
+      for (TeamMember member : team.getTeamMembers()) {
+        if (member.getRosterStudent() != null
+            && member.getRosterStudent().getGithubLogin() != null) {
+          String githubLogin = member.getRosterStudent().getGithubLogin();
+          String provisionEndpoint =
+              "https://api.github.com/repos/"
+                  + course.getOrgName()
+                  + "/"
+                  + newRepoName
+                  + "/collaborators/"
+                  + githubLogin;
+
+          try {
+            Map<String, Object> provisionBody = new HashMap<>();
+            provisionBody.put("permission", permissions.getApiName());
+            String provisionAsJson = mapper.writeValueAsString(provisionBody);
+
+            HttpEntity<String> provisionEntity =
+                new HttpEntity<>(provisionAsJson, existenceHeaders);
+            restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);
+          } catch (HttpClientErrorException ignored) {
+            // silently ignore if provisioning fails (same as before)
+          }
+        }
+      }
+    }
   }
 }
