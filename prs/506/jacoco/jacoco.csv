@@ -26,7 +26,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,
 frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,JwtService,0,152,0,4,0,37,0,7,0,5
-frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,184,192,10,2,44,50,6,6,1,5
+frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,376,0,12,0,94,0,12,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,465,0,20,0,105,0,23,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.RosterStudentCoursesDTO,0,27,0,0,0,1,0,1,0,1
@@ -66,7 +66,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,RemoveStudentsJob,0,79,0,12,0,17,0,7,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,95,0,24,0,17,0,13,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,47,0,4,0,12,0,3,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamRepositoriesJob,32,0,2,0,6,0,2,0,1,0
+frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamRepositoriesJob,0,32,0,2,0,6,0,2,0,1
 frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,17,0,0,0,4,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.utilities,WebhookSecurityUtils,0,134,0,18,0,29,0,14,0,5
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersApplicationRunner,0,14,0,0,0,5,0,3,0,3

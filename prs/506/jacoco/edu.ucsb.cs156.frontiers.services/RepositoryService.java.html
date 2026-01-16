@@ -191,73 +191,73 @@ public class RepositoryService {
       RepositoryPermissions permissions)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
-<span class="nc" id="L194">    String newRepoName = repoPrefix + &quot;-&quot; + team.getName();</span>
-<span class="nc" id="L195">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L194">    String newRepoName = repoPrefix + &quot;-&quot; + team.getName();</span>
+<span class="fc" id="L195">    String token = jwtService.getInstallationToken(course);</span>
 
-<span class="nc" id="L197">    String existenceEndpoint =</span>
-<span class="nc" id="L198">        &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + newRepoName;</span>
-<span class="nc" id="L199">    String createEndpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/repos&quot;;</span>
+<span class="fc" id="L197">    String existenceEndpoint =</span>
+<span class="fc" id="L198">        &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + newRepoName;</span>
+<span class="fc" id="L199">    String createEndpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/repos&quot;;</span>
 
-<span class="nc" id="L201">    HttpHeaders existenceHeaders = new HttpHeaders();</span>
-<span class="nc" id="L202">    existenceHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="nc" id="L203">    existenceHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="nc" id="L204">    existenceHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L201">    HttpHeaders existenceHeaders = new HttpHeaders();</span>
+<span class="fc" id="L202">    existenceHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L203">    existenceHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L204">    existenceHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
 
-<span class="nc" id="L206">    HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
+<span class="fc" id="L206">    HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
 
     try {
-<span class="nc" id="L209">      restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
-<span class="nc" id="L210">    } catch (HttpClientErrorException e) {</span>
-<span class="nc bnc" id="L211" title="All 2 branches missed.">      if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
-<span class="nc" id="L212">        HttpHeaders createHeaders = new HttpHeaders();</span>
-<span class="nc" id="L213">        createHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="nc" id="L214">        createHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="nc" id="L215">        createHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L209">      restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
+<span class="fc" id="L210">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">      if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+<span class="fc" id="L212">        HttpHeaders createHeaders = new HttpHeaders();</span>
+<span class="fc" id="L213">        createHeaders.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L214">        createHeaders.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L215">        createHeaders.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
 
-<span class="nc" id="L217">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L218">        body.put(&quot;name&quot;, newRepoName);</span>
-<span class="nc" id="L219">        body.put(&quot;private&quot;, isPrivate);</span>
-<span class="nc" id="L220">        String bodyAsJson = mapper.writeValueAsString(body);</span>
+<span class="fc" id="L217">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L218">        body.put(&quot;name&quot;, newRepoName);</span>
+<span class="fc" id="L219">        body.put(&quot;private&quot;, isPrivate);</span>
+<span class="fc" id="L220">        String bodyAsJson = mapper.writeValueAsString(body);</span>
 
-<span class="nc" id="L222">        HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
+<span class="fc" id="L222">        HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
 
-<span class="nc" id="L224">        restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
-<span class="nc" id="L225">      } else {</span>
-<span class="nc" id="L226">        log.warn(</span>
+<span class="fc" id="L224">        restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
+<span class="fc" id="L225">      } else {</span>
+<span class="fc" id="L226">        log.warn(</span>
             &quot;Unexpected response code {} when checking for existence of repository {}&quot;,
-<span class="nc" id="L228">            e.getStatusCode(),</span>
+<span class="fc" id="L228">            e.getStatusCode(),</span>
             newRepoName);
-<span class="nc" id="L230">        return;</span>
+<span class="fc" id="L230">        return;</span>
       }
-<span class="nc" id="L232">    }</span>
+<span class="fc" id="L232">    }</span>
 
-<span class="nc bnc" id="L234" title="All 2 branches missed.">    if (team.getTeamMembers() != null) {</span>
-<span class="nc bnc" id="L235" title="All 2 branches missed.">      for (TeamMember member : team.getTeamMembers()) {</span>
-<span class="nc bnc" id="L236" title="All 2 branches missed.">        if (member.getRosterStudent() != null</span>
-<span class="nc bnc" id="L237" title="All 2 branches missed.">            &amp;&amp; member.getRosterStudent().getGithubLogin() != null) {</span>
-<span class="nc" id="L238">          String githubLogin = member.getRosterStudent().getGithubLogin();</span>
-<span class="nc" id="L239">          String provisionEndpoint =</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">    if (team.getTeamMembers() != null) {</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">      for (TeamMember member : team.getTeamMembers()) {</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        if (member.getRosterStudent() != null</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">            &amp;&amp; member.getRosterStudent().getGithubLogin() != null) {</span>
+<span class="fc" id="L238">          String githubLogin = member.getRosterStudent().getGithubLogin();</span>
+<span class="fc" id="L239">          String provisionEndpoint =</span>
               &quot;https://api.github.com/repos/&quot;
-<span class="nc" id="L241">                  + course.getOrgName()</span>
+<span class="fc" id="L241">                  + course.getOrgName()</span>
                   + &quot;/&quot;
                   + newRepoName
                   + &quot;/collaborators/&quot;
                   + githubLogin;
 
           try {
-<span class="nc" id="L248">            Map&lt;String, Object&gt; provisionBody = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L249">            provisionBody.put(&quot;permission&quot;, permissions.getApiName());</span>
-<span class="nc" id="L250">            String provisionAsJson = mapper.writeValueAsString(provisionBody);</span>
+<span class="fc" id="L248">            Map&lt;String, Object&gt; provisionBody = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L249">            provisionBody.put(&quot;permission&quot;, permissions.getApiName());</span>
+<span class="fc" id="L250">            String provisionAsJson = mapper.writeValueAsString(provisionBody);</span>
 
-<span class="nc" id="L252">            HttpEntity&lt;String&gt; provisionEntity =</span>
+<span class="fc" id="L252">            HttpEntity&lt;String&gt; provisionEntity =</span>
                 new HttpEntity&lt;&gt;(provisionAsJson, existenceHeaders);
-<span class="nc" id="L254">            restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
-<span class="nc" id="L255">          } catch (HttpClientErrorException ignored) {</span>
+<span class="fc" id="L254">            restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
+<span class="fc" id="L255">          } catch (HttpClientErrorException ignored) {</span>
             // silently ignore if provisioning fails (same as before)
-<span class="nc" id="L257">          }</span>
+<span class="fc" id="L257">          }</span>
         }
-<span class="nc" id="L259">      }</span>
+<span class="fc" id="L259">      }</span>
     }
-<span class="nc" id="L261">  }</span>
+<span class="fc" id="L261">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
