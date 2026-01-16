@@ -9,10 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -257,6 +260,246 @@ public class RepositoryServiceTests {
     repositoryService.createStaffRepository(
         course, staff, "repo1", false, RepositoryPermissions.ADMIN);
 
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void team_repo_already_exists_test() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    Map<String, Object> provisionBody = new HashMap<>();
+    provisionBody.put("permission", "push");
+    String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
+    mockRestServiceServer
+        .expect(
+            requestTo(
+                "https://api.github.com/repos/ucsb-cs156/repo1-test-team/collaborators/student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(content().json(provisionBodyJson))
+        .andRespond(withNoContent());
+
+    RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+    Team team = Team.builder().name("test-team").build();
+    TeamMember member = TeamMember.builder().rosterStudent(student).build();
+    team.setTeamMembers(List.of(member));
+
+    repositoryService.createTeamRepository(
+        course, team, "repo1", false, RepositoryPermissions.WRITE);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void successfully_creates_team_repo_public() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withResourceNotFound());
+
+    Map<String, Object> createBody = new HashMap<>();
+    createBody.put("name", "repo1-test-team");
+    createBody.put("private", false);
+    String createBodyJson = objectMapper.writeValueAsString(createBody);
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().json(createBodyJson))
+        .andRespond(withSuccess());
+
+    Map<String, Object> provisionBody = new HashMap<>();
+    provisionBody.put("permission", "admin");
+    String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
+    mockRestServiceServer
+        .expect(
+            requestTo(
+                "https://api.github.com/repos/ucsb-cs156/repo1-test-team/collaborators/student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(content().json(provisionBodyJson))
+        .andRespond(withSuccess());
+
+    RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+    Team team = Team.builder().name("test-team").build();
+    TeamMember member = TeamMember.builder().rosterStudent(student).build();
+    team.setTeamMembers(List.of(member));
+
+    repositoryService.createTeamRepository(
+        course, team, "repo1", false, RepositoryPermissions.ADMIN);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void successfully_creates_team_repo_private() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withResourceNotFound());
+
+    Map<String, Object> createBody = new HashMap<>();
+    createBody.put("name", "repo1-test-team");
+    createBody.put("private", true);
+    String createBodyJson = objectMapper.writeValueAsString(createBody);
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().json(createBodyJson))
+        .andRespond(withSuccess());
+
+    Map<String, Object> provisionBody = new HashMap<>();
+    provisionBody.put("permission", "push");
+    String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
+    mockRestServiceServer
+        .expect(
+            requestTo(
+                "https://api.github.com/repos/ucsb-cs156/repo1-test-team/collaborators/student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(content().json(provisionBodyJson))
+        .andRespond(withSuccess());
+
+    RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+    Team team = Team.builder().name("test-team").build();
+    TeamMember member = TeamMember.builder().rosterStudent(student).build();
+    team.setTeamMembers(List.of(member));
+
+    repositoryService.createTeamRepository(
+        course, team, "repo1", true, RepositoryPermissions.WRITE);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void exits_if_team_repo_not_not_found() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withForbiddenRequest());
+
+    RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+    Team team = Team.builder().name("test-team").build();
+    TeamMember member = TeamMember.builder().rosterStudent(student).build();
+    team.setTeamMembers(List.of(member));
+
+    repositoryService.createTeamRepository(
+        course, team, "repo1", false, RepositoryPermissions.WRITE);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void exits_if_no_team_members() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    Team team = Team.builder().name("test-team").build();
+    // team.setTeamMembers(null);
+
+    repositoryService.createTeamRepository(
+        course, team, "repo1", false, RepositoryPermissions.WRITE);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void continues_if_member_is_not_roster_student_or_missing_github_login() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    Map<String, Object> provisionBody = new HashMap<>();
+    provisionBody.put("permission", "push");
+    String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
+    mockRestServiceServer
+        .expect(
+            requestTo(
+                "https://api.github.com/repos/ucsb-cs156/repo1-test-team/collaborators/student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(content().json(provisionBodyJson))
+        .andRespond(withSuccess());
+
+    Team team = Team.builder().name("test-team").build();
+    RosterStudent student1 = RosterStudent.builder().githubLogin("student1").build();
+    TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
+    // RosterStudent student2 = RosterStudent.builder().githubLogin("student2").build();
+    TeamMember member2 = TeamMember.builder().build();
+    RosterStudent student3 = RosterStudent.builder().githubLogin(null).build();
+    TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
+    team.setTeamMembers(List.of(member1, member2, member3));
+
+    repositoryService.createTeamRepository(
+        course, team, "repo1", false, RepositoryPermissions.WRITE);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void warn_on_team_repo_not_no_content() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    Map<String, Object> provisionBody = new HashMap<>();
+    provisionBody.put("permission", "push");
+    String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
+    mockRestServiceServer
+        .expect(
+            requestTo(
+                "https://api.github.com/repos/ucsb-cs156/repo1-test-team/collaborators/student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(content().json(provisionBodyJson))
+        .andRespond(withForbiddenRequest());
+
+    RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+    Team team = Team.builder().name("test-team").build();
+    TeamMember member = TeamMember.builder().rosterStudent(student).build();
+    team.setTeamMembers(List.of(member));
+
+    repositoryService.createTeamRepository(
+        course, team, "repo1", false, RepositoryPermissions.WRITE);
     mockRestServiceServer.verify();
   }
 }

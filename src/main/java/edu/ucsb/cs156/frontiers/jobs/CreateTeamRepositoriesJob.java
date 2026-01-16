@@ -24,7 +24,6 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
       repositoryService.createTeamRepository(
           course, team, repositoryPrefix, isPrivate, permissions);
     }
-
     ctx.log("Done");
   }
 }
