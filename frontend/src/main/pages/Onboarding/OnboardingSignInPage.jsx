@@ -45,9 +45,7 @@ export default function OnboardingSignInPage() {
       <Container className="text-center">
         <h1 className="mb-4">Welcome to Frontiers!</h1>
         <hr />
-        <p className="mb-4">
-          Please pick the school you have credentials with:
-        </p>
+        <p className="mb-4">Sign in with your school credentials:</p>
         <p className="mb-4">
           <strong>{schoolName}</strong>
         </p>

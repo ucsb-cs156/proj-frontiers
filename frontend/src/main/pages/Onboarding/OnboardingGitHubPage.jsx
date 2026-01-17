@@ -46,7 +46,7 @@ export default function OnboardingGitHubPage() {
           />
         </Row>
         <div className="mt-4">
-          <p>Don&apos;t have a GitHub account?</p>
+          <p>Don't have a GitHub account?</p>
           <Button
             variant="outline-primary"
             href="https://github.com/signup"
