@@ -25,6 +25,11 @@ import SignInPage from "main/pages/Auth/SignInPage";
 import NotFoundPage from "main/pages/Auth/NotFoundPage";
 import HelpAboutPage from "main/pages/Help/HelpAboutPage";
 import HelpCsvPage from "main/pages/Help/HelpCsvPage";
+import OnboardingSchoolSelectionPage from "main/pages/Onboarding/OnboardingSchoolSelectionPage";
+import OnboardingSignInPage from "main/pages/Onboarding/OnboardingSignInPage";
+import OnboardingGitHubPage from "main/pages/Onboarding/OnboardingGitHubPage";
+import OnboardingCoursesPage from "main/pages/Onboarding/OnboardingCoursesPage";
+import OnboardingCompletePage from "main/pages/Onboarding/OnboardingCompletePage";
 
 function App() {
   const currentUser = useCurrentUser();
@@ -36,6 +41,12 @@ function App() {
           <Route path="/" element={<HomePageConnectGithub />} />
           <Route path="/help/about" element={<HelpAboutPage />} />
           <Route path="/help/csv" element={<HelpCsvPage />} />
+          <Route
+            path="/onboarding"
+            element={<OnboardingSchoolSelectionPage />}
+          />
+          <Route path="/onboarding/signin" element={<OnboardingSignInPage />} />
+          <Route path="/onboarding/github" element={<OnboardingGitHubPage />} />
           <Route path="*" element={<HomePageConnectGithub />} />
           <Route path="/login/success" element={<SignInSuccessPage />} />
         </Routes>
@@ -55,6 +66,29 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/login" element={<SignInPage />} />
         <Route path="/" element={homePage} />
+        <Route path="/onboarding" element={<OnboardingSchoolSelectionPage />} />
+        <Route path="/onboarding/signin" element={<OnboardingSignInPage />} />
+        <Route path="/onboarding/github" element={<OnboardingGitHubPage />} />
+        <Route
+          path="/onboarding/courses"
+          element={
+            <ProtectedPage
+              component={<OnboardingCoursesPage />}
+              enforceRole={"ROLE_GITHUB"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/onboarding/complete"
+          element={
+            <ProtectedPage
+              component={<OnboardingCompletePage />}
+              enforceRole={"ROLE_GITHUB"}
+              currentUser={currentUser}
+            />
+          }
+        />
         <Route path="/help/about" element={<HelpAboutPage />} />
         <Route path="/help/csv" element={<HelpCsvPage />} />
         <Route
