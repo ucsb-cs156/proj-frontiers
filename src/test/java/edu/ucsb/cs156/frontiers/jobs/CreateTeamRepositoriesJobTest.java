@@ -38,12 +38,22 @@ public class CreateTeamRepositoriesJobTest {
   @Test
   public void testCreateTeamRepository_public() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-    RosterStudent student =
-        RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
-    Team team = Team.builder().name("test-team").build();
-    TeamMember member = TeamMember.builder().rosterStudent(student).build();
-    team.setTeamMembers(List.of(member));
-    course.setTeams(List.of(team));
+    RosterStudent student1 =
+        RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
+    Team team1 = Team.builder().name("test-team1").build();
+    team1.setTeamMembers(List.of(member1));
+
+    RosterStudent student2 =
+        RosterStudent.builder().githubLogin("student2").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member2 = TeamMember.builder().rosterStudent(student2).build();
+    RosterStudent student3 =
+        RosterStudent.builder().githubLogin("student3").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
+    Team team2 = Team.builder().name("test-team2").build();
+    team2.setTeamMembers(List.of(member2, member3));
+
+    course.setTeams(List.of(team1, team2));
 
     var repoJob =
         spy(
@@ -64,7 +74,14 @@ public class CreateTeamRepositoriesJobTest {
     verify(service, times(1))
         .createTeamRepository(
             eq(course),
-            eq(team),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE));
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team2),
             contains("repo-prefix"),
             eq(false),
             eq(RepositoryPermissions.WRITE));
@@ -73,12 +90,22 @@ public class CreateTeamRepositoriesJobTest {
   @Test
   public void testCreateTeamRepository_private() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
-    RosterStudent student =
-        RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
-    Team team = Team.builder().name("test-team").build();
-    TeamMember member = TeamMember.builder().rosterStudent(student).team(team).build();
-    team.setTeamMembers(List.of(member));
-    course.setTeams(List.of(team));
+    RosterStudent student1 =
+        RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
+    Team team1 = Team.builder().name("test-team1").build();
+    team1.setTeamMembers(List.of(member1));
+
+    RosterStudent student2 =
+        RosterStudent.builder().githubLogin("student2").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member2 = TeamMember.builder().rosterStudent(student2).build();
+    RosterStudent student3 =
+        RosterStudent.builder().githubLogin("student3").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
+    Team team2 = Team.builder().name("test-team2").build();
+    team2.setTeamMembers(List.of(member2, member3));
+
+    course.setTeams(List.of(team1, team2));
 
     var repoJob =
         spy(
@@ -99,7 +126,14 @@ public class CreateTeamRepositoriesJobTest {
     verify(service, times(1))
         .createTeamRepository(
             eq(course),
-            eq(team),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(true),
+            eq(RepositoryPermissions.WRITE));
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team2),
             contains("repo-prefix"),
             eq(true),
             eq(RepositoryPermissions.WRITE));
