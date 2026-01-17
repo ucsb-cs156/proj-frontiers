@@ -374,8 +374,17 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // arrange
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(eq(1L)))
-        .thenReturn(java.util.List.of(rs1, rs2));
+    org.springframework.data.domain.Sort sort =
+        org.springframework.data.domain.Sort.by(
+            org.springframework.data.domain.Sort.Order.asc("firstName").ignoreCase(),
+            org.springframework.data.domain.Sort.Order.asc("lastName").ignoreCase());
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE, sort);
+    when(rosterStudentRepository.findByCourseId(
+            eq(1L), any(org.springframework.data.domain.Pageable.class)))
+        .thenReturn(
+            new org.springframework.data.domain.PageImpl<>(
+                java.util.List.of(rs1, rs2), pageable, 2));
     List<RosterStudentDTO> expectedRosterStudents =
         java.util.List.of(new RosterStudentDTO(rs1), new RosterStudentDTO(rs2));
 

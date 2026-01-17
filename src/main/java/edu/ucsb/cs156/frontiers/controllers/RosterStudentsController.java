@@ -28,6 +28,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -117,8 +121,12 @@ public class RosterStudentsController extends ApiController {
     courseRepository
         .findById(courseId)
         .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-    Iterable<RosterStudent> rosterStudents =
-        rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(courseId);
+    Sort sort =
+        Sort.by(Sort.Order.asc("firstName").ignoreCase(), Sort.Order.asc("lastName").ignoreCase());
+    Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
+    Page<RosterStudent> rosterStudentsPage =
+        rosterStudentRepository.findByCourseId(courseId, pageable);
+    Iterable<RosterStudent> rosterStudents = rosterStudentsPage.getContent();
     Iterable<RosterStudentDTO> rosterStudentDTOs =
         () ->
             java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)

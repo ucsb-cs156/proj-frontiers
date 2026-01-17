@@ -5,22 +5,16 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 public interface RosterStudentRepository extends JpaRepository<RosterStudent, Long> {
   List<RosterStudent> findAllByEmail(String email);
 
   public Iterable<RosterStudent> findByCourseId(Long courseId);
 
-  @Query(
-      """
-          SELECT r
-          FROM RosterStudent r
-          WHERE r.course.id = :courseId
-          ORDER BY LOWER(r.firstName), LOWER(r.lastName)
-      """)
-  Iterable<RosterStudent> findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(Long courseId);
+  Page<RosterStudent> findByCourseId(Long courseId, Pageable pageable);
 
   public Optional<RosterStudent> findByCourseIdAndStudentId(Long courseId, String studentId);
 
