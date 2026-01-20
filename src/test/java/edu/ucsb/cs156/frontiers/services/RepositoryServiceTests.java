@@ -454,7 +454,6 @@ public class RepositoryServiceTests {
         .andRespond(withSuccess());
 
     Team team = Team.builder().name("test-team").build();
-    // team.setTeamMembers(null);
 
     repositoryService.createTeamRepository(
         course, team, "repo1", false, RepositoryPermissions.WRITE);
