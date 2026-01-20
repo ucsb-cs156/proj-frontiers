@@ -60,43 +60,13 @@ public class CoursesController extends ApiController {
    * @param courseName the name of the course
    * @param term the term of the course
    * @param school the school of the course
-   * @return the created course
+   * @param canvasApiToken the Canvas API token (optional)
+   * @param canvasCourseId the Canvas course ID (optional)
    */
   @Operation(summary = "Create a new course")
   @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
   @PostMapping("/post")
   public InstructorCourseView postCourse(
-      @Parameter(name = "courseName") @RequestParam String courseName,
-      @Parameter(name = "term") @RequestParam String term,
-      @Parameter(name = "school") @RequestParam String school) {
-    // get current date right now and set status to pending
-    CurrentUser currentUser = getCurrentUser();
-    Course course =
-        Course.builder()
-            .courseName(courseName)
-            .term(term)
-            .school(school)
-            .instructorEmail(currentUser.getUser().getEmail().strip())
-            .build();
-    Course savedCourse = courseRepository.save(course);
-
-    return new InstructorCourseView(savedCourse);
-  }
-
-  /**
-   * This method creates a new Course with Canvas API token and course ID.
-   *
-   * @param courseName the name of the course
-   * @param term the term of the course
-   * @param school the school of the course
-   * @param canvasApiToken the Canvas API token for the course
-   * @param canvasCourseId the Canvas course ID
-   * @return the created course
-   */
-  @Operation(summary = "Create a new course")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
-  @PostMapping("/postCourseWithCanvasToken")
-  public InstructorCourseView postCourseWithCanvasToken(
       @Parameter(name = "courseName") @RequestParam String courseName,
       @Parameter(name = "term") @RequestParam String term,
       @Parameter(name = "school") @RequestParam String school,

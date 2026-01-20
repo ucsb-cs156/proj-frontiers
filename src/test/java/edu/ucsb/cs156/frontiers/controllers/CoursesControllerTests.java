@@ -82,6 +82,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .instructorEmail(user.getEmail())
+            .canvasApiToken("canvas-token")
+            .canvasCourseId("12345")
             .build();
 
     when(courseRepository.save(any(Course.class))).thenReturn(course);
@@ -95,7 +97,9 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .with(csrf())
                     .param("courseName", "CS156")
                     .param("term", "S25")
-                    .param("school", "UCSB"))
+                    .param("school", "UCSB")
+                    .param("canvasApiToken", "canvas-token")
+                    .param("canvasCourseId", "12345"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -122,6 +126,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .instructorEmail(user.getEmail())
+            .canvasApiToken("canvas-token")
+            .canvasCourseId("12345")
             .build();
 
     when(courseRepository.save(any(Course.class))).thenReturn(course);
@@ -135,95 +141,9 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .with(csrf())
                     .param("courseName", "CS156")
                     .param("term", "S25")
-                    .param("school", "UCSB"))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    // assert
-
-    verify(courseRepository, times(1)).save(eq(course));
-
-    String responseString = response.getResponse().getContentAsString();
-    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(course));
-    assertEquals(expectedJson, responseString);
-  }
-
-  /** Test that ROLE_ADMIN can create a course with Canvas token and course ID */
-  @Test
-  @WithMockUser(roles = {"ADMIN"})
-  public void testPostCourseWithCanvasToken_byAdmin() throws Exception {
-
-    User user = currentUserService.getCurrentUser().getUser();
-
-    // arrange
-    Course course =
-        Course.builder()
-            .courseName("CS156")
-            .term("S25")
-            .school("UCSB")
-            .instructorEmail(user.getEmail())
-            .canvasApiToken("fake-token-123")
-            .canvasCourseId("fake-course-id-123")
-            .build();
-
-    when(courseRepository.save(any(Course.class))).thenReturn(course);
-
-    // act
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/courses/postCourseWithCanvasToken")
-                    .with(csrf())
-                    .param("courseName", "CS156")
-                    .param("term", "S25")
                     .param("school", "UCSB")
-                    .param("canvasApiToken", "fake-token-123")
-                    .param("canvasCourseId", "fake-course-id-123"))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    // assert
-
-    verify(courseRepository, times(1)).save(eq(course));
-
-    String responseString = response.getResponse().getContentAsString();
-    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(course));
-    assertEquals(expectedJson, responseString);
-  }
-
-  /** Test that ROLE_INSTRUCTOR can create a course */
-  @Test
-  @WithMockUser(roles = {"INSTRUCTOR"})
-  public void testPostCourseWithCanvasToken_byInstructor() throws Exception {
-
-    User user = currentUserService.getCurrentUser().getUser();
-
-    // arrange
-    Course course =
-        Course.builder()
-            .courseName("CS156")
-            .term("S25")
-            .school("UCSB")
-            .instructorEmail(user.getEmail())
-            .canvasApiToken("fake-token-123")
-            .canvasCourseId("fake-course-id-123")
-            .build();
-
-    when(courseRepository.save(any(Course.class))).thenReturn(course);
-
-    // act
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/courses/postCourseWithCanvasToken")
-                    .with(csrf())
-                    .param("courseName", "CS156")
-                    .param("term", "S25")
-                    .param("school", "UCSB")
-                    .param("canvasApiToken", "fake-token-123")
-                    .param("canvasCourseId", "fake-course-id-123"))
+                    .param("canvasApiToken", "canvas-token")
+                    .param("canvasCourseId", "12345"))
             .andExpect(status().isOk())
             .andReturn();
 
