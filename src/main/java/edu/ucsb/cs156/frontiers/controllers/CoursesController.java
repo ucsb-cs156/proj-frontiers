@@ -83,6 +83,41 @@ public class CoursesController extends ApiController {
     return new InstructorCourseView(savedCourse);
   }
 
+  /**
+   * This method creates a new Course with Canvas API token and course ID.
+   *
+   * @param courseName the name of the course
+   * @param term the term of the course
+   * @param school the school of the course
+   * @param canvasApiToken the Canvas API token for the course
+   * @param canvasCourseId the Canvas course ID
+   * @return the created course
+   */
+  @Operation(summary = "Create a new course")
+  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PostMapping("/postCourseWithCanvasToken")
+  public InstructorCourseView postCourseWithCanvasToken(
+      @Parameter(name = "courseName") @RequestParam String courseName,
+      @Parameter(name = "term") @RequestParam String term,
+      @Parameter(name = "school") @RequestParam String school,
+      @Parameter(name = "canvasApiToken") @RequestParam(required = false) String canvasApiToken,
+      @Parameter(name = "canvasCourseId") @RequestParam(required = false) String canvasCourseId) {
+    // get current date right now and set status to pending
+    CurrentUser currentUser = getCurrentUser();
+    Course course =
+        Course.builder()
+            .courseName(courseName)
+            .term(term)
+            .school(school)
+            .instructorEmail(currentUser.getUser().getEmail().strip())
+            .canvasApiToken(canvasApiToken)
+            .canvasCourseId(canvasCourseId)
+            .build();
+    Course savedCourse = courseRepository.save(course);
+
+    return new InstructorCourseView(savedCourse);
+  }
+
   /** Projection of Course entity with fields that are relevant for instructors and admins */
   public static record InstructorCourseView(
       Long id,
@@ -417,6 +452,42 @@ public class CoursesController extends ApiController {
     course.setTerm(term);
     course.setSchool(school);
 
+    Course savedCourse = courseRepository.save(course);
+
+    return new InstructorCourseView(savedCourse);
+  }
+
+  /**
+   * This method updates an existing course.
+   *
+   * @param courseId the id of the course to update
+   * @param courseName the new name of the course
+   * @param term the new term of the course
+   * @param school the new school of the course
+   * @param canvasApiToken the new Canvas API token for the course
+   * @param canvasCourseId the new Canvas course ID
+   * @return the updated course
+   */
+  @Operation(summary = "Update an existing course with Canvas token and course ID")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("/updateCourseWithCanvasToken")
+  public InstructorCourseView updateCourseWithCanvasToken(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "courseName") @RequestParam String courseName,
+      @Parameter(name = "term") @RequestParam String term,
+      @Parameter(name = "school") @RequestParam String school,
+      @Parameter(name = "canvasApiToken") @RequestParam String canvasApiToken,
+      @Parameter(name = "canvasCourseId") @RequestParam String canvasCourseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    course.setCourseName(courseName);
+    course.setTerm(term);
+    course.setSchool(school);
+    course.setCanvasApiToken(canvasApiToken);
+    course.setCanvasCourseId(canvasCourseId);
     Course savedCourse = courseRepository.save(course);
 
     return new InstructorCourseView(savedCourse);
