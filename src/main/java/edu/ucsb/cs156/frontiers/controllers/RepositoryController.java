@@ -7,6 +7,7 @@ import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -64,6 +65,41 @@ public class RepositoryController extends ApiController {
               .course(course)
               .permissions(permissions)
               .creationOption(creationOption)
+              .build();
+      return jobService.runAsJob(job);
+    }
+  }
+
+  /**
+   * Fires a job that creates team repos shared by all TeamMembers of each Team in a Course .
+   *
+   * @param courseId ID of course to create team repos for
+   * @param repoPrefix each team repo created will begin with this prefix, followed by a dash and
+   *     the team's name
+   * @param isPrivate determines whether the repository being created is private
+   * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
+   */
+  @PostMapping("/createTeamRepos")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public Job createTeamRepos(
+      @RequestParam Long courseId,
+      @RequestParam String repoPrefix,
+      @RequestParam Optional<Boolean> isPrivate,
+      @RequestParam RepositoryPermissions permissions) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      throw new NoLinkedOrganizationException(course.getCourseName());
+    } else {
+      CreateTeamRepositoriesJob job =
+          CreateTeamRepositoriesJob.builder()
+              .repositoryPrefix(repoPrefix)
+              .isPrivate(isPrivate.orElse(false))
+              .repositoryService(repositoryService)
+              .course(course)
+              .permissions(permissions)
               .build();
       return jobService.runAsJob(job);
     }
