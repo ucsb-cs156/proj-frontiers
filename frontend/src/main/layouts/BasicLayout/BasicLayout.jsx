@@ -17,7 +17,7 @@ export default function BasicLayout({ children }) {
         systemInfo={systemInfo}
         doLogout={doLogout}
       />
-      <Container expand="xl" className="pt-4 flex-grow-1">
+      <Container expand="xl" className="pt-4 flex-grow-1 d-flex flex-column">
         {children}
       </Container>
       <Footer />
