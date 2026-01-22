@@ -2,7 +2,7 @@ import { hasRole, useCurrentUser } from "main/utils/currentUser";
 import OnboardingSelectSchoolComponent from "main/components/Onboarding/OnboardingSelectSchoolComponent";
 import OnboardingSelectCoursesComponent from "main/components/Onboarding/OnboardingSelectCoursesComponent";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import { ProgressBar, Row } from "react-bootstrap";
+import { Container, ProgressBar, Row } from "react-bootstrap";
 import OnboardingGithubSignInComponent from "main/components/Onboarding/OnboardingGithubSignInComponent";
 
 export default function OnboardingWrapperPage() {
@@ -22,7 +22,7 @@ export default function OnboardingWrapperPage() {
   };
 
   return (
-    <BasicLayout>
+    <BasicLayout enableBootstrap={true}>
       {renderElement()}
       <Row className="mt-auto pb-3">
         <ProgressBar now={progress} />
