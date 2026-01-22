@@ -30,6 +30,9 @@ describe("OnboardingWrapperPage tests", () => {
     await screen.findByText(
       "We need a bit of information from you. Please select the school you have credentials with:",
     );
+    const container = screen.getByTestId("BasicLayout-container");
+    expect(container).toBeInTheDocument();
+    expect(container).toHaveClass("pt-4 flex-grow-1 d-flex flex-column");
   });
 
   test("displays GitHub on no Github role", async () => {
