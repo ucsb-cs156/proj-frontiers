@@ -440,12 +440,9 @@ public class CoursesController extends ApiController {
    */
   @Operation(summary = "Update an existing course with Canvas token and course ID")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @PutMapping("/updateCourseWithCanvasToken")
+  @PutMapping("/updateCourseCanvasToken")
   public InstructorCourseView updateCourseWithCanvasToken(
       @Parameter(name = "courseId") @RequestParam Long courseId,
-      @Parameter(name = "courseName") @RequestParam String courseName,
-      @Parameter(name = "term") @RequestParam String term,
-      @Parameter(name = "school") @RequestParam String school,
       @Parameter(name = "canvasApiToken") @RequestParam String canvasApiToken,
       @Parameter(name = "canvasCourseId") @RequestParam String canvasCourseId) {
     Course course =
@@ -453,9 +450,6 @@ public class CoursesController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
-    course.setCourseName(courseName);
-    course.setTerm(term);
-    course.setSchool(school);
     course.setCanvasApiToken(canvasApiToken);
     course.setCanvasCourseId(canvasCourseId);
     Course savedCourse = courseRepository.save(course);

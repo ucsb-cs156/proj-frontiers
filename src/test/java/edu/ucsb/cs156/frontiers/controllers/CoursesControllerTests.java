@@ -1281,14 +1281,14 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"ADMIN"})
-  public void updateCourseWithCanvasToken_success_admin() throws Exception {
+  public void updateCourseCanvasToken_success_admin() throws Exception {
 
     Course course =
         Course.builder()
             .id(1L)
-            .courseName("OldName")
-            .term("OldTerm")
-            .school("OldSchool")
+            .courseName("Name")
+            .term("Term")
+            .school("School")
             .instructorEmail("rando@example.com")
             .canvasApiToken("oldToken")
             .canvasCourseId("oldCourseId")
@@ -1297,9 +1297,9 @@ public class CoursesControllerTests extends ControllerTestCase {
     Course updatedCourse =
         Course.builder()
             .id(1L)
-            .courseName("NewName")
-            .term("NewTerm")
-            .school("NewSchool")
+            .courseName("Name")
+            .term("Term")
+            .school("School")
             .instructorEmail("rando@example.com")
             .canvasApiToken("newToken")
             .canvasCourseId("newCourseId")
@@ -1311,11 +1311,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     MvcResult result =
         mockMvc
             .perform(
-                put("/api/courses/updateCourseWithCanvasToken")
+                put("/api/courses/updateCourseCanvasToken")
                     .param("courseId", "1")
-                    .param("courseName", "NewName")
-                    .param("term", "NewTerm")
-                    .param("school", "NewSchool")
                     .param("canvasApiToken", "newToken")
                     .param("canvasCourseId", "newCourseId")
                     .with(csrf()))
@@ -1331,17 +1328,14 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"INSTRUCTOR"})
-  public void updateCourseWithCanvasToken_notFound() throws Exception {
+  public void updateCourseCanvasToken_notFound() throws Exception {
     when(courseRepository.findById(eq(2L))).thenReturn(Optional.empty());
 
     MvcResult result =
         mockMvc
             .perform(
-                put("/api/courses/updateCourseWithCanvasToken")
+                put("/api/courses/updateCourseCanvasToken")
                     .param("courseId", "2")
-                    .param("courseName", "AnyName")
-                    .param("term", "AnyTerm")
-                    .param("school", "AnySchool")
                     .param("canvasApiToken", "AnyToken")
                     .param("canvasCourseId", "AnyCourseId")
                     .with(csrf()))
@@ -1353,14 +1347,11 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"USER"})
-  public void updateCourseWithCanvasToken_forbidden_for_non_instructor() throws Exception {
+  public void updateCourseCanvasToken_forbidden_for_non_instructor() throws Exception {
     mockMvc
         .perform(
-            put("/api/courses/updateCourseWithCanvasToken")
+            put("/api/courses/updateCourseCanvasToken")
                 .param("courseId", "1")
-                .param("courseName", "NewName")
-                .param("term", "NewTerm")
-                .param("school", "NewSchool")
                 .param("canvasApiToken", "newToken")
                 .param("canvasCourseId", "newCourseId")
                 .with(csrf()))
@@ -1369,16 +1360,13 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void updateCourseWithCanvasToken_not_found_returns_not_found() throws Exception {
+  public void updateCourseCanvasToken_not_found_returns_not_found() throws Exception {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
     MvcResult response =
         mockMvc
             .perform(
-                put("/api/courses/updateCourseWithCanvasToken")
+                put("/api/courses/updateCourseCanvasToken")
                     .param("courseId", "1")
-                    .param("courseName", "Updated Course")
-                    .param("term", "F25")
-                    .param("school", "Updated School")
                     .param("canvasApiToken", "newToken")
                     .param("canvasCourseId", "newCourseId")
                     .with(csrf()))
@@ -1397,7 +1385,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void updateCourseWithCanvasToken_success_returns_ok() throws Exception {
+  public void updateCourseCanvasToken_success_returns_ok() throws Exception {
     User user = currentUserService.getCurrentUser().getUser();
 
     Course originalCourse =
@@ -1414,9 +1402,9 @@ public class CoursesControllerTests extends ControllerTestCase {
     Course updatedCourse =
         Course.builder()
             .id(1L)
-            .courseName("Updated Course")
-            .term("F25")
-            .school("Updated School")
+            .courseName("Original Course")
+            .term("S25")
+            .school("Original School")
             .instructorEmail(user.getEmail())
             .canvasApiToken("newToken")
             .canvasCourseId("newCourseId")
@@ -1428,11 +1416,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                put("/api/courses/updateCourseWithCanvasToken")
+                put("/api/courses/updateCourseCanvasToken")
                     .param("courseId", "1")
-                    .param("courseName", "Updated Course")
-                    .param("term", "F25")
-                    .param("school", "Updated School")
                     .param("canvasApiToken", "newToken")
                     .param("canvasCourseId", "newCourseId")
                     .with(csrf()))
@@ -1449,7 +1434,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"ADMIN"})
-  public void admin_can_updateCourseWithCanvasToken_created_by_someone_else() throws Exception {
+  public void admin_can_updateCourseCanvasToken_created_by_someone_else() throws Exception {
     User adminUser = currentUserService.getCurrentUser().getUser();
     User instructorUser =
         User.builder().id(adminUser.getId() + 1L).email("instructor@example.com").build();
@@ -1468,9 +1453,9 @@ public class CoursesControllerTests extends ControllerTestCase {
     Course updatedCourse =
         Course.builder()
             .id(1L)
-            .courseName("Admin Updated Course")
-            .term("F25")
-            .school("Admin Updated School")
+            .courseName("Original Course")
+            .term("S25")
+            .school("Original School")
             .instructorEmail(instructorUser.getEmail())
             .canvasApiToken("newToken")
             .canvasCourseId("newCourseId")
@@ -1482,11 +1467,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                put("/api/courses/updateCourseWithCanvasToken")
+                put("/api/courses/updateCourseCanvasToken")
                     .param("courseId", "1")
-                    .param("courseName", "Admin Updated Course")
-                    .param("term", "F25")
-                    .param("school", "Admin Updated School")
                     .param("canvasApiToken", "newToken")
                     .param("canvasCourseId", "newCourseId")
                     .with(csrf()))
