@@ -49,6 +49,14 @@ export default function HomePageLoggedIn() {
     },
   });
 
+  const onJoinSuccess = (message) => {
+    toast(message);
+  };
+
+  const onJoinFail = (result) => {
+    toast(result.response.data ? result.response.data : result.message);
+  };
+
   const staffJoinMutation = useBackendMutation(
     cellToAxiosParamsStaff,
     { onSuccess: onJoinSuccess, onError: onJoinFail },

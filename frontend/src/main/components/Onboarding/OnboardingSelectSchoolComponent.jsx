@@ -8,7 +8,7 @@ import { FaMicrosoft } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import SignInCard from "main/components/Auth/SignInCard";
 
-export default function OnboardingSelectSchoolPage() {
+export default function OnboardingSelectSchoolComponent() {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const { data: systemInfo } = useSystemInfo();
 
@@ -38,7 +38,7 @@ export default function OnboardingSelectSchoolPage() {
   };
 
   const setRedirect = () => {
-    sessionStorage.setItem("redirect", "/onboarding/courses");
+    sessionStorage.setItem("redirect", "/onboarding");
   };
 
   const renderProviderSignIn = () => {
@@ -93,7 +93,7 @@ export default function OnboardingSelectSchoolPage() {
   };
 
   return (
-    <BasicLayout>
+    <>
       <Row>
         <Col>
           <h1>Welcome to Frontiers!</h1>
@@ -119,11 +119,6 @@ export default function OnboardingSelectSchoolPage() {
           <>{selectedProvider && renderProviderSignIn()}</>
         </Col>
       </Row>
-      <Row className="mt-auto pb-3">
-        <Col>
-          <ProgressBar now={25} />
-        </Col>
-      </Row>
-    </BasicLayout>
+    </>
   );
 }

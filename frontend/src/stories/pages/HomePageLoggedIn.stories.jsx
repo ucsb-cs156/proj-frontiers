@@ -54,12 +54,12 @@ LoggedInUserWithNoCourses.parameters = {
       http.get("/api/courses/staffCourses", () => {
         return HttpResponse.json([]);
       }),
-      http.get("/api/coursestaff/joinCourse", () => {
+      http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
       }),
-      http.get("/api/rosterstudents/joinCourse", () => {
+      http.put("/api/rosterstudents/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
@@ -92,12 +92,12 @@ LoggedInRegularUser.parameters = {
       http.get("/api/courses/staffCourses", () => {
         return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
       }),
-      http.get("/api/coursestaff/joinCourse", () => {
+      http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
       }),
-      http.get("/api/rosterstudents/joinCourse", () => {
+      http.put("/api/rosterstudents/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
@@ -129,12 +129,12 @@ LoggedInInstructorUserWithNoCourses.parameters = {
       http.get("/api/courses/staffCourses", () => {
         return HttpResponse.json([]);
       }),
-      http.get("/api/coursestaff/joinCourse", () => {
+      http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
       }),
-      http.get("/api/rosterstudents/joinCourse", () => {
+      http.put("/api/rosterstudents/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
@@ -168,12 +168,12 @@ LoggedInInstructorUser.parameters = {
       http.get("/api/courses/staffCourses", () => {
         return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
       }),
-      http.get("/api/coursestaff/joinCourse", () => {
+      http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
       }),
-      http.get("/api/rosterstudents/joinCourse", () => {
+      http.put("/api/rosterstudents/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
@@ -204,12 +204,12 @@ LoggedInAdminUserNoCourses.parameters = {
       http.get("/api/courses/allForAdmins", () => {
         return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
       }),
-      http.get("/api/coursestaff/joinCourse", () => {
+      http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
       }),
-      http.get("/api/rosterstudents/joinCourse", () => {
+      http.put("/api/rosterstudents/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
@@ -242,12 +242,12 @@ LoggedInAdminUserShowingSwaggerAndH2Console.parameters = {
       http.get("/api/courses/allForAdmins", () => {
         return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
       }),
-      http.get("/api/coursestaff/joinCourse", () => {
+      http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });
       }),
-      http.get("/api/rosterstudents/joinCourse", () => {
+      http.put("/api/rosterstudents/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
         });

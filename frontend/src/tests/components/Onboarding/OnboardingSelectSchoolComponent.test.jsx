@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { render } from "@testing-library/react";
-import OnboardingSelectSchoolPage from "main/pages/Onboarding/OnboardingSelectSchoolPage";
+import OnboardingSelectSchoolComponent from "main/components/Onboarding/OnboardingSelectSchoolComponent";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
@@ -10,7 +10,7 @@ import { MemoryRouter } from "react-router";
 const queryClient = new QueryClient();
 const axiosMock = new AxiosMockAdapter(axios);
 
-describe("OnboardingSelectSchoolPage tests", () => {
+describe("OnboardingSelectSchoolComponent tests", () => {
   beforeEach(() => {
     axiosMock.reset();
     axiosMock.resetHistory();
@@ -23,7 +23,7 @@ describe("OnboardingSelectSchoolPage tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <OnboardingSelectSchoolPage />
+          <OnboardingSelectSchoolComponent />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -37,8 +37,8 @@ describe("OnboardingSelectSchoolPage tests", () => {
       .reply(200, systemInfoFixtures.withActiveDirectoryAndGoogle);
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/onboarding/select-school"]}>
-          <OnboardingSelectSchoolPage />
+        <MemoryRouter initialEntries={["/onboarding"]}>
+          <OnboardingSelectSchoolComponent />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -57,7 +57,7 @@ describe("OnboardingSelectSchoolPage tests", () => {
       screen.getByTestId("SignInCard-base-google"),
     ).getByText("Log In");
     fireEvent.click(googleButton);
-    expect(sessionStorage.getItem("redirect")).toBe("/onboarding/courses");
+    expect(sessionStorage.getItem("redirect")).toBe("/onboarding");
     sessionStorage.clear();
     expect(screen.getByTestId("SignInOptions-googleIcon")).toBeInTheDocument();
     expect(screen.getByRole("img")).toHaveAttribute("height", "10em");
@@ -69,8 +69,8 @@ describe("OnboardingSelectSchoolPage tests", () => {
       .reply(200, systemInfoFixtures.withActiveDirectoryAndGoogle);
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/onboarding/select-school"]}>
-          <OnboardingSelectSchoolPage />
+        <MemoryRouter initialEntries={["/onboarding"]}>
+          <OnboardingSelectSchoolComponent />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -87,7 +87,7 @@ describe("OnboardingSelectSchoolPage tests", () => {
       screen.getByTestId("SignInCard-base-microsoft"),
     ).getByText("Log In");
     fireEvent.click(googleButton);
-    expect(sessionStorage.getItem("redirect")).toBe("/onboarding/github");
+    expect(sessionStorage.getItem("redirect")).toBe("/onboarding");
     sessionStorage.clear();
     expect(
       screen.getByTestId("SignInOptions-microsoftIcon"),
@@ -103,7 +103,7 @@ describe("OnboardingSelectSchoolPage tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/onboarding/select-school"]}>
-          <OnboardingSelectSchoolPage />
+          <OnboardingSelectSchoolComponent />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -125,7 +125,7 @@ describe("OnboardingSelectSchoolPage tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/onboarding/select-school"]}>
-          <OnboardingSelectSchoolPage />
+          <OnboardingSelectSchoolComponent />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -149,7 +149,7 @@ describe("OnboardingSelectSchoolPage tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/onboarding/select-school"]}>
-          <OnboardingSelectSchoolPage />
+          <OnboardingSelectSchoolComponent />
         </MemoryRouter>
       </QueryClientProvider>,
     );
