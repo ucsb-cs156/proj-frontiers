@@ -440,27 +440,21 @@ import org.springframework.web.bind.annotation.*;
    */
   @Operation(summary = &quot;Update an existing course with Canvas token and course ID&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
-  @PutMapping(&quot;/updateCourseWithCanvasToken&quot;)
+  @PutMapping(&quot;/updateCourseCanvasToken&quot;)
   public InstructorCourseView updateCourseWithCanvasToken(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
-      @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
-      @Parameter(name = &quot;term&quot;) @RequestParam String term,
-      @Parameter(name = &quot;school&quot;) @RequestParam String school,
       @Parameter(name = &quot;canvasApiToken&quot;) @RequestParam String canvasApiToken,
       @Parameter(name = &quot;canvasCourseId&quot;) @RequestParam String canvasCourseId) {
-<span class="fc" id="L451">    Course course =</span>
+<span class="fc" id="L448">    Course course =</span>
         courseRepository
-<span class="fc" id="L453">            .findById(courseId)</span>
-<span class="fc" id="L454">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L450">            .findById(courseId)</span>
+<span class="fc" id="L451">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L456">    course.setCourseName(courseName);</span>
-<span class="fc" id="L457">    course.setTerm(term);</span>
-<span class="fc" id="L458">    course.setSchool(school);</span>
-<span class="fc" id="L459">    course.setCanvasApiToken(canvasApiToken);</span>
-<span class="fc" id="L460">    course.setCanvasCourseId(canvasCourseId);</span>
-<span class="fc" id="L461">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L453">    course.setCanvasApiToken(canvasApiToken);</span>
+<span class="fc" id="L454">    course.setCanvasCourseId(canvasCourseId);</span>
+<span class="fc" id="L455">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L463">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L457">    return new InstructorCourseView(savedCourse);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
