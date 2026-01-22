@@ -8,22 +8,10 @@ import CourseModal from "main/components/Courses/CourseModal";
 import Button from "react-bootstrap/Button";
 import React from "react";
 import { hasRole } from "main/utils/currentUser";
+import { StudentCoursesTable } from "main/components/Courses/StudentCoursesTable";
 
 export default function HomePageLoggedIn() {
   const currentUser = useCurrentUser();
-
-  const {
-    data: courses,
-    error: _error,
-    status: _status,
-  } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
-    ["/api/courses/list"],
-    // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET. Therefore, there is no way to kill a mutation that transforms "GET" to ""
-    { method: "GET", url: "/api/courses/list" },
-    // Stryker disable next-line all : don't test default value of empty list
-    [],
-  );
   const {
     data: staffCourses,
     error: _staffError,
@@ -53,24 +41,6 @@ export default function HomePageLoggedIn() {
     },
   );
 
-  const onJoinSuccess = (message) => {
-    toast(message);
-  };
-
-  const onJoinFail = (result) => {
-    toast(result.response.data ? result.response.data : result.message);
-  };
-
-  const cellToAxiosParamsStudent = (cell) => {
-    return {
-      url: `/api/rosterstudents/joinCourse`,
-      method: "PUT",
-      params: {
-        rosterStudentId: cell.row.original.rosterStudentId,
-      },
-    };
-  };
-
   const cellToAxiosParamsStaff = (cell) => ({
     url: `/api/coursestaff/joinCourse`,
     method: "PUT",
@@ -79,31 +49,14 @@ export default function HomePageLoggedIn() {
     },
   });
 
-  const studentJoinMutation = useBackendMutation(
-    cellToAxiosParamsStudent,
-    { onSuccess: onJoinSuccess, onError: onJoinFail },
-    [`/api/courses/list`],
-  );
-
   const staffJoinMutation = useBackendMutation(
     cellToAxiosParamsStaff,
     { onSuccess: onJoinSuccess, onError: onJoinFail },
     [`/api/courses/staffCourses`],
   );
 
-  const joinStudentCourseCallback = async (cell) => {
-    studentJoinMutation.mutate(cell);
-  };
-
   const joinStaffCourseCallback = async (cell) => {
     staffJoinMutation.mutate(cell);
-  };
-
-  const isStudentJoining = (cell) => {
-    return (
-      studentJoinMutation.isPending &&
-      studentJoinMutation.variables.row.index === cell.row.index
-    );
   };
 
   const isStaffJoining = (cell) => {
@@ -179,18 +132,7 @@ export default function HomePageLoggedIn() {
           </>
         )}
         <h1>Your Student Courses</h1>
-        {courses.length > 0 ? (
-          <>
-            <CoursesTable
-              courses={courses}
-              testId={"CoursesTable"}
-              joinCallback={joinStudentCourseCallback}
-              isLoading={isStudentJoining}
-            />
-          </>
-        ) : (
-          <p>You are not enrolled in any student courses yet.</p>
-        )}
+        <StudentCoursesTable testid={"CoursesTable"} />
         {staffCourses.length > 0 && (
           <>
             <h1>Your Staff Courses</h1>

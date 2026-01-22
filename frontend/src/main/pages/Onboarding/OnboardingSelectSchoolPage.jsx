@@ -121,7 +121,7 @@ export default function OnboardingSelectSchoolPage() {
       </Row>
       <Row className="mt-auto pb-3">
         <Col>
-          <ProgressBar now={20} />
+          <ProgressBar now={25} />
         </Col>
       </Row>
     </BasicLayout>
