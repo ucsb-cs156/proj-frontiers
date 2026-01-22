@@ -6,7 +6,6 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
-import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -190,13 +189,22 @@ public class RepositoryService {
       Boolean isPrivate,
       RepositoryPermissions permissions)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-
-    String newRepoName = repoPrefix + "-" + team.getName();
+    // Should update Team entity with a team slug field. Would need to update all instances in code
+    // base where teams are created
+    String teamSlug = team.getName().toLowerCase().replaceAll("[^a-z0-9-]+", "-");
+    String newRepoName = repoPrefix + "-" + teamSlug;
     String token = jwtService.getInstallationToken(course);
 
     String existenceEndpoint =
         "https://api.github.com/repos/" + course.getOrgName() + "/" + newRepoName;
     String createEndpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos";
+    String provisionEndpoint =
+        "https://api.github.com/teams/"
+            + team.getGithubTeamId()
+            + "/repos/"
+            + course.getOrgName()
+            + "/"
+            + newRepoName;
 
     HttpHeaders existenceHeaders = new HttpHeaders();
     existenceHeaders.add("Authorization", "Bearer " + token);
@@ -230,33 +238,15 @@ public class RepositoryService {
         return;
       }
     }
+    try {
+      Map<String, Object> provisionBody = new HashMap<>();
+      provisionBody.put("permission", permissions.getApiName());
+      String provisionAsJson = mapper.writeValueAsString(provisionBody);
 
-    if (team.getTeamMembers() != null) {
-      for (TeamMember member : team.getTeamMembers()) {
-        if (member.getRosterStudent() != null
-            && member.getRosterStudent().getGithubLogin() != null) {
-          String githubLogin = member.getRosterStudent().getGithubLogin();
-          String provisionEndpoint =
-              "https://api.github.com/repos/"
-                  + course.getOrgName()
-                  + "/"
-                  + newRepoName
-                  + "/collaborators/"
-                  + githubLogin;
-
-          try {
-            Map<String, Object> provisionBody = new HashMap<>();
-            provisionBody.put("permission", permissions.getApiName());
-            String provisionAsJson = mapper.writeValueAsString(provisionBody);
-
-            HttpEntity<String> provisionEntity =
-                new HttpEntity<>(provisionAsJson, existenceHeaders);
-            restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);
-          } catch (HttpClientErrorException ignored) {
-            // silently ignore if provisioning fails (same as before)
-          }
-        }
-      }
+      HttpEntity<String> provisionEntity = new HttpEntity<>(provisionAsJson, existenceHeaders);
+      restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);
+    } catch (HttpClientErrorException ignored) {
+      // silently ignore if provisioning fails (same as before)
     }
   }
 }
