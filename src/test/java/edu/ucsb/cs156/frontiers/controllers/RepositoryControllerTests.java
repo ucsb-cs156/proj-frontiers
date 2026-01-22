@@ -14,6 +14,7 @@ import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
@@ -183,6 +184,130 @@ public class RepositoryControllerTests extends ControllerTestCase {
         mockMvc
             .perform(
                 post("/api/repos/createRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Course with id 2 not found", json.get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  public void team_repo_job_not_the_creator() throws Exception {
+    Course course = Course.builder().instructorEmail("test@example.com").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createTeamRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE"))
+            .andExpect(status().isForbidden())
+            .andReturn();
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void team_repo_job_not_registered_org() throws Exception {
+    Course course =
+        Course.builder()
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createTeamRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("NoLinkedOrganizationException", json.get("type"));
+    assertEquals(
+        "No linked GitHub Organization to course. Please link a GitHub Organization first.",
+        json.get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void team_repo_job_just_no_install_id() throws Exception {
+    Course course =
+        Course.builder()
+            .courseName("course")
+            .orgName("ucsb-cs156")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createTeamRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("NoLinkedOrganizationException", json.get("type"));
+    assertEquals(
+        "No linked GitHub Organization to course. Please link a GitHub Organization first.",
+        json.get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void team_repo_job_actually_fires() throws Exception {
+    Course course =
+        Course.builder()
+            .id(2L)
+            .orgName("ucsb-cs156")
+            .installationId("1234")
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    Job job = Job.builder().status("processing").build();
+    doReturn(job).when(service).runAsJob(any(CreateTeamRepositoriesJob.class));
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createTeamRepos")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("repoPrefix", "repo1")
+                    .param("permissions", "WRITE"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String expectedJson = objectMapper.writeValueAsString(job);
+    String actualJson = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, actualJson);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void team_repo_job_notFound() throws Exception {
+    Course course =
+        Course.builder()
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.empty()).when(courseRepository).findById(eq(2L));
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/repos/createTeamRepos")
                     .with(csrf())
                     .param("courseId", "2")
                     .param("repoPrefix", "repo1")
