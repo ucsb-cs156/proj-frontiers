@@ -4,7 +4,7 @@ import { Link } from "react-router";
 
 export default function OnboardingSuccessPage() {
   return (
-    <BasicLayout>
+    <BasicLayout enableBootstrap={true}>
       <Row>
         <h1>Complete!</h1>
         <p>Congratulations on completing the onboarding process!</p>

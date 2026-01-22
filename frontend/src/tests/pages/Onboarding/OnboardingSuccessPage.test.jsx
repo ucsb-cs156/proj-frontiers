@@ -16,4 +16,7 @@ test("OnboardingSuccessPage static checks", async () => {
   await screen.findByText(
     /Congratulations on completing the onboarding process!/,
   );
+  const container = screen.getByTestId("BasicLayout-container");
+  expect(container).toBeInTheDocument();
+  expect(container).toHaveClass("pt-4 flex-grow-1 d-flex flex-column");
 });
