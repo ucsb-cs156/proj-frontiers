@@ -40,6 +40,7 @@ function App() {
           <Route path="/help/csv" element={<HelpCsvPage />} />
           <Route path="*" element={<HomePageConnectGithub />} />
           <Route path="/login/success" element={<SignInSuccessPage />} />
+          <Route path="/onboarding" element={<OnboardingWrapperPage />} />
         </Routes>
       </BrowserRouter>
     );
