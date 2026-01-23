@@ -1,0 +1,216 @@
+import AxiosMockAdapter from "axios-mock-adapter";
+import axios from "axios";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { vi } from "vitest";
+import coursesFixtures from "fixtures/coursesFixtures";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import { StudentCoursesTable } from "main/components/Courses/StudentCoursesTable";
+import React from "react";
+
+const axiosMock = new AxiosMockAdapter(axios);
+const queryClient = new QueryClient();
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    toast: (x) => mockToast(x),
+  };
+});
+
+describe("StudentCoursesTable tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    queryClient.clear();
+    mockToast.mockReset();
+  });
+
+  test("renders correctly with courses", async () => {
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`CoursesTable-cell-row-0-col-id`),
+      ).toHaveTextContent("1");
+    });
+    expect(
+      screen.getByTestId(`CoursesTable-cell-row-1-col-id`),
+    ).toHaveTextContent("2");
+    expect(
+      screen.getByTestId(`CoursesTable-cell-row-2-col-id`),
+    ).toHaveTextContent("3");
+    expect(
+      screen.getByTestId(`CoursesTable-cell-row-0-col-courseName`),
+    ).toHaveTextContent("CMPSC 156");
+    expect(
+      screen.getByTestId(`CoursesTable-cell-row-0-col-term`),
+    ).toHaveTextContent("Spring 2025");
+    expect(
+      screen.getByTestId(`CoursesTable-cell-row-0-col-school`),
+    ).toHaveTextContent("UCSB");
+    expect(
+      screen.getByTestId(`CoursesTable-cell-row-0-col-studentStatus`),
+    ).toHaveTextContent("Pending");
+  });
+
+  test("renders empty message when no courses", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("You are not enrolled in any student courses yet."),
+      ).toBeInTheDocument();
+    });
+  });
+
+  test("join callback works", async () => {
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, coursesFixtures.oneRosterStudentWithEachStatus);
+    axiosMock
+      .onPut("/api/rosterstudents/joinCourse")
+      .reply(200, "Successfully invited student to Organization");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findAllByText("Join Course");
+    const studentJoinButton = screen.getByTestId(
+      "CoursesTable-cell-row-1-col-studentStatus-button",
+    );
+    fireEvent.click(studentJoinButton);
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].url).toBe("/api/rosterstudents/joinCourse");
+    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 22 });
+    await waitFor(() => {
+      expect(mockToast).toBeCalledWith(
+        "Successfully invited student to Organization",
+      );
+    });
+
+    expect(
+      queryClient.getQueryState(["/api/courses/list"]).dataUpdateCount,
+    ).toBe(2);
+  });
+
+  test("right message on 400", async () => {
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, coursesFixtures.oneRosterStudentWithEachStatus);
+    axiosMock
+      .onPut("/api/rosterstudents/joinCourse")
+      .reply(
+        400,
+        "Course has not been set up. Please ask your instructor for help.",
+      );
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findAllByText("Join Course");
+    const studentJoinButton = screen.getByTestId(
+      "CoursesTable-cell-row-1-col-studentStatus-button",
+    );
+    fireEvent.click(studentJoinButton);
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].url).toBe("/api/rosterstudents/joinCourse");
+    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 22 });
+    await waitFor(() => {
+      expect(mockToast).toBeCalledWith(
+        "Course has not been set up. Please ask your instructor for help.",
+      );
+    });
+  });
+
+  test("right message on 404", async () => {
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, coursesFixtures.oneRosterStudentWithEachStatus);
+    axiosMock.onPut("/api/rosterstudents/joinCourse").reply(404);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findAllByText("Join Course");
+    const studentJoinButton = screen.getByTestId(
+      "CoursesTable-cell-row-1-col-studentStatus-button",
+    );
+    fireEvent.click(studentJoinButton);
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].url).toBe("/api/rosterstudents/joinCourse");
+    expect(axiosMock.history.put[0].params).toEqual({ rosterStudentId: 22 });
+    await waitFor(() => {
+      expect(mockToast).toBeCalledWith("Request failed with status code 404");
+    });
+  });
+
+  test("Loading message renders", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, [
+      ...coursesFixtures.oneRosterStudentWithEachStatus,
+      {
+        id: 7,
+        rosterStudentId: 26,
+        courseName: "CMPSC 130B",
+        term: "Spring 2026",
+        school: "UCSB",
+        orgName: "ucsb-cs130b-s26",
+        studentStatus: "JOINCOURSE",
+      },
+    ]);
+    axiosMock
+      .onPut("/api/rosterstudents/joinCourse")
+      .withDelayInMs(5000)
+      .reply(202, "Successfully invited student to Organization");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await screen.findAllByText("Join Course");
+    const studentJoinButton = screen.getByTestId(
+      "CoursesTable-cell-row-1-col-studentStatus-button",
+    );
+    fireEvent.click(studentJoinButton);
+    await screen.findByText("Joining...");
+    expect(
+      screen.getByTestId("CoursesTable-cell-row-6-col-studentStatus-button"),
+    ).toHaveTextContent("Join Course");
+  });
+});

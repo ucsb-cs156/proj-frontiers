@@ -25,6 +25,8 @@ import SignInPage from "main/pages/Auth/SignInPage";
 import NotFoundPage from "main/pages/Auth/NotFoundPage";
 import HelpAboutPage from "main/pages/Help/HelpAboutPage";
 import HelpCsvPage from "main/pages/Help/HelpCsvPage";
+import OnboardingSuccessPage from "main/pages/Onboarding/OnboardingSuccessPage";
+import OnboardingWrapperPage from "main/pages/Onboarding/OnboardingWrapperPage";
 
 function App() {
   const currentUser = useCurrentUser();
@@ -38,6 +40,7 @@ function App() {
           <Route path="/help/csv" element={<HelpCsvPage />} />
           <Route path="*" element={<HomePageConnectGithub />} />
           <Route path="/login/success" element={<SignInSuccessPage />} />
+          <Route path="/onboarding" element={<OnboardingWrapperPage />} />
         </Routes>
       </BrowserRouter>
     );
@@ -57,6 +60,8 @@ function App() {
         <Route path="/" element={homePage} />
         <Route path="/help/about" element={<HelpAboutPage />} />
         <Route path="/help/csv" element={<HelpCsvPage />} />
+        <Route path="/onboarding" element={<OnboardingWrapperPage />} />
+        <Route path="/onboarding/success" element={<OnboardingSuccessPage />} />
         <Route
           path="/profile"
           element={

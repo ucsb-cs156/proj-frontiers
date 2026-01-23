@@ -1,9 +1,15 @@
 /**
  * Mapping of login providers to their associated schools
  */
-const loginProviderSchools = {
+export const loginProviderSchools = {
   google: ["Chico State University", "University of California, Santa Barbara"],
   microsoft: ["Oregon State University"],
 };
 
-export default loginProviderSchools;
+export const schoolToProvider = Object.entries(loginProviderSchools).flatMap(
+  ([provider, schools]) =>
+    schools.map((school) => ({
+      schoolName: school,
+      provider: provider,
+    })),
+);

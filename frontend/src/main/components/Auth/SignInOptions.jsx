@@ -4,7 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Row } from "react-bootstrap";
 import SignInCard from "main/components/Auth/SignInCard";
 import { useSystemInfo } from "main/utils/systemInfo";
-import loginProviderSchools from "main/utils/loginProviderSchools";
+import { loginProviderSchools } from "main/utils/loginProviderSchools";
 
 const SignInOptions = ({ onSignIn }) => {
   const { data: systemInfo } = useSystemInfo();
