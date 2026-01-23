@@ -3,12 +3,14 @@ package edu.ucsb.cs156.frontiers.services.jobs;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class JobService {
   @Autowired private JobsRepository jobsRepository;
 
@@ -20,6 +22,11 @@ public class JobService {
 
   public Job runAsJob(JobContextConsumer jobFunction) {
     Job job = Job.builder().createdBy(currentUserService.getUser()).status("running").build();
+
+    String jobClass =
+        jobFunction.getClass().getName().replace("edu.ucsb.cs156.frontiers.jobs.", "");
+
+    log.info("Starting job: {}, jobClass={}", job.getId(), jobClass);
 
     jobsRepository.save(job);
     self.runJobAsync(job, jobFunction);
