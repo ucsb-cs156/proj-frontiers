@@ -82,6 +82,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .instructorEmail(user.getEmail())
+            .canvasApiToken("canvas-token")
+            .canvasCourseId("12345")
             .build();
 
     when(courseRepository.save(any(Course.class))).thenReturn(course);
@@ -95,7 +97,9 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .with(csrf())
                     .param("courseName", "CS156")
                     .param("term", "S25")
-                    .param("school", "UCSB"))
+                    .param("school", "UCSB")
+                    .param("canvasApiToken", "canvas-token")
+                    .param("canvasCourseId", "12345"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -122,6 +126,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .instructorEmail(user.getEmail())
+            .canvasApiToken("canvas-token")
+            .canvasCourseId("12345")
             .build();
 
     when(courseRepository.save(any(Course.class))).thenReturn(course);
@@ -135,7 +141,9 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .with(csrf())
                     .param("courseName", "CS156")
                     .param("term", "S25")
-                    .param("school", "UCSB"))
+                    .param("school", "UCSB")
+                    .param("canvasApiToken", "canvas-token")
+                    .param("canvasCourseId", "12345"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -1259,6 +1267,210 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .param("courseName", "Admin Updated Course")
                     .param("term", "F25")
                     .param("school", "Admin Updated School")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verify(courseRepository).save(updatedCourse);
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void updateCourseCanvasToken_success_admin() throws Exception {
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("Name")
+            .term("Term")
+            .school("School")
+            .instructorEmail("rando@example.com")
+            .canvasApiToken("oldToken")
+            .canvasCourseId("oldCourseId")
+            .build();
+
+    Course updatedCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("Name")
+            .term("Term")
+            .school("School")
+            .instructorEmail("rando@example.com")
+            .canvasApiToken("newToken")
+            .canvasCourseId("newCourseId")
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/api/courses/updateCourseCanvasToken")
+                    .param("courseId", "1")
+                    .param("canvasApiToken", "newToken")
+                    .param("canvasCourseId", "newCourseId")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseRepository, times(1)).save(any(Course.class));
+
+    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+    assertEquals(expectedJson, result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  public void updateCourseCanvasToken_notFound() throws Exception {
+    when(courseRepository.findById(eq(2L))).thenReturn(Optional.empty());
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/api/courses/updateCourseCanvasToken")
+                    .param("courseId", "2")
+                    .param("canvasApiToken", "AnyToken")
+                    .param("canvasCourseId", "AnyCourseId")
+                    .with(csrf()))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void updateCourseCanvasToken_forbidden_for_non_instructor() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/courses/updateCourseCanvasToken")
+                .param("courseId", "1")
+                .param("canvasApiToken", "newToken")
+                .param("canvasCourseId", "newCourseId")
+                .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateCourseCanvasToken_not_found_returns_not_found() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateCourseCanvasToken")
+                    .param("courseId", "1")
+                    .param("canvasApiToken", "newToken")
+                    .param("canvasCourseId", "newCourseId")
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 1 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+    verify(courseRepository).findById(eq(1L));
+    verifyNoMoreInteractions(courseRepository);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateCourseCanvasToken_success_returns_ok() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
+
+    Course originalCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("Original Course")
+            .term("S25")
+            .school("Original School")
+            .instructorEmail(user.getEmail())
+            .canvasApiToken("originalToken")
+            .canvasCourseId("originalCourseId")
+            .build();
+
+    Course updatedCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("Original Course")
+            .term("S25")
+            .school("Original School")
+            .instructorEmail(user.getEmail())
+            .canvasApiToken("newToken")
+            .canvasCourseId("newCourseId")
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+    when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateCourseCanvasToken")
+                    .param("courseId", "1")
+                    .param("canvasApiToken", "newToken")
+                    .param("canvasCourseId", "newCourseId")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verify(courseRepository).save(updatedCourse);
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void admin_can_updateCourseCanvasToken_created_by_someone_else() throws Exception {
+    User adminUser = currentUserService.getCurrentUser().getUser();
+    User instructorUser =
+        User.builder().id(adminUser.getId() + 1L).email("instructor@example.com").build();
+
+    Course originalCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("Original Course")
+            .term("S25")
+            .school("Original School")
+            .instructorEmail(instructorUser.getEmail())
+            .canvasApiToken("originalToken")
+            .canvasCourseId("originalCourseId")
+            .build();
+
+    Course updatedCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("Original Course")
+            .term("S25")
+            .school("Original School")
+            .instructorEmail(instructorUser.getEmail())
+            .canvasApiToken("newToken")
+            .canvasCourseId("newCourseId")
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+    when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateCourseCanvasToken")
+                    .param("courseId", "1")
+                    .param("canvasApiToken", "newToken")
+                    .param("canvasCourseId", "newCourseId")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
