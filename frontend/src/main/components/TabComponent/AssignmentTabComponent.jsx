@@ -57,7 +57,7 @@ export default function AssignmentTabComponent({ courseId }) {
   return (
     <Row md={2} className="g-2 mb-2" data-testid={"AssignmentTabComponent"}>
       <Col md={6}>
-        <Card>
+        <Card className="h-100">
           <Card.Header>Individual Repository Assignment</Card.Header>
           <Card.Body>
             <IndividualAssignmentForm submitAction={postIndividualAssignment} />

@@ -22,7 +22,6 @@ Default.parameters = {
     handlers: [
       http.post("/api/repos/createRepos", ({ request }) => {
         const url = new URL(request.url);
-        const params = Object.fromEntries(url.searchParams);
         window.alert(
           "Invoked with URL: " +
             url +
@@ -42,7 +41,6 @@ Default.parameters = {
 
       http.post("/api/repos/createTeamRepos", ({ request }) => {
         const url = new URL(request.url);
-        const params = Object.fromEntries(url.searchParams);
         window.alert(
           "Invoked with URL: " +
             url +
