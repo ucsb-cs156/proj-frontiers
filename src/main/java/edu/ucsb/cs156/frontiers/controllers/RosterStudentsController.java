@@ -401,17 +401,13 @@ public class RosterStudentsController extends ApiController {
    * consistent with the code in uploadRosterStudentsCSV.
    *
    * @param courseId the internal course ID in Frontiers
-   * @param canvasCourseId the Canvas course ID
-   * @param apiKey the Canvas API key
    * @return LoadResult with counts of inserted, updated, dropped students and any rejected students
    */
   @Operation(summary = "Upload Roster students for Course from Canvas")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/upload/canvas")
   public ResponseEntity<LoadResult> uploadRosterFromCanvas(
-      @Parameter(name = "courseId") @RequestParam Long courseId,
-      @Parameter(name = "canvasCourseId") @RequestParam Integer canvasCourseId,
-      @Parameter(name = "apiKey") @RequestParam String apiKey) {
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
 
     Course course =
         courseRepository
@@ -425,7 +421,7 @@ public class RosterStudentsController extends ApiController {
     int counts[] = {0, 0};
     List<RosterStudent> rejectedStudents = new ArrayList<>();
 
-    List<RosterStudent> canvasStudents = canvasService.getCanvasRoster(canvasCourseId, apiKey);
+    List<RosterStudent> canvasStudents = canvasService.getCanvasRoster(course);
     for (RosterStudent rosterStudent : canvasStudents) {
       UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
       if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {

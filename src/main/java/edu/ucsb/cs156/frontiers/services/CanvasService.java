@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.models.CanvasStudent;
 import java.util.List;
@@ -21,7 +22,13 @@ public class CanvasService {
     this.mapper = new ObjectMapper();
   }
 
-  public List<RosterStudent> getCanvasRoster(/*Course course,*/ Integer courseId, String apiKey) {
+  /**
+   * Fetches the roster of students from Canvas for the given course.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of RosterStudent objects from Canvas
+   */
+  public List<RosterStudent> getCanvasRoster(Course course) {
     String query =
         """
   query GetRoster($courseId: ID!) {
@@ -41,11 +48,14 @@ public class CanvasService {
 }
         """;
     HttpSyncGraphQlClient authedClient =
-        graphQlClient.mutate().header("Authorization", "Bearer " + apiKey).build();
+        graphQlClient
+            .mutate()
+            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .build();
     List<CanvasStudent> students =
         authedClient
             .document(query)
-            .variable("courseId", courseId)
+            .variable("courseId", course.getCanvasCourseId())
             .retrieveSync("course.usersConnection.edges")
             .toEntityList(JsonNode.class)
             .stream()

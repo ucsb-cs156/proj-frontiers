@@ -2444,6 +2444,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156-s25")
             .term("S25")
             .school("UCSB")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>())
             .build();
 
@@ -2466,23 +2468,18 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> canvasStudents = List.of(canvasStudent1, canvasStudent2);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(canvasService.getCanvasRoster(eq(12345), eq("test-api-key"))).thenReturn(canvasStudents);
+    when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
     // Act
     MvcResult response =
         mockMvc
-            .perform(
-                post("/api/rosterstudents/upload/canvas")
-                    .with(csrf())
-                    .param("courseId", "1")
-                    .param("canvasCourseId", "12345")
-                    .param("apiKey", "test-api-key"))
+            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
     // Assert
     verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    verify(canvasService).getCanvasRoster(eq(12345), eq("test-api-key"));
+    verify(canvasService).getCanvasRoster(any(Course.class));
     verify(rosterStudentRepository).saveAll(any());
     verify(updateUserService).attachUsersToRosterStudents(any());
     verify(service).runAsJob(any(RemoveStudentsJob.class));
@@ -2515,6 +2512,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156-s25")
             .term("S25")
             .school("UCSB")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(existingStudent)))
             .build();
     existingStudent.setCourse(course);
@@ -2530,23 +2529,18 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> canvasStudents = List.of(canvasStudent);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(canvasService.getCanvasRoster(eq(12345), eq("test-api-key"))).thenReturn(canvasStudents);
+    when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
     // Act
     MvcResult response =
         mockMvc
-            .perform(
-                post("/api/rosterstudents/upload/canvas")
-                    .with(csrf())
-                    .param("courseId", "1")
-                    .param("canvasCourseId", "12345")
-                    .param("apiKey", "test-api-key"))
+            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
     // Assert
     verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    verify(canvasService).getCanvasRoster(eq(12345), eq("test-api-key"));
+    verify(canvasService).getCanvasRoster(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
     LoadResult expectedResult = new LoadResult(0, 1, 0, List.of());
@@ -2570,6 +2564,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156-s25")
             .term("S25")
             .school("UCSB")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(studentWithId, studentWithEmail)))
             .build();
 
@@ -2584,17 +2580,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> canvasStudents = List.of(canvasStudent);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(canvasService.getCanvasRoster(eq(12345), eq("test-api-key"))).thenReturn(canvasStudents);
+    when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
     // Act
     MvcResult response =
         mockMvc
-            .perform(
-                post("/api/rosterstudents/upload/canvas")
-                    .with(csrf())
-                    .param("courseId", "1")
-                    .param("canvasCourseId", "12345")
-                    .param("apiKey", "test-api-key"))
+            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
             .andExpect(status().isConflict())
             .andReturn();
 
@@ -2636,6 +2627,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156-s25")
             .term("S25")
             .school("UCSB")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(existingStudent)))
             .build();
     existingStudent.setCourse(course);
@@ -2652,19 +2645,14 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> canvasStudents = List.of(canvasStudent);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(canvasService.getCanvasRoster(eq(12345), eq("test-api-key"))).thenReturn(canvasStudents);
+    when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
     ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
 
     // Act
     MvcResult response =
         mockMvc
-            .perform(
-                post("/api/rosterstudents/upload/canvas")
-                    .with(csrf())
-                    .param("courseId", "1")
-                    .param("canvasCourseId", "12345")
-                    .param("apiKey", "test-api-key"))
+            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -2697,17 +2685,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/rosterstudents/upload/canvas")
-                    .with(csrf())
-                    .param("courseId", "999")
-                    .param("canvasCourseId", "12345")
-                    .param("apiKey", "test-api-key"))
+                post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "999"))
             .andExpect(status().isNotFound())
             .andReturn();
 
     // Assert
     verify(courseRepository, atLeastOnce()).findById(eq(999L));
-    verify(canvasService, never()).getCanvasRoster(any(), any());
+    verify(canvasService, never()).getCanvasRoster(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -2731,6 +2715,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .installationId("12345")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>())
             .build();
 
@@ -2745,18 +2731,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> canvasStudents = List.of(canvasStudent);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(canvasService.getCanvasRoster(eq(12345), eq("test-api-key"))).thenReturn(canvasStudents);
+    when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
     ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
 
     // Act
     mockMvc
-        .perform(
-            post("/api/rosterstudents/upload/canvas")
-                .with(csrf())
-                .param("courseId", "1")
-                .param("canvasCourseId", "12345")
-                .param("apiKey", "test-api-key"))
+        .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
         .andExpect(status().isOk());
 
     // Assert
@@ -2779,6 +2760,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .installationId(null)
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>())
             .build();
 
@@ -2793,18 +2776,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> canvasStudents = List.of(canvasStudent);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(canvasService.getCanvasRoster(eq(12345), eq("test-api-key"))).thenReturn(canvasStudents);
+    when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
     ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
 
     // Act
     mockMvc
-        .perform(
-            post("/api/rosterstudents/upload/canvas")
-                .with(csrf())
-                .param("courseId", "1")
-                .param("canvasCourseId", "12345")
-                .param("apiKey", "test-api-key"))
+        .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
         .andExpect(status().isOk());
 
     // Assert
@@ -2837,6 +2815,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156-s25")
             .term("S25")
             .school("UCSB")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(manualStudent)))
             .build();
     manualStudent.setCourse(course);
@@ -2853,19 +2833,14 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     List<RosterStudent> canvasStudents = List.of(canvasStudent);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(canvasService.getCanvasRoster(eq(12345), eq("test-api-key"))).thenReturn(canvasStudents);
+    when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
     ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
 
     // Act
     MvcResult response =
         mockMvc
-            .perform(
-                post("/api/rosterstudents/upload/canvas")
-                    .with(csrf())
-                    .param("courseId", "1")
-                    .param("canvasCourseId", "12345")
-                    .param("apiKey", "test-api-key"))
+            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
