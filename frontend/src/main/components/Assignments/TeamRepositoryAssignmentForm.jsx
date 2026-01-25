@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { Button, Form } from "react-bootstrap";
 
-export default function IndividualAssignmentForm({ submitAction }) {
+export default function TeamRepositoryAssignmentForm({ submitAction }) {
   const {
     register,
     formState: { errors },
@@ -11,17 +11,17 @@ export default function IndividualAssignmentForm({ submitAction }) {
   return (
     <Form
       onSubmit={handleSubmit(submitAction)}
-      data-testid="IndividualAssignmentForm"
+      data-testid="TeamRepositoryAssignmentForm"
     >
       <Form.Group className="mb-3">
-        <Form.Label htmlFor="repoPrefix">Repository Prefix</Form.Label>
+        <Form.Label htmlFor="repoPrefix">Team Repository Prefix</Form.Label>
         <Form.Control
           id="repoPrefix"
           type="text"
           isInvalid={Boolean(errors.repoPrefix)}
-          data-testid="IndividualAssignmentForm-repoPrefix"
+          data-testid="TeamRepositoryAssignmentForm-repoPrefix"
           {...register("repoPrefix", {
-            required: "Repository Prefix is required.",
+            required: "Team Repository Prefix is required.",
           })}
         />
         <Form.Control.Feedback type="invalid">
@@ -35,16 +35,16 @@ export default function IndividualAssignmentForm({ submitAction }) {
         <Form.Check
           id="assignmentPrivacy"
           type="switch"
-          data-testid="IndividualAssignmentForm-assignmentPrivacy"
+          data-testid="TeamRepositoryAssignmentForm-assignmentPrivacy"
           {...register("assignmentPrivacy")}
         />
       </Form.Group>
       <Form.Group className="mb-3">
-        <Form.Label htmlFor="permissions">Student Permissions</Form.Label>
+        <Form.Label htmlFor="permissions">Team Permissions</Form.Label>
         <Form.Control
           as="select"
           defaultValue={"MAINTAIN"}
-          data-testid={"IndividualAssignmentForm-permissions"}
+          data-testid={"TeamRepositoryAssignmentForm-permissions"}
           {...register("permissions")}
         >
           <option value="READ">Read</option>
@@ -53,24 +53,8 @@ export default function IndividualAssignmentForm({ submitAction }) {
           <option value="ADMIN">Admin</option>
         </Form.Control>
       </Form.Group>
-      <Form.Group className="mb-3">
-        <Form.Label htmlFor="creationOption">
-          Create Repositories for
-        </Form.Label>
-        <Form.Control
-          as="select"
-          id="creationOption"
-          defaultValue="STUDENTS_ONLY"
-          data-testid="IndividualAssignmentForm-creationOption"
-          {...register("creationOption")}
-        >
-          <option value="STUDENTS_ONLY">Students Only</option>
-          <option value="STAFF_ONLY">Staff Only</option>
-          <option value="STUDENTS_AND_STAFF">Students and Staff</option>
-        </Form.Control>
-      </Form.Group>
       <Form.Group>
-        <Button type="submit" data-testid="IndividualAssignmentForm-submit">
+        <Button type="submit" data-testid="TeamRepositoryAssignmentForm-submit">
           Create
         </Button>
       </Form.Group>

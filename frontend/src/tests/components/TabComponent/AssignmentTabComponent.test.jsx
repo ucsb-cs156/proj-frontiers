@@ -16,7 +16,8 @@ vi.mock("react-toastify", async (importOriginal) => {
     toast: (x) => mockToast(x),
   };
 });
-test("Calls successfully", async () => {
+
+test("Calls individual repository assignment successfully", async () => {
   axiosMock.onPost("/api/repos/createRepos").reply(200);
   const client = new QueryClient();
   render(
@@ -70,5 +71,68 @@ test("Sends non-default creation option to backend", async () => {
     isPrivate: false,
     permissions: "MAINTAIN",
     creationOption: "STAFF_ONLY",
+  });
+});
+
+test("Calls team repository assignment successfully", async () => {
+  axiosMock.onPost("/api/repos/createTeamRepos").reply(200);
+  const client = new QueryClient();
+  render(
+    <QueryClientProvider client={client}>
+      <AssignmentTabComponent courseId={7} />
+    </QueryClientProvider>,
+  );
+
+  await screen.findByTestId("TeamRepositoryAssignmentForm-submit");
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-repoPrefix"),
+    {
+      target: { value: "test-team" },
+    },
+  );
+  fireEvent.click(screen.getByTestId("TeamRepositoryAssignmentForm-submit"));
+  await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  expect(mockToast).toBeCalledWith(
+    "Team repository creation successfully started.",
+  );
+  expect(axiosMock.history.post.length).toEqual(1);
+  expect(axiosMock.history.post[0].params).toEqual({
+    courseId: 7,
+    repoPrefix: "test-team",
+    isPrivate: false,
+    permissions: "MAINTAIN",
+  });
+});
+
+test("Sends non-default team creation option to backend", async () => {
+  axiosMock.onPost("/api/repos/createTeamRepos").reply(200);
+  const client = new QueryClient();
+  render(
+    <QueryClientProvider client={client}>
+      <AssignmentTabComponent courseId={7} />
+    </QueryClientProvider>,
+  );
+
+  await screen.findByTestId("TeamRepositoryAssignmentForm-submit");
+
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-repoPrefix"),
+    {
+      target: { value: "test-team-non-default" },
+    },
+  );
+
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-permissions"),
+    { target: { value: "ADMIN" } },
+  );
+  fireEvent.click(screen.getByTestId("TeamRepositoryAssignmentForm-submit"));
+  await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  expect(axiosMock.history.post.length).toEqual(1);
+  expect(axiosMock.history.post[0].params).toEqual({
+    courseId: 7,
+    repoPrefix: "test-team-non-default",
+    isPrivate: false,
+    permissions: "ADMIN",
   });
 });
