@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -25,6 +26,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +61,7 @@ public class RosterStudentsController extends ApiController {
   @Autowired private UpdateUserService updateUserService;
 
   @Autowired private CurrentUserService currentUserService;
+  @Autowired private CanvasService canvasService;
 
   /**
    * This method creates a new RosterStudent. It is important to keep the code in this method
@@ -388,5 +391,15 @@ public class RosterStudentsController extends ApiController {
           "Successfully deleted roster student but there was an error removing them from the course organization: "
               + orgRemovalErrorMessage);
     }
+  }
+
+  @GetMapping("/canvas")
+  public List<RosterStudent> getAllRosterStudents(
+      @Parameter String apiKey, @Parameter Integer courseId) {
+    List<RosterStudent> rosterStudents = canvasService.getCanvasRoster(courseId, apiKey);
+    for (RosterStudent rosterStudent : rosterStudents) {
+      RosterStudentsController.upsertStudent(rosterStudent, null, RosterStatus.ROSTER);
+    }
+    return rosterStudents;
   }
 }
