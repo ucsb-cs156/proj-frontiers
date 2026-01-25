@@ -9,16 +9,19 @@ import java.util.List;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class CanvasService {
 
-  private HttpSyncGraphQlClient graphQlClient;
+  private RestTemplate restTemplate;
   private ObjectMapper mapper;
 
-  public CanvasService(RestTemplateBuilder templateBuilder, HttpSyncGraphQlClient graphQlClient) {
-    this.graphQlClient =
-        graphQlClient.mutate().url("https://ucsb.instructure.com/api/graphql").build();
+  private static final String CANVAS_GRAPHQL_URL = "https://ucsb.instructure.com/api/graphql";
+
+  public CanvasService(RestTemplateBuilder restTemplateBuilder) {
+    this.restTemplate = restTemplateBuilder.build();
     this.mapper = new ObjectMapper();
   }
 
@@ -47,13 +50,22 @@ public class CanvasService {
   }
 }
         """;
-    HttpSyncGraphQlClient authedClient =
-        graphQlClient
-            .mutate()
+
+    // Build HttpSyncGraphQlClient using RestClient built from our RestTemplate's request factory
+    RestClient restClient =
+        RestClient.builder()
+            .requestFactory(restTemplate.getRequestFactory())
+            .baseUrl(CANVAS_GRAPHQL_URL)
+            .build();
+
+    HttpSyncGraphQlClient graphQlClient =
+        HttpSyncGraphQlClient.builder(restClient)
+            .url(CANVAS_GRAPHQL_URL)
             .header("Authorization", "Bearer " + course.getCanvasApiToken())
             .build();
+
     List<CanvasStudent> students =
-        authedClient
+        graphQlClient
             .document(query)
             .variable("courseId", course.getCanvasCourseId())
             .retrieveSync("course.usersConnection.edges")
