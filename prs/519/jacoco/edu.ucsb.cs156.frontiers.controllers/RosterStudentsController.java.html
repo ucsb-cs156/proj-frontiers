@@ -401,68 +401,64 @@ import org.springframework.web.server.ResponseStatusException;
    * consistent with the code in uploadRosterStudentsCSV.
    *
    * @param courseId the internal course ID in Frontiers
-   * @param canvasCourseId the Canvas course ID
-   * @param apiKey the Canvas API key
    * @return LoadResult with counts of inserted, updated, dropped students and any rejected students
    */
   @Operation(summary = &quot;Upload Roster students for Course from Canvas&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @PostMapping(&quot;/upload/canvas&quot;)
   public ResponseEntity&lt;LoadResult&gt; uploadRosterFromCanvas(
-      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
-      @Parameter(name = &quot;canvasCourseId&quot;) @RequestParam Integer canvasCourseId,
-      @Parameter(name = &quot;apiKey&quot;) @RequestParam String apiKey) {
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-<span class="fc" id="L416">    Course course =</span>
+<span class="fc" id="L412">    Course course =</span>
         courseRepository
-<span class="fc" id="L418">            .findById(courseId)</span>
-<span class="fc" id="L419">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
+<span class="fc" id="L414">            .findById(courseId)</span>
+<span class="fc" id="L415">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
 
-<span class="fc" id="L421">    course.getRosterStudents().stream()</span>
-<span class="fc bfc" id="L422" title="All 2 branches covered.">        .filter(filteredStudent -&gt; filteredStudent.getRosterStatus() == RosterStatus.ROSTER)</span>
-<span class="fc" id="L423">        .forEach(student -&gt; student.setRosterStatus(RosterStatus.DROPPED));</span>
+<span class="fc" id="L417">    course.getRosterStudents().stream()</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">        .filter(filteredStudent -&gt; filteredStudent.getRosterStatus() == RosterStatus.ROSTER)</span>
+<span class="fc" id="L419">        .forEach(student -&gt; student.setRosterStatus(RosterStatus.DROPPED));</span>
 
-<span class="fc" id="L425">    int counts[] = {0, 0};</span>
-<span class="fc" id="L426">    List&lt;RosterStudent&gt; rejectedStudents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L421">    int counts[] = {0, 0};</span>
+<span class="fc" id="L422">    List&lt;RosterStudent&gt; rejectedStudents = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L428">    List&lt;RosterStudent&gt; canvasStudents = canvasService.getCanvasRoster(canvasCourseId, apiKey);</span>
-<span class="fc bfc" id="L429" title="All 2 branches covered.">    for (RosterStudent rosterStudent : canvasStudents) {</span>
-<span class="fc" id="L430">      UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);</span>
-<span class="fc bfc" id="L431" title="All 2 branches covered.">      if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {</span>
-<span class="fc" id="L432">        rejectedStudents.add(upsertResponse.rosterStudent());</span>
+<span class="fc" id="L424">    List&lt;RosterStudent&gt; canvasStudents = canvasService.getCanvasRoster(course);</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">    for (RosterStudent rosterStudent : canvasStudents) {</span>
+<span class="fc" id="L426">      UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);</span>
+<span class="fc bfc" id="L427" title="All 2 branches covered.">      if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {</span>
+<span class="fc" id="L428">        rejectedStudents.add(upsertResponse.rosterStudent());</span>
       } else {
-<span class="fc" id="L434">        InsertStatus s = upsertResponse.getInsertStatus();</span>
-<span class="fc bfc" id="L435" title="All 2 branches covered.">        if (s == InsertStatus.INSERTED) {</span>
-<span class="fc" id="L436">          course.getRosterStudents().add(upsertResponse.rosterStudent());</span>
+<span class="fc" id="L430">        InsertStatus s = upsertResponse.getInsertStatus();</span>
+<span class="fc bfc" id="L431" title="All 2 branches covered.">        if (s == InsertStatus.INSERTED) {</span>
+<span class="fc" id="L432">          course.getRosterStudents().add(upsertResponse.rosterStudent());</span>
         }
-<span class="fc" id="L438">        counts[s.ordinal()]++;</span>
+<span class="fc" id="L434">        counts[s.ordinal()]++;</span>
       }
-<span class="fc" id="L440">    }</span>
+<span class="fc" id="L436">    }</span>
 
-<span class="fc bfc" id="L442" title="All 2 branches covered.">    if (rejectedStudents.isEmpty()) {</span>
-<span class="fc" id="L443">      List&lt;RosterStudent&gt; droppedStudents =</span>
-<span class="fc" id="L444">          course.getRosterStudents().stream()</span>
-<span class="fc bfc" id="L445" title="All 2 branches covered.">              .filter(student -&gt; student.getRosterStatus() == RosterStatus.DROPPED)</span>
-<span class="fc" id="L446">              .toList();</span>
-<span class="fc" id="L447">      LoadResult successfulResult =</span>
+<span class="fc bfc" id="L438" title="All 2 branches covered.">    if (rejectedStudents.isEmpty()) {</span>
+<span class="fc" id="L439">      List&lt;RosterStudent&gt; droppedStudents =</span>
+<span class="fc" id="L440">          course.getRosterStudents().stream()</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">              .filter(student -&gt; student.getRosterStatus() == RosterStatus.DROPPED)</span>
+<span class="fc" id="L442">              .toList();</span>
+<span class="fc" id="L443">      LoadResult successfulResult =</span>
           new LoadResult(
-<span class="fc" id="L449">              counts[InsertStatus.INSERTED.ordinal()],</span>
-<span class="fc" id="L450">              counts[InsertStatus.UPDATED.ordinal()],</span>
-<span class="fc" id="L451">              droppedStudents.size(),</span>
-<span class="fc" id="L452">              List.of());</span>
-<span class="fc" id="L453">      rosterStudentRepository.saveAll(course.getRosterStudents());</span>
-<span class="fc" id="L454">      updateUserService.attachUsersToRosterStudents(course.getRosterStudents());</span>
+<span class="fc" id="L445">              counts[InsertStatus.INSERTED.ordinal()],</span>
+<span class="fc" id="L446">              counts[InsertStatus.UPDATED.ordinal()],</span>
+<span class="fc" id="L447">              droppedStudents.size(),</span>
+<span class="fc" id="L448">              List.of());</span>
+<span class="fc" id="L449">      rosterStudentRepository.saveAll(course.getRosterStudents());</span>
+<span class="fc" id="L450">      updateUserService.attachUsersToRosterStudents(course.getRosterStudents());</span>
       RemoveStudentsJob job =
-<span class="fc" id="L456">          RemoveStudentsJob.builder()</span>
-<span class="fc" id="L457">              .students(droppedStudents)</span>
-<span class="fc" id="L458">              .organizationMemberService(organizationMemberService)</span>
-<span class="fc" id="L459">              .rosterStudentRepository(rosterStudentRepository)</span>
-<span class="fc" id="L460">              .build();</span>
-<span class="fc" id="L461">      jobService.runAsJob(job);</span>
-<span class="fc" id="L462">      return ResponseEntity.ok(successfulResult);</span>
+<span class="fc" id="L452">          RemoveStudentsJob.builder()</span>
+<span class="fc" id="L453">              .students(droppedStudents)</span>
+<span class="fc" id="L454">              .organizationMemberService(organizationMemberService)</span>
+<span class="fc" id="L455">              .rosterStudentRepository(rosterStudentRepository)</span>
+<span class="fc" id="L456">              .build();</span>
+<span class="fc" id="L457">      jobService.runAsJob(job);</span>
+<span class="fc" id="L458">      return ResponseEntity.ok(successfulResult);</span>
     } else {
-<span class="fc" id="L464">      LoadResult conflictResult = new LoadResult(0, 0, 0, rejectedStudents);</span>
-<span class="fc" id="L465">      return ResponseEntity.status(HttpStatus.CONFLICT).body(conflictResult);</span>
+<span class="fc" id="L460">      LoadResult conflictResult = new LoadResult(0, 0, 0, rejectedStudents);</span>
+<span class="fc" id="L461">      return ResponseEntity.status(HttpStatus.CONFLICT).body(conflictResult);</span>
     }
   }
 }
