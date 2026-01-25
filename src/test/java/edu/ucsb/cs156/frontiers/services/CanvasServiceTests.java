@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,6 +54,11 @@ public class CanvasServiceTests {
         restTemplateBuilder, graphQlClient, graphQlClientBuilder, requestSpec, retrieveSyncSpec);
   }
 
+  /** Helper method to convert a JsonNode array to a List<JsonNode> */
+  private List<JsonNode> jsonArrayToList(JsonNode rootNode) {
+    return StreamSupport.stream(rootNode.spliterator(), false).collect(Collectors.toList());
+  }
+
   @Test
   public void testGetCanvasRoster_returnsStudents() throws Exception {
     // Arrange
@@ -63,7 +70,7 @@ public class CanvasServiceTests {
             .canvasCourseId("12345")
             .build();
 
-    // Create JSON nodes that match what Canvas API would return
+    // Create JSON response string that matches what Canvas API would return
     String jsonResponse =
         """
         [
@@ -72,10 +79,7 @@ public class CanvasServiceTests {
         ]
         """;
     JsonNode rootNode = objectMapper.readTree(jsonResponse);
-    List<JsonNode> convertedNodes = new java.util.ArrayList<>();
-    for (JsonNode node : rootNode) {
-      convertedNodes.add(node);
-    }
+    List<JsonNode> convertedNodes = jsonArrayToList(rootNode);
 
     // Set up mock chain
     when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
@@ -157,10 +161,7 @@ public class CanvasServiceTests {
         ]
         """;
     JsonNode rootNode = objectMapper.readTree(jsonResponse);
-    List<JsonNode> convertedNodes = new java.util.ArrayList<>();
-    for (JsonNode node : rootNode) {
-      convertedNodes.add(node);
-    }
+    List<JsonNode> convertedNodes = jsonArrayToList(rootNode);
 
     when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
     when(graphQlClientBuilder.url(anyString())).thenReturn(graphQlClientBuilder);
@@ -200,10 +201,7 @@ public class CanvasServiceTests {
         ]
         """;
     JsonNode rootNode = objectMapper.readTree(jsonResponse);
-    List<JsonNode> convertedNodes = new java.util.ArrayList<>();
-    for (JsonNode node : rootNode) {
-      convertedNodes.add(node);
-    }
+    List<JsonNode> convertedNodes = jsonArrayToList(rootNode);
 
     when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
     when(graphQlClientBuilder.url(anyString())).thenReturn(graphQlClientBuilder);
