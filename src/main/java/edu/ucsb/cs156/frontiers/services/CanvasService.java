@@ -2,26 +2,36 @@ package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.models.CanvasStudent;
 import java.util.List;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class CanvasService {
 
-  private HttpSyncGraphQlClient graphQlClient;
+  private RestTemplate restTemplate;
   private ObjectMapper mapper;
 
-  public CanvasService(RestTemplateBuilder templateBuilder, HttpSyncGraphQlClient graphQlClient) {
-    this.graphQlClient =
-        graphQlClient.mutate().url("https://ucsb.instructure.com/api/graphql").build();
+  private static final String CANVAS_GRAPHQL_URL = "https://ucsb.instructure.com/api/graphql";
+
+  public CanvasService(RestTemplateBuilder restTemplateBuilder) {
+    this.restTemplate = restTemplateBuilder.build();
     this.mapper = new ObjectMapper();
   }
 
-  public List<RosterStudent> getCanvasRoster(/*Course course,*/ Integer courseId, String apiKey) {
+  /**
+   * Fetches the roster of students from Canvas for the given course.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of RosterStudent objects from Canvas
+   */
+  public List<RosterStudent> getCanvasRoster(Course course) {
     String query =
         """
   query GetRoster($courseId: ID!) {
@@ -40,12 +50,21 @@ public class CanvasService {
   }
 }
         """;
-    HttpSyncGraphQlClient authedClient =
-        graphQlClient.mutate().header("Authorization", "Bearer " + apiKey).build();
+
+    // Build HttpSyncGraphQlClient using RestClient built from our RestTemplate's request factory
+    RestClient restClient =
+        RestClient.builder().requestFactory(restTemplate.getRequestFactory()).build();
+
+    HttpSyncGraphQlClient graphQlClient =
+        HttpSyncGraphQlClient.builder(restClient)
+            .url(CANVAS_GRAPHQL_URL)
+            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .build();
+
     List<CanvasStudent> students =
-        authedClient
+        graphQlClient
             .document(query)
-            .variable("courseId", courseId)
+            .variable("courseId", course.getCanvasCourseId())
             .retrieveSync("course.usersConnection.edges")
             .toEntityList(JsonNode.class)
             .stream()
