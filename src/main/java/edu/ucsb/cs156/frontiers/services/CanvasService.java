@@ -53,10 +53,7 @@ public class CanvasService {
 
     // Build HttpSyncGraphQlClient using RestClient built from our RestTemplate's request factory
     RestClient restClient =
-        RestClient.builder()
-            .requestFactory(restTemplate.getRequestFactory())
-            .baseUrl(CANVAS_GRAPHQL_URL)
-            .build();
+        RestClient.builder().requestFactory(restTemplate.getRequestFactory()).build();
 
     HttpSyncGraphQlClient graphQlClient =
         HttpSyncGraphQlClient.builder(restClient)
