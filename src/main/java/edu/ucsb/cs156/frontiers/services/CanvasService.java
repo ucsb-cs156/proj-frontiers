@@ -5,11 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.models.CanvasStudent;
+import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
 import java.util.List;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestClient;
 
 @Service
+@Validated
 public class CanvasService {
 
   private HttpSyncGraphQlClient graphQlClient;
@@ -17,8 +21,9 @@ public class CanvasService {
 
   private static final String CANVAS_GRAPHQL_URL = "https://ucsb.instructure.com/api/graphql";
 
-  public CanvasService(ObjectMapper mapper, HttpSyncGraphQlClient graphQlClient) {
-    this.graphQlClient = graphQlClient.mutate().url(CANVAS_GRAPHQL_URL).build();
+  public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {
+    this.graphQlClient =
+        HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();
     this.mapper = mapper;
   }
 
@@ -28,25 +33,25 @@ public class CanvasService {
    * @param course the Course entity containing canvasApiToken and canvasCourseId
    * @return list of RosterStudent objects from Canvas
    */
-  public List<RosterStudent> getCanvasRoster(Course course) {
+  public List<RosterStudent> getCanvasRoster(@HasLinkedCanvasCourse Course course) {
     String query =
         """
-  query GetRoster($courseId: ID!) {
-  course(id: $courseId) {
-    usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
-      edges {
-        node {
-          firstName
-          lastName
-          sisId
-          email
-          integrationId
-        }
-      }
-    }
-  }
-}
-        """;
+              query GetRoster($courseId: ID!) {
+              course(id: $courseId) {
+                usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
+                  edges {
+                    node {
+                      firstName
+                      lastName
+                      sisId
+                      email
+                      integrationId
+                    }
+                  }
+                }
+              }
+            }
+            """;
 
     HttpSyncGraphQlClient authedClient =
         graphQlClient

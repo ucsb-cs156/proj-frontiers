@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import jakarta.validation.ValidationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,5 +35,10 @@ public class DummyController extends ApiController {
   @GetMapping("/interceptorTest")
   public ResponseEntity<String> interceptorTest() {
     return ResponseEntity.ok("OK");
+  }
+
+  @GetMapping("/validationexception")
+  public void validationException() {
+    throw new ValidationException("Validation Exception");
   }
 }

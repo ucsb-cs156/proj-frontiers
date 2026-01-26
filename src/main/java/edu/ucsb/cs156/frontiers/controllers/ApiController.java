@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import jakarta.validation.ValidationException;
 import java.util.Collection;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -118,5 +119,17 @@ public abstract class ApiController {
     return Map.of(
         "type", e.getClass().getSimpleName(),
         "message", e.getMessage());
+  }
+
+  /**
+   * This method handles the ValidationException. This maps to a 400/Bad Request.
+   *
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({ValidationException.class})
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Map<String, String> handleValidationException(Throwable e) {
+    return Map.of("message", e.getMessage());
   }
 }

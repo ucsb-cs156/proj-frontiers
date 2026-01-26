@@ -404,7 +404,7 @@ public class RosterStudentsController extends ApiController {
    * @return LoadResult with counts of inserted, updated, dropped students and any rejected students
    */
   @Operation(summary = "Upload Roster students for Course from Canvas")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
   @PostMapping("/upload/canvas")
   public ResponseEntity<LoadResult> uploadRosterFromCanvas(
       @Parameter(name = "courseId") @RequestParam Long courseId) {
