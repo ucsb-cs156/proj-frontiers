@@ -16,7 +16,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 
 const mockedNavigate = vi.fn();
 vi.mock("react-router", async (importOriginal) => ({
@@ -84,7 +84,15 @@ describe("InstructorCourseShowPage tests", () => {
       );
     });
 
-    expect(screen.queryByText("ucsb-cs156-s25")).not.toBeInTheDocument();
+    expect(screen.queryByText("ucsb-cs156-s25")).toBeInTheDocument();
+
+    const githubImage = screen.getByTestId(`${testId}-github-org-image`);
+    expect(githubImage).toHaveAttribute(
+      "src",
+      "https://github.com/ucsb-cs156-s25.png?size=64",
+    );
+    expect(githubImage).toHaveAttribute("alt", "ucsb-cs156-s25");
+    expect(githubImage).toHaveStyle("width: 48px; height: 48px;");
 
     expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
     vi.advanceTimersByTime(3000);
@@ -115,9 +123,9 @@ describe("InstructorCourseShowPage tests", () => {
     expect(queryClient.getQueryData(["/api/courses/7"])).toBe(null);
     const testId = "InstructorCourseShowPage";
 
-    await screen.findByTestId(`${testId}-title`);
+    await screen.findByTestId(`${testId}-loading`);
 
-    const courseName = screen.getByTestId(`${testId}-title`);
+    const courseName = screen.getByTestId(`${testId}-loading`);
     expect(courseName).toHaveTextContent("Course: Loading...");
 
     await screen.findByText(
@@ -303,7 +311,7 @@ describe("InstructorCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
-    await screen.findByText("CMPSC 156 Fall 2025");
+    await screen.findByText("CMPSC 156");
 
     expect(
       screen.getByTestId("InstructorCourseShowPage-title"),

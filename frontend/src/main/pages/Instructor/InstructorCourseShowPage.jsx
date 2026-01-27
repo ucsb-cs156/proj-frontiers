@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { useCurrentUser } from "main/utils/currentUser";
 import { useNavigate, useParams } from "react-router";
 
@@ -65,53 +64,72 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <h1
-        data-testid={`${testId}-title`}
-        className="d-flex align-items-center lh-1 gap-3"
-      >
-        {!course ? (
-          "Course: Loading..."
-        ) : !course.installationId ? (
-          <span>
-            {course.courseName}&nbsp;&nbsp;{course.term}
-          </span>
-        ) : (
-          <>
-            <span>{course.courseName}</span>
-            <a
-              className="ms-2"
-              href={`https://github.com/${course.orgName}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid={`${testId}-github-org-link`}
-            >
-              {course.orgName}
-            </a>
-            <OverlayTrigger
-              placement="right"
-              overlay={
-                <Tooltip id={`${testId}-tooltip-github-settings`}>
-                  Manage settings for association between your GitHub
-                  organization and this web application.
-                </Tooltip>
-              }
-            >
-              <a
-                href={`https://github.com/organizations/${course.orgName}/settings/installations/${course.installationId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid={`${testId}-github-settings-link`}
-              >
-                <GithubSettingIcon
-                  size={45}
-                  data-testid={`${testId}-github-settings-icon`}
-                />
-              </a>
-            </OverlayTrigger>
-            <span> {course.term} </span>
-          </>
-        )}
-      </h1>
+      {!course ? (
+        <div data-testid={`${testId}-loading`}>Course: Loading...</div>
+      ) : (
+        <div className="border rounded-3 p-4 mb-4">
+          <div className="d-flex align-items-center gap-3">
+            {course.orgName && (
+              <img
+                src={`https://github.com/${course.orgName}.png?size=64`}
+                alt={course.orgName}
+                data-testid={`${testId}-github-org-image`}
+                className="rounded-circle border"
+                style={{ width: 48, height: 48 }}
+              />
+            )}
+            <div>
+              <div className="d-flex align-items-center gap-2">
+                <h1
+                  data-testid={`${testId}-title`}
+                  className="h3 mb-0 fw-semibold"
+                >
+                  {course.courseName}
+                </h1>
+                <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill">
+                  {course.term}
+                </span>
+              </div>
+              {course.orgName && (
+                <div className="d-flex align-items-center gap-2">
+                  <a
+                    href={`https://github.com/${course.orgName}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary text-decoration-none fs-5"
+                    data-testid={`${testId}-github-org-link`}
+                  >
+                    {course.orgName}
+                  </a>
+                  {course.installationId && (
+                    <OverlayTrigger
+                      placement="right"
+                      overlay={
+                        <Tooltip id={`${testId}-tooltip-github-settings`}>
+                          Manage settings for association between your GitHub
+                          organization and this web application.
+                        </Tooltip>
+                      }
+                    >
+                      <a
+                        href={`https://github.com/organizations/${course.orgName}/settings/installations/${course.installationId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid={`${testId}-github-settings-link`}
+                      >
+                        <GithubSettingIcon
+                          size={20}
+                          data-testid={`${testId}-github-settings-icon`}
+                        />
+                      </a>
+                    </OverlayTrigger>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <Tabs defaultActiveKey={"default"}>
         <Tab eventKey={"students"} title={"Students"} className="pt-2">
           <EnrollmentTabComponent
