@@ -1,4 +1,4 @@
-import {fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,7 +21,7 @@ describe("CanvasApiForm tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <CanvasApiForm/>
+          <CanvasApiForm />
         </Router>
       </QueryClientProvider>,
     );
@@ -47,7 +47,7 @@ describe("CanvasApiForm tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <CanvasApiForm/>
+          <CanvasApiForm />
         </Router>
       </QueryClientProvider>,
     );
