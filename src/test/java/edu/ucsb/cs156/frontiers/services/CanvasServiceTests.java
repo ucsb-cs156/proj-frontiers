@@ -243,16 +243,16 @@ public class CanvasServiceTests {
                         .firstName("Alice")
                         .lastName("Smith")
                         .studentId("A1")
-                        .teamMembers(new ArrayList<>())
+                        .teamMembers(List.of())
                         .build(),
                     RosterStudent.builder()
                         .email("bob@ucsb.edu")
                         .firstName("Bob")
                         .lastName("Jones")
                         .studentId("B2")
-                        .teamMembers(new ArrayList<>())
+                        .teamMembers(List.of())
                         .build()))
-            .teams(new ArrayList<>())
+            .teams(List.of())
             .build();
 
     String graphqlResponse =
