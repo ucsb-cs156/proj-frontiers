@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportCanvasTeamsJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">ImportCanvasTeamsJob.java</span></div><h1>ImportCanvasTeamsJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import lombok.Builder;
+
+@Builder
+public class ImportCanvasTeamsJob implements JobContextConsumer {
+  Long courseId;
+  CourseRepository courseRepository;
+  TeamRepository teamRepository;
+  CanvasService canvasService;
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L30">    ctx.log(&quot;Starting import teams from Canvas job for course ID: &quot; + courseId);</span>
+
+    // Get the course
+<span class="fc" id="L33">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(courseId);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">    if (courseOpt.isEmpty()) {</span>
+<span class="fc" id="L35">      ctx.log(&quot;ERROR: Course with ID &quot; + courseId + &quot; not found&quot;);</span>
+<span class="fc" id="L36">      return;</span>
+    }
+<span class="fc" id="L38">    Course course = courseOpt.get();</span>
+<span class="fc" id="L39">    ctx.log(&quot;Processing course: &quot; + course.getCourseName());</span>
+
+    // Check if Canvas is linked
+<span class="fc bfc" id="L42" title="All 4 branches covered.">    if (course.getCanvasCourseId() == null || course.getCanvasApiToken() == null) {</span>
+<span class="fc" id="L43">      ctx.log(&quot;ERROR: Course has no linked Canvas course. Please configure Canvas API settings.&quot;);</span>
+<span class="fc" id="L44">      return;</span>
+    }
+
+    // Fetch teams from Canvas
+<span class="fc" id="L48">    ctx.log(&quot;Fetching teams from Canvas...&quot;);</span>
+    List&lt;JsonNode&gt; groups;
+    try {
+<span class="fc" id="L51">      groups = canvasService.fetchCanvasTeamGroups(course);</span>
+<span class="fc" id="L52">      ctx.log(&quot;Found &quot; + groups.size() + &quot; groups in Canvas&quot;);</span>
+<span class="fc" id="L53">    } catch (Exception e) {</span>
+<span class="fc" id="L54">      ctx.log(&quot;ERROR: Failed to fetch teams from Canvas: &quot; + e.getMessage());</span>
+<span class="fc" id="L55">      return;</span>
+<span class="fc" id="L56">    }</span>
+
+    // Build lookup maps for roster students and existing teams
+<span class="fc" id="L59">    HashMap&lt;String, RosterStudent&gt; mappedStudents = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L60">    HashMap&lt;String, Team&gt; mappedTeams = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L61">    course.getRosterStudents().forEach(student -&gt; mappedStudents.put(student.getEmail(), student));</span>
+<span class="fc" id="L62">    course.getTeams().forEach(team -&gt; mappedTeams.put(team.getName(), team));</span>
+<span class="fc" id="L63">    ctx.log(&quot;Found &quot; + mappedStudents.size() + &quot; roster students&quot;);</span>
+<span class="fc" id="L64">    ctx.log(&quot;Found &quot; + mappedTeams.size() + &quot; existing teams&quot;);</span>
+
+<span class="fc" id="L66">    List&lt;Team&gt; createdTeams = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L67">    int teamsCreated = 0;</span>
+<span class="fc" id="L68">    int teamsUpdated = 0;</span>
+<span class="fc" id="L69">    int membersAdded = 0;</span>
+<span class="fc" id="L70">    int membersSkipped = 0;</span>
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">    for (JsonNode group : groups) {</span>
+<span class="fc" id="L73">      String teamName = group.get(&quot;name&quot;).asText().trim();</span>
+<span class="fc" id="L74">      Integer canvasId = group.get(&quot;_id&quot;).asInt();</span>
+<span class="fc" id="L75">      ctx.log(&quot;Processing group: &quot; + teamName + &quot; (Canvas ID: &quot; + canvasId + &quot;)&quot;);</span>
+
+      // Find or create the team
+<span class="fc" id="L78">      Team team = mappedTeams.get(teamName);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">      boolean isNewTeam = team == null;</span>
+
+<span class="fc bfc" id="L81" title="All 2 branches covered.">      if (isNewTeam) {</span>
+<span class="fc" id="L82">        team = Team.builder().name(teamName).teamMembers(new ArrayList&lt;&gt;()).course(course).build();</span>
+<span class="fc" id="L83">        teamsCreated++;</span>
+<span class="fc" id="L84">        ctx.log(&quot;  Creating new team: &quot; + teamName);</span>
+      } else {
+<span class="fc" id="L86">        teamsUpdated++;</span>
+<span class="fc" id="L87">        ctx.log(&quot;  Updating existing team: &quot; + teamName);</span>
+      }
+
+<span class="fc" id="L90">      team.setCanvasId(canvasId);</span>
+
+      // Process team members
+<span class="fc" id="L93">      JsonNode membersEdges = group.path(&quot;membersConnection&quot;).get(&quot;edges&quot;);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">      if (membersEdges != null) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (JsonNode edge : membersEdges) {</span>
+<span class="fc" id="L96">          String memberEmail = edge.path(&quot;node&quot;).path(&quot;user&quot;).get(&quot;email&quot;).asText();</span>
+<span class="fc" id="L97">          String canonicalEmail = CanonicalFormConverter.convertToValidEmail(memberEmail);</span>
+
+<span class="fc" id="L99">          RosterStudent student = mappedStudents.get(canonicalEmail);</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">          if (student == null) {</span>
+<span class="fc" id="L101">            ctx.log(&quot;  Skipping member &quot; + canonicalEmail + &quot; - not found in roster&quot;);</span>
+<span class="fc" id="L102">            membersSkipped++;</span>
+<span class="fc" id="L103">            continue;</span>
+          }
+
+          // Check if student is already a member of this team
+<span class="fc" id="L107">          final Team finalTeam = team;</span>
+<span class="fc" id="L108">          boolean alreadyMember =</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">              student.getTeamMembers() != null</span>
+<span class="fc" id="L110">                  &amp;&amp; student.getTeamMembers().stream()</span>
+<span class="pc bpc" id="L111" title="2 of 6 branches missed.">                      .anyMatch(tm -&gt; tm.getTeam() != null &amp;&amp; tm.getTeam().equals(finalTeam));</span>
+
+<span class="fc bfc" id="L113" title="All 2 branches covered.">          if (alreadyMember) {</span>
+<span class="fc" id="L114">            ctx.log(&quot;  Skipping member &quot; + canonicalEmail + &quot; - already in team&quot;);</span>
+<span class="fc" id="L115">            membersSkipped++;</span>
+          } else {
+            TeamMember newMember =
+<span class="fc" id="L118">                TeamMember.builder()</span>
+<span class="fc" id="L119">                    .teamStatus(TeamStatus.NO_GITHUB_ID)</span>
+<span class="fc" id="L120">                    .team(team)</span>
+<span class="fc" id="L121">                    .rosterStudent(student)</span>
+<span class="fc" id="L122">                    .build();</span>
+<span class="fc" id="L123">            team.getTeamMembers().add(newMember);</span>
+<span class="fc" id="L124">            membersAdded++;</span>
+<span class="fc" id="L125">            ctx.log(&quot;  Added member: &quot; + canonicalEmail);</span>
+          }
+<span class="fc" id="L127">        }</span>
+      }
+
+<span class="fc" id="L130">      createdTeams.add(team);</span>
+<span class="fc" id="L131">    }</span>
+
+    // Save all teams
+<span class="fc" id="L134">    ctx.log(&quot;Saving &quot; + createdTeams.size() + &quot; teams...&quot;);</span>
+<span class="fc" id="L135">    teamRepository.saveAll(createdTeams);</span>
+
+<span class="fc" id="L137">    ctx.log(&quot;Import complete!&quot;);</span>
+<span class="fc" id="L138">    ctx.log(&quot;Summary:&quot;);</span>
+<span class="fc" id="L139">    ctx.log(&quot;  Teams created: &quot; + teamsCreated);</span>
+<span class="fc" id="L140">    ctx.log(&quot;  Teams updated: &quot; + teamsUpdated);</span>
+<span class="fc" id="L141">    ctx.log(&quot;  Members added: &quot; + membersAdded);</span>
+<span class="fc" id="L142">    ctx.log(&quot;  Members skipped: &quot; + membersSkipped);</span>
+<span class="fc" id="L143">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

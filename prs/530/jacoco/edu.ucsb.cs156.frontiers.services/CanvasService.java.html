@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CanvasService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">CanvasService.java</span></div><h1>CanvasService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
+import edu.ucsb.cs156.frontiers.models.CanvasStudent;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.springframework.graphql.client.HttpSyncGraphQlClient;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestClient;
+
+@Service
+@Validated
+public class CanvasService {
+
+  private final TeamRepository teamRepository;
+  private HttpSyncGraphQlClient graphQlClient;
+  private ObjectMapper mapper;
+
+  private static final String CANVAS_GRAPHQL_URL = &quot;https://ucsb.instructure.com/api/graphql&quot;;
+
+  public CanvasService(
+<span class="fc" id="L34">      ObjectMapper mapper, RestClient.Builder builder, TeamRepository teamRepository) {</span>
+<span class="fc" id="L35">    this.graphQlClient =</span>
+<span class="fc" id="L36">        HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();</span>
+<span class="fc" id="L37">    this.mapper = mapper;</span>
+<span class="fc" id="L38">    this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L39">    this.teamRepository = teamRepository;</span>
+<span class="fc" id="L40">  }</span>
+
+  /**
+   * Fetches the roster of students from Canvas for the given course.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of RosterStudent objects from Canvas
+   */
+  public List&lt;RosterStudent&gt; getCanvasRoster(@HasLinkedCanvasCourse Course course) {
+<span class="fc" id="L49">    String query =</span>
+        &quot;&quot;&quot;
+              query GetRoster($courseId: ID!) {
+              course(id: $courseId) {
+                usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
+                  edges {
+                    node {
+                      firstName
+                      lastName
+                      sisId
+                      email
+                      integrationId
+                    }
+                  }
+                }
+              }
+            }
+            &quot;&quot;&quot;;
+
+<span class="fc" id="L68">    HttpSyncGraphQlClient authedClient =</span>
+        graphQlClient
+<span class="fc" id="L70">            .mutate()</span>
+<span class="fc" id="L71">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + course.getCanvasApiToken())</span>
+<span class="fc" id="L72">            .build();</span>
+
+<span class="fc" id="L74">    List&lt;CanvasStudent&gt; students =</span>
+        authedClient
+<span class="fc" id="L76">            .document(query)</span>
+<span class="fc" id="L77">            .variable(&quot;courseId&quot;, course.getCanvasCourseId())</span>
+<span class="fc" id="L78">            .retrieveSync(&quot;course.usersConnection.edges&quot;)</span>
+<span class="fc" id="L79">            .toEntityList(JsonNode.class)</span>
+<span class="fc" id="L80">            .stream()</span>
+<span class="fc" id="L81">            .map(node -&gt; mapper.convertValue(node.get(&quot;node&quot;), CanvasStudent.class))</span>
+<span class="fc" id="L82">            .toList();</span>
+
+<span class="fc" id="L84">    return students.stream()</span>
+<span class="fc" id="L85">        .map(</span>
+            student -&gt;
+<span class="fc" id="L87">                RosterStudent.builder()</span>
+<span class="fc" id="L88">                    .firstName(student.getFirstName())</span>
+<span class="fc" id="L89">                    .lastName(student.getLastName())</span>
+<span class="fc" id="L90">                    .studentId(student.getStudentId())</span>
+<span class="fc" id="L91">                    .email(student.getEmail())</span>
+<span class="fc" id="L92">                    .build())</span>
+<span class="fc" id="L93">        .toList();</span>
+  }
+
+  /**
+   * Fetches the team groups from Canvas for the given course. This is a helper method that just
+   * fetches the raw Canvas data without processing it into Team entities.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of JsonNode objects representing Canvas groups
+   */
+  public List&lt;JsonNode&gt; fetchCanvasTeamGroups(@HasLinkedCanvasCourse Course course) {
+<span class="fc" id="L104">    String query =</span>
+        &quot;&quot;&quot;
+        query GetTeams($courseId: ID!) {
+          course(id: $courseId) {
+            groupSets {
+              groups {
+                name
+                _id
+                membersConnection {
+                  edges {
+                    node {
+                      user {
+                        email
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        &quot;&quot;&quot;;
+
+<span class="fc" id="L127">    HttpSyncGraphQlClient authedClient =</span>
+        graphQlClient
+<span class="fc" id="L129">            .mutate()</span>
+<span class="fc" id="L130">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + course.getCanvasApiToken())</span>
+<span class="fc" id="L131">            .build();</span>
+
+<span class="fc" id="L133">    return authedClient</span>
+<span class="fc" id="L134">        .document(query)</span>
+<span class="fc" id="L135">        .variable(&quot;courseId&quot;, course.getCanvasCourseId())</span>
+<span class="fc" id="L136">        .retrieveSync(&quot;course.groupSets[0].groups&quot;)</span>
+<span class="fc" id="L137">        .toEntityList(JsonNode.class);</span>
+  }
+
+  /**
+   * Fetches and processes teams from Canvas, creating Team entities and saving them to the
+   * database. This method delegates to helper methods for fetching and processing.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of Team entities created or updated from Canvas
+   */
+  public List&lt;Team&gt; getCanvasTeams(@HasLinkedCanvasCourse Course course) {
+<span class="nc" id="L148">    List&lt;JsonNode&gt; groups = fetchCanvasTeamGroups(course);</span>
+
+<span class="nc" id="L150">    HashMap&lt;String, RosterStudent&gt; mappedStudents = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L151">    HashMap&lt;String, Team&gt; mappedTeams = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L152">    course.getRosterStudents().forEach(student -&gt; mappedStudents.put(student.getEmail(), student));</span>
+<span class="nc" id="L153">    course.getTeams().forEach(team -&gt; mappedTeams.put(team.getName(), team));</span>
+
+<span class="nc" id="L155">    List&lt;Team&gt; createdTeams = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">    for (JsonNode group : groups) {</span>
+<span class="nc" id="L158">      Team linked =</span>
+<span class="nc" id="L159">          mappedTeams.getOrDefault(</span>
+<span class="nc" id="L160">              group.get(&quot;name&quot;).asText().trim(),</span>
+<span class="nc" id="L161">              Team.builder()</span>
+<span class="nc" id="L162">                  .name(group.get(&quot;name&quot;).asText())</span>
+<span class="nc" id="L163">                  .teamMembers(new ArrayList&lt;&gt;())</span>
+<span class="nc" id="L164">                  .course(course)</span>
+<span class="nc" id="L165">                  .build());</span>
+<span class="nc" id="L166">      linked.setCanvasId(group.get(&quot;_id&quot;).asInt());</span>
+<span class="nc" id="L167">      group</span>
+<span class="nc" id="L168">          .path(&quot;membersConnection&quot;)</span>
+<span class="nc" id="L169">          .get(&quot;edges&quot;)</span>
+<span class="nc" id="L170">          .forEach(</span>
+              edge -&gt; {
+<span class="nc" id="L172">                RosterStudent student =</span>
+<span class="nc" id="L173">                    mappedStudents.get(</span>
+<span class="nc" id="L174">                        CanonicalFormConverter.convertToValidEmail(</span>
+<span class="nc" id="L175">                            edge.path(&quot;node&quot;).path(&quot;user&quot;).get(&quot;email&quot;).asText()));</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if (student != null) {</span>
+<span class="nc" id="L177">                  if (student.getTeamMembers().stream()</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                      .anyMatch(teamMember -&gt; teamMember.getTeam().equals(linked))) {</span>
+<span class="nc" id="L179">                    return;</span>
+                  } else {
+<span class="nc" id="L181">                    linked</span>
+<span class="nc" id="L182">                        .getTeamMembers()</span>
+<span class="nc" id="L183">                        .add(</span>
+<span class="nc" id="L184">                            TeamMember.builder()</span>
+<span class="nc" id="L185">                                .teamStatus(TeamStatus.NO_GITHUB_ID)</span>
+<span class="nc" id="L186">                                .team(linked)</span>
+<span class="nc" id="L187">                                .rosterStudent(student)</span>
+<span class="nc" id="L188">                                .build());</span>
+                  }
+                }
+<span class="nc" id="L191">              });</span>
+<span class="nc" id="L192">      createdTeams.add(linked);</span>
+<span class="nc" id="L193">    }</span>
+<span class="nc" id="L194">    teamRepository.saveAll(createdTeams);</span>
+
+<span class="nc" id="L196">    return createdTeams;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
