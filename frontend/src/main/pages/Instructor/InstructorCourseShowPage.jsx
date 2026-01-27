@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { useCurrentUser } from "main/utils/currentUser";
 import { useNavigate, useParams } from "react-router";
 
@@ -13,6 +12,7 @@ import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabCo
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
+import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -141,8 +141,11 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           />
         </Tab>
-        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-          Coming Soon
+         <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
+          <SettingsTabComponent 
+            courseId={courseId}
+            testIdPrefix={testId}
+          />
         </Tab>
       </Tabs>
     </BasicLayout>
