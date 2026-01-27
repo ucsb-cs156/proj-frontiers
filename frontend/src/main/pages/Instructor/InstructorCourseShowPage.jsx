@@ -162,11 +162,8 @@ export default function InstructorCourseShowPage() {
             currentUser={currentUser}
           />
         </Tab>
-         <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-          <SettingsTabComponent 
-            courseId={courseId}
-            testIdPrefix={testId}
-          />
+        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
+          <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
       </Tabs>
     </BasicLayout>

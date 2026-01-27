@@ -23,14 +23,14 @@ test("Settings tab component renders correctly", async () => {
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-        <SettingsTabComponent 
-            courseId={coursesFixtures.severalCourses[0].id}
-            testIdPrefix="CanvasApiForm"
-        />
+      <SettingsTabComponent
+        courseId={coursesFixtures.severalCourses[0].id}
+        testIdPrefix="CanvasApiForm"
+      />
     </QueryClientProvider>,
   );
 
-  await screen.findByTestId("CanvasApiForm-submit"); 
+  await screen.findByTestId("CanvasApiForm-submit");
 
   expect(screen.getByText("Connect Canvas")).toBeInTheDocument();
   expect(screen.getByLabelText("Canvas Course ID")).toBeInTheDocument();
@@ -39,15 +39,12 @@ test("Settings tab component renders correctly", async () => {
   expect(screen.getByTestId("CanvasApiForm-canvasForm")).toBeInTheDocument();
 });
 
-
 test("Call PUT for Canvas credentials properly", async () => {
   axiosMock.onPut("/api/courses/updateCourseCanvasToken").reply(200);
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-        <SettingsTabComponent 
-            courseId={coursesFixtures.severalCourses[0].id}
-        />
+      <SettingsTabComponent courseId={coursesFixtures.severalCourses[0].id} />
     </QueryClientProvider>,
   );
 

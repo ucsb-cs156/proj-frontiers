@@ -1,10 +1,7 @@
 import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
-function CanvasApiForm({
-  submitAction,
-  buttonLabel = "Connect Canvas",
-}) {
+function CanvasApiForm({ submitAction, buttonLabel = "Connect Canvas" }) {
   // Stryker disable all
   const {
     register,
