@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.ImportCanvasTeamsJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
@@ -15,6 +16,7 @@ import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -54,6 +56,7 @@ public class JobsController extends ApiController {
   @Autowired private TeamRepository teamRepository;
   @Autowired private TeamMemberRepository teamMemberRepository;
   @Autowired private GithubTeamService githubTeamService;
+  @Autowired private CanvasService canvasService;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -139,6 +142,21 @@ public class JobsController extends ApiController {
             .teamRepository(teamRepository)
             .teamMemberRepository(teamMemberRepository)
             .githubTeamService(githubTeamService)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(summary = "Launch Import Teams from Canvas Job")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/launch/importCanvasTeams")
+  public Job launchImportCanvasTeamsJob(@Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    ImportCanvasTeamsJob job =
+        ImportCanvasTeamsJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .canvasService(canvasService)
             .build();
     return jobService.runAsJob(job);
   }

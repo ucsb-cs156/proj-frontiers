@@ -93,7 +93,14 @@ public class CanvasService {
         .toList();
   }
 
-  public List<Team> getCanvasTeams(@HasLinkedCanvasCourse Course course) {
+  /**
+   * Fetches the team groups from Canvas for the given course. This is a helper method that just
+   * fetches the raw Canvas data without processing it into Team entities.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of JsonNode objects representing Canvas groups
+   */
+  public List<JsonNode> fetchCanvasTeamGroups(@HasLinkedCanvasCourse Course course) {
     String query =
         """
         query GetTeams($courseId: ID!) {
@@ -123,12 +130,22 @@ public class CanvasService {
             .header("Authorization", "Bearer " + course.getCanvasApiToken())
             .build();
 
-    List<JsonNode> groups =
-        authedClient
-            .document(query)
-            .variable("courseId", course.getCanvasCourseId())
-            .retrieveSync("course.groupSets[0].groups")
-            .toEntityList(JsonNode.class);
+    return authedClient
+        .document(query)
+        .variable("courseId", course.getCanvasCourseId())
+        .retrieveSync("course.groupSets[0].groups")
+        .toEntityList(JsonNode.class);
+  }
+
+  /**
+   * Fetches and processes teams from Canvas, creating Team entities and saving them to the
+   * database. This method delegates to helper methods for fetching and processing.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of Team entities created or updated from Canvas
+   */
+  public List<Team> getCanvasTeams(@HasLinkedCanvasCourse Course course) {
+    List<JsonNode> groups = fetchCanvasTeamGroups(course);
 
     HashMap<String, RosterStudent> mappedStudents = new HashMap<>();
     HashMap<String, Team> mappedTeams = new HashMap<>();

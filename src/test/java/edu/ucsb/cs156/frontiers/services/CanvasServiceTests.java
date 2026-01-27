@@ -9,15 +9,18 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.ucsb.cs156.frontiers.config.GithubGraphQLClientConfig;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -30,6 +33,8 @@ public class CanvasServiceTests {
   @Autowired private MockRestServiceServer mockServer;
 
   @Autowired private CanvasService canvasService;
+
+  @MockBean private TeamRepository teamRepository;
 
   @BeforeEach
   public void setup() {
@@ -216,5 +221,173 @@ public class CanvasServiceTests {
     assertNotNull(result);
     assertEquals(1, result.size());
     assertEquals("INT456", result.get(0).getStudentId());
+  }
+
+  @Test
+  public void testFetchCanvasTeamGroups_returnsGroups() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    // Create GraphQL response that matches what Canvas API would return for teams
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "groupSets": [
+                {
+                  "groups": [
+                    {
+                      "name": "Team Alpha",
+                      "_id": 123,
+                      "membersConnection": {
+                        "edges": [
+                          {"node": {"user": {"email": "student1@ucsb.edu"}}},
+                          {"node": {"user": {"email": "student2@ucsb.edu"}}}
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Team Beta",
+                      "_id": 456,
+                      "membersConnection": {
+                        "edges": [
+                          {"node": {"user": {"email": "student3@ucsb.edu"}}}
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<JsonNode> result = canvasService.fetchCanvasTeamGroups(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(2, result.size());
+
+    // Verify first group
+    JsonNode group1 = result.get(0);
+    assertEquals("Team Alpha", group1.get("name").asText());
+    assertEquals(123, group1.get("_id").asInt());
+    assertEquals(2, group1.path("membersConnection").path("edges").size());
+
+    // Verify second group
+    JsonNode group2 = result.get(1);
+    assertEquals("Team Beta", group2.get("name").asText());
+    assertEquals(456, group2.get("_id").asInt());
+    assertEquals(1, group2.path("membersConnection").path("edges").size());
+  }
+
+  @Test
+  public void testFetchCanvasTeamGroups_returnsEmptyList() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    // GraphQL response with empty groups array
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "groupSets": [
+                {
+                  "groups": []
+                }
+              ]
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<JsonNode> result = canvasService.fetchCanvasTeamGroups(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void testFetchCanvasTeamGroups_singleGroup() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "groupSets": [
+                {
+                  "groups": [
+                    {
+                      "name": "Solo Team",
+                      "_id": 789,
+                      "membersConnection": {
+                        "edges": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<JsonNode> result = canvasService.fetchCanvasTeamGroups(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals("Solo Team", result.get(0).get("name").asText());
+    assertEquals(789, result.get(0).get("_id").asInt());
   }
 }

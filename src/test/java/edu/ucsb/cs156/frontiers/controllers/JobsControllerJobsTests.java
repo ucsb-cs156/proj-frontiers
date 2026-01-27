@@ -13,10 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.jobs.ImportCanvasTeamsJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.*;
+import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -64,6 +66,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @MockitoBean TeamMemberRepository teamMemberRepository;
 
   @MockitoBean GithubTeamService githubTeamService;
+
+  @MockitoBean CanvasService canvasService;
 
   @Autowired ObjectMapper objectMapper;
 
@@ -164,6 +168,41 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
     String response = result.getResponse().getContentAsString();
     verify(jobService, times(1)).runAsJob(any(PushTeamsToGithubJob.class));
+    assertEquals(expectedResponse, response);
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_launch_importCanvasTeams_job() throws Exception {
+
+    // arrange
+
+    User user = currentUserService.getUser();
+
+    Job jobStarted =
+        Job.builder()
+            .id(0L)
+            .createdBy(user)
+            .createdAt(null)
+            .updatedAt(null)
+            .status("started")
+            .build();
+
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
+
+    when(jobService.runAsJob(any(ImportCanvasTeamsJob.class))).thenReturn(jobStarted);
+
+    // act
+    MvcResult result =
+        mockMvc
+            .perform(post("/api/jobs/launch/importCanvasTeams").param("courseId", "1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    String response = result.getResponse().getContentAsString();
+    verify(jobService, times(1)).runAsJob(any(ImportCanvasTeamsJob.class));
     assertEquals(expectedResponse, response);
   }
 }
