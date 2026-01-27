@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.InsertStatus;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
@@ -460,5 +461,16 @@ public class RosterStudentsController extends ApiController {
       LoadResult conflictResult = new LoadResult(0, 0, 0, rejectedStudents);
       return ResponseEntity.status(HttpStatus.CONFLICT).body(conflictResult);
     }
+  }
+
+  @Operation(summary = "Load Groups from Canvas")
+  @GetMapping("/canvas/teams")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  public List<Team> loadCanvasTeams(@Parameter(name = "courseId") @RequestParam Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
+    return canvasService.getCanvasTeams(course);
   }
 }
