@@ -2473,7 +2473,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Act
     MvcResult response =
         mockMvc
-            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
+            .perform(
+                post("/api/rosterstudents/canvas/sync/students")
+                    .with(csrf())
+                    .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -2534,7 +2537,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Act
     MvcResult response =
         mockMvc
-            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
+            .perform(
+                post("/api/rosterstudents/canvas/sync/students")
+                    .with(csrf())
+                    .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -2585,7 +2591,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Act
     MvcResult response =
         mockMvc
-            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
+            .perform(
+                post("/api/rosterstudents/canvas/sync/students")
+                    .with(csrf())
+                    .param("courseId", "1"))
             .andExpect(status().isConflict())
             .andReturn();
 
@@ -2652,7 +2661,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Act
     MvcResult response =
         mockMvc
-            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
+            .perform(
+                post("/api/rosterstudents/canvas/sync/students")
+                    .with(csrf())
+                    .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -2685,7 +2697,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "999"))
+                post("/api/rosterstudents/canvas/sync/students")
+                    .with(csrf())
+                    .param("courseId", "999"))
             .andExpect(status().isNotFound())
             .andReturn();
 
@@ -2737,7 +2751,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     // Act
     mockMvc
-        .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
+        .perform(
+            post("/api/rosterstudents/canvas/sync/students").with(csrf()).param("courseId", "1"))
         .andExpect(status().isOk());
 
     // Assert
@@ -2782,7 +2797,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     // Act
     mockMvc
-        .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
+        .perform(
+            post("/api/rosterstudents/canvas/sync/students").with(csrf()).param("courseId", "1"))
         .andExpect(status().isOk());
 
     // Assert
@@ -2840,7 +2856,10 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Act
     MvcResult response =
         mockMvc
-            .perform(post("/api/rosterstudents/upload/canvas").with(csrf()).param("courseId", "1"))
+            .perform(
+                post("/api/rosterstudents/canvas/sync/students")
+                    .with(csrf())
+                    .param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
 
