@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { useCurrentUser } from "main/utils/currentUser";
-import { data, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 import Modal from "react-bootstrap/Modal";
 import { Button, Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
