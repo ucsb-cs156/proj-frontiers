@@ -104,4 +104,15 @@ public class ApiControllerTests extends ControllerTestCase {
     assertEquals("IllegalArgumentException", json.get("type"));
     assertEquals("course", json.get("message"));
   }
+
+  @Test
+  public void validation_exception_handling() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(get("/dummycontroller/validationexception"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("", json.get("message"));
+  }
 }

@@ -1,0 +1,83 @@
+package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.models.CanvasStudent;
+import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
+import java.util.List;
+import org.springframework.graphql.client.HttpSyncGraphQlClient;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestClient;
+
+@Service
+@Validated
+public class CanvasService {
+
+  private HttpSyncGraphQlClient graphQlClient;
+  private ObjectMapper mapper;
+
+  private static final String CANVAS_GRAPHQL_URL = "https://ucsb.instructure.com/api/graphql";
+
+  public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {
+    this.graphQlClient =
+        HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();
+    this.mapper = mapper;
+  }
+
+  /**
+   * Fetches the roster of students from Canvas for the given course.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of RosterStudent objects from Canvas
+   */
+  public List<RosterStudent> getCanvasRoster(@HasLinkedCanvasCourse Course course) {
+    String query =
+        """
+              query GetRoster($courseId: ID!) {
+              course(id: $courseId) {
+                usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
+                  edges {
+                    node {
+                      firstName
+                      lastName
+                      sisId
+                      email
+                      integrationId
+                    }
+                  }
+                }
+              }
+            }
+            """;
+
+    HttpSyncGraphQlClient authedClient =
+        graphQlClient
+            .mutate()
+            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .build();
+
+    List<CanvasStudent> students =
+        authedClient
+            .document(query)
+            .variable("courseId", course.getCanvasCourseId())
+            .retrieveSync("course.usersConnection.edges")
+            .toEntityList(JsonNode.class)
+            .stream()
+            .map(node -> mapper.convertValue(node.get("node"), CanvasStudent.class))
+            .toList();
+
+    return students.stream()
+        .map(
+            student ->
+                RosterStudent.builder()
+                    .firstName(student.getFirstName())
+                    .lastName(student.getLastName())
+                    .studentId(student.getStudentId())
+                    .email(student.getEmail())
+                    .build())
+        .toList();
+  }
+}

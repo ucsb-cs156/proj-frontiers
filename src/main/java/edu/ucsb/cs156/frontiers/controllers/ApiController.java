@@ -4,7 +4,10 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,5 +121,19 @@ public abstract class ApiController {
     return Map.of(
         "type", e.getClass().getSimpleName(),
         "message", e.getMessage());
+  }
+
+  /**
+   * This method handles the ConstraintViolationException. This maps to a 400/Bad Request.
+   *
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({ConstraintViolationException.class})
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Map<String, String> handleValidationException(ConstraintViolationException e) {
+    List<String> messages =
+        e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList();
+    return Map.of("message", String.join(", ", messages));
   }
 }
