@@ -405,7 +405,7 @@ import org.springframework.web.server.ResponseStatusException;
    */
   @Operation(summary = &quot;Upload Roster students for Course from Canvas&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
-  @PostMapping(&quot;/upload/canvas&quot;)
+  @PostMapping(&quot;/canvas/sync/students&quot;)
   public ResponseEntity&lt;LoadResult&gt; uploadRosterFromCanvas(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
