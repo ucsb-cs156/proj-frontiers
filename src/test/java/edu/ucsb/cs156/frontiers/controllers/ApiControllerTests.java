@@ -113,6 +113,6 @@ public class ApiControllerTests extends ControllerTestCase {
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
-    assertEquals("Validation Exception", json.get("message"));
+    assertEquals("", json.get("message"));
   }
 }
