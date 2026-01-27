@@ -96,6 +96,38 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
           .installationId("12345")
           .build();
 
+  @Test
+  @WithInstructorCoursePermissions
+  public void loadCanvasTeams_returnsTeams() throws Exception {
+    Course course =
+        Course.builder()
+            .id(7L)
+            .courseName("CS156")
+            .canvasCourseId("12345")
+            .canvasApiToken("token")
+            .build();
+    List<Team> teams =
+        List.of(
+            Team.builder().id(1L).name("Team Alpha").canvasId(999).teamMembers(List.of()).build(),
+            Team.builder().id(2L).name("Team Beta").canvasId(1000).teamMembers(List.of()).build());
+
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(7L));
+    when(canvasService.getCanvasTeams(course)).thenReturn(teams);
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/rosterstudents/canvas/teams").param("courseId", "7"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String expectedJson = mapper.writeValueAsString(teams);
+    String actualJson = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, actualJson);
+
+    verify(courseRepository, times(1)).findById(eq(7L));
+    verify(canvasService, times(1)).getCanvasTeams(course);
+  }
+
   RosterStudent rs1 =
       RosterStudent.builder()
           .firstName("Chris")
