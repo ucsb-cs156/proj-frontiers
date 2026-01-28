@@ -137,11 +137,11 @@ public class CanvasController extends ApiController {
   @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
   public List&lt;CanvasGroupSet&gt; getCanvasGroupSets(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="nc" id="L140">    Course course =</span>
+<span class="fc" id="L140">    Course course =</span>
         courseRepository
-<span class="nc" id="L142">            .findById(courseId)</span>
-<span class="nc" id="L143">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
-<span class="nc" id="L144">    return canvasService.getCanvasGroupSets(course);</span>
+<span class="fc" id="L142">            .findById(courseId)</span>
+<span class="fc" id="L143">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
+<span class="fc" id="L144">    return canvasService.getCanvasGroupSets(course);</span>
   }
 
   @Operation(summary = &quot;Load Groups from Canvas&quot;)
@@ -150,18 +150,18 @@ public class CanvasController extends ApiController {
   public Job loadCanvasTeams(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
       @Parameter(name = &quot;groupSetId&quot;) @RequestParam String groupSetId) {
-<span class="nc" id="L153">    Course course =</span>
+<span class="fc" id="L153">    Course course =</span>
         courseRepository
-<span class="nc" id="L155">            .findById(courseId)</span>
-<span class="nc" id="L156">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
+<span class="fc" id="L155">            .findById(courseId)</span>
+<span class="fc" id="L156">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId.toString()));</span>
     PullTeamsFromCanvasJob job =
-<span class="nc" id="L158">        PullTeamsFromCanvasJob.builder()</span>
-<span class="nc" id="L159">            .course(course)</span>
-<span class="nc" id="L160">            .canvasService(canvasService)</span>
-<span class="nc" id="L161">            .teamRepository(teamRepository)</span>
-<span class="nc" id="L162">            .groupsetId(groupSetId)</span>
-<span class="nc" id="L163">            .build();</span>
-<span class="nc" id="L164">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L158">        PullTeamsFromCanvasJob.builder()</span>
+<span class="fc" id="L159">            .course(course)</span>
+<span class="fc" id="L160">            .canvasService(canvasService)</span>
+<span class="fc" id="L161">            .teamRepository(teamRepository)</span>
+<span class="fc" id="L162">            .groupsetId(groupSetId)</span>
+<span class="fc" id="L163">            .build();</span>
+<span class="fc" id="L164">    return jobService.runAsJob(job);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
