@@ -1,0 +1,26 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "008-add-canvas-field-to-teams",
+      "author": "Division7",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "TEAM",
+            "columns": [
+              {
+                "column": {
+                  "name": "CANVAS_ID",
+                  "type": "INTEGER",
+                  "constraints": {
+                    "nullable": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+]}
