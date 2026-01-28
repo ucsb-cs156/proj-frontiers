@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CanvasService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">CanvasService.java</span></div><h1>CanvasService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
+import edu.ucsb.cs156.frontiers.models.CanvasStudent;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.graphql.client.HttpSyncGraphQlClient;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestClient;
+
+@Service
+@Validated
+public class CanvasService {
+
+  private HttpSyncGraphQlClient graphQlClient;
+  private ObjectMapper mapper;
+
+  private static final String CANVAS_GRAPHQL_URL = &quot;https://ucsb.instructure.com/api/graphql&quot;;
+
+<span class="fc" id="L29">  public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {</span>
+<span class="fc" id="L30">    this.graphQlClient =</span>
+<span class="fc" id="L31">        HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();</span>
+<span class="fc" id="L32">    this.mapper = mapper;</span>
+<span class="fc" id="L33">    this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L34">  }</span>
+
+  public List&lt;CanvasGroupSet&gt; getCanvasGroupSets(@HasLinkedCanvasCourse Course course) {
+<span class="nc" id="L37">    String query =</span>
+        &quot;&quot;&quot;
+        query GetGroupSets($courseId: ID!) {
+          course(id: $courseId) {
+            groupSets {
+              _id
+              name
+              id
+            }
+          }
+        }
+        &quot;&quot;&quot;;
+
+<span class="nc" id="L50">    HttpSyncGraphQlClient authedClient =</span>
+        graphQlClient
+<span class="nc" id="L52">            .mutate()</span>
+<span class="nc" id="L53">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + course.getCanvasApiToken())</span>
+<span class="nc" id="L54">            .build();</span>
+
+<span class="nc" id="L56">    List&lt;CanvasGroupSet&gt; groupSets =</span>
+        authedClient
+<span class="nc" id="L58">            .document(query)</span>
+<span class="nc" id="L59">            .variable(&quot;courseId&quot;, course.getCanvasCourseId())</span>
+<span class="nc" id="L60">            .retrieveSync(&quot;course.groupSets&quot;)</span>
+<span class="nc" id="L61">            .toEntityList(CanvasGroupSet.class);</span>
+<span class="nc" id="L62">    return groupSets;</span>
+  }
+
+  /**
+   * Fetches the roster of students from Canvas for the given course.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of RosterStudent objects from Canvas
+   */
+  public List&lt;RosterStudent&gt; getCanvasRoster(@HasLinkedCanvasCourse Course course) {
+<span class="fc" id="L72">    String query =</span>
+        &quot;&quot;&quot;
+              query GetRoster($courseId: ID!) {
+              course(id: $courseId) {
+                usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
+                  edges {
+                    node {
+                      firstName
+                      lastName
+                      sisId
+                      email
+                      integrationId
+                    }
+                  }
+                }
+              }
+            }
+            &quot;&quot;&quot;;
+
+<span class="fc" id="L91">    HttpSyncGraphQlClient authedClient =</span>
+        graphQlClient
+<span class="fc" id="L93">            .mutate()</span>
+<span class="fc" id="L94">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + course.getCanvasApiToken())</span>
+<span class="fc" id="L95">            .build();</span>
+
+<span class="fc" id="L97">    List&lt;CanvasStudent&gt; students =</span>
+        authedClient
+<span class="fc" id="L99">            .document(query)</span>
+<span class="fc" id="L100">            .variable(&quot;courseId&quot;, course.getCanvasCourseId())</span>
+<span class="fc" id="L101">            .retrieveSync(&quot;course.usersConnection.edges&quot;)</span>
+<span class="fc" id="L102">            .toEntityList(JsonNode.class)</span>
+<span class="fc" id="L103">            .stream()</span>
+<span class="fc" id="L104">            .map(node -&gt; mapper.convertValue(node.get(&quot;node&quot;), CanvasStudent.class))</span>
+<span class="fc" id="L105">            .toList();</span>
+
+<span class="fc" id="L107">    return students.stream()</span>
+<span class="fc" id="L108">        .map(</span>
+            student -&gt;
+<span class="fc" id="L110">                RosterStudent.builder()</span>
+<span class="fc" id="L111">                    .firstName(student.getFirstName())</span>
+<span class="fc" id="L112">                    .lastName(student.getLastName())</span>
+<span class="fc" id="L113">                    .studentId(student.getStudentId())</span>
+<span class="fc" id="L114">                    .email(student.getEmail())</span>
+<span class="fc" id="L115">                    .build())</span>
+<span class="fc" id="L116">        .toList();</span>
+  }
+
+  public List&lt;CanvasGroup&gt; getCanvasGroups(
+      @HasLinkedCanvasCourse Course course, String groupSetId) {
+<span class="nc" id="L121">    String query =</span>
+        &quot;&quot;&quot;
+            query GetTeams($groupId: ID!) {
+              node(id: $groupId) {
+                ... on GroupSet {
+                  id
+                  name
+                  groups {
+                    name
+                    _id
+                    membersConnection {
+                      edges {
+                        node {
+                          user {
+                            email
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            &quot;&quot;&quot;;
+
+<span class="nc" id="L146">    HttpSyncGraphQlClient authedClient =</span>
+        graphQlClient
+<span class="nc" id="L148">            .mutate()</span>
+<span class="nc" id="L149">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + course.getCanvasApiToken())</span>
+<span class="nc" id="L150">            .build();</span>
+
+<span class="nc" id="L152">    List&lt;JsonNode&gt; groups =</span>
+        authedClient
+<span class="nc" id="L154">            .document(query)</span>
+<span class="nc" id="L155">            .variable(&quot;groupId&quot;, groupSetId)</span>
+<span class="nc" id="L156">            .retrieveSync(&quot;node.groups&quot;)</span>
+<span class="nc" id="L157">            .toEntityList(JsonNode.class);</span>
+
+<span class="nc" id="L159">    List&lt;CanvasGroup&gt; parsedGroups =</span>
+<span class="nc" id="L160">        groups.stream()</span>
+<span class="nc" id="L161">            .map(</span>
+                group -&gt; {
+                  CanvasGroup canvasGroup =
+<span class="nc" id="L164">                      CanvasGroup.builder()</span>
+<span class="nc" id="L165">                          .name(group.get(&quot;name&quot;).asText())</span>
+<span class="nc" id="L166">                          .id(group.get(&quot;_id&quot;).asInt())</span>
+<span class="nc" id="L167">                          .members(new ArrayList&lt;&gt;())</span>
+<span class="nc" id="L168">                          .build();</span>
+<span class="nc" id="L169">                  group</span>
+<span class="nc" id="L170">                      .get(&quot;membersConnection&quot;)</span>
+<span class="nc" id="L171">                      .get(&quot;edges&quot;)</span>
+<span class="nc" id="L172">                      .forEach(</span>
+                          edge -&gt; {
+<span class="nc" id="L174">                            canvasGroup</span>
+<span class="nc" id="L175">                                .getMembers()</span>
+<span class="nc" id="L176">                                .add(</span>
+<span class="nc" id="L177">                                    CanonicalFormConverter.convertToValidEmail(</span>
+<span class="nc" id="L178">                                        edge.path(&quot;node&quot;).path(&quot;user&quot;).get(&quot;email&quot;).asText()));</span>
+<span class="nc" id="L179">                          });</span>
+<span class="nc" id="L180">                  return canvasGroup;</span>
+                })
+<span class="nc" id="L182">            .toList();</span>
+
+<span class="nc" id="L184">    return parsedGroups;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
