@@ -421,13 +421,13 @@
             <outputFormat>XML</outputFormat>
           </outputFormats>
           <avoidCallsTo>
-            <avoidCallsTo>java.util.logging</avoidCallsTo>
-            <avoidCallsTo>org.apache.log4j</avoidCallsTo>
-            <avoidCallsTo>org.slf4j</avoidCallsTo>
-            <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
-            <avoidCallsTo>java.lang.Exception</avoidCallsTo>
-            <avoidCallsTo>org.springframework.security.core.context.SecurityContextHolder</avoidCallsTo>
-            <avoidCallsTo>edu.ucsb.cs156.frontiers.services.jobs.JobContext</avoidCallsTo>
+            <param>java.util.logging</param>
+            <param>org.apache.log4j</param>
+            <param>org.slf4j</param>
+            <param>org.apache.commons.logging</param>
+            <param>java.lang.Exception</param>
+            <param>org.springframework.security.core.context.SecurityContextHolder</param>
+            <param>edu.ucsb.cs156.frontiers.services.jobs.JobContext</param>
           </avoidCallsTo>
           <timestampedReports>false</timestampedReports>
         </configuration>
