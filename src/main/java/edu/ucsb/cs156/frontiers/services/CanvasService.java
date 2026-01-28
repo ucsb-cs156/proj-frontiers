@@ -5,15 +5,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
-import edu.ucsb.cs156.frontiers.entities.Team;
-import edu.ucsb.cs156.frontiers.entities.TeamMember;
-import edu.ucsb.cs156.frontiers.enums.TeamStatus;
+import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.models.CanvasStudent;
-import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.stereotype.Service;
@@ -24,19 +21,45 @@ import org.springframework.web.client.RestClient;
 @Validated
 public class CanvasService {
 
-  private final TeamRepository teamRepository;
   private HttpSyncGraphQlClient graphQlClient;
   private ObjectMapper mapper;
 
   private static final String CANVAS_GRAPHQL_URL = "https://ucsb.instructure.com/api/graphql";
 
-  public CanvasService(
-      ObjectMapper mapper, RestClient.Builder builder, TeamRepository teamRepository) {
+  public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {
     this.graphQlClient =
         HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();
     this.mapper = mapper;
     this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    this.teamRepository = teamRepository;
+  }
+
+  public List<CanvasGroupSet> getCanvasGroupSets(@HasLinkedCanvasCourse Course course) {
+    String query =
+        """
+        query GetGroupSets($courseId: ID!) {
+          course(id: $courseId) {
+            groupSets {
+              _id
+              name
+              id
+            }
+          }
+        }
+        """;
+
+    HttpSyncGraphQlClient authedClient =
+        graphQlClient
+            .mutate()
+            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .build();
+
+    List<CanvasGroupSet> groupSets =
+        authedClient
+            .document(query)
+            .variable("courseId", course.getCanvasCourseId())
+            .retrieveSync("course.groupSets")
+            .toEntityList(CanvasGroupSet.class);
+    return groupSets;
   }
 
   /**
@@ -93,29 +116,32 @@ public class CanvasService {
         .toList();
   }
 
-  public List<Team> getCanvasTeams(@HasLinkedCanvasCourse Course course) {
+  public List<CanvasGroup> getCanvasGroups(
+      @HasLinkedCanvasCourse Course course, String groupSetId) {
     String query =
         """
-        query GetTeams($courseId: ID!) {
-          course(id: $courseId) {
-            groupSets {
-              groups {
-                name
-                _id
-                membersConnection {
-                  edges {
-                    node {
-                      user {
-                        email
+            query GetTeams($groupId: ID!) {
+              node(id: $groupId) {
+                ... on GroupSet {
+                  id
+                  name
+                  groups {
+                    name
+                    _id
+                    membersConnection {
+                      edges {
+                        node {
+                          user {
+                            email
+                          }
+                        }
                       }
                     }
                   }
                 }
               }
             }
-          }
-        }
-        """;
+            """;
 
     HttpSyncGraphQlClient authedClient =
         graphQlClient
@@ -126,56 +152,35 @@ public class CanvasService {
     List<JsonNode> groups =
         authedClient
             .document(query)
-            .variable("courseId", course.getCanvasCourseId())
-            .retrieveSync("course.groupSets[0].groups")
+            .variable("groupId", groupSetId)
+            .retrieveSync("node.groups")
             .toEntityList(JsonNode.class);
 
-    HashMap<String, RosterStudent> mappedStudents = new HashMap<>();
-    HashMap<String, Team> mappedTeams = new HashMap<>();
-    course.getRosterStudents().forEach(student -> mappedStudents.put(student.getEmail(), student));
-    course.getTeams().forEach(team -> mappedTeams.put(team.getName(), team));
+    List<CanvasGroup> parsedGroups =
+        groups.stream()
+            .map(
+                group -> {
+                  CanvasGroup canvasGroup =
+                      CanvasGroup.builder()
+                          .name(group.get("name").asText())
+                          .id(group.get("_id").asInt())
+                          .members(new ArrayList<>())
+                          .build();
+                  group
+                      .get("membersConnection")
+                      .get("edges")
+                      .forEach(
+                          edge -> {
+                            canvasGroup
+                                .getMembers()
+                                .add(
+                                    CanonicalFormConverter.convertToValidEmail(
+                                        edge.path("node").path("user").get("email").asText()));
+                          });
+                  return canvasGroup;
+                })
+            .toList();
 
-    List<Team> createdTeams = new ArrayList<>();
-
-    for (JsonNode group : groups) {
-      Team linked =
-          mappedTeams.getOrDefault(
-              group.get("name").asText().trim(),
-              Team.builder()
-                  .name(group.get("name").asText())
-                  .teamMembers(new ArrayList<>())
-                  .course(course)
-                  .build());
-      linked.setCanvasId(group.get("_id").asInt());
-      group
-          .path("membersConnection")
-          .get("edges")
-          .forEach(
-              edge -> {
-                RosterStudent student =
-                    mappedStudents.get(
-                        CanonicalFormConverter.convertToValidEmail(
-                            edge.path("node").path("user").get("email").asText()));
-                if (student != null) {
-                  if (student.getTeamMembers().stream()
-                      .anyMatch(teamMember -> teamMember.getTeam().equals(linked))) {
-                    return;
-                  } else {
-                    linked
-                        .getTeamMembers()
-                        .add(
-                            TeamMember.builder()
-                                .teamStatus(TeamStatus.NO_GITHUB_ID)
-                                .team(linked)
-                                .rosterStudent(student)
-                                .build());
-                  }
-                }
-              });
-      createdTeams.add(linked);
-    }
-    teamRepository.saveAll(createdTeams);
-
-    return createdTeams;
+    return parsedGroups;
   }
 }
