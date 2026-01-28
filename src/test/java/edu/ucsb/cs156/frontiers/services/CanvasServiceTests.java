@@ -257,7 +257,6 @@ public class CanvasServiceTests {
 
     // Assert
     mockServer.verify();
-    assertNotNull(result);
     assertEquals(2, result.size());
 
     CanvasGroupSet groupSet1 = result.get(0);
@@ -302,7 +301,6 @@ public class CanvasServiceTests {
 
     // Assert
     mockServer.verify();
-    assertNotNull(result);
     assertTrue(result.isEmpty());
   }
 

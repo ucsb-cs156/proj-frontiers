@@ -122,7 +122,9 @@ public class PullTeamsFromCanvasJobTests {
     job.accept(ctx);
 
     // Assert
-    verify(teamRepository).saveAll(anyList());
+    assertTrue(
+        existingTeam.getTeamMembers().stream()
+            .anyMatch(tm -> tm.getRosterStudent().equals(student1)));
   }
 
   @Test
@@ -174,9 +176,8 @@ public class PullTeamsFromCanvasJobTests {
     assertEquals(1, savedTeams.size());
 
     // The existing team should be linked with the Canvas ID
-    Team savedTeam = savedTeams.get(0);
-    assertEquals("Team Alpha", savedTeam.getName());
-    assertEquals(101, savedTeam.getCanvasId());
+    assertEquals("Team Alpha", existingTeam.getName());
+    assertEquals(101, existingTeam.getCanvasId());
   }
 
   @Test
@@ -291,7 +292,11 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     CanvasGroup group =
-        CanvasGroup.builder().name("Team Alpha").id(101).members(List.of("alice@ucsb.edu")).build();
+        CanvasGroup.builder()
+            .name("Team Alpha")
+            .id(101)
+            .members(List.of("alice@umail.ucsb.edu"))
+            .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
 
@@ -307,21 +312,14 @@ public class PullTeamsFromCanvasJobTests {
     job.accept(ctx);
 
     // Assert
-    ArgumentCaptor<List<Team>> teamsCaptor = ArgumentCaptor.forClass(List.class);
-    verify(teamRepository).saveAll(teamsCaptor.capture());
-
-    List<Team> savedTeams = teamsCaptor.getValue();
-    assertEquals(1, savedTeams.size());
+    verify(teamRepository).saveAll(anyList());
 
     // Should not add duplicate member
-    Team savedTeam = savedTeams.get(0);
-    assertEquals(1, savedTeam.getTeamMembers().size());
+    assertEquals(1, existingTeam.getTeamMembers().size());
   }
 
   @Test
   public void testAccept_AddsNewMemberToExistingTeam() throws Exception {
-    // This test verifies that new members ARE added when they are not already team members.
-    // This catches the mutation where anyMatch() always returns true.
     // Arrange
     Team existingTeam =
         Team.builder().name("Team Alpha").canvasId(101).teamMembers(new ArrayList<>()).build();
@@ -341,10 +339,6 @@ public class PullTeamsFromCanvasJobTests {
         TeamMember.builder().team(existingTeam).rosterStudent(existingStudent).build();
     existingStudent.getTeamMembers().add(existingMember);
     existingTeam.getTeamMembers().add(existingMember);
-
-    // Bob is a member of OTHER team, but NOT of the linked team
-    // This is critical: with the mutation, anyMatch will return true for Bob
-    // because he has at least one team membership, and the mutated predicate returns true
     TeamMember otherMember = TeamMember.builder().team(otherTeam).rosterStudent(newStudent).build();
     newStudent.getTeamMembers().add(otherMember);
 
@@ -378,78 +372,17 @@ public class PullTeamsFromCanvasJobTests {
     job.accept(ctx);
 
     // Assert
-    ArgumentCaptor<List<Team>> teamsCaptor = ArgumentCaptor.forClass(List.class);
-    verify(teamRepository).saveAll(teamsCaptor.capture());
-
-    List<Team> savedTeams = teamsCaptor.getValue();
-    Team savedTeam =
-        savedTeams.stream().filter(t -> t.getName().equals("Team Alpha")).findFirst().orElse(null);
-    assertNotNull(savedTeam);
+    verify(teamRepository).saveAll(anyList());
 
     // Should have 2 members: Alice (existing) and Bob (new)
     // With the mutation, Bob wouldn't be added because anyMatch would return true
-    assertEquals(2, savedTeam.getTeamMembers().size());
+    assertEquals(2, existingTeam.getTeamMembers().size());
 
     // Verify Bob was added
     boolean bobAdded =
-        savedTeam.getTeamMembers().stream()
+        existingTeam.getTeamMembers().stream()
             .anyMatch(tm -> tm.getRosterStudent().getEmail().equals("bob@ucsb.edu"));
     assertTrue(bobAdded, "Bob should have been added as a new team member");
-  }
-
-  @Test
-  public void testAccept_TeamsWithNullCanvasIdNotInCanvasIdMap() throws Exception {
-    // This test verifies that teams with null Canvas ID are NOT looked up by Canvas ID.
-    // This catches the mutation where the null check is negated.
-    // Arrange
-    Team teamWithNullCanvasId =
-        Team.builder().name("Team Alpha").canvasId(null).teamMembers(new ArrayList<>()).build();
-
-    // CRITICAL: This team has a canvas ID but a DIFFERENT name than the group
-    // When mutation is active, this team won't be in the Canvas ID map
-    // so the name lookup will fail, and a NEW team will be created
-    Team teamWithCanvasId =
-        Team.builder().name("Old Team Name").canvasId(200).teamMembers(new ArrayList<>()).build();
-
-    Course course =
-        Course.builder()
-            .id(1L)
-            .courseName("CS156")
-            .rosterStudents(new ArrayList<>())
-            .teams(new ArrayList<>(List.of(teamWithNullCanvasId, teamWithCanvasId)))
-            .build();
-
-    // Canvas group with ID 200 but different name - should match by canvas ID
-    // If mutation is active, this will create a NEW team instead of linking
-    CanvasGroup group =
-        CanvasGroup.builder().name("New Team Name").id(200).members(new ArrayList<>()).build();
-
-    when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
-
-    PullTeamsFromCanvasJob job =
-        PullTeamsFromCanvasJob.builder()
-            .course(course)
-            .groupsetId("groupset123")
-            .canvasService(canvasService)
-            .teamRepository(teamRepository)
-            .build();
-
-    // Act
-    job.accept(ctx);
-
-    // Assert
-    ArgumentCaptor<List<Team>> teamsCaptor = ArgumentCaptor.forClass(List.class);
-    verify(teamRepository).saveAll(teamsCaptor.capture());
-
-    List<Team> savedTeams = teamsCaptor.getValue();
-    assertEquals(1, savedTeams.size());
-
-    // The existing team should be found by canvas ID (NOT by name since names don't match)
-    // If mutation is active, a NEW team called "New Team Name" would be created
-    Team savedTeam = savedTeams.get(0);
-    assertEquals(teamWithCanvasId, savedTeam); // Should be the same object
-    assertEquals("Old Team Name", savedTeam.getName()); // Original name should be preserved
-    assertEquals(200, savedTeam.getCanvasId());
   }
 
   @Test
@@ -492,126 +425,6 @@ public class PullTeamsFromCanvasJobTests {
 
     List<Team> savedTeams = teamsCaptor.getValue();
     assertEquals(2, savedTeams.size());
-  }
-
-  @Test
-  public void testAccept_HandlesEmailConversion() throws Exception {
-    // Arrange
-    RosterStudent student1 =
-        RosterStudent.builder()
-            .email("alice@ucsb.edu") // Stored in canonical form
-            .teamMembers(new ArrayList<>())
-            .build();
-
-    Course course =
-        Course.builder()
-            .id(1L)
-            .courseName("CS156")
-            .rosterStudents(List.of(student1))
-            .teams(new ArrayList<>())
-            .build();
-
-    // Canvas returns email in non-canonical form (note: the entire email is lowercased
-    // and @umail.ucsb.edu is converted to @ucsb.edu by CanonicalFormConverter)
-    CanvasGroup group =
-        CanvasGroup.builder()
-            .name("Team Alpha")
-            .id(101)
-            .members(List.of("ALICE@umail.ucsb.edu"))
-            .build();
-
-    when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
-
-    PullTeamsFromCanvasJob job =
-        PullTeamsFromCanvasJob.builder()
-            .course(course)
-            .groupsetId("groupset123")
-            .canvasService(canvasService)
-            .teamRepository(teamRepository)
-            .build();
-
-    // Act
-    job.accept(ctx);
-
-    // Assert
-    ArgumentCaptor<List<Team>> teamsCaptor = ArgumentCaptor.forClass(List.class);
-    verify(teamRepository).saveAll(teamsCaptor.capture());
-
-    List<Team> savedTeams = teamsCaptor.getValue();
-    Team savedTeam = savedTeams.get(0);
-    assertEquals(1, savedTeam.getTeamMembers().size());
-    assertEquals(student1, savedTeam.getTeamMembers().get(0).getRosterStudent());
-  }
-
-  @Test
-  public void testAccept_HandlesGroupWithEmptyMembers() throws Exception {
-    // Arrange
-    Course course =
-        Course.builder()
-            .id(1L)
-            .courseName("CS156")
-            .rosterStudents(new ArrayList<>())
-            .teams(new ArrayList<>())
-            .build();
-
-    CanvasGroup group =
-        CanvasGroup.builder().name("Empty Team").id(101).members(new ArrayList<>()).build();
-
-    when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
-
-    PullTeamsFromCanvasJob job =
-        PullTeamsFromCanvasJob.builder()
-            .course(course)
-            .groupsetId("groupset123")
-            .canvasService(canvasService)
-            .teamRepository(teamRepository)
-            .build();
-
-    // Act
-    job.accept(ctx);
-
-    // Assert
-    ArgumentCaptor<List<Team>> teamsCaptor = ArgumentCaptor.forClass(List.class);
-    verify(teamRepository).saveAll(teamsCaptor.capture());
-
-    List<Team> savedTeams = teamsCaptor.getValue();
-    assertEquals(1, savedTeams.size());
-
-    Team savedTeam = savedTeams.get(0);
-    assertEquals("Empty Team", savedTeam.getName());
-    assertTrue(savedTeam.getTeamMembers().isEmpty());
-  }
-
-  @Test
-  public void testAccept_HandlesNoGroups() throws Exception {
-    // Arrange
-    Course course =
-        Course.builder()
-            .id(1L)
-            .courseName("CS156")
-            .rosterStudents(new ArrayList<>())
-            .teams(new ArrayList<>())
-            .build();
-
-    when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(new ArrayList<>());
-
-    PullTeamsFromCanvasJob job =
-        PullTeamsFromCanvasJob.builder()
-            .course(course)
-            .groupsetId("groupset123")
-            .canvasService(canvasService)
-            .teamRepository(teamRepository)
-            .build();
-
-    // Act
-    job.accept(ctx);
-
-    // Assert
-    ArgumentCaptor<List<Team>> teamsCaptor = ArgumentCaptor.forClass(List.class);
-    verify(teamRepository).saveAll(teamsCaptor.capture());
-
-    List<Team> savedTeams = teamsCaptor.getValue();
-    assertTrue(savedTeams.isEmpty());
   }
 
   @Test

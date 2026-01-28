@@ -52,9 +52,6 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
         linked = teamsByCanvasId.get(group.getId());
       } else if (teamsByName.containsKey(group.getName().trim())) {
         linked = teamsByName.get(group.getName().trim());
-        if (linked.getCanvasId() != null && !linked.getCanvasId().equals(group.getId())) {
-          throw new DuplicateGroupException();
-        }
       } else {
         linked =
             Team.builder()
@@ -63,8 +60,13 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
                 .course(course)
                 .build();
       }
+      if (linked.getCanvasId() != null && !linked.getCanvasId().equals(group.getId())) {
+        ctx.log("Duplicate group found: " + group.getName() + " with canvasId: " + group.getId());
+        throw new DuplicateGroupException();
+      }
 
       linked.setCanvasId(group.getId());
+      ctx.log("Processing group: " + group.getName() + " with canvasId: " + group.getId());
       Team finalLinked = linked;
       group
           .getMembers()

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -109,6 +109,8 @@ public class CanvasControllerTests extends ControllerTestCase {
     verify(updateUserService).attachUsersToRosterStudents(any());
     verify(service).runAsJob(any(RemoveStudentsJob.class));
 
+    assertEquals(2, course.getRosterStudents().size());
+
     String responseString = response.getResponse().getContentAsString();
     LoadResult expectedResult = new LoadResult(2, 0, 0, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResult);
@@ -164,7 +166,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(courseRepository, atLeastOnce()).findById(eq(1L));
+    verify(courseRepository, times(1)).findById(eq(1L));
     verify(canvasService).getCanvasRoster(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
@@ -272,8 +274,6 @@ public class CanvasControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
-
     // Act
     MvcResult response =
         mockMvc
@@ -282,17 +282,9 @@ public class CanvasControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
+    verify(rosterStudentRepository).saveAll(any(List.class));
     verify(service).runAsJob(any(RemoveStudentsJob.class));
-
-    // Check that dropped student has DROPPED status in saved list
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent droppedInSavedList =
-        savedStudents.stream()
-            .filter(s -> s.getStudentId().equals("D999999"))
-            .findFirst()
-            .orElse(null);
-    assertEquals(RosterStatus.DROPPED, droppedInSavedList.getRosterStatus());
+    assertEquals(RosterStatus.DROPPED, existingStudent.getRosterStatus());
 
     String responseString = response.getResponse().getContentAsString();
     LoadResult expectedResult = new LoadResult(1, 0, 1, List.of());
@@ -315,7 +307,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(courseRepository, atLeastOnce()).findById(eq(999L));
+    verify(courseRepository, times(1)).findById(eq(999L));
     verify(canvasService, never()).getCanvasRoster(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
@@ -358,19 +350,15 @@ public class CanvasControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
-
     // Act
     mockMvc
         .perform(post("/api/courses/canvas/sync/students").with(csrf()).param("courseId", "1"))
         .andExpect(status().isOk());
 
     // Assert
-    verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
+    verify(rosterStudentRepository).saveAll(any(List.class));
 
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent savedStudent = savedStudents.get(0);
-    assertEquals(OrgStatus.JOINCOURSE, savedStudent.getOrgStatus());
+    assertEquals(OrgStatus.JOINCOURSE, canvasStudent.getOrgStatus());
   }
 
   @Test
@@ -403,19 +391,15 @@ public class CanvasControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
-
     // Act
     mockMvc
         .perform(post("/api/courses/canvas/sync/students").with(csrf()).param("courseId", "1"))
         .andExpect(status().isOk());
 
     // Assert
-    verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
+    verify(rosterStudentRepository).saveAll(any(List.class));
 
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent savedStudent = savedStudents.get(0);
-    assertEquals(OrgStatus.PENDING, savedStudent.getOrgStatus());
+    assertEquals(OrgStatus.PENDING, canvasStudent.getOrgStatus());
   }
 
   @Test
@@ -459,9 +443,6 @@ public class CanvasControllerTests extends ControllerTestCase {
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
-
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
-
     // Act
     MvcResult response =
         mockMvc
@@ -470,19 +451,11 @@ public class CanvasControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
+    verify(rosterStudentRepository).saveAll(any(List.class));
 
-    // Check that manual student still has MANUAL status
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent manualInSavedList =
-        savedStudents.stream()
-            .filter(s -> s.getStudentId().equals("M999999"))
-            .findFirst()
-            .orElse(null);
-    assertEquals(RosterStatus.MANUAL, manualInSavedList.getRosterStatus());
+    assertEquals(RosterStatus.MANUAL, manualStudent.getRosterStatus());
 
     String responseString = response.getResponse().getContentAsString();
-    // 1 inserted (new student), 0 dropped (manual stays manual)
     LoadResult expectedResult = new LoadResult(1, 0, 0, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
@@ -515,7 +488,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(courseRepository, atLeastOnce()).findById(eq(1L));
+    verify(courseRepository, times(1)).findById(eq(1L));
     verify(canvasService).getCanvasGroupSets(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
@@ -537,7 +510,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(courseRepository, atLeastOnce()).findById(eq(999L));
+    verify(courseRepository, times(1)).findById(eq(999L));
     verify(canvasService, never()).getCanvasGroupSets(any(Course.class));
 
     String responseString = response.getResponse().getContentAsString();
