@@ -52,40 +52,42 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
 <span class="fc" id="L52">        linked = teamsByCanvasId.get(group.getId());</span>
 <span class="fc bfc" id="L53" title="All 2 branches covered.">      } else if (teamsByName.containsKey(group.getName().trim())) {</span>
 <span class="fc" id="L54">        linked = teamsByName.get(group.getName().trim());</span>
-<span class="pc bpc" id="L55" title="1 of 4 branches missed.">        if (linked.getCanvasId() != null &amp;&amp; !linked.getCanvasId().equals(group.getId())) {</span>
-<span class="fc" id="L56">          throw new DuplicateGroupException();</span>
-        }
       } else {
         linked =
-<span class="fc" id="L60">            Team.builder()</span>
-<span class="fc" id="L61">                .name(group.getName())</span>
-<span class="fc" id="L62">                .teamMembers(new ArrayList&lt;&gt;())</span>
-<span class="fc" id="L63">                .course(course)</span>
-<span class="fc" id="L64">                .build();</span>
+<span class="fc" id="L57">            Team.builder()</span>
+<span class="fc" id="L58">                .name(group.getName())</span>
+<span class="fc" id="L59">                .teamMembers(new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L60">                .course(course)</span>
+<span class="fc" id="L61">                .build();</span>
+      }
+<span class="fc bfc" id="L63" title="All 4 branches covered.">      if (linked.getCanvasId() != null &amp;&amp; !linked.getCanvasId().equals(group.getId())) {</span>
+<span class="fc" id="L64">        ctx.log(&quot;Duplicate group found: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
+<span class="fc" id="L65">        throw new DuplicateGroupException();</span>
       }
 
-<span class="fc" id="L67">      linked.setCanvasId(group.getId());</span>
-<span class="fc" id="L68">      Team finalLinked = linked;</span>
-<span class="fc" id="L69">      group</span>
-<span class="fc" id="L70">          .getMembers()</span>
-<span class="fc" id="L71">          .forEach(</span>
+<span class="fc" id="L68">      linked.setCanvasId(group.getId());</span>
+<span class="fc" id="L69">      ctx.log(&quot;Processing group: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
+<span class="fc" id="L70">      Team finalLinked = linked;</span>
+<span class="fc" id="L71">      group</span>
+<span class="fc" id="L72">          .getMembers()</span>
+<span class="fc" id="L73">          .forEach(</span>
               email -&gt; {
-<span class="fc" id="L73">                RosterStudent student =</span>
-<span class="fc" id="L74">                    mappedStudents.get(CanonicalFormConverter.convertToValidEmail(email));</span>
-<span class="fc bfc" id="L75" title="All 2 branches covered.">                if (student != null) {</span>
-<span class="fc" id="L76">                  if (student.getTeamMembers().stream()</span>
-<span class="fc bfc" id="L77" title="All 2 branches covered.">                      .anyMatch(teamMember -&gt; teamMember.getTeam().equals(finalLinked))) {</span>
-<span class="fc" id="L78">                    return;</span>
+<span class="fc" id="L75">                RosterStudent student =</span>
+<span class="fc" id="L76">                    mappedStudents.get(CanonicalFormConverter.convertToValidEmail(email));</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                if (student != null) {</span>
+<span class="fc" id="L78">                  if (student.getTeamMembers().stream()</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">                      .anyMatch(teamMember -&gt; teamMember.getTeam().equals(finalLinked))) {</span>
+<span class="fc" id="L80">                    return;</span>
                   } else {
-<span class="fc" id="L80">                    finalLinked</span>
-<span class="fc" id="L81">                        .getTeamMembers()</span>
-<span class="fc" id="L82">                        .add(TeamMember.builder().team(finalLinked).rosterStudent(student).build());</span>
+<span class="fc" id="L82">                    finalLinked</span>
+<span class="fc" id="L83">                        .getTeamMembers()</span>
+<span class="fc" id="L84">                        .add(TeamMember.builder().team(finalLinked).rosterStudent(student).build());</span>
                   }
                 }
-<span class="fc" id="L85">              });</span>
-<span class="fc" id="L86">      createdTeams.add(finalLinked);</span>
-<span class="fc" id="L87">    }</span>
-<span class="fc" id="L88">    teamRepository.saveAll(createdTeams);</span>
-<span class="fc" id="L89">  }</span>
+<span class="fc" id="L87">              });</span>
+<span class="fc" id="L88">      createdTeams.add(finalLinked);</span>
+<span class="fc" id="L89">    }</span>
+<span class="fc" id="L90">    teamRepository.saveAll(createdTeams);</span>
+<span class="fc" id="L91">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
