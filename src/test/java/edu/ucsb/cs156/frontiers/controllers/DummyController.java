@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import jakarta.validation.ConstraintViolationException;
@@ -49,5 +50,10 @@ public class DummyController extends ApiController {
   @GetMapping("/validationexception")
   public void validationException() {
     throw new ConstraintViolationException("Test ConstraintViolationException", Set.of());
+  }
+
+  @GetMapping("/duplicategroup")
+  public String duplicateGroup() {
+    throw new DuplicateGroupException();
   }
 }

@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -135,5 +136,19 @@ public abstract class ApiController {
     List<String> messages =
         e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList();
     return Map.of("message", String.join(", ", messages));
+  }
+
+  /**
+   * This method handles the DuplicateGroupException. This maps to a 400/Bad Request.
+   *
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({DuplicateGroupException.class})
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Object handleDuplicateGroupException(Throwable e) {
+    return Map.of(
+        "type", e.getClass().getSimpleName(),
+        "message", e.getMessage());
   }
 }
