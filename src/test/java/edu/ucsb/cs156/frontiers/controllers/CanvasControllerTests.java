@@ -8,16 +8,20 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromCanvasJob;
 import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
@@ -481,6 +485,134 @@ public class CanvasControllerTests extends ControllerTestCase {
     // 1 inserted (new student), 0 dropped (manual stays manual)
     LoadResult expectedResult = new LoadResult(1, 0, 0, List.of());
     String expectedJson = mapper.writeValueAsString(expectedResult);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testGetCanvasGroupSets_returnsGroupSets() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    CanvasGroupSet groupSet1 = CanvasGroupSet.builder().name("Project Teams").id("abc123").build();
+    CanvasGroupSet groupSet2 = CanvasGroupSet.builder().name("Lab Groups").id("def456").build();
+    List<CanvasGroupSet> groupSets = List.of(groupSet1, groupSet2);
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(canvasService.getCanvasGroupSets(any(Course.class))).thenReturn(groupSets);
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/canvas/groupsets").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // Assert
+    verify(courseRepository, atLeastOnce()).findById(eq(1L));
+    verify(canvasService).getCanvasGroupSets(any(Course.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(groupSets);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testGetCanvasGroupSets_courseNotFound() throws Exception {
+    // Arrange
+    when(courseRepository.findById(eq(999L))).thenReturn(Optional.empty());
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/canvas/groupsets").param("courseId", "999"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // Assert
+    verify(courseRepository, atLeastOnce()).findById(eq(999L));
+    verify(canvasService, never()).getCanvasGroupSets(any(Course.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 999 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testLoadCanvasTeams_startsJob() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    Job expectedJob = Job.builder().id(1L).build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(service.runAsJob(any(PullTeamsFromCanvasJob.class))).thenReturn(expectedJob);
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/courses/canvas/sync/teams")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("groupSetId", "groupset123"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // Assert
+    verify(courseRepository, atLeastOnce()).findById(eq(1L));
+    verify(service).runAsJob(any(PullTeamsFromCanvasJob.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(expectedJob);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testLoadCanvasTeams_courseNotFound() throws Exception {
+    // Arrange
+    when(courseRepository.findById(eq(999L))).thenReturn(Optional.empty());
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/courses/canvas/sync/teams")
+                    .with(csrf())
+                    .param("courseId", "999")
+                    .param("groupSetId", "groupset123"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // Assert
+    verify(courseRepository, atLeastOnce()).findById(eq(999L));
+    verify(service, never()).runAsJob(any(PullTeamsFromCanvasJob.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 999 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
   }
 }
