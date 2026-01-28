@@ -1,0 +1,28 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "008-add-jobname-to-job",
+        "author": "copilot",
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "JOBS",
+              "columns": [
+                {
+                  "column": {
+                    "name": "JOBNAME",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
