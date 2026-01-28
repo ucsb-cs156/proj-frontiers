@@ -511,7 +511,8 @@ public class PullTeamsFromCanvasJobTests {
             .teams(new ArrayList<>())
             .build();
 
-    // Canvas returns email in non-canonical form (lowercase domain is required for conversion)
+    // Canvas returns email in non-canonical form (note: the entire email is lowercased
+    // and @umail.ucsb.edu is converted to @ucsb.edu by CanonicalFormConverter)
     CanvasGroup group =
         CanvasGroup.builder()
             .name("Team Alpha")
