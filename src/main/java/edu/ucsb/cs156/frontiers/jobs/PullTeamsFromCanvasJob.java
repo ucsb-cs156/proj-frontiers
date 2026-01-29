@@ -6,27 +6,37 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
 import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 
+@Slf4j
 @Builder
 @Validated
 public class PullTeamsFromCanvasJob implements JobContextConsumer {
 
-  Course course;
+  @HasLinkedCanvasCourse Course course;
   String groupsetId;
   CanvasService canvasService;
   TeamRepository teamRepository;
+  TeamMemberRepository teamMemberRepository;
 
   @Override
+  @Transactional
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Processing...");
     List<CanvasGroup> groups = canvasService.getCanvasGroups(course, groupsetId);
@@ -65,6 +75,8 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
         throw new DuplicateGroupException();
       }
 
+      HashSet<String> processedEmails = new HashSet<>();
+
       linked.setCanvasId(group.getId());
       ctx.log("Processing group: " + group.getName() + " with canvasId: " + group.getId());
       Team finalLinked = linked;
@@ -75,6 +87,7 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
                 RosterStudent student =
                     mappedStudents.get(CanonicalFormConverter.convertToValidEmail(email));
                 if (student != null) {
+                  processedEmails.add(student.getEmail());
                   if (student.getTeamMembers().stream()
                       .anyMatch(teamMember -> teamMember.getTeam().equals(finalLinked))) {
                     return;
@@ -86,6 +99,26 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
                 }
               });
       createdTeams.add(finalLinked);
+      Set<TeamMember> removedMembers =
+          finalLinked.getTeamMembers().stream()
+              .filter(
+                  teamMember -> !processedEmails.contains(teamMember.getRosterStudent().getEmail()))
+              .collect(Collectors.toSet());
+      ctx.log("Group members to be removed:" + removedMembers);
+      removedMembers.forEach(
+          teamMember -> {
+            teamMember.getTeam().getTeamMembers().remove(teamMember);
+            teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
+            teamMember.setTeam(null);
+            teamMember.setRosterStudent(null);
+          });
+      teamMemberRepository.deleteAll(removedMembers);
+
+      log.warn("linked: {}", linked);
+      log.warn("finalLinked: {}", finalLinked);
+      log.warn("course: {}", course);
+      log.warn("course team: {}", course.getTeams());
+      log.warn("removedMembers: {}", removedMembers);
     }
     teamRepository.saveAll(createdTeams);
   }

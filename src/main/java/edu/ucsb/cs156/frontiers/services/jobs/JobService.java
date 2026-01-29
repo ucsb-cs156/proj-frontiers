@@ -3,11 +3,13 @@ package edu.ucsb.cs156.frontiers.services.jobs;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class JobService {
   @Autowired private JobsRepository jobsRepository;
@@ -36,6 +38,8 @@ public class JobService {
     } catch (Exception e) {
       job.setStatus("error");
       context.log(e.getMessage());
+      log.error("Error running job: {}", e.getMessage());
+      log.error("Error running job: ", e);
       return;
     }
 
