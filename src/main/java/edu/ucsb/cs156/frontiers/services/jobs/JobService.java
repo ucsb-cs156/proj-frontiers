@@ -18,6 +18,9 @@ public class JobService {
 
   @Autowired private JobContextFactory contextFactory;
 
+  /*
+   * This is a self-referential bean to allow for async method calls within the same class.
+   */
   @Lazy @Autowired private JobService self;
 
   public Job runAsJob(JobContextConsumer jobFunction) {
