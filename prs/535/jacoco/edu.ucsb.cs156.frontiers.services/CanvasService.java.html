@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CanvasService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">CanvasService.java</span></div><h1>CanvasService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.models.CanvasStudent;
+import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
+import java.util.List;
+import org.springframework.graphql.client.HttpSyncGraphQlClient;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestClient;
+
+@Service
+@Validated
+public class CanvasService {
+
+  private HttpSyncGraphQlClient graphQlClient;
+  private ObjectMapper mapper;
+
+  private static final String CANVAS_GRAPHQL_URL = &quot;https://ucsb.instructure.com/api/graphql&quot;;
+
+<span class="fc" id="L24">  public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {</span>
+<span class="fc" id="L25">    this.graphQlClient =</span>
+<span class="fc" id="L26">        HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();</span>
+<span class="fc" id="L27">    this.mapper = mapper;</span>
+<span class="fc" id="L28">  }</span>
+
+  /**
+   * Fetches the roster of students from Canvas for the given course.
+   *
+   * @param course the Course entity containing canvasApiToken and canvasCourseId
+   * @return list of RosterStudent objects from Canvas
+   */
+  public List&lt;RosterStudent&gt; getCanvasRoster(@HasLinkedCanvasCourse Course course) {
+<span class="fc" id="L37">    String query =</span>
+        &quot;&quot;&quot;
+              query GetRoster($courseId: ID!) {
+              course(id: $courseId) {
+                usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
+                  edges {
+                    node {
+                      firstName
+                      lastName
+                      sisId
+                      email
+                      integrationId
+                    }
+                  }
+                }
+              }
+            }
+            &quot;&quot;&quot;;
+
+<span class="fc" id="L56">    HttpSyncGraphQlClient authedClient =</span>
+        graphQlClient
+<span class="fc" id="L58">            .mutate()</span>
+<span class="fc" id="L59">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + course.getCanvasApiToken())</span>
+<span class="fc" id="L60">            .build();</span>
+
+<span class="fc" id="L62">    List&lt;CanvasStudent&gt; students =</span>
+        authedClient
+<span class="fc" id="L64">            .document(query)</span>
+<span class="fc" id="L65">            .variable(&quot;courseId&quot;, course.getCanvasCourseId())</span>
+<span class="fc" id="L66">            .retrieveSync(&quot;course.usersConnection.edges&quot;)</span>
+<span class="fc" id="L67">            .toEntityList(JsonNode.class)</span>
+<span class="fc" id="L68">            .stream()</span>
+<span class="fc" id="L69">            .map(node -&gt; mapper.convertValue(node.get(&quot;node&quot;), CanvasStudent.class))</span>
+<span class="fc" id="L70">            .toList();</span>
+
+<span class="fc" id="L72">    return students.stream()</span>
+<span class="fc" id="L73">        .map(</span>
+            student -&gt;
+<span class="fc" id="L75">                RosterStudent.builder()</span>
+<span class="fc" id="L76">                    .firstName(student.getFirstName())</span>
+<span class="fc" id="L77">                    .lastName(student.getLastName())</span>
+<span class="fc" id="L78">                    .studentId(student.getStudentId())</span>
+<span class="fc" id="L79">                    .email(student.getEmail())</span>
+<span class="fc" id="L80">                    .build())</span>
+<span class="fc" id="L81">        .toList();</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
