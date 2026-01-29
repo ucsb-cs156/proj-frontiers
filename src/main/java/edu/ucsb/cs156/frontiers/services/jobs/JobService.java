@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @Slf4j
 public class JobService {
@@ -50,6 +51,8 @@ public class JobService {
     } catch (Exception e) {
       job.setStatus("error");
       context.log(e.getMessage());
+      log.error("Error running job: {}", e.getMessage());
+      log.error("Error running job: ", e);
       return;
     }
 

@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
@@ -48,6 +49,7 @@ public class CanvasController extends ApiController {
   private final RosterStudentRepository rosterStudentRepository;
   private final UpdateUserService updateUserService;
   private final OrganizationMemberService organizationMemberService;
+  private final TeamMemberRepository teamMemberRepository;
 
   public CanvasController(
       CourseRepository courseRepository,
@@ -56,7 +58,8 @@ public class CanvasController extends ApiController {
       JobService jobService,
       RosterStudentRepository rosterStudentRepository,
       UpdateUserService updateUserService,
-      OrganizationMemberService organizationMemberService) {
+      OrganizationMemberService organizationMemberService,
+      TeamMemberRepository teamMemberRepository) {
     this.courseRepository = courseRepository;
     this.canvasService = canvasService;
     this.teamRepository = teamRepository;
@@ -64,6 +67,7 @@ public class CanvasController extends ApiController {
     this.rosterStudentRepository = rosterStudentRepository;
     this.updateUserService = updateUserService;
     this.organizationMemberService = organizationMemberService;
+    this.teamMemberRepository = teamMemberRepository;
   }
 
   /**
@@ -159,6 +163,7 @@ public class CanvasController extends ApiController {
             .course(course)
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
             .groupsetId(groupSetId)
             .build();
     return jobService.runAsJob(job);
