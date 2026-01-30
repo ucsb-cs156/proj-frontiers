@@ -20,4 +20,99 @@ An instructor should first create a *Course* through *Swagger*. Then, they shoul
 Then, as students sign into Frontiers and link their GitHubs, their *User* accounts will be automatically linked with their associated Roster Students.
 
 ## Database Design
-![img.png](img.png)
+```mermaid
+classDiagram
+direction BT
+class Assignment {
+    Long  id
+    AssignmentType  asnType
+    String  name
+    Permission  permission
+    Visibility  visibility
+}
+class Course {
+    Long  id
+    String  canvasApiToken
+    String  canvasCourseId
+    String  courseName
+    String  installationId
+    String  instructorEmail
+    String  orgName
+    String  school
+    String  term
+}
+class CourseStaff {
+    Long  id
+    String  email
+    String  firstName
+    Integer  githubId
+    String  githubLogin
+    String  lastName
+    OrgStatus  orgStatus
+    String  role
+}
+class RosterStudent {
+    Long  id
+    String  email
+    String  firstName
+    Integer  githubId
+    String  githubLogin
+    String  lastName
+    OrgStatus  orgStatus
+    RosterStatus  rosterStatus
+    String  section
+    String  studentId
+}
+class Section {
+    Long  id
+    String  label
+    String  section
+}
+class Team {
+    Long  id
+    Integer  canvasId
+    Integer  githubTeamId
+    String  name
+}
+class TeamMember {
+    Long  id
+    TeamStatus  teamStatus
+}
+class admins {
+    String  email
+}
+class instructors {
+    String  email
+}
+class jobs {
+    long  id
+    ZonedDateTime  createdAt
+    String  log
+    String  status
+    ZonedDateTime  updatedAt
+}
+class users {
+    long  id
+    String  email
+    String  familyName
+    String  fullName
+    Integer  githubId
+    String  githubLogin
+    String  givenName
+    String  googleSub
+    String  pictureUrl
+    String  studentId
+}
+
+Assignment --> Course 
+Course <--> CourseStaff 
+RosterStudent <--> Course 
+Section <--> Course 
+Team <--> Course 
+TeamMember <--> RosterStudent 
+TeamMember <--> Team 
+jobs --> users 
+users <--> CourseStaff 
+users <--> RosterStudent 
+
+```
