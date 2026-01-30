@@ -30,10 +30,10 @@ import org.springframework.stereotype.Service;
 <span class="fc" id="L30">        Job.builder()</span>
 <span class="fc" id="L31">            .createdBy(currentUserService.getUser())</span>
 <span class="fc" id="L32">            .status(&quot;running&quot;)</span>
-<span class="fc" id="L33">            .jobname(jobName)</span>
+<span class="fc" id="L33">            .jobName(jobName)</span>
 <span class="fc" id="L34">            .build();</span>
 
-<span class="fc" id="L36">    log.info(&quot;Starting job: {}, jobName={}&quot;, job.getId(), job.getJobname());</span>
+<span class="fc" id="L36">    log.info(&quot;Starting job: {}, jobName={}&quot;, job.getId(), job.getJobName());</span>
 
 <span class="fc" id="L38">    jobsRepository.save(job);</span>
 <span class="fc" id="L39">    self.runJobAsync(job, jobFunction);</span>
