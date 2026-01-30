@@ -3,7 +3,7 @@
     {
       "changeSet": {
         "id": "008-add-jobname-to-job",
-        "author": "copilot",
+        "author": "copilot/summit.haque",
         "changes": [
           {
             "addColumn": {
@@ -11,7 +11,7 @@
               "columns": [
                 {
                   "column": {
-                    "name": "JOBNAME",
+                    "name": "JOB_NAME",
                     "type": "VARCHAR(255)",
                     "constraints": {
                       "nullable": true

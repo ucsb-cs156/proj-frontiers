@@ -30,10 +30,10 @@ public class JobService {
         Job.builder()
             .createdBy(currentUserService.getUser())
             .status("running")
-            .jobname(jobName)
+            .jobName(jobName)
             .build();
 
-    log.info("Starting job: {}, jobName={}", job.getId(), job.getJobname());
+    log.info("Starting job: {}, jobName={}", job.getId(), job.getJobName());
 
     jobsRepository.save(job);
     self.runJobAsync(job, jobFunction);

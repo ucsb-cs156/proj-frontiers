@@ -92,7 +92,7 @@ public class JobServiceTests {
     TestJob job = TestJob.builder().fail(false).sleepMs(0).build();
 
     Job fireJob =
-        Job.builder().jobname("TestJob").createdBy(user.getUser()).status("running").build();
+        Job.builder().jobName("TestJob").createdBy(user.getUser()).status("running").build();
 
     doNothing().when(injectedJobService).runJobAsync(any(), any());
     when(currentUserService.getUser()).thenReturn(user.getUser());

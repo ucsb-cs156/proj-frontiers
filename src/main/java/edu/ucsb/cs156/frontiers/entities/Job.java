@@ -29,7 +29,7 @@ public class Job {
   @LastModifiedDate private ZonedDateTime updatedAt;
 
   private String status;
-  private String jobname;
+  private String jobName;
 
   // 1048576 is 2^20, which is the max size of a mediumtext in MySQL
   @Column(
