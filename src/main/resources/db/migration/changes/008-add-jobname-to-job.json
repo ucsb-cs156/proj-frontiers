@@ -1,0 +1,28 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "008-add-jobname-to-job",
+        "author": "copilot/summit.haque",
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "JOBS",
+              "columns": [
+                {
+                  "column": {
+                    "name": "JOB_NAME",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
