@@ -23,12 +23,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 
-@Slf4j
 @Builder
-@Validated
 public class PullTeamsFromCanvasJob implements JobContextConsumer {
 
   @HasLinkedCanvasCourse Course course;
