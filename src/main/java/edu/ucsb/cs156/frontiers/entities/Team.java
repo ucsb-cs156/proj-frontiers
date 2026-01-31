@@ -14,6 +14,7 @@ import org.hibernate.annotations.FetchMode;
 @Builder
 @Entity
 @Table(name = "team", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "course_id"}))
+@EqualsAndHashCode(exclude = {"teamMembers"})
 public class Team {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +32,6 @@ public class Team {
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "team")
   @Fetch(FetchMode.JOIN)
-  @EqualsAndHashCode.Exclude
   private List<TeamMember> teamMembers;
 
   @Column(nullable = true)
