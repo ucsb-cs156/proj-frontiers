@@ -26,6 +26,7 @@ import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
@@ -55,6 +56,8 @@ public class CanvasControllerTests extends ControllerTestCase {
   @MockitoBean private JobService service;
 
   @MockitoBean private TeamRepository teamRepository;
+
+  @MockitoBean private TeamMemberRepository teamMemberRepository;
 
   @MockitoBean private OrganizationMemberService organizationMemberService;
 
