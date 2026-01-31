@@ -164,6 +164,7 @@ public class CanvasController extends ApiController {
             .canvasService(canvasService)
             .teamRepository(teamRepository)
             .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .groupsetId(groupSetId)
             .build();
     return jobService.runAsJob(job);

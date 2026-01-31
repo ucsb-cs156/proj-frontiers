@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -43,6 +44,7 @@ public class JobService {
   }
 
   @Async
+  @Transactional
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
     JobContext context = contextFactory.createContext(job);
 
@@ -51,8 +53,6 @@ public class JobService {
     } catch (Exception e) {
       job.setStatus("error");
       context.log(e.getMessage());
-      log.error("Error running job: {}", e.getMessage());
-      log.error("Error running job: ", e);
       return;
     }
 

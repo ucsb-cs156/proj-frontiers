@@ -6,6 +6,7 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
 import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasService;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -34,10 +36,13 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
   CanvasService canvasService;
   TeamRepository teamRepository;
   TeamMemberRepository teamMemberRepository;
+  CourseRepository courseRepository;
 
   @Override
   @Transactional
   public void accept(JobContext ctx) throws Exception {
+    Optional<Course> courseOpt = courseRepository.findById(course.getId());
+    course = courseOpt.get();
     ctx.log("Processing...");
     List<CanvasGroup> groups = canvasService.getCanvasGroups(course, groupsetId);
     HashMap<String, RosterStudent> mappedStudents = new HashMap<>();
@@ -109,8 +114,6 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
           teamMember -> {
             teamMember.getTeam().getTeamMembers().remove(teamMember);
             teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
-            teamMember.setTeam(null);
-            teamMember.setRosterStudent(null);
           });
       teamMemberRepository.deleteAll(removedMembers);
 

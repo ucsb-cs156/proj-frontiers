@@ -10,11 +10,14 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
 import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +31,8 @@ public class PullTeamsFromCanvasJobTests {
 
   @Mock private CanvasService canvasService;
   @Mock private TeamRepository teamRepository;
+  @Mock private TeamMemberRepository teamMemberRepository;
+  @Mock private CourseRepository courseRepository;
 
   Job jobStarted = Job.builder().build();
   JobContext ctx = new JobContext(null, jobStarted);
@@ -55,6 +60,7 @@ public class PullTeamsFromCanvasJobTests {
         CanvasGroup.builder().name("Team Alpha").id(101).members(List.of("alice@ucsb.edu")).build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -62,6 +68,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -109,6 +117,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -116,6 +125,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -156,6 +167,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -163,6 +175,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -206,6 +220,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -213,6 +228,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act & Assert
@@ -243,6 +260,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -250,6 +268,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -299,6 +319,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -306,6 +327,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -359,6 +382,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -366,6 +390,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -407,6 +433,7 @@ public class PullTeamsFromCanvasJobTests {
         CanvasGroup.builder().name("Team Beta").id(102).members(List.of("bob@ucsb.edu")).build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group1, group2));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -414,6 +441,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -450,6 +479,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(List.of(group));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -457,6 +487,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
@@ -487,6 +519,7 @@ public class PullTeamsFromCanvasJobTests {
             .build();
 
     when(canvasService.getCanvasGroups(course, "groupset123")).thenReturn(new ArrayList<>());
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     PullTeamsFromCanvasJob job =
         PullTeamsFromCanvasJob.builder()
@@ -494,6 +527,8 @@ public class PullTeamsFromCanvasJobTests {
             .groupsetId("groupset123")
             .canvasService(canvasService)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .courseRepository(courseRepository)
             .build();
 
     // Act
