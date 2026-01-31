@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -1729,6 +1730,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).delete(eq(rosterStudentUpdated));
     assertEquals(course1.getRosterStudents(), List.of());
     assertEquals(team1.getTeamMembers(), List.of());
+    assertNull(teamMember1.getTeam());
     // Verify that removeOrganizationMember is called since the student has a GitHub login
     verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
 

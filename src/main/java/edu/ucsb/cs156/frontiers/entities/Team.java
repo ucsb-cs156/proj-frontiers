@@ -31,6 +31,7 @@ public class Team {
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "team")
   @Fetch(FetchMode.JOIN)
+  @EqualsAndHashCode.Exclude
   private List<TeamMember> teamMembers;
 
   @Column(nullable = true)

@@ -18,6 +18,7 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -144,18 +145,25 @@ public class PullTeamsFromCanvasJobTests {
     RosterStudent student1 =
         RosterStudent.builder().email("alice@ucsb.edu").teamMembers(new ArrayList<>()).build();
 
+    RosterStudent notOnTeam =
+        RosterStudent.builder().email("bob@ucsb.edu").teamMembers(new ArrayList<>()).build();
+
+    TeamMember notOnTeamMember = TeamMember.builder().id(737L).rosterStudent(notOnTeam).build();
     Team existingTeam =
         Team.builder()
             .name("Team Alpha")
             .canvasId(null) // No Canvas ID yet
             .teamMembers(new ArrayList<>())
             .build();
+    notOnTeamMember.setTeam(existingTeam);
+    notOnTeam.getTeamMembers().add(notOnTeamMember);
+    existingTeam.getTeamMembers().add(notOnTeamMember);
 
     Course course =
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .rosterStudents(List.of(student1))
+            .rosterStudents(List.of(student1, notOnTeam))
             .teams(new ArrayList<>(List.of(existingTeam)))
             .build();
 
@@ -184,8 +192,12 @@ public class PullTeamsFromCanvasJobTests {
 
     // Assert
     ArgumentCaptor<List<Team>> teamsCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<TeamMember>> deletedStudents = ArgumentCaptor.forClass(Set.class);
     verify(teamRepository).saveAll(teamsCaptor.capture());
+    verify(teamMemberRepository).deleteAll(deletedStudents.capture());
 
+    assertTrue(deletedStudents.getValue().stream().allMatch(tm -> tm.getId().equals(737L)));
+    assertTrue(notOnTeam.getTeamMembers().isEmpty());
     List<Team> savedTeams = teamsCaptor.getValue();
     assertEquals(1, savedTeams.size());
 

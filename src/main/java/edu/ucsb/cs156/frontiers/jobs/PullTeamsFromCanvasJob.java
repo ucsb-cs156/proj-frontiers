@@ -116,12 +116,6 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
             teamMember.getRosterStudent().getTeamMembers().remove(teamMember);
           });
       teamMemberRepository.deleteAll(removedMembers);
-
-      log.warn("linked: {}", linked);
-      log.warn("finalLinked: {}", finalLinked);
-      log.warn("course: {}", course);
-      log.warn("course team: {}", course.getTeams());
-      log.warn("removedMembers: {}", removedMembers);
     }
     teamRepository.saveAll(createdTeams);
   }
