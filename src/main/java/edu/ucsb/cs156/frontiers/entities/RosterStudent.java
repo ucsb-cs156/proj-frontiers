@@ -28,6 +28,7 @@ import org.hibernate.annotations.FetchMode;
           name = "UK_ROSTER_STUDENT_COURSE_EMAIL",
           columnNames = {"course_id", "email"})
     })
+@EqualsAndHashCode(exclude = {"teamMembers"})
 public class RosterStudent {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,7 +53,6 @@ public class RosterStudent {
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
   @ToString.Exclude
-  @EqualsAndHashCode.Exclude
   private List<TeamMember> teamMembers;
 
   @Enumerated(EnumType.STRING)
