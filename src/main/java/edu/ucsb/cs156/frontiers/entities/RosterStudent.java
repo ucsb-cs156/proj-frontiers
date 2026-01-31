@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.Fetch;
@@ -27,7 +28,7 @@ import org.hibernate.annotations.FetchMode;
           name = "UK_ROSTER_STUDENT_COURSE_EMAIL",
           columnNames = {"course_id", "email"})
     })
-// @EqualsAndHashCode(exclude = {"teamMembers"})
+@EqualsAndHashCode(exclude = {"teamMembers"})
 public class RosterStudent {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
