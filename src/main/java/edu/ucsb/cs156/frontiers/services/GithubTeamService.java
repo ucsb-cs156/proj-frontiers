@@ -206,7 +206,7 @@ public class GithubTeamService {
    * Adds a member to a GitHub team.
    *
    * @param githubLogin The GitHub login of the user to add
-   * @param teamSlug The GitHub team slug (name)
+   * @param teamId The GitHub team ID
    * @param role The role to assign ("member" or "maintainer")
    * @param course The course containing the organization
    * @return The resulting team status
@@ -243,5 +243,30 @@ public class GithubTeamService {
     return "maintainer".equalsIgnoreCase(resultRole)
         ? TeamStatus.TEAM_MAINTAINER
         : TeamStatus.TEAM_MEMBER;
+  }
+
+  /**
+   * Removes a member from a GitHub team
+   *
+   * @param githubLogin
+   * @param teamId
+   * @param course
+   * @throws NoSuchAlgorithmException
+   * @throws InvalidKeySpecException
+   * @throws JsonProcessingException
+   */
+  public void removeMemberFromGithubTeam(String githubLogin, Integer teamId, Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+    String endpoint = "https://api.github.com/teams/" + teamId + "/members/" + githubLogin;
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);
+    log.info("Successfully removed member {} from team ID {}", githubLogin, teamId);
   }
 }

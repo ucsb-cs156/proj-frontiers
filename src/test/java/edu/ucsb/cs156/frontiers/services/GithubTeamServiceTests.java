@@ -493,4 +493,50 @@ public class GithubTeamServiceTests {
     assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
     assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
   }
+
+  @Test
+  public void testRemoveTeamMember() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"role\": \"member\", \"state\": \"active\"}";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/teams/11/members/testuser"),
+            eq(HttpMethod.DELETE),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.NO_CONTENT));
+
+    // Act
+    githubTeamService.removeMemberFromGithubTeam("testuser", 11, course);
+  }
+
+  @Test
+  public void testRemoveTeamMember_VerifyHeaders() throws Exception {
+    // Arrange
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"role\": \"member\", \"state\": \"active\"}";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/teams/11/members/testuser"),
+            eq(HttpMethod.DELETE),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    // Act
+    githubTeamService.removeMemberFromGithubTeam("testuser", 11, course);
+
+    // Assert
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
 }
