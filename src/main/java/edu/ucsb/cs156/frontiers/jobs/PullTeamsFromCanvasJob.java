@@ -13,7 +13,6 @@ import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
-import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +26,7 @@ import lombok.Builder;
 @Builder
 public class PullTeamsFromCanvasJob implements JobContextConsumer {
 
-  @HasLinkedCanvasCourse Course course;
+  Course course;
   String groupsetId;
   CanvasService canvasService;
   TeamRepository teamRepository;
@@ -37,6 +36,8 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
   @Override
   @Transactional
   public void accept(JobContext ctx) throws Exception {
+    // Prior to attempting to optimize this code or modify any repository calls, please see here:
+    // https://github.com/ucsb-cs156/ucsb-cs156.github.io/blob/main/topics/spring_boot/spring_boot_entity_relationships.md
     Optional<Course> courseOpt = courseRepository.findById(course.getId());
     course = courseOpt.get();
     ctx.log("Processing...");
