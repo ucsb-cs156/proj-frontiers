@@ -25,7 +25,6 @@ import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
-import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -61,8 +60,6 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
   @MockitoBean private OrganizationMemberService organizationMemberService;
 
   @MockitoBean private JobService service;
-
-  @MockitoBean private CanvasService canvasService;
 
   @Autowired private ObjectMapper objectMapper;
 
