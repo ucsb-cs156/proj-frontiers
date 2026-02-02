@@ -5,10 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.models.CourseWarning;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.time.ZonedDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,6 +27,8 @@ public class OrganizationLinkerService {
   @Autowired JwtService jwtService;
 
   @Autowired ObjectMapper objectMapper;
+
+  @Autowired DateTimeProvider provider;
 
   public OrganizationLinkerService(RestTemplateBuilder restTemplateBuilder) {
     restTemplate = restTemplateBuilder.build();
@@ -77,6 +82,23 @@ public class OrganizationLinkerService {
     }
     String orgName = responseJson.get("account").get("login").asText();
     return orgName;
+  }
+
+  public CourseWarning checkCourseWarnings(Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<JsonNode> response =
+        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);
+    JsonNode responseJson = response.getBody();
+    ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get("created_at").asText());
+    ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());
+    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)));
   }
 
   /**

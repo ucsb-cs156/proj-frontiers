@@ -8,6 +8,7 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.models.CourseWarning;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -455,5 +456,15 @@ public class CoursesController extends ApiController {
     Course savedCourse = courseRepository.save(course);
 
     return new InstructorCourseView(savedCourse);
+  }
+
+  @GetMapping("/warnings/{courseId}")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public CourseWarning warnings(@PathVariable Long courseId) throws Exception {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    return linkerService.checkCourseWarnings(course);
   }
 }
