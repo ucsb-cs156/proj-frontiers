@@ -215,7 +215,7 @@ ExampleWithOrganizationAgeWarning.parameters = {
       http.get("/api/teams/all", () => {
         return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
       }),
-      http.get("/api/courses/warnings/1", () =>
+      http.get("/api/courses/warnings/7", () =>
         HttpResponse.json(showOrganizationAgeWarning),
       ),
     ],
