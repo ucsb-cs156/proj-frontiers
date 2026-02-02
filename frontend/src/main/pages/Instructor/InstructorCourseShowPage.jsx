@@ -12,6 +12,7 @@ import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabCo
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
+import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -64,6 +65,7 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
+      <CourseWarningBanner courseId={courseId} />
       {!course ? (
         <div data-testid={`${testId}-loading`}>Course: Loading...</div>
       ) : (

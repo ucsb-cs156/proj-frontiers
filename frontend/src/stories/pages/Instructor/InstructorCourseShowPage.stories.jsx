@@ -12,6 +12,7 @@ import coursesFixtures from "fixtures/coursesFixtures";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { teamsFixtures } from "fixtures/TeamsFixtures";
+import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -184,6 +185,39 @@ ExampleCourseThreeStudentsThreeStaff.parameters = {
       http.get("/api/teams/all", () => {
         return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
       }),
+    ],
+  },
+};
+
+export const ExampleWithOrganizationAgeWarning = Template.bind({});
+ExampleWithOrganizationAgeWarning.args = {
+  suppressMemoryRouter: true,
+};
+ExampleWithOrganizationAgeWarning.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        if (courseId === "7") {
+          return HttpResponse.json(courseStaff, {
+            status: 200,
+          });
+        }
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/teams/all", () => {
+        return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
+      }),
+      http.get("/api/courses/warnings/1", () =>
+        HttpResponse.json(showOrganizationAgeWarning),
+      ),
     ],
   },
 };

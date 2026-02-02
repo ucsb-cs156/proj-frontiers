@@ -323,12 +323,16 @@ describe("InstructorCourseShowPage tests", () => {
       screen.queryByTestId("InstructorCourseShowPage-tooltip-github-settings"),
     ).not.toBeInTheDocument();
   });
-  test("header displays correct info when course is loaded", async () => {
+  test("header displays correct info when course is loaded (and displays warning)", async () => {
     setupInstructorUser();
 
     axiosMock
       .onGet("/api/courses/7")
       .reply(200, coursesFixtures.severalCourses[0]);
+
+    axiosMock
+      .onGet("/api/courses/warnings/7")
+      .reply(200, { showOrganizationAgeWarning: true });
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -355,6 +359,7 @@ describe("InstructorCourseShowPage tests", () => {
       screen.getByTestId("InstructorCourseShowPage-github-org-link"),
     ).toHaveAttribute("href", "https://github.com/ucsb-cs156-s25");
     expect(screen.getByText("Spring 2025")).toBeInTheDocument();
+    expect(screen.getByText(/This GitHub Organization/i)).toBeInTheDocument();
   });
   test("expect the correct URL to the organization for the course", async () => {
     setupInstructorUser();
