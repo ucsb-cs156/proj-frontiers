@@ -33,7 +33,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,67,0,2,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController,0,536,0,42,0,128,0,37,0,16
-frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,687,0,38,0,133,0,41,0,22
+frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,688,0,38,0,133,0,41,0,22
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,489,0,14,0,133,0,32,0,25
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.InstructorCourseView,0,63,0,4,0,12,0,4,0,2
@@ -71,7 +71,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,247,0,30,0,62,0,22,
 frontiers,edu.ucsb.cs156.frontiers.jobs,RemoveStudentsJob,0,79,0,12,0,17,0,7,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,95,0,24,0,17,0,13,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,47,0,4,0,12,0,3,0,1
-frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamMemberFromGithubJob,0,74,0,6,0,23,0,4,0,1
+frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamMemberFromGithubJob,0,44,0,4,0,14,0,3,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamRepositoriesJob,0,32,0,2,0,6,0,2,0,1
 frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,17,0,0,0,4,0,3,0,3

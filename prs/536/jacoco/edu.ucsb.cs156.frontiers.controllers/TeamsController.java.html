@@ -328,9 +328,9 @@ import org.springframework.web.server.ResponseStatusException;
 
     DeleteTeamMemberFromGithubJob job =
 <span class="fc" id="L330">        DeleteTeamMemberFromGithubJob.builder()</span>
-<span class="fc" id="L331">            .teamMemberId(teamMemberId)</span>
-<span class="fc" id="L332">            .teamId(team.getId())</span>
-<span class="fc" id="L333">            .teamMemberRepository(teamMemberRepository)</span>
+<span class="fc" id="L331">            .memberGithubLogin(rosterStudent.getGithubLogin())</span>
+<span class="fc" id="L332">            .githubTeamId(team.getGithubTeamId())</span>
+<span class="fc" id="L333">            .course(team.getCourse())</span>
 <span class="fc" id="L334">            .githubTeamService(githubTeamService)</span>
 <span class="fc" id="L335">            .build();</span>
 <span class="fc" id="L336">    jobService.runAsJob(job);</span>
