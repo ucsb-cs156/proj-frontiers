@@ -7,13 +7,10 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
-import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
-import edu.ucsb.cs156.frontiers.services.GithubTeamService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,10 +42,6 @@ public class TeamsController extends ApiController {
   @Autowired private CourseRepository courseRepository;
 
   @Autowired private RosterStudentRepository rosterStudentRepository;
-
-  @Autowired private JobService jobService;
-
-  @Autowired private GithubTeamService githubTeamService;
 
   public record TeamMemberResult(
       TeamMember teamMember, TeamMemberStatus status, String rejectedEmail) {
@@ -325,20 +318,6 @@ public class TeamsController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(TeamMember.class, teamMemberId));
     Team team = teamMember.getTeam();
     RosterStudent rosterStudent = teamMember.getRosterStudent();
-
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-
-    DeleteTeamMemberFromGithubJob job =
-        DeleteTeamMemberFromGithubJob.builder()
-            .memberGithubLogin(rosterStudent.getGithubLogin())
-            .githubTeamId(team.getGithubTeamId())
-            .course(course)
-            .githubTeamService(githubTeamService)
-            .build();
-    jobService.runAsJob(job);
 
     team.getTeamMembers().remove(teamMember);
     rosterStudent.getTeamMembers().remove(teamMember);

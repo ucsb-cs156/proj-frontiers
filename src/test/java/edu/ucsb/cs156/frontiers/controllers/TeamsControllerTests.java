@@ -15,7 +15,6 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
-import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
@@ -624,7 +623,6 @@ public class TeamsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(jobService, times(1)).runAsJob(any(DeleteTeamMemberFromGithubJob.class));
     verify(teamMemberRepository, times(1)).findById(1L);
     verify(teamMemberRepository, times(1)).delete(teamMemberUpdated);
     verify(teamRepository, times(1)).save(team);
@@ -658,7 +656,6 @@ public class TeamsControllerTests extends ControllerTestCase {
     // assert
     verify(teamMemberRepository, times(1)).findById(999L);
     verify(teamMemberRepository, never()).delete(any(TeamMember.class));
-    verify(jobService, times(0)).runAsJob(any(DeleteTeamMemberFromGithubJob.class));
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
