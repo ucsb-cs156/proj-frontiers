@@ -1,20 +1,16 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
-import edu.ucsb.cs156.frontiers.entities.RosterStudent;
-import edu.ucsb.cs156.frontiers.entities.Team;
-import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import java.util.Arrays;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,19 +37,12 @@ public class DeleteTeamMemberFromGithubJobTests {
   @Test
   public void test_successfully_delete_team_member() throws Exception {
     Course course = Course.builder().orgName("test-org").installationId("123").build();
-    Team team = Team.builder().id(1234L).name("team-1").githubTeamId(456).course(course).build();
-    RosterStudent rosterStudent =
-        RosterStudent.builder().id(99L).githubLogin("testuser").course(course).build();
-    TeamMember teamMember =
-        TeamMember.builder().id(10L).team(team).rosterStudent(rosterStudent).build();
-
-    when(teamMemberRepository.findById(10L)).thenReturn(Optional.of(teamMember));
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
-            .teamMemberId(10L)
-            .teamId(1234L)
-            .teamMemberRepository(teamMemberRepository)
+            .memberGithubLogin("testuser")
+            .githubTeamId(456)
+            .course(course)
             .githubTeamService(githubTeamService)
             .build();
 
@@ -64,22 +53,15 @@ public class DeleteTeamMemberFromGithubJobTests {
   }
 
   @Test
-  public void test_CourseWithoutGithubOrg() throws Exception {
-    Course course = Course.builder().id(1L).courseName("Test Course").build();
-    Team team = Team.builder().id(1234L).name("team-1").githubTeamId(456).course(course).build();
-    RosterStudent rosterStudent =
-        RosterStudent.builder().id(99L).githubLogin("testuser").course(course).build();
-    Long teamMemberId = 10L;
-    TeamMember teamMember =
-        TeamMember.builder().id(teamMemberId).team(team).rosterStudent(rosterStudent).build();
-
-    when(teamMemberRepository.findById(teamMemberId)).thenReturn(Optional.of(teamMember));
+  public void test_githubTeamIdIsNull() throws Exception {
+    // Test exception handling when github team id is null
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
-            .teamMemberId(teamMemberId)
-            .teamId(1234L)
-            .teamMemberRepository(teamMemberRepository)
+            .memberGithubLogin("testuser")
+            .githubTeamId(null)
+            .course(course)
             .githubTeamService(githubTeamService)
             .build();
 
@@ -87,36 +69,21 @@ public class DeleteTeamMemberFromGithubJobTests {
     job.accept(ctx);
 
     // Assert
-    verify(teamMemberRepository).findById(teamMemberId);
-    verifyNoInteractions(githubTeamService);
+    verify(githubTeamService, never())
+        .removeMemberFromGithubTeam(anyString(), anyInt(), any(Course.class));
+    assertTrue(jobStarted.getLog().contains("ERROR: Team has no GitHub team ID"));
   }
 
   @Test
-  public void test_CourseWithOrgNameButNoInstallationId() throws Exception {
-    // Test case where orgName is not null but installationId is null
-    // Arrange
-    Long courseId = 1L;
-    Course course =
-        Course.builder()
-            .id(courseId)
-            .courseName("Test Course")
-            .orgName("test-org")
-            .installationId(null)
-            .build();
-    Team team = Team.builder().id(1234L).name("team-1").githubTeamId(456).course(course).build();
-    RosterStudent rosterStudent =
-        RosterStudent.builder().id(99L).githubLogin("testuser").course(course).build();
-    Long teamMemberId = 10L;
-    TeamMember teamMember =
-        TeamMember.builder().id(teamMemberId).team(team).rosterStudent(rosterStudent).build();
-
-    when(teamMemberRepository.findById(teamMemberId)).thenReturn(Optional.of(teamMember));
+  public void test_memberGithubLoginIsNull() throws Exception {
+    // Test exception handling when member github login is null
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
-            .teamMemberId(teamMemberId)
-            .teamId(1234L)
-            .teamMemberRepository(teamMemberRepository)
+            .memberGithubLogin(null)
+            .githubTeamId(456)
+            .course(course)
             .githubTeamService(githubTeamService)
             .build();
 
@@ -124,8 +91,9 @@ public class DeleteTeamMemberFromGithubJobTests {
     job.accept(ctx);
 
     // Assert
-    verify(teamMemberRepository).findById(teamMemberId);
-    verifyNoInteractions(githubTeamService);
+    verify(githubTeamService, never())
+        .removeMemberFromGithubTeam(anyString(), anyInt(), any(Course.class));
+    assertTrue(jobStarted.getLog().contains("ERROR: Team member has no GitHub login"));
   }
 
   @Test
@@ -141,32 +109,15 @@ public class DeleteTeamMemberFromGithubJobTests {
             .installationId("123")
             .build();
 
-    Team team1 =
-        Team.builder().name("team1").githubTeamId(null).teamMembers(Arrays.asList()).build();
-    Team team =
-        Team.builder()
-            .id(1234L)
-            .name("team-1")
-            .githubTeamId(456)
-            .teamMembers(Arrays.asList())
-            .course(course)
-            .build();
-    RosterStudent rosterStudent =
-        RosterStudent.builder().id(99L).githubLogin("testuser").course(course).build();
-    Long teamMemberId = 10L;
-    TeamMember teamMember =
-        TeamMember.builder().id(teamMemberId).team(team).rosterStudent(rosterStudent).build();
-
-    when(teamMemberRepository.findById(teamMemberId)).thenReturn(Optional.of(teamMember));
     doThrow(new RuntimeException("GitHub API error"))
         .when(githubTeamService)
         .removeMemberFromGithubTeam("testuser", 456, course);
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
-            .teamMemberId(teamMemberId)
-            .teamId(1234L)
-            .teamMemberRepository(teamMemberRepository)
+            .memberGithubLogin("testuser")
+            .githubTeamId(456)
+            .course(course)
             .githubTeamService(githubTeamService)
             .build();
 
@@ -174,31 +125,10 @@ public class DeleteTeamMemberFromGithubJobTests {
     job.accept(ctx);
 
     // Assert
-    verify(teamMemberRepository).findById(teamMemberId);
     verify(githubTeamService).removeMemberFromGithubTeam("testuser", 456, course);
-    // Should not save team or process members when creation fails
-    verify(teamRepository, never()).save(any());
-  }
-
-  @Test
-  public void test_TeamMemberNotFound() throws Exception {
-    // Arrange
-    Long teamMemberId = 1L;
-    when(teamMemberRepository.findById(teamMemberId)).thenReturn(Optional.empty());
-
-    DeleteTeamMemberFromGithubJob job =
-        DeleteTeamMemberFromGithubJob.builder()
-            .teamMemberId(teamMemberId)
-            .teamId(1234L)
-            .teamMemberRepository(teamMemberRepository)
-            .githubTeamService(githubTeamService)
-            .build();
-
-    // Act
-    job.accept(ctx);
-
-    // Assert
-    verify(teamMemberRepository).findById(teamMemberId);
-    verifyNoInteractions(teamRepository, githubTeamService);
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("ERROR: Failed to remove user from GitHub team: GitHub API error"));
   }
 }

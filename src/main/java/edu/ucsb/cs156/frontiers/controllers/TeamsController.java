@@ -328,9 +328,9 @@ public class TeamsController extends ApiController {
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
-            .teamMemberId(teamMemberId)
-            .teamId(team.getId())
-            .teamMemberRepository(teamMemberRepository)
+            .memberGithubLogin(rosterStudent.getGithubLogin())
+            .githubTeamId(team.getGithubTeamId())
+            .course(team.getCourse())
             .githubTeamService(githubTeamService)
             .build();
     jobService.runAsJob(job);
