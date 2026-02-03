@@ -2,6 +2,7 @@ const jobsFixtures = {
   threeJobs: [
     {
       id: 1,
+      jobName: "MembershipAuditJob",
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
@@ -9,6 +10,7 @@ const jobsFixtures = {
     },
     {
       id: 2,
+      jobName: "DataSyncJob",
       createdAt: "2023-01-02T10:00:00",
       updatedAt: "2023-01-02T10:05:00",
       status: "error",
@@ -16,6 +18,7 @@ const jobsFixtures = {
     },
     {
       id: 3,
+      jobName: "UpdateAllJob",
       createdAt: "2023-01-03T10:00:00",
       updatedAt: "2023-01-03T10:05:00",
       status: "running",
@@ -25,6 +28,7 @@ const jobsFixtures = {
   oneJob: [
     {
       id: 1,
+      jobName: "MembershipAuditJob",
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
@@ -34,6 +38,7 @@ const jobsFixtures = {
   longLogJob: [
     {
       id: 1,
+      jobName: "LongLogJob",
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
