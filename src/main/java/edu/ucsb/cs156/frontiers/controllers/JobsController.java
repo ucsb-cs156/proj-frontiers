@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
@@ -138,6 +139,24 @@ public class JobsController extends ApiController {
             .courseRepository(courseRepository)
             .teamRepository(teamRepository)
             .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(summary = "Launch Delete Team Member From GitHub Job")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/launch/deleteTeamMemberFromGithub")
+  public Job launchDeleteTeamMemberFromGithubJob(
+      @Parameter(name = "memberGithubLogin") @RequestParam String memberGithubLogin,
+      @Parameter(name = "githubTeamId") @RequestParam Integer githubTeamId,
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    DeleteTeamMemberFromGithubJob job =
+        DeleteTeamMemberFromGithubJob.builder()
+            .memberGithubLogin(memberGithubLogin)
+            .githubTeamId(githubTeamId)
+            .course(courseRepository.findById(courseId).get())
             .githubTeamService(githubTeamService)
             .build();
     return jobService.runAsJob(job);

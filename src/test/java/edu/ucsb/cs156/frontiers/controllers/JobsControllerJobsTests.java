@@ -11,8 +11,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
@@ -21,6 +26,7 @@ import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -164,6 +170,53 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
     String response = result.getResponse().getContentAsString();
     verify(jobService, times(1)).runAsJob(any(PushTeamsToGithubJob.class));
+    assertEquals(expectedResponse, response);
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_launch_deleteTeamMemberFromGithub_job() throws Exception {
+
+    // arrange
+
+    User user = currentUserService.getUser();
+
+    Course course = Course.builder().id(1L).orgName("test-org").installationId("123").build();
+    Team team = Team.builder().id(1L).githubTeamId(456).build();
+    RosterStudent rosterStudent = RosterStudent.builder().id(1L).githubLogin("testuser").build();
+    TeamMember teamMember =
+        TeamMember.builder().id(123L).team(team).rosterStudent(rosterStudent).build();
+
+    Job jobStarted =
+        Job.builder()
+            .id(0L)
+            .createdBy(user)
+            .createdAt(null)
+            .updatedAt(null)
+            .status("started")
+            .build();
+
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(jobService.runAsJob(any(DeleteTeamMemberFromGithubJob.class))).thenReturn(jobStarted);
+
+    // act
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/jobs/launch/deleteTeamMemberFromGithub")
+                    .param("memberGithubLogin", "testuser")
+                    .param("githubTeamId", "456")
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    String response = result.getResponse().getContentAsString();
+    verify(jobService, times(1)).runAsJob(any(DeleteTeamMemberFromGithubJob.class));
     assertEquals(expectedResponse, response);
   }
 }
