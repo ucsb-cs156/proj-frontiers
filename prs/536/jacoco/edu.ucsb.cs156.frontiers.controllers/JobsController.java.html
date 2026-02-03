@@ -148,23 +148,18 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @PostMapping(&quot;/launch/deleteTeamMemberFromGithub&quot;)
   public Job launchDeleteTeamMemberFromGithubJob(
-      @Parameter(name = &quot;teamMemberId&quot;) @RequestParam Long teamMemberId,
+      @Parameter(name = &quot;memberGithubLogin&quot;) @RequestParam String memberGithubLogin,
+      @Parameter(name = &quot;githubTeamId&quot;) @RequestParam Integer githubTeamId,
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
     DeleteTeamMemberFromGithubJob job =
-<span class="fc" id="L155">        DeleteTeamMemberFromGithubJob.builder()</span>
-<span class="fc" id="L156">            .memberGithubLogin(</span>
-                teamMemberRepository
-<span class="fc" id="L158">                    .findById(teamMemberId)</span>
-<span class="fc" id="L159">                    .get()</span>
-<span class="fc" id="L160">                    .getRosterStudent()</span>
-<span class="fc" id="L161">                    .getGithubLogin())</span>
-<span class="fc" id="L162">            .githubTeamId(</span>
-<span class="fc" id="L163">                teamMemberRepository.findById(teamMemberId).get().getTeam().getGithubTeamId())</span>
-<span class="fc" id="L164">            .course(courseRepository.findById(courseId).get())</span>
-<span class="fc" id="L165">            .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L166">            .build();</span>
-<span class="fc" id="L167">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L156">        DeleteTeamMemberFromGithubJob.builder()</span>
+<span class="fc" id="L157">            .memberGithubLogin(memberGithubLogin)</span>
+<span class="fc" id="L158">            .githubTeamId(githubTeamId)</span>
+<span class="fc" id="L159">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L160">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L161">            .build();</span>
+<span class="fc" id="L162">    return jobService.runAsJob(job);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
