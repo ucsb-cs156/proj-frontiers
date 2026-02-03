@@ -610,6 +610,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     TeamMember teamMemberUpdated = teamMember;
 
     when(teamMemberRepository.findById(eq(1L))).thenReturn(Optional.of(teamMember));
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
     // act
     MvcResult response =

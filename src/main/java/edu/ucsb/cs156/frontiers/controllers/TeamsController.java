@@ -326,11 +326,16 @@ public class TeamsController extends ApiController {
     Team team = teamMember.getTeam();
     RosterStudent rosterStudent = teamMember.getRosterStudent();
 
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
             .memberGithubLogin(rosterStudent.getGithubLogin())
             .githubTeamId(team.getGithubTeamId())
-            .course(team.getCourse())
+            .course(course)
             .githubTeamService(githubTeamService)
             .build();
     jobService.runAsJob(job);
