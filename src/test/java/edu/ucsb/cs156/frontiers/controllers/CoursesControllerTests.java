@@ -20,6 +20,7 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.models.CourseWarning;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -1647,5 +1648,49 @@ public class CoursesControllerTests extends ControllerTestCase {
     InstructorCourseView viewWithData = new InstructorCourseView(course);
     assertEquals(2, viewWithData.numStudents());
     assertEquals(1, viewWithData.numStaff());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void calls_org_service_for_warnings() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail("test@example.com")
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true));
+
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/warnings/1")).andExpect(status().isOk()).andReturn();
+
+    verify(linkerService).checkCourseWarnings(eq(course));
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(new CourseWarning(true));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_warnings_not_found() throws Exception {
+
+    doReturn(Optional.empty()).when(courseRepository).findById(eq(1L));
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/warnings/1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    verify(linkerService, never()).checkCourseWarnings(any());
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 1 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
   }
 }
