@@ -131,7 +131,7 @@ describe("TeamsTable tests", () => {
   test("delete team calls correct API endpoint with correct params", async () => {
     const successMessage = "Team removed successfully";
     axiosMock.onDelete("/api/teams").reply(200, { successMessage });
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -175,7 +175,6 @@ describe("TeamsTable tests", () => {
       .onPost("/api/jobs/launch/deleteTeamMemberFromGithub")
       .reply(200, { githubMemberSuccessMessage });
 
-
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -216,7 +215,9 @@ describe("TeamsTable tests", () => {
       courseId: "12",
     });
 
-    expect(axiosMock.history.post[0].url).toBe("/api/jobs/launch/deleteTeamMemberFromGithub");
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/jobs/launch/deleteTeamMemberFromGithub",
+    );
     expect(axiosMock.history.post[0].params).toEqual({
       memberGithubLogin: "Division7",
       githubTeamId: 1111111,
