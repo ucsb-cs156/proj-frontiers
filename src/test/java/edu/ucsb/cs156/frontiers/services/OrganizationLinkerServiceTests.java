@@ -188,7 +188,7 @@ public class OrganizationLinkerServiceTests {
 
   @Test
   public void test_no_warning_when_old() throws Exception {
-    Course course = Course.builder().orgName("ucsb-cs156").build();
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
     doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
@@ -212,7 +212,7 @@ public class OrganizationLinkerServiceTests {
 
   @Test
   public void test_warning_when_new() throws Exception {
-    Course course = Course.builder().orgName("ucsb-cs156").build();
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
     doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
@@ -232,5 +232,21 @@ public class OrganizationLinkerServiceTests {
 
     CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
     assertTrue(warning.showOrganizationAgeWarning());
+  }
+
+  @Test
+  public void no_rest_service_calls_when_not_installed() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").build();
+    CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
+    assertFalse(warning.showOrganizationAgeWarning());
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void no_rest_service_calls_when_not_installed_blank() throws Exception {
+    Course course = Course.builder().build();
+    CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
+    assertFalse(warning.showOrganizationAgeWarning());
+    mockRestServiceServer.verify();
   }
 }

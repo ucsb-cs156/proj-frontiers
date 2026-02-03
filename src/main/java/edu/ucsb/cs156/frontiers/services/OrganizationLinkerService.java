@@ -86,6 +86,11 @@ public class OrganizationLinkerService {
 
   public CourseWarning checkCourseWarnings(Course course)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      return new CourseWarning(false);
+    }
+
     String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
     HttpHeaders headers = new HttpHeaders();
     String token = jwtService.getInstallationToken(course);
