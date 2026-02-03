@@ -145,7 +145,7 @@ public class JobsController extends ApiController {
   }
 
   @Operation(summary = "Launch Delete Team Member From GitHub Job")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/launch/deleteTeamMemberFromGithub")
   public Job launchDeleteTeamMemberFromGithubJob(
       @Parameter(name = "memberGithubLogin") @RequestParam String memberGithubLogin,

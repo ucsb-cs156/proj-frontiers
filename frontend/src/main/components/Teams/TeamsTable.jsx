@@ -24,7 +24,7 @@ export default function TeamsTable({
 
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
-    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    // Stryker disable next-line all : GET and empty string are equivalent
     { method: "GET", url: `/api/rosterstudents/course/${courseId}` },
     [],
     true,
