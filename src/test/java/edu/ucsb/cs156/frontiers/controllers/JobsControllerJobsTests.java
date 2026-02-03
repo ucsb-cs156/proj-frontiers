@@ -198,7 +198,6 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
     String expectedResponse = objectMapper.writeValueAsString(jobStarted);
 
-    when(teamMemberRepository.findById(123L)).thenReturn(Optional.of(teamMember));
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
     when(jobService.runAsJob(any(DeleteTeamMemberFromGithubJob.class))).thenReturn(jobStarted);
 
@@ -207,7 +206,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
         mockMvc
             .perform(
                 post("/api/jobs/launch/deleteTeamMemberFromGithub")
-                    .param("teamMemberId", "123")
+                    .param("memberGithubLogin", "testuser")
+                    .param("githubTeamId", "456")
                     .param("courseId", "1")
                     .with(csrf()))
             .andExpect(status().isOk())

@@ -148,19 +148,14 @@ public class JobsController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/launch/deleteTeamMemberFromGithub")
   public Job launchDeleteTeamMemberFromGithubJob(
-      @Parameter(name = "teamMemberId") @RequestParam Long teamMemberId,
+      @Parameter(name = "memberGithubLogin") @RequestParam String memberGithubLogin,
+      @Parameter(name = "githubTeamId") @RequestParam Integer githubTeamId,
       @Parameter(name = "courseId") @RequestParam Long courseId) {
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
-            .memberGithubLogin(
-                teamMemberRepository
-                    .findById(teamMemberId)
-                    .get()
-                    .getRosterStudent()
-                    .getGithubLogin())
-            .githubTeamId(
-                teamMemberRepository.findById(teamMemberId).get().getTeam().getGithubTeamId())
+            .memberGithubLogin(memberGithubLogin)
+            .githubTeamId(githubTeamId)
             .course(courseRepository.findById(courseId).get())
             .githubTeamService(githubTeamService)
             .build();
