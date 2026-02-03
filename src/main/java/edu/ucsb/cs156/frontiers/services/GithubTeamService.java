@@ -248,6 +248,7 @@ public class GithubTeamService {
   /**
    * Removes a member from a GitHub team
    *
+   * @param orgId
    * @param githubLogin
    * @param teamId
    * @param course
@@ -255,10 +256,17 @@ public class GithubTeamService {
    * @throws InvalidKeySpecException
    * @throws JsonProcessingException
    */
-  public void removeMemberFromGithubTeam(String githubLogin, Integer teamId, Course course)
+  public void removeMemberFromGithubTeam(
+      Integer orgId, String githubLogin, Integer teamId, Course course)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
-    String endpoint = "https://api.github.com/teams/" + teamId + "/members/" + githubLogin;
+    String endpoint =
+        "https://api.github.com/organizations/"
+            + orgId
+            + "/team/"
+            + teamId
+            + "/memberships/"
+            + githubLogin;
     HttpHeaders headers = new HttpHeaders();
     String token = jwtService.getInstallationToken(course);
     headers.add("Authorization", "Bearer " + token);

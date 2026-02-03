@@ -31,8 +31,26 @@ public class DeleteTeamMemberFromGithubJob implements JobContextConsumer {
       return;
     }
 
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      ctx.log("ERROR: Course has no linked GitHub organization");
+      return;
+    }
+    // Get the organization id
+    Integer orgId = null;
     try {
-      githubTeamService.removeMemberFromGithubTeam(memberGithubLogin, githubTeamId, course);
+      orgId = githubTeamService.getOrgId(course.getOrgName(), course);
+
+    } catch (Exception e) {
+      ctx.log(
+          "ERROR: Failed to get organization ID for org: "
+              + course.getOrgName()
+              + " - "
+              + e.getMessage());
+      return;
+    }
+
+    try {
+      githubTeamService.removeMemberFromGithubTeam(orgId, memberGithubLogin, githubTeamId, course);
       ctx.log("Successfully removed user from GitHub team");
     } catch (Exception e) {
       ctx.log("ERROR: Failed to remove user from GitHub team: " + e.getMessage());

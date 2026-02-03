@@ -37,6 +37,7 @@ public class DeleteTeamMemberFromGithubJobTests {
   @Test
   public void test_successfully_delete_team_member() throws Exception {
     Course course = Course.builder().orgName("test-org").installationId("123").build();
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
@@ -49,7 +50,7 @@ public class DeleteTeamMemberFromGithubJobTests {
     job.accept(ctx);
 
     verify(githubTeamService, times(1))
-        .removeMemberFromGithubTeam(eq("testuser"), eq(456), eq(course));
+        .removeMemberFromGithubTeam(eq(1), eq("testuser"), eq(456), eq(course));
   }
 
   @Test
@@ -65,12 +66,10 @@ public class DeleteTeamMemberFromGithubJobTests {
             .githubTeamService(githubTeamService)
             .build();
 
-    // Act
     job.accept(ctx);
 
-    // Assert
     verify(githubTeamService, never())
-        .removeMemberFromGithubTeam(anyString(), anyInt(), any(Course.class));
+        .removeMemberFromGithubTeam(anyInt(), anyString(), anyInt(), any(Course.class));
     assertTrue(jobStarted.getLog().contains("ERROR: Team has no GitHub team ID"));
   }
 
@@ -87,19 +86,94 @@ public class DeleteTeamMemberFromGithubJobTests {
             .githubTeamService(githubTeamService)
             .build();
 
-    // Act
     job.accept(ctx);
 
-    // Assert
     verify(githubTeamService, never())
-        .removeMemberFromGithubTeam(anyString(), anyInt(), any(Course.class));
+        .removeMemberFromGithubTeam(anyInt(), anyString(), anyInt(), any(Course.class));
     assertTrue(jobStarted.getLog().contains("ERROR: Team member has no GitHub login"));
+  }
+
+  @Test
+  public void test_CourseWithoutGithubOrg() throws Exception {
+    // Test case where course orgName is null
+    Course course = Course.builder().id(1L).courseName("Test Course").build();
+
+    DeleteTeamMemberFromGithubJob job =
+        DeleteTeamMemberFromGithubJob.builder()
+            .memberGithubLogin("testuser")
+            .githubTeamId(456)
+            .course(course)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verifyNoInteractions(githubTeamService);
+    assertTrue(jobStarted.getLog().contains("ERROR: Course has no linked GitHub organization"));
+  }
+
+  @Test
+  public void test_CourseWithOrgNameButNoInstallationId() throws Exception {
+    // Test case where orgName is not null but installationId is null
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId(null)
+            .build();
+
+    DeleteTeamMemberFromGithubJob job =
+        DeleteTeamMemberFromGithubJob.builder()
+            .memberGithubLogin("testuser")
+            .githubTeamId(456)
+            .course(course)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verifyNoInteractions(githubTeamService);
+    assertTrue(jobStarted.getLog().contains("ERROR: Course has no linked GitHub organization"));
   }
 
   @Test
   public void test_TeamMemberRemovalFailure() throws Exception {
     // Test exception handling when team member removal fails
-    // Arrange
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
+
+    doThrow(new RuntimeException("GitHub API error"))
+        .when(githubTeamService)
+        .removeMemberFromGithubTeam(1, "testuser", 456, course);
+
+    DeleteTeamMemberFromGithubJob job =
+        DeleteTeamMemberFromGithubJob.builder()
+            .memberGithubLogin("testuser")
+            .githubTeamId(456)
+            .course(course)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(githubTeamService).removeMemberFromGithubTeam(1, "testuser", 456, course);
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("ERROR: Failed to remove user from GitHub team: GitHub API error"));
+  }
+
+  @Test
+  public void test_getOrgIdFailure() throws Exception {
+    // Test exception handling when get org id failure occurs
     Long courseId = 1L;
     Course course =
         Course.builder()
@@ -111,7 +185,7 @@ public class DeleteTeamMemberFromGithubJobTests {
 
     doThrow(new RuntimeException("GitHub API error"))
         .when(githubTeamService)
-        .removeMemberFromGithubTeam("testuser", 456, course);
+        .getOrgId("test-org", course);
 
     DeleteTeamMemberFromGithubJob job =
         DeleteTeamMemberFromGithubJob.builder()
@@ -121,14 +195,14 @@ public class DeleteTeamMemberFromGithubJobTests {
             .githubTeamService(githubTeamService)
             .build();
 
-    // Act
     job.accept(ctx);
 
-    // Assert
-    verify(githubTeamService).removeMemberFromGithubTeam("testuser", 456, course);
+    verify(githubTeamService).getOrgId("test-org", course);
+    verify(githubTeamService, never())
+        .removeMemberFromGithubTeam(anyInt(), anyString(), anyInt(), any(Course.class));
     assertTrue(
         jobStarted
             .getLog()
-            .contains("ERROR: Failed to remove user from GitHub team: GitHub API error"));
+            .contains("ERROR: Failed to get organization ID for org: test-org - GitHub API error"));
   }
 }

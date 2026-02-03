@@ -503,14 +503,14 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/teams/11/members/testuser"),
+            eq("https://api.github.com/organizations/1/team/11/memberships/testuser"),
             eq(HttpMethod.DELETE),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>(response, HttpStatus.NO_CONTENT));
 
     // Act
-    githubTeamService.removeMemberFromGithubTeam("testuser", 11, course);
+    githubTeamService.removeMemberFromGithubTeam(1, "testuser", 11, course);
   }
 
   @Test
@@ -523,14 +523,14 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/teams/11/members/testuser"),
+            eq("https://api.github.com/organizations/1/team/11/memberships/testuser"),
             eq(HttpMethod.DELETE),
             entityCaptor.capture(),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
 
     // Act
-    githubTeamService.removeMemberFromGithubTeam("testuser", 11, course);
+    githubTeamService.removeMemberFromGithubTeam(1, "testuser", 11, course);
 
     // Assert
     HttpEntity<String> capturedEntity = entityCaptor.getValue();
