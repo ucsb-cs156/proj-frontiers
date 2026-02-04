@@ -14,6 +14,7 @@ import org.hibernate.annotations.FetchMode;
 @Builder
 @Entity
 @Table(name = "team", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "course_id"}))
+@EqualsAndHashCode(exclude = {"teamMembers"})
 public class Team {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,4 +36,6 @@ public class Team {
 
   @Column(nullable = true)
   private Integer githubTeamId;
+
+  private Integer canvasId;
 }
