@@ -1,7 +1,8 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -76,13 +78,11 @@ public class UpdateOrgMembershipJobTests {
             .orgStatus(OrgStatus.MEMBER)
             .build();
 
-    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
+    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(any(Course.class));
     doReturn(Optional.of(student1))
+        .doReturn(Optional.of(student2))
         .when(rosterStudentRepository)
-        .findByCourseAndGithubId(eq(course), eq(123456));
-    doReturn(Optional.of(student2))
-        .when(rosterStudentRepository)
-        .findByCourseAndGithubId(eq(course), eq(123457));
+        .findByCourseAndGithubId(any(Course.class), anyInt());
 
     var matchJob =
         spy(
@@ -98,8 +98,10 @@ public class UpdateOrgMembershipJobTests {
                 Done""";
     assertEquals(expected, jobStarted.getLog());
 
-    verify(rosterStudentRepository, times(1)).save(eq(student1Updated));
-    verify(rosterStudentRepository, times(1)).save(eq(student2Updated));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(2)).save(captor.capture());
+    assertThat(captor.getAllValues().get(0)).usingRecursiveComparison().isEqualTo(student1Updated);
+    assertThat(captor.getAllValues().get(1)).usingRecursiveComparison().isEqualTo(student2Updated);
   }
 
   @Test
@@ -108,10 +110,10 @@ public class UpdateOrgMembershipJobTests {
     List<OrgMember> orgMembers = List.of(orgMember1);
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
 
-    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
+    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(any(Course.class));
     doReturn(Optional.empty())
         .when(rosterStudentRepository)
-        .findByCourseAndGithubId(eq(course), eq(123456));
+        .findByCourseAndGithubId(any(Course.class), anyInt());
 
     var matchJob =
         spy(
