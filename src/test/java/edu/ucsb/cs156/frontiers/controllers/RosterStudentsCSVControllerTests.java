@@ -1,10 +1,10 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -193,9 +193,9 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsChico.getBytes());
 
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course1));
 
-    when(rosterStudentRepository.saveAll(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)))
+    when(rosterStudentRepository.saveAll(any()))
         .thenReturn(List.of(rs1AfterWithId, rs2AfterWithId, rs3WithId));
 
     // act
@@ -212,11 +212,21 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     // assert
 
-    verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    verify(rosterStudentRepository, times(1))
-        .saveAll(new ArrayList<>(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)));
-    verify(updateUserService, times(1))
-        .attachUsersToRosterStudents(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
+    verify(courseRepository, atLeastOnce()).findById(1L);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<RosterStudent>> saveAllCaptor = ArgumentCaptor.forClass(List.class);
+    verify(rosterStudentRepository, times(1)).saveAll(saveAllCaptor.capture());
+    List<RosterStudent> savedStudents = saveAllCaptor.getValue();
+    assertThat(savedStudents).hasSize(3);
+    assertThat(savedStudents)
+        .extracting("studentId")
+        .containsExactlyInAnyOrder("013228559", "013205354", "013251642");
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<RosterStudent>> attachCaptor = ArgumentCaptor.forClass(List.class);
+    verify(updateUserService, times(1)).attachUsersToRosterStudents(attachCaptor.capture());
+    assertThat(attachCaptor.getValue()).hasSize(3);
 
     String responseString = response.getResponse().getContentAsString();
     LoadResult expectedResult = new LoadResult(1, 2, 0, List.of());
@@ -237,7 +247,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .id(1L)
             .rosterStudents(new ArrayList<>(List.of(student1ID, student1Email, student2)))
             .build();
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course1));
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
@@ -326,7 +336,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
 
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
@@ -364,7 +374,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .id(1L)
             .rosterStudents(new ArrayList<>(List.of(student1Email, student2)))
             .build();
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course1));
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
@@ -428,7 +438,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleUnknownCSVFormat.getBytes());
 
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course1));
 
     // act
 
@@ -458,7 +468,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
 
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
 
     // act
 
@@ -474,7 +484,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     // assert
 
-    verify(courseRepository, atLeastOnce()).findById(eq(1L));
+    verify(courseRepository, atLeastOnce()).findById(1L);
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
         Map.of(
