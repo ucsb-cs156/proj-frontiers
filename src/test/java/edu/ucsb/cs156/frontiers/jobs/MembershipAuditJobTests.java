@@ -218,21 +218,41 @@ public class MembershipAuditJobTests {
     ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
     verify(rosterStudentRepository, times(2)).saveAll(rosterCaptor.capture());
     List<List<RosterStudent>> rosterSaves = rosterCaptor.getAllValues();
-    assertThat(rosterSaves.get(0).get(0)).isSameAs(student1);
-    assertThat(rosterSaves.get(0).get(1)).isSameAs(student2);
-    assertThat(rosterSaves.get(1).get(0)).isSameAs(student3);
-    assertThat(rosterSaves.get(1).get(1)).isSameAs(student4);
-    assertThat(rosterSaves.get(1).get(2)).isSameAs(student5);
-    assertThat(rosterSaves.get(1).get(3)).isSameAs(student6);
+    assertThat(rosterSaves.get(0).get(0).getGithubId()).isEqualTo(123456);
+    assertThat(rosterSaves.get(0).get(0).getStudentId()).isEqualTo("banana");
+    assertThat(rosterSaves.get(0).get(0).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(rosterSaves.get(0).get(1).getGithubId()).isEqualTo(123457);
+    assertThat(rosterSaves.get(0).get(1).getStudentId()).isEqualTo("apple");
+    assertThat(rosterSaves.get(0).get(1).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(rosterSaves.get(1).get(0).getGithubId()).isEqualTo(123455);
+    assertThat(rosterSaves.get(1).get(0).getStudentId()).isEqualTo("banana");
+    assertThat(rosterSaves.get(1).get(0).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(rosterSaves.get(1).get(1).getGithubId()).isEqualTo(123454);
+    assertThat(rosterSaves.get(1).get(1).getStudentId()).isEqualTo("apple");
+    assertThat(rosterSaves.get(1).get(1).getOrgStatus()).isEqualTo(OrgStatus.JOINCOURSE);
+    assertThat(rosterSaves.get(1).get(2).getStudentId()).isEqualTo("orange");
+    assertThat(rosterSaves.get(1).get(2).getGithubId()).isNull();
+    assertThat(rosterSaves.get(1).get(2).getOrgStatus()).isNull();
+    assertThat(rosterSaves.get(1).get(3).getStudentId()).isEqualTo("grape");
+    assertThat(rosterSaves.get(1).get(3).getGithubId()).isEqualTo(123455);
+    assertThat(rosterSaves.get(1).get(3).getOrgStatus()).isNull();
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
     verify(courseStaffRepository, times(2)).saveAll(staffCaptor.capture());
     List<List<CourseStaff>> staffSaves = staffCaptor.getAllValues();
-    assertThat(staffSaves.get(0).get(0)).isSameAs(courseStaff1);
-    assertThat(staffSaves.get(1).get(0)).isSameAs(courseStaff2);
-    assertThat(staffSaves.get(1).get(1)).isSameAs(courseStaff3);
-    assertThat(staffSaves.get(1).get(2)).isSameAs(courseStaff4);
+    assertThat(staffSaves.get(0).get(0).getGithubId()).isEqualTo(781);
+    assertThat(staffSaves.get(0).get(0).getGithubLogin()).isEqualTo("division11");
+    assertThat(staffSaves.get(0).get(0).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(staffSaves.get(1).get(0).getGithubId()).isEqualTo(738);
+    assertThat(staffSaves.get(1).get(0).getGithubLogin()).isEqualTo("division6");
+    assertThat(staffSaves.get(1).get(0).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(staffSaves.get(1).get(1).getGithubId()).isNull();
+    assertThat(staffSaves.get(1).get(1).getGithubLogin()).isNull();
+    assertThat(staffSaves.get(1).get(1).getOrgStatus()).isNull();
+    assertThat(staffSaves.get(1).get(2).getGithubId()).isEqualTo(722);
+    assertThat(staffSaves.get(1).get(2).getGithubLogin()).isNull();
+    assertThat(staffSaves.get(1).get(2).getOrgStatus()).isNull();
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 
@@ -296,12 +316,16 @@ public class MembershipAuditJobTests {
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
     verify(rosterStudentRepository, times(1)).saveAll(rosterCaptor.capture());
-    assertThat(rosterCaptor.getValue().get(0)).isSameAs(student1);
+    assertThat(rosterCaptor.getValue().get(0).getGithubId()).isEqualTo(123456);
+    assertThat(rosterCaptor.getValue().get(0).getStudentId()).isEqualTo("banana");
+    assertThat(rosterCaptor.getValue().get(0).getOrgStatus()).isEqualTo(OrgStatus.JOINCOURSE);
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
     verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
-    assertThat(staffCaptor.getValue().get(0)).isSameAs(courseStaff1);
+    assertThat(staffCaptor.getValue().get(0).getGithubId()).isEqualTo(123457);
+    assertThat(staffCaptor.getValue().get(0).getGithubLogin()).isEqualTo("apple");
+    assertThat(staffCaptor.getValue().get(0).getOrgStatus()).isEqualTo(OrgStatus.JOINCOURSE);
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 
@@ -392,14 +416,22 @@ public class MembershipAuditJobTests {
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
     verify(rosterStudentRepository, times(1)).saveAll(rosterCaptor.capture());
-    assertThat(rosterCaptor.getValue().get(0)).isSameAs(student2);
-    assertThat(rosterCaptor.getValue().get(1)).isSameAs(student3);
+    assertThat(rosterCaptor.getValue().get(0).getGithubId()).isEqualTo(123457);
+    assertThat(rosterCaptor.getValue().get(0).getStudentId()).isEqualTo("apple");
+    assertThat(rosterCaptor.getValue().get(0).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(rosterCaptor.getValue().get(1).getGithubId()).isEqualTo(123455);
+    assertThat(rosterCaptor.getValue().get(1).getStudentId()).isEqualTo("orange");
+    assertThat(rosterCaptor.getValue().get(1).getOrgStatus()).isEqualTo(OrgStatus.OWNER);
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
     verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
-    assertThat(staffCaptor.getValue().get(0)).isSameAs(courseStaff1);
-    assertThat(staffCaptor.getValue().get(1)).isSameAs(courseStaff2);
+    assertThat(staffCaptor.getValue().get(0).getGithubId()).isEqualTo(772);
+    assertThat(staffCaptor.getValue().get(0).getGithubLogin()).isEqualTo("division6");
+    assertThat(staffCaptor.getValue().get(0).getOrgStatus()).isEqualTo(OrgStatus.OWNER);
+    assertThat(staffCaptor.getValue().get(1).getGithubId()).isEqualTo(752);
+    assertThat(staffCaptor.getValue().get(1).getGithubLogin()).isEqualTo("division11");
+    assertThat(staffCaptor.getValue().get(1).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 
@@ -513,14 +545,22 @@ public class MembershipAuditJobTests {
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
     verify(rosterStudentRepository, times(1)).saveAll(rosterCaptor.capture());
-    assertThat(rosterCaptor.getValue().get(0)).isSameAs(student);
-    assertThat(rosterCaptor.getValue().get(1)).isSameAs(student2);
+    assertThat(rosterCaptor.getValue().get(0).getGithubId()).isEqualTo(123456);
+    assertThat(rosterCaptor.getValue().get(0).getStudentId()).isEqualTo("banana");
+    assertThat(rosterCaptor.getValue().get(0).getOrgStatus()).isEqualTo(OrgStatus.INVITED);
+    assertThat(rosterCaptor.getValue().get(1).getGithubId()).isEqualTo(241789);
+    assertThat(rosterCaptor.getValue().get(1).getStudentId()).isEqualTo("banana");
+    assertThat(rosterCaptor.getValue().get(1).getOrgStatus()).isEqualTo(OrgStatus.JOINCOURSE);
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
     verify(courseStaffRepository).saveAll(staffCaptor.capture());
-    assertThat(staffCaptor.getValue().get(0)).isSameAs(courseStaff1);
-    assertThat(staffCaptor.getValue().get(1)).isSameAs(courseStaff2);
+    assertThat(staffCaptor.getValue().get(0).getGithubId()).isEqualTo(777);
+    assertThat(staffCaptor.getValue().get(0).getGithubLogin()).isEqualTo("division6");
+    assertThat(staffCaptor.getValue().get(0).getOrgStatus()).isEqualTo(OrgStatus.INVITED);
+    assertThat(staffCaptor.getValue().get(1).getGithubId()).isEqualTo(7310);
+    assertThat(staffCaptor.getValue().get(1).getGithubLogin()).isEqualTo("division14");
+    assertThat(staffCaptor.getValue().get(1).getOrgStatus()).isEqualTo(OrgStatus.JOINCOURSE);
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 }
