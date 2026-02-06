@@ -9,6 +9,7 @@ import static org.mockito.Mockito.*;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
@@ -86,8 +87,13 @@ public class UpdateOrgMembershipJobTests {
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(rosterStudentRepository, times(2)).save(captor.capture());
     List<RosterStudent> savedStudents = captor.getAllValues();
-    assertThat(savedStudents.get(0)).isSameAs(student1);
-    assertThat(savedStudents.get(1)).isSameAs(student2);
+    assertThat(savedStudents.get(0).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(savedStudents.get(0).getGithubId()).isEqualTo(123456);
+    assertThat(savedStudents.get(0).getStudentId()).isEqualTo("banana");
+
+    assertThat(savedStudents.get(1).getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
+    assertThat(savedStudents.get(1).getGithubId()).isEqualTo(123457);
+    assertThat(savedStudents.get(1).getStudentId()).isEqualTo("apple");
   }
 
   @Test
