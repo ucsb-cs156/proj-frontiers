@@ -56,7 +56,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     // arrange
 
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
 
     // act
 
@@ -83,8 +83,8 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
     // arrange
 
     Course course = Course.builder().id(1L).build();
-    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
-    doReturn(List.of()).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
+    doReturn(Optional.of(course)).when(courseRepository).findById(1L);
+    doReturn(List.of()).when(rosterStudentDTOService).getRosterStudentDTOs(1L);
     doReturn(csvWriter).when(rosterStudentDTOService).getStatefulBeanToCSV(any());
 
     doThrow(new CsvDataTypeMismatchException()).when(csvWriter).write(anyList());
@@ -128,8 +128,8 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             OrgStatus.PENDING,
             List.of("Team Alpha", "Team Beta"));
 
-    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
-    doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
+    doReturn(Optional.of(course)).when(courseRepository).findById(1L);
+    doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(1L);
 
     String expectedResponse =
         """
@@ -145,7 +145,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentDTOService, times(1)).getRosterStudentDTOs(eq(1L));
+    verify(rosterStudentDTOService, times(1)).getRosterStudentDTOs(1L);
     verify(rosterStudentDTOService, times(1)).getStatefulBeanToCSV(any());
 
     assertEquals(expectedResponse, response.getResponse().getContentAsString());
