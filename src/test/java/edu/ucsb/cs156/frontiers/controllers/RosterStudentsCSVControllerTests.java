@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -195,7 +196,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
 
-    when(rosterStudentRepository.saveAll(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)))
+    when(rosterStudentRepository.saveAll(any()))
         .thenReturn(List.of(rs1AfterWithId, rs2AfterWithId, rs3WithId));
 
     // act
@@ -213,10 +214,18 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, atLeastOnce()).findById(eq(1L));
-    verify(rosterStudentRepository, times(1))
-        .saveAll(new ArrayList<>(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)));
-    verify(updateUserService, times(1))
-        .attachUsersToRosterStudents(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
+
+    ArgumentCaptor<List<RosterStudent>> saveAllCaptor = ArgumentCaptor.forClass(List.class);
+    verify(rosterStudentRepository, times(1)).saveAll(saveAllCaptor.capture());
+    assertThat(saveAllCaptor.getValue())
+        .usingRecursiveComparison()
+        .isEqualTo(new ArrayList<>(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)));
+
+    ArgumentCaptor<List<RosterStudent>> attachCaptor = ArgumentCaptor.forClass(List.class);
+    verify(updateUserService, times(1)).attachUsersToRosterStudents(attachCaptor.capture());
+    assertThat(attachCaptor.getValue())
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
 
     String responseString = response.getResponse().getContentAsString();
     LoadResult expectedResult = new LoadResult(1, 2, 0, List.of());
