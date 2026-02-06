@@ -1,8 +1,8 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -92,7 +93,7 @@ public class AdminsControllerTests extends ControllerTestCase {
   @Test
   public void an_admin_user_can_post_a_new_admin() throws Exception {
     Admin admin = Admin.builder().email("acdamstedt@ucsb.edu").build();
-    when(adminRepository.save(eq(admin))).thenReturn(admin);
+    when(adminRepository.save(any(Admin.class))).thenReturn(admin);
     // act
     MvcResult response =
         mockMvc
@@ -100,7 +101,9 @@ public class AdminsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
     // assert
-    verify(adminRepository, times(1)).save(admin);
+    ArgumentCaptor<Admin> adminCaptor = ArgumentCaptor.forClass(Admin.class);
+    verify(adminRepository, times(1)).save(adminCaptor.capture());
+    assertThat(adminCaptor.getValue()).usingRecursiveComparison().isEqualTo(admin);
     String expectedJson = mapper.writeValueAsString(admin);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -111,7 +114,7 @@ public class AdminsControllerTests extends ControllerTestCase {
   public void an_admin_user_can_post_a_new_admin_and_email_is_sanitized() throws Exception {
     Admin admin =
         Admin.builder().email("acdamstedt@ucsb.edu").build(); // Expect spaces to get sanitized
-    when(adminRepository.save(eq(admin))).thenReturn(admin);
+    when(adminRepository.save(any(Admin.class))).thenReturn(admin);
     // act
     MvcResult response =
         mockMvc
@@ -119,7 +122,9 @@ public class AdminsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
     // assert
-    verify(adminRepository, times(1)).save(admin);
+    ArgumentCaptor<Admin> adminCaptor = ArgumentCaptor.forClass(Admin.class);
+    verify(adminRepository, times(1)).save(adminCaptor.capture());
+    assertThat(adminCaptor.getValue()).usingRecursiveComparison().isEqualTo(admin);
     String expectedJson = mapper.writeValueAsString(admin);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
