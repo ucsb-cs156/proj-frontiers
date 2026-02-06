@@ -2,7 +2,6 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -72,7 +71,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             .instructorEmail(user.getEmail())
             .build();
 
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     Assignment assignment =
         Assignment.builder()
@@ -115,7 +114,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
   @Test
   @WithMockUser(roles = {"ADMIN"})
   public void test_AdminCannotPostAssignmentForCourseThatDoesNotExist() throws Exception {
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
 
     // act
 
@@ -166,8 +165,8 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             .permission(Permission.READ)
             .build();
 
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(assignmentRepository.findById(eq(1L))).thenReturn(Optional.of(assignment));
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(assignmentRepository.findById(1L)).thenReturn(Optional.of(assignment));
 
     Assignment updatedAssignment =
         Assignment.builder()
@@ -254,7 +253,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void testUpdateAssignment_course_not_found() throws Exception {
 
-    when(courseRepository.findById(eq(42L))).thenReturn(Optional.empty());
+    when(courseRepository.findById(42L)).thenReturn(Optional.empty());
 
     MvcResult response =
         mockMvc
