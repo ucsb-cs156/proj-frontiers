@@ -1,8 +1,8 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
@@ -21,6 +21,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -185,10 +186,16 @@ public class MembershipAuditJobTests {
     CourseStaff courseStaff4Updated =
         CourseStaff.builder().githubLogin(null).githubId(722).course(course2).build();
 
-    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
-    doReturn(secondCourse).when(organizationMemberService).getOrganizationMembers(eq(course2));
-    doReturn(emptyAdmins).when(organizationMemberService).getOrganizationAdmins(eq(course));
-    doReturn(emptyAdmins).when(organizationMemberService).getOrganizationAdmins(eq(course2));
+    doAnswer(
+            invocation -> {
+              Course c = invocation.getArgument(0);
+              if (c == course) return orgMembers;
+              if (c == course2) return secondCourse;
+              return List.of();
+            })
+        .when(organizationMemberService)
+        .getOrganizationMembers(any(Course.class));
+    doReturn(emptyAdmins).when(organizationMemberService).getOrganizationAdmins(any(Course.class));
     doReturn(List.of(course, course2, course3, course4)).when(courseRepository).findAll();
 
     var matchJob =
@@ -207,15 +214,25 @@ public class MembershipAuditJobTests {
                 Done""";
     assertEquals(expected, jobStarted.getLog());
 
-    verify(rosterStudentRepository, atLeastOnce())
-        .saveAll(eq(List.of(student1Updated, student2Updated)));
-    verify(courseStaffRepository, atLeastOnce()).saveAll(eq(List.of(courseStaff1Updated)));
-    verify(courseStaffRepository, atLeastOnce())
-        .saveAll(eq(List.of(courseStaff2Updated, courseStaff3Updated, courseStaff4Updated)));
-    verify(rosterStudentRepository, atLeastOnce())
-        .saveAll(eq(List.of(student3Updated, student4Updated, student5Updated, student6Updated)));
-    verify(rosterStudentRepository, times(2)).saveAll(any());
-    verify(courseStaffRepository, times(2)).saveAll(any());
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
+    verify(rosterStudentRepository, times(2)).saveAll(rosterCaptor.capture());
+    List<List<RosterStudent>> rosterSaves = rosterCaptor.getAllValues();
+    assertThat(rosterSaves.get(0).get(0)).isSameAs(student1);
+    assertThat(rosterSaves.get(0).get(1)).isSameAs(student2);
+    assertThat(rosterSaves.get(1).get(0)).isSameAs(student3);
+    assertThat(rosterSaves.get(1).get(1)).isSameAs(student4);
+    assertThat(rosterSaves.get(1).get(2)).isSameAs(student5);
+    assertThat(rosterSaves.get(1).get(3)).isSameAs(student6);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    verify(courseStaffRepository, times(2)).saveAll(staffCaptor.capture());
+    List<List<CourseStaff>> staffSaves = staffCaptor.getAllValues();
+    assertThat(staffSaves.get(0).get(0)).isSameAs(courseStaff1);
+    assertThat(staffSaves.get(1).get(0)).isSameAs(courseStaff2);
+    assertThat(staffSaves.get(1).get(1)).isSameAs(courseStaff3);
+    assertThat(staffSaves.get(1).get(2)).isSameAs(courseStaff4);
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 
@@ -252,9 +269,12 @@ public class MembershipAuditJobTests {
             .course(course)
             .orgStatus(OrgStatus.JOINCOURSE)
             .build();
-    when(organizationMemberService.getOrganizationMembers(course)).thenReturn(orgMembers);
-    when(organizationMemberService.getOrganizationAdmins(course)).thenReturn(emptyAdmins);
-    when(organizationMemberService.getOrganizationInvitees(course)).thenReturn(List.of());
+    when(organizationMemberService.getOrganizationMembers(any(Course.class)))
+        .thenReturn(orgMembers);
+    when(organizationMemberService.getOrganizationAdmins(any(Course.class)))
+        .thenReturn(emptyAdmins);
+    when(organizationMemberService.getOrganizationInvitees(any(Course.class)))
+        .thenReturn(List.of());
     when(courseRepository.findAll()).thenReturn(List.of(course));
 
     var matchJob =
@@ -273,8 +293,15 @@ public class MembershipAuditJobTests {
                 Done""";
     assertEquals(expected, jobStarted.getLog());
 
-    verify(rosterStudentRepository, times(1)).saveAll(eq(List.of(student1Updated)));
-    verify(courseStaffRepository, times(1)).saveAll(eq(List.of(courseStaff1Updated)));
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
+    verify(rosterStudentRepository, times(1)).saveAll(rosterCaptor.capture());
+    assertThat(rosterCaptor.getValue().get(0)).isSameAs(student1);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
+    assertThat(staffCaptor.getValue().get(0)).isSameAs(courseStaff1);
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 
@@ -342,8 +369,8 @@ public class MembershipAuditJobTests {
             .orgStatus(OrgStatus.MEMBER)
             .build();
 
-    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
-    doReturn(orgAdmins).when(organizationMemberService).getOrganizationAdmins(eq(course));
+    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(any(Course.class));
+    doReturn(orgAdmins).when(organizationMemberService).getOrganizationAdmins(any(Course.class));
     doReturn(List.of(course)).when(courseRepository).findAll();
 
     var matchJob =
@@ -362,10 +389,17 @@ public class MembershipAuditJobTests {
                 Done""";
     assertEquals(expected, jobStarted.getLog());
 
-    verify(rosterStudentRepository, times(1))
-        .saveAll(eq(List.of(student2Updated, student3Updated)));
-    verify(courseStaffRepository, times(1))
-        .saveAll(eq(List.of(courseStaff1Updated, courseStaff2Updated)));
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
+    verify(rosterStudentRepository, times(1)).saveAll(rosterCaptor.capture());
+    assertThat(rosterCaptor.getValue().get(0)).isSameAs(student2);
+    assertThat(rosterCaptor.getValue().get(1)).isSameAs(student3);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
+    assertThat(staffCaptor.getValue().get(0)).isSameAs(courseStaff1);
+    assertThat(staffCaptor.getValue().get(1)).isSameAs(courseStaff2);
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 
@@ -450,9 +484,13 @@ public class MembershipAuditJobTests {
             .orgStatus(OrgStatus.JOINCOURSE)
             .build();
 
-    doReturn(emptyMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
-    doReturn(emptyAdmins).when(organizationMemberService).getOrganizationAdmins(eq(course));
-    doReturn(orgInvitees).when(organizationMemberService).getOrganizationInvitees(eq(course));
+    doReturn(emptyMembers)
+        .when(organizationMemberService)
+        .getOrganizationMembers(any(Course.class));
+    doReturn(emptyAdmins).when(organizationMemberService).getOrganizationAdmins(any(Course.class));
+    doReturn(orgInvitees)
+        .when(organizationMemberService)
+        .getOrganizationInvitees(any(Course.class));
     doReturn(List.of(course)).when(courseRepository).findAll();
 
     var matchJob =
@@ -472,9 +510,17 @@ public class MembershipAuditJobTests {
                 Done""";
     assertEquals(expected, jobStarted.getLog());
 
-    verify(rosterStudentRepository, times(1))
-        .saveAll(eq(List.of(studentUpdated, student2NotUpdated)));
-    verify(courseStaffRepository).saveAll(eq(List.of(courseStaff1Updated, courseStaff2NotUpdated)));
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<RosterStudent>> rosterCaptor = ArgumentCaptor.forClass(List.class);
+    verify(rosterStudentRepository, times(1)).saveAll(rosterCaptor.capture());
+    assertThat(rosterCaptor.getValue().get(0)).isSameAs(student);
+    assertThat(rosterCaptor.getValue().get(1)).isSameAs(student2);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    verify(courseStaffRepository).saveAll(staffCaptor.capture());
+    assertThat(staffCaptor.getValue().get(0)).isSameAs(courseStaff1);
+    assertThat(staffCaptor.getValue().get(1)).isSameAs(courseStaff2);
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
 }
