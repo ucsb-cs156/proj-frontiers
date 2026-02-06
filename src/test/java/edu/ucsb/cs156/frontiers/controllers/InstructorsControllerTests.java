@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -65,7 +67,9 @@ public class InstructorsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(instructorRepository, times(1)).save(eq(instructor));
+    ArgumentCaptor<Instructor> captor = ArgumentCaptor.forClass(Instructor.class);
+    verify(instructorRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(instructor);
     String expectedJson = mapper.writeValueAsString(instructor);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -86,7 +90,9 @@ public class InstructorsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(instructorRepository, times(1)).save(eq(instructor));
+    ArgumentCaptor<Instructor> captor = ArgumentCaptor.forClass(Instructor.class);
+    verify(instructorRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(instructor);
     String expectedJson = mapper.writeValueAsString(instructor);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -161,7 +167,9 @@ public class InstructorsControllerTests extends ControllerTestCase {
 
     // Assert
     verify(instructorRepository, times(1)).findById("ins@ucsb.edu");
-    verify(instructorRepository, times(1)).delete(instructor);
+    ArgumentCaptor<Instructor> captor = ArgumentCaptor.forClass(Instructor.class);
+    verify(instructorRepository, times(1)).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(instructor);
     String expectedMessage =
         String.format("Instructor with email %s deleted.", instructor.getEmail());
     String responseString = response.getResponse().getContentAsString();
