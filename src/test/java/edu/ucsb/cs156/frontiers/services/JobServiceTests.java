@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -97,9 +98,16 @@ public class JobServiceTests {
     doNothing().when(injectedJobService).runJobAsync(any(), any());
     when(currentUserService.getUser()).thenReturn(user.getUser());
 
-    MatcherAssert.assertThat(fireJob, samePropertyValuesAs(jobService.runAsJob(job)));
-    verify(jobRepository).save(eq(fireJob));
-    verify(injectedJobService).runJobAsync(eq(fireJob), eq(job));
+    Job result = jobService.runAsJob(job);
+    MatcherAssert.assertThat(fireJob, samePropertyValuesAs(result));
+
+    ArgumentCaptor<Job> savedJobCaptor = ArgumentCaptor.forClass(Job.class);
+    verify(jobRepository).save(savedJobCaptor.capture());
+    assertThat(savedJobCaptor.getValue()).isSameAs(result);
+
+    ArgumentCaptor<Job> asyncJobCaptor = ArgumentCaptor.forClass(Job.class);
+    verify(injectedJobService).runJobAsync(asyncJobCaptor.capture(), eq(job));
+    assertThat(asyncJobCaptor.getValue()).isSameAs(result);
   }
 
   @Test
@@ -108,17 +116,25 @@ public class JobServiceTests {
     JobContext context = mock(JobContext.class);
 
     Job passedJob = Job.builder().status("running").build();
-    Job expectedReturn = Job.builder().status("complete").build();
 
     doNothing().when(job).accept(any());
 
-    when(contextFactory.createContext(eq(passedJob))).thenReturn(context);
+    when(contextFactory.createContext(any(Job.class))).thenReturn(context);
     doNothing().when(job).accept(eq(context));
 
     jobService.runJobAsync(passedJob, job);
-    await().atMost(2, SECONDS).untilAsserted(() -> verify(jobRepository).save(eq(expectedReturn)));
+
+    ArgumentCaptor<Job> savedJobCaptor = ArgumentCaptor.forClass(Job.class);
+    await()
+        .atMost(2, SECONDS)
+        .untilAsserted(() -> verify(jobRepository).save(savedJobCaptor.capture()));
+    assertThat(savedJobCaptor.getValue()).isSameAs(passedJob);
+
     verify(job).accept(eq(context));
-    verify(contextFactory).createContext(eq(passedJob));
+
+    ArgumentCaptor<Job> contextJobCaptor = ArgumentCaptor.forClass(Job.class);
+    verify(contextFactory).createContext(contextJobCaptor.capture());
+    assertThat(contextJobCaptor.getValue()).isSameAs(passedJob);
   }
 
   @Test
@@ -129,13 +145,16 @@ public class JobServiceTests {
     Job passedJob = Job.builder().status("running").build();
     doNothing().when(job).accept(any());
 
-    when(contextFactory.createContext(eq(passedJob))).thenReturn(context);
+    when(contextFactory.createContext(any(Job.class))).thenReturn(context);
     doThrow(new Exception("fail!")).when(job).accept(eq(context));
 
     jobService.runJobAsync(passedJob, job);
     await().atMost(2, SECONDS).untilAsserted(() -> verify(context).log(contains("fail!")));
     verify(job).accept(eq(context));
-    verify(contextFactory).createContext(eq(passedJob));
+
+    ArgumentCaptor<Job> contextJobCaptor = ArgumentCaptor.forClass(Job.class);
+    verify(contextFactory).createContext(contextJobCaptor.capture());
+    assertThat(contextJobCaptor.getValue()).isSameAs(passedJob);
     assertEquals("error", passedJob.getStatus());
   }
 }
