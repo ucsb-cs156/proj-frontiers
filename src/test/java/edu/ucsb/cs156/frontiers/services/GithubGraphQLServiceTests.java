@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +68,7 @@ public class GithubGraphQLServiceTests {
   @Test
   public void testGetDefaultBranchName() throws Exception {
     assertNotNull(course);
-    when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+    when(jwtService.getInstallationToken(any(Course.class))).thenReturn("mocked-token");
 
     when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
     when(graphQlClientBuilder.header(anyString(), anyString())).thenReturn(graphQlClientBuilder);
@@ -77,7 +76,7 @@ public class GithubGraphQLServiceTests {
     when(graphQlClient.document(anyString())).thenReturn(requestSpec);
     when(requestSpec.variable(anyString(), anyString())).thenReturn(requestSpec);
     when(requestSpec.retrieveSync(anyString())).thenReturn(retrieveSyncSpec);
-    when(retrieveSyncSpec.toEntity(eq(String.class))).thenReturn("main");
+    when(retrieveSyncSpec.toEntity(String.class)).thenReturn("main");
 
     GithubGraphQLService githubGraphQLService = new GithubGraphQLService(graphQlClient, jwtService);
     String defaultBranchName =
@@ -101,7 +100,7 @@ public class GithubGraphQLServiceTests {
     when(requestSpec.retrieveSync(anyString())).thenReturn(retrieveSyncSpec);
 
     assertNotNull(course);
-    when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+    when(jwtService.getInstallationToken(any(Course.class))).thenReturn("mocked-token");
 
     when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
     when(graphQlClientBuilder.header(anyString(), anyString())).thenReturn(graphQlClientBuilder);
