@@ -1,8 +1,8 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -18,6 +18,7 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
@@ -101,9 +102,11 @@ public class RemoveStudentsJobTests {
 
     doThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND))
         .when(organizationMemberService)
-        .removeOrganizationMember(eq(student1));
+        .removeOrganizationMember(any(RosterStudent.class));
     removeStudentsJob.accept(jobContext);
-    verify(organizationMemberService, times(1)).removeOrganizationMember(eq(student1));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(organizationMemberService, times(1)).removeOrganizationMember(captor.capture());
+    assertThat(captor.getValue()).isSameAs(student1);
     verify(rosterStudentRepository, times(1)).save(student1Updated);
   }
 
@@ -129,9 +132,11 @@ public class RemoveStudentsJobTests {
 
     doThrow(new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS))
         .when(organizationMemberService)
-        .removeOrganizationMember(eq(student1));
+        .removeOrganizationMember(any(RosterStudent.class));
     assertThrows(RuntimeException.class, () -> removeStudentsJob.accept(jobContext));
-    verify(organizationMemberService, times(1)).removeOrganizationMember(eq(student1));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(organizationMemberService, times(1)).removeOrganizationMember(captor.capture());
+    assertThat(captor.getValue()).isSameAs(student1);
     verify(rosterStudentRepository, never()).save(student1Updated);
   }
 
