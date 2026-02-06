@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
@@ -19,6 +20,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -59,13 +61,19 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<RosterStudent> studentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
     verify(service, times(1))
         .createStudentRepository(
-            eq(course),
-            eq(student),
+            courseCaptor.capture(),
+            studentCaptor.capture(),
             contains("repo-prefix"),
             eq(false),
             eq(RepositoryPermissions.WRITE));
+
+    assertThat(courseCaptor.getValue()).isSameAs(course);
+    assertThat(studentCaptor.getValue()).isSameAs(student);
   }
 
   @Test
@@ -91,13 +99,19 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<RosterStudent> studentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
     verify(service, times(1))
         .createStudentRepository(
-            eq(course),
-            eq(student),
+            courseCaptor.capture(),
+            studentCaptor.capture(),
             contains("repo-prefix"),
             eq(true),
             eq(RepositoryPermissions.WRITE));
+
+    assertThat(courseCaptor.getValue()).isSameAs(course);
+    assertThat(studentCaptor.getValue()).isSameAs(student);
   }
 
   @Test
@@ -123,13 +137,19 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<RosterStudent> studentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
     verify(service, times(1))
         .createStudentRepository(
-            eq(course),
-            eq(student),
+            courseCaptor.capture(),
+            studentCaptor.capture(),
             contains("repo-prefix"),
             eq(true),
             eq(RepositoryPermissions.WRITE));
+
+    assertThat(courseCaptor.getValue()).isSameAs(course);
+    assertThat(studentCaptor.getValue()).isSameAs(student);
   }
 
   @Test
@@ -214,13 +234,19 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<CourseStaff> staffCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+
     verify(service, times(1))
         .createStaffRepository(
-            eq(course),
-            eq(staff),
+            courseCaptor.capture(),
+            staffCaptor.capture(),
             contains("repo-prefix"),
             eq(false),
             eq(RepositoryPermissions.WRITE));
+
+    assertThat(courseCaptor.getValue()).isSameAs(course);
+    assertThat(staffCaptor.getValue()).isSameAs(staff);
   }
 
   @Test
@@ -253,21 +279,33 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
+    ArgumentCaptor<Course> studentCourseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<RosterStudent> studentCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+
     verify(service, times(1))
         .createStudentRepository(
-            eq(course),
-            eq(student),
+            studentCourseCaptor.capture(),
+            studentCaptor.capture(),
             contains("repo-prefix"),
             eq(true),
             eq(RepositoryPermissions.WRITE));
 
+    assertThat(studentCourseCaptor.getValue()).isSameAs(course);
+    assertThat(studentCaptor.getValue()).isSameAs(student);
+
+    ArgumentCaptor<Course> staffCourseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<CourseStaff> staffCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+
     verify(service, times(1))
         .createStaffRepository(
-            eq(course),
-            eq(staff),
+            staffCourseCaptor.capture(),
+            staffCaptor.capture(),
             contains("repo-prefix"),
             eq(true),
             eq(RepositoryPermissions.WRITE));
+
+    assertThat(staffCourseCaptor.getValue()).isSameAs(course);
+    assertThat(staffCaptor.getValue()).isSameAs(staff);
   }
 
   @Test
@@ -357,12 +395,18 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<CourseStaff> staffCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+
     verify(service, times(1))
         .createStaffRepository(
-            eq(course),
-            eq(staff),
+            courseCaptor.capture(),
+            staffCaptor.capture(),
             contains("repo-prefix"),
             eq(false),
             eq(RepositoryPermissions.WRITE));
+
+    assertThat(courseCaptor.getValue()).isSameAs(course);
+    assertThat(staffCaptor.getValue()).isSameAs(staff);
   }
 }
