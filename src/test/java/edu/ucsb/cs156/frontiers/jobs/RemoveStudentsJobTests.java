@@ -3,7 +3,6 @@ package edu.ucsb.cs156.frontiers.jobs;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -56,11 +55,6 @@ public class RemoveStudentsJobTests {
             .githubId(123456)
             .build();
 
-    RosterStudent student1Updated =
-        RosterStudent.builder().course(course).orgStatus(OrgStatus.REMOVED).build();
-    RosterStudent student2Updated =
-        RosterStudent.builder().course(course).orgStatus(OrgStatus.REMOVED).build();
-
     validStudents = List.of(student1, student2);
 
     removeStudentsJob =
@@ -75,9 +69,14 @@ public class RemoveStudentsJobTests {
 
     // Assert
     verify(organizationMemberService, times(2)).removeOrganizationMember(any(RosterStudent.class));
-    verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
-    verify(rosterStudentRepository, atLeastOnce()).save(student1Updated);
-    verify(rosterStudentRepository, atLeastOnce()).save(student2Updated);
+
+    ArgumentCaptor<RosterStudent> saveCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(2)).save(saveCaptor.capture());
+    for (RosterStudent saved : saveCaptor.getAllValues()) {
+      assertThat(saved.getGithubId()).isNull();
+      assertThat(saved.getGithubLogin()).isNull();
+      assertThat(saved.getOrgStatus()).isEqualTo(OrgStatus.REMOVED);
+    }
   }
 
   @Test
@@ -90,9 +89,6 @@ public class RemoveStudentsJobTests {
             .githubId(123545)
             .orgStatus(OrgStatus.MEMBER)
             .build();
-    RosterStudent student1Updated =
-        RosterStudent.builder().course(course).orgStatus(OrgStatus.REMOVED).build();
-
     removeStudentsJob =
         RemoveStudentsJob.builder()
             .organizationMemberService(organizationMemberService)
@@ -106,8 +102,18 @@ public class RemoveStudentsJobTests {
     removeStudentsJob.accept(jobContext);
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(organizationMemberService, times(1)).removeOrganizationMember(captor.capture());
-    assertThat(captor.getValue()).isSameAs(student1);
-    verify(rosterStudentRepository, times(1)).save(student1Updated);
+    RosterStudent captured = captor.getValue();
+    assertThat(captured.getCourse()).isEqualTo(course);
+    assertThat(captured.getGithubLogin()).isEqualTo(student1.getGithubLogin());
+    assertThat(captured.getGithubId()).isEqualTo(student1.getGithubId());
+    assertThat(captured.getOrgStatus()).isEqualTo(student1.getOrgStatus());
+
+    ArgumentCaptor<RosterStudent> saveCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(saveCaptor.capture());
+    RosterStudent saved = saveCaptor.getValue();
+    assertThat(saved.getGithubId()).isNull();
+    assertThat(saved.getGithubLogin()).isNull();
+    assertThat(saved.getOrgStatus()).isEqualTo(OrgStatus.REMOVED);
   }
 
   @Test
@@ -120,9 +126,6 @@ public class RemoveStudentsJobTests {
             .githubId(123545)
             .orgStatus(OrgStatus.MEMBER)
             .build();
-    RosterStudent student1Updated =
-        RosterStudent.builder().course(course).orgStatus(OrgStatus.REMOVED).build();
-
     removeStudentsJob =
         RemoveStudentsJob.builder()
             .organizationMemberService(organizationMemberService)
@@ -136,8 +139,12 @@ public class RemoveStudentsJobTests {
     assertThrows(RuntimeException.class, () -> removeStudentsJob.accept(jobContext));
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(organizationMemberService, times(1)).removeOrganizationMember(captor.capture());
-    assertThat(captor.getValue()).isSameAs(student1);
-    verify(rosterStudentRepository, never()).save(student1Updated);
+    RosterStudent captured = captor.getValue();
+    assertThat(captured.getCourse()).isEqualTo(course);
+    assertThat(captured.getGithubLogin()).isEqualTo(student1.getGithubLogin());
+    assertThat(captured.getGithubId()).isEqualTo(student1.getGithubId());
+    assertThat(captured.getOrgStatus()).isEqualTo(student1.getOrgStatus());
+    verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
   }
 
   @Test
