@@ -1,11 +1,13 @@
 package edu.ucsb.cs156.frontiers.services.jobs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
@@ -29,22 +31,23 @@ public class JobContextTests {
   public void jobsContext_can_save_log_messages() throws Exception {
     JobsRepository repository = mock(JobsRepository.class);
     Job job = Job.builder().build();
-    Job jobAfterFirstSave = Job.builder().log("This is a log message").build();
-    Job jobAfterSecondSave = Job.builder().log("This is a log message\nSecond log message").build();
 
     JobContext ctx = new JobContext(repository, job);
 
     InOrder inOrder = Mockito.inOrder(repository);
+    ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
 
     ctx.log("This is a log message");
     assertEquals("This is a log message", job.getLog());
 
-    inOrder.verify(repository).save(jobAfterFirstSave);
+    inOrder.verify(repository).save(captor.capture());
+    assertThat(captor.getValue()).isSameAs(job);
 
     ctx.log("Second log message");
     assertEquals("This is a log message\nSecond log message", job.getLog());
 
-    inOrder.verify(repository).save(jobAfterSecondSave);
+    inOrder.verify(repository).save(captor.capture());
+    assertThat(captor.getValue()).isSameAs(job);
     inOrder.verifyNoMoreInteractions();
   }
 }
