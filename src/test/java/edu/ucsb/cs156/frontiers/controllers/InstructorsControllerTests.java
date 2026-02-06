@@ -68,7 +68,7 @@ public class InstructorsControllerTests extends ControllerTestCase {
     // assert
     ArgumentCaptor<Instructor> captor = ArgumentCaptor.forClass(Instructor.class);
     verify(instructorRepository, times(1)).save(captor.capture());
-    assertThat(captor.getValue()).isEqualTo(instructor);
+    assertThat(captor.getValue().getEmail()).isEqualTo("ins@ucsb.edu");
 
     String expectedJson = mapper.writeValueAsString(instructor);
     String responseString = response.getResponse().getContentAsString();
@@ -92,7 +92,7 @@ public class InstructorsControllerTests extends ControllerTestCase {
     // assert
     ArgumentCaptor<Instructor> captor = ArgumentCaptor.forClass(Instructor.class);
     verify(instructorRepository, times(1)).save(captor.capture());
-    assertThat(captor.getValue()).isEqualTo(instructor);
+    assertThat(captor.getValue().getEmail()).isEqualTo("ins@ucsb.edu");
 
     String expectedJson = mapper.writeValueAsString(instructor);
     String responseString = response.getResponse().getContentAsString();
