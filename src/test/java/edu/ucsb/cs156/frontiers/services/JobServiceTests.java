@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -98,8 +99,11 @@ public class JobServiceTests {
     when(currentUserService.getUser()).thenReturn(user.getUser());
 
     MatcherAssert.assertThat(fireJob, samePropertyValuesAs(jobService.runAsJob(job)));
-    verify(jobRepository).save(eq(fireJob));
-    verify(injectedJobService).runJobAsync(eq(fireJob), eq(job));
+    ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
+    verify(jobRepository).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(fireJob);
+    verify(injectedJobService).runJobAsync(captor.capture(), eq(job));
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(fireJob);
   }
 
   @Test
@@ -112,13 +116,22 @@ public class JobServiceTests {
 
     doNothing().when(job).accept(any());
 
-    when(contextFactory.createContext(eq(passedJob))).thenReturn(context);
+    when(contextFactory.createContext(any())).thenReturn(context);
     doNothing().when(job).accept(eq(context));
 
     jobService.runJobAsync(passedJob, job);
-    await().atMost(2, SECONDS).untilAsserted(() -> verify(jobRepository).save(eq(expectedReturn)));
+    await()
+        .atMost(2, SECONDS)
+        .untilAsserted(
+            () -> {
+              ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
+              verify(jobRepository).save(captor.capture());
+              assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(expectedReturn);
+            });
     verify(job).accept(eq(context));
-    verify(contextFactory).createContext(eq(passedJob));
+    ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
+    verify(contextFactory).createContext(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(passedJob);
   }
 
   @Test
@@ -129,13 +142,15 @@ public class JobServiceTests {
     Job passedJob = Job.builder().status("running").build();
     doNothing().when(job).accept(any());
 
-    when(contextFactory.createContext(eq(passedJob))).thenReturn(context);
+    when(contextFactory.createContext(any())).thenReturn(context);
     doThrow(new Exception("fail!")).when(job).accept(eq(context));
 
     jobService.runJobAsync(passedJob, job);
     await().atMost(2, SECONDS).untilAsserted(() -> verify(context).log(contains("fail!")));
     verify(job).accept(eq(context));
-    verify(contextFactory).createContext(eq(passedJob));
+    ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
+    verify(contextFactory).createContext(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(passedJob);
     assertEquals("error", passedJob.getStatus());
   }
 }
