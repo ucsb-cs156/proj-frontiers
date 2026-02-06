@@ -1,6 +1,8 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -143,7 +145,7 @@ public class WebhookControllerTests extends ControllerTestCase {
     doReturn(Optional.of(student))
         .when(rosterStudentRepository)
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
-    doReturn(updated).when(rosterStudentRepository).save(eq(updated));
+    doReturn(updated).when(rosterStudentRepository).save(any(RosterStudent.class));
 
     String sendBody =
         """
@@ -175,7 +177,10 @@ public class WebhookControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository, times(1))
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
     verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
-    verify(rosterStudentRepository, times(1)).save(eq(updated));
+    ArgumentCaptor<RosterStudent> rosterStudentCaptor1 =
+        ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor1.capture());
+    assertThat(rosterStudentCaptor1.getValue()).usingRecursiveComparison().isEqualTo(updated);
     String actualBody = response.getResponse().getContentAsString();
     assertEquals(updated.toString(), actualBody);
   }
@@ -195,7 +200,7 @@ public class WebhookControllerTests extends ControllerTestCase {
     doReturn(Optional.of(student))
         .when(rosterStudentRepository)
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
-    doReturn(updated).when(rosterStudentRepository).save(eq(updated));
+    doReturn(updated).when(rosterStudentRepository).save(any(RosterStudent.class));
 
     String sendBody =
         """
@@ -227,7 +232,10 @@ public class WebhookControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository, times(1))
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
     verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
-    verify(rosterStudentRepository, times(1)).save(eq(updated));
+    ArgumentCaptor<RosterStudent> rosterStudentCaptor2 =
+        ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(rosterStudentCaptor2.capture());
+    assertThat(rosterStudentCaptor2.getValue()).usingRecursiveComparison().isEqualTo(updated);
     String actualBody = response.getResponse().getContentAsString();
     assertEquals(updated.toString(), actualBody);
   }
@@ -885,7 +893,9 @@ public class WebhookControllerTests extends ControllerTestCase {
     verify(courseStaffRepository, times(1))
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
     verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
-    verify(courseStaffRepository, times(1)).save(eq(updated));
+    ArgumentCaptor<CourseStaff> courseStaffCaptor1 = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(courseStaffCaptor1.capture());
+    assertThat(courseStaffCaptor1.getValue()).usingRecursiveComparison().isEqualTo(updated);
     verifyNoMoreInteractions(courseStaffRepository, courseStaffRepository);
     verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
 
@@ -908,7 +918,7 @@ public class WebhookControllerTests extends ControllerTestCase {
     doReturn(Optional.of(staff))
         .when(courseStaffRepository)
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
-    doReturn(updated).when(courseStaffRepository).save(eq(updated));
+    doReturn(updated).when(courseStaffRepository).save(any(CourseStaff.class));
 
     String sendBody =
         """
@@ -940,7 +950,9 @@ public class WebhookControllerTests extends ControllerTestCase {
     verify(courseStaffRepository, times(1))
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
     verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
-    verify(courseStaffRepository, times(1)).save(eq(updated));
+    ArgumentCaptor<CourseStaff> courseStaffCaptor2 = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(courseStaffCaptor2.capture());
+    assertThat(courseStaffCaptor2.getValue()).usingRecursiveComparison().isEqualTo(updated);
     String actualBody = response.getResponse().getContentAsString();
     assertEquals(updated.toString(), actualBody);
   }
@@ -960,7 +972,7 @@ public class WebhookControllerTests extends ControllerTestCase {
     doReturn(Optional.of(staff))
         .when(courseStaffRepository)
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
-    doReturn(updated).when(courseStaffRepository).save(eq(updated));
+    doReturn(updated).when(courseStaffRepository).save(any(CourseStaff.class));
 
     String sendBody =
         """
@@ -992,7 +1004,9 @@ public class WebhookControllerTests extends ControllerTestCase {
     verify(courseStaffRepository, times(1))
         .findByCourseAndGithubLogin(eq(course), contains("testLogin"));
     verify(courseRepository, times(1)).findByInstallationId(contains("1234"));
-    verify(courseStaffRepository, times(1)).save(eq(updated));
+    ArgumentCaptor<CourseStaff> courseStaffCaptor3 = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(courseStaffCaptor3.capture());
+    assertThat(courseStaffCaptor3.getValue()).usingRecursiveComparison().isEqualTo(updated);
     String actualBody = response.getResponse().getContentAsString();
     assertEquals(updated.toString(), actualBody);
   }
