@@ -1,8 +1,8 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -65,7 +66,10 @@ public class InstructorsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(instructorRepository, times(1)).save(eq(instructor));
+    ArgumentCaptor<Instructor> captor = ArgumentCaptor.forClass(Instructor.class);
+    verify(instructorRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).isEqualTo(instructor);
+
     String expectedJson = mapper.writeValueAsString(instructor);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -86,7 +90,10 @@ public class InstructorsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(instructorRepository, times(1)).save(eq(instructor));
+    ArgumentCaptor<Instructor> captor = ArgumentCaptor.forClass(Instructor.class);
+    verify(instructorRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).isEqualTo(instructor);
+
     String expectedJson = mapper.writeValueAsString(instructor);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -149,7 +156,7 @@ public class InstructorsControllerTests extends ControllerTestCase {
   public void logged_in_admins_can_delete() throws Exception {
     // Arrange
     Instructor instructor = Instructor.builder().email("ins@ucsb.edu").build();
-    when(instructorRepository.findById(eq("ins@ucsb.edu"))).thenReturn(Optional.of(instructor));
+    when(instructorRepository.findById("ins@ucsb.edu")).thenReturn(Optional.of(instructor));
 
     // Act
     MvcResult response =
@@ -173,7 +180,7 @@ public class InstructorsControllerTests extends ControllerTestCase {
   public void admin_try_to_delete_a_instructor_not_found() throws Exception {
     // Arrange
     String email = "nonexistent@ucsb.edu";
-    when(instructorRepository.findById(eq(email))).thenReturn(Optional.empty());
+    when(instructorRepository.findById(email)).thenReturn(Optional.empty());
 
     // Act
     MvcResult response =
