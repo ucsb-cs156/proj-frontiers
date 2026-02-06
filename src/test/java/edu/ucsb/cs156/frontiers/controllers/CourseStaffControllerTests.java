@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -119,7 +120,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(courseStaffRepository, times(1)).save(eq(cs2));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(cs2);
 
     verify(updateUserService).attachUserToCourseStaff(any(CourseStaff.class));
 
@@ -171,7 +174,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(courseStaffRepository, times(1)).save(eq(cs2));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(cs2);
 
     verify(updateUserService).attachUserToCourseStaff(any(CourseStaff.class));
 
@@ -224,7 +229,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(courseStaffRepository, times(1)).save(eq(cs2));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(cs2);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(cs2);
@@ -543,7 +550,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
     verify(courseStaffRepository).findById(eq(3L));
 
-    verify(courseStaffRepository, times(0)).save(eq(courseStaffUpdated));
+    verify(courseStaffRepository, times(0)).save(any(CourseStaff.class));
     verify(organizationMemberService, times(0)).inviteOrganizationOwner(any(CourseStaff.class));
 
     assertEquals(
@@ -641,7 +648,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .build();
 
     when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
-    when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+    when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(courseStaffUpdated);
     when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class)))
         .thenReturn(OrgStatus.INVITED);
 
@@ -653,7 +660,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
     verify(courseStaffRepository).findById(eq(3L));
 
-    verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffUpdated);
     assertEquals(
         "Successfully invited staff member to Organization",
         response.getResponse().getContentAsString());
@@ -700,7 +709,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .build();
 
     when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
-    when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+    when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(courseStaffUpdated);
     when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class)))
         .thenReturn(OrgStatus.MEMBER);
 
@@ -712,7 +721,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
     verify(courseStaffRepository).findById(eq(3L));
 
-    verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffUpdated);
     assertEquals(
         "Already in organization - set status to MEMBER",
         response.getResponse().getContentAsString());
@@ -759,7 +770,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .build();
 
     when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
-    when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+    when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(courseStaffUpdated);
     when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class)))
         .thenReturn(OrgStatus.OWNER);
 
@@ -771,7 +782,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
 
     verify(courseStaffRepository).findById(eq(3L));
 
-    verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffUpdated);
     assertEquals(
         "Already in organization - set status to OWNER",
         response.getResponse().getContentAsString());
@@ -818,7 +831,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .build();
 
     when(courseStaffRepository.findById(eq(3L))).thenReturn(Optional.of(courseStaff));
-    when(courseStaffRepository.save(eq(courseStaffUpdated))).thenReturn(courseStaffUpdated);
+    when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(courseStaffUpdated);
     when(organizationMemberService.inviteOrganizationOwner(any(CourseStaff.class)))
         .thenReturn(OrgStatus.PENDING);
 
@@ -833,7 +846,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     verify(courseStaffRepository).findById(eq(3L));
 
     // Verify the GitHub ID and login were set
-    verify(courseStaffRepository, times(1)).save(eq(courseStaffUpdated));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffUpdated);
     assertEquals(
         "Could not invite staff member to Organization",
         response.getResponse().getContentAsString());
@@ -948,7 +963,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
     assertEquals(course1.getCourseStaff(), List.of());
     // Since the staff member doesn't have a GitHub login, removeOrganizationMember
     // should not be called
@@ -1009,9 +1026,13 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    ArgumentCaptor<CourseStaff> deleteCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).delete(deleteCaptor.capture());
+    assertThat(deleteCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
     assertEquals(course1.getCourseStaff(), List.of());
-    verify(organizationMemberService).removeOrganizationMember(eq(staffMember));
+    ArgumentCaptor<CourseStaff> removeCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(organizationMemberService).removeOrganizationMember(removeCaptor.capture());
+    assertThat(removeCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMember);
 
     assertEquals(
         "Successfully deleted staff member and removed them from the staff roster and organization.",
@@ -1066,7 +1087,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
     assertEquals(course1.getCourseStaff(), List.of());
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
@@ -1123,7 +1146,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
     assertEquals(course1.getCourseStaff(), List.of());
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
@@ -1185,9 +1210,13 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseStaffRepository).delete(eq(staffMemberUpdated));
+    ArgumentCaptor<CourseStaff> deleteCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).delete(deleteCaptor.capture());
+    assertThat(deleteCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
     assertEquals(course1.getCourseStaff(), List.of());
-    verify(organizationMemberService).removeOrganizationMember(eq(staffMember));
+    ArgumentCaptor<CourseStaff> removeCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(organizationMemberService).removeOrganizationMember(removeCaptor.capture());
+    assertThat(removeCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMember);
 
     assertEquals(
         "Successfully deleted staff member but there was an error removing them from the course organization: "
@@ -1289,7 +1318,9 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseStaffRepository).findById(eq(1L));
-    verify(courseStaffRepository).delete(eq(courseStaffDeleted));
+    ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffDeleted);
     assertEquals(course1.getCourseStaff(), List.of());
     // Verify that removeOrganizationMember is NOT called when removeFromOrg is false
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
@@ -1349,9 +1380,13 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(courseStaffRepository).delete(eq(courseStaffDeleted));
+    ArgumentCaptor<CourseStaff> deleteCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(courseStaffRepository).delete(deleteCaptor.capture());
+    assertThat(deleteCaptor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffDeleted);
     // Verify that removeOrganizationMember IS called when removeFromOrg is true
-    verify(organizationMemberService).removeOrganizationMember(eq(courseStaffDeleted));
+    ArgumentCaptor<CourseStaff> removeCaptor = ArgumentCaptor.forClass(CourseStaff.class);
+    verify(organizationMemberService).removeOrganizationMember(removeCaptor.capture());
+    assertThat(removeCaptor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffDeleted);
 
     assertEquals(
         "Successfully deleted staff member and removed them from the staff roster and organization.",
