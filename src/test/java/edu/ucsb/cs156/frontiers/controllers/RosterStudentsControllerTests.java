@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -145,8 +146,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(rosterStudentRepository, times(1)).save(eq(rs1));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rs1);
+    ArgumentCaptor<RosterStudent> updateCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(updateUserService, times(1)).attachUserToRosterStudent(updateCaptor.capture());
+    assertThat(updateCaptor.getValue()).usingRecursiveComparison().isEqualTo(rs1);
 
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
@@ -179,8 +184,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(rosterStudentRepository, times(1)).save(eq(rs1));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rs1));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rs1);
+    ArgumentCaptor<RosterStudent> updateCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(updateUserService, times(1)).attachUserToRosterStudent(updateCaptor.capture());
+    assertThat(updateCaptor.getValue()).usingRecursiveComparison().isEqualTo(rs1);
 
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
@@ -204,7 +213,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.save(eq(rsUmail))).thenReturn(rsUmail);
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rsUmail);
     doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
     // act
 
@@ -224,8 +233,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // assert
 
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(rosterStudentRepository, times(1)).save(eq(rsUmail));
-    verify(updateUserService, times(1)).attachUserToRosterStudent(eq(rsUmail));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rsUmail);
+    ArgumentCaptor<RosterStudent> updateCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(updateUserService, times(1)).attachUserToRosterStudent(updateCaptor.capture());
+    assertThat(updateCaptor.getValue()).usingRecursiveComparison().isEqualTo(rsUmail);
 
     String responseString = response.getResponse().getContentAsString();
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
@@ -763,7 +776,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).findById(eq(3L));
 
     // Verify the GitHub ID and login were set
-    verify(rosterStudentRepository, times(0)).save(eq(rosterStudentUpdated));
+    verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
     verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
 
     assertEquals(
@@ -820,7 +833,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).findById(eq(3L));
 
     // Verify the GitHub ID and login were set
-    verify(rosterStudentRepository, times(0)).save(eq(rosterStudentUpdated));
+    verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
     verify(organizationMemberService, times(0)).inviteOrganizationMember(any(RosterStudent.class));
 
     assertEquals(
@@ -873,7 +886,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .build();
 
     when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
-    when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rosterStudentUpdated);
     when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class)))
         .thenReturn(OrgStatus.INVITED);
 
@@ -889,7 +902,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).findById(eq(3L));
 
     // Verify the GitHub ID and login were set
-    verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentUpdated);
     assertEquals(
         "Successfully invited student to Organization",
         response.getResponse().getContentAsString());
@@ -940,7 +955,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .build();
 
     when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
-    when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rosterStudentUpdated);
     when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class)))
         .thenReturn(OrgStatus.MEMBER);
 
@@ -956,7 +971,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).findById(eq(3L));
 
     // Verify the GitHub ID and login were set
-    verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentUpdated);
     assertEquals(
         "Already in organization - set status to MEMBER",
         response.getResponse().getContentAsString());
@@ -1007,7 +1024,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .build();
 
     when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
-    when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rosterStudentUpdated);
     when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class)))
         .thenReturn(OrgStatus.OWNER);
 
@@ -1023,7 +1040,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).findById(eq(3L));
 
     // Verify the GitHub ID and login were set
-    verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentUpdated);
     assertEquals(
         "Already in organization - set status to OWNER",
         response.getResponse().getContentAsString());
@@ -1074,7 +1093,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .build();
 
     when(rosterStudentRepository.findById(eq(3L))).thenReturn(Optional.of(rosterStudent));
-    when(rosterStudentRepository.save(eq(rosterStudentUpdated))).thenReturn(rosterStudentUpdated);
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(rosterStudentUpdated);
     when(organizationMemberService.inviteOrganizationMember(any(RosterStudent.class)))
         .thenReturn(OrgStatus.PENDING);
 
@@ -1090,7 +1109,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).findById(eq(3L));
 
     // Verify the GitHub ID and login were set
-    verify(rosterStudentRepository, times(1)).save(eq(rosterStudentUpdated));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentUpdated);
     assertEquals(
         "Could not invite student to Organization", response.getResponse().getContentAsString());
   }
@@ -1129,7 +1150,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     List<RosterStudent> expectedRosterStudents = List.of(rs1WithUser, rs2WithUser);
 
-    when(rosterStudentRepository.findAllByUser(eq(currentUser))).thenReturn(expectedRosterStudents);
+    when(rosterStudentRepository.findAllByUser(any(User.class))).thenReturn(expectedRosterStudents);
 
     // Act
     MvcResult response =
@@ -1139,7 +1160,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(rosterStudentRepository, times(1)).findAllByUser(eq(currentUser));
+    ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+    verify(rosterStudentRepository, times(1)).findAllByUser(userCaptor.capture());
+    assertThat(userCaptor.getValue()).usingRecursiveComparison().isEqualTo(currentUser);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(expectedRosterStudents);
@@ -1152,7 +1175,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Arrange
     User currentUser = currentUserService.getUser();
 
-    when(rosterStudentRepository.findAllByUser(eq(currentUser))).thenReturn(List.of());
+    when(rosterStudentRepository.findAllByUser(any(User.class))).thenReturn(List.of());
 
     // Act
     MvcResult response =
@@ -1162,7 +1185,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // Assert
-    verify(rosterStudentRepository, times(1)).findAllByUser(eq(currentUser));
+    ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+    verify(rosterStudentRepository, times(1)).findAllByUser(userCaptor.capture());
+    assertThat(userCaptor.getValue()).usingRecursiveComparison().isEqualTo(currentUser);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(List.of());
@@ -1659,7 +1684,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
     assertEquals(course1.getRosterStudents(), List.of());
     // Since the student doesn't have a GitHub login, removeOrganizationMember should not be called
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
@@ -1731,11 +1758,15 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(rosterStudentRepository).delete(eq(rosterStudentUpdated));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentUpdated);
     assertEquals(course1.getRosterStudents(), List.of());
     assertEquals(team1.getTeamMembers(), List.of());
     // Verify that removeOrganizationMember is called since the student has a GitHub login
-    verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
+    ArgumentCaptor<RosterStudent> orgCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(organizationMemberService).removeOrganizationMember(orgCaptor.capture());
+    assertThat(orgCaptor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
 
     assertEquals(
         "Successfully deleted roster student and removed him/her from the course list and organization",
@@ -1777,7 +1808,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
     assertEquals(course1.getRosterStudents(), List.of());
 
     // Verify that removeOrganizationMember is NOT called since the course has no org name
@@ -1822,7 +1855,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
     assertEquals(course1.getRosterStudents(), List.of());
 
     // Verify that removeOrganizationMember is NOT called since the course has no installation ID
@@ -1873,10 +1908,14 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(rosterStudentRepository).delete(eq(rosterStudent));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
     assertEquals(course1.getRosterStudents(), List.of());
     // Verify that removeOrganizationMember is called but throws an exception
-    verify(organizationMemberService).removeOrganizationMember(eq(rosterStudent));
+    ArgumentCaptor<RosterStudent> orgCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(organizationMemberService).removeOrganizationMember(orgCaptor.capture());
+    assertThat(orgCaptor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
 
     assertEquals(
         "Successfully deleted roster student but there was an error removing them from the course organization: "
@@ -1958,7 +1997,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     course1.setRosterStudents(List.of(existingStudent));
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.save(eq(expectedSaved))).thenReturn(expectedSaved);
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(expectedSaved);
     doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
 
     // act
@@ -1982,7 +2021,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
     assertEquals(InsertStatus.UPDATED, upsertResponse.insertStatus());
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(expectedSaved);
   }
 
   @Test
@@ -2012,7 +2053,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     course1.setRosterStudents(List.of(existingStudent));
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
-    when(rosterStudentRepository.save(eq(expectedSaved))).thenReturn(expectedSaved);
+    when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(expectedSaved);
     doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
 
     // act
@@ -2036,7 +2077,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     UpsertResponse upsertResponse = mapper.readValue(responseString, UpsertResponse.class);
     assertEquals(InsertStatus.UPDATED, upsertResponse.insertStatus());
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(rosterStudentRepository, times(1)).save(eq(expectedSaved));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(expectedSaved);
   }
 
   @Test
@@ -2093,7 +2136,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentDeleted);
     // Verify that removeOrganizationMember is NOT called when removeFromOrg is false
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -2157,9 +2202,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentDeleted);
     // Verify that removeOrganizationMember IS called when removeFromOrg is true
-    verify(organizationMemberService).removeOrganizationMember(eq(rosterStudentDeleted));
+    ArgumentCaptor<RosterStudent> orgCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(organizationMemberService).removeOrganizationMember(orgCaptor.capture());
+    assertThat(orgCaptor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentDeleted);
 
     assertEquals(
         "Successfully deleted roster student and removed him/her from the course list and organization",
@@ -2221,7 +2270,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
-    verify(rosterStudentRepository).delete(eq(rosterStudentDeleted));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentDeleted);
     // Verify that removeOrganizationMember is NOT called (student has no GitHub login)
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -2268,7 +2319,9 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     // Assert
     verify(rosterStudentRepository).findById(eq(1L));
-    verify(rosterStudentRepository).save(eq(restoredStudent));
+    ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(restoredStudent);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(restoredStudent);
