@@ -69,7 +69,7 @@ public class GithubGraphQLServiceTests {
   @Test
   public void testGetDefaultBranchName() throws Exception {
     assertNotNull(course);
-    when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+    when(jwtService.getInstallationToken(any(Course.class))).thenReturn("mocked-token");
 
     when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
     when(graphQlClientBuilder.header(anyString(), anyString())).thenReturn(graphQlClientBuilder);
@@ -101,7 +101,7 @@ public class GithubGraphQLServiceTests {
     when(requestSpec.retrieveSync(anyString())).thenReturn(retrieveSyncSpec);
 
     assertNotNull(course);
-    when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+    when(jwtService.getInstallationToken(any(Course.class))).thenReturn("mocked-token");
 
     when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
     when(graphQlClientBuilder.header(anyString(), anyString())).thenReturn(graphQlClientBuilder);

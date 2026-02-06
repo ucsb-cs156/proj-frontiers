@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
@@ -191,7 +191,7 @@ public class OrganizationLinkerServiceTests {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
-    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(any(Course.class));
     String apiResponse =
         """
             {
@@ -215,7 +215,7 @@ public class OrganizationLinkerServiceTests {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
-    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(any(Course.class));
     String apiResponse =
         """
             {

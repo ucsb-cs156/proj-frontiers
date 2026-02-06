@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,6 +19,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -71,20 +73,26 @@ public class CreateTeamRepositoriesJobTest {
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
-    verify(service, times(1))
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<Team> teamCaptor = ArgumentCaptor.forClass(Team.class);
+
+    verify(service, times(2))
         .createTeamRepository(
-            eq(course),
-            eq(team1),
+            courseCaptor.capture(),
+            teamCaptor.capture(),
             contains("repo-prefix"),
             eq(false),
             eq(RepositoryPermissions.WRITE));
-    verify(service, times(1))
-        .createTeamRepository(
-            eq(course),
-            eq(team2),
-            contains("repo-prefix"),
-            eq(false),
-            eq(RepositoryPermissions.WRITE));
+
+    courseCaptor
+        .getAllValues()
+        .forEach(
+            c -> {
+              assertThat(c.getOrgName()).isEqualTo("ucsb-cs156");
+              assertThat(c.getInstallationId()).isEqualTo("1234");
+            });
+    assertThat(teamCaptor.getAllValues().get(0).getName()).isEqualTo("test-team1");
+    assertThat(teamCaptor.getAllValues().get(1).getName()).isEqualTo("test-team2");
   }
 
   @Test
@@ -123,19 +131,25 @@ public class CreateTeamRepositoriesJobTest {
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
-    verify(service, times(1))
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    ArgumentCaptor<Team> teamCaptor = ArgumentCaptor.forClass(Team.class);
+
+    verify(service, times(2))
         .createTeamRepository(
-            eq(course),
-            eq(team1),
+            courseCaptor.capture(),
+            teamCaptor.capture(),
             contains("repo-prefix"),
             eq(true),
             eq(RepositoryPermissions.WRITE));
-    verify(service, times(1))
-        .createTeamRepository(
-            eq(course),
-            eq(team2),
-            contains("repo-prefix"),
-            eq(true),
-            eq(RepositoryPermissions.WRITE));
+
+    courseCaptor
+        .getAllValues()
+        .forEach(
+            c -> {
+              assertThat(c.getOrgName()).isEqualTo("ucsb-cs156");
+              assertThat(c.getInstallationId()).isEqualTo("1234");
+            });
+    assertThat(teamCaptor.getAllValues().get(0).getName()).isEqualTo("test-team1");
+    assertThat(teamCaptor.getAllValues().get(1).getName()).isEqualTo("test-team2");
   }
 }

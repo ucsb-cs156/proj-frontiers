@@ -72,8 +72,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             eq(false),
             eq(RepositoryPermissions.WRITE));
 
-    assertThat(courseCaptor.getValue()).isSameAs(course);
-    assertThat(studentCaptor.getValue()).isSameAs(student);
+    assertThat(courseCaptor.getValue().getOrgName()).isEqualTo("ucsb-cs156");
+    assertThat(courseCaptor.getValue().getInstallationId()).isEqualTo("1234");
+    assertThat(studentCaptor.getValue().getGithubLogin()).isEqualTo("studentLogin");
+    assertThat(studentCaptor.getValue().getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
   }
 
   @Test
@@ -110,8 +112,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             eq(true),
             eq(RepositoryPermissions.WRITE));
 
-    assertThat(courseCaptor.getValue()).isSameAs(course);
-    assertThat(studentCaptor.getValue()).isSameAs(student);
+    assertThat(courseCaptor.getValue().getOrgName()).isEqualTo("ucsb-cs156");
+    assertThat(courseCaptor.getValue().getInstallationId()).isEqualTo("1234");
+    assertThat(studentCaptor.getValue().getGithubLogin()).isEqualTo("studentLogin");
+    assertThat(studentCaptor.getValue().getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
   }
 
   @Test
@@ -148,8 +152,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             eq(true),
             eq(RepositoryPermissions.WRITE));
 
-    assertThat(courseCaptor.getValue()).isSameAs(course);
-    assertThat(studentCaptor.getValue()).isSameAs(student);
+    assertThat(courseCaptor.getValue().getOrgName()).isEqualTo("ucsb-cs156");
+    assertThat(courseCaptor.getValue().getInstallationId()).isEqualTo("1234");
+    assertThat(studentCaptor.getValue().getGithubLogin()).isEqualTo("studentLogin");
+    assertThat(studentCaptor.getValue().getOrgStatus()).isEqualTo(OrgStatus.OWNER);
   }
 
   @Test
@@ -245,8 +251,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             eq(false),
             eq(RepositoryPermissions.WRITE));
 
-    assertThat(courseCaptor.getValue()).isSameAs(course);
-    assertThat(staffCaptor.getValue()).isSameAs(staff);
+    assertThat(courseCaptor.getValue().getOrgName()).isEqualTo("ucsb-cs156");
+    assertThat(courseCaptor.getValue().getInstallationId()).isEqualTo("1234");
+    assertThat(staffCaptor.getValue().getGithubLogin()).isEqualTo("staffLogin");
+    assertThat(staffCaptor.getValue().getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
   }
 
   @Test
@@ -290,8 +298,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             eq(true),
             eq(RepositoryPermissions.WRITE));
 
-    assertThat(studentCourseCaptor.getValue()).isSameAs(course);
-    assertThat(studentCaptor.getValue()).isSameAs(student);
+    assertThat(studentCourseCaptor.getValue().getOrgName()).isEqualTo("ucsb-cs156");
+    assertThat(studentCourseCaptor.getValue().getInstallationId()).isEqualTo("1234");
+    assertThat(studentCaptor.getValue().getGithubLogin()).isEqualTo("studentLogin");
+    assertThat(studentCaptor.getValue().getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
 
     ArgumentCaptor<Course> staffCourseCaptor = ArgumentCaptor.forClass(Course.class);
     ArgumentCaptor<CourseStaff> staffCaptor = ArgumentCaptor.forClass(CourseStaff.class);
@@ -304,8 +314,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             eq(true),
             eq(RepositoryPermissions.WRITE));
 
-    assertThat(staffCourseCaptor.getValue()).isSameAs(course);
-    assertThat(staffCaptor.getValue()).isSameAs(staff);
+    assertThat(staffCourseCaptor.getValue().getOrgName()).isEqualTo("ucsb-cs156");
+    assertThat(staffCourseCaptor.getValue().getInstallationId()).isEqualTo("1234");
+    assertThat(staffCaptor.getValue().getGithubLogin()).isEqualTo("staffLogin");
+    assertThat(staffCaptor.getValue().getOrgStatus()).isEqualTo(OrgStatus.MEMBER);
   }
 
   @Test
@@ -406,7 +418,9 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             eq(false),
             eq(RepositoryPermissions.WRITE));
 
-    assertThat(courseCaptor.getValue()).isSameAs(course);
-    assertThat(staffCaptor.getValue()).isSameAs(staff);
+    assertThat(courseCaptor.getValue().getOrgName()).isEqualTo("ucsb-cs156");
+    assertThat(courseCaptor.getValue().getInstallationId()).isEqualTo("1234");
+    assertThat(staffCaptor.getValue().getGithubLogin()).isEqualTo("staffOwner");
+    assertThat(staffCaptor.getValue().getOrgStatus()).isEqualTo(OrgStatus.OWNER);
   }
 }
