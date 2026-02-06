@@ -1,7 +1,6 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import edu.ucsb.cs156.frontiers.entities.Admin;
@@ -63,7 +62,7 @@ public class UserDataDTOServiceTests {
 
     Pageable pageable = Pageable.unpaged();
 
-    when(userRepository.findAll(eq(pageable))).thenReturn(page);
+    when(userRepository.findAll(pageable)).thenReturn(page);
     when(adminRepository.findAll()).thenReturn(expectedAdmins);
     when(instructorRepository.findAll()).thenReturn(expectedInstructors);
 

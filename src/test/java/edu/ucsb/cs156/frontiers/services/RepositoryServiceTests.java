@@ -1,6 +1,5 @@
 package edu.ucsb.cs156.frontiers.services;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
@@ -44,7 +43,7 @@ public class RepositoryServiceTests {
 
   @BeforeEach
   public void setup() throws Exception {
-    doReturn("real.installation.token").when(jwtService).getInstallationToken(eq(course));
+    doReturn("real.installation.token").when(jwtService).getInstallationToken(course);
   }
 
   @Test
