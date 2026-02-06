@@ -2,7 +2,6 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -92,7 +91,7 @@ public class AdminsControllerTests extends ControllerTestCase {
   @Test
   public void an_admin_user_can_post_a_new_admin() throws Exception {
     Admin admin = Admin.builder().email("acdamstedt@ucsb.edu").build();
-    when(adminRepository.save(eq(admin))).thenReturn(admin);
+    when(adminRepository.save(any(Admin.class))).thenReturn(admin);
     // act
     MvcResult response =
         mockMvc
@@ -111,7 +110,7 @@ public class AdminsControllerTests extends ControllerTestCase {
   public void an_admin_user_can_post_a_new_admin_and_email_is_sanitized() throws Exception {
     Admin admin =
         Admin.builder().email("acdamstedt@ucsb.edu").build(); // Expect spaces to get sanitized
-    when(adminRepository.save(eq(admin))).thenReturn(admin);
+    when(adminRepository.save(any(Admin.class))).thenReturn(admin);
     // act
     MvcResult response =
         mockMvc
