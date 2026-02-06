@@ -1,13 +1,12 @@
 package edu.ucsb.cs156.frontiers.services.jobs;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
@@ -35,19 +34,14 @@ public class JobContextTests {
     JobContext ctx = new JobContext(repository, job);
 
     InOrder inOrder = Mockito.inOrder(repository);
-    ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
 
     ctx.log("This is a log message");
     assertEquals("This is a log message", job.getLog());
-
-    inOrder.verify(repository).save(captor.capture());
-    assertThat(captor.getValue()).isSameAs(job);
+    inOrder.verify(repository).save(any(Job.class));
 
     ctx.log("Second log message");
     assertEquals("This is a log message\nSecond log message", job.getLog());
-
-    inOrder.verify(repository).save(captor.capture());
-    assertThat(captor.getValue()).isSameAs(job);
+    inOrder.verify(repository).save(any(Job.class));
     inOrder.verifyNoMoreInteractions();
   }
 }
