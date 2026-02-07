@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.AddTeamMemberToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
@@ -158,6 +159,27 @@ public class JobsController extends ApiController {
             .githubTeamId(githubTeamId)
             .course(courseRepository.findById(courseId).get())
             .githubTeamService(githubTeamService)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(summary = "Launch Add Team Member To GitHub Job")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/launch/addTeamMemberToGithub")
+  public Job launchAddTeamMemberToGithubJob(
+      @Parameter(name = "memberGithubLogin") @RequestParam String memberGithubLogin,
+      @Parameter(name = "githubTeamId") @RequestParam Integer githubTeamId,
+      @Parameter(name = "teamMemberId") @RequestParam Long teamMemberId,
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    AddTeamMemberToGithubJob job =
+        AddTeamMemberToGithubJob.builder()
+            .memberGithubLogin(memberGithubLogin)
+            .githubTeamId(githubTeamId)
+            .teamMemberId(teamMemberId)
+            .course(courseRepository.findById(courseId).get())
+            .githubTeamService(githubTeamService)
+            .teamMemberRepository(teamMemberRepository)
             .build();
     return jobService.runAsJob(job);
   }
