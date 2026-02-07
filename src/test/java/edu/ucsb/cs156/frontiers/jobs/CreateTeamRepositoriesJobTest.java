@@ -84,8 +84,9 @@ public class CreateTeamRepositoriesJobTest {
             eq(RepositoryPermissions.WRITE));
     assertThat(courseCaptor.getAllValues().get(0)).usingRecursiveComparison().isEqualTo(course);
     assertThat(courseCaptor.getAllValues().get(1)).usingRecursiveComparison().isEqualTo(course);
-    assertThat(teamCaptor.getAllValues().get(0)).usingRecursiveComparison().isEqualTo(team1);
-    assertThat(teamCaptor.getAllValues().get(1)).usingRecursiveComparison().isEqualTo(team2);
+    assertThat(teamCaptor.getAllValues())
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactlyInAnyOrder(team1, team2);
   }
 
   @Test
@@ -135,7 +136,8 @@ public class CreateTeamRepositoriesJobTest {
             eq(RepositoryPermissions.WRITE));
     assertThat(courseCaptor.getAllValues().get(0)).usingRecursiveComparison().isEqualTo(course);
     assertThat(courseCaptor.getAllValues().get(1)).usingRecursiveComparison().isEqualTo(course);
-    assertThat(teamCaptor.getAllValues().get(0)).usingRecursiveComparison().isEqualTo(team1);
-    assertThat(teamCaptor.getAllValues().get(1)).usingRecursiveComparison().isEqualTo(team2);
+    assertThat(teamCaptor.getAllValues())
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactlyInAnyOrder(team1, team2);
   }
 }

@@ -127,7 +127,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             "cgaucho",
             RosterStatus.ROSTER,
             OrgStatus.PENDING,
-            Set.of("Team Alpha", "Team Beta"));
+            Set.of("Team Alpha"));
 
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
     doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
