@@ -189,12 +189,12 @@ import org.springframework.web.server.ResponseStatusException;
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;/mapping&quot;)
   public Iterable&lt;TeamMemberMapping&gt; teamMemberMapping(@RequestParam Long courseId) {
-<span class="fc" id="L192">    List&lt;Team&gt; teams =</span>
+<span class="fc" id="L192">    Set&lt;Team&gt; teams =</span>
         courseRepository
 <span class="fc" id="L194">            .findById(courseId)</span>
 <span class="fc" id="L195">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId))</span>
 <span class="fc" id="L196">            .getTeams();</span>
-<span class="fc" id="L197">    List&lt;TeamMemberMapping&gt; mappings = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L197">    Set&lt;TeamMemberMapping&gt; mappings = new HashSet&lt;&gt;();</span>
 <span class="fc bfc" id="L198" title="All 2 branches covered.">    for (Team team : teams) {</span>
 <span class="fc bfc" id="L199" title="All 2 branches covered.">      for (TeamMember member : team.getTeamMembers()) {</span>
 <span class="fc" id="L200">        mappings.add(TeamMemberMapping.from(member));</span>

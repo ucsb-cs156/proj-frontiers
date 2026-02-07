@@ -62,7 +62,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,438,0,54,0,10
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberResult,0,24,0,0,0,5,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,7,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToGithubJob,0,262,0,22,0,72,0,12,0,1
-frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,247,0,30,0,62,0,22,0,7
+frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,235,0,30,0,64,0,22,0,7
 frontiers,edu.ucsb.cs156.frontiers.jobs,RemoveStudentsJob,0,79,0,12,0,17,0,7,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,95,0,24,0,17,0,13,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,47,0,4,0,12,0,3,0,1
