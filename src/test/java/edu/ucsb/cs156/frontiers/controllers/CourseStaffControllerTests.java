@@ -20,10 +20,10 @@ import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -935,7 +935,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .orgStatus(OrgStatus.PENDING)
             .build();
 
-    List<CourseStaff> staffList = new ArrayList<>();
+    Set<CourseStaff> staffList = new HashSet<>();
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
@@ -966,7 +966,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(courseStaffRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
-    assertEquals(course1.getCourseStaff(), List.of());
+    assertEquals(course1.getCourseStaff(), Set.of());
     // Since the staff member doesn't have a GitHub login, removeOrganizationMember
     // should not be called
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
@@ -994,7 +994,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .githubLogin("teststaff")
             .build();
 
-    List<CourseStaff> staffList = new ArrayList<>();
+    Set<CourseStaff> staffList = new HashSet<>();
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
@@ -1029,7 +1029,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     ArgumentCaptor<CourseStaff> deleteCaptor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(courseStaffRepository).delete(deleteCaptor.capture());
     assertThat(deleteCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
-    assertEquals(course1.getCourseStaff(), List.of());
+    assertEquals(course1.getCourseStaff(), Set.of());
     ArgumentCaptor<CourseStaff> removeCaptor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(organizationMemberService).removeOrganizationMember(removeCaptor.capture());
     assertThat(removeCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMember);
@@ -1057,7 +1057,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .githubLogin("teststaff")
             .build();
 
-    List<CourseStaff> staffList = new ArrayList<>();
+    Set<CourseStaff> staffList = new HashSet<>();
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
@@ -1090,7 +1090,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(courseStaffRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
-    assertEquals(course1.getCourseStaff(), List.of());
+    assertEquals(course1.getCourseStaff(), Set.of());
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
     assertEquals(
@@ -1116,7 +1116,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .githubLogin("teststaff")
             .build();
 
-    List<CourseStaff> staffList = new ArrayList<>();
+    Set<CourseStaff> staffList = new HashSet<>();
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
@@ -1149,7 +1149,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(courseStaffRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
-    assertEquals(course1.getCourseStaff(), List.of());
+    assertEquals(course1.getCourseStaff(), Set.of());
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
     assertEquals(
@@ -1175,7 +1175,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .githubLogin("teststaff")
             .build();
 
-    List<CourseStaff> staffList = new ArrayList<>();
+    Set<CourseStaff> staffList = new HashSet<>();
     staffList.add(staffMember);
     course1.setCourseStaff(staffList);
 
@@ -1213,7 +1213,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     ArgumentCaptor<CourseStaff> deleteCaptor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(courseStaffRepository).delete(deleteCaptor.capture());
     assertThat(deleteCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMemberUpdated);
-    assertEquals(course1.getCourseStaff(), List.of());
+    assertEquals(course1.getCourseStaff(), Set.of());
     ArgumentCaptor<CourseStaff> removeCaptor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(organizationMemberService).removeOrganizationMember(removeCaptor.capture());
     assertThat(removeCaptor.getValue()).usingRecursiveComparison().isEqualTo(staffMember);
@@ -1299,7 +1299,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .githubLogin("teststaff")
             .build();
 
-    List<CourseStaff> staff = new ArrayList<>();
+    Set<CourseStaff> staff = new HashSet<>();
     staff.add(courseStaff);
     course1.setCourseStaff(staff);
 
@@ -1321,7 +1321,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
     ArgumentCaptor<CourseStaff> captor = ArgumentCaptor.forClass(CourseStaff.class);
     verify(courseStaffRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(courseStaffDeleted);
-    assertEquals(course1.getCourseStaff(), List.of());
+    assertEquals(course1.getCourseStaff(), Set.of());
     // Verify that removeOrganizationMember is NOT called when removeFromOrg is false
     verify(organizationMemberService, never()).removeOrganizationMember(any(CourseStaff.class));
 
@@ -1361,7 +1361,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .githubLogin("teststaff")
             .build();
 
-    List<CourseStaff> staff = new ArrayList<>();
+    Set<CourseStaff> staff = new HashSet<>();
     staff.add(courseStaff);
     course1.setCourseStaff(staff);
 

@@ -17,6 +17,7 @@ import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -76,11 +77,11 @@ public class MembershipAuditJobTests {
             .githubId(123457)
             .course(course)
             .build();
-    course.setRosterStudents(List.of(student1, student2));
+    course.setRosterStudents(Set.of(student1, student2));
 
     CourseStaff courseStaff1 =
         CourseStaff.builder().githubLogin("division11").githubId(781).course(course).build();
-    course.setCourseStaff(List.of(courseStaff1));
+    course.setCourseStaff(Set.of(courseStaff1));
 
     RosterStudent student3 =
         RosterStudent.builder()
@@ -110,7 +111,7 @@ public class MembershipAuditJobTests {
             .githubId(123455)
             .course(course3)
             .build();
-    course2.setRosterStudents(List.of(student3, student4, student5, student6));
+    course2.setRosterStudents(Set.of(student3, student4, student5, student6));
 
     CourseStaff courseStaff2 =
         CourseStaff.builder().githubLogin("division6").githubId(738).course(course2).build();
@@ -118,7 +119,7 @@ public class MembershipAuditJobTests {
         CourseStaff.builder().githubLogin(null).githubId(null).course(course2).build();
     CourseStaff courseStaff4 =
         CourseStaff.builder().githubLogin(null).githubId(722).course(course2).build();
-    course2.setCourseStaff(List.of(courseStaff2, courseStaff3, courseStaff4));
+    course2.setCourseStaff(Set.of(courseStaff2, courseStaff3, courseStaff4));
 
     RosterStudent student1Updated =
         RosterStudent.builder()
@@ -208,24 +209,24 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(2)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getAllValues().get(0))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student1Updated, student2Updated));
+        .isEqualTo(Set.of(student1Updated, student2Updated));
     assertThat(studentCaptor.getAllValues().get(1))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student3Updated, student4Updated, student5Updated, student6Updated));
+        .isEqualTo(Set.of(student3Updated, student4Updated, student5Updated, student6Updated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository, times(2)).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getAllValues().get(0))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated));
+        .isEqualTo(Set.of(courseStaff1Updated));
     assertThat(staffCaptor.getAllValues().get(1))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff2Updated, courseStaff3Updated, courseStaff4Updated));
+        .isEqualTo(Set.of(courseStaff2Updated, courseStaff3Updated, courseStaff4Updated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
@@ -244,10 +245,10 @@ public class MembershipAuditJobTests {
             .githubId(123456)
             .course(course)
             .build();
-    course.setRosterStudents(List.of(student1));
+    course.setRosterStudents(Set.of(student1));
     CourseStaff courseStaff1 =
         CourseStaff.builder().githubLogin("apple").githubId(123457).course(course).build();
-    course.setCourseStaff(List.of(courseStaff1));
+    course.setCourseStaff(Set.of(courseStaff1));
     RosterStudent student1Updated =
         RosterStudent.builder()
             .studentId("banana")
@@ -285,18 +286,18 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student1Updated));
+        .isEqualTo(Set.of(student1Updated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated));
+        .isEqualTo(Set.of(courseStaff1Updated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
@@ -326,13 +327,13 @@ public class MembershipAuditJobTests {
             .githubId(123455)
             .course(course)
             .build();
-    course.setRosterStudents(List.of(student2, student3));
+    course.setRosterStudents(Set.of(student2, student3));
 
     CourseStaff courseStaff1 =
         CourseStaff.builder().githubLogin("division6").githubId(772).course(course).build();
     CourseStaff courseStaff2 =
         CourseStaff.builder().githubLogin("division11").githubId(752).course(course).build();
-    course.setCourseStaff(List.of(courseStaff1, courseStaff2));
+    course.setCourseStaff(Set.of(courseStaff1, courseStaff2));
 
     RosterStudent student2Updated =
         RosterStudent.builder()
@@ -386,18 +387,18 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student2Updated, student3Updated));
+        .isEqualTo(Set.of(student2Updated, student3Updated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated, courseStaff2Updated));
+        .isEqualTo(Set.of(courseStaff1Updated, courseStaff2Updated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
@@ -446,9 +447,9 @@ public class MembershipAuditJobTests {
             .orgStatus(OrgStatus.JOINCOURSE)
             .build();
 
-    course.setRosterStudents(List.of(student, student2));
+    course.setRosterStudents(Set.of(student, student2));
 
-    course.setCourseStaff(List.of(courseStaff1, courseStaff2));
+    course.setCourseStaff(Set.of(courseStaff1, courseStaff2));
 
     RosterStudent studentUpdated =
         RosterStudent.builder()
@@ -506,18 +507,18 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(studentUpdated, student2NotUpdated));
+        .isEqualTo(Set.of(studentUpdated, student2NotUpdated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated, courseStaff2NotUpdated));
+        .isEqualTo(Set.of(courseStaff1Updated, courseStaff2NotUpdated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }

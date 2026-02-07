@@ -30,10 +30,11 @@ import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -187,7 +188,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .orgStatus(OrgStatus.PENDING)
             .build();
 
-    course1.setRosterStudents(new ArrayList<>(List.of(rs1BeforeWithId, rs2BeforeWithId)));
+    course1.setRosterStudents(new HashSet<>(Set.of(rs1BeforeWithId, rs2BeforeWithId)));
 
     MockMultipartFile file =
         new MockMultipartFile(
@@ -214,17 +215,17 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     verify(courseRepository, atLeastOnce()).findById(eq(1L));
 
-    ArgumentCaptor<List<RosterStudent>> saveAllCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> saveAllCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(saveAllCaptor.capture());
     assertThat(saveAllCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(new ArrayList<>(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)));
+        .isEqualTo(new HashSet<>(Set.of(rs1AfterWithId, rs2AfterWithId, rs3NoId)));
 
-    ArgumentCaptor<List<RosterStudent>> attachCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> attachCaptor = ArgumentCaptor.forClass(Set.class);
     verify(updateUserService, times(1)).attachUsersToRosterStudents(attachCaptor.capture());
     assertThat(attachCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
+        .isEqualTo(Set.of(rs1AfterWithId, rs2AfterWithId, rs3NoId));
 
     String responseString = response.getResponse().getContentAsString();
     LoadResult expectedResult = new LoadResult(1, 2, 0, List.of());
@@ -243,7 +244,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     Course course1 =
         Course.builder()
             .id(1L)
-            .rosterStudents(new ArrayList<>(List.of(student1ID, student1Email, student2)))
+            .rosterStudents(new HashSet<>(Set.of(student1ID, student1Email, student2)))
             .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     MockMultipartFile file =
@@ -326,13 +327,13 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     Course course =
         Course.builder()
             .id(1L)
-            .rosterStudents(new ArrayList<>(List.of(noUpdateNoDrop, droppedStudent)))
+            .rosterStudents(new HashSet<>(Set.of(noUpdateNoDrop, droppedStudent)))
             .build();
 
     when(rosterStudentRepository.saveAll(any()))
         .thenReturn(List.of(droppedStudentUpdated, noUpdateNoDrop));
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     MockMultipartFile file =
@@ -370,14 +371,14 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     Course course1 =
         Course.builder()
             .id(1L)
-            .rosterStudents(new ArrayList<>(List.of(student1Email, student2)))
+            .rosterStudents(new HashSet<>(Set.of(student1Email, student2)))
             .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
     MvcResult response =
         mockMvc
             .perform(
@@ -431,7 +432,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .orgName("osu-101-s25")
             .term("S25")
             .school("Oregon State")
-            .rosterStudents(List.of())
+            .rosterStudents(Set.of())
             .build();
     MockMultipartFile file =
         new MockMultipartFile(

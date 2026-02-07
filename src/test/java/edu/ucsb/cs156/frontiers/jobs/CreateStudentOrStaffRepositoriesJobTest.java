@@ -16,7 +16,7 @@ import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +43,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     RosterStudent student =
         RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
-    course.setRosterStudents(List.of(student));
+    course.setRosterStudents(Set.of(student));
 
     var repoJob =
         spy(
@@ -79,7 +79,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     RosterStudent student =
         RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
-    course.setRosterStudents(List.of(student));
+    course.setRosterStudents(Set.of(student));
 
     var repoJob =
         spy(
@@ -115,7 +115,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     RosterStudent student =
         RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.OWNER).build();
-    course.setRosterStudents(List.of(student));
+    course.setRosterStudents(Set.of(student));
 
     var repoJob =
         spy(
@@ -150,7 +150,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
   public void expectDoesntCallForNoLogin() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     RosterStudent student = RosterStudent.builder().build();
-    course.setRosterStudents(List.of(student));
+    course.setRosterStudents(Set.of(student));
 
     var repoJob =
         spy(
@@ -176,7 +176,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     RosterStudent student =
         RosterStudent.builder().githubLogin("banana").orgStatus(OrgStatus.PENDING).build();
-    course.setRosterStudents(List.of(student));
+    course.setRosterStudents(Set.of(student));
     var repoJob =
         spy(
             CreateStudentOrStaffRepositoriesJob.builder()
@@ -202,11 +202,11 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     RosterStudent student =
         RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
-    course.setRosterStudents(List.of(student));
+    course.setRosterStudents(Set.of(student));
 
     CourseStaff staff =
         CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
-    course.setCourseStaff(List.of(staff));
+    course.setCourseStaff(Set.of(staff));
 
     var repoJob =
         spy(
@@ -247,11 +247,11 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     RosterStudent student =
         RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
-    course.setRosterStudents(List.of(student));
+    course.setRosterStudents(Set.of(student));
 
     CourseStaff staff =
         CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
-    course.setCourseStaff(List.of(staff));
+    course.setCourseStaff(Set.of(staff));
 
     var repoJob =
         spy(
@@ -301,7 +301,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
 
     CourseStaff staff = CourseStaff.builder().orgStatus(OrgStatus.MEMBER).build(); // no githubLogin
-    course.setCourseStaff(List.of(staff));
+    course.setCourseStaff(Set.of(staff));
 
     var repoJob =
         spy(
@@ -333,7 +333,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
             .githubLogin("staffLogin")
             .orgStatus(OrgStatus.PENDING) // not MEMBER or OWNER
             .build();
-    course.setCourseStaff(List.of(staff));
+    course.setCourseStaff(Set.of(staff));
 
     var repoJob =
         spy(
@@ -363,7 +363,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
     CourseStaff staff =
         CourseStaff.builder().githubLogin("staffOwner").orgStatus(OrgStatus.OWNER).build();
 
-    course.setCourseStaff(List.of(staff));
+    course.setCourseStaff(Set.of(staff));
 
     var repoJob =
         spy(

@@ -14,7 +14,6 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +56,7 @@ public class CourseSecurityTests {
       User user = User.builder().id(1L).email("admin@example.com").build();
       User user2 = User.builder().id(2L).email("instructor@example.com").build();
       Course testCourse =
-          Course.builder().id(1L).instructorEmail(user2.getEmail()).courseStaff(List.of()).build();
+          Course.builder().id(1L).instructorEmail(user2.getEmail()).courseStaff(Set.of()).build();
       when(currentUserService.getCurrentUser())
           .thenReturn(
               CurrentUser.builder()
@@ -87,7 +86,7 @@ public class CourseSecurityTests {
           Course.builder()
               .id(1L)
               .instructorEmail("alternateemail@ucsb.edu")
-              .courseStaff(List.of(courseStaff))
+              .courseStaff(Set.of(courseStaff))
               .build();
       when(currentUserService.getCurrentUser())
           .thenReturn(
@@ -113,7 +112,7 @@ public class CourseSecurityTests {
     public void setup() {
       User user = User.builder().id(1L).email("instructor@example.com").build();
       Course testCourse =
-          Course.builder().id(1L).instructorEmail(user.getEmail()).courseStaff(List.of()).build();
+          Course.builder().id(1L).instructorEmail(user.getEmail()).courseStaff(Set.of()).build();
       when(currentUserService.getCurrentUser())
           .thenReturn(
               CurrentUser.builder()
@@ -144,7 +143,7 @@ public class CourseSecurityTests {
           Course.builder()
               .id(1L)
               .instructorEmail(user2.getEmail())
-              .courseStaff(List.of(courseStaff))
+              .courseStaff(Set.of(courseStaff))
               .build();
       when(currentUserService.getCurrentUser())
           .thenReturn(
@@ -195,7 +194,7 @@ public class CourseSecurityTests {
       User user = User.builder().id(1L).email("admin@example.com").build();
       User user2 = User.builder().id(2L).email("instructor@example.com").build();
       Course testCourse =
-          Course.builder().id(1L).instructorEmail(user2.getEmail()).courseStaff(List.of()).build();
+          Course.builder().id(1L).instructorEmail(user2.getEmail()).courseStaff(Set.of()).build();
       when(currentUserService.getCurrentUser())
           .thenReturn(
               CurrentUser.builder()
@@ -221,7 +220,7 @@ public class CourseSecurityTests {
     public void setup() {
       User user = User.builder().id(1L).email("instructor@example.com").build();
       Course testCourse =
-          Course.builder().id(1L).instructorEmail(user.getEmail()).courseStaff(List.of()).build();
+          Course.builder().id(1L).instructorEmail(user.getEmail()).courseStaff(Set.of()).build();
       when(currentUserService.getCurrentUser())
           .thenReturn(
               CurrentUser.builder()
@@ -248,7 +247,7 @@ public class CourseSecurityTests {
       User user = User.builder().id(1L).email("instructor1@example.com").build();
       User user2 = User.builder().id(2L).email("instructor2@example.com").build();
       Course testCourse =
-          Course.builder().id(1L).instructorEmail(user2.getEmail()).courseStaff(List.of()).build();
+          Course.builder().id(1L).instructorEmail(user2.getEmail()).courseStaff(Set.of()).build();
       when(currentUserService.getCurrentUser())
           .thenReturn(
               CurrentUser.builder()
@@ -336,7 +335,7 @@ public class CourseSecurityTests {
                   Course.builder()
                       .id(1L)
                       .instructorEmail("instructoremail@ucsb.edu")
-                      .courseStaff(List.of())
+                      .courseStaff(Set.of())
                       .build())
               .build();
       when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(student));
@@ -372,7 +371,7 @@ public class CourseSecurityTests {
                   Course.builder()
                       .id(1L)
                       .instructorEmail("instructoremail@ucsb.edu")
-                      .courseStaff(List.of())
+                      .courseStaff(Set.of())
                       .build())
               .build();
       when(rosterStudentRepository.findById(1L)).thenReturn(Optional.of(student));

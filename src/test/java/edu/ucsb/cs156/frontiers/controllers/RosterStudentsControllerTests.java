@@ -43,10 +43,11 @@ import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -80,7 +81,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
       Course.builder()
           .id(1L)
           .courseName("CS156")
-          .rosterStudents(List.of())
+          .rosterStudents(Set.of())
           .orgName("ucsb-cs156-s25")
           .term("S25")
           .school("UCSB")
@@ -91,7 +92,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
           .id(2L)
           .courseName("CS156")
           .orgName("ucsb-cs156-s25")
-          .rosterStudents(List.of())
+          .rosterStudents(Set.of())
           .term("S25")
           .school("UCSB")
           .installationId("12345")
@@ -366,7 +367,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
         RosterStudent.builder().id(1L).studentId("A123456").course(course1).build();
     RosterStudent rosterStudent2 =
         RosterStudent.builder().id(2L).email("cgaucho@example.org").course(course1).build();
-    course1.setRosterStudents(List.of(rosterStudent1, rosterStudent2));
+    course1.setRosterStudents(Set.of(rosterStudent1, rosterStudent2));
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     // act
 
@@ -1667,11 +1668,11 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .email("test@ucsb.edu")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .orgStatus(OrgStatus.PENDING)
             .build();
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
@@ -1687,7 +1688,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(rosterStudentRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
-    assertEquals(course1.getRosterStudents(), List.of());
+    assertEquals(course1.getRosterStudents(), Set.of());
     // Since the student doesn't have a GitHub login, removeOrganizationMember should not be called
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
 
@@ -1721,12 +1722,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
 
     TeamMember teamMember1 = TeamMember.builder().id(1L).team(team1).build();
 
-    List<TeamMember> teamMembers = new ArrayList<>();
+    Set<TeamMember> teamMembers = new HashSet<>();
     teamMembers.add(teamMember1);
     team1.setTeamMembers(teamMembers);
-    rosterStudent.setTeamMembers(List.of(teamMember1));
+    rosterStudent.setTeamMembers(Set.of(teamMember1));
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
@@ -1741,12 +1742,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .orgStatus(OrgStatus.MEMBER)
             .githubId(67890)
             .githubLogin("teststudent")
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .build();
 
     TeamMember teamMember1Updated = TeamMember.builder().id(1L).build();
 
-    rosterStudentUpdated.setTeamMembers(List.of(teamMember1Updated));
+    rosterStudentUpdated.setTeamMembers(Set.of(teamMember1Updated));
 
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
     doNothing().when(organizationMemberService).removeOrganizationMember(any(RosterStudent.class));
@@ -1761,8 +1762,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(rosterStudentRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudentUpdated);
-    assertEquals(course1.getRosterStudents(), List.of());
-    assertEquals(team1.getTeamMembers(), List.of());
+    assertEquals(course1.getRosterStudents(), Set.of());
+    assertEquals(team1.getTeamMembers(), Set.of());
     // Verify that removeOrganizationMember is called since the student has a GitHub login
     ArgumentCaptor<RosterStudent> orgCaptor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(organizationMemberService).removeOrganizationMember(orgCaptor.capture());
@@ -1789,13 +1790,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .email("test@ucsb.edu")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .orgStatus(OrgStatus.MEMBER)
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
@@ -1811,7 +1812,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(rosterStudentRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
-    assertEquals(course1.getRosterStudents(), List.of());
+    assertEquals(course1.getRosterStudents(), Set.of());
 
     // Verify that removeOrganizationMember is NOT called since the course has no org name
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
@@ -1838,12 +1839,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
@@ -1858,7 +1859,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(rosterStudentRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
-    assertEquals(course1.getRosterStudents(), List.of());
+    assertEquals(course1.getRosterStudents(), Set.of());
 
     // Verify that removeOrganizationMember is NOT called since the course has no installation ID
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
@@ -1884,13 +1885,13 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .email("test@ucsb.edu")
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .orgStatus(OrgStatus.MEMBER)
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
@@ -1911,7 +1912,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     ArgumentCaptor<RosterStudent> captor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(rosterStudentRepository).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(rosterStudent);
-    assertEquals(course1.getRosterStudents(), List.of());
+    assertEquals(course1.getRosterStudents(), Set.of());
     // Verify that removeOrganizationMember is called but throws an exception
     ArgumentCaptor<RosterStudent> orgCaptor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(organizationMemberService).removeOrganizationMember(orgCaptor.capture());
@@ -1994,7 +1995,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .rosterStatus(RosterStatus.MANUAL)
             .build();
 
-    course1.setRosterStudents(List.of(existingStudent));
+    course1.setRosterStudents(Set.of(existingStudent));
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(expectedSaved);
@@ -2051,7 +2052,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .rosterStatus(RosterStatus.MANUAL)
             .build();
 
-    course1.setRosterStudents(List.of(existingStudent));
+    course1.setRosterStudents(Set.of(existingStudent));
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
     when(rosterStudentRepository.save(any(RosterStudent.class))).thenReturn(expectedSaved);
     doNothing().when(updateUserService).attachUserToRosterStudent(any(RosterStudent.class));
@@ -2099,7 +2100,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
@@ -2114,12 +2115,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(null)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
@@ -2164,7 +2165,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
@@ -2179,12 +2180,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(null)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.MEMBER)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .githubId(67890)
             .githubLogin("teststudent")
             .build();
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
@@ -2233,7 +2234,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(course1)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .githubId(null)
             .githubLogin(null) // No GitHub login
             .build();
@@ -2248,12 +2249,12 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .course(null)
             .rosterStatus(RosterStatus.ROSTER)
             .orgStatus(OrgStatus.PENDING)
-            .teamMembers(List.of())
+            .teamMembers(Set.of())
             .githubId(null)
             .githubLogin(null) // No GitHub login
             .build();
 
-    List<RosterStudent> students = new ArrayList<>();
+    Set<RosterStudent> students = new HashSet<>();
     students.add(rosterStudent);
     course1.setRosterStudents(students);
 
@@ -2499,7 +2500,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .school("UCSB")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
-            .rosterStudents(new ArrayList<>())
+            .rosterStudents(new HashSet<>())
             .build();
 
     RosterStudent canvasStudent1 =
@@ -2570,7 +2571,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .school("UCSB")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
-            .rosterStudents(new ArrayList<>(List.of(existingStudent)))
+            .rosterStudents(new HashSet<>(Set.of(existingStudent)))
             .build();
     existingStudent.setCourse(course);
 
@@ -2625,7 +2626,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .school("UCSB")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
-            .rosterStudents(new ArrayList<>(List.of(studentWithId, studentWithEmail)))
+            .rosterStudents(new HashSet<>(Set.of(studentWithId, studentWithEmail)))
             .build();
 
     RosterStudent canvasStudent =
@@ -2691,7 +2692,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .school("UCSB")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
-            .rosterStudents(new ArrayList<>(List.of(existingStudent)))
+            .rosterStudents(new HashSet<>(Set.of(existingStudent)))
             .build();
     existingStudent.setCourse(course);
 
@@ -2709,7 +2710,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     MvcResult response =
@@ -2726,7 +2727,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(service).runAsJob(any(RemoveStudentsJob.class));
 
     // Check that dropped student has DROPPED status in saved list
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
     RosterStudent droppedInSavedList =
         savedStudents.stream()
             .filter(s -> s.getStudentId().equals("D999999"))
@@ -2784,7 +2785,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .installationId("12345")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
-            .rosterStudents(new ArrayList<>())
+            .rosterStudents(new HashSet<>())
             .build();
 
     RosterStudent canvasStudent =
@@ -2800,7 +2801,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     mockMvc
@@ -2811,8 +2812,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Assert
     verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
 
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent savedStudent = savedStudents.get(0);
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    RosterStudent savedStudent = savedStudents.iterator().next();
     assertEquals(OrgStatus.JOINCOURSE, savedStudent.getOrgStatus());
   }
 
@@ -2830,7 +2831,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .installationId(null)
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
-            .rosterStudents(new ArrayList<>())
+            .rosterStudents(new HashSet<>())
             .build();
 
     RosterStudent canvasStudent =
@@ -2846,7 +2847,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     mockMvc
@@ -2857,8 +2858,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Assert
     verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
 
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent savedStudent = savedStudents.get(0);
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    RosterStudent savedStudent = savedStudents.iterator().next();
     assertEquals(OrgStatus.PENDING, savedStudent.getOrgStatus());
   }
 
@@ -2886,7 +2887,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
             .school("UCSB")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
-            .rosterStudents(new ArrayList<>(List.of(manualStudent)))
+            .rosterStudents(new HashSet<>(Set.of(manualStudent)))
             .build();
     manualStudent.setCourse(course);
 
@@ -2904,7 +2905,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     MvcResult response =
@@ -2920,7 +2921,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
 
     // Check that manual student still has MANUAL status
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
     RosterStudent manualInSavedList =
         savedStudents.stream()
             .filter(s -> s.getStudentId().equals("M999999"))

@@ -23,6 +23,7 @@ import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
 import org.mockito.Mock;
@@ -126,7 +127,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             "cgaucho",
             RosterStatus.ROSTER,
             OrgStatus.PENDING,
-            List.of("Team Alpha", "Team Beta"));
+            Set.of("Team Alpha"));
 
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
     doReturn(List.of(rosterStudentDTO)).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
