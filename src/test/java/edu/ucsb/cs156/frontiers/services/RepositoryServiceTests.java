@@ -16,8 +16,8 @@ import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -289,7 +289,7 @@ public class RepositoryServiceTests {
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
     Team team = Team.builder().name("test-team").build();
     TeamMember member = TeamMember.builder().rosterStudent(student).build();
-    team.setTeamMembers(List.of(member));
+    team.setTeamMembers(Set.of(member));
     team.setGithubTeamId(12345);
 
     repositoryService.createTeamRepository(
@@ -343,7 +343,7 @@ public class RepositoryServiceTests {
         RosterStudent.builder().githubLogin("student3").orgStatus(OrgStatus.MEMBER).build();
     TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
     Team team1 = Team.builder().name("test-team1").build();
-    team1.setTeamMembers(List.of(member1, member2, member3));
+    team1.setTeamMembers(Set.of(member1, member2, member3));
     team1.setGithubTeamId(123456);
 
     repositoryService.createTeamRepository(
@@ -390,7 +390,7 @@ public class RepositoryServiceTests {
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
     Team team = Team.builder().name("test-team").build();
     TeamMember member = TeamMember.builder().rosterStudent(student).build();
-    team.setTeamMembers(List.of(member));
+    team.setTeamMembers(Set.of(member));
     team.setGithubTeamId(1234567);
 
     repositoryService.createTeamRepository(
@@ -411,7 +411,7 @@ public class RepositoryServiceTests {
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
     Team team = Team.builder().name("test-team").build();
     TeamMember member = TeamMember.builder().rosterStudent(student).build();
-    team.setTeamMembers(List.of(member));
+    team.setTeamMembers(Set.of(member));
 
     repositoryService.createTeamRepository(
         course, team, "repo1", false, RepositoryPermissions.WRITE);
@@ -443,7 +443,7 @@ public class RepositoryServiceTests {
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
     Team team = Team.builder().name("test-team").build();
     TeamMember member = TeamMember.builder().rosterStudent(student).build();
-    team.setTeamMembers(List.of(member));
+    team.setTeamMembers(Set.of(member));
     team.setGithubTeamId(12345);
 
     repositoryService.createTeamRepository(
