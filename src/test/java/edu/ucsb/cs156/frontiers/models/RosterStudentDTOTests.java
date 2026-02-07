@@ -9,7 +9,7 @@ import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
-import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /** This is a test class for the RosterStudentDTO class. */
@@ -141,10 +141,10 @@ public class RosterStudentDTOTests {
     team.setId(1L);
     team.setName("Team Rocket");
     team.setCourse(course);
-    team.setTeamMembers(java.util.List.of(teamMember, teamMember2));
+    team.setTeamMembers(java.util.Set.of(teamMember, teamMember2));
 
-    rosterStudent.setTeamMembers(java.util.List.of(teamMember2));
-    teammate.setTeamMembers(java.util.List.of(teamMember));
+    rosterStudent.setTeamMembers(java.util.Set.of(teamMember2));
+    teammate.setTeamMembers(java.util.Set.of(teamMember));
 
     teamMember.setTeam(team);
     teamMember2.setTeam(team);
@@ -165,6 +165,6 @@ public class RosterStudentDTOTests {
     assertEquals("testuser", dto.githubLogin());
     assertEquals(RosterStatus.ROSTER, dto.rosterStatus());
     assertEquals(rosterStudent.getTeams(), dto.teams());
-    assertEquals(List.of("Team Rocket"), dto.teams());
+    assertEquals(Set.of("Team Rocket"), dto.teams());
   }
 }
