@@ -2,7 +2,6 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -114,7 +113,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
     Job job = Job.builder().id(1L).status("completed").log("This is a test job log.").build();
 
-    when(jobsRepository.findById(eq(1L))).thenReturn(Optional.of(job));
+    when(jobsRepository.findById(1L)).thenReturn(Optional.of(job));
 
     // act
 
@@ -136,7 +135,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
     // arrange
 
-    when(jobsRepository.findById(eq(2L))).thenReturn(Optional.empty());
+    when(jobsRepository.findById(2L)).thenReturn(Optional.empty());
 
     // act
 
@@ -178,7 +177,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
     // Arrange
     Long jobId = 1L;
     String jobLog = "This is a job log";
-    when(jobService.getJobLogs(eq(jobId))).thenReturn(jobLog);
+    when(jobService.getJobLogs(jobId)).thenReturn(jobLog);
 
     // Act & Assert
     mockMvc
@@ -192,7 +191,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
   public void test_getJobLogs_admin_can_get_empty_log() throws Exception {
     // Arrange
     Long jobId = 2L;
-    when(jobService.getJobLogs(eq(jobId))).thenReturn("");
+    when(jobService.getJobLogs(jobId)).thenReturn("");
 
     // Act & Assert
     mockMvc
@@ -207,8 +206,8 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
     // arrange
 
-    when(jobsRepository.existsById(eq(1L))).thenReturn(true);
-    doNothing().when(jobsRepository).deleteById(eq(1L));
+    when(jobsRepository.existsById(1L)).thenReturn(true);
+    doNothing().when(jobsRepository).deleteById(1L);
 
     // act
     MvcResult response =
@@ -219,7 +218,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
     // assert
 
-    verify(jobsRepository, times(1)).deleteById(eq(1L));
+    verify(jobsRepository, times(1)).deleteById(1L);
     String expectedJson = mapper.writeValueAsString(Map.of("message", "Job with id 1 deleted"));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -231,7 +230,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
     // arrange
 
-    when(jobsRepository.existsById(eq(2L))).thenReturn(false);
+    when(jobsRepository.existsById(2L)).thenReturn(false);
 
     // act
     MvcResult response =
@@ -242,7 +241,7 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
 
     // assert
 
-    verify(jobsRepository, times(1)).existsById(eq(2L));
+    verify(jobsRepository, times(1)).existsById(2L);
     String expectedJson = mapper.writeValueAsString(Map.of("message", "Job with id 2 not found"));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);

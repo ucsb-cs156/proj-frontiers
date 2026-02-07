@@ -102,8 +102,10 @@ public class JobServiceTests {
     ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
     verify(jobRepository).save(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(fireJob);
-    verify(injectedJobService).runJobAsync(captor.capture(), eq(job));
+    ArgumentCaptor<TestJob> testJobCaptor = ArgumentCaptor.forClass(TestJob.class);
+    verify(injectedJobService).runJobAsync(captor.capture(), testJobCaptor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(fireJob);
+    assertThat(testJobCaptor.getValue()).usingRecursiveComparison().isEqualTo(job);
   }
 
   @Test
@@ -117,7 +119,7 @@ public class JobServiceTests {
     doNothing().when(job).accept(any());
 
     when(contextFactory.createContext(any())).thenReturn(context);
-    doNothing().when(job).accept(eq(context));
+    doNothing().when(job).accept(any(JobContext.class));
 
     jobService.runJobAsync(passedJob, job);
     await()
@@ -128,7 +130,9 @@ public class JobServiceTests {
               verify(jobRepository).save(captor.capture());
               assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(expectedReturn);
             });
-    verify(job).accept(eq(context));
+    ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
+    verify(job).accept(ctxCaptor.capture());
+    assertThat(ctxCaptor.getValue()).isSameAs(context);
     ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
     verify(contextFactory).createContext(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(passedJob);
@@ -143,11 +147,13 @@ public class JobServiceTests {
     doNothing().when(job).accept(any());
 
     when(contextFactory.createContext(any())).thenReturn(context);
-    doThrow(new Exception("fail!")).when(job).accept(eq(context));
+    doThrow(new Exception("fail!")).when(job).accept(any(JobContext.class));
 
     jobService.runJobAsync(passedJob, job);
     await().atMost(2, SECONDS).untilAsserted(() -> verify(context).log(contains("fail!")));
-    verify(job).accept(eq(context));
+    ArgumentCaptor<JobContext> ctxCaptor = ArgumentCaptor.forClass(JobContext.class);
+    verify(job).accept(ctxCaptor.capture());
+    assertThat(ctxCaptor.getValue()).isSameAs(context);
     ArgumentCaptor<Job> captor = ArgumentCaptor.forClass(Job.class);
     verify(contextFactory).createContext(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(passedJob);
