@@ -20,11 +20,12 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -297,13 +298,13 @@ public class TeamsControllerTests extends ControllerTestCase {
     TeamMember teamMember1 = TeamMember.builder().id(1L).team(team).rosterStudent(rs1).build();
     TeamMember teamMember2 = TeamMember.builder().id(2L).team(team).rosterStudent(rs2).build();
 
-    team.setTeamMembers(new ArrayList<>(List.of(teamMember1, teamMember2)));
-    rs1.setTeamMembers(new ArrayList<>(List.of(teamMember1)));
-    rs2.setTeamMembers(new ArrayList<>(List.of(teamMember2)));
-    course.setTeams(new ArrayList<>(List.of(team)));
+    team.setTeamMembers(new HashSet<>(Set.of(teamMember1, teamMember2)));
+    rs1.setTeamMembers(new HashSet<>(Set.of(teamMember1)));
+    rs2.setTeamMembers(new HashSet<>(Set.of(teamMember2)));
+    course.setTeams(new HashSet<>(Set.of(team)));
 
     Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(course).build();
-    teamUpdated.setTeamMembers(List.of(teamMember1, teamMember2));
+    teamUpdated.setTeamMembers(Set.of(teamMember1, teamMember2));
 
     when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
 
@@ -319,9 +320,9 @@ public class TeamsControllerTests extends ControllerTestCase {
     ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
     verify(teamRepository, times(1)).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(team);
-    assertEquals(course.getTeams(), List.of());
-    assertEquals(rs1.getTeamMembers(), List.of());
-    assertEquals(rs2.getTeamMembers(), List.of());
+    assertEquals(course.getTeams(), Set.of());
+    assertEquals(rs1.getTeamMembers(), Set.of());
+    assertEquals(rs2.getTeamMembers(), Set.of());
     assertNull(teamMember1.getRosterStudent());
     assertNull(teamMember2.getRosterStudent());
 
@@ -364,12 +365,12 @@ public class TeamsControllerTests extends ControllerTestCase {
     Course course = Course.builder().id(1L).courseName("CS156").build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
 
-    // Initialize with empty lists to match Hibernate behavior
-    team.setTeamMembers(List.of());
-    course.setTeams(new ArrayList<>(List.of(team)));
+    // Initialize with empty sets to match Hibernate behavior
+    team.setTeamMembers(Set.of());
+    course.setTeams(new HashSet<>(Set.of(team)));
 
     Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(null).build();
-    teamUpdated.setTeamMembers(List.of());
+    teamUpdated.setTeamMembers(Set.of());
 
     when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
 
@@ -385,7 +386,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
     verify(teamRepository, times(1)).delete(captor.capture());
     assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(teamUpdated);
-    assertEquals(course.getTeams(), List.of());
+    assertEquals(course.getTeams(), Set.of());
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team with id 1 deleted");
@@ -604,13 +605,13 @@ public class TeamsControllerTests extends ControllerTestCase {
     RosterStudent rs = RosterStudent.builder().id(2L).course(course).build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
     TeamMember teamMember = TeamMember.builder().id(1L).team(team).rosterStudent(rs).build();
-    team.setTeamMembers(new ArrayList<>(List.of(teamMember)));
-    rs.setTeamMembers(new ArrayList<>(List.of(teamMember)));
+    team.setTeamMembers(new HashSet<>(Set.of(teamMember)));
+    rs.setTeamMembers(new HashSet<>(Set.of(teamMember)));
 
     Team updatedTeam = Team.builder().id(1L).name("Team Alpha").course(course).build();
-    updatedTeam.setTeamMembers(List.of());
+    updatedTeam.setTeamMembers(Set.of());
     RosterStudent rsUpdated = RosterStudent.builder().id(2L).course(course).build();
-    rsUpdated.setTeamMembers(List.of());
+    rsUpdated.setTeamMembers(Set.of());
 
     TeamMember teamMemberUpdated = teamMember;
 
@@ -638,8 +639,8 @@ public class TeamsControllerTests extends ControllerTestCase {
     ArgumentCaptor<RosterStudent> rsCaptor = ArgumentCaptor.forClass(RosterStudent.class);
     verify(rosterStudentRepository, times(1)).save(rsCaptor.capture());
     assertThat(rsCaptor.getValue()).usingRecursiveComparison().isEqualTo(rs);
-    assertEquals(team.getTeamMembers(), List.of());
-    assertEquals(rs.getTeamMembers(), List.of());
+    assertEquals(team.getTeamMembers(), Set.of());
+    assertEquals(rs.getTeamMembers(), Set.of());
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team member with id 1 deleted");
@@ -703,8 +704,8 @@ public class TeamsControllerTests extends ControllerTestCase {
             .githubLogin(null)
             .build();
     TeamMember teamMember2 = TeamMember.builder().id(2L).team(team).rosterStudent(student2).build();
-    team.setTeamMembers(List.of(teamMember, teamMember2));
-    course.setTeams(List.of(team));
+    team.setTeamMembers(Set.of(teamMember, teamMember2));
+    course.setTeams(Set.of(team));
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
@@ -732,7 +733,7 @@ public class TeamsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void testTeamMemberMapping_noTeams() throws Exception {
     // arrange
-    Course course = Course.builder().id(1L).courseName("CS156").teams(List.of()).build();
+    Course course = Course.builder().id(1L).courseName("CS156").teams(Set.of()).build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
     // act
