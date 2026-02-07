@@ -3,7 +3,7 @@ package edu.ucsb.cs156.frontiers.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import java.util.List;
+import java.util.Set;
 import lombok.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -31,7 +31,7 @@ public class Team {
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "team")
   @Fetch(FetchMode.JOIN)
-  private List<TeamMember> teamMembers;
+  private Set<TeamMember> teamMembers;
 
   @Column(nullable = true)
   private Integer githubTeamId;

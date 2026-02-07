@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -35,8 +36,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -106,7 +109,9 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     // assert
 
-    verify(courseRepository, times(1)).save(eq(course));
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(course);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(course));
@@ -150,7 +155,9 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     // assert
 
-    verify(courseRepository, times(1)).save(eq(course));
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(course);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(course));
@@ -254,12 +261,12 @@ public class CoursesControllerTests extends ControllerTestCase {
     CourseStaff courseStaff1 = CourseStaff.builder().orgStatus(OrgStatus.PENDING).build();
     RosterStudent rs1 = RosterStudent.builder().orgStatus(OrgStatus.PENDING).build();
 
-    course1.setCourseStaff(List.of(courseStaff1));
-    course1.setRosterStudents(List.of(rs1));
+    course1.setCourseStaff(Set.of(courseStaff1));
+    course1.setRosterStudents(Set.of(rs1));
 
     CourseStaff courseStaff1Updated = CourseStaff.builder().orgStatus(OrgStatus.JOINCOURSE).build();
     RosterStudent rs1Updated = RosterStudent.builder().orgStatus(OrgStatus.JOINCOURSE).build();
-    Course course2 =
+    Course savedCourse =
         Course.builder()
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
@@ -271,8 +278,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .build();
 
-    course2.setCourseStaff(List.of(courseStaff1Updated));
-    course2.setRosterStudents(List.of(rs1Updated));
+    savedCourse.setCourseStaff(Set.of(courseStaff1Updated));
+    savedCourse.setRosterStudents(Set.of(rs1Updated));
 
     doReturn(Optional.of(course1)).when(courseRepository).findById(eq(1L));
     doReturn("ucsb-cs156-s25").when(linkerService).getOrgName("1234");
@@ -288,7 +295,9 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
-    verify(courseRepository, times(1)).save(eq(course2));
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(savedCourse);
     assertEquals("/login/success", responseUrl);
   }
 
@@ -302,11 +311,11 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .instructorEmail(user.getEmail())
-            .courseStaff(List.of())
-            .rosterStudents(List.of())
+            .courseStaff(Set.of())
+            .rosterStudents(Set.of())
             .id(1L)
             .build();
-    Course course2 =
+    Course savedCourse =
         Course.builder()
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
@@ -316,8 +325,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .installationId("1234")
             .orgName("ucsb-cs156-s25")
             .id(1L)
-            .courseStaff(List.of())
-            .rosterStudents(List.of())
+            .courseStaff(Set.of())
+            .rosterStudents(Set.of())
             .build();
 
     doReturn(Optional.of(course1)).when(courseRepository).findById(eq(1L));
@@ -334,7 +343,9 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
-    verify(courseRepository, times(1)).save(eq(course2));
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(savedCourse);
     assertEquals("/login/success", responseUrl);
   }
 
@@ -395,8 +406,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school("UCSB")
             .instructorEmail(separateUser.getEmail())
-            .courseStaff(List.of())
-            .rosterStudents(List.of())
+            .courseStaff(Set.of())
+            .rosterStudents(Set.of())
             .id(1L)
             .build();
     Course courseAfter =
@@ -408,8 +419,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .instructorEmail(separateUser.getEmail())
             .installationId("1234")
             .orgName("ucsb-cs156-s25")
-            .courseStaff(List.of())
-            .rosterStudents(List.of())
+            .courseStaff(Set.of())
+            .rosterStudents(Set.of())
             .id(1L)
             .build();
 
@@ -427,7 +438,9 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     String responseUrl = response.getResponse().getHeader(HttpHeaders.LOCATION);
-    verify(courseRepository, times(1)).save(eq(courseAfter));
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(courseAfter);
     assertEquals("/login/success", responseUrl);
   }
 
@@ -733,8 +746,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     Course course =
         Course.builder()
             .id(1L)
-            .rosterStudents(Collections.emptyList())
-            .courseStaff(Collections.emptyList())
+            .rosterStudents(Collections.emptySet())
+            .courseStaff(Collections.emptySet())
             .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     MvcResult response =
@@ -742,9 +755,12 @@ public class CoursesControllerTests extends ControllerTestCase {
             .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
-    verify(linkerService).unenrollOrganization(eq(course));
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(linkerService).unenrollOrganization(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(course);
     verify(courseRepository).findById(eq(1L));
-    verify(courseRepository).delete(eq(course));
+    verify(courseRepository).delete(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(course);
     verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
     String expectedJson = mapper.writeValueAsString(Map.of("message", "Course with id 1 deleted"));
     String responseString = response.getResponse().getContentAsString();
@@ -758,8 +774,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     Course course =
         Course.builder()
             .id(1L)
-            .rosterStudents(List.of(student))
-            .courseStaff(Collections.emptyList())
+            .rosterStudents(Set.of(student))
+            .courseStaff(Collections.emptySet())
             .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
@@ -788,8 +804,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     Course course =
         Course.builder()
             .id(1L)
-            .rosterStudents(Collections.emptyList())
-            .courseStaff(List.of(staff))
+            .rosterStudents(Collections.emptySet())
+            .courseStaff(Set.of(staff))
             .build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
@@ -817,11 +833,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     RosterStudent student = RosterStudent.builder().id(1L).build();
     CourseStaff staff = CourseStaff.builder().id(1L).build();
     Course course =
-        Course.builder()
-            .id(1L)
-            .rosterStudents(List.of(student))
-            .courseStaff(List.of(staff))
-            .build();
+        Course.builder().id(1L).rosterStudents(Set.of(student)).courseStaff(Set.of(staff)).build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
     MvcResult response =
@@ -976,9 +988,11 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
     verify(courseRepository, times(1)).findById(eq(1L));
     verify(instructorRepository, times(1)).existsByEmail(eq("new-instructor@example.com"));
-    verify(courseRepository, times(1)).save(eq(updatedCourse));
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(updatedCourse);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
@@ -1025,9 +1039,11 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
     verify(courseRepository, times(1)).findById(eq(1L));
     verify(instructorRepository, times(1)).existsByEmail(eq("new-instructor@example.com"));
-    verify(courseRepository, times(1)).save(eq(updatedCourse));
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(updatedCourse);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
@@ -1224,8 +1240,10 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
     verify(courseRepository).findById(eq(1L));
-    verify(courseRepository).save(updatedCourse);
+    verify(courseRepository).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(updatedCourse);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
@@ -1272,8 +1290,10 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
     verify(courseRepository).findById(eq(1L));
-    verify(courseRepository).save(updatedCourse);
+    verify(courseRepository).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(updatedCourse);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
@@ -1425,8 +1445,10 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
     verify(courseRepository).findById(eq(1L));
-    verify(courseRepository).save(updatedCourse);
+    verify(courseRepository).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(updatedCourse);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
@@ -1476,8 +1498,10 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
 
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
     verify(courseRepository).findById(eq(1L));
-    verify(courseRepository).save(updatedCourse);
+    verify(courseRepository).save(courseCaptor.capture());
+    assertThat(courseCaptor.getValue()).usingRecursiveComparison().isEqualTo(updatedCourse);
 
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
@@ -1487,7 +1511,6 @@ public class CoursesControllerTests extends ControllerTestCase {
   // Tests for InstructorCourseView constructor with null collections
   @Test
   public void testInstructorCourseView_withNullRosterStudents() throws Exception {
-    /** Test that InstructorCourseView correctly counts students and staff */
     // arrange
     Course course =
         Course.builder()
@@ -1499,7 +1522,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .installationId("123")
             .orgName("test-org")
             .rosterStudents(null) // explicitly null
-            .courseStaff(List.of()) // empty list
+            .courseStaff(Set.of()) // empty set
             .build();
 
     // act
@@ -1529,7 +1552,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .instructorEmail("instructor@example.com")
             .installationId("456")
             .orgName("test-org-2")
-            .rosterStudents(List.of()) // empty list
+            .rosterStudents(Set.of()) // empty set
             .courseStaff(null) // explicitly null
             .build();
 
@@ -1597,8 +1620,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .instructorEmail("instructor@example.com")
             .installationId("101112")
             .orgName("test-org-4")
-            .rosterStudents(List.of(student1, student2)) // 2 students
-            .courseStaff(List.of(staff1, staff2, staff3)) // 3 staff
+            .rosterStudents(Set.of(student1, student2)) // 2 students
+            .courseStaff(Set.of(staff1, staff2, staff3)) // 3 staff
             .build();
 
     // act
@@ -1633,8 +1656,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(0, viewWithNulls.numStaff());
 
     // Test with empty lists
-    course.setRosterStudents(Collections.emptyList());
-    course.setCourseStaff(Collections.emptyList());
+    course.setRosterStudents(Collections.emptySet());
+    course.setCourseStaff(Collections.emptySet());
     InstructorCourseView viewWithEmpty = new InstructorCourseView(course);
     assertEquals(0, viewWithEmpty.numStudents());
 
@@ -1643,8 +1666,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     RosterStudent student2 = RosterStudent.builder().id(2L).build();
     CourseStaff staff1 = CourseStaff.builder().id(1L).build();
 
-    course.setRosterStudents(List.of(student1, student2));
-    course.setCourseStaff(List.of(staff1));
+    course.setRosterStudents(Set.of(student1, student2));
+    course.setCourseStaff(Set.of(staff1));
     InstructorCourseView viewWithData = new InstructorCourseView(course);
     assertEquals(2, viewWithData.numStudents());
     assertEquals(1, viewWithData.numStaff());

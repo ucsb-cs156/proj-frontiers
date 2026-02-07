@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,12 +20,14 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -69,7 +72,9 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(courseRepository, times(1)).findById(1L);
-    verify(teamRepository, times(1)).save(teamToSave);
+    ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
+    verify(teamRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(teamToSave);
 
     String expectedJson = mapper.writeValueAsString(team);
     String responseString = response.getResponse().getContentAsString();
@@ -102,7 +107,9 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(courseRepository, times(1)).findById(1L);
-    verify(teamRepository, times(1)).save(teamToSave);
+    ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
+    verify(teamRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(teamToSave);
 
     String expectedJson = mapper.writeValueAsString(team);
     String responseString = response.getResponse().getContentAsString();
@@ -291,13 +298,13 @@ public class TeamsControllerTests extends ControllerTestCase {
     TeamMember teamMember1 = TeamMember.builder().id(1L).team(team).rosterStudent(rs1).build();
     TeamMember teamMember2 = TeamMember.builder().id(2L).team(team).rosterStudent(rs2).build();
 
-    team.setTeamMembers(new ArrayList<>(List.of(teamMember1, teamMember2)));
-    rs1.setTeamMembers(new ArrayList<>(List.of(teamMember1)));
-    rs2.setTeamMembers(new ArrayList<>(List.of(teamMember2)));
-    course.setTeams(new ArrayList<>(List.of(team)));
+    team.setTeamMembers(new HashSet<>(Set.of(teamMember1, teamMember2)));
+    rs1.setTeamMembers(new HashSet<>(Set.of(teamMember1)));
+    rs2.setTeamMembers(new HashSet<>(Set.of(teamMember2)));
+    course.setTeams(new HashSet<>(Set.of(team)));
 
     Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(course).build();
-    teamUpdated.setTeamMembers(List.of(teamMember1, teamMember2));
+    teamUpdated.setTeamMembers(Set.of(teamMember1, teamMember2));
 
     when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
 
@@ -310,10 +317,12 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(teamRepository, times(1)).findById(1L);
-    verify(teamRepository, times(1)).delete(team);
-    assertEquals(course.getTeams(), List.of());
-    assertEquals(rs1.getTeamMembers(), List.of());
-    assertEquals(rs2.getTeamMembers(), List.of());
+    ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
+    verify(teamRepository, times(1)).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(team);
+    assertEquals(course.getTeams(), Set.of());
+    assertEquals(rs1.getTeamMembers(), Set.of());
+    assertEquals(rs2.getTeamMembers(), Set.of());
     assertNull(teamMember1.getRosterStudent());
     assertNull(teamMember2.getRosterStudent());
 
@@ -356,12 +365,12 @@ public class TeamsControllerTests extends ControllerTestCase {
     Course course = Course.builder().id(1L).courseName("CS156").build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
 
-    // Initialize with empty lists to match Hibernate behavior
-    team.setTeamMembers(List.of());
-    course.setTeams(new ArrayList<>(List.of(team)));
+    // Initialize with empty sets to match Hibernate behavior
+    team.setTeamMembers(Set.of());
+    course.setTeams(new HashSet<>(Set.of(team)));
 
     Team teamUpdated = Team.builder().id(1L).name("Team Alpha").course(null).build();
-    teamUpdated.setTeamMembers(List.of());
+    teamUpdated.setTeamMembers(Set.of());
 
     when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
 
@@ -374,8 +383,10 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(teamRepository, times(1)).findById(1L);
-    verify(teamRepository, times(1)).delete(teamUpdated);
-    assertEquals(course.getTeams(), List.of());
+    ArgumentCaptor<Team> captor = ArgumentCaptor.forClass(Team.class);
+    verify(teamRepository, times(1)).delete(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(teamUpdated);
+    assertEquals(course.getTeams(), Set.of());
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team with id 1 deleted");
@@ -418,7 +429,9 @@ public class TeamsControllerTests extends ControllerTestCase {
     // assert
     verify(teamRepository, times(1)).findById(1L);
     verify(rosterStudentRepository, times(1)).findById(1L);
-    verify(teamMemberRepository, times(1)).save(teamMemberToSave);
+    ArgumentCaptor<TeamMember> captor = ArgumentCaptor.forClass(TeamMember.class);
+    verify(teamMemberRepository, times(1)).save(captor.capture());
+    assertThat(captor.getValue()).usingRecursiveComparison().isEqualTo(teamMemberToSave);
 
     String expectedJson = mapper.writeValueAsString(teamMember);
     String responseString = response.getResponse().getContentAsString();
@@ -524,7 +537,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
     when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
-    when(teamMemberRepository.findByTeamAndRosterStudent(eq(team), eq(rosterStudent)))
+    when(teamMemberRepository.findByTeamAndRosterStudent(any(Team.class), any(RosterStudent.class)))
         .thenReturn(Optional.of(teamMember));
 
     // act
@@ -592,13 +605,13 @@ public class TeamsControllerTests extends ControllerTestCase {
     RosterStudent rs = RosterStudent.builder().id(2L).course(course).build();
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
     TeamMember teamMember = TeamMember.builder().id(1L).team(team).rosterStudent(rs).build();
-    team.setTeamMembers(new ArrayList<>(List.of(teamMember)));
-    rs.setTeamMembers(new ArrayList<>(List.of(teamMember)));
+    team.setTeamMembers(new HashSet<>(Set.of(teamMember)));
+    rs.setTeamMembers(new HashSet<>(Set.of(teamMember)));
 
     Team updatedTeam = Team.builder().id(1L).name("Team Alpha").course(course).build();
-    updatedTeam.setTeamMembers(List.of());
+    updatedTeam.setTeamMembers(Set.of());
     RosterStudent rsUpdated = RosterStudent.builder().id(2L).course(course).build();
-    rsUpdated.setTeamMembers(List.of());
+    rsUpdated.setTeamMembers(Set.of());
 
     TeamMember teamMemberUpdated = teamMember;
 
@@ -617,11 +630,17 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(teamMemberRepository, times(1)).findById(1L);
-    verify(teamMemberRepository, times(1)).delete(teamMemberUpdated);
-    verify(teamRepository, times(1)).save(team);
-    verify(rosterStudentRepository, times(1)).save(rs);
-    assertEquals(team.getTeamMembers(), List.of());
-    assertEquals(rs.getTeamMembers(), List.of());
+    ArgumentCaptor<TeamMember> teamMemberCaptor = ArgumentCaptor.forClass(TeamMember.class);
+    verify(teamMemberRepository, times(1)).delete(teamMemberCaptor.capture());
+    assertThat(teamMemberCaptor.getValue()).usingRecursiveComparison().isEqualTo(teamMemberUpdated);
+    ArgumentCaptor<Team> teamCaptor = ArgumentCaptor.forClass(Team.class);
+    verify(teamRepository, times(1)).save(teamCaptor.capture());
+    assertThat(teamCaptor.getValue()).usingRecursiveComparison().isEqualTo(team);
+    ArgumentCaptor<RosterStudent> rsCaptor = ArgumentCaptor.forClass(RosterStudent.class);
+    verify(rosterStudentRepository, times(1)).save(rsCaptor.capture());
+    assertThat(rsCaptor.getValue()).usingRecursiveComparison().isEqualTo(rs);
+    assertEquals(team.getTeamMembers(), Set.of());
+    assertEquals(rs.getTeamMembers(), Set.of());
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap = Map.of("message", "Team member with id 1 deleted");
@@ -685,8 +704,8 @@ public class TeamsControllerTests extends ControllerTestCase {
             .githubLogin(null)
             .build();
     TeamMember teamMember2 = TeamMember.builder().id(2L).team(team).rosterStudent(student2).build();
-    team.setTeamMembers(List.of(teamMember, teamMember2));
-    course.setTeams(List.of(team));
+    team.setTeamMembers(Set.of(teamMember, teamMember2));
+    course.setTeams(Set.of(team));
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
@@ -714,7 +733,7 @@ public class TeamsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void testTeamMemberMapping_noTeams() throws Exception {
     // arrange
-    Course course = Course.builder().id(1L).courseName("CS156").teams(List.of()).build();
+    Course course = Course.builder().id(1L).courseName("CS156").teams(Set.of()).build();
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
     // act
@@ -809,10 +828,15 @@ public class TeamsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated1));
-    verify(teamRepository).save(eq(team2Created));
-    verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated2));
-    verify(teamMemberRepository, never()).save(eq(teamMemberFor3));
+    ArgumentCaptor<TeamMember> teamMemberCaptor = ArgumentCaptor.forClass(TeamMember.class);
+    verify(teamMemberRepository, atLeast(2)).save(teamMemberCaptor.capture());
+    assertThat(teamMemberCaptor.getAllValues())
+        .usingRecursiveFieldByFieldElementComparator()
+        .contains(teamMemberCreated1, teamMemberCreated2)
+        .doesNotContain(teamMemberFor3);
+    ArgumentCaptor<Team> teamCaptor = ArgumentCaptor.forClass(Team.class);
+    verify(teamRepository).save(teamCaptor.capture());
+    assertThat(teamCaptor.getValue()).usingRecursiveComparison().isEqualTo(team2Created);
 
     TeamsController.TeamCreationResponse expectedResponse =
         new TeamsController.TeamCreationResponse(
@@ -877,10 +901,15 @@ public class TeamsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-    verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated1));
-    verify(teamRepository).save(eq(team2Created));
-    verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated2));
-    verify(teamMemberRepository, never()).save(eq(teamMemberFor3));
+    ArgumentCaptor<TeamMember> teamMemberCaptor = ArgumentCaptor.forClass(TeamMember.class);
+    verify(teamMemberRepository, atLeast(2)).save(teamMemberCaptor.capture());
+    assertThat(teamMemberCaptor.getAllValues())
+        .usingRecursiveFieldByFieldElementComparator()
+        .contains(teamMemberCreated1, teamMemberCreated2)
+        .doesNotContain(teamMemberFor3);
+    ArgumentCaptor<Team> teamCaptor = ArgumentCaptor.forClass(Team.class);
+    verify(teamRepository).save(teamCaptor.capture());
+    assertThat(teamCaptor.getValue()).usingRecursiveComparison().isEqualTo(team2Created);
 
     TeamsController.TeamCreationResponse expectedResponse =
         new TeamsController.TeamCreationResponse(

@@ -189,12 +189,12 @@ public class TeamsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/mapping")
   public Iterable<TeamMemberMapping> teamMemberMapping(@RequestParam Long courseId) {
-    List<Team> teams =
+    Set<Team> teams =
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId))
             .getTeams();
-    List<TeamMemberMapping> mappings = new ArrayList<>();
+    Set<TeamMemberMapping> mappings = new HashSet<>();
     for (Team team : teams) {
       for (TeamMember member : team.getTeamMembers()) {
         mappings.add(TeamMemberMapping.from(member));

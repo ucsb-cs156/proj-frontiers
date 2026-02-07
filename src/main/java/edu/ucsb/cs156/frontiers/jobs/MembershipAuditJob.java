@@ -11,8 +11,8 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Builder;
 
@@ -32,11 +32,11 @@ public class MembershipAuditJob implements JobContextConsumer {
         Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
         Iterable<OrgMember> admins = organizationMemberService.getOrganizationAdmins(course);
         Iterable<OrgMember> invitees = organizationMemberService.getOrganizationInvitees(course);
-        List<RosterStudent> rosterStudents = course.getRosterStudents();
-        List<CourseStaff> courseStaff = course.getCourseStaff();
-        for (int i = 0; i < rosterStudents.size(); i++) {
-          Integer studentGithubId = rosterStudents.get(i).getGithubId();
-          String studentGithubLogin = rosterStudents.get(i).getGithubLogin();
+        Set<RosterStudent> rosterStudents = course.getRosterStudents();
+        Set<CourseStaff> courseStaff = course.getCourseStaff();
+        for (RosterStudent student : rosterStudents) {
+          Integer studentGithubId = student.getGithubId();
+          String studentGithubLogin = student.getGithubLogin();
           if (studentGithubId != null && studentGithubLogin != null) {
             Optional<OrgMember> member =
                 StreamSupport.stream(members.spliterator(), false)
@@ -60,14 +60,14 @@ public class MembershipAuditJob implements JobContextConsumer {
             } else if (invitee.isPresent()) {
               updatedStatus = OrgStatus.INVITED;
             }
-            rosterStudents.get(i).setOrgStatus(updatedStatus);
+            student.setOrgStatus(updatedStatus);
           }
         }
         rosterStudentRepository.saveAll(rosterStudents);
 
-        for (int i = 0; i < courseStaff.size(); i++) {
-          Integer staffGithubId = courseStaff.get(i).getGithubId();
-          String staffGithubLogin = courseStaff.get(i).getGithubLogin();
+        for (CourseStaff staff : courseStaff) {
+          Integer staffGithubId = staff.getGithubId();
+          String staffGithubLogin = staff.getGithubLogin();
           if (staffGithubId != null && staffGithubLogin != null) {
             Optional<OrgMember> member =
                 StreamSupport.stream(members.spliterator(), false)
@@ -91,7 +91,7 @@ public class MembershipAuditJob implements JobContextConsumer {
             } else if (invitee.isPresent()) {
               updatedStatus = OrgStatus.INVITED;
             }
-            courseStaff.get(i).setOrgStatus(updatedStatus);
+            staff.setOrgStatus(updatedStatus);
           }
         }
         courseStaffRepository.saveAll(courseStaff);

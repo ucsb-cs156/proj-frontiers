@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -204,7 +205,7 @@ public class UpdateUserServiceTests {
     when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
     // Act
-    updateUserService.attachUsersToRosterStudents(List.of(rosterStudent));
+    updateUserService.attachUsersToRosterStudents(Set.of(rosterStudent));
 
     // Assert
     verify(userRepository, times(1)).findByEmail(email);

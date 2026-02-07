@@ -16,6 +16,7 @@ import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -142,11 +143,10 @@ public class PushTeamsToGithubJobTests {
         Team.builder()
             .name("team1")
             .githubTeamId(null)
-            .teamMembers(Arrays.asList(teamMember1, teamMember2))
+            .teamMembers(Set.of(teamMember1, teamMember2))
             .build();
 
-    Team team2 =
-        Team.builder().name("team2").githubTeamId(456).teamMembers(Arrays.asList()).build();
+    Team team2 = Team.builder().name("team2").githubTeamId(456).teamMembers(Set.of()).build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team1, team2));
@@ -218,11 +218,7 @@ public class PushTeamsToGithubJobTests {
     TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
 
     Team team =
-        Team.builder()
-            .name("team1")
-            .githubTeamId(123)
-            .teamMembers(Arrays.asList(teamMember))
-            .build();
+        Team.builder().name("team1").githubTeamId(123).teamMembers(Set.of(teamMember)).build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
@@ -270,11 +266,7 @@ public class PushTeamsToGithubJobTests {
     TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
 
     Team team =
-        Team.builder()
-            .name("team1")
-            .githubTeamId(123)
-            .teamMembers(Arrays.asList(teamMember))
-            .build();
+        Team.builder().name("team1").githubTeamId(123).teamMembers(Set.of(teamMember)).build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
@@ -316,8 +308,7 @@ public class PushTeamsToGithubJobTests {
             .installationId("123")
             .build();
 
-    Team team =
-        Team.builder().name("team1").githubTeamId(null).teamMembers(Arrays.asList()).build();
+    Team team = Team.builder().name("team1").githubTeamId(null).teamMembers(Set.of()).build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
@@ -363,11 +354,7 @@ public class PushTeamsToGithubJobTests {
 
     // Team with null GitHub team ID - this should cause member processing to be skipped
     Team team =
-        Team.builder()
-            .name("team1")
-            .githubTeamId(null)
-            .teamMembers(Arrays.asList(teamMember))
-            .build();
+        Team.builder().name("team1").githubTeamId(null).teamMembers(Set.of(teamMember)).build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
@@ -415,11 +402,7 @@ public class PushTeamsToGithubJobTests {
     TeamMember teamMember = TeamMember.builder().rosterStudent(student).build();
 
     Team team =
-        Team.builder()
-            .name("team1")
-            .githubTeamId(123)
-            .teamMembers(Arrays.asList(teamMember))
-            .build();
+        Team.builder().name("team1").githubTeamId(123).teamMembers(Set.of(teamMember)).build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));

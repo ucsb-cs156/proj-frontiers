@@ -8,6 +8,7 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -66,7 +67,7 @@ public class UpdateUserService {
   }
 
   /** This method attaches a SingleRoster student to the User based on their email. */
-  public void attachUsersToRosterStudents(List<RosterStudent> rosterStudents) {
+  public void attachUsersToRosterStudents(Set<RosterStudent> rosterStudents) {
     for (RosterStudent matchedStudent : rosterStudents) {
       attachUserToRosterStudent(matchedStudent);
     }
