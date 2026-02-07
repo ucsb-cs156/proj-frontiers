@@ -15,7 +15,7 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +44,7 @@ public class CreateTeamRepositoriesJobTest {
         RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
     TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
     Team team1 = Team.builder().name("test-team1").build();
-    team1.setTeamMembers(List.of(member1));
+    team1.setTeamMembers(Set.of(member1));
 
     RosterStudent student2 =
         RosterStudent.builder().githubLogin("student2").orgStatus(OrgStatus.MEMBER).build();
@@ -53,9 +53,9 @@ public class CreateTeamRepositoriesJobTest {
         RosterStudent.builder().githubLogin("student3").orgStatus(OrgStatus.MEMBER).build();
     TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
     Team team2 = Team.builder().name("test-team2").build();
-    team2.setTeamMembers(List.of(member2, member3));
+    team2.setTeamMembers(Set.of(member2, member3));
 
-    course.setTeams(List.of(team1, team2));
+    course.setTeams(Set.of(team1, team2));
 
     var repoJob =
         spy(
@@ -95,7 +95,7 @@ public class CreateTeamRepositoriesJobTest {
         RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
     TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
     Team team1 = Team.builder().name("test-team1").build();
-    team1.setTeamMembers(List.of(member1));
+    team1.setTeamMembers(Set.of(member1));
 
     RosterStudent student2 =
         RosterStudent.builder().githubLogin("student2").orgStatus(OrgStatus.MEMBER).build();
@@ -104,9 +104,9 @@ public class CreateTeamRepositoriesJobTest {
         RosterStudent.builder().githubLogin("student3").orgStatus(OrgStatus.MEMBER).build();
     TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
     Team team2 = Team.builder().name("test-team2").build();
-    team2.setTeamMembers(List.of(member2, member3));
+    team2.setTeamMembers(Set.of(member2, member3));
 
-    course.setTeams(List.of(team1, team2));
+    course.setTeams(Set.of(team1, team2));
 
     var repoJob =
         spy(
