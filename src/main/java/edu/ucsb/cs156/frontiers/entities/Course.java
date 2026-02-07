@@ -7,8 +7,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -51,25 +51,25 @@ public class Course {
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
   @ToString.Exclude
-  private List<CourseStaff> courseStaff;
+  private Set<CourseStaff> courseStaff;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
   @ToString.Exclude
-  private List<RosterStudent> rosterStudents;
+  private Set<RosterStudent> rosterStudents;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
   @ToString.Exclude
-  private List<Team> teams;
+  private Set<Team> teams;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
   @ToString.Exclude
-  private List<Section> sections;
+  private Set<Section> sections;
 
   @Override
   public final boolean equals(Object o) {

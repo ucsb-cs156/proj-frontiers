@@ -15,8 +15,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -67,7 +68,7 @@ public class RosterStudent {
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
   @ToString.Exclude
-  private List<TeamMember> teamMembers;
+  private Set<TeamMember> teamMembers;
 
   @Enumerated(EnumType.STRING)
   private RosterStatus rosterStatus;
@@ -78,11 +79,11 @@ public class RosterStudent {
   private Integer githubId;
   private String githubLogin;
 
-  public List<String> getTeams() {
+  public Set<String> getTeams() {
     if (teamMembers == null) {
-      return List.of();
+      return Set.of();
     } else {
-      return teamMembers.stream().map(tm -> tm.getTeam().getName()).toList();
+      return teamMembers.stream().map(tm -> tm.getTeam().getName()).collect(Collectors.toSet());
     }
   }
 

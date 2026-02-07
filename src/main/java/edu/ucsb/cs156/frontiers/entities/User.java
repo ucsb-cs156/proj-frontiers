@@ -6,8 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,13 +46,13 @@ public class User {
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
   @ToString.Exclude
-  private List<RosterStudent> linkedStudents;
+  private Set<RosterStudent> linkedStudents;
 
   @OneToMany(mappedBy = "user")
   @Fetch(FetchMode.JOIN)
   @ToString.Exclude
   @JsonIgnore
-  private List<CourseStaff> roles;
+  private Set<CourseStaff> roles;
 
   @Override
   public final boolean equals(Object o) {
