@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>WebhookSecurityUtils.java</h1>
+
+<table class="src">
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package edu.ucsb.cs156.frontiers.utilities;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.nio.charset.StandardCharsets;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.security.InvalidKeyException;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.security.NoSuchAlgorithmException;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import javax.crypto.Mac;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import javax.crypto.spec.SecretKeySpec;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import lombok.extern.slf4j.Slf4j;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>/** Utility class for webhook security validation */</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>@Slf4j</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>public class WebhookSecurityUtils {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  private WebhookSecurityUtils() {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    // Utility Class</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_16'/>
+16
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_16'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_17'/>
+17
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_17'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_18'/>
+18
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_18'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static final String HMAC_SHA256 = &#34;HmacSHA256&#34;;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_21'/>
+21
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_21'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * Validates GitHub webhook signature using HMAC-SHA256</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_22'/>
+22
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_22'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_23'/>
+23
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_23'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param payload the raw payload body as string</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_24'/>
+24
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_24'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param signature the GitHub signature header (e.g., &#34;sha256=abc123...&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_25'/>
+25
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_25'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param secret the webhook secret</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_26'/>
+26
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_26'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return true if signature is valid, false otherwise</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_27'/>
+27
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_27'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_28'/>
+28
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_28'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public static boolean validateGitHubSignature(String payload, String signature, String secret)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_29'/>
+29
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_29'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      throws NoSuchAlgorithmException, InvalidKeyException {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_30'/>
+30
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_30'>3</a>
+<span>
+1. validateGitHubSignature : negated conditional &rarr; KILLED<br/>
+2. validateGitHubSignature : negated conditional &rarr; KILLED<br/>
+3. validateGitHubSignature : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (payload == null || signature == null || secret == null) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_31'/>
+31
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_31'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      log.warn(&#34;Null values provided for webhook validation&#34;);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_32'/>
+32
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_32'>1</a>
+<span>
+1. validateGitHubSignature : replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return false;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_33'/>
+33
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_33'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_34'/>
+34
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_34'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_35'/>
+35
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_35'>1</a>
+<span>
+1. validateGitHubSignature : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (!signature.startsWith(&#34;sha256=&#34;)) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_36'/>
+36
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_36'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      log.warn(&#34;Invalid signature format: {}&#34;, signature);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_37'/>
+37
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_37'>1</a>
+<span>
+1. validateGitHubSignature : replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return false;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_38'/>
+38
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_38'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_39'/>
+39
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_39'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_40'/>
+40
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_40'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    String expectedSignature = &#34;sha256=&#34; + calculateHmacSha256(payload, secret);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_41'/>
+41
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_41'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    boolean isValid = safeEquals(signature, expectedSignature);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_42'/>
+42
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_42'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_43'/>
+43
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_43'>1</a>
+<span>
+1. validateGitHubSignature : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (!isValid) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_44'/>
+44
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_44'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      log.warn(&#34;Webhook signature validation failed&#34;);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_45'/>
+45
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_45'>1</a>
+<span>
+1. validateGitHubSignature : replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return false;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_46'/>
+46
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_46'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_47'/>
+47
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_47'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_48'/>
+48
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_48'>1</a>
+<span>
+1. validateGitHubSignature : replaced boolean return with false for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return true;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_49'/>
+49
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_49'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_50'/>
+50
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_50'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_51'/>
+51
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_51'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_52'/>
+52
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_52'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * Calculates HMAC-SHA256 signature for given payload and secret</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_53'/>
+53
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_53'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_54'/>
+54
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_54'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param payload the payload to sign</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_55'/>
+55
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_55'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param secret the secret key</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_56'/>
+56
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_56'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return hex-encoded signature</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_57'/>
+57
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_57'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_58'/>
+58
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_58'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static String calculateHmacSha256(String payload, String secret)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_59'/>
+59
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_59'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      throws NoSuchAlgorithmException, InvalidKeyException {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_60'/>
+60
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_60'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    Mac mac = Mac.getInstance(HMAC_SHA256);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_61'/>
+61
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_61'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    SecretKeySpec secretKeySpec =</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_62'/>
+62
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_62'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_63'/>
+63
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_63'>1</a>
+<span>
+1. calculateHmacSha256 : removed call to javax/crypto/Mac::init &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    mac.init(secretKeySpec);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_64'/>
+64
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_64'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    byte[] signature = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_65'/>
+65
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_65'>1</a>
+<span>
+1. calculateHmacSha256 : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::calculateHmacSha256 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return bytesToHex(signature);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_66'/>
+66
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_66'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_67'/>
+67
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_67'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_68'/>
+68
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_68'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_69'/>
+69
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_69'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * Converts byte array to hexadecimal string</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_70'/>
+70
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_70'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_71'/>
+71
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_71'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param bytes the byte array</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_72'/>
+72
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_72'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return hex string</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_73'/>
+73
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_73'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_74'/>
+74
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_74'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static String bytesToHex(byte[] bytes) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_75'/>
+75
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_75'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    StringBuilder result = new StringBuilder();</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_76'/>
+76
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_76'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    for (byte b : bytes) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_77'/>
+77
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_77'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      result.append(String.format(&#34;%02x&#34;, b));</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_78'/>
+78
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_78'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_79'/>
+79
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_79'>1</a>
+<span>
+1. bytesToHex : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::bytesToHex &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return result.toString();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_80'/>
+80
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_80'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_81'/>
+81
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_81'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_82'/>
+82
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_82'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  /**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_83'/>
+83
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_83'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * Constant-time string comparison to prevent timing attacks</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_84'/>
+84
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_84'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_85'/>
+85
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_85'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param a first string</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_86'/>
+86
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_86'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @param b second string</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_87'/>
+87
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_87'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   * @return true if strings are equal</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_88'/>
+88
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_88'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>   */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_89'/>
+89
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_89'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static boolean safeEquals(String a, String b) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_90'/>
+90
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_90'>1</a>
+<span>
+1. safeEquals : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (a.length() != b.length()) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_91'/>
+91
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_91'>1</a>
+<span>
+1. safeEquals : replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::safeEquals &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return false;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_92'/>
+92
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_92'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_93'/>
+93
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_93'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_94'/>
+94
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_94'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    int result = 0;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_95'/>
+95
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_95'>2</a>
+<span>
+1. safeEquals : changed conditional boundary &rarr; KILLED<br/>
+2. safeEquals : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    for (int i = 0; i &#60; a.length(); i++) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_96'/>
+96
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_96'>2</a>
+<span>
+1. safeEquals : Replaced bitwise OR with AND &rarr; KILLED<br/>
+2. safeEquals : Replaced XOR with AND &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      result |= a.charAt(i) ^ b.charAt(i);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_97'/>
+97
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_97'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_98'/>
+98
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_98'>2</a>
+<span>
+1. safeEquals : replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::safeEquals &rarr; KILLED<br/>
+2. safeEquals : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return result == 0;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_99'/>
+99
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_99'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@31a89b54_100'/>
+100
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_100'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_30'>30</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_30'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_nullSecret()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_nullPayload()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_nullSignature()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_32'>32</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_32'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_nullSignature()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_35'>35</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_35'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_37'>37</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_37'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_invalidSignatureFormat()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_43'>43</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_43'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_invalidSignature()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_45'>45</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_45'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_invalidSignature()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_48'>48</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_48'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>validateGitHubSignature<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> replaced boolean return with false for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::validateGitHubSignature &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_63'>63</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_63'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>calculateHmacSha256<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_invalidSignature()]</span></span> removed call to javax/crypto/Mac::init &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_65'>65</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_65'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>calculateHmacSha256<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::calculateHmacSha256 &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_79'>79</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_79'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>bytesToHex<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::bytesToHex &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_90'>90</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_90'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_91'>91</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_91'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_invalidSignature()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::safeEquals &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_95'>95</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_95'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> changed conditional boundary &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_differentSecret()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_96'>96</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_96'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_differentSecret()]</span></span> Replaced bitwise OR with AND &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> Replaced XOR with AND &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@31a89b54_98'>98</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@31a89b54_98'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_differentSecret()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/utilities/WebhookSecurityUtils::safeEquals &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>safeEquals<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_validSignature()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_differentSecret()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_emptyPayload()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:unsuccessfulWebhook_badJSON()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:uninstall_missingInstallationField_returns_success_noops()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:no_action()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:uninstall_missingInstallationIdField_returns_success_noops()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:testUnrecognizedAction_withValidFields()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:action_wrong()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingInstallationIdField()] (2 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingInstallationField()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingMembershipField()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:testMemberRemoved_withValidFields()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingLoginField()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:testNullGithubLoginAndInstallationId()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:uninstall_noCourseFound_returns_success()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingInstallationField()] (2 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingInstallationIdField()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberInvited_missingUserField()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingLoginField()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:memberAdded_missingUserField()] (6 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:uninstall_success_clears_installation_and_orgName()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:noCourse()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:noStudent()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:successfulWebhook_memberInvited()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:courseStaffInvited()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:successfulWebhook_member_course_staff()] (4 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:successfulWebhook_admin_course_staff()] (9 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:successfulWebhook_admin()] (5 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:successfulWebhook_member()] (17 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_nullSignature()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_nullSecret()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_nullPayload()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:unsuccessfulWebhook_noXHubSignature()] (2 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:webhookWithoutSignature_returnsUnauthorized()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_invalidSignature()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:webhookWithInvalidSignature_returnsUnauthorized()] (3 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_invalidSignatureFormat()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.utilities.WebhookSecurityUtilsTests]/[method:testValidateGitHubSignature_signatureWithoutPrefix()] (0 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.WebhookControllerTests]/[method:unsuccessfulWebhook_invalidSignature()] (3 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.17.0
+
+</body>
+</html>
