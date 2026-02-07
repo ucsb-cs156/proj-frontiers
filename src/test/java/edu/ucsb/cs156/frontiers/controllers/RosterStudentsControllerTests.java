@@ -2710,7 +2710,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     MvcResult response =
@@ -2727,7 +2727,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(service).runAsJob(any(RemoveStudentsJob.class));
 
     // Check that dropped student has DROPPED status in saved list
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
     RosterStudent droppedInSavedList =
         savedStudents.stream()
             .filter(s -> s.getStudentId().equals("D999999"))
@@ -2801,7 +2801,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     mockMvc
@@ -2812,8 +2812,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Assert
     verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
 
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent savedStudent = savedStudents.get(0);
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    RosterStudent savedStudent = savedStudents.iterator().next();
     assertEquals(OrgStatus.JOINCOURSE, savedStudent.getOrgStatus());
   }
 
@@ -2847,7 +2847,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     mockMvc
@@ -2858,8 +2858,8 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Assert
     verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
 
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
-    RosterStudent savedStudent = savedStudents.get(0);
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    RosterStudent savedStudent = savedStudents.iterator().next();
     assertEquals(OrgStatus.PENDING, savedStudent.getOrgStatus());
   }
 
@@ -2905,7 +2905,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(canvasService.getCanvasRoster(any(Course.class))).thenReturn(canvasStudents);
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     // Act
     MvcResult response =
@@ -2921,7 +2921,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     verify(rosterStudentRepository).saveAll(rosterStudentCaptor.capture());
 
     // Check that manual student still has MANUAL status
-    List<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
+    Set<RosterStudent> savedStudents = rosterStudentCaptor.getValue();
     RosterStudent manualInSavedList =
         savedStudents.stream()
             .filter(s -> s.getStudentId().equals("M999999"))

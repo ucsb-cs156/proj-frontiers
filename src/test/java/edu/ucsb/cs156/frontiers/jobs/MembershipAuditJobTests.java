@@ -209,24 +209,24 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(2)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getAllValues().get(0))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student1Updated, student2Updated));
+        .isEqualTo(Set.of(student1Updated, student2Updated));
     assertThat(studentCaptor.getAllValues().get(1))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student3Updated, student4Updated, student5Updated, student6Updated));
+        .isEqualTo(Set.of(student3Updated, student4Updated, student5Updated, student6Updated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository, times(2)).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getAllValues().get(0))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated));
+        .isEqualTo(Set.of(courseStaff1Updated));
     assertThat(staffCaptor.getAllValues().get(1))
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff2Updated, courseStaff3Updated, courseStaff4Updated));
+        .isEqualTo(Set.of(courseStaff2Updated, courseStaff3Updated, courseStaff4Updated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
@@ -286,18 +286,18 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student1Updated));
+        .isEqualTo(Set.of(student1Updated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated));
+        .isEqualTo(Set.of(courseStaff1Updated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
@@ -387,18 +387,18 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(student2Updated, student3Updated));
+        .isEqualTo(Set.of(student2Updated, student3Updated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository, times(1)).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated, courseStaff2Updated));
+        .isEqualTo(Set.of(courseStaff1Updated, courseStaff2Updated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }
@@ -507,18 +507,18 @@ public class MembershipAuditJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> studentCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(studentCaptor.capture());
     assertThat(studentCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(studentUpdated, student2NotUpdated));
+        .isEqualTo(Set.of(studentUpdated, student2NotUpdated));
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<CourseStaff>> staffCaptor = ArgumentCaptor.forClass(Set.class);
     verify(courseStaffRepository).saveAll(staffCaptor.capture());
     assertThat(staffCaptor.getValue())
         .usingRecursiveComparison()
-        .isEqualTo(List.of(courseStaff1Updated, courseStaff2NotUpdated));
+        .isEqualTo(Set.of(courseStaff1Updated, courseStaff2NotUpdated));
 
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
   }

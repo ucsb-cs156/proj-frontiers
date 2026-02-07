@@ -215,7 +215,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
 
     verify(courseRepository, atLeastOnce()).findById(eq(1L));
 
-    ArgumentCaptor<List<RosterStudent>> saveAllCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> saveAllCaptor = ArgumentCaptor.forClass(Set.class);
     verify(rosterStudentRepository, times(1)).saveAll(saveAllCaptor.capture());
     assertThat(saveAllCaptor.getValue())
         .usingRecursiveComparison()
@@ -333,7 +333,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
     when(rosterStudentRepository.saveAll(any()))
         .thenReturn(List.of(droppedStudentUpdated, noUpdateNoDrop));
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     MockMultipartFile file =
@@ -378,7 +378,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
         new MockMultipartFile(
             "file", "roster.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSVContentsUCSB.getBytes());
 
-    ArgumentCaptor<List<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<Set<RosterStudent>> rosterStudentCaptor = ArgumentCaptor.forClass(Set.class);
     MvcResult response =
         mockMvc
             .perform(
