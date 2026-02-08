@@ -13,7 +13,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
@@ -42,11 +41,6 @@ public class GithubGraphQLServiceTests {
           .term("Fall 2023")
           .school("UCSB")
           .build();
-
-  @BeforeEach
-  public void setup() {
-    mockServer.reset();
-  }
 
   @Test
   public void testGetDefaultBranchName() throws Exception {
