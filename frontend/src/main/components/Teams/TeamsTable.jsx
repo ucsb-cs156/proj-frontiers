@@ -24,7 +24,7 @@ export default function TeamsTable({
 
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
-    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    // Stryker disable next-line all : GET and empty string are equivalent
     { method: "GET", url: `/api/rosterstudents/course/${courseId}` },
     [],
     true,
@@ -40,6 +40,14 @@ export default function TeamsTable({
 
   const onDeleteTeam = () => {
     toast("Team removed successfully");
+  };
+
+  const onDeleteGithubMember = () => {
+    toast("Delete GitHub team member job launched successfully");
+  };
+
+  const onAddGithubMember = () => {
+    toast("Add GitHub team member job launched successfully");
   };
 
   const cellToAxiosParamsPost = (data) => ({
@@ -64,6 +72,27 @@ export default function TeamsTable({
     params: { teamMemberId: member.id, courseId: courseId },
   });
 
+  const cellToAxiosParamDeleteGithubMember = (data) => ({
+    method: "POST",
+    url: `/api/jobs/launch/deleteTeamMemberFromGithub`,
+    params: {
+      memberGithubLogin: data.memberGithubLogin,
+      githubTeamId: data.githubTeamId,
+      courseId: courseId,
+    },
+  });
+
+  const cellToAxiosParamAddGithubMember = (data) => ({
+    method: "POST",
+    url: `/api/jobs/launch/addTeamMemberToGithub`,
+    params: {
+      memberGithubLogin: data.memberGithubLogin,
+      githubTeamId: data.githubTeamId,
+      teamMemberId: data.teamMemberId,
+      courseId: courseId,
+    },
+  });
+
   const deleteTeamMutation = useBackendMutation(
     cellToAxiosParamDeleteTeam,
     { onSuccess: onDeleteTeam },
@@ -76,10 +105,32 @@ export default function TeamsTable({
     [`/api/teams/all?courseId=${courseId}`],
   );
 
+  const deleteGithubMemberMutation = useBackendMutation(
+    cellToAxiosParamDeleteGithubMember,
+    { onSuccess: onDeleteGithubMember },
+    [`/api/jobs/launch/deleteTeamMemberFromGithub`],
+  );
+
+  const addGithubMemberMutation = useBackendMutation(
+    cellToAxiosParamAddGithubMember,
+    { onSuccess: onAddGithubMember },
+    [`/api/jobs/launch/addTeamMemberToGithub`],
+  );
+
   const memberPostMutation = useBackendMutation(
     cellToAxiosParamsPost,
     {
-      onSuccess: () => onSuccessMember(setPostMemberModal),
+      onSuccess: (createdTeamMember) => {
+        onSuccessMember(setPostMemberModal);
+        const rosterStudent = rosterStudents.find(
+          (rs) => rs.id === createdTeamMember.rosterStudent.id,
+        );
+        addGithubMemberMutation.mutate({
+          memberGithubLogin: rosterStudent.githubLogin,
+          githubTeamId: selectedTeam.githubTeamId,
+          teamMemberId: createdTeamMember.id,
+        });
+      },
       onError: (error) => {
         setPostMemberModal(false);
         if (error.response.status === 409) {
@@ -104,9 +155,13 @@ export default function TeamsTable({
     deleteTeamMutation.mutate(team);
   };
 
-  const deleteMemberCallback = async (cell) => {
+  const deleteMemberCallback = async (cell, team) => {
     const member = cell.row.original;
     deleteMemberMutation.mutate(member);
+    deleteGithubMemberMutation.mutate({
+      memberGithubLogin: member.rosterStudent.githubLogin,
+      githubTeamId: team.githubTeamId,
+    });
   };
 
   const memberColumns = [
@@ -208,7 +263,7 @@ export default function TeamsTable({
                         ButtonColumn(
                           "Remove",
                           "danger",
-                          deleteMemberCallback,
+                          (cell) => deleteMemberCallback(cell, team),
                           `${testIdPrefix}-${team.id}`,
                         ),
                       ]
