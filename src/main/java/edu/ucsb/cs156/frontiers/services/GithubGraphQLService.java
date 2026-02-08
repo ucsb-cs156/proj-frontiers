@@ -13,6 +13,7 @@ import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 @Service
 @Slf4j
@@ -22,9 +23,13 @@ public class GithubGraphQLService {
 
   private final JwtService jwtService;
 
-  public GithubGraphQLService(HttpSyncGraphQlClient graphQlClient, JwtService jwtService) {
+  private final String githubBaseUrl = "https://api.github.com/graphql";
+
+  public GithubGraphQLService(RestClient.Builder builder, JwtService jwtService) {
     this.jwtService = jwtService;
-    this.graphQlClient = graphQlClient;
+    this.graphQlClient =
+        HttpSyncGraphQlClient.builder(builder.baseUrl(githubBaseUrl).build()).build();
+    ;
   }
 
   /**
