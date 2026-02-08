@@ -2,43 +2,36 @@ package edu.ucsb.cs156.frontiers.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
-import java.util.Map;
-import org.junit.jupiter.api.AfterEach;
+import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.graphql.client.ClientGraphQlResponse;
-import org.springframework.graphql.client.GraphQlClient.RequestSpec;
-import org.springframework.graphql.client.GraphQlClient.RetrieveSyncSpec;
-import org.springframework.graphql.client.HttpSyncGraphQlClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.client.MockRestServiceServer;
 
-@ExtendWith(MockitoExtension.class)
+@RestClientTest(GithubGraphQLService.class)
+@Import({TestConfig.class})
 public class GithubGraphQLServiceTests {
 
-  @Mock private JwtService jwtService;
+  @Autowired private MockRestServiceServer mockServer;
 
-  @Mock private HttpSyncGraphQlClient graphQlClient;
+  @Autowired private GithubGraphQLService githubGraphQLService;
 
-  @Mock private HttpSyncGraphQlClient.Builder graphQlClientBuilder;
-
-  @Mock private RequestSpec requestSpec;
-
-  @Mock private RetrieveSyncSpec retrieveSyncSpec;
-
-  @Mock private ClientGraphQlResponse clientGraphQlResponse;
+  @MockitoBean private JwtService jwtService;
 
   Course course =
       Course.builder()
@@ -52,83 +45,50 @@ public class GithubGraphQLServiceTests {
 
   @BeforeEach
   public void setup() {
-    MockitoAnnotations.openMocks(this);
-  }
-
-  @AfterEach
-  public void tearDown() {
-    Mockito.reset(
-        jwtService,
-        graphQlClient,
-        graphQlClientBuilder,
-        requestSpec,
-        retrieveSyncSpec,
-        clientGraphQlResponse); // Reset specific mocks
+    mockServer.reset();
   }
 
   @Test
   public void testGetDefaultBranchName() throws Exception {
-    assertNotNull(course);
     when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
 
-    when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
-    when(graphQlClientBuilder.header(anyString(), anyString())).thenReturn(graphQlClientBuilder);
-    when(graphQlClientBuilder.build()).thenReturn(graphQlClient);
-    when(graphQlClient.document(anyString())).thenReturn(requestSpec);
-    when(requestSpec.variable(anyString(), anyString())).thenReturn(requestSpec);
-    when(requestSpec.retrieveSync(anyString())).thenReturn(retrieveSyncSpec);
-    when(retrieveSyncSpec.toEntity(eq(String.class))).thenReturn("main");
+    String graphqlResponse =
+        """
+        {"data": {"repository": {"defaultBranchRef": {"name": "main"}}}}
+        """;
 
-    GithubGraphQLService githubGraphQLService = new GithubGraphQLService(graphQlClient, jwtService);
-    String defaultBranchName =
-        githubGraphQLService.getDefaultBranchName(course, "test-owner", "test-repo");
-    assertEquals("main", defaultBranchName);
+    mockServer
+        .expect(requestTo("https://api.github.com/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer mocked-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    String result = githubGraphQLService.getDefaultBranchName(course, "test-owner", "test-repo");
+
+    mockServer.verify();
+    assertEquals("main", result);
   }
 
   @Test
   public void testGetCommits() throws Exception {
-
-    TypeReference<Map<String, Object>> typeRef = new TypeReference<Map<String, Object>>() {};
-
-    when(clientGraphQlResponse.getData()).thenReturn(GithubGraphQLFixtures.COMMITS_RESPONSE_MAP);
-
-    when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
-    when(graphQlClientBuilder.header(anyString(), anyString())).thenReturn(graphQlClientBuilder);
-    when(graphQlClientBuilder.build()).thenReturn(graphQlClient);
-    when(graphQlClient.document(anyString())).thenReturn(requestSpec);
-    when(requestSpec.variable(anyString(), any())).thenReturn(requestSpec);
-    when(requestSpec.executeSync()).thenReturn(clientGraphQlResponse);
-    when(requestSpec.retrieveSync(anyString())).thenReturn(retrieveSyncSpec);
-
-    assertNotNull(course);
     when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
 
-    when(graphQlClient.mutate()).thenReturn(graphQlClientBuilder);
-    when(graphQlClientBuilder.header(anyString(), anyString())).thenReturn(graphQlClientBuilder);
-    when(graphQlClientBuilder.build()).thenReturn(graphQlClient);
-    when(graphQlClient.document(anyString())).thenReturn(requestSpec);
-    when(requestSpec.variable(anyString(), anyString())).thenReturn(requestSpec);
-    when(requestSpec.executeSync()).thenReturn(clientGraphQlResponse);
-    when(requestSpec.retrieveSync(anyString())).thenReturn(retrieveSyncSpec);
+    String graphqlResponse =
+        String.format("{\"data\": %s}", GithubGraphQLFixtures.COMMITS_RESPONSE.trim());
 
-    when(clientGraphQlResponse.getData()).thenReturn(GithubGraphQLFixtures.COMMITS_RESPONSE_MAP);
+    mockServer
+        .expect(requestTo("https://api.github.com/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer mocked-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
-    GithubGraphQLService githubGraphQLService = new GithubGraphQLService(graphQlClient, jwtService);
     String commitsJson =
         githubGraphQLService.getCommits(course, "test-owner", "test-repo", "main", 10, null);
 
-    verify(graphQlClient).mutate();
-    verify(graphQlClientBuilder).header("Authorization", "Bearer mocked-token");
-    verify(graphQlClientBuilder).header("Content-Type", "application/json");
-    verify(graphQlClientBuilder).build();
-    verify(requestSpec).variable("owner", "test-owner");
-    verify(requestSpec).variable("repo", "test-repo");
-    verify(requestSpec).variable("branch", "main");
-    verify(requestSpec).variable("first", 10);
-    verify(requestSpec).variable("after", null);
-    verify(requestSpec).executeSync();
-    verify(clientGraphQlResponse).getData();
-
+    mockServer.verify();
+    assertNotNull(commitsJson);
     assertEquals(GithubGraphQLFixtures.COMMITS_RESPONSE.trim(), commitsJson.trim());
   }
 }
