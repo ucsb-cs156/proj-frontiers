@@ -61,13 +61,13 @@ public class AddTeamMemberToGithubJob implements JobContextConsumer {
       ctx.log(
           "Successfully added " + memberGithubLogin + " to Github team with status: " + newStatus);
 
-      if (teamMemberId != null && teamMemberRepository != null) {
-        TeamMember teamMember = teamMemberRepository.findById(teamMemberId).orElse(null);
-        if (teamMember != null) {
-          teamMember.setTeamStatus(newStatus);
-          teamMemberRepository.save(teamMember);
-          ctx.log("Updated team member status in database");
-        }
+      TeamMember teamMember = teamMemberRepository.findById(teamMemberId).orElse(null);
+      if (teamMember != null) {
+        teamMember.setTeamStatus(newStatus);
+        teamMemberRepository.save(teamMember);
+        ctx.log("Updated team member status in database");
+      } else {
+        ctx.log("ERROR: Could not find team member in database with ID: " + teamMemberId);
       }
     } catch (Exception e) {
       ctx.log("ERROR: Failed to add user to GitHub team: " + e.getMessage());
