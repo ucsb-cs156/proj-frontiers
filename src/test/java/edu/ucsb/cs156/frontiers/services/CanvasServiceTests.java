@@ -23,7 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 @RestClientTest(CanvasService.class)
-@Import({TestConfig.class, GithubGraphQLClientConfig.class})
+@Import({TestConfig.class})
 public class CanvasServiceTests {
 
   @Autowired private MockRestServiceServer mockServer;
