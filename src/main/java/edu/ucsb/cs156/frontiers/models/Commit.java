@@ -14,8 +14,13 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Commit {
   private String url;
+
+  @JsonProperty("messageHeadline")
   private String message;
+
+  @JsonProperty("committedDate")
   private ZonedDateTime commitTime;
+
   private String committerName;
   private String committerEmail;
   private String committerLogin;
@@ -26,16 +31,16 @@ public class Commit {
   @JsonProperty("author")
   public void setAuthor(JsonNode node) {
     if (node == null) return;
-    this.authorName = node.get("name").asText();
-    this.authorEmail = node.get("email").asText();
-    this.authorLogin = node.path("user").get("login").asText();
+    this.authorName = node.path("name").asText();
+    this.authorEmail = node.path("email").asText();
+    this.authorLogin = node.path("user").path("login").asText();
   }
 
   @JsonProperty("committer")
   public void setCommitter(JsonNode node) {
     if (node == null) return;
-    this.committerName = node.get("name").asText();
-    this.committerEmail = node.get("email").asText();
-    this.committerLogin = node.path("user").get("login").asText();
+    this.committerName = node.path("name").asText();
+    this.committerEmail = node.path("email").asText();
+    this.committerLogin = node.path("user").path("login").asText();
   }
 }
