@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -12,16 +13,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -33,6 +37,10 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
   @MockitoBean private CourseRepository courseRepository;
 
   @MockitoBean private GithubGraphQLService githubGraphQLService;
+
+  @MockitoBean private JobService jobService;
+
+  @MockitoBean private DateTimeProvider time;
 
   @Autowired private CurrentUserService currentUserService;
 
@@ -238,6 +246,67 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
     mockMvc
         .perform(
             get("/api/github/graphql/commits")
+                .param("courseId", "1")
+                .param("owner", "ucsb-cs156-f24")
+                .param("repo", "STARTER-jpa00")
+                .param("branch", "main")
+                .param("first", "10")
+                .param("after", ""))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testCsvCommits() throws Exception {
+
+    User user = currentUserService.getCurrentUser().getUser();
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail(user.getEmail())
+            .build();
+
+    Job job = Job.builder().id(1L).status("running").build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(jobService.runAsJob(any())).thenReturn(job);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/github/graphql/csvCommits")
+                    .param("courseId", "1")
+                    .param("owner", "ucsb-cs156-f24")
+                    .param("repo", "STARTER-jpa00")
+                    .param("branch", "main")
+                    .param("first", "10")
+                    .param("after", ""))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(jobService, times(1)).runAsJob(any());
+    Job returnedJob =
+        objectMapper.readValue(response.getResponse().getContentAsString(), Job.class);
+    assertEquals(job, returnedJob);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_get_commits_csv_not_found() throws Exception {
+
+    // arrange
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    // act & assert
+    mockMvc
+        .perform(
+            get("/api/github/graphql/csvCommits")
                 .param("courseId", "1")
                 .param("owner", "ucsb-cs156-f24")
                 .param("repo", "STARTER-jpa00")
