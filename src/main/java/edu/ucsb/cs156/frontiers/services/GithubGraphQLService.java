@@ -1,13 +1,18 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.models.Commit;
+import edu.ucsb.cs156.frontiers.models.CommitHistory;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.graphql.GraphQlResponse;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.http.HttpHeaders;
@@ -25,11 +30,21 @@ public class GithubGraphQLService {
 
   private final String githubBaseUrl = "https://api.github.com/graphql";
 
-  public GithubGraphQLService(RestClient.Builder builder, JwtService jwtService) {
+  private final DateTimeProvider dateTimeProvider;
+  private final ObjectMapper jacksonObjectMapper;
+
+  public GithubGraphQLService(
+      RestClient.Builder builder,
+      JwtService jwtService,
+      DateTimeProvider dateTimeProvider,
+      ObjectMapper jacksonObjectMapper) {
     this.jwtService = jwtService;
     this.graphQlClient =
-        HttpSyncGraphQlClient.builder(builder.baseUrl(githubBaseUrl).build()).build();
-    ;
+        HttpSyncGraphQlClient.builder(builder.baseUrl(githubBaseUrl).build())
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build();
+    this.dateTimeProvider = dateTimeProvider;
+    this.jacksonObjectMapper = jacksonObjectMapper;
   }
 
   /**
@@ -50,8 +65,6 @@ public class GithubGraphQLService {
         owner,
         repo);
     String githubToken = jwtService.getInstallationToken(course);
-
-    log.info("githubToken: {}", githubToken);
 
     String query =
         """
@@ -91,8 +104,6 @@ public class GithubGraphQLService {
         first,
         after);
     String githubToken = jwtService.getInstallationToken(course);
-
-    log.info("githubToken: {}", githubToken);
 
     String query =
         """
@@ -140,7 +151,6 @@ public class GithubGraphQLService {
         graphQlClient
             .mutate()
             .header("Authorization", "Bearer " + githubToken)
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build()
             .document(query)
             .variable("owner", owner)
@@ -151,7 +161,51 @@ public class GithubGraphQLService {
             .executeSync();
 
     Map<String, Object> data = response.getData();
-    String jsonData = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data);
+    String jsonData = jacksonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(data);
     return jsonData;
+  }
+
+  public CommitHistory returnCommitHistory(
+      Course course, String owner, String repo, String branch, int count)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    ZonedDateTime retrievedTime = ZonedDateTime.from(dateTimeProvider.getNow().get());
+    CommitHistory history =
+        CommitHistory.builder().owner(owner).repo(repo).retrievedTime(retrievedTime).build();
+
+    String pointer = null;
+    boolean hasNextPage;
+    int commitCount = 0;
+    do {
+      JsonNode currentPage =
+          jacksonObjectMapper.readTree(getCommits(course, owner, repo, branch, 100, pointer));
+      pointer =
+          currentPage
+              .path("repository")
+              .path("ref")
+              .path("target")
+              .path("history")
+              .path("pageInfo")
+              .path("endCursor")
+              .asText();
+      hasNextPage =
+          currentPage
+              .path("repository")
+              .path("ref")
+              .path("target")
+              .path("history")
+              .path("pageInfo")
+              .path("hasNextPage")
+              .asBoolean();
+      JsonNode commits =
+          currentPage.path("repository").path("ref").path("target").path("history").path("edges");
+      for (JsonNode node : commits) {
+        history.getCommits().add(jacksonObjectMapper.treeToValue(node.get("node"), Commit.class));
+        commitCount++;
+        if (commitCount >= count) break;
+      }
+
+    } while (hasNextPage && commitCount < count);
+    history.setCount(history.getCommits().size());
+    return history;
   }
 }
