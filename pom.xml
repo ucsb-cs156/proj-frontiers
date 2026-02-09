@@ -64,6 +64,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-client</artifactId>
     </dependency>
     <dependency>
@@ -192,6 +196,12 @@
       <artifactId>jjwt-jackson</artifactId>
       <version>0.12.3</version>
       <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.codemonstur</groupId>
+      <artifactId>embedded-redis</artifactId>
+      <version>1.4.3</version>
     </dependency>
 
     <dependency>
@@ -400,7 +410,8 @@
             <param>${app.package}.config.SecurityConfig$CustomIssuerValidator</param>
             <param>${app.package}.config.SpaCsrfTokenRequestHandler</param>
             <param>${app.package}.config.CsrfCookieFilter</param>
-            <param>${app.package}.config.JpaAuditingConfig</param>
+            <param>${app.package}.config.JpaConfiguration</param>
+            <param>${app.package}.config.RedisConfiguration</param>
             <param>${app.package}.startup.AzureProfileEnabler</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockService</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceDummy</param>

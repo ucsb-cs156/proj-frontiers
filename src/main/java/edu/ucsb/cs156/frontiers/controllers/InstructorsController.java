@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,6 +41,7 @@ public class InstructorsController extends ApiController {
   @Operation(summary = "Create a new Instructor")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/post")
+  @CacheEvict(value = "instructors", allEntries = true)
   public Instructor postInstructor(@RequestParam String email) {
     String convertedEmail = CanonicalFormConverter.convertToValidEmail(email).strip();
     Instructor instructor = Instructor.builder().email(convertedEmail).build();
@@ -54,6 +57,7 @@ public class InstructorsController extends ApiController {
   @Operation(summary = "List all Instructors")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/get")
+  @Cacheable("instructors")
   public Iterable<Instructor> allInstructors() {
     Iterable<Instructor> instructors = instructorRepository.findAll();
     return instructors;
@@ -63,6 +67,7 @@ public class InstructorsController extends ApiController {
   @Operation(summary = "Delete an Instructor by email")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("/delete")
+  @CacheEvict(value = "instructors", allEntries = true)
   public ResponseEntity<String> deleteInstructor(@RequestParam String email) {
     Instructor instructor = instructorRepository.findById(email).orElse(null);
 
