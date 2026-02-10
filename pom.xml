@@ -533,22 +533,22 @@
                 </goals>
                 <configuration>
                   <target>
-                    <!-- Check if frontend directory exists and determine if rebuild is needed -->
-                    <condition property="frontend.skip" value="false" else="true">
-                      <uptodate targetfile="${project.build.outputDirectory}/public">
+                    <condition property="frontend.skip">
+                      <uptodate>
                         <srcfiles dir="${project.basedir}/frontend/src" includes="**/*" />
                         <srcfiles dir="${project.basedir}/frontend/build" includes="**/*" />
+                        <srcfiles dir="${project.basedir}/frontend/node_modules" includes="**/*" />
                         <srcfiles file="${project.basedir}/frontend/package.json" />
                         <srcfiles file="${project.basedir}/frontend/package-lock.json" />
                         <srcfiles file="${project.basedir}/frontend/vite.config.js" />
+                        <mapper type="merge" to="${project.build.outputDirectory}/public/index.html" />
                       </uptodate>
                     </condition>
 
-                    <!-- Log the decision -->
                     <condition property="build.message"
-                      value="Frontend changes detected - will rebuild"
-                      else="No frontend changes detected - skipping npm build">
-                      <equals arg1="${frontend.skip}" arg2="false" />
+                      value="No frontend changes detected - skipping npm build"
+                      else="Frontend changes detected - will rebuild">
+                      <istrue value="${frontend.skip}" />
                     </condition>
                     <echo message="${build.message}" level="info" />
                   </target>
