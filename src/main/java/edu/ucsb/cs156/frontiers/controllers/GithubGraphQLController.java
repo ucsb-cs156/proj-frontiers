@@ -51,7 +51,7 @@ public class GithubGraphQLController extends ApiController {
   /**
    * Return default branch name for a given repository.
    *
-   * @param courseId the id of the course whose installation is being used for credentails
+   * @param courseId the id of the course whose installation is being used for credentials
    * @param owner the owner of the repository
    * @param repo the name of the repository
    * @return the default branch name
@@ -170,17 +170,13 @@ public class GithubGraphQLController extends ApiController {
 
   @GetMapping("csvResult/{jobId}")
   public ResponseEntity<byte[]> returnCsv(@PathVariable Long jobId) throws Exception {
-    JobResult result =
-        jobResultRepository
-            .findById(jobId)
+    CommitCsvResult result =
+        jobService
+            .returnTypedResultById(jobId, CommitCsvResult.class)
             .orElseThrow(() -> new EntityNotFoundException(JobResult.class, jobId));
-    if (result instanceof CommitCsvResult csvResult) {
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-      headers.setContentDispositionFormData("attachment", "commits.csv");
-      return ResponseEntity.ok().headers(headers).body(csvResult.getJobData().getCsvData());
-    } else {
-      return ResponseEntity.notFound().build();
-    }
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    headers.setContentDispositionFormData("attachment", "commits.csv");
+    return ResponseEntity.ok().headers(headers).body(result.getJobData().getCsvData());
   }
 }
