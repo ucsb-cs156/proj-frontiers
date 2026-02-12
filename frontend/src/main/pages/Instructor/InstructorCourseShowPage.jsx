@@ -12,6 +12,7 @@ import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabCo
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
+import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -160,7 +161,7 @@ export default function InstructorCourseShowPage() {
           />
         </Tab>
         <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-          Coming Soon
+          <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
       </Tabs>
     </BasicLayout>
