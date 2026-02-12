@@ -14,3 +14,4 @@ edu.ucsb.cs156.frontiers.services.jobs
 edu.ucsb.cs156.frontiers.services.wiremock
 edu.ucsb.cs156.frontiers.startup
 edu.ucsb.cs156.frontiers.utilities
+edu.ucsb.cs156.frontiers.validators
