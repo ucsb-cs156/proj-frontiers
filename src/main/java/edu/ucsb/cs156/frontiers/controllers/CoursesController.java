@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -461,7 +460,6 @@ public class CoursesController extends ApiController {
 
   @GetMapping("/warnings/{courseId}")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @Cacheable(cacheNames = "warnings", key = "#courseId")
   public CourseWarning warnings(@PathVariable Long courseId) throws Exception {
     Course course =
         courseRepository

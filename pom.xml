@@ -412,6 +412,7 @@
             <param>${app.package}.config.CsrfCookieFilter</param>
             <param>${app.package}.config.JpaConfiguration</param>
             <param>${app.package}.config.RedisConfiguration</param>
+            <param>${app.package}.config.RedisConfiguration$LocalStackConfiguration</param>
             <param>${app.package}.startup.AzureProfileEnabler</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockService</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceDummy</param>
