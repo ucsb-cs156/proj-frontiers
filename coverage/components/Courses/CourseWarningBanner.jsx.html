@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Onboarding/OnboardingSelectCoursesComponent.jsx</title>
+    <title>Code coverage report for components/Courses/CourseWarningBanner.jsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,20 +19,20 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Onboarding</a> OnboardingSelectCoursesComponent.jsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Courses</a> CourseWarningBanner.jsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
@@ -88,53 +88,65 @@
 <a name='L23'></a><a href='#L23'>23</a>
 <a name='L24'></a><a href='#L24'>24</a>
 <a name='L25'></a><a href='#L25'>25</a>
-<a name='L26'></a><a href='#L26'>26</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Row, Button, Col } from "react-bootstrap";
-import { Link } from "react-router";
-import { StudentCoursesTable } from "main/components/Courses/StudentCoursesTable";
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Alert } from "react-bootstrap";
+import { useBackend } from "main/utils/useBackend";
 &nbsp;
-export default function OnboardingSelectCoursesComponent() {
+export function CourseWarningBanner({ courseId }) {
+  const { data: warnings } = useBackend(
+    [`/api/courses/warnings/${courseId}`],
+    {
+      method: "GET",
+      url: `/api/courses/warnings/${courseId}`,
+    },
+    undefined,
+    true,
+    {
+      placeholderData: { showOrganizationAgeWarning: false },
+      staleTime: "static",
+    },
+  );
+&nbsp;
   return (
     &lt;&gt;
-      &lt;Row&gt;
-        &lt;h1&gt;Joining Courses&lt;/h1&gt;
-        &lt;p&gt;
-          Next, you&amp;#39;re listed on the roster of the courses below. Follow the
-          prompts to join:
-        &lt;/p&gt;
-        &lt;StudentCoursesTable testid={"OnboardingCoursesTable"} /&gt;
-      &lt;/Row&gt;
-      &lt;Row className="pt-5 justify-content-center pb-3"&gt;
-        &lt;Col xs="auto" className="text-center"&gt;
-          &lt;Button as={Link} to="/onboarding/success"&gt;
-            Continue
-          &lt;/Button&gt;
-        &lt;/Col&gt;
-      &lt;/Row&gt;
+      {warnings?.showOrganizationAgeWarning &amp;&amp; (
+        &lt;Alert variant="warning"&gt;
+          Warning: This GitHub Organization is less than 30 days old. You will
+          experience difficulties enrolling more than 50 students in a day.
+        &lt;/Alert&gt;
+      )}
     &lt;/&gt;
   );
 }
