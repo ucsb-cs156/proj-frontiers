@@ -11,12 +11,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.jobs.AddTeamMemberToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
@@ -173,9 +175,9 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     assertEquals(expectedResponse, response);
   }
 
-  @WithMockUser(roles = {"ADMIN"})
+  @WithInstructorCoursePermissions
   @Test
-  public void admin_can_launch_deleteTeamMemberFromGithub_job() throws Exception {
+  public void instructor_can_launch_deleteTeamMemberFromGithub_job() throws Exception {
 
     // arrange
 
@@ -217,6 +219,53 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
     String response = result.getResponse().getContentAsString();
     verify(jobService, times(1)).runAsJob(any(DeleteTeamMemberFromGithubJob.class));
+    assertEquals(expectedResponse, response);
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void instructor_can_launch_addTeamMemberToGithub_job() throws Exception {
+
+    // arrange
+    User user = currentUserService.getUser();
+
+    Course course = Course.builder().id(1L).orgName("test-org").installationId("123").build();
+    Team team = Team.builder().id(1L).githubTeamId(456).build();
+    RosterStudent rosterStudent = RosterStudent.builder().id(1L).githubLogin("testuser").build();
+    TeamMember teamMember =
+        TeamMember.builder().id(123L).team(team).rosterStudent(rosterStudent).build();
+
+    Job jobStarted =
+        Job.builder()
+            .id(0L)
+            .createdBy(user)
+            .createdAt(null)
+            .updatedAt(null)
+            .status("started")
+            .build();
+
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(jobService.runAsJob(any(AddTeamMemberToGithubJob.class))).thenReturn(jobStarted);
+
+    // act
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/jobs/launch/addTeamMemberToGithub")
+                    .param("memberGithubLogin", "testuser")
+                    .param("githubTeamId", "456")
+                    .param("teamMemberId", "123")
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    String response = result.getResponse().getContentAsString();
+    verify(jobService, times(1)).runAsJob(any(AddTeamMemberToGithubJob.class));
     assertEquals(expectedResponse, response);
   }
 }

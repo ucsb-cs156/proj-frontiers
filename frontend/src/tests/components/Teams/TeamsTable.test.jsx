@@ -167,7 +167,8 @@ describe("TeamsTable tests", () => {
   });
   test("delete member calls correct API endpoint with correct params", async () => {
     const successMessage = "Member removed successfully";
-    const githubMemberSuccessMessage = "GitHub member removed successfully";
+    const githubMemberSuccessMessage =
+      "Delete GitHub team member job launched successfully";
     axiosMock
       .onDelete("/api/teams/removeMember")
       .reply(200, { successMessage });
@@ -238,11 +239,22 @@ describe("TeamsTable tests", () => {
   });
   test("add member calls correct API endpoint with correct params", async () => {
     const successMessage = "Member added successfully";
-    axiosMock.onPost("/api/teams/addMember").reply(200, { successMessage });
+    const githubMemberSuccessMessage =
+      "Add GitHub team member job launched successfully";
+
+    // Mock returns the created team member with id and rosterStudent
+    const createdTeamMember = {
+      id: 5,
+      rosterStudent: { id: 4 },
+    };
+    axiosMock.onPost("/api/teams/addMember").reply(200, createdTeamMember);
 
     axiosMock
       .onGet("/api/rosterstudents/course/12")
       .reply(200, rosterStudentFixtures.studentsWithEachStatus);
+    axiosMock
+      .onPost("/api/jobs/launch/addTeamMemberToGithub")
+      .reply(200, { githubMemberSuccessMessage });
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -279,7 +291,7 @@ describe("TeamsTable tests", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(axiosMock.history.post.length).toBe(1);
+      expect(axiosMock.history.post.length).toBe(2);
     });
 
     expect(axiosMock.history.post[0].url).toBe("/api/teams/addMember");
@@ -289,12 +301,27 @@ describe("TeamsTable tests", () => {
       teamId: 3,
     });
 
-    expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
+    expect(axiosMock.history.post[1].url).toBe(
+      "/api/jobs/launch/addTeamMemberToGithub",
+    );
+    expect(axiosMock.history.post[1].params).toEqual({
+      memberGithubLogin: "jonsnow",
+      githubTeamId: 1111111,
+      teamMemberId: 5,
+      courseId: "12",
+    });
+
+    expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({
       queryKey: ["/api/teams/all?courseId=12"],
     });
 
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ["/api/jobs/launch/addTeamMemberToGithub"],
+    });
+
     expect(mockToast).toHaveBeenCalledWith(successMessage);
+    expect(mockToast).toHaveBeenCalledWith(githubMemberSuccessMessage);
 
     await waitFor(() => {
       expect(
