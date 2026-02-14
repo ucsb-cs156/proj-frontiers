@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import OurTable from "main/components/OurTable";
 import { useBackend } from "main/utils/useBackend";
-import { Form, Button, Row, Col } from "react-bootstrap";
+import { Form, Button, Row, Col, ListGroup } from "react-bootstrap";
 
 export default function CommitDataPage() {
   const [courseId, setCourseId] = useState(0);
@@ -11,6 +11,8 @@ export default function CommitDataPage() {
   const [branch, setBranch] = useState("");
   const [count, setCount] = useState(100);
   const [params, setParams] = useState(null);
+  const [commitHistories, setCommitHistories] = useState([]);
+  const keyCounter = useRef(0);
 
   const {
     data: commitHistory,
@@ -28,12 +30,45 @@ export default function CommitDataPage() {
     { enabled: !!params },
   );
 
+  useEffect(() => {
+    if (commitHistory) {
+      const key = keyCounter.current++;
+      const enrichedCommits = (commitHistory.commits || []).map((commit) => ({
+        ...commit,
+        _repoKey: key,
+        _owner: commitHistory.owner,
+        _repo: commitHistory.repo,
+        _branch: commitHistory.branch,
+      }));
+      setCommitHistories((prev) => [
+        ...prev,
+        { ...commitHistory, commits: enrichedCommits, _key: key },
+      ]);
+      setParams(null);
+    }
+  }, [commitHistory]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setParams({ courseId, owner, repo, branch, count });
   };
 
+  const handleRemove = (key) => {
+    setCommitHistories((prev) => prev.filter((h) => h._key !== key));
+  };
+
+  const handleClearAll = () => {
+    setCommitHistories([]);
+  };
+
+  const allCommits = commitHistories.flatMap((h) => h.commits);
+
   const columns = [
+    {
+      header: "Owner/Repo",
+      accessorFn: (row) => `${row._owner}/${row._repo}`,
+      id: "ownerRepo",
+    },
     {
       header: "SHA",
       accessorFn: (row) => (row.sha ? row.sha.substring(0, 7) : ""),
@@ -155,12 +190,44 @@ export default function CommitDataPage() {
                 type="submit"
                 data-testid="CommitDataPage-fetch-button"
                 disabled={isLoading}
+                className="me-2"
               >
-                {isLoading ? "Loading..." : "Fetch Commits"}
+                {isLoading ? "Loading..." : "Add Commits"}
               </Button>
+              {commitHistories.length > 0 && (
+                <Button
+                  variant="danger"
+                  data-testid="CommitDataPage-clear-button"
+                  onClick={handleClearAll}
+                >
+                  Clear All
+                </Button>
+              )}
             </Col>
           </Row>
         </Form>
+
+        {commitHistories.length > 0 && (
+          <ListGroup className="mb-3" data-testid="CommitDataPage-added-repos">
+            {commitHistories.map((h, index) => (
+              <ListGroup.Item
+                key={h._key}
+                className="d-flex justify-content-between align-items-center"
+              >
+                {h.owner}/{h.repo} ({h.branch}) - {h.count}{" "}
+                {h.count === 1 ? "commit" : "commits"}
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  data-testid={`CommitDataPage-remove-${index}`}
+                  onClick={() => handleRemove(h._key)}
+                >
+                  Remove
+                </Button>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        )}
 
         {error && (
           <div className="text-danger" data-testid="CommitDataPage-error">
@@ -168,19 +235,16 @@ export default function CommitDataPage() {
           </div>
         )}
 
-        {commitHistory && (
+        {commitHistories.length > 0 && (
           <>
             <div className="mb-3" data-testid="CommitDataPage-metadata">
               <p>
-                <strong>Owner:</strong> {commitHistory.owner} |{" "}
-                <strong>Repo:</strong> {commitHistory.repo} |{" "}
-                <strong>Branch:</strong> {commitHistory.branch} |{" "}
-                <strong>Count:</strong> {commitHistory.count} |{" "}
-                <strong>Retrieved:</strong> {commitHistory.retrievedTime}
+                Showing commits from {commitHistories.length}{" "}
+                {commitHistories.length === 1 ? "repository" : "repositories"}
               </p>
             </div>
             <OurTable
-              data={commitHistory.commits || []}
+              data={allCommits}
               columns={columns}
               testid="CommitDataPage-table"
             />
