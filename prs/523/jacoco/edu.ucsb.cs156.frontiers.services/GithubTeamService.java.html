@@ -206,7 +206,7 @@ public class GithubTeamService {
    * Adds a member to a GitHub team.
    *
    * @param githubLogin The GitHub login of the user to add
-   * @param teamSlug The GitHub team slug (name)
+   * @param teamId The GitHub team ID
    * @param role The role to assign (&quot;member&quot; or &quot;maintainer&quot;)
    * @param course The course containing the organization
    * @return The resulting team status
@@ -244,5 +244,38 @@ public class GithubTeamService {
 <span class="fc" id="L244">        ? TeamStatus.TEAM_MAINTAINER</span>
 <span class="fc" id="L245">        : TeamStatus.TEAM_MEMBER;</span>
   }
+
+  /**
+   * Removes a member from a GitHub team
+   *
+   * @param orgId
+   * @param githubLogin
+   * @param teamId
+   * @param course
+   * @throws NoSuchAlgorithmException
+   * @throws InvalidKeySpecException
+   * @throws JsonProcessingException
+   */
+  public void removeMemberFromGithubTeam(
+      Integer orgId, String githubLogin, Integer teamId, Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+<span class="fc" id="L263">    String endpoint =</span>
+        &quot;https://api.github.com/organizations/&quot;
+            + orgId
+            + &quot;/team/&quot;
+            + teamId
+            + &quot;/memberships/&quot;
+            + githubLogin;
+<span class="fc" id="L270">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L271">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L272">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L273">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L274">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L275">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L277">    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);</span>
+<span class="fc" id="L278">    log.info(&quot;Successfully removed member {} from team ID {}&quot;, githubLogin, teamId);</span>
+<span class="fc" id="L279">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
