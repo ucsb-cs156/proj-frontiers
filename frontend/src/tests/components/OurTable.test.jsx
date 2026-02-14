@@ -123,9 +123,7 @@ describe("OurTable tests", () => {
         expect(
           screen.getByTestId("filterTest-cell-row-0-col-col1"),
         ).toHaveTextContent("Hello");
-        expect(
-          screen.queryByText("react-table"),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByText("react-table")).not.toBeInTheDocument();
       });
     });
 
