@@ -17,4 +17,8 @@ public class JobContext {
     job.setLog(previousLog + message);
     if (jobsRepository != null) jobsRepository.save(job);
   }
+
+  public Long getId() {
+    return job.getId();
+  }
 }

@@ -1,8 +1,11 @@
 package edu.ucsb.cs156.frontiers.services.jobs;
 
 import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.redis.JobResult;
+import edu.ucsb.cs156.frontiers.redis.JobResultRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -17,6 +20,8 @@ public class JobService {
   @Autowired private CurrentUserService currentUserService;
 
   @Autowired private JobContextFactory contextFactory;
+
+  @Autowired private JobResultRepository jobResultRepository;
 
   /*
    * This is a self-referential bean to allow for async method calls within the same class.
@@ -65,5 +70,15 @@ public class JobService {
 
     String log = job.getLog();
     return log != null ? log : "";
+  }
+
+  public <T extends JobResult> Optional<T> returnTypedResultById(
+      Long jobId, Class<T> specificType) {
+    Optional<JobResult> result = jobResultRepository.findById(jobId);
+    if (result.isPresent() && specificType.isInstance(result.get())) {
+      return Optional.of(specificType.cast(result.get()));
+    } else {
+      return Optional.empty();
+    }
   }
 }

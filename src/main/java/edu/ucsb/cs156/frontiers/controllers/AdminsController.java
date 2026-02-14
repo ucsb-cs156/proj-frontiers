@@ -12,6 +12,8 @@ import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +48,7 @@ public class AdminsController extends ApiController {
   @Operation(summary = "Create a new admin")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/post")
+  @CacheEvict(value = "admins", allEntries = true)
   public Admin postAdmin(@Parameter(name = "email") @RequestParam String email) {
     String convertedEmail = CanonicalFormConverter.convertToValidEmail(email).strip();
     Admin admin = new Admin(convertedEmail);
@@ -61,6 +64,7 @@ public class AdminsController extends ApiController {
   @Operation(summary = "List all admins")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/all")
+  @Cacheable("admins")
   public Iterable<AdminDTO> allAdmins() {
     Iterable<Admin> admins = adminRepository.findAll();
     List<AdminDTO> adminDTOs =
@@ -80,6 +84,7 @@ public class AdminsController extends ApiController {
   @Operation(summary = "Delete an Admin")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("/delete")
+  @CacheEvict(value = "admins", allEntries = true)
   public Object deleteAdmin(@Parameter(name = "email") @RequestParam String email) {
     Admin admin =
         adminRepository
