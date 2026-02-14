@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -11,6 +12,7 @@ import SortCaret from "main/components/Common/SortCaret";
 import { convertOldStyleColumnsToNewStyle } from "main/components/OurTableUtils";
 
 function OurTable({ data, columns, testid = "testid" }) {
+  const [columnFilters, setColumnFilters] = useState([]);
   const newColumns = convertOldStyleColumnsToNewStyle(columns);
   const memoizedData = useMemo(() => data, [data]);
   const memoizedColumns = useMemo(() => newColumns, [newColumns]);
@@ -19,7 +21,11 @@ function OurTable({ data, columns, testid = "testid" }) {
     data: memoizedData,
     columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    enableColumnFilters: true,
+    state: { columnFilters },
+    onColumnFiltersChange: setColumnFilters,
   });
 
   return (
@@ -52,6 +58,19 @@ function OurTable({ data, columns, testid = "testid" }) {
                     )}
                     <SortCaret header={header} testId={testid} />
                   </div>
+                )}
+                {header.column.getCanFilter() && (
+                  <input
+                    type="text"
+                    placeholder={`Filter...`}
+                    value={header.column.getFilterValue() ?? ""}
+                    onChange={(e) =>
+                      header.column.setFilterValue(e.target.value)
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                    data-testid={`${testid}-header-${header.column.id}-filter`}
+                    className="form-control form-control-sm mt-1"
+                  />
                 )}
               </th>
             ))}

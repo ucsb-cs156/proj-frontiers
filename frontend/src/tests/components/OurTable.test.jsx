@@ -109,6 +109,46 @@ describe("OurTable tests", () => {
       expect(col1Row0).toHaveTextContent("Hello");
     });
 
+    test("filter inputs are rendered and filtering works", async () => {
+      render(
+        <OurTable columns={columns} data={threeRows} testid={"filterTest"} />,
+      );
+
+      await screen.findByTestId("filterTest-header-col1-filter");
+      const filterInput = screen.getByTestId("filterTest-header-col1-filter");
+      expect(filterInput).toBeInTheDocument();
+
+      fireEvent.change(filterInput, { target: { value: "Hello" } });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("filterTest-cell-row-0-col-col1"),
+        ).toHaveTextContent("Hello");
+        expect(
+          screen.queryByText("react-table"),
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test("filter input click does not trigger sorting", async () => {
+      render(
+        <OurTable columns={columns} data={threeRows} testid={"filterClick"} />,
+      );
+
+      await screen.findByTestId("filterClick-header-col1-filter");
+      const filterInput = screen.getByTestId("filterClick-header-col1-filter");
+
+      const sortCarets = screen.getByTestId(
+        "filterClick-header-col1-sort-carets",
+      );
+      expect(sortCarets).toBeEmptyDOMElement();
+
+      fireEvent.click(filterInput);
+
+      await waitFor(() => {
+        expect(sortCarets).toBeEmptyDOMElement();
+      });
+    });
+
     test("placeholder headers work properly", async () => {
       render(
         <OurTable
