@@ -27,6 +27,7 @@ public class Commit {
   private String authorName;
   private String authorEmail;
   private String authorLogin;
+  private String sha;
 
   @JsonProperty("author")
   public void setAuthor(JsonNode node) {

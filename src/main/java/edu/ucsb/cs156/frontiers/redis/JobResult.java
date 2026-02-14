@@ -13,7 +13,7 @@ import org.springframework.data.redis.core.RedisHash;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-@RedisHash("job_result")
+@RedisHash(value = "job_result", timeToLive = 7 * 24 * 60 * 60)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = As.WRAPPER_ARRAY)
 public abstract class JobResult {
   @Id private Long jobId;

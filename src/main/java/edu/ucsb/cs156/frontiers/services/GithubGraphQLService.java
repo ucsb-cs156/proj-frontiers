@@ -7,16 +7,19 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.Commit;
 import edu.ucsb.cs156.frontiers.models.CommitHistory;
+import edu.ucsb.cs156.frontiers.redis.CommitHistoryRepository;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZonedDateTime;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.graphql.GraphQlResponse;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -32,12 +35,15 @@ public class GithubGraphQLService {
 
   private final DateTimeProvider dateTimeProvider;
   private final ObjectMapper jacksonObjectMapper;
+  private final CommitHistoryRepository commitHistoryRepository;
+  private final RestClient client;
 
   public GithubGraphQLService(
       RestClient.Builder builder,
       JwtService jwtService,
       DateTimeProvider dateTimeProvider,
-      ObjectMapper jacksonObjectMapper) {
+      ObjectMapper jacksonObjectMapper,
+      CommitHistoryRepository commitHistoryRepository) {
     this.jwtService = jwtService;
     this.graphQlClient =
         HttpSyncGraphQlClient.builder(builder.baseUrl(githubBaseUrl).build())
@@ -45,6 +51,8 @@ public class GithubGraphQLService {
             .build();
     this.dateTimeProvider = dateTimeProvider;
     this.jacksonObjectMapper = jacksonObjectMapper;
+    this.commitHistoryRepository = commitHistoryRepository;
+    this.client = builder.baseUrl("https://api.github.com/").build();
   }
 
   /**
@@ -166,11 +174,29 @@ public class GithubGraphQLService {
   }
 
   public CommitHistory returnCommitHistory(
-      Course course, String owner, String repo, String branch, int count)
-      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+      Course course, String owner, String repo, String branch, int count) throws Exception {
+    Optional<CommitHistory> existingHistory =
+        commitHistoryRepository.findById(CommitHistory.getId(owner, repo, branch));
+    if (existingHistory.isPresent()) {
+      log.info(
+          "Discovered cached commit history for branch {}, with head at {}",
+          branch,
+          existingHistory.get().getCommitUrl());
+      String cachedSha = existingHistory.get().getCommitUrl();
+      String currentSha = getMostRecentCommitUrl(course, owner, repo, branch);
+      if (cachedSha.equals(currentSha) && existingHistory.get().getCount() >= count) {
+        log.info("Returning cached commit history for branch {}, commit URLs match.", branch);
+        return existingHistory.get();
+      }
+    }
     ZonedDateTime retrievedTime = ZonedDateTime.from(dateTimeProvider.getNow().get());
     CommitHistory history =
-        CommitHistory.builder().owner(owner).repo(repo).retrievedTime(retrievedTime).build();
+        CommitHistory.builder()
+            .owner(owner)
+            .repo(repo)
+            .branch(branch)
+            .retrievedTime(retrievedTime)
+            .build();
 
     String pointer = null;
     boolean hasNextPage;
@@ -206,6 +232,24 @@ public class GithubGraphQLService {
 
     } while (hasNextPage && commitCount < count);
     history.setCount(history.getCommits().size());
+    history.setCommitUrl(history.getCommits().getFirst().getUrl());
+    commitHistoryRepository.save(history);
     return history;
+  }
+
+  public String getMostRecentCommitUrl(Course course, String owner, String repo, String branch)
+      throws Exception {
+    String token = jwtService.getInstallationToken(course);
+    ResponseEntity<JsonNode> response =
+        client
+            .get()
+            .uri("/repos/" + owner + "/" + repo + "/branches/" + branch)
+            .header("Authorization", "Bearer " + token)
+            .header("Accept", "application/vnd.github+json")
+            .header("X-GitHub-Api-Version", "2022-11-28")
+            .retrieve()
+            .toEntity(JsonNode.class);
+    String commitSha = response.getBody().path("commit").path("html_url").asText();
+    return commitSha;
   }
 }

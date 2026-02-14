@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.ReturnCsvCommitHistoryJob;
+import edu.ucsb.cs156.frontiers.models.CommitHistory;
 import edu.ucsb.cs156.frontiers.redis.CommitCsvResult;
 import edu.ucsb.cs156.frontiers.redis.JobResult;
 import edu.ucsb.cs156.frontiers.redis.JobResultRepository;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +61,7 @@ public class GithubGraphQLController extends ApiController {
   @Operation(summary = "Get default branch name")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("defaultBranchName")
+  @Cacheable(value = "defaultBranchName", key = "#owner + ':' + #repo")
   public String getDefaultBranchName(
       @Parameter Long courseId, @Parameter String owner, @Parameter String repo) throws Exception {
     log.info(
@@ -178,5 +181,28 @@ public class GithubGraphQLController extends ApiController {
     headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
     headers.setContentDispositionFormData("attachment", "commits.csv");
     return ResponseEntity.ok().headers(headers).body(result.getJobData().getCsvData());
+  }
+
+  @GetMapping("/commitData")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public CommitHistory getCommitHistory(
+      @Parameter Long courseId,
+      @Parameter String owner,
+      @Parameter String repo,
+      @Parameter String branch,
+      @Parameter int count)
+      throws Exception {
+    log.info(
+        "getCommitHistory called with courseId: {}, owner: {}, repo: {}, branch: {}",
+        courseId,
+        owner,
+        repo,
+        branch);
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    return githubGraphQLService.returnCommitHistory(course, owner, repo, branch, count);
   }
 }
