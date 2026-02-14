@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.models;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.ZonedDateTime;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class Commit {
   private String url;
 
-  @JsonProperty("messageHeadline")
+  @JsonAlias("messageHeadline")
   private String message;
 
   @JsonProperty("committedDate")

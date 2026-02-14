@@ -27,6 +27,7 @@ import HelpAboutPage from "main/pages/Help/HelpAboutPage";
 import HelpCsvPage from "main/pages/Help/HelpCsvPage";
 import OnboardingSuccessPage from "main/pages/Onboarding/OnboardingSuccessPage";
 import OnboardingWrapperPage from "main/pages/Onboarding/OnboardingWrapperPage";
+import CommitDataPage from "main/pages/CommitDataPage";
 
 function App() {
   const currentUser = useCurrentUser();
@@ -158,6 +159,16 @@ function App() {
             <ProtectedPage
               component={<InstructorsCreatePage />}
               enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/commits"
+          element={
+            <ProtectedPage
+              component={<CommitDataPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
               currentUser={currentUser}
             />
           }
