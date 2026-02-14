@@ -1,11 +1,16 @@
 package edu.ucsb.cs156.frontiers.services;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.models.CanvasStudent;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import edu.ucsb.cs156.frontiers.validators.HasLinkedCanvasCourse;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.stereotype.Service;
@@ -25,6 +30,36 @@ public class CanvasService {
     this.graphQlClient =
         HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();
     this.mapper = mapper;
+    this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+
+  public List<CanvasGroupSet> getCanvasGroupSets(@HasLinkedCanvasCourse Course course) {
+    String query =
+        """
+        query GetGroupSets($courseId: ID!) {
+          course(id: $courseId) {
+            groupSets {
+              _id
+              name
+              id
+            }
+          }
+        }
+        """;
+
+    HttpSyncGraphQlClient authedClient =
+        graphQlClient
+            .mutate()
+            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .build();
+
+    List<CanvasGroupSet> groupSets =
+        authedClient
+            .document(query)
+            .variable("courseId", course.getCanvasCourseId())
+            .retrieveSync("course.groupSets")
+            .toEntityList(CanvasGroupSet.class);
+    return groupSets;
   }
 
   /**
@@ -79,5 +114,73 @@ public class CanvasService {
                     .email(student.getEmail())
                     .build())
         .toList();
+  }
+
+  public List<CanvasGroup> getCanvasGroups(
+      @HasLinkedCanvasCourse Course course, String groupSetId) {
+    String query =
+        """
+            query GetTeams($groupId: ID!) {
+              node(id: $groupId) {
+                ... on GroupSet {
+                  id
+                  name
+                  groups {
+                    name
+                    _id
+                    membersConnection {
+                      edges {
+                        node {
+                          user {
+                            email
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            """;
+
+    HttpSyncGraphQlClient authedClient =
+        graphQlClient
+            .mutate()
+            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .build();
+
+    List<JsonNode> groups =
+        authedClient
+            .document(query)
+            .variable("groupId", groupSetId)
+            .retrieveSync("node.groups")
+            .toEntityList(JsonNode.class);
+
+    List<CanvasGroup> parsedGroups =
+        groups.stream()
+            .map(
+                group -> {
+                  CanvasGroup canvasGroup =
+                      CanvasGroup.builder()
+                          .name(group.get("name").asText())
+                          .id(group.get("_id").asInt())
+                          .members(new ArrayList<>())
+                          .build();
+                  group
+                      .get("membersConnection")
+                      .get("edges")
+                      .forEach(
+                          edge -> {
+                            canvasGroup
+                                .getMembers()
+                                .add(
+                                    CanonicalFormConverter.convertToValidEmail(
+                                        edge.path("node").path("user").get("email").asText()));
+                          });
+                  return canvasGroup;
+                })
+            .toList();
+
+    return parsedGroups;
   }
 }
