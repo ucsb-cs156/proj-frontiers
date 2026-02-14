@@ -1,6 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import OurTable from "main/components/OurTable";
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import OurPagination from "main/components/Common/OurPagination";
+import SortCaret from "main/components/Common/SortCaret";
+import { convertOldStyleColumnsToNewStyle } from "main/components/OurTableUtils";
 import { useBackend } from "main/utils/useBackend";
 import { Form, Button, Row, Col, ListGroup } from "react-bootstrap";
 
@@ -12,6 +22,7 @@ export default function CommitDataPage() {
   const [count, setCount] = useState(100);
   const [params, setParams] = useState(null);
   const [commitHistories, setCommitHistories] = useState([]);
+  const [columnFilters, setColumnFilters] = useState([]);
   const keyCounter = useRef(0);
 
   const {
@@ -112,6 +123,20 @@ export default function CommitDataPage() {
       ),
     },
   ];
+
+  const testid = "CommitDataPage-table";
+
+  const table = useReactTable({
+    data: allCommits,
+    columns: convertOldStyleColumnsToNewStyle(columns),
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 50, pageIndex: 0 } },
+    state: { columnFilters },
+    onColumnFiltersChange: setColumnFilters,
+  });
 
   return (
     <BasicLayout>
@@ -238,15 +263,90 @@ export default function CommitDataPage() {
           <>
             <div className="mb-3" data-testid="CommitDataPage-metadata">
               <p>
-                Showing commits from {commitHistories.length}{" "}
+                Showing {allCommits.length}{" "}
+                {allCommits.length === 1 ? "commit" : "commits"} from{" "}
+                {commitHistories.length}{" "}
                 {commitHistories.length === 1 ? "repository" : "repositories"}
               </p>
             </div>
-            <OurTable
-              data={allCommits}
-              columns={columns}
-              testid="CommitDataPage-table"
-            />
+            <table
+              className="table table-striped table-bordered"
+              data-testid={testid}
+            >
+              <thead>
+                {table.getHeaderGroups().map((headerGroup, i) => (
+                  <tr
+                    data-testid={`${testid}-header-group-${i}`}
+                    key={`${testid}-header-group-${i}`}
+                  >
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        data-testid={`${testid}-header-${header.column.id}`}
+                        key={`${testid}-header-${header.column.id}`}
+                        colSpan={header.colSpan}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <div
+                            {...(header.column.getCanSort() && {
+                              onClick: header.column.getToggleSortingHandler(),
+                              style: { cursor: "pointer" },
+                            })}
+                            data-testid={`${testid}-header-${header.column.id}-sort-header`}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                            <SortCaret header={header} testId={testid} />
+                          </div>
+                        )}
+                        {header.column.getCanFilter() && (
+                          <input
+                            type="text"
+                            placeholder={`Filter...`}
+                            value={header.column.getFilterValue() ?? ""}
+                            onChange={(e) =>
+                              header.column.setFilterValue(e.target.value)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid={`${testid}-header-${header.column.id}-filter`}
+                            className="form-control form-control-sm mt-1"
+                          />
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => {
+                  const rowTestId = `${testid}-row-${row.index}`;
+                  return (
+                    <tr data-testid={rowTestId} key={rowTestId}>
+                      {row.getVisibleCells().map((cell) => {
+                        const cellTestId = `${testid}-cell-row-${cell.row.index}-col-${cell.column.id}`;
+                        return (
+                          <td data-testid={cellTestId} key={cellTestId}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {table.getPageCount() > 1 && (
+              <OurPagination
+                currentActivePage={table.getState().pagination.pageIndex + 1}
+                updateActivePage={(page) => table.setPageIndex(page - 1)}
+                totalPages={table.getPageCount()}
+                testId="CommitDataPage-pagination"
+              />
+            )}
           </>
         )}
       </div>
