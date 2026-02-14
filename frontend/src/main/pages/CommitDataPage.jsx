@@ -35,7 +35,6 @@ export default function CommitDataPage() {
       const key = keyCounter.current++;
       const enrichedCommits = (commitHistory.commits || []).map((commit) => ({
         ...commit,
-        _repoKey: key,
         _owner: commitHistory.owner,
         _repo: commitHistory.repo,
         _branch: commitHistory.branch,
@@ -214,8 +213,8 @@ export default function CommitDataPage() {
                 key={h._key}
                 className="d-flex justify-content-between align-items-center"
               >
-                {h.owner}/{h.repo} ({h.branch}) - {h.count}{" "}
-                {h.count === 1 ? "commit" : "commits"}
+                {h.owner}/{h.repo} ({h.branch}) - {h.commits.length}{" "}
+                {h.commits.length === 1 ? "commit" : "commits"}
                 <Button
                   variant="outline-danger"
                   size="sm"
