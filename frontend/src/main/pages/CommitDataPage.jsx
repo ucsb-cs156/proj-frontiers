@@ -5,7 +5,7 @@ import { useBackend } from "main/utils/useBackend";
 import { Form, Button, Row, Col } from "react-bootstrap";
 
 export default function CommitDataPage() {
-  const [courseId, setCourseId] = useState("");
+  const [courseId, setCourseId] = useState(0);
   const [owner, setOwner] = useState("");
   const [repo, setRepo] = useState("");
   const [branch, setBranch] = useState("");
@@ -93,7 +93,7 @@ export default function CommitDataPage() {
                   data-testid="CommitDataPage-courseId"
                   value={courseId}
                   onChange={(e) =>
-                    setCourseId(parseInt(e.target.value, 10) || "")
+                    setCourseId(parseInt(e.target.value, 10) || 0)
                   }
                   required
                 />
@@ -144,7 +144,9 @@ export default function CommitDataPage() {
                   type="number"
                   data-testid="CommitDataPage-count"
                   value={count}
-                  onChange={(e) => setCount(parseInt(e.target.value, 10) || "")}
+                  onChange={(e) =>
+                    setCount(parseInt(e.target.value, 10) || 100)
+                  }
                 />
               </Form.Group>
             </Col>
