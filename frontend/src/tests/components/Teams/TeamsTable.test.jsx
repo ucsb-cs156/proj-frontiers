@@ -167,9 +167,13 @@ describe("TeamsTable tests", () => {
   });
   test("delete member calls correct API endpoint with correct params", async () => {
     const successMessage = "Member removed successfully";
+    const githubMemberSuccessMessage = "GitHub member removed successfully";
     axiosMock
       .onDelete("/api/teams/removeMember")
       .reply(200, { successMessage });
+    axiosMock
+      .onPost("/api/jobs/launch/deleteTeamMemberFromGithub")
+      .reply(200, { githubMemberSuccessMessage });
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -201,18 +205,36 @@ describe("TeamsTable tests", () => {
       expect(axiosMock.history.delete.length).toBe(1);
     });
 
+    await waitFor(() => {
+      expect(axiosMock.history.post.length).toBe(1);
+    });
+
     expect(axiosMock.history.delete[0].url).toBe("/api/teams/removeMember");
     expect(axiosMock.history.delete[0].params).toEqual({
       teamMemberId: 4,
       courseId: "12",
     });
 
-    expect(invalidateQueriesSpy).toHaveBeenCalledTimes(1);
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/jobs/launch/deleteTeamMemberFromGithub",
+    );
+    expect(axiosMock.history.post[0].params).toEqual({
+      memberGithubLogin: "Division7",
+      githubTeamId: 1111111,
+      courseId: "12",
+    });
+
+    expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({
       queryKey: ["/api/teams/all?courseId=12"],
     });
 
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ["/api/jobs/launch/deleteTeamMemberFromGithub"],
+    });
+
     expect(mockToast).toHaveBeenCalledWith(successMessage);
+    expect(mockToast).toHaveBeenCalledWith(githubMemberSuccessMessage);
   });
   test("add member calls correct API endpoint with correct params", async () => {
     const successMessage = "Member added successfully";

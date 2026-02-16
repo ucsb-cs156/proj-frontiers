@@ -19,6 +19,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +44,10 @@ public class TeamsControllerTests extends ControllerTestCase {
   @MockitoBean CourseRepository courseRepository;
 
   @MockitoBean RosterStudentRepository rosterStudentRepository;
+
+  @MockitoBean JobService jobService;
+
+  @MockitoBean GithubTeamService githubTeamService;
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
@@ -603,6 +609,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     TeamMember teamMemberUpdated = teamMember;
 
     when(teamMemberRepository.findById(eq(1L))).thenReturn(Optional.of(teamMember));
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
 
     // act
     MvcResult response =

@@ -24,7 +24,7 @@ export default function TeamsTable({
 
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
-    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    // Stryker disable next-line all : GET and empty string are equivalent
     { method: "GET", url: `/api/rosterstudents/course/${courseId}` },
     [],
     true,
@@ -40,6 +40,10 @@ export default function TeamsTable({
 
   const onDeleteTeam = () => {
     toast("Team removed successfully");
+  };
+
+  const onDeleteGithubMember = () => {
+    toast("GitHub member removed successfully");
   };
 
   const cellToAxiosParamsPost = (data) => ({
@@ -64,6 +68,16 @@ export default function TeamsTable({
     params: { teamMemberId: member.id, courseId: courseId },
   });
 
+  const cellToAxiosParamDeleteGithubMember = (data) => ({
+    method: "POST",
+    url: `/api/jobs/launch/deleteTeamMemberFromGithub`,
+    params: {
+      memberGithubLogin: data.memberGithubLogin,
+      githubTeamId: data.githubTeamId,
+      courseId: courseId,
+    },
+  });
+
   const deleteTeamMutation = useBackendMutation(
     cellToAxiosParamDeleteTeam,
     { onSuccess: onDeleteTeam },
@@ -74,6 +88,12 @@ export default function TeamsTable({
     cellToAxiosParamDeleteMember,
     { onSuccess: onDeleteMember },
     [`/api/teams/all?courseId=${courseId}`],
+  );
+
+  const deleteGithubMemberMutation = useBackendMutation(
+    cellToAxiosParamDeleteGithubMember,
+    { onSuccess: onDeleteGithubMember },
+    [`/api/jobs/launch/deleteTeamMemberFromGithub`],
   );
 
   const memberPostMutation = useBackendMutation(
@@ -104,9 +124,13 @@ export default function TeamsTable({
     deleteTeamMutation.mutate(team);
   };
 
-  const deleteMemberCallback = async (cell) => {
+  const deleteMemberCallback = async (cell, team) => {
     const member = cell.row.original;
     deleteMemberMutation.mutate(member);
+    deleteGithubMemberMutation.mutate({
+      memberGithubLogin: member.rosterStudent.githubLogin,
+      githubTeamId: team.githubTeamId,
+    });
   };
 
   const memberColumns = [
@@ -208,7 +232,7 @@ export default function TeamsTable({
                         ButtonColumn(
                           "Remove",
                           "danger",
-                          deleteMemberCallback,
+                          (cell) => deleteMemberCallback(cell, team),
                           `${testIdPrefix}-${team.id}`,
                         ),
                       ]
