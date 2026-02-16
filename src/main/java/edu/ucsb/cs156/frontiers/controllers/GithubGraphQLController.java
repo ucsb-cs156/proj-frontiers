@@ -4,6 +4,9 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.ReturnCsvCommitHistoryJob;
+import edu.ucsb.cs156.frontiers.mongo.documents.Commit;
+import edu.ucsb.cs156.frontiers.mongo.documents.CommitHistory;
+import edu.ucsb.cs156.frontiers.mongo.repositories.CommitRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -12,6 +15,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,14 +32,17 @@ public class GithubGraphQLController extends ApiController {
   private final GithubGraphQLService githubGraphQLService;
   private final CourseRepository courseRepository;
   private final JobService jobService;
+  private final CommitRepository commitRepository;
 
   public GithubGraphQLController(
       @Autowired GithubGraphQLService gitHubGraphQLService,
       @Autowired CourseRepository courseRepository,
-      JobService jobService) {
+      JobService jobService,
+      CommitRepository commitRepository) {
     this.githubGraphQLService = gitHubGraphQLService;
     this.courseRepository = courseRepository;
     this.jobService = jobService;
+    this.commitRepository = commitRepository;
   }
 
   /**
@@ -154,5 +162,25 @@ public class GithubGraphQLController extends ApiController {
             .githubService(githubGraphQLService)
             .build();
     return jobService.runAsJob(job);
+  }
+
+  @GetMapping("/pagedCommits")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public Page<Commit> returnCommits(
+      @Parameter Long courseId,
+      @Parameter String owner,
+      @Parameter String repo,
+      @Parameter String branch,
+      Pageable pageable)
+      throws Exception {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    CommitHistory returnedBranch =
+        githubGraphQLService.updateCommitHistory(course, owner, repo, branch);
+    Page<Commit> returnedCommits =
+        commitRepository.findByParentBranch(returnedBranch.getId(), pageable);
+    return returnedCommits;
   }
 }

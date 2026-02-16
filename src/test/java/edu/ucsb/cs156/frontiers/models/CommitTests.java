@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.models;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import edu.ucsb.cs156.frontiers.mongo.documents.Commit;
 import org.junit.jupiter.api.Test;
 
 public class CommitTests {

@@ -16,6 +16,6 @@ public class MongoConfiguration {
   @Configuration
   @Import(EmbeddedMongoAutoConfiguration.class)
   public class MongoLocalConfiguration {
-    //    public void mongoInstance(@Autowired MongoTemplate mongoTemplate) {}
+    /* noop config class designed to import the embedded mongo server when development is active */
   }
 }
