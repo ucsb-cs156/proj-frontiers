@@ -1,6 +1,9 @@
 package edu.ucsb.cs156.frontiers.config;
 
+import com.mongodb.client.MongoClient;
 import de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -16,6 +19,11 @@ public class MongoConfiguration {
   @Configuration
   @Import(EmbeddedMongoAutoConfiguration.class)
   public class MongoLocalConfiguration {
-    /* noop config class designed to import the embedded mongo server when development is active */
+    @Autowired private MongoClient mongoClient;
+
+    @PostConstruct
+    public void logPort() {
+      System.out.println("Embedded Mongo running at: " + mongoClient.getClusterDescription());
+    }
   }
 }

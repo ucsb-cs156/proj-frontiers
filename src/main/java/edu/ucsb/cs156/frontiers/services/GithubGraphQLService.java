@@ -23,7 +23,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -179,7 +178,6 @@ public class GithubGraphQLService {
     return jsonData;
   }
 
-  @Transactional
   public CommitHistory updateCommitHistory(Course course, String owner, String repo, String branch)
       throws Exception {
     Optional<CommitHistory> existingHistory =
@@ -219,7 +217,7 @@ public class GithubGraphQLService {
     LinkedList<Commit> history = new LinkedList<>();
     do {
       JsonNode currentPage =
-          jacksonObjectMapper.readTree(getCommits(course, owner, repo, branch, 1500, pointer));
+          jacksonObjectMapper.readTree(getCommits(course, owner, repo, branch, 100, pointer));
       pointer =
           currentPage
               .path("repository")
