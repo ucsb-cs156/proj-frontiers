@@ -36,6 +36,7 @@ describe("JobsTable tests", () => {
       {
         id: 1,
         jobName: "Test Job",
+        userEmail: "test@example.com",
         createdAt: "2023-01-01T10:00:00",
         updatedAt: "2023-01-01T10:05:00",
         status: "complete",
@@ -54,6 +55,7 @@ describe("JobsTable tests", () => {
     // Check that the table headers are rendered
     expect(screen.getByText("id")).toBeInTheDocument();
     expect(screen.getByText("Job Name")).toBeInTheDocument();
+    expect(screen.getByText("User Email")).toBeInTheDocument();
     expect(screen.getByText("Created")).toBeInTheDocument();
     expect(screen.getByText("Updated")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
@@ -62,6 +64,7 @@ describe("JobsTable tests", () => {
     // Check that the job data is rendered
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("Test Job")).toBeInTheDocument();
+    expect(screen.getByText("test@example.com")).toBeInTheDocument();
     expect(screen.getByText("2023-01-01 10:00:00")).toBeInTheDocument();
     expect(screen.getByText("2023-01-01 10:05:00")).toBeInTheDocument();
     expect(screen.getByText("complete")).toBeInTheDocument();
