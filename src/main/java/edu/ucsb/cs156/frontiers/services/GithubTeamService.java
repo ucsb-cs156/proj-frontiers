@@ -131,7 +131,7 @@ public class GithubTeamService {
    * @throws NoSuchAlgorithmException if there is an algorithm error
    * @throws InvalidKeySpecException if there is a key specification error
    */
-  private Integer createTeam(String teamName, Course course)
+  public Integer createTeam(String teamName, Course course)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/teams";
     HttpHeaders headers = new HttpHeaders();
