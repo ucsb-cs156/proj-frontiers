@@ -15,6 +15,7 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import AdminJobsPage from "main/pages/Admin/AdminJobsPage";
+import AggregatedCommitsPage from "main/pages/Admin/AggregatedCommitsPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
@@ -137,6 +138,16 @@ function App() {
           element={
             <ProtectedPage
               component={<AdminJobsPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/commits"
+          element={
+            <ProtectedPage
+              component={<AggregatedCommitsPage />}
               enforceRole={"ROLE_ADMIN"}
               currentUser={currentUser}
             />
