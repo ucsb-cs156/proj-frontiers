@@ -3,7 +3,7 @@ import AggregatedCommitsTable from "main/components/Commits/AggregatedCommitsTab
 import OurPagination from "main/components/Common/OurPagination";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import { useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, ListGroup } from "react-bootstrap";
 import { toast } from "react-toastify";
 
 const AggregatedCommitsPage = () => {
@@ -11,6 +11,7 @@ const AggregatedCommitsPage = () => {
   const [owner, setOwner] = useState("");
   const [repo, setRepo] = useState("");
   const [branch, setBranch] = useState("");
+  const [branches, setBranches] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -56,15 +57,34 @@ const AggregatedCommitsPage = () => {
     { enabled: !!sessionId },
   );
 
+  const handleAddBranch = () => {
+    if (!owner || !repo || !branch) {
+      toast("Please fill in owner, repo, and branch");
+      return;
+    }
+    setBranches([...branches, { owner, repo, branch }]);
+    setOwner("");
+    setRepo("");
+    setBranch("");
+  };
+
+  const handleRemoveBranch = (index) => {
+    setBranches(branches.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!courseId || !owner || !repo || !branch) {
-      toast("Please fill in all fields");
+    if (!courseId) {
+      toast("Please enter a course ID");
+      return;
+    }
+    if (branches.length === 0) {
+      toast("Please add at least one branch");
       return;
     }
     createSession.mutate({
       courseId,
-      branches: [{ owner, repo, branch }],
+      branches,
     });
   };
 
@@ -82,6 +102,35 @@ const AggregatedCommitsPage = () => {
             data-testid="AggregatedCommitsForm-courseId"
           />
         </Form.Group>
+
+        <h5>Branches</h5>
+        {branches.length > 0 && (
+          <ListGroup
+            className="mb-3"
+            data-testid="AggregatedCommitsForm-branchList"
+          >
+            {branches.map((b, i) => (
+              <ListGroup.Item
+                key={i}
+                className="d-flex justify-content-between align-items-center"
+                data-testid={`AggregatedCommitsForm-branchItem-${i}`}
+              >
+                <span>
+                  {b.owner}/{b.repo} — {b.branch}
+                </span>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => handleRemoveBranch(i)}
+                  data-testid={`AggregatedCommitsForm-removeBranch-${i}`}
+                >
+                  Remove
+                </Button>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        )}
+
         <Form.Group className="mb-3">
           <Form.Label>Owner</Form.Label>
           <Form.Control
@@ -112,6 +161,14 @@ const AggregatedCommitsPage = () => {
             data-testid="AggregatedCommitsForm-branch"
           />
         </Form.Group>
+        <Button
+          variant="secondary"
+          className="me-2"
+          onClick={handleAddBranch}
+          data-testid="AggregatedCommitsForm-addBranch"
+        >
+          Add Branch
+        </Button>
         <Button
           type="submit"
           variant="primary"
