@@ -4,21 +4,29 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.ReturnCsvCommitHistoryJob;
+import edu.ucsb.cs156.frontiers.models.Branch;
+import edu.ucsb.cs156.frontiers.mongo.documents.AggregatedCommit;
 import edu.ucsb.cs156.frontiers.mongo.documents.Commit;
 import edu.ucsb.cs156.frontiers.mongo.documents.CommitHistory;
+import edu.ucsb.cs156.frontiers.mongo.documents.TemporaryCommitCollection;
+import edu.ucsb.cs156.frontiers.mongo.repositories.AggregatedCommitRepository;
 import edu.ucsb.cs156.frontiers.mongo.repositories.CommitRepository;
+import edu.ucsb.cs156.frontiers.mongo.repositories.TemporaryCommitCollectionRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,16 +41,22 @@ public class GithubGraphQLController extends ApiController {
   private final CourseRepository courseRepository;
   private final JobService jobService;
   private final CommitRepository commitRepository;
+  private final TemporaryCommitCollectionRepository temporaryCommitCollectionRepository;
+  private final AggregatedCommitRepository aggregatedCommitRepository;
 
   public GithubGraphQLController(
       @Autowired GithubGraphQLService gitHubGraphQLService,
       @Autowired CourseRepository courseRepository,
       JobService jobService,
-      CommitRepository commitRepository) {
+      CommitRepository commitRepository,
+      TemporaryCommitCollectionRepository temporaryCommitCollectionRepository,
+      AggregatedCommitRepository aggregatedCommitRepository) {
     this.githubGraphQLService = gitHubGraphQLService;
     this.courseRepository = courseRepository;
     this.jobService = jobService;
     this.commitRepository = commitRepository;
+    this.temporaryCommitCollectionRepository = temporaryCommitCollectionRepository;
+    this.aggregatedCommitRepository = aggregatedCommitRepository;
   }
 
   /**
@@ -182,5 +196,27 @@ public class GithubGraphQLController extends ApiController {
     Page<Commit> returnedCommits =
         commitRepository.findByParentBranch(returnedBranch.getId(), pageable);
     return returnedCommits;
+  }
+
+  @PostMapping("/create_commit_session")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public TemporaryCommitCollection staticTest(
+      @Parameter Long courseId, @RequestBody List<Branch> branches) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    TemporaryCommitCollection starter =
+        TemporaryCommitCollection.builder().user(getCurrentUser().getUser().getId()).build();
+    return temporaryCommitCollectionRepository.createSession(starter, branches);
+  }
+
+  @GetMapping("/aggregated_commits")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  public Page<AggregatedCommit> aggregatedCommits(
+      @Parameter Pageable pageable, @Parameter String sessionId) {
+    TemporaryCommitCollection session =
+        temporaryCommitCollectionRepository.findBySessionId(sessionId);
+    return aggregatedCommitRepository.findAllBySessionId(session.getId(), pageable);
   }
 }
