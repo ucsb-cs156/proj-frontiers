@@ -1,8 +1,11 @@
+import { use } from "react";
+
 const jobsFixtures = {
   threeJobs: [
     {
       id: 1,
       jobName: "MembershipAuditJob",
+      userEmail: "test@example.com",
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
@@ -11,6 +14,7 @@ const jobsFixtures = {
     {
       id: 2,
       jobName: "DataSyncJob",
+      userEmail: "admin@example.com",
       createdAt: "2023-01-02T10:00:00",
       updatedAt: "2023-01-02T10:05:00",
       status: "error",
@@ -19,6 +23,7 @@ const jobsFixtures = {
     {
       id: 3,
       jobName: "UpdateAllJob",
+      userEmail: "admin@example.com",
       createdAt: "2023-01-03T10:00:00",
       updatedAt: "2023-01-03T10:05:00",
       status: "running",
@@ -29,6 +34,7 @@ const jobsFixtures = {
     {
       id: 1,
       jobName: "MembershipAuditJob",
+      userEmail: "test@example.com",
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
@@ -39,6 +45,7 @@ const jobsFixtures = {
     {
       id: 1,
       jobName: "LongLogJob",
+      userEmail: "longlog@example.com",
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
