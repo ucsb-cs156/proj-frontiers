@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(basePackages = {"edu.ucsb.cs156.frontiers.mongo.repositories"})
+@EnableMongoRepositories(basePackages = {"edu.ucsb.cs156.frontiers.mongo"})
 @EnableAutoConfiguration(exclude = EmbeddedMongoAutoConfiguration.class)
 public class MongoConfiguration {
 

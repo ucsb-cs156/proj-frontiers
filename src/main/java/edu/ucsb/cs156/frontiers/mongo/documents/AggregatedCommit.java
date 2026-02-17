@@ -8,10 +8,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "aggregated_commits")
+@CompoundIndex(
+    name = "session_branch_sha_idx",
+    def = "{'sessionId': 1, 'parentBranch': 1, 'sha': 1}",
+    unique = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,6 +37,7 @@ public class AggregatedCommit {
   private String message;
 
   @JsonAlias("committedDate")
+  @Indexed
   private Instant commitTime;
 
   private String committerName;

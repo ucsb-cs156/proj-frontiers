@@ -11,7 +11,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.MergeOperation;
+import org.springframework.data.mongodb.core.aggregation.ConvertOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
@@ -49,37 +49,21 @@ public class TemporaryCommitCollectionAggregatorImpl
     List<Document> docs = mongoOperations.find(query, Document.class, "commit_history");
     List<ObjectId> ids =
         docs.stream().map(doc -> doc.getObjectId("_id")).collect(Collectors.toList());
+
     Aggregation agg =
         Aggregation.newAggregation(
             Aggregation.match(Criteria.where("parentBranch").in(ids)),
-            Aggregation.project()
-                .andExpression("{$toObjectId: '" + starter.getId().toHexString() + "'}")
-                .as("sessionId")
-                .and("sha")
-                .as("sha")
-                .and("message")
-                .as("message")
-                .and("commitTime")
-                .as("commitTime")
-                .and("committerName")
-                .as("committerName")
-                .and("committerEmail")
-                .as("committerEmail")
-                .and("committerLogin")
-                .as("committerLogin")
-                .and("authorName")
-                .as("authorName")
-                .and("authorEmail")
-                .as("authorEmail")
-                .and("authorLogin")
-                .as("authorLogin")
-                .and("parentBranch")
-                .as("parentBranch")
-                .and("url")
-                .as("url"),
+            Aggregation.project(AggregatedCommit.class).andExclude("_id"),
+            Aggregation.addFields()
+                .addFieldWithValueOf(
+                    "sessionId",
+                    ConvertOperators.ToObjectId.toObjectId(starter.getId().toHexString()))
+                .build(),
             Aggregation.sort(Sort.by(Sort.Direction.DESC, "commitTime")),
-            MergeOperation.mergeInto("aggregated_commits"));
-
+            Aggregation.merge()
+                .intoCollection("aggregated_commits")
+                .on("sha", "parentBranch", "sessionId")
+                .build());
     mongoOperations.aggregate(agg, "commits", AggregatedCommit.class);
 
     return starter;
