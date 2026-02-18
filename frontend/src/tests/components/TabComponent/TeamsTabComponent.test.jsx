@@ -573,7 +573,7 @@ describe("TeamTabComponent tests", () => {
     );
     expect(axiosMock.history.post[1].params).toEqual({
       courseId: 1,
-      name: "team5",
+      teamName: "team5",
     });
 
     expect(toast).toBeCalledWith("Team successfully added.");

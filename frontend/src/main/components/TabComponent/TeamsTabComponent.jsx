@@ -71,7 +71,7 @@ export default function TeamsTabComponent({
     method: "POST",
     params: {
       courseId: courseId,
-      name: team.name,
+      teamName: team.name,
     },
   });
 
