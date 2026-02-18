@@ -14,6 +14,11 @@ public class DeleteTeamMemberFromGithubJob implements JobContextConsumer {
   GithubTeamService githubTeamService;
 
   @Override
+  public Course getCourse() {
+    return this.course;
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log(
         "Starting delete team member from GitHub job for team ID "

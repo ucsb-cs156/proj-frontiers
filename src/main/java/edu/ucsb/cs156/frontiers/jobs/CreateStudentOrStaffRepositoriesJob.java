@@ -22,6 +22,11 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
   @Builder.Default RepositoryCreationOption creationOption = RepositoryCreationOption.STUDENTS_ONLY;
 
   @Override
+  public Course getCourse() {
+    return this.course;
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Processing...");
 
