@@ -1,5 +1,3 @@
-import { use } from "react";
-
 const jobsFixtures = {
   threeJobs: [
     {
