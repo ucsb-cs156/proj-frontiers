@@ -17,6 +17,11 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
   RepositoryPermissions permissions;
 
   @Override
+  public Course getCourse() {
+    return this.course;
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Creating team repositories...");
 

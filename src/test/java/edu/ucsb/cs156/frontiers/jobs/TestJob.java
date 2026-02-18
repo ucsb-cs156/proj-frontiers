@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import lombok.Builder;
@@ -11,6 +12,12 @@ public class TestJob implements JobContextConsumer {
 
   private boolean fail;
   private int sleepMs;
+  private Course course;
+
+  @Override
+  public Course getCourse() {
+    return this.course;
+  }
 
   @Override
   public void accept(JobContext ctx) throws Exception {

@@ -5,8 +5,12 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.jobs.TestJob;
@@ -89,10 +93,42 @@ public class JobServiceTests {
 
   @Test
   void runAsJob_fires_correctly() {
-    TestJob job = TestJob.builder().fail(false).sleepMs(0).build();
+    Course course = Course.builder().id(1L).courseName("Test Course").build();
+
+    TestJob job = TestJob.builder().fail(false).sleepMs(0).course(course).build();
 
     Job fireJob =
-        Job.builder().jobName("TestJob").createdBy(user.getUser()).status("running").build();
+        Job.builder()
+            .jobName("TestJob")
+            .createdBy(user.getUser())
+            .userEmail(user.getUser().getEmail())
+            .courseName("Test Course")
+            .course(course)
+            .status("running")
+            .build();
+
+    doNothing().when(injectedJobService).runJobAsync(any(), any());
+    when(currentUserService.getUser()).thenReturn(user.getUser());
+
+    MatcherAssert.assertThat(fireJob, samePropertyValuesAs(jobService.runAsJob(job)));
+    verify(jobRepository).save(eq(fireJob));
+    verify(injectedJobService).runJobAsync(eq(fireJob), eq(job));
+  }
+
+  @Test
+  void runAsJob_withNullCourse_setsCourseNameToNull() {
+
+    TestJob job = TestJob.builder().fail(false).sleepMs(0).course(null).build();
+
+    Job fireJob =
+        Job.builder()
+            .jobName("TestJob")
+            .createdBy(user.getUser())
+            .userEmail(user.getUser().getEmail())
+            .courseName(null)
+            .course(null)
+            .status("running")
+            .build();
 
     doNothing().when(injectedJobService).runJobAsync(any(), any());
     when(currentUserService.getUser()).thenReturn(user.getUser());

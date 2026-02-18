@@ -18,6 +18,11 @@ public class UpdateOrgMembershipJob implements JobContextConsumer {
   RosterStudentRepository rosterStudentRepository;
 
   @Override
+  public Course getCourse() {
+    return this.course;
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Processing...");
     Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
