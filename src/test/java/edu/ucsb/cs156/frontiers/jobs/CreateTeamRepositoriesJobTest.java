@@ -36,6 +36,22 @@ public class CreateTeamRepositoriesJobTest {
   }
 
   @Test
+  public void testGetCourse_returnsCoursePassedToBuilder() {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    var repoJob =
+        CreateTeamRepositoriesJob.builder()
+            .repositoryService(service)
+            .repositoryPrefix("repo-prefix")
+            .course(course)
+            .isPrivate(false)
+            .permissions(RepositoryPermissions.WRITE)
+            .build();
+
+    assertEquals(course, repoJob.getCourse());
+  }
+
+  @Test
   public void testCreateTeamRepository_public() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     RosterStudent student1 =
