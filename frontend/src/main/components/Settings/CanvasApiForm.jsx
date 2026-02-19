@@ -8,7 +8,6 @@ function CanvasApiForm({
   buttonLabel = "Connect Canvas",
   courseId,
 }) {
-  //divy need to find way to test look at daniel
   const {
     register,
     formState: { errors },
