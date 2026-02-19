@@ -13,6 +13,10 @@ export default function JobsTable({ jobs }) {
       accessorKey: "jobName",
     },
     {
+      header: "User Email",
+      accessorKey: "userEmail",
+    },
+    {
       header: "Created",
       accessorFn: (row) => formatTime(row.createdAt),
       id: "createdAt",

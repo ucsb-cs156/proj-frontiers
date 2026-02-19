@@ -5,6 +5,9 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Job;
@@ -92,7 +95,12 @@ public class JobServiceTests {
     TestJob job = TestJob.builder().fail(false).sleepMs(0).build();
 
     Job fireJob =
-        Job.builder().jobName("TestJob").createdBy(user.getUser()).status("running").build();
+        Job.builder()
+            .jobName("TestJob")
+            .createdBy(user.getUser())
+            .userEmail(user.getUser().getEmail())
+            .status("running")
+            .build();
 
     doNothing().when(injectedJobService).runJobAsync(any(), any());
     when(currentUserService.getUser()).thenReturn(user.getUser());
