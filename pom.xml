@@ -411,6 +411,8 @@
             <param>${app.package}.config.SpaCsrfTokenRequestHandler</param>
             <param>${app.package}.config.CsrfCookieFilter</param>
             <param>${app.package}.config.JpaAuditingConfig</param>
+            <param>${app.package}.config.MongoConfig</param>
+            <param>${app.package}.config.MongoConfig$MongoLocalConfiguration</param>
             <param>${app.package}.startup.AzureProfileEnabler</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockService</param>
             <param>edu.ucsb.cs156.frontiers.services.wiremock.WiremockServiceDummy</param>

@@ -2,6 +2,7 @@ version: '3.8'
 
 volumes:
   postgres-data:
+  mongo-data:
 
 services:
   app:
@@ -14,6 +15,7 @@ services:
         DATABASE_URL: postgres://postgres:postgres@postgresdb:5432/postgres
         PORT: 8080
         WEBHOOK_SECRET: fake-webhook-secret
+        MONGO_URI: mongodb://root:password@mongodb:27017/
 
 #    volumes:
 #      - ../..:/workspaces:cached
@@ -41,3 +43,13 @@ services:
 
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  mongo:
+    container_name: mongodb
+    image: mongo:6.0.7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
