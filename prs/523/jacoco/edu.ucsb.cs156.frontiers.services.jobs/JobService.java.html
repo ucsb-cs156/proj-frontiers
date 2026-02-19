@@ -42,31 +42,47 @@ import org.springframework.transaction.annotation.Transactional;
 <span class="fc" id="L42">    return job;</span>
   }
 
+  /**
+   * Runs a job asynchronously.
+   *
+   * &lt;p&gt;This method is annotated with @Transactional because outside of the Spring context, you
+   * cannot delete entities that are unmanaged by Hibernate. Adding @Transactional keeps the
+   * database session open and allows Hibernate to maintain it's knowledge of the object graph (i.e.
+   * the entities)
+   *
+   * &lt;p&gt;To learn more, read about Hibernate and the concept of a Spring Context.
+   *
+   * &lt;p&gt;Note that @Transactional means that if there is an unhandled exception, either every
+   * database transactions succeeds, or all of them are rolled back.
+   *
+   * @param job
+   * @param jobFunction
+   */
   @Async
   @Transactional
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
-<span class="fc" id="L48">    JobContext context = contextFactory.createContext(job);</span>
+<span class="fc" id="L64">    JobContext context = contextFactory.createContext(job);</span>
 
     try {
-<span class="fc" id="L51">      jobFunction.accept(context);</span>
-<span class="fc" id="L52">    } catch (Exception e) {</span>
-<span class="fc" id="L53">      job.setStatus(&quot;error&quot;);</span>
-<span class="fc" id="L54">      context.log(e.getMessage());</span>
-<span class="fc" id="L55">      return;</span>
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L67">      jobFunction.accept(context);</span>
+<span class="fc" id="L68">    } catch (Exception e) {</span>
+<span class="fc" id="L69">      job.setStatus(&quot;error&quot;);</span>
+<span class="fc" id="L70">      context.log(e.getMessage());</span>
+<span class="fc" id="L71">      return;</span>
+<span class="fc" id="L72">    }</span>
 
-<span class="fc" id="L58">    job.setStatus(&quot;complete&quot;);</span>
-<span class="fc" id="L59">    jobsRepository.save(job);</span>
-<span class="fc" id="L60">  }</span>
+<span class="fc" id="L74">    job.setStatus(&quot;complete&quot;);</span>
+<span class="fc" id="L75">    jobsRepository.save(job);</span>
+<span class="fc" id="L76">  }</span>
 
   public String getJobLogs(Long jobId) {
-<span class="fc" id="L63">    Job job =</span>
+<span class="fc" id="L79">    Job job =</span>
         jobsRepository
-<span class="fc" id="L65">            .findById(jobId)</span>
-<span class="fc" id="L66">            .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Job not found&quot;));</span>
+<span class="fc" id="L81">            .findById(jobId)</span>
+<span class="fc" id="L82">            .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Job not found&quot;));</span>
 
-<span class="fc" id="L68">    String log = job.getLog();</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">    return log != null ? log : &quot;&quot;;</span>
+<span class="fc" id="L84">    String log = job.getLog();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">    return log != null ? log : &quot;&quot;;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
