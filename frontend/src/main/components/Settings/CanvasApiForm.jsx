@@ -55,9 +55,6 @@ function CanvasApiForm({
           isInvalid={Boolean(errors.canvasApiToken)}
           {...register("canvasApiToken")}
         />
-        <Form.Control.Feedback type="invalid">
-          {errors.canvasApiToken?.message}
-        </Form.Control.Feedback>
       </Form.Group>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="canvasCourseId">Canvas Course ID</Form.Label>
@@ -73,9 +70,6 @@ function CanvasApiForm({
           isInvalid={Boolean(errors.canvasCourseId)}
           {...register("canvasCourseId")}
         />
-        <Form.Control.Feedback type="invalid">
-          {errors.canvasCourseId?.message}
-        </Form.Control.Feedback>
       </Form.Group>
       {errors.root && (
         <Form.Text className="text-danger d-block mb-2">
