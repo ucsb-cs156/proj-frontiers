@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.web;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
+import com.microsoft.playwright.Page;
 import edu.ucsb.cs156.frontiers.WebTestCase;
 import edu.ucsb.cs156.frontiers.testconfig.IntegrationConfig;
 import org.junit.jupiter.api.Test;
@@ -19,15 +20,17 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @ResourceLock("port-8080")
 @Import(IntegrationConfig.class)
-public class OauthWebIT extends WebTestCase {
-  @Test
-  public void regular_user_can_login_logout() throws Exception {
-    setupUser(false, true);
-    assertThat(page.getByText("Log Out")).isVisible();
-    assertThat(page.getByText("Welcome, cgaucho@ucsb.edu")).isVisible();
-    page.getByText("Log Out").click();
+public class CourseCreationWebIT extends WebTestCase {
 
-    assertThat(page.getByText("Log In")).isVisible();
-    assertThat(page.getByText("Log Out")).not().isVisible();
+  @Test
+  public void can_create_course() {
+    setupUser(true, true);
+    page.getByText("Create Course").click();
+    page.getByLabel("Course Name").fill("test course");
+    page.getByLabel("Term").fill("Fall 2025");
+    page.getByLabel("School").fill("UCSB");
+    page.getByText("Create", new Page.GetByTextOptions().setExact(true)).click();
+    assertThat(page.getByTestId("CoursesTable-cell-row-0-col-courseName-link"))
+        .containsText("test course");
   }
 }
