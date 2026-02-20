@@ -43,7 +43,11 @@ export default function TeamsTable({
   };
 
   const onDeleteGithubMember = () => {
-    toast("GitHub member removed successfully");
+    toast("Delete GitHub team member job launched successfully");
+  };
+
+  const onAddGithubMember = () => {
+    toast("Add GitHub team member job launched successfully");
   };
 
   const cellToAxiosParamsPost = (data) => ({
@@ -78,6 +82,17 @@ export default function TeamsTable({
     },
   });
 
+  const cellToAxiosParamAddGithubMember = (data) => ({
+    method: "POST",
+    url: `/api/jobs/launch/addTeamMemberToGithub`,
+    params: {
+      memberGithubLogin: data.memberGithubLogin,
+      githubTeamId: data.githubTeamId,
+      teamMemberId: data.teamMemberId,
+      courseId: courseId,
+    },
+  });
+
   const deleteTeamMutation = useBackendMutation(
     cellToAxiosParamDeleteTeam,
     { onSuccess: onDeleteTeam },
@@ -96,10 +111,26 @@ export default function TeamsTable({
     [`/api/jobs/launch/deleteTeamMemberFromGithub`],
   );
 
+  const addGithubMemberMutation = useBackendMutation(
+    cellToAxiosParamAddGithubMember,
+    { onSuccess: onAddGithubMember },
+    [`/api/jobs/launch/addTeamMemberToGithub`],
+  );
+
   const memberPostMutation = useBackendMutation(
     cellToAxiosParamsPost,
     {
-      onSuccess: () => onSuccessMember(setPostMemberModal),
+      onSuccess: (createdTeamMember) => {
+        onSuccessMember(setPostMemberModal);
+        const rosterStudent = rosterStudents.find(
+          (rs) => rs.id === createdTeamMember.rosterStudent.id,
+        );
+        addGithubMemberMutation.mutate({
+          memberGithubLogin: rosterStudent.githubLogin,
+          githubTeamId: selectedTeam.githubTeamId,
+          teamMemberId: createdTeamMember.id,
+        });
+      },
       onError: (error) => {
         setPostMemberModal(false);
         if (error.response.status === 409) {
