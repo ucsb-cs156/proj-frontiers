@@ -490,6 +490,9 @@ describe("TeamTabComponent tests", () => {
     });
   });
   test("TeamsForm submit works and clears search filter", async () => {
+    const addGithubTeamSuccessMessage =
+      "Add team to Github job successfully started.";
+
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
         queries: {
@@ -502,7 +505,11 @@ describe("TeamTabComponent tests", () => {
       .onGet("/api/teams/all?courseId=1")
       .reply(200, teamsFixtures.teams);
 
-    axiosMock.onPost("/api/teams/post").reply(200);
+    axiosMock.onPost("/api/teams/post").reply(200, { name: "team5" });
+    axiosMock
+      .onPost("/api/jobs/launch/addTeamToGithub")
+      .reply(200, { addGithubTeamSuccessMessage });
+
     render(
       <MemoryRouter>
         <QueryClientProvider client={queryClientSpecific}>
@@ -555,14 +562,22 @@ describe("TeamTabComponent tests", () => {
 
     expect(teamNameInput.value).toBe("team5");
     fireEvent.click(screen.getByTestId("TeamsForm-submit"));
-    await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(2));
 
     expect(axiosMock.history.post[0].params).toEqual({
       courseId: 1,
       name: "team5",
     });
+    expect(axiosMock.history.post[1].url).toBe(
+      "/api/jobs/launch/addTeamToGithub",
+    );
+    expect(axiosMock.history.post[1].params).toEqual({
+      courseId: 1,
+      teamName: "team5",
+    });
 
     expect(toast).toBeCalledWith("Team successfully added.");
+    expect(toast).toBeCalledWith(addGithubTeamSuccessMessage);
     expect(
       queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
     ).toBe(arbitraryUpdateCount);

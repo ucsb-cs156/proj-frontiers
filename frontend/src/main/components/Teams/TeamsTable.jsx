@@ -42,6 +42,10 @@ export default function TeamsTable({
     toast("Team removed successfully");
   };
 
+  const onDeleteGithubTeam = () => {
+    toast("Delete GitHub team job launched successfully");
+  };
+
   const onDeleteGithubMember = () => {
     toast("Delete GitHub team member job launched successfully");
   };
@@ -70,6 +74,12 @@ export default function TeamsTable({
     method: "DELETE",
     url: `/api/teams/removeMember`,
     params: { teamMemberId: member.id, courseId: courseId },
+  });
+
+  const cellToAxiosParamDeleteGithubTeam = (team) => ({
+    method: "POST",
+    url: `/api/jobs/launch/deleteTeamFromGithub`,
+    params: { githubTeamId: team.githubTeamId, courseId: courseId },
   });
 
   const cellToAxiosParamDeleteGithubMember = (data) => ({
@@ -103,6 +113,12 @@ export default function TeamsTable({
     cellToAxiosParamDeleteMember,
     { onSuccess: onDeleteMember },
     [`/api/teams/all?courseId=${courseId}`],
+  );
+
+  const deleteGithubTeamMutation = useBackendMutation(
+    cellToAxiosParamDeleteGithubTeam,
+    { onSuccess: onDeleteGithubTeam },
+    [`/api/jobs/launch/deleteTeamFromGithub`],
   );
 
   const deleteGithubMemberMutation = useBackendMutation(
@@ -153,6 +169,7 @@ export default function TeamsTable({
 
   const deleteTeamCallback = async (team) => {
     deleteTeamMutation.mutate(team);
+    deleteGithubTeamMutation.mutate(team);
   };
 
   const deleteMemberCallback = async (cell, team) => {
