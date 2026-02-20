@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PullTeamsFromCanvasJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">PullTeamsFromCanvasJob.java</span></div><h1>PullTeamsFromCanvasJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
+import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import jakarta.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import lombok.Builder;
+
+@Builder
+public class PullTeamsFromCanvasJob implements JobContextConsumer {
+
+  Course course;
+  String groupsetId;
+  CanvasService canvasService;
+  TeamRepository teamRepository;
+  TeamMemberRepository teamMemberRepository;
+  CourseRepository courseRepository;
+
+  @Override
+  @Transactional
+  public void accept(JobContext ctx) throws Exception {
+    // Prior to attempting to optimize this code or modify any repository calls, please see here:
+    // https://github.com/ucsb-cs156/ucsb-cs156.github.io/blob/main/topics/spring_boot/spring_boot_entity_relationships.md
+<span class="fc" id="L41">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(course.getId());</span>
+<span class="fc" id="L42">    course = courseOpt.get();</span>
+<span class="fc" id="L43">    ctx.log(&quot;Processing...&quot;);</span>
+<span class="fc" id="L44">    List&lt;CanvasGroup&gt; groups = canvasService.getCanvasGroups(course, groupsetId);</span>
+<span class="fc" id="L45">    HashMap&lt;String, RosterStudent&gt; mappedStudents = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L46">    HashMap&lt;String, Team&gt; teamsByName = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L47">    HashMap&lt;Integer, Team&gt; teamsByCanvasId = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L48">    course.getRosterStudents().forEach(student -&gt; mappedStudents.put(student.getEmail(), student));</span>
+<span class="fc" id="L49">    course</span>
+<span class="fc" id="L50">        .getTeams()</span>
+<span class="fc" id="L51">        .forEach(</span>
+            team -&gt; {
+<span class="fc" id="L53">              teamsByName.put(team.getName(), team);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">              if (team.getCanvasId() != null) {</span>
+<span class="fc" id="L55">                teamsByCanvasId.put(team.getCanvasId(), team);</span>
+              }
+<span class="fc" id="L57">            });</span>
+
+<span class="fc" id="L59">    List&lt;Team&gt; createdTeams = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L61" title="All 2 branches covered.">    for (CanvasGroup group : groups) {</span>
+      Team linked;
+<span class="fc bfc" id="L63" title="All 2 branches covered.">      if (teamsByCanvasId.containsKey(group.getId())) {</span>
+<span class="fc" id="L64">        linked = teamsByCanvasId.get(group.getId());</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">      } else if (teamsByName.containsKey(group.getName().trim())) {</span>
+<span class="fc" id="L66">        linked = teamsByName.get(group.getName().trim());</span>
+      } else {
+        linked =
+<span class="fc" id="L69">            Team.builder()</span>
+<span class="fc" id="L70">                .name(group.getName())</span>
+<span class="fc" id="L71">                .teamMembers(new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L72">                .course(course)</span>
+<span class="fc" id="L73">                .build();</span>
+      }
+<span class="fc bfc" id="L75" title="All 4 branches covered.">      if (linked.getCanvasId() != null &amp;&amp; !linked.getCanvasId().equals(group.getId())) {</span>
+<span class="fc" id="L76">        ctx.log(&quot;Duplicate group found: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
+<span class="fc" id="L77">        throw new DuplicateGroupException();</span>
+      }
+
+<span class="fc" id="L80">      HashSet&lt;String&gt; processedEmails = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L82">      linked.setCanvasId(group.getId());</span>
+<span class="fc" id="L83">      ctx.log(&quot;Processing group: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
+<span class="fc" id="L84">      Team finalLinked = linked;</span>
+<span class="fc" id="L85">      group</span>
+<span class="fc" id="L86">          .getMembers()</span>
+<span class="fc" id="L87">          .forEach(</span>
+              email -&gt; {
+<span class="fc" id="L89">                RosterStudent student =</span>
+<span class="fc" id="L90">                    mappedStudents.get(CanonicalFormConverter.convertToValidEmail(email));</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">                if (student != null) {</span>
+<span class="fc" id="L92">                  processedEmails.add(student.getEmail());</span>
+<span class="fc" id="L93">                  if (student.getTeamMembers().stream()</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                      .anyMatch(teamMember -&gt; teamMember.getTeam().equals(finalLinked))) {</span>
+<span class="fc" id="L95">                    return;</span>
+                  } else {
+<span class="fc" id="L97">                    finalLinked</span>
+<span class="fc" id="L98">                        .getTeamMembers()</span>
+<span class="fc" id="L99">                        .add(TeamMember.builder().team(finalLinked).rosterStudent(student).build());</span>
+                  }
+                }
+<span class="fc" id="L102">              });</span>
+<span class="fc" id="L103">      createdTeams.add(finalLinked);</span>
+<span class="fc" id="L104">      Set&lt;TeamMember&gt; removedMembers =</span>
+<span class="fc" id="L105">          finalLinked.getTeamMembers().stream()</span>
+<span class="fc" id="L106">              .filter(</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">                  teamMember -&gt; !processedEmails.contains(teamMember.getRosterStudent().getEmail()))</span>
+<span class="fc" id="L108">              .collect(Collectors.toSet());</span>
+<span class="fc" id="L109">      ctx.log(&quot;Group members to be removed:&quot; + removedMembers);</span>
+<span class="fc" id="L110">      removedMembers.forEach(</span>
+          teamMember -&gt; {
+<span class="fc" id="L112">            teamMember.getTeam().getTeamMembers().remove(teamMember);</span>
+<span class="fc" id="L113">            teamMember.getRosterStudent().getTeamMembers().remove(teamMember);</span>
+<span class="fc" id="L114">          });</span>
+<span class="fc" id="L115">      teamMemberRepository.deleteAll(removedMembers);</span>
+<span class="fc" id="L116">    }</span>
+<span class="fc" id="L117">    teamRepository.saveAll(createdTeams);</span>
+<span class="fc" id="L118">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
