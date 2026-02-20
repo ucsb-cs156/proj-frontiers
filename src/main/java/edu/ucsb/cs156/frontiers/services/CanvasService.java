@@ -17,6 +17,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Service for interacting with the Canvas API.
+ *
+ * <p>Note that the Canvas API uses a GraphQL endpoint, which allows for more flexible queries
+ * compared to traditional REST APIs.
+ *
+ * <p>For more information on the Canvas API, visit the official documentation at
+ * https://canvas.instructure.com/doc/api/.
+ *
+ * <p>You can typically interact with Canvas API GraphQL endpoints interactively by appending
+ * /graphiql to the URL of the Canvas instance.
+ *
+ * <p>For example, for UCSB Canvas, use: https://ucsb.instructure.com/graphiql
+ */
 @Service
 @Validated
 public class CanvasService {
