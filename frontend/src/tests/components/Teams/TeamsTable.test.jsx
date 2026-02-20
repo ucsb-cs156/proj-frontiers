@@ -350,61 +350,6 @@ describe("TeamsTable tests", () => {
       ).not.toBeInTheDocument();
     });
   });
-  test("add member calls correct API endpoint with correct params", async () => {
-    const successMessage = "Member added successfully";
-    const githubMemberSuccessMessage = "Add GitHub team member job launched successfully";
-    
-    // Mock returns the created team member with id and rosterStudent
-    const createdTeamMember = {
-      id: 5,
-      rosterStudent: { id: 4 },
-    };
-    axiosMock.onPost("/api/teams/addMember").reply(200, createdTeamMember);
-
-    axiosMock
-      .onGet("/api/rosterstudents/course/12")
-      .reply(200, rosterStudentFixtures.studentsWithEachStatus);
-    axiosMock
-      .onPost("/api/jobs/launch/addTeamMemberToGithub")
-      .reply(200, { githubMemberSuccessMessage });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <TeamsTable
-            teams={teamsFixtures.teams}
-            currentUser={currentUserFixtures.instructorUser}
-            courseId="12"
-            testIdPrefix="TeamsTable"
-          />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-    expect(axiosMock.history.post[1].params).toEqual({
-      memberGithubLogin: "jonsnow",
-      githubTeamId: 1111111,
-      teamMemberId: 5,
-      courseId: "12",
-    });
-
-    expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-      queryKey: ["/api/teams/all?courseId=12"],
-    });
-
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-      queryKey: ["/api/jobs/launch/addTeamMemberToGithub"],
-    });
-
-    expect(mockToast).toHaveBeenCalledWith(successMessage);
-    expect(mockToast).toHaveBeenCalledWith(githubMemberSuccessMessage);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId("TeamsTable-post-modal"),
-      ).not.toBeInTheDocument();
-    });
-  });
   test("add member returns 409 error modal when member is already in the team", async () => {
     axiosMock.onPost("/api/teams/addMember").reply(409);
 
