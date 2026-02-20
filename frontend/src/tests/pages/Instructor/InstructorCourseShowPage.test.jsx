@@ -39,6 +39,11 @@ describe("InstructorCourseShowPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
+      courseId: "",
+      canvasApiToken: "",
+      canvasCourseId: "",
+    });
   });
 
   const setupInstructorUser = () => {
@@ -215,6 +220,7 @@ describe("InstructorCourseShowPage tests", () => {
       .onGet("/api/rosterstudents/course/7")
       .reply(200, rosterStudentFixtures.threeStudents);
 
+    //here
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
