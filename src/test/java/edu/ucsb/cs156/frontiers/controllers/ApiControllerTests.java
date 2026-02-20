@@ -115,4 +115,20 @@ public class ApiControllerTests extends ControllerTestCase {
     Map<String, Object> json = responseToJson(response);
     assertEquals("", json.get("message"));
   }
+
+  @Test
+  public void test_dummy_controller_returns_duplicate_group_exception() throws Exception {
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/dummycontroller/duplicategroup"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    // assert
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("DuplicateGroupException", json.get("type"));
+    assertEquals(
+        "Frontiers cannot support two Canvas groups with the same name.", json.get("message"));
+  }
 }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -41,7 +42,24 @@ public class JobService {
     return job;
   }
 
+  /**
+   * Runs a job asynchronously.
+   *
+   * <p>This method is annotated with @Transactional because outside of the Spring context, you
+   * cannot delete entities that are unmanaged by Hibernate. Adding @Transactional keeps the
+   * database session open and allows Hibernate to maintain it's knowledge of the object graph (i.e.
+   * the entities)
+   *
+   * <p>To learn more, read about Hibernate and the concept of a Spring Context.
+   *
+   * <p>Note that @Transactional means that if there is an unhandled exception, either every
+   * database transactions succeeds, or all of them are rolled back.
+   *
+   * @param job
+   * @param jobFunction
+   */
   @Async
+  @Transactional
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
     JobContext context = contextFactory.createContext(job);
 

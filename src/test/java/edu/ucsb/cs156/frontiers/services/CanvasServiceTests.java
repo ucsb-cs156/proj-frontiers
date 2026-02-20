@@ -12,6 +12,8 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import edu.ucsb.cs156.frontiers.config.GithubGraphQLClientConfig;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -216,5 +218,254 @@ public class CanvasServiceTests {
     assertNotNull(result);
     assertEquals(1, result.size());
     assertEquals("INT456", result.get(0).getStudentId());
+  }
+
+  @Test
+  public void testGetCanvasGroupSets_returnsGroupSets() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "groupSets": [
+                {"_id": "101", "name": "Project Teams", "id": "UHJvamVjdFRlYW1z"},
+                {"_id": "102", "name": "Lab Groups", "id": "TGFiR3JvdXBz"}
+              ]
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<CanvasGroupSet> result = canvasService.getCanvasGroupSets(course);
+
+    // Assert
+    mockServer.verify();
+    assertEquals(2, result.size());
+
+    CanvasGroupSet groupSet1 = result.get(0);
+    assertEquals("Project Teams", groupSet1.getName());
+    assertEquals("UHJvamVjdFRlYW1z", groupSet1.getId());
+
+    CanvasGroupSet groupSet2 = result.get(1);
+    assertEquals("Lab Groups", groupSet2.getName());
+    assertEquals("TGFiR3JvdXBz", groupSet2.getId());
+  }
+
+  @Test
+  public void testGetCanvasGroupSets_returnsEmptyList() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "groupSets": []
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<CanvasGroupSet> result = canvasService.getCanvasGroupSets(course);
+
+    // Assert
+    mockServer.verify();
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void testGetCanvasGroups_returnsGroups() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "node": {
+              "id": "R3JvdXBTZXQtMTAx",
+              "name": "Project Teams",
+              "groups": [
+                {
+                  "name": "Team Alpha",
+                  "_id": 201,
+                  "membersConnection": {
+                    "edges": [
+                      {"node": {"user": {"email": "alice@ucsb.edu"}}},
+                      {"node": {"user": {"email": "bob@ucsb.edu"}}}
+                    ]
+                  }
+                },
+                {
+                  "name": "Team Beta",
+                  "_id": 202,
+                  "membersConnection": {
+                    "edges": [
+                      {"node": {"user": {"email": "charlie@umail.ucsb.edu"}}}
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<CanvasGroup> result = canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx");
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(2, result.size());
+
+    CanvasGroup group1 = result.get(0);
+    assertEquals("Team Alpha", group1.getName());
+    assertEquals(201, group1.getId());
+    assertEquals(2, group1.getMembers().size());
+    assertEquals("alice@ucsb.edu", group1.getMembers().get(0));
+    assertEquals("bob@ucsb.edu", group1.getMembers().get(1));
+
+    CanvasGroup group2 = result.get(1);
+    assertEquals("Team Beta", group2.getName());
+    assertEquals(202, group2.getId());
+    assertEquals(1, group2.getMembers().size());
+    // Email should be converted to canonical form (umail.ucsb.edu -> ucsb.edu)
+    assertEquals("charlie@ucsb.edu", group2.getMembers().get(0));
+  }
+
+  @Test
+  public void testGetCanvasGroups_returnsEmptyList() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "node": {
+              "id": "R3JvdXBTZXQtMTAx",
+              "name": "Project Teams",
+              "groups": []
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<CanvasGroup> result = canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx");
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void testGetCanvasGroups_handlesGroupWithNoMembers() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "node": {
+              "id": "R3JvdXBTZXQtMTAx",
+              "name": "Project Teams",
+              "groups": [
+                {
+                  "name": "Empty Team",
+                  "_id": 203,
+                  "membersConnection": {
+                    "edges": []
+                  }
+                }
+              ]
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<CanvasGroup> result = canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx");
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(1, result.size());
+
+    CanvasGroup group = result.get(0);
+    assertEquals("Empty Team", group.getName());
+    assertEquals(203, group.getId());
+    assertTrue(group.getMembers().isEmpty());
   }
 }

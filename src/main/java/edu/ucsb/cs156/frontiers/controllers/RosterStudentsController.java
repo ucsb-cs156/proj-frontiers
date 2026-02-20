@@ -10,14 +10,11 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
-import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
-import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
-import edu.ucsb.cs156.frontiers.services.CanvasService;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
@@ -28,8 +25,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +59,6 @@ public class RosterStudentsController extends ApiController {
   @Autowired private UpdateUserService updateUserService;
 
   @Autowired private CurrentUserService currentUserService;
-  @Autowired private CanvasService canvasService;
 
   /**
    * This method creates a new RosterStudent. It is important to keep the code in this method
@@ -393,72 +387,6 @@ public class RosterStudentsController extends ApiController {
       return ResponseEntity.ok(
           "Successfully deleted roster student but there was an error removing them from the course organization: "
               + orgRemovalErrorMessage);
-    }
-  }
-
-  /**
-   * Upload Roster students for Course from Canvas. It is important to keep the code in this method
-   * consistent with the code in uploadRosterStudentsCSV.
-   *
-   * @param courseId the internal course ID in Frontiers
-   * @return LoadResult with counts of inserted, updated, dropped students and any rejected students
-   */
-  @Operation(summary = "Upload Roster students for Course from Canvas")
-  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
-  @PostMapping("/canvas/sync/students")
-  public ResponseEntity<LoadResult> uploadRosterFromCanvas(
-      @Parameter(name = "courseId") @RequestParam Long courseId) {
-
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
-
-    course.getRosterStudents().stream()
-        .filter(filteredStudent -> filteredStudent.getRosterStatus() == RosterStatus.ROSTER)
-        .forEach(student -> student.setRosterStatus(RosterStatus.DROPPED));
-
-    int counts[] = {0, 0};
-    List<RosterStudent> rejectedStudents = new ArrayList<>();
-
-    List<RosterStudent> canvasStudents = canvasService.getCanvasRoster(course);
-    for (RosterStudent rosterStudent : canvasStudents) {
-      UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.ROSTER);
-      if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {
-        rejectedStudents.add(upsertResponse.rosterStudent());
-      } else {
-        InsertStatus s = upsertResponse.getInsertStatus();
-        if (s == InsertStatus.INSERTED) {
-          course.getRosterStudents().add(upsertResponse.rosterStudent());
-        }
-        counts[s.ordinal()]++;
-      }
-    }
-
-    if (rejectedStudents.isEmpty()) {
-      List<RosterStudent> droppedStudents =
-          course.getRosterStudents().stream()
-              .filter(student -> student.getRosterStatus() == RosterStatus.DROPPED)
-              .toList();
-      LoadResult successfulResult =
-          new LoadResult(
-              counts[InsertStatus.INSERTED.ordinal()],
-              counts[InsertStatus.UPDATED.ordinal()],
-              droppedStudents.size(),
-              List.of());
-      rosterStudentRepository.saveAll(course.getRosterStudents());
-      updateUserService.attachUsersToRosterStudents(course.getRosterStudents());
-      RemoveStudentsJob job =
-          RemoveStudentsJob.builder()
-              .students(droppedStudents)
-              .organizationMemberService(organizationMemberService)
-              .rosterStudentRepository(rosterStudentRepository)
-              .build();
-      jobService.runAsJob(job);
-      return ResponseEntity.ok(successfulResult);
-    } else {
-      LoadResult conflictResult = new LoadResult(0, 0, 0, rejectedStudents);
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(conflictResult);
     }
   }
 }
