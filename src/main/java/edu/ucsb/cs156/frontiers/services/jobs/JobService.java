@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.services.jobs;
 
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -27,11 +28,16 @@ public class JobService {
   public Job runAsJob(JobContextConsumer jobFunction) {
     String jobName = jobFunction.getClass().getName().replace("edu.ucsb.cs156.frontiers.jobs.", "");
 
+    Course course = jobFunction.getCourse();
+
     Job job =
         Job.builder()
             .createdBy(currentUserService.getUser())
             .status("running")
             .jobName(jobName)
+            .course(course)
+            .courseName(course != null ? course.getCourseName() : null)
+            .userEmail(currentUserService.getUser().getEmail())
             .build();
 
     log.info("Starting job: {}, jobName={}", job.getId(), job.getJobName());

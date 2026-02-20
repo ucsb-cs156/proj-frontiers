@@ -35,6 +35,27 @@ public class DeleteTeamMemberFromGithubJobTests {
   }
 
   @Test
+  public void testGetCourse_returnsCoursePassedToBuilder() {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    DeleteTeamMemberFromGithubJob job =
+        DeleteTeamMemberFromGithubJob.builder()
+            .memberGithubLogin("testuser")
+            .githubTeamId(456)
+            .course(course)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    assertEquals(course, job.getCourse());
+  }
+
+  @Test
   public void test_successfully_delete_team_member() throws Exception {
     Course course = Course.builder().orgName("test-org").installationId("123").build();
     when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
