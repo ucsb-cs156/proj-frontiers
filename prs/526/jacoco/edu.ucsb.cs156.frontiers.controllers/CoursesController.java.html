@@ -487,14 +487,14 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L487">            .findById(courseId)</span>
 <span class="fc" id="L488">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="pc bpc" id="L490" title="1 of 2 branches missed.">    if (canvasApiToken != null</span>
-<span class="pc bpc" id="L491" title="1 of 2 branches missed.">        &amp;&amp; !canvasApiToken.isEmpty()</span>
+<span class="fc bfc" id="L490" title="All 2 branches covered.">    if (canvasApiToken != null</span>
+<span class="fc bfc" id="L491" title="All 2 branches covered.">        &amp;&amp; !canvasApiToken.isEmpty()</span>
 <span class="pc bpc" id="L492" title="1 of 2 branches missed.">        &amp;&amp; !canvasApiToken.equals(course.getCanvasApiToken())) {</span>
 <span class="fc" id="L493">      course.setCanvasApiToken(canvasApiToken);</span>
     }
 
-<span class="pc bpc" id="L496" title="1 of 2 branches missed.">    if (canvasCourseId != null</span>
-<span class="pc bpc" id="L497" title="1 of 2 branches missed.">        &amp;&amp; !canvasCourseId.isEmpty()</span>
+<span class="fc bfc" id="L496" title="All 2 branches covered.">    if (canvasCourseId != null</span>
+<span class="fc bfc" id="L497" title="All 2 branches covered.">        &amp;&amp; !canvasCourseId.isEmpty()</span>
 <span class="pc bpc" id="L498" title="1 of 2 branches missed.">        &amp;&amp; !canvasCourseId.equals(course.getCanvasCourseId())) {</span>
 <span class="fc" id="L499">      course.setCanvasCourseId(canvasCourseId);</span>
     }
