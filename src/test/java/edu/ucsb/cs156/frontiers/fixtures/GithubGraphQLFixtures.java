@@ -8,6 +8,7 @@ public class GithubGraphQLFixtures {
 
   public static final ObjectMapper objectMapper = new ObjectMapper();
   public static final String COMMITS_RESPONSE =
+      // language=JSON
       """
       {
         "repository" : {
@@ -24,6 +25,9 @@ public class GithubGraphQLFixtures {
                     "url" : "https://github.com/ucsb-cs156/proj-frontiers/commit/79a22f53b228b10212b44f1a59c84a2999c23ecf",
                     "messageHeadline" : "Update azure-active-directory.md - formatting and clarification fixes",
                     "committedDate" : "2025-07-22T22:26:12Z",
+                    "parents" : {
+                      "totalCount" : 2
+                    },
                     "author" : {
                       "name" : "Phill Conrad",
                       "email" : "pconrad@cs.ucsb.edu",
@@ -43,6 +47,9 @@ public class GithubGraphQLFixtures {
                     "url" : "https://github.com/ucsb-cs156/proj-frontiers/commit/13f8c8a8821b3f0636597f2d42d2359ad34183b5",
                     "messageHeadline" : "Merge pull request #228 from ucsb-cs156/dj-addAppropriateOrgStatus",
                     "committedDate" : "2025-07-22T22:04:48Z",
+                    "parents" : {
+                      "totalCount" : 2
+                    },
                     "author" : {
                       "name" : "Phill Conrad",
                       "email" : "pconrad@cs.ucsb.edu",

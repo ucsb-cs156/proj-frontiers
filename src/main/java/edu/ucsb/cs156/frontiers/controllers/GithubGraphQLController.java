@@ -1,12 +1,14 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.opencsv.exceptions.CsvFieldAssignmentException;
+import edu.ucsb.cs156.frontiers.entities.Branch;
 import edu.ucsb.cs156.frontiers.entities.BranchId;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.LoadCommitHistoryJob;
 import edu.ucsb.cs156.frontiers.models.CommitDto;
+import edu.ucsb.cs156.frontiers.repositories.BranchRepository;
 import edu.ucsb.cs156.frontiers.repositories.CommitRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
@@ -21,6 +23,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Tag(name = "GithubGraphQL")
@@ -43,18 +47,21 @@ public class GithubGraphQLController extends ApiController {
   private final JobService jobService;
   private final CommitRepository commitRepository;
   private final StatefulBeanToCsvBuilderFactory statefulBeanToCsvBuilderFactory;
+  private final BranchRepository branchRepository;
 
   public GithubGraphQLController(
       @Autowired GithubGraphQLService gitHubGraphQLService,
       @Autowired CourseRepository courseRepository,
       JobService jobService,
       CommitRepository commitRepository,
-      StatefulBeanToCsvBuilderFactory statefulBeanToCsvBuilderFactory) {
+      StatefulBeanToCsvBuilderFactory statefulBeanToCsvBuilderFactory,
+      BranchRepository branchRepository) {
     this.githubGraphQLService = gitHubGraphQLService;
     this.courseRepository = courseRepository;
     this.jobService = jobService;
     this.statefulBeanToCsvBuilderFactory = statefulBeanToCsvBuilderFactory;
     this.commitRepository = commitRepository;
+    this.branchRepository = branchRepository;
   }
 
   /**
@@ -175,6 +182,26 @@ public class GithubGraphQLController extends ApiController {
       @Parameter Boolean skipMergeCommits,
       @RequestBody List<BranchId> branches)
       throws Exception {
+
+    List<Branch> selectedBranches = branchRepository.findByIdIn(branches);
+
+    if (start.isAfter(end)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Start time must be before end time.");
+    }
+
+    if (selectedBranches.size() != branches.size()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "One or more branches not found; Please load commit history for those branches first.");
+    }
+
+    if (selectedBranches.stream().anyMatch(branch -> branch.getRetrievedTime().isBefore(end))) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "One or more branches have not been updated since the requested end time; Please load commit history for those branches first.");
+    }
+
     StreamingResponseBody stream =
         (outputStream) -> {
           try (var writer = new OutputStreamWriter(outputStream)) {

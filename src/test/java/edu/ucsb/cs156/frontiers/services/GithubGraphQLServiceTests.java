@@ -1,9 +1,11 @@
-/*
 package edu.ucsb.cs156.frontiers.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
@@ -12,14 +14,18 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import edu.ucsb.cs156.frontiers.entities.Branch;
+import edu.ucsb.cs156.frontiers.entities.BranchId;
+import edu.ucsb.cs156.frontiers.entities.Commit;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
-import edu.ucsb.cs156.frontiers.entities.Commit;
-import edu.ucsb.cs156.frontiers.entities.Branch;
+import edu.ucsb.cs156.frontiers.repositories.BranchRepository;
+import edu.ucsb.cs156.frontiers.repositories.CommitRepository;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
@@ -41,6 +47,10 @@ public class GithubGraphQLServiceTests {
   @MockitoBean private JwtService jwtService;
 
   @MockitoBean private DateTimeProvider provider;
+
+  @MockitoBean private BranchRepository branchRepository;
+
+  @MockitoBean private CommitRepository commitRepository;
 
   Course course =
       Course.builder()
@@ -97,219 +107,16 @@ public class GithubGraphQLServiceTests {
   }
 
   // language=JSON
-  final String response =
+  final String existingBranchResponse =
       """
           {
-             "data": {
-               "repository": {
-                 "ref": {
-                   "target": {
-                     "history": {
-                       "pageInfo": {
-                         "hasNextPage": false,
-                         "endCursor": "thereIsStillAnEndCursor"
-                       },
-                       "edges": [
-                         {
-                           "node": {
-                             "oid": "9df9217b7f66102d0dcaecf48ef48af16facb058",
-                             "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/9df9217b7f66102d0dcaecf48ef48af16facb058",
-                             "messageHeadline": "dj - added actual constraint validating dependency, modified unit tes…",
-                             "committedDate": "2026-01-27T00:55:00Z",
-                             "author": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             },
-                             "committer": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             }
-                           }
-                         },
-                         {
-                           "node": {
-                             "oid": "f0497a983b1533f4b7f9f2779030d3fa62fd6031",
-                             "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/f0497a983b1533f4b7f9f2779030d3fa62fd6031",
-                             "messageHeadline": "dj - removed files outside of our normal unit testing area",
-                             "committedDate": "2026-01-26T00:58:12Z",
-                             "author": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             },
-                             "committer": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             }
-                           }
-                         },
-                         {
-                           "node": {
-                             "oid": "10269ddffe44c9367fb9beed5943a675ea3ba43f",
-                             "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/10269ddffe44c9367fb9beed5943a675ea3ba43f",
-                             "messageHeadline": "dj - built a currently tightly linked canvas roster integration",
-                             "committedDate": "2026-01-26T00:50:08Z",
-                             "author": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             },
-                             "committer": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             }
-                           }
-                         },
-                         {
-                           "node": {
-                             "oid": "2497a0276ad9dcf2a7b098d30226acef61e7f069",
-                             "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/2497a0276ad9dcf2a7b098d30226acef61e7f069",
-                             "messageHeadline": "dj - refactored tests to use MockRestServer hook",
-                             "committedDate": "2026-01-25T10:16:38Z",
-                             "author": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             },
-                             "committer": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             }
-                           }
-                         },
-                         {
-                           "node": {
-                             "oid": "e2aee37e439c609ad45abfa51e9f2edaf444c05e",
-                             "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/e2aee37e439c609ad45abfa51e9f2edaf444c05e",
-                             "messageHeadline": "Add uploadRosterFromCanvas endpoint for Canvas roster upload, add tes…",
-                             "committedDate": "2026-01-25T08:55:37Z",
-                             "author": {
-                               "name": "Copilot",
-                               "email": "198982749+Copilot@users.noreply.github.com",
-                               "user": {
-                                 "login": "Copilot"
-                               }
-                             },
-                             "committer": {
-                               "name": "GitHub",
-                               "email": "noreply@github.com",
-                               "user": null
-                             }
-                           }
-                         },
-                         {
-                           "node": {
-                             "oid": "419b4cae580d69510ff158599cc9a3043e992c1d",
-                             "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/419b4cae580d69510ff158599cc9a3043e992c1d",
-                             "messageHeadline": "Update junie.yml",
-                             "committedDate": "2026-01-25T08:33:34Z",
-                             "author": {
-                               "name": "Daniel Jensen",
-                               "email": "djensen2@outlook.com",
-                               "user": {
-                                 "login": "Division7"
-                               }
-                             },
-                             "committer": {
-                               "name": "GitHub",
-                               "email": "noreply@github.com",
-                               "user": null
-                             }
-                           }
-                         },
-                         {
-                           "node": {
-                             "oid": "b4454e4ed1996590edbb7688865a99af1ff176db",
-                             "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/b4454e4ed1996590edbb7688865a99af1ff176db",
-                             "messageHeadline": "dk - Added frontend to set off create team repos job (#518)",
-                             "committedDate": "2026-01-25T08:32:51Z",
-                             "author": {
-                               "name": "DerekKirschbaum",
-                               "email": "109634693+DerekKirschbaum@users.noreply.github.com",
-                               "user": {
-                                 "login": "DerekKirschbaum"
-                               }
-                             },
-                             "committer": {
-                               "name": "GitHub",
-                               "email": "noreply@github.com",
-                               "user": null
-                             }
-                           }
-                         }
-                       ]
-                     }
-                   }
-                 }
-               }
-             }
-           }
-          """;
-
-  @Test
-  public void onePageOnly_stops_short() throws Exception {
-    ZonedDateTime retrievedTime = ZonedDateTime.parse("2023-01-01T00:00:00Z");
-    Branch history =
-        Branch.builder()
-            .owner("ucsb-cs156")
-            .repo("proj-frontiers")
-            .retrievedTime(retrievedTime)
-            .build();
-    Commit firstCommit =
-        Commit.builder()
-            .commitTime(
-                ZonedDateTime.parse("2026-01-27T00:55:00Z")
-                    .withZoneSameInstant(ZoneId.systemDefault()))
-            .message("dj - added actual constraint validating dependency, modified unit tes…")
-            .authorEmail("djensen2@outlook.com")
-            .authorLogin("Division7")
-            .authorName("Daniel Jensen")
-            .url(
-                "https://github.com/ucsb-cs156/proj-frontiers/commit/9df9217b7f66102d0dcaecf48ef48af16facb058")
-            .committerEmail("djensen2@outlook.com")
-            .committerLogin("Division7")
-            .committerName("Daniel Jensen")
-            .build();
-
-    history.getCommits().add(firstCommit);
-    history.setCount(1);
-    when(provider.getNow()).thenReturn(Optional.of(ZonedDateTime.parse("2023-01-01T00:00:00Z")));
-    when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
-
-    mockServer
-        .expect(requestTo("https://api.github.com/graphql"))
-        .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer mocked-token"))
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
-
-    Branch returned =
-        githubGraphQLService.returnCommitHistory(course, "ucsb-cs156", "proj-frontiers", "main", 1);
-
-    assertEquals(history, returned);
-    mockServer.verify();
-  }
+            "name": "main",
+            "commit": {
+              "sha": "9df9217b7f66102d0dcaecf48ef48af16facb058",
+              "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/9df9217b7f66102d0dcaecf48ef48af16facb058"
+            }
+          }
+      """;
 
   // language=JSON
   final String responsePageOne =
@@ -331,6 +138,9 @@ public class GithubGraphQLServiceTests {
                              "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/9df9217b7f66102d0dcaecf48ef48af16facb058",
                              "messageHeadline": "dj - added actual constraint validating dependency, modified unit tes…",
                              "committedDate": "2026-01-27T00:55:00Z",
+                             "parents": {
+                               "totalCount": 1
+                             },
                              "author": {
                                "name": "Daniel Jensen",
                                "email": "djensen2@outlook.com",
@@ -376,6 +186,9 @@ public class GithubGraphQLServiceTests {
                              "url": "https://github.com/ucsb-cs156/proj-frontiers/commit/f0497a983b1533f4b7f9f2779030d3fa62fd6031",
                              "messageHeadline": "dj - removed files outside of our normal unit testing area",
                              "committedDate": "2026-01-26T00:58:12Z",
+                             "parents": {
+                               "totalCount": 1
+                             },
                              "author": {
                                "name": "Daniel Jensen",
                                "email": "djensen2@outlook.com",
@@ -403,50 +216,47 @@ public class GithubGraphQLServiceTests {
 
   @Test
   public void can_parse_two_pages() throws Exception {
-    ZonedDateTime retrievedTime = ZonedDateTime.parse("2023-01-01T00:00:00Z");
-    Branch history =
-        Branch.builder()
-            .owner("ucsb-cs156")
-            .repo("proj-frontiers")
-            .retrievedTime(retrievedTime)
-            .build();
+    Instant retrievedTime = Instant.parse("2023-01-01T00:00:00Z");
+    BranchId branchId = new BranchId("ucsb-cs156", "proj-frontiers", "main");
+    Branch finishedHistory = Branch.builder().id(branchId).retrievedTime(retrievedTime).build();
     Commit firstCommit =
         Commit.builder()
-            .commitTime(
-                ZonedDateTime.parse("2026-01-27T00:55:00Z")
-                    .withZoneSameInstant(ZoneId.systemDefault()))
+            .commitTime(Instant.parse("2026-01-27T00:55:00Z"))
             .message("dj - added actual constraint validating dependency, modified unit tes…")
             .authorEmail("djensen2@outlook.com")
             .authorLogin("Division7")
             .authorName("Daniel Jensen")
+            .branch(finishedHistory)
             .url(
                 "https://github.com/ucsb-cs156/proj-frontiers/commit/9df9217b7f66102d0dcaecf48ef48af16facb058")
             .committerEmail("djensen2@outlook.com")
             .committerLogin("Division7")
             .committerName("Daniel Jensen")
+            .sha("9df9217b7f66102d0dcaecf48ef48af16facb058")
+            .isMergeCommit(false)
             .build();
 
     Commit secondCommit =
         Commit.builder()
-            .commitTime(
-                ZonedDateTime.parse("2026-01-26T00:58:12Z")
-                    .withZoneSameInstant(ZoneId.systemDefault()))
+            .commitTime(Instant.parse("2026-01-26T00:58:12Z"))
             .message("dj - removed files outside of our normal unit testing area")
             .authorEmail("djensen2@outlook.com")
             .authorLogin("Division7")
             .authorName("Daniel Jensen")
+            .branch(finishedHistory)
             .url(
                 "https://github.com/ucsb-cs156/proj-frontiers/commit/f0497a983b1533f4b7f9f2779030d3fa62fd6031")
             .committerEmail("djensen2@outlook.com")
             .committerLogin("Division7")
             .committerName("Daniel Jensen")
+            .sha("f0497a983b1533f4b7f9f2779030d3fa62fd6031")
+            .isMergeCommit(false)
             .build();
 
-    history.getCommits().add(firstCommit);
-    history.getCommits().add(secondCommit);
-    history.setCount(2);
-    when(provider.getNow()).thenReturn(Optional.of(ZonedDateTime.parse("2023-01-01T00:00:00Z")));
+    when(provider.getNow()).thenReturn(Optional.of(retrievedTime));
     when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+    when(branchRepository.findById(branchId)).thenReturn(Optional.empty());
+    when(branchRepository.save(eq(finishedHistory))).thenReturn(finishedHistory);
 
     mockServer
         .expect(requestTo("https://api.github.com/graphql"))
@@ -463,103 +273,103 @@ public class GithubGraphQLServiceTests {
         .andExpect(jsonPath("$.variables.after").value("page2"))
         .andRespond(withSuccess(responsePageTwo, MediaType.APPLICATION_JSON));
 
-    Branch returned =
-        githubGraphQLService.returnCommitHistory(course, "ucsb-cs156", "proj-frontiers", "main", 2);
+    Branch returned = githubGraphQLService.loadCommitHistory(course, branchId);
 
-    assertEquals(history, returned);
+    verify(commitRepository, times(1)).saveAll(List.of(firstCommit, secondCommit));
+
+    assertEquals(finishedHistory, returned);
     mockServer.verify();
   }
 
   @Test
-  public void early_return_on_done() throws Exception {
-    ZonedDateTime retrievedTime = ZonedDateTime.parse("2023-01-01T00:00:00Z");
-    Branch history =
-        Branch.builder()
-            .owner("ucsb-cs156")
-            .repo("proj-frontiers")
-            .retrievedTime(retrievedTime)
-            .build();
-    Commit firstCommit =
-        Commit.builder()
-            .commitTime(
-                ZonedDateTime.parse("2026-01-27T00:55:00Z")
-                    .withZoneSameInstant(ZoneId.systemDefault()))
-            .message("dj - added actual constraint validating dependency, modified unit tes…")
-            .authorEmail("djensen2@outlook.com")
-            .authorLogin("Division7")
-            .authorName("Daniel Jensen")
-            .url(
-                "https://github.com/ucsb-cs156/proj-frontiers/commit/9df9217b7f66102d0dcaecf48ef48af16facb058")
-            .committerEmail("djensen2@outlook.com")
-            .committerLogin("Division7")
-            .committerName("Daniel Jensen")
-            .build();
+  public void short_circuit_exit_behaves() throws Exception {
 
-    history.getCommits().add(firstCommit);
-    history.setCount(1);
-    when(provider.getNow()).thenReturn(Optional.of(ZonedDateTime.parse("2023-01-01T00:00:00Z")));
+    Instant retrievedTime = Instant.parse("2023-01-01T00:00:00Z");
+    BranchId branchId = new BranchId("ucsb-cs156", "proj-frontiers", "main");
+    Branch history =
+        Branch.builder().id(branchId).retrievedTime(Instant.parse("2022-05-01T00:00:00Z")).build();
+
+    Branch updatedRetrieveTime = Branch.builder().id(branchId).retrievedTime(retrievedTime).build();
+
+    when(provider.getNow()).thenReturn(Optional.of(Instant.parse("2023-01-01T00:00:00Z")));
     when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+    when(branchRepository.findById(branchId)).thenReturn(Optional.of(history));
+    when(commitRepository.existsByBranchAndSha(
+            eq(history), eq("9df9217b7f66102d0dcaecf48ef48af16facb058")))
+        .thenReturn(true);
 
     mockServer
-        .expect(requestTo("https://api.github.com/graphql"))
-        .andExpect(method(HttpMethod.POST))
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/proj-frontiers/branches/main"))
+        .andExpect(method(HttpMethod.GET))
         .andExpect(header("Authorization", "Bearer mocked-token"))
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andRespond(withSuccess(responsePageOne, MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess(existingBranchResponse, MediaType.APPLICATION_JSON));
 
-    Branch returned =
-        githubGraphQLService.returnCommitHistory(course, "ucsb-cs156", "proj-frontiers", "main", 1);
+    Branch returned = githubGraphQLService.loadCommitHistory(course, branchId);
 
+    verify(branchRepository, times(1)).findById(branchId);
+    verify(branchRepository, times(1)).save(eq(updatedRetrieveTime));
+    verify(commitRepository, times(1))
+        .existsByBranchAndSha(eq(history), eq("9df9217b7f66102d0dcaecf48ef48af16facb058"));
+    verifyNoMoreInteractions(commitRepository, branchRepository);
     assertEquals(history, returned);
     mockServer.verify();
   }
 
   @Test
-  public void behaves_correctly_on_lack_of_commits() throws Exception {
-    ZonedDateTime retrievedTime = ZonedDateTime.parse("2023-01-01T00:00:00Z");
-    Branch history =
-        Branch.builder()
-            .owner("ucsb-cs156")
-            .repo("proj-frontiers")
-            .retrievedTime(retrievedTime)
-            .build();
+  public void loadCommitHistory_skips_existing_commits() throws Exception {
+    Instant retrievedTime = Instant.parse("2023-01-01T00:00:00Z");
+    BranchId branchId = new BranchId("ucsb-cs156", "proj-frontiers", "main");
+    Branch startHistory =
+        Branch.builder().id(branchId).retrievedTime(Instant.parse("2022-05-01T00:00:00Z")).build();
+    Branch finishedHistory = Branch.builder().id(branchId).retrievedTime(retrievedTime).build();
     Commit firstCommit =
         Commit.builder()
-            .commitTime(
-                ZonedDateTime.parse("2026-01-27T00:55:00Z")
-                    .withZoneSameInstant(ZoneId.systemDefault()))
+            .commitTime(Instant.parse("2026-01-27T00:55:00Z"))
             .message("dj - added actual constraint validating dependency, modified unit tes…")
             .authorEmail("djensen2@outlook.com")
             .authorLogin("Division7")
             .authorName("Daniel Jensen")
+            .branch(finishedHistory)
             .url(
                 "https://github.com/ucsb-cs156/proj-frontiers/commit/9df9217b7f66102d0dcaecf48ef48af16facb058")
             .committerEmail("djensen2@outlook.com")
             .committerLogin("Division7")
             .committerName("Daniel Jensen")
+            .sha("9df9217b7f66102d0dcaecf48ef48af16facb058")
+            .isMergeCommit(false)
             .build();
 
     Commit secondCommit =
         Commit.builder()
-            .commitTime(
-                ZonedDateTime.parse("2026-01-26T00:58:12Z")
-                    .withZoneSameInstant(ZoneId.systemDefault()))
+            .commitTime(Instant.parse("2026-01-26T00:58:12Z"))
             .message("dj - removed files outside of our normal unit testing area")
             .authorEmail("djensen2@outlook.com")
             .authorLogin("Division7")
             .authorName("Daniel Jensen")
+            .branch(finishedHistory)
             .url(
                 "https://github.com/ucsb-cs156/proj-frontiers/commit/f0497a983b1533f4b7f9f2779030d3fa62fd6031")
             .committerEmail("djensen2@outlook.com")
             .committerLogin("Division7")
             .committerName("Daniel Jensen")
+            .sha("f0497a983b1533f4b7f9f2779030d3fa62fd6031")
+            .isMergeCommit(false)
             .build();
 
-    history.getCommits().add(firstCommit);
-    history.getCommits().add(secondCommit);
-    history.setCount(2);
-    when(provider.getNow()).thenReturn(Optional.of(ZonedDateTime.parse("2023-01-01T00:00:00Z")));
+    when(provider.getNow()).thenReturn(Optional.of(Instant.parse("2023-01-01T00:00:00Z")));
     when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+    when(branchRepository.findById(branchId)).thenReturn(Optional.of(startHistory));
+    when(commitRepository.existsByBranchAndSha(
+            eq(startHistory), eq("9df9217b7f66102d0dcaecf48ef48af16facb058")))
+        .thenReturn(false);
+    when(commitRepository.streamByBranch(eq(startHistory))).thenReturn(Stream.of(secondCommit));
+    when(branchRepository.save(eq(finishedHistory))).thenReturn(finishedHistory);
+
+    mockServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/proj-frontiers/branches/main"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer mocked-token"))
+        .andRespond(withSuccess(existingBranchResponse, MediaType.APPLICATION_JSON));
 
     mockServer
         .expect(requestTo("https://api.github.com/graphql"))
@@ -576,12 +386,9 @@ public class GithubGraphQLServiceTests {
         .andExpect(jsonPath("$.variables.after").value("page2"))
         .andRespond(withSuccess(responsePageTwo, MediaType.APPLICATION_JSON));
 
-    Branch returned =
-        githubGraphQLService.returnCommitHistory(
-            course, "ucsb-cs156", "proj-frontiers", "main", 10);
+    Branch response = githubGraphQLService.loadCommitHistory(course, branchId);
 
-    assertEquals(history, returned);
-    mockServer.verify();
+    verify(commitRepository, times(1)).saveAll(eq(List.of(firstCommit)));
+    verify(branchRepository, times(1)).save(eq(finishedHistory));
   }
 }
-*/

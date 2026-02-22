@@ -25,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
@@ -196,7 +197,7 @@ public class GithubGraphQLService {
    *     information
    * @throws Exception if an error occurs while loading or updating the commit history
    */
-  @Transactional
+  @Transactional(propagation = Propagation.NESTED)
   public Branch loadCommitHistory(Course course, BranchId branch) throws Exception {
     Instant retrievedTime = Instant.from(dateTimeProvider.getNow().get());
 
@@ -222,7 +223,7 @@ public class GithubGraphQLService {
             .forEach(commit -> existingCommits.put(commit.getSha(), commit));
       }
     } else {
-      selectedBranch = branchRepository.save(Branch.builder().id(branch).build());
+      selectedBranch = Branch.builder().id(branch).build();
       log.info("Branch {} does not exist in database, creating new branch", branch);
     }
     selectedBranch.setRetrievedTime(retrievedTime);
