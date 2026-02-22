@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Commit.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.entities</a> &gt; <span class="el_source">Commit.java</span></div><h1>Commit.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.entities;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Entity
+@Table(
+    name = &quot;commits&quot;,
+    uniqueConstraints = {@UniqueConstraint(columnNames = {&quot;org&quot;, &quot;repo&quot;, &quot;branch&quot;, &quot;sha&quot;})},
+    indexes = {@Index(name = &quot;idx_commit_filtering&quot;, columnList = &quot;org, repo, branch, commitTime&quot;)})
+public class Commit {
+
+  @Id
+  @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+  private Long id;
+
+  @JoinColumns(
+      value = {
+        @JoinColumn(name = &quot;org&quot;, referencedColumnName = &quot;org&quot;),
+        @JoinColumn(name = &quot;repo&quot;, referencedColumnName = &quot;repo&quot;),
+        @JoinColumn(name = &quot;branch&quot;, referencedColumnName = &quot;branchName&quot;),
+      },
+      foreignKey = @ForeignKey(name = &quot;fk_commits_branch&quot;))
+  @OnDelete(action = OnDeleteAction.CASCADE)
+  @ManyToOne
+  @NotNull
+  private Branch branch;
+
+  @JsonAlias(&quot;oid&quot;)
+  @NotNull
+  private String sha;
+
+  private String url;
+
+  @JsonAlias(&quot;messageHeadline&quot;)
+  private String message;
+
+  @JsonAlias(&quot;committedDate&quot;)
+  private Instant commitTime;
+
+  private String committerName;
+  private String committerEmail;
+  private String committerLogin;
+  private String authorName;
+  private String authorEmail;
+  private String authorLogin;
+  private boolean isMergeCommit;
+
+  @JsonAlias(&quot;author&quot;)
+  public void setAuthor(JsonNode node) {
+<span class="fc bfc" id="L73" title="All 2 branches covered.">    if (node == null) return;</span>
+<span class="fc" id="L74">    this.authorName = node.path(&quot;name&quot;).asText();</span>
+<span class="fc" id="L75">    this.authorEmail = node.path(&quot;email&quot;).asText();</span>
+<span class="fc" id="L76">    this.authorLogin = node.path(&quot;user&quot;).path(&quot;login&quot;).asText();</span>
+<span class="fc" id="L77">  }</span>
+
+  @JsonAlias(&quot;committer&quot;)
+  public void setCommitter(JsonNode node) {
+<span class="fc bfc" id="L81" title="All 2 branches covered.">    if (node == null) return;</span>
+<span class="fc" id="L82">    this.committerName = node.path(&quot;name&quot;).asText();</span>
+<span class="fc" id="L83">    this.committerEmail = node.path(&quot;email&quot;).asText();</span>
+<span class="fc" id="L84">    this.committerLogin = node.path(&quot;user&quot;).path(&quot;login&quot;).asText();</span>
+<span class="fc" id="L85">  }</span>
+
+  @JsonAlias(&quot;parents&quot;)
+  public void setIsMergeCommit(JsonNode node) {
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    if (node == null) return;</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">    this.isMergeCommit = node.path(&quot;totalCount&quot;).asInt() &gt; 1;</span>
+<span class="fc" id="L91">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
