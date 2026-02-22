@@ -1,7 +1,7 @@
 package edu.ucsb.cs156.frontiers.config;
 
-import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
+import edu.ucsb.cs156.frontiers.models.SecurityProjection;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -59,7 +59,7 @@ public class CourseSecurity {
   @PreAuthorize("hasRole('ROLE_USER')")
   public Boolean hasManagePermissions(
       MethodSecurityExpressionOperations operations, Long courseId) {
-    Optional<Course> course = courseRepository.findById(courseId);
+    Optional<SecurityProjection> course = courseRepository.getSecurityProjectionById(courseId);
     if (course.isEmpty()) {
       return true;
     }
@@ -83,7 +83,7 @@ public class CourseSecurity {
     if (authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"))) {
       return true;
     } else {
-      Optional<Course> course = courseRepository.findById(courseId);
+      Optional<SecurityProjection> course = courseRepository.getSecurityProjectionById(courseId);
       if (course.isEmpty()) {
         return true;
       }
@@ -104,33 +104,44 @@ public class CourseSecurity {
   @PreAuthorize("hasRole('ROLE_USER')")
   public Boolean hasRosterStudentManagementPermissions(
       MethodSecurityExpressionOperations operations, Long rosterStudentId) {
-    return rosterStudentRepository
-        .findById(rosterStudentId)
-        .map(rosterStudent -> baseHasManagePermissions(operations, rosterStudent.getCourse()))
-        .orElse(true);
+
+    Optional<Long> associatedCourseId = rosterStudentRepository.findCourseIdById(rosterStudentId);
+
+    Optional<SecurityProjection> projection =
+        rosterStudentRepository.findCourseById(rosterStudentId);
+
+    if (associatedCourseId.isEmpty()) {
+      return true;
+    } else {
+      return courseRepository
+          .getSecurityProjectionById(associatedCourseId.get())
+          .map(securityProjection -> baseHasManagePermissions(operations, securityProjection))
+          .orElse(true);
+    }
   }
 
   /**
    * This is a helper method that checks if the current user has management permissions for the
    * given course.
    *
-   * @param operations
-   * @param course
-   * @return
+   * @param operations the original calling method
+   * @param projection the minimal projection of a course with the possible course staff emails and
+   *     instructor email
+   * @return true if the user has management permissions for the course, false otherwise.
    */
   public Boolean baseHasManagePermissions(
-      MethodSecurityExpressionOperations operations, Course course) {
+      MethodSecurityExpressionOperations operations, SecurityProjection projection) {
     CurrentUser currentUser = currentUserService.getCurrentUser();
     Collection<? extends GrantedAuthority> authorities =
         roleHierarchy.getReachableGrantedAuthorities(currentUser.getRoles());
     if (authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"))) {
       return true;
     } else {
-      if (course.getCourseStaff().stream()
+      if (projection.getCourseStaff().stream()
           .anyMatch(staff -> staff.getEmail().equals(currentUser.getUser().getEmail()))) {
         return true;
       }
-      return currentUser.getUser().getEmail().equals(course.getInstructorEmail());
+      return currentUser.getUser().getEmail().equals(projection.getInstructorEmail());
     }
   }
 }
