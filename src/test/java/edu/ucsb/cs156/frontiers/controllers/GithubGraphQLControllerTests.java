@@ -688,6 +688,13 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
     MvcResult asyncResponse =
         mockMvc.perform(asyncDispatch(response)).andExpect(status().isOk()).andReturn();
 
+    verify(commitRepository, times(1))
+        .findByBranchIdInAndCommitTimeBetweenAndIsMergeCommitEquals(
+            List.of(branchId),
+            Instant.parse("2023-01-01T00:00:00Z"),
+            Instant.parse("2023-01-02T00:00:00Z"),
+            false);
+
     String responseString = asyncResponse.getResponse().getContentAsString();
     assertFalse(responseString.isBlank());
   }
@@ -733,11 +740,10 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(branchRepository.findByIdIn(List.of(branchId))).thenReturn(List.of(branch));
-    when(commitRepository.findByBranchIdInAndCommitTimeBetweenAndIsMergeCommitEquals(
+    when(commitRepository.findByBranchIdInAndCommitTimeBetween(
             List.of(branchId),
             Instant.parse("2023-01-01T00:00:00Z"),
-            Instant.parse("2023-01-02T00:00:00Z"),
-            false))
+            Instant.parse("2023-01-02T00:00:00Z")))
         .thenReturn(commits);
 
     when(csvBuilderFactory.build(any())).thenCallRealMethod();
@@ -760,6 +766,11 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
     MvcResult asyncResponse =
         mockMvc.perform(asyncDispatch(response)).andExpect(status().isOk()).andReturn();
 
+    verify(commitRepository, times(1))
+        .findByBranchIdInAndCommitTimeBetween(
+            List.of(branchId),
+            Instant.parse("2023-01-01T00:00:00Z"),
+            Instant.parse("2023-01-02T00:00:00Z"));
     String responseString = asyncResponse.getResponse().getContentAsString();
     assertFalse(responseString.isBlank());
   }

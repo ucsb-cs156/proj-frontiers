@@ -215,9 +215,14 @@ public class GithubGraphQLController extends ApiController {
         (outputStream) -> {
           try (var writer = new OutputStreamWriter(outputStream)) {
             StatefulBeanToCsv<CommitDto> csvWriter = statefulBeanToCsvBuilderFactory.build(writer);
-            List<CommitDto> commits =
-                commitRepository.findByBranchIdInAndCommitTimeBetweenAndIsMergeCommitEquals(
-                    branches, start, end, !skipMergeCommits);
+            List<CommitDto> commits;
+            if (skipMergeCommits) {
+              commits =
+                  commitRepository.findByBranchIdInAndCommitTimeBetweenAndIsMergeCommitEquals(
+                      branches, start, end, false);
+            } else {
+              commits = commitRepository.findByBranchIdInAndCommitTimeBetween(branches, start, end);
+            }
             try {
               csvWriter.write(commits);
             } catch (CsvFieldAssignmentException ignored) {

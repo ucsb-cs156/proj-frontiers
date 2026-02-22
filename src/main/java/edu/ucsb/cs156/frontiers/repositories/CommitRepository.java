@@ -18,6 +18,10 @@ public interface CommitRepository
   List<CommitDto> findByBranchIdInAndCommitTimeBetweenAndIsMergeCommitEquals(
       List<BranchId> branchIds, Instant start, Instant end, boolean isMergeCommit);
 
+  @BatchSize(size = 200)
+  List<CommitDto> findByBranchIdInAndCommitTimeBetween(
+      List<BranchId> branchIds, Instant start, Instant end);
+
   Stream<Commit> streamByBranch(Branch branch);
 
   List<Commit> findByBranch(Branch branch);
