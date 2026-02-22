@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StatefulBeanToCsvBuilderFactory {
 
-  public <T> StatefulBeanToCsv<T> build(Class<T> type, Writer writer) {
+  public <T> StatefulBeanToCsv<T> build(Writer writer) {
     return new StatefulBeanToCsvBuilder<T>(writer)
         .withSeparator(',')
         .withQuotechar(CSVWriter.DEFAULT_QUOTE_CHARACTER)

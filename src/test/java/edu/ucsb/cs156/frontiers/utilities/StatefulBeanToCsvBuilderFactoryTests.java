@@ -14,7 +14,7 @@ public class StatefulBeanToCsvBuilderFactoryTests {
   public void assert_statefulBeanToCsvBuilder_not_null() {
     StatefulBeanToCsvBuilderFactory factory = new StatefulBeanToCsvBuilderFactory();
     Writer writer = new StringWriter();
-    StatefulBeanToCsv<CommitDto> csvWriter = factory.build(CommitDto.class, writer);
+    StatefulBeanToCsv<CommitDto> csvWriter = factory.build(writer);
     assertNotNull(csvWriter);
   }
 }

@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.exceptions.CsvFieldAssignmentException;
 import edu.ucsb.cs156.frontiers.entities.Branch;
 import edu.ucsb.cs156.frontiers.entities.BranchId;
@@ -161,6 +162,10 @@ public class GithubGraphQLController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
+    if (branches.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No branches specified");
+    }
+
     LoadCommitHistoryJob job =
         LoadCommitHistoryJob.builder()
             .course(course)
@@ -174,7 +179,7 @@ public class GithubGraphQLController extends ApiController {
       summary = "Get commits as a CSV",
       description = "Returns preloaded commit history for the given branches as a CSV")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @PostMapping(name = "/csv", produces = "text/csv")
+  @PostMapping(value = "csv", produces = "text/csv")
   public ResponseEntity<StreamingResponseBody> getCommitsCsv(
       @Parameter Long courseId,
       @Parameter Instant start,
@@ -184,6 +189,10 @@ public class GithubGraphQLController extends ApiController {
       throws Exception {
 
     List<Branch> selectedBranches = branchRepository.findByIdIn(branches);
+
+    if (branches.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No branches specified");
+    }
 
     if (start.isAfter(end)) {
       throw new ResponseStatusException(
@@ -205,14 +214,14 @@ public class GithubGraphQLController extends ApiController {
     StreamingResponseBody stream =
         (outputStream) -> {
           try (var writer = new OutputStreamWriter(outputStream)) {
-            var csvWriter = statefulBeanToCsvBuilderFactory.build(CommitDto.class, writer);
+            StatefulBeanToCsv<CommitDto> csvWriter = statefulBeanToCsvBuilderFactory.build(writer);
             List<CommitDto> commits =
                 commitRepository.findByBranchIdInAndCommitTimeBetweenAndIsMergeCommitEquals(
                     branches, start, end, !skipMergeCommits);
             try {
-              csvWriter.write(commits.stream());
+              csvWriter.write(commits);
             } catch (CsvFieldAssignmentException ignored) {
-              outputStream.write("Error: CSV field assignment failed".getBytes());
+              writer.write("Error writing CSV file");
             }
           }
         };
