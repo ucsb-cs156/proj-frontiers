@@ -1,0 +1,243 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "010-add-branches-table",
+        "author": "Division7 (IntelliJ IDEA JPA Buddy)",
+        "changes": [
+          {
+            "createTable": {
+              "columns": [
+                {
+                  "column": {
+                    "name": "retrieved_time",
+                    "type": "DATETIME"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_branches"
+                    },
+                    "name": "org",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_branches"
+                    },
+                    "name": "repo",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_branches"
+                    },
+                    "name": "branch_name",
+                    "type": "VARCHAR(255)"
+                  }
+                }
+              ],
+              "tableName": "branches"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "010-add-commits-table",
+        "author": "Division7 (IntelliJ IDEA JPA Buddy)",
+        "changes": [
+          {
+            "createTable": {
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_commits"
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "sha",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "url",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "message",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "commit_time",
+                    "type": "DATETIME"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "committer_name",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "committer_email",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "committer_login",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "author_name",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "author_email",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "author_login",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "is_merge_commit",
+                    "type": "BOOLEAN"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "org",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "repo",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "branch",
+                    "type": "VARCHAR(255)"
+                  }
+                }
+              ],
+              "tableName": "commits"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "010-add-unique-constraint-on-commits",
+        "author": "Division7 (IntelliJ IDEA JPA Buddy)",
+        "changes": [
+          {
+            "addUniqueConstraint": {
+              "columnNames": "org, repo, branch, sha",
+              "constraintName": "uc_commit_sha_branch_id",
+              "tableName": "commits"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "010-add-index-on-commits",
+        "author": "Division7 (IntelliJ IDEA JPA Buddy)",
+        "changes": [
+          {
+            "createIndex": {
+              "columns": [
+                {
+                  "column": {
+                    "name": "org"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "repo"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "branch"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "commit_time"
+                  }
+                }
+              ],
+              "indexName": "idx_commit_filtering",
+              "tableName": "commits"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "add-fk-constraint-on-commits",
+        "author": "Division7 (IntelliJ IDEA JPA Buddy)",
+        "changes": [
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "org,repo,branch",
+              "baseTableName": "commits",
+              "constraintName": "FK_COMMITS_BRANCH",
+              "onDelete": "CASCADE",
+              "referencedColumnNames": "org,repo,branch_name",
+              "referencedTableName": "branches"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
