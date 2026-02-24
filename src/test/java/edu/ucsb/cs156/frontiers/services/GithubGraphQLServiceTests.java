@@ -21,9 +21,11 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
 import edu.ucsb.cs156.frontiers.repositories.BranchRepository;
 import edu.ucsb.cs156.frontiers.repositories.CommitRepository;
+import edu.ucsb.cs156.frontiers.services.GithubGraphQLService.ValidationStatus;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -390,5 +392,89 @@ public class GithubGraphQLServiceTests {
 
     verify(commitRepository, times(1)).saveAll(eq(List.of(firstCommit)));
     verify(branchRepository, times(1)).save(eq(finishedHistory));
+  }
+
+  // language=JSON
+  private final String assertionResponse =
+      """
+{
+  "data": {
+            "repo_0" : {
+              "ref" : {
+                "target" : {
+                  "oid" : "75323e7005f48437f7498071c741bf95160d8ef9"
+                }
+              }
+            },
+            "repo_1" : null,
+            "repo_2" : {
+              "ref" : null
+            }
+          }
+}
+""";
+  // language=GraphQL
+  private final String expectedQuery =
+      """
+      query CompleteQuery {
+            repo_0: repository(owner: "ucsb-cs156", name: "cs156") {
+            ref(qualifiedName: "refs/heads/main") {
+              target {
+                ... on Commit {
+                  oid
+                }
+              }
+            }
+          }
+          repo_1: repository(owner: "ucsb-cs156", name: "fakeRepo") {
+            ref(qualifiedName: "refs/heads/main") {
+              target {
+                ... on Commit {
+                  oid
+                }
+              }
+            }
+          }
+          repo_2: repository(owner: "ucsb", name: "cs156") {
+            ref(qualifiedName: "refs/heads/fakeBranch") {
+              target {
+                ... on Commit {
+                  oid
+                }
+              }
+            }
+          }
+
+      }
+      """;
+
+  @Test
+  public void assertBranchesExist_matches_returns_correctly() throws Exception {
+    List<BranchId> branches =
+        List.of(
+            new BranchId("ucsb-cs156", "cs156", "main"),
+            new BranchId("ucsb-cs156", "fakeRepo", "main"),
+            new BranchId("ucsb", "cs156", "fakeBranch"));
+
+    Map<BranchId, ValidationStatus> expected =
+        Map.of(
+            branches.get(0), ValidationStatus.EXISTS,
+            branches.get(1), ValidationStatus.REPOSITORY_DOES_NOT_EXIST,
+            branches.get(2), ValidationStatus.BRANCH_DOES_NOT_EXIST);
+
+    when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+
+    mockServer
+        .expect(requestTo("https://api.github.com/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer mocked-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.query").value(expectedQuery))
+        .andRespond(withSuccess(assertionResponse, MediaType.APPLICATION_JSON));
+    Map<BranchId, ValidationStatus> returnedResult =
+        githubGraphQLService.assertBranchesExist(course, branches);
+
+    verify(jwtService, times(1)).getInstallationToken(course);
+    assertEquals(expected, returnedResult);
   }
 }

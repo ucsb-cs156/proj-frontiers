@@ -15,6 +15,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -285,5 +286,69 @@ public class GithubGraphQLService {
             .toEntity(JsonNode.class);
     String commitSha = response.getBody().path("commit").path("sha").asText();
     return commitSha;
+  }
+
+  public enum ValidationStatus {
+    EXISTS,
+    BRANCH_DOES_NOT_EXIST,
+    REPOSITORY_DOES_NOT_EXIST,
+  }
+
+  // language=GraphQL
+  final String individualBranchQuery =
+      """
+      repo_%d: repository(owner: "%s", name: "%s") {
+        ref(qualifiedName: "refs/heads/%s") {
+          target {
+            ... on Commit {
+              oid
+            }
+          }
+        }
+      }
+  """;
+  final String completeQueryWrap = """
+  query CompleteQuery {
+    %s
+  }
+  """;
+
+  public Map<BranchId, ValidationStatus> assertBranchesExist(Course course, List<BranchId> branches)
+      throws Exception {
+    StringBuilder query = new StringBuilder();
+    Map<BranchId, ValidationStatus> result = new HashMap<>();
+    for (int i = 0; i < branches.size(); i++) {
+      query.append(
+          String.format(
+              individualBranchQuery,
+              i,
+              branches.get(i).org(),
+              branches.get(i).repo(),
+              branches.get(i).branchName()));
+    }
+    String finalizedQuery = String.format(completeQueryWrap, query);
+    String githubToken = jwtService.getInstallationToken(course);
+    JsonNode response =
+        graphQlClient
+            .mutate()
+            .header("Authorization", "Bearer " + githubToken)
+            .build()
+            .document(finalizedQuery)
+            .executeSync()
+            .toEntity(JsonNode.class);
+
+    for (int i = 0; i < branches.size(); i++) {
+      JsonNode branchNode = response.path("repo_" + i);
+      if (branchNode.isNull()) {
+        result.put(branches.get(i), ValidationStatus.REPOSITORY_DOES_NOT_EXIST);
+        continue;
+      }
+      if (branchNode.path("ref").isNull()) {
+        result.put(branches.get(i), ValidationStatus.BRANCH_DOES_NOT_EXIST);
+        continue;
+      }
+      result.put(branches.get(i), ValidationStatus.EXISTS);
+    }
+    return result;
   }
 }

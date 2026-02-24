@@ -13,14 +13,18 @@ import edu.ucsb.cs156.frontiers.repositories.BranchRepository;
 import edu.ucsb.cs156.frontiers.repositories.CommitRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.GithubGraphQLService.ValidationStatus;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import edu.ucsb.cs156.frontiers.utilities.StatefulBeanToCsvBuilderFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.io.OutputStreamWriter;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -152,7 +156,8 @@ public class GithubGraphQLController extends ApiController {
   @Operation(summary = "Get commits", description = "Loads commit history for the given branches")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("history")
-  public Job loadCommitHistory(@Parameter Long courseId, @RequestBody List<BranchId> branches) {
+  public Job loadCommitHistory(
+      @Parameter Long courseId, @Valid @RequestBody List<BranchId> branches) throws Exception {
     log.debug(
         "Commit History loader called with courseId {} for the following branches: {}",
         courseId,
@@ -164,6 +169,18 @@ public class GithubGraphQLController extends ApiController {
 
     if (branches.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No branches specified");
+    }
+
+    Map<BranchId, ValidationStatus> validBranches =
+        githubGraphQLService.assertBranchesExist(course, branches);
+
+    List<Entry<BranchId, ValidationStatus>> invalidBranches =
+        validBranches.entrySet().stream()
+            .filter(entry -> entry.getValue() != ValidationStatus.EXISTS)
+            .toList();
+
+    if (!invalidBranches.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid branches specified");
     }
 
     LoadCommitHistoryJob job =
@@ -185,7 +202,7 @@ public class GithubGraphQLController extends ApiController {
       @Parameter Instant start,
       @Parameter Instant end,
       @Parameter Boolean skipMergeCommits,
-      @RequestBody List<BranchId> branches)
+      @Valid @RequestBody List<BranchId> branches)
       throws Exception {
 
     List<Branch> selectedBranches = branchRepository.findByIdIn(branches);

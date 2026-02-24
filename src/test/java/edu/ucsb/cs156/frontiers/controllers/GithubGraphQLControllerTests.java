@@ -35,6 +35,7 @@ import edu.ucsb.cs156.frontiers.repositories.CommitRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.GithubGraphQLService.ValidationStatus;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import edu.ucsb.cs156.frontiers.utilities.StatefulBeanToCsvBuilderFactory;
 import java.time.Instant;
@@ -367,6 +368,9 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
     BranchId branch1 = new BranchId("ucsb-cs156-f24", "STARTER-jpa00", "main");
     BranchId branch2 = new BranchId("ucsb-cs156-f24", "STARTER-jpa00", "branch2");
 
+    when(githubGraphQLService.assertBranchesExist(any(Course.class), anyList()))
+        .thenReturn(Map.of(branch1, ValidationStatus.EXISTS, branch2, ValidationStatus.EXISTS));
+
     MvcResult response =
         mockMvc
             .perform(
@@ -380,6 +384,53 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
 
     String responseString = response.getResponse().getContentAsString();
     assertEquals(objectMapper.writeValueAsString(job), responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void branches_invalid() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
+
+    // arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school("UCSB")
+            .instructorEmail(user.getEmail())
+            .build();
+
+    Job job = Job.builder().id(1L).status("running").build();
+
+    when(jobService.runAsJob(any(LoadCommitHistoryJob.class))).thenReturn(job);
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    BranchId branch1 = new BranchId("ucsb-cs156-f24", "STARTER-jpa00", "main");
+    BranchId branch2 = new BranchId("ucsb-cs156-f24", "STARTER-jpa00", "branch2");
+
+    when(githubGraphQLService.assertBranchesExist(any(Course.class), anyList()))
+        .thenReturn(
+            Map.of(
+                branch1,
+                ValidationStatus.BRANCH_DOES_NOT_EXIST,
+                branch2,
+                ValidationStatus.REPOSITORY_DOES_NOT_EXIST));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/github/graphql/history")
+                    .param("courseId", "1")
+                    .content(objectMapper.writeValueAsString(List.of(branch1, branch2)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    String responseString = response.getResponse().getErrorMessage();
+    assertEquals("Invalid branches specified", responseString);
   }
 
   @Test
