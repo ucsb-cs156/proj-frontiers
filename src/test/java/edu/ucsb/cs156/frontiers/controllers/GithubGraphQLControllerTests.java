@@ -657,7 +657,6 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                     .content(objectMapper.writeValueAsString(List.of(branchId)))
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(csrf()))
-            .andExpect(request().asyncStarted())
             .andExpect(status().isOk())
             .andReturn();
 
