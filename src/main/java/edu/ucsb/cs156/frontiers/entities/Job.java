@@ -35,8 +35,6 @@ public class Job {
 
   private String status;
   private String jobName;
-  private String userEmail;
-  private String courseName;
 
   // 1048576 is 2^20, which is the max size of a mediumtext in MySQL
   @Column(
