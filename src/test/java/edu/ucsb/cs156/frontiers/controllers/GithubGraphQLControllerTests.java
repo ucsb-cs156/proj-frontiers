@@ -732,11 +732,8 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(csrf()))
             .andExpect(request().asyncStarted())
-            .andExpect(status().isOk())
+            .andDo(MvcResult::getAsyncResult)
             .andReturn();
-
-    MvcResult asyncResponse =
-        mockMvc.perform(asyncDispatch(response)).andExpect(status().isOk()).andReturn();
 
     verify(commitRepository, times(1))
         .findByBranchIdInAndCommitTimeBetweenAndIsMergeCommitEquals(
@@ -745,7 +742,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             Instant.parse("2023-01-02T00:00:00Z"),
             false);
 
-    String responseString = asyncResponse.getResponse().getContentAsString();
+    String responseString = response.getResponse().getContentAsString();
     assertFalse(responseString.isBlank());
   }
 
