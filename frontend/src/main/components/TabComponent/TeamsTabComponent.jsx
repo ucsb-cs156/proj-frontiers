@@ -66,6 +66,15 @@ export default function TeamsTabComponent({
     },
   });
 
+  const objectToAxiosParamsAddTeamToGithub = (team) => ({
+    url: `/api/jobs/launch/addTeamToGithub`,
+    method: "POST",
+    params: {
+      courseId: courseId,
+      teamName: team.name,
+    },
+  });
+
   const onSuccessTeams = (modalFn) => {
     toast("Team successfully added.");
     setSearchTeams("");
@@ -76,10 +85,17 @@ export default function TeamsTabComponent({
     toast("Push teams to Github job successfully started.");
   };
 
+  const onSuccessAddTeamToGithub = () => {
+    toast("Add team to Github job successfully started.");
+  };
+
   const teamPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
     {
-      onSuccess: () => onSuccessTeams(setPostTeamModal),
+      onSuccess: (createdTeam) => {
+        onSuccessTeams(setPostTeamModal);
+        addTeamToGithubMutation.mutate(createdTeam);
+      },
       onError: (error) => {
         setPostTeamModal(false);
         if (error.response.status === 409) {
@@ -130,6 +146,11 @@ export default function TeamsTabComponent({
   const pushTeamsToGithubMutation = useBackendMutation(
     objectToAxiosParamsPushTeamsToGithub,
     { onSuccess: onSuccessPushTeamsToGithub },
+  );
+
+  const addTeamToGithubMutation = useBackendMutation(
+    objectToAxiosParamsAddTeamToGithub,
+    { onSuccess: onSuccessAddTeamToGithub },
   );
 
   const handleCsvSubmit = (formData) => {
