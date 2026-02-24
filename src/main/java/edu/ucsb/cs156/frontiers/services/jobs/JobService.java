@@ -35,8 +35,6 @@ public class JobService {
             .status("running")
             .jobName(jobName)
             .course(course)
-            .courseName(course != null ? course.getCourseName() : null)
-            .userEmail(currentUserService.getUser().getEmail())
             .build();
 
     log.info("Starting job: {}, jobName={}", job.getId(), job.getJobName());
