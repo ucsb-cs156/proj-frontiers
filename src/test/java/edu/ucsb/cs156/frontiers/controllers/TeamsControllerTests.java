@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
@@ -820,6 +821,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     verify(teamRepository).save(eq(team2Created));
     verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated2));
     verify(teamMemberRepository, never()).save(eq(teamMemberFor3));
+    verify(jobService, times(1)).runAsJob(any(PushTeamsToGithubJob.class));
 
     TeamsController.TeamCreationResponse expectedResponse =
         new TeamsController.TeamCreationResponse(
@@ -888,6 +890,7 @@ public class TeamsControllerTests extends ControllerTestCase {
     verify(teamRepository).save(eq(team2Created));
     verify(teamMemberRepository, atLeastOnce()).save(eq(teamMemberCreated2));
     verify(teamMemberRepository, never()).save(eq(teamMemberFor3));
+    verify(jobService, times(1)).runAsJob(any(PushTeamsToGithubJob.class));
 
     TeamsController.TeamCreationResponse expectedResponse =
         new TeamsController.TeamCreationResponse(
@@ -920,6 +923,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(courseRepository, times(1)).findById(999L);
+    verify(jobService, never()).runAsJob(any(PushTeamsToGithubJob.class));
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -956,6 +960,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(courseRepository, times(1)).findById(1L);
+    verify(jobService, never()).runAsJob(any(PushTeamsToGithubJob.class));
     assertEquals("Unknown Roster Source Type", response.getResponse().getErrorMessage());
   }
 
@@ -985,6 +990,7 @@ public class TeamsControllerTests extends ControllerTestCase {
 
     // assert
     verify(courseRepository, times(1)).findById(1L);
+    verify(jobService, never()).runAsJob(any(PushTeamsToGithubJob.class));
     assertEquals("Unknown Roster Source Type", response.getResponse().getErrorMessage());
   }
 }
