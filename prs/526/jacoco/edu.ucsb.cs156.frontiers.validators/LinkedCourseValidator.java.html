@@ -4,13 +4,21 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-<span class="fc" id="L7">public class LinkedCourseValidator implements ConstraintValidator&lt;HasLinkedCanvasCourse, Course&gt; {</span>
+/**
+ * This is a validator, which enforces a property. These are used together with @Validated to in a
+ * spring managed bean (for example, a controller or service).
+ *
+ * &lt;p&gt;With this validator, you would have to put lots of code in your controller to check for linked
+ * courses. Instead, we can just put @HasLinkedCanvasCourse on the method parameters that require
+ * it, and if the contraint is not satisfied, a ConstraintViolationException will be thrown.
+ */
+<span class="fc" id="L15">public class LinkedCourseValidator implements ConstraintValidator&lt;HasLinkedCanvasCourse, Course&gt; {</span>
 
   @Override
   public boolean isValid(Course course, ConstraintValidatorContext constraintValidatorContext) {
-<span class="fc bfc" id="L11" title="All 2 branches covered.">    return course != null</span>
-<span class="fc bfc" id="L12" title="All 2 branches covered.">        &amp;&amp; course.getCanvasApiToken() != null</span>
-<span class="fc bfc" id="L13" title="All 2 branches covered.">        &amp;&amp; course.getCanvasCourseId() != null;</span>
+<span class="fc bfc" id="L19" title="All 2 branches covered.">    return course != null</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">        &amp;&amp; course.getCanvasApiToken() != null</span>
+<span class="fc bfc" id="L21" title="All 2 branches covered.">        &amp;&amp; course.getCanvasCourseId() != null;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

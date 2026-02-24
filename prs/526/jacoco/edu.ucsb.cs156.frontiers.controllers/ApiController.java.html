@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">ApiController.java</span></div><h1>ApiController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
 
+import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
@@ -19,8 +20,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /** This is an abstract class that provides common functionality for all API controllers. */
-<span class="fc" id="L22">@Slf4j</span>
-<span class="fc" id="L23">public abstract class ApiController {</span>
+<span class="fc" id="L23">@Slf4j</span>
+<span class="fc" id="L24">public abstract class ApiController {</span>
   @Autowired private CurrentUserService currentUserService;
 
   @Autowired RoleHierarchy roleHierarchy;
@@ -31,7 +32,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
    * @return the current user
    */
   protected CurrentUser getCurrentUser() {
-<span class="fc" id="L34">    return currentUserService.getCurrentUser();</span>
+<span class="fc" id="L35">    return currentUserService.getCurrentUser();</span>
   }
 
   /**
@@ -41,13 +42,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
    * @param role the role to check
    */
   protected boolean doesCurrentUserHaveRole(String roleToCheck) {
-<span class="fc" id="L44">    CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L45">    Collection&lt;? extends GrantedAuthority&gt; authorities = currentUser.getRoles();</span>
+<span class="fc" id="L45">    CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L46">    Collection&lt;? extends GrantedAuthority&gt; authorities = currentUser.getRoles();</span>
 
-<span class="fc" id="L47">    Collection&lt;? extends GrantedAuthority&gt; extendedAuthorities =</span>
-<span class="fc" id="L48">        roleHierarchy.getReachableGrantedAuthorities(authorities);</span>
+<span class="fc" id="L48">    Collection&lt;? extends GrantedAuthority&gt; extendedAuthorities =</span>
+<span class="fc" id="L49">        roleHierarchy.getReachableGrantedAuthorities(authorities);</span>
 
-<span class="fc" id="L50">    return extendedAuthorities.stream().anyMatch(role -&gt; role.getAuthority().equals(roleToCheck));</span>
+<span class="fc" id="L51">    return extendedAuthorities.stream().anyMatch(role -&gt; role.getAuthority().equals(roleToCheck));</span>
   }
 
   /**
@@ -56,7 +57,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
    * @return true if the current user is an admin, false otherwise
    */
   protected boolean isCurrentUserAdmin() {
-<span class="fc" id="L59">    return doesCurrentUserHaveRole(&quot;ROLE_ADMIN&quot;);</span>
+<span class="fc" id="L60">    return doesCurrentUserHaveRole(&quot;ROLE_ADMIN&quot;);</span>
   }
 
   /**
@@ -66,7 +67,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
    * @return a map with the message
    */
   protected Object genericMessage(String message) {
-<span class="fc" id="L69">    return Map.of(&quot;message&quot;, message);</span>
+<span class="fc" id="L70">    return Map.of(&quot;message&quot;, message);</span>
   }
 
   /**
@@ -78,9 +79,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
   @ExceptionHandler({EntityNotFoundException.class})
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public Object handleEntityNotFoundException(Throwable e) {
-<span class="fc" id="L81">    return Map.of(</span>
-<span class="fc" id="L82">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L83">        &quot;message&quot;, e.getMessage());</span>
+<span class="fc" id="L82">    return Map.of(</span>
+<span class="fc" id="L83">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L84">        &quot;message&quot;, e.getMessage());</span>
   }
 
   /**
@@ -92,9 +93,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
   @ExceptionHandler({NoLinkedOrganizationException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleNoLinkedOrgException(Throwable e) {
-<span class="fc" id="L95">    return Map.of(</span>
-<span class="fc" id="L96">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L97">        &quot;message&quot;, e.getMessage());</span>
+<span class="fc" id="L96">    return Map.of(</span>
+<span class="fc" id="L97">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L98">        &quot;message&quot;, e.getMessage());</span>
   }
 
   /**
@@ -106,7 +107,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
   @ExceptionHandler(UnsupportedOperationException.class)
   public ResponseEntity&lt;Map&lt;String, String&gt;&gt; handleUnsupportedOperation(
       UnsupportedOperationException ex) {
-<span class="fc" id="L109">    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
+<span class="fc" id="L110">    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(&quot;message&quot;, ex.getMessage()));</span>
   }
 
   /**
@@ -118,9 +119,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
   @ExceptionHandler({IllegalArgumentException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleIllegalArgument(Throwable e) {
-<span class="fc" id="L121">    return Map.of(</span>
-<span class="fc" id="L122">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L123">        &quot;message&quot;, e.getMessage());</span>
+<span class="fc" id="L122">    return Map.of(</span>
+<span class="fc" id="L123">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L124">        &quot;message&quot;, e.getMessage());</span>
   }
 
   /**
@@ -132,9 +133,23 @@ import org.springframework.web.bind.annotation.ResponseStatus;
   @ExceptionHandler({ConstraintViolationException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Map&lt;String, String&gt; handleValidationException(ConstraintViolationException e) {
-<span class="fc" id="L135">    List&lt;String&gt; messages =</span>
-<span class="fc" id="L136">        e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList();</span>
-<span class="fc" id="L137">    return Map.of(&quot;message&quot;, String.join(&quot;, &quot;, messages));</span>
+<span class="fc" id="L136">    List&lt;String&gt; messages =</span>
+<span class="fc" id="L137">        e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList();</span>
+<span class="fc" id="L138">    return Map.of(&quot;message&quot;, String.join(&quot;, &quot;, messages));</span>
+  }
+
+  /**
+   * This method handles the DuplicateGroupException. This maps to a 400/Bad Request.
+   *
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({DuplicateGroupException.class})
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Object handleDuplicateGroupException(Throwable e) {
+<span class="fc" id="L150">    return Map.of(</span>
+<span class="fc" id="L151">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L152">        &quot;message&quot;, e.getMessage());</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

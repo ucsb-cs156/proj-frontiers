@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.Fetch;
@@ -27,6 +28,7 @@ import org.hibernate.annotations.FetchMode;
           name = &quot;UK_ROSTER_STUDENT_COURSE_EMAIL&quot;,
           columnNames = {&quot;course_id&quot;, &quot;email&quot;})
     })
+@EqualsAndHashCode(exclude = {&quot;teamMembers&quot;})
 public class RosterStudent {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,10 +65,10 @@ public class RosterStudent {
   private String githubLogin;
 
   public List&lt;String&gt; getTeams() {
-<span class="fc bfc" id="L66" title="All 2 branches covered.">    if (teamMembers == null) {</span>
-<span class="fc" id="L67">      return List.of();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">    if (teamMembers == null) {</span>
+<span class="fc" id="L69">      return List.of();</span>
     } else {
-<span class="fc" id="L69">      return teamMembers.stream().map(tm -&gt; tm.getTeam().getName()).toList();</span>
+<span class="fc" id="L71">      return teamMembers.stream().map(tm -&gt; tm.getTeam().getName()).toList();</span>
     }
   }
 }
