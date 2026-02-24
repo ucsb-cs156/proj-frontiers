@@ -3,10 +3,18 @@
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
+/**
+ * Represents a GitHub branch identifier with organization, repository, and branch name. regex
+ * pattern is specified to prevent injection into GitHub GraphQL API.
+ */
 @Embeddable
-<span class="fc" id="L8">public record BranchId(</span>
-    @NotNull @NotBlank String org,
-    @NotNull @NotBlank String repo,
-    @NotNull @NotBlank String branchName) {}
+<span class="fc" id="L13">public record BranchId(</span>
+    @Pattern(regexp = &quot;^[a-zA-Z0-9._-]+$&quot;, message = &quot;Invalid org name&quot;) @NotNull @NotBlank
+        String org,
+    @Pattern(regexp = &quot;^[a-zA-Z0-9._-]+$&quot;, message = &quot;Invalid repo name&quot;) @NotNull @NotBlank
+        String repo,
+    @Pattern(regexp = &quot;^[a-zA-Z0-9._-]+$&quot;, message = &quot;Invalid branch name&quot;) @NotNull @NotBlank
+        String branchName) {}
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
