@@ -1911,35 +1911,39 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(expectedJson, responseString);
   }
 
-  // @Test
-  // @WithInstructorCoursePermissions
-  // public void updateCourseCanvasToken_same_value_does_not_change() throws Exception {
-  //     User user = currentUserService.getCurrentUser().getUser();
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateCourseCanvasToken_same_value_does_not_change() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
 
-  //     Course originalCourse = Course.builder()
-  //         .id(1L)
-  //         .courseName("Original Course")
-  //         .term("S25")
-  //         .school("Original School")
-  //         .instructorEmail(user.getEmail())
-  //         .canvasApiToken("sameToken")
-  //         .canvasCourseId("sameCourseId")
-  //         .build();
+    Course originalCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("Original Course")
+            .term("S25")
+            .school("Original School")
+            .instructorEmail(user.getEmail())
+            .canvasApiToken("sameToken")
+            .canvasCourseId("sameCourseId")
+            .build();
 
-  //     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
-  //     when(courseRepository.save(any(Course.class))).thenReturn(originalCourse);
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+    when(courseRepository.save(any(Course.class))).thenReturn(originalCourse);
 
-  //     mockMvc.perform(put("/api/courses/updateCourseCanvasToken")
-  //             .param("courseId", "1")
-  //             .param("canvasApiToken", "sameToken")
-  //             .param("canvasCourseId", "sameCourseId")
-  //             .with(csrf()))
-  //         .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            put("/api/courses/updateCourseCanvasToken")
+                .param("courseId", "1")
+                .param("canvasApiToken", "sameToken")
+                .param("canvasCourseId", "sameCourseId")
+                .with(csrf()))
+        .andExpect(status().isOk());
 
-  //     verify(courseRepository).save(eq(originalCourse));
-  //     assertEquals("sameToken", originalCourse.getCanvasApiToken());
-  //     assertEquals("sameCourseId", originalCourse.getCanvasCourseId());
-  // }
+    verify(courseRepository).save(eq(originalCourse));
+    assertEquals("sameToken", originalCourse.getCanvasApiToken());
+    assertEquals("sameCourseId", originalCourse.getCanvasCourseId());
+  }
+
   @Test
   @WithInstructorCoursePermissions
   public void updateCourseCanvasToken_empty_string_no_change() throws Exception {
