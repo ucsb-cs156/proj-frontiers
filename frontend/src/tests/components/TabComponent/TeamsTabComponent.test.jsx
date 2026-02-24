@@ -658,13 +658,18 @@ describe("TeamTabComponent tests", () => {
     await user.hover(infoIcon);
 
     await waitFor(() => {
-      expect(screen.getByText("Team CSV Upload Format Help")).toBeInTheDocument();
+      expect(
+        screen.getByText("Team CSV Upload Format Help"),
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(infoIcon);
 
     await waitFor(() => {
-      expect(openMock).toHaveBeenCalledWith("/help/csv#team-information", "_blank");
+      expect(openMock).toHaveBeenCalledWith(
+        "/help/csv#team-information",
+        "_blank",
+      );
     });
   });
   test("TeamForm (adding individual team) returns correct error when team already exists", async () => {
