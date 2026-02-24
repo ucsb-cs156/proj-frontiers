@@ -11,6 +11,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { BsInfoCircleFill } from "react-icons/bs";
 import TeamsCSVUploadForm from "main/components/Teams/TeamsCSVUploadForm";
 import TeamsForm from "main/components/Teams/TeamsForm";
 import Modal from "react-bootstrap/Modal";
@@ -236,17 +237,15 @@ export default function TeamsTabComponent({
                 </Tooltip>
               }
             >
-              <span
+              <BsInfoCircleFill
                 onClick={openCsvHelp}
                 style={{
                   cursor: "pointer",
-                  fontSize: "0.85rem",
+                  fontSize: "0.9rem",
                   userSelect: "none",
                 }}
                 data-testid={`${testIdPrefix}-csv-info-icon`}
-              >
-                {"\u2139"}
-              </span>
+              />
             </OverlayTrigger>
           </div>
         </Col>
