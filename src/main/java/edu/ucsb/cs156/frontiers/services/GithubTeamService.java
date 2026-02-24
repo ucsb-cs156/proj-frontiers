@@ -156,6 +156,30 @@ public class GithubTeamService {
   }
 
   /**
+   * Deletes a team on GitHub.
+   *
+   * @param orgId The ID of the organization
+   * @param githubTeamId The ID of the team to delete
+   * @param course The course containing the organization
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public void deleteGithubTeam(Integer orgId, Integer teamId, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    String endpoint = "https://api.github.com/organizations/" + orgId + "/team/" + teamId;
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);
+    log.info("Deleted team with ID {} in organization {}", teamId, course.getOrgName());
+  }
+
+  /**
    * Gets the current team membership status for a user.
    *
    * @param githubLogin The GitHub login of the user
