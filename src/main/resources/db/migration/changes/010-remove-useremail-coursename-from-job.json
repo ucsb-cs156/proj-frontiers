@@ -1,0 +1,24 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "010-remove-useremail-coursename-from-job",
+        "author": "summit.haque",
+        "changes": [
+          {
+            "dropColumn": {
+              "tableName": "JOBS",
+              "columnName": "USER_EMAIL"
+            }
+          },
+          {
+            "dropColumn": {
+              "tableName": "JOBS",
+              "columnName": "COURSE_NAME"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
