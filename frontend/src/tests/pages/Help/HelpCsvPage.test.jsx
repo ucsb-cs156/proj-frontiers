@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import HelpCsvPage from "main/pages/Help/HelpCsvPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
+import { vi } from "vitest";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
@@ -18,6 +19,22 @@ describe("HelpCsvPage tests", () => {
     .reply(200, systemInfoFixtures.showingNeither);
 
   const queryClient = new QueryClient();
+  test("scrolls to teams section when hash is present", async () => {
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/help/csv#team-information"]}>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Team Information");
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
   test("renders with separate Team Information section and examples", async () => {
     render(
       <QueryClientProvider client={queryClient}>

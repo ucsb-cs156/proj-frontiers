@@ -8,6 +8,8 @@ import {
   ModalBody,
   ModalHeader,
   Row,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import TeamsCSVUploadForm from "main/components/Teams/TeamsCSVUploadForm";
 import TeamsForm from "main/components/Teams/TeamsForm";
@@ -144,6 +146,10 @@ export default function TeamsTabComponent({
     pushTeamsToGithubMutation.mutate();
   };
 
+  const openCsvHelp = () => {
+    window.open("/help/csv#team-information", "_blank");
+  };
+
   return (
     <div data-testid={`${testIdPrefix}-teams-tab-component`}>
       <Modal
@@ -214,13 +220,35 @@ export default function TeamsTabComponent({
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
-          <Button
-            onClick={() => setCsvModal(true)}
-            data-testid={`${testIdPrefix}-csv-button`}
-            className="w-100"
-          >
-            Upload Teams by CSV
-          </Button>
+          <div className="d-flex align-items-center gap-2">
+            <Button
+              onClick={() => setCsvModal(true)}
+              data-testid={`${testIdPrefix}-csv-button`}
+              className="w-100"
+            >
+              Upload Teams by CSV
+            </Button>
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="csv-help-tooltip">
+                  Team CSV Upload Format Help
+                </Tooltip>
+              }
+            >
+              <span
+                onClick={openCsvHelp}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  userSelect: "none",
+                }}
+                data-testid={`${testIdPrefix}-csv-info-icon`}
+              >
+                {"\u2139"}
+              </span>
+            </OverlayTrigger>
+          </div>
         </Col>
         <Col>
           <Button

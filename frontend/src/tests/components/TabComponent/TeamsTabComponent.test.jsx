@@ -624,6 +624,49 @@ describe("TeamTabComponent tests", () => {
     expect(pushTeamsButton).toBeInTheDocument();
     expect(pushTeamsButton).toBeEnabled();
   });
+  test("Info icon displays tooltip and opens help page on click", async () => {
+    const openMock = vi.fn();
+    window.open = openMock;
+
+    axiosMock
+      .onGet("/api/teams/all?courseId=1")
+      .reply(200, teamsFixtures.teams);
+
+    const user = userEvent.setup();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TeamsTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-csv-button`)).toBeInTheDocument();
+    });
+
+    const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
+    expect(infoIcon).toBeInTheDocument();
+    expect(infoIcon).toHaveStyle({ cursor: "pointer" });
+    expect(infoIcon).toHaveStyle({ fontSize: "0.85rem" });
+    expect(infoIcon).toHaveStyle({ userSelect: "none" });
+    expect(infoIcon).toHaveTextContent("\u2139");
+
+    await user.hover(infoIcon);
+
+    await waitFor(() => {
+      expect(screen.getByText("Team CSV Upload Format Help")).toBeInTheDocument();
+    });
+
+    fireEvent.click(infoIcon);
+
+    await waitFor(() => {
+      expect(openMock).toHaveBeenCalledWith("/help/csv#team-information", "_blank");
+    });
+  });
   test("TeamForm (adding individual team) returns correct error when team already exists", async () => {
     const queryClientSpecific = new QueryClient({
       defaultOptions: {
