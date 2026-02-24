@@ -156,6 +156,30 @@ public class GithubTeamService {
   }
 
   /**
+   * Deletes a team on GitHub.
+   *
+   * @param orgId The ID of the organization
+   * @param githubTeamId The ID of the team to delete
+   * @param course The course containing the organization
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public void deleteGithubTeam(Integer orgId, Integer teamId, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L170">    String endpoint = &quot;https://api.github.com/organizations/&quot; + orgId + &quot;/team/&quot; + teamId;</span>
+<span class="fc" id="L171">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L172">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L173">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L174">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L175">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L176">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L178">    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);</span>
+<span class="fc" id="L179">    log.info(&quot;Deleted team with ID {} in organization {}&quot;, teamId, course.getOrgName());</span>
+<span class="fc" id="L180">  }</span>
+
+  /**
    * Gets the current team membership status for a user.
    *
    * @param githubLogin The GitHub login of the user
@@ -168,37 +192,37 @@ public class GithubTeamService {
    */
   public TeamStatus getTeamMembershipStatus(String githubLogin, Integer teamId, Course course)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc bfc" id="L171" title="All 2 branches covered.">    if (githubLogin == null) {</span>
-<span class="fc" id="L172">      return TeamStatus.NO_GITHUB_ID;</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">    if (githubLogin == null) {</span>
+<span class="fc" id="L196">      return TeamStatus.NO_GITHUB_ID;</span>
     }
 
-<span class="fc" id="L175">    String endpoint =</span>
+<span class="fc" id="L199">    String endpoint =</span>
         &quot;https://api.github.com/orgs/&quot;
-<span class="fc" id="L177">            + course.getOrgName()</span>
+<span class="fc" id="L201">            + course.getOrgName()</span>
             + &quot;/teams/&quot;
             + teamId
             + &quot;/memberships/&quot;
             + githubLogin;
-<span class="fc" id="L182">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L183">    String token = jwtService.getInstallationToken(course);</span>
-<span class="fc" id="L184">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L185">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L186">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L187">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L206">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L207">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L208">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L209">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L210">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L211">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
 
     try {
-<span class="fc" id="L190">      ResponseEntity&lt;String&gt; response =</span>
-<span class="fc" id="L191">          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L192">      JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
-<span class="fc" id="L193">      String role = responseJson.get(&quot;role&quot;).asText();</span>
-<span class="fc bfc" id="L194" title="All 2 branches covered.">      return &quot;maintainer&quot;.equalsIgnoreCase(role)</span>
-<span class="fc" id="L195">          ? TeamStatus.TEAM_MAINTAINER</span>
-<span class="fc" id="L196">          : TeamStatus.TEAM_MEMBER;</span>
-<span class="fc" id="L197">    } catch (HttpClientErrorException e) {</span>
-<span class="fc bfc" id="L198" title="All 2 branches covered.">      if (e.getStatusCode().value() == 404) {</span>
-<span class="fc" id="L199">        return TeamStatus.NOT_ORG_MEMBER; // User is not a member of the team</span>
+<span class="fc" id="L214">      ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L215">          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L216">      JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L217">      String role = responseJson.get(&quot;role&quot;).asText();</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">      return &quot;maintainer&quot;.equalsIgnoreCase(role)</span>
+<span class="fc" id="L219">          ? TeamStatus.TEAM_MAINTAINER</span>
+<span class="fc" id="L220">          : TeamStatus.TEAM_MEMBER;</span>
+<span class="fc" id="L221">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">      if (e.getStatusCode().value() == 404) {</span>
+<span class="fc" id="L223">        return TeamStatus.NOT_ORG_MEMBER; // User is not a member of the team</span>
       }
-<span class="fc" id="L201">      throw e;</span>
+<span class="fc" id="L225">      throw e;</span>
     }
   }
 
@@ -217,32 +241,32 @@ public class GithubTeamService {
   public TeamStatus addMemberToGithubTeam(
       String githubLogin, Integer teamId, String role, Course course, Integer orgId)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc" id="L220">    String endpoint =</span>
+<span class="fc" id="L244">    String endpoint =</span>
         &quot;https://api.github.com/organizations/&quot;
             + orgId
             + &quot;/team/&quot;
             + teamId
             + &quot;/memberships/&quot;
             + githubLogin;
-<span class="fc" id="L227">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L228">    String token = jwtService.getInstallationToken(course);</span>
-<span class="fc" id="L229">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L230">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L231">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L251">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L252">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L253">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L254">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L255">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
 
-<span class="fc" id="L233">    Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L234">    body.put(&quot;role&quot;, role);</span>
-<span class="fc" id="L235">    String bodyAsJson = objectMapper.writeValueAsString(body);</span>
-<span class="fc" id="L236">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(bodyAsJson, headers);</span>
+<span class="fc" id="L257">    Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L258">    body.put(&quot;role&quot;, role);</span>
+<span class="fc" id="L259">    String bodyAsJson = objectMapper.writeValueAsString(body);</span>
+<span class="fc" id="L260">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(bodyAsJson, headers);</span>
 
-<span class="fc" id="L238">    ResponseEntity&lt;String&gt; response =</span>
-<span class="fc" id="L239">        restTemplate.exchange(endpoint, HttpMethod.PUT, entity, String.class);</span>
-<span class="fc" id="L240">    JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
-<span class="fc" id="L241">    String resultRole = responseJson.get(&quot;role&quot;).asText();</span>
-<span class="fc" id="L242">    log.info(&quot;Added user '{}' to team ID {} with role '{}'&quot;, githubLogin, teamId, resultRole);</span>
-<span class="fc bfc" id="L243" title="All 2 branches covered.">    return &quot;maintainer&quot;.equalsIgnoreCase(resultRole)</span>
-<span class="fc" id="L244">        ? TeamStatus.TEAM_MAINTAINER</span>
-<span class="fc" id="L245">        : TeamStatus.TEAM_MEMBER;</span>
+<span class="fc" id="L262">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L263">        restTemplate.exchange(endpoint, HttpMethod.PUT, entity, String.class);</span>
+<span class="fc" id="L264">    JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L265">    String resultRole = responseJson.get(&quot;role&quot;).asText();</span>
+<span class="fc" id="L266">    log.info(&quot;Added user '{}' to team ID {} with role '{}'&quot;, githubLogin, teamId, resultRole);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">    return &quot;maintainer&quot;.equalsIgnoreCase(resultRole)</span>
+<span class="fc" id="L268">        ? TeamStatus.TEAM_MAINTAINER</span>
+<span class="fc" id="L269">        : TeamStatus.TEAM_MEMBER;</span>
   }
 
   /**
@@ -260,22 +284,22 @@ public class GithubTeamService {
       Integer orgId, String githubLogin, Integer teamId, Course course)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
-<span class="fc" id="L263">    String endpoint =</span>
+<span class="fc" id="L287">    String endpoint =</span>
         &quot;https://api.github.com/organizations/&quot;
             + orgId
             + &quot;/team/&quot;
             + teamId
             + &quot;/memberships/&quot;
             + githubLogin;
-<span class="fc" id="L270">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L271">    String token = jwtService.getInstallationToken(course);</span>
-<span class="fc" id="L272">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L273">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L274">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L275">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L294">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L295">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L296">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L297">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L298">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L299">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
 
-<span class="fc" id="L277">    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);</span>
-<span class="fc" id="L278">    log.info(&quot;Successfully removed member {} from team ID {}&quot;, githubLogin, teamId);</span>
-<span class="fc" id="L279">  }</span>
+<span class="fc" id="L301">    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);</span>
+<span class="fc" id="L302">    log.info(&quot;Successfully removed member {} from team ID {}&quot;, githubLogin, teamId);</span>
+<span class="fc" id="L303">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
