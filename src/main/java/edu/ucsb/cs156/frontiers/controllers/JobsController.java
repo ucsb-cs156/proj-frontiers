@@ -10,6 +10,7 @@ import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
+import edu.ucsb.cs156.frontiers.models.JobDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
@@ -59,9 +60,10 @@ public class JobsController extends ApiController {
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/all")
-  public Iterable<Job> allJobs() {
-    Iterable<Job> jobs = jobsRepository.findAll(by(Sort.Direction.DESC, "createdAt"));
-    return jobs;
+  public Iterable<JobDTO> allJobs() {
+    return jobsRepository.findAll(by(Sort.Direction.DESC, "createdAt")).stream()
+        .map(JobDTO::fromEntity)
+        .toList();
   }
 
   @Operation(summary = "Delete all job records")
@@ -75,14 +77,14 @@ public class JobsController extends ApiController {
   @Operation(summary = "Get a specific Job Log by ID if it is in the database")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("")
-  public Job getJobLogById(
+  public JobDTO getJobLogById(
       @Parameter(name = "id", description = "ID of the job") @RequestParam Long id)
       throws JsonProcessingException {
 
     Job job =
         jobsRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(Job.class, id));
 
-    return job;
+    return JobDTO.fromEntity(job);
   }
 
   @Operation(summary = "Delete specific job record")
@@ -107,16 +109,16 @@ public class JobsController extends ApiController {
   @Operation(summary = "Launch UpdateAll job")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/launch/updateAll")
-  public Job launchUpdateAllJob() {
+  public JobDTO launchUpdateAllJob() {
 
     UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();
-    return jobService.runAsJob(job);
+    return JobDTO.fromEntity(jobService.runAsJob(job));
   }
 
   @Operation(summary = "Launch Audit All Courses Job")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/launch/auditAllCourses")
-  public Job launchAuditAllCoursesJob() {
+  public JobDTO launchAuditAllCoursesJob() {
 
     MembershipAuditJob job =
         MembershipAuditJob.builder()
@@ -125,13 +127,14 @@ public class JobsController extends ApiController {
             .organizationMemberService(organizationMemberService)
             .courseStaffRepository(courseStaffRepository)
             .build();
-    return jobService.runAsJob(job);
+    return JobDTO.fromEntity(jobService.runAsJob(job));
   }
 
   @Operation(summary = "Launch Push Teams to GitHub Job")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("/launch/pushTeamsToGithub")
-  public Job launchPushTeamsToGithubJob(@Parameter(name = "courseId") @RequestParam Long courseId) {
+  public JobDTO launchPushTeamsToGithubJob(
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
 
     PushTeamsToGithubJob job =
         PushTeamsToGithubJob.builder()
@@ -141,13 +144,13 @@ public class JobsController extends ApiController {
             .teamMemberRepository(teamMemberRepository)
             .githubTeamService(githubTeamService)
             .build();
-    return jobService.runAsJob(job);
+    return JobDTO.fromEntity(jobService.runAsJob(job));
   }
 
   @Operation(summary = "Launch Delete Team Member From GitHub Job")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @PostMapping("/launch/deleteTeamMemberFromGithub")
-  public Job launchDeleteTeamMemberFromGithubJob(
+  public JobDTO launchDeleteTeamMemberFromGithubJob(
       @Parameter(name = "memberGithubLogin") @RequestParam String memberGithubLogin,
       @Parameter(name = "githubTeamId") @RequestParam Integer githubTeamId,
       @Parameter(name = "courseId") @RequestParam Long courseId) {
@@ -159,6 +162,6 @@ public class JobsController extends ApiController {
             .course(courseRepository.findById(courseId).get())
             .githubTeamService(githubTeamService)
             .build();
-    return jobService.runAsJob(job);
+    return JobDTO.fromEntity(jobService.runAsJob(job));
   }
 }
