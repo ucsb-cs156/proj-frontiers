@@ -101,8 +101,6 @@ public class JobServiceTests {
         Job.builder()
             .jobName("TestJob")
             .createdBy(user.getUser())
-            .userEmail(user.getUser().getEmail())
-            .courseName("Test Course")
             .course(course)
             .status("running")
             .build();
@@ -124,8 +122,6 @@ public class JobServiceTests {
         Job.builder()
             .jobName("TestJob")
             .createdBy(user.getUser())
-            .userEmail(user.getUser().getEmail())
-            .courseName(null)
             .course(null)
             .status("running")
             .build();
