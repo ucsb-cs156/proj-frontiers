@@ -24,6 +24,7 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.transaction.Transactional;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,7 @@ public class JobsController extends ApiController {
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("/all")
+  @Transactional
   public Iterable<JobDTO> allJobs() {
     return jobsRepository.findAll(by(Sort.Direction.DESC, "createdAt")).stream()
         .map(JobDTO::fromEntity)
@@ -77,6 +79,7 @@ public class JobsController extends ApiController {
   @Operation(summary = "Get a specific Job Log by ID if it is in the database")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("")
+  @Transactional
   public JobDTO getJobLogById(
       @Parameter(name = "id", description = "ID of the job") @RequestParam Long id)
       throws JsonProcessingException {
