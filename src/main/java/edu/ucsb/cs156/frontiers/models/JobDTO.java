@@ -19,6 +19,7 @@ public class JobDTO {
   private String courseName;
   private ZonedDateTime createdAt;
   private ZonedDateTime updatedAt;
+  private String log;
 
   public static JobDTO fromEntity(Job job) {
     return JobDTO.builder()
@@ -29,6 +30,7 @@ public class JobDTO {
         .updatedAt(job.getUpdatedAt())
         .userEmail(job.getCreatedBy() != null ? job.getCreatedBy().getEmail() : null)
         .courseName(job.getCourse() != null ? job.getCourse().getCourseName() : null)
+        .log(job.getLog())
         .build();
   }
 }
