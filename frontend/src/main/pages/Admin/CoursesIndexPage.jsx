@@ -39,12 +39,9 @@ export default function CoursesIndexPage() {
     setViewModal(false);
   };
 
-  const mutation = useBackendMutation(
-    objectToAxiosParams,
-    { onSuccess },
-    // Stryker disable next-line all : hard to set up test for caching
-    ["/api/courses/allForAdmins"],
-  );
+  const mutation = useBackendMutation(objectToAxiosParams, { onSuccess }, [
+    "/api/courses/allForAdmins",
+  ]);
 
   const onSubmit = async (data) => {
     mutation.mutate(data);

@@ -17,7 +17,6 @@ export default function HomePageLoggedIn() {
     error: _staffError,
     status: _staffStatus,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
     ["/api/courses/staffCourses"],
     // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET.
     { method: "GET", url: "/api/courses/staffCourses" },
@@ -29,7 +28,6 @@ export default function HomePageLoggedIn() {
     error: _instructorError,
     status: _instructorStatus,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
     ["/api/courses/allForInstructors"],
     // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET. Therefore, there is no way to kill a mutation that transforms "GET" to ""
     { method: "GET", url: "/api/courses/allForInstructors" },
@@ -91,12 +89,9 @@ export default function HomePageLoggedIn() {
     setViewModal(false);
   };
 
-  const mutation = useBackendMutation(
-    objectToAxiosParams,
-    { onSuccess },
-    // Stryker disable next-line all : don't test internal caching of React Query
-    ["/api/courses/allForInstructors"],
-  );
+  const mutation = useBackendMutation(objectToAxiosParams, { onSuccess }, [
+    "/api/courses/allForInstructors",
+  ]);
 
   const onSubmit = async (data) => {
     mutation.mutate(data);

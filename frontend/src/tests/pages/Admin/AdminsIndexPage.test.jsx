@@ -10,6 +10,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { vi } from "vitest";
+import * as useBackendModule from "main/utils/useBackend";
 
 const mockToast = vi.fn();
 vi.mock("react-toastify", async (importOriginal) => {
@@ -20,6 +21,8 @@ vi.mock("react-toastify", async (importOriginal) => {
 });
 
 const axiosMock = new AxiosMockAdapter(axios);
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
 
 describe("AdminsIndexPage tests", () => {
   const getEndpoint = "/api/admin/all";
@@ -39,6 +42,10 @@ describe("AdminsIndexPage tests", () => {
   };
 
   const queryClient = new QueryClient();
+
+  afterEach(() => {
+    useBackendSpy.mockClear();
+  });
 
   test("Renders with New Admin Button", async () => {
     setupAdminUser();
@@ -170,5 +177,20 @@ describe("AdminsIndexPage tests", () => {
     expect(axiosMock.history.delete[0].params).toEqual({
       email: "instructor1@example.com",
     });
+  });
+  test("useBackend is called with correct cache query key", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      [`/api/admin/all`],
+      { method: "GET", url: "/api/admin/all" },
+      [],
+    );
   });
 });

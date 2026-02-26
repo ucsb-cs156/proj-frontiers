@@ -2,12 +2,16 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { test, vi } from "vitest";
+import { afterEach, test, vi } from "vitest";
 import CanvasApiForm from "main/components/Settings/CanvasApiForm";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import * as useBackendModule from "main/utils/useBackend";
 
 const mockedNavigate = vi.fn();
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
+
 vi.mock("react-router", async (importOriginal) => ({
   ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
@@ -21,6 +25,9 @@ describe("CanvasApiForm tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+  });
+  afterEach(() => {
+    useBackendSpy.mockClear();
   });
 
   const expectedHeaders = ["Canvas Course ID", "Canvas API Token"];
@@ -274,5 +281,26 @@ describe("CanvasApiForm tests", () => {
     });
 
     expect(mockSubmitAction).toHaveBeenCalled();
+  });
+  test("useBackend is called with correct cache query key", async () => {
+    axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
+      courseId: "1",
+      canvasApiToken: "***************d1U",
+      canvasCourseId: "1234567",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <CanvasApiForm courseId={1} />
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      [`/api/courses/getCanvasInfo?courseId=1`],
+      { method: "GET", url: `/api/courses/getCanvasInfo?courseId=1` },
+      [],
+    );
   });
 });

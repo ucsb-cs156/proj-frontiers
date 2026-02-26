@@ -11,7 +11,6 @@ export default function InstructorsIndexPage() {
     error: _error,
     status: _status,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
     ["/api/admin/instructors/get"],
     { method: "GET", url: "/api/admin/instructors/get" },
     // Stryker disable next-line all : don't test default value of empty list

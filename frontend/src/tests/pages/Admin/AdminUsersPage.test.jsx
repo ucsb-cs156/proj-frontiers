@@ -6,9 +6,12 @@ import usersFixtures from "fixtures/usersFixtures";
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import mockConsole from "tests/testutils/mockConsole";
+import * as useBackendModule from "main/utils/useBackend";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
 
 describe("AdminUsersPage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
@@ -24,6 +27,10 @@ describe("AdminUsersPage tests", () => {
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
+  });
+
+  afterEach(() => {
+    useBackendSpy.mockClear();
   });
 
   test("renders without crashing on three users", async () => {
@@ -86,5 +93,25 @@ describe("AdminUsersPage tests", () => {
 
     expect(screen.getByTestId("OurPagination-1")).toBeInTheDocument();
     expect(screen.queryByTestId("OurPagination-2")).not.toBeInTheDocument();
+  });
+  test("useBackend is called with correct cache query key", async () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminUsersPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      [`/api/admin/users/0`],
+      {
+        method: "GET",
+        url: "/api/admin/users",
+        params: { page: 0, size: 50, sort: "id" },
+      },
+      { content: [], page: { totalPages: 1 } },
+    );
   });
 });

@@ -20,7 +20,6 @@ export default function AdminsCreatePage({ storybook = false }) {
   const mutation = useBackendMutation(
     objectToAxiosParams,
     { onSuccess },
-    // Stryker disable next-line all : hard to set up test for caching
     ["/api/admin/all"], // mutation makes this key stale so that pages relying on it reload
   );
 

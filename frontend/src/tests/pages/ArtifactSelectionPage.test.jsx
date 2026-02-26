@@ -7,9 +7,12 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import collectionNames from "fixtures/collectionNames";
 import { vi } from "vitest";
+import * as useBackendModule from "main/utils/useBackend";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
 
 const mockedNavigate = vi.fn();
 vi.mock("react-router", async (importOriginal) => ({
@@ -22,6 +25,7 @@ describe("ArtifactSelectionPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    useBackendSpy.mockClear();
   });
 
   test("Tab assertions", () => {
@@ -95,5 +99,24 @@ describe("ArtifactSelectionPage tests", () => {
         ),
       ).toBe(true);
     });
+  });
+  test("useBackend is called with correct cache query key", async () => {
+    axiosMock
+      .onGet("/api/collections/list")
+      .reply(200, collectionNames.collectionNamesForOneCourse);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <ArtifactSelectionPage />
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      [`/api/collections/list`],
+      { method: "GET", url: "/api/collections/list" },
+      [],
+    );
   });
 });

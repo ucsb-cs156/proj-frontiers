@@ -10,7 +10,8 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
+import * as useBackendModule from "main/utils/useBackend";
 
 const mockToast = vi.fn();
 
@@ -22,6 +23,9 @@ vi.mock("react-toastify", async (importOriginal) => {
   };
 });
 
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
+const useBackendMutationSpy = vi.spyOn(useBackendModule, "useBackendMutation");
+
 describe("CoursesIndexPage tests", () => {
   const testId = "InstructorCoursesTable";
 
@@ -30,6 +34,11 @@ describe("CoursesIndexPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+  });
+
+  afterEach(() => {
+    useBackendSpy.mockClear();
+    useBackendMutationSpy.mockClear();
   });
 
   const setupAdminUser = () => {
@@ -241,5 +250,26 @@ describe("CoursesIndexPage tests", () => {
       "InstructorCoursesTable-header-delete-sort-header",
     );
     expect(deleteHeader).not.toBeInTheDocument();
+  });
+  test("useBackend and useBackendMutation are called with correct cache query key", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      [`/api/courses/allForAdmins`],
+      { method: "GET", url: `/api/courses/allForAdmins` },
+      [],
+    );
+
+    expect(useBackendMutationSpy).toHaveBeenCalledWith(
+      expect.any(Function),
+      { onSuccess: expect.any(Function) },
+      [`/api/courses/allForAdmins`],
+    );
   });
 });
