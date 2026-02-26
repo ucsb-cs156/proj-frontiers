@@ -11,7 +11,6 @@ export default function ArtifactSelectionPage() {
     error: _error,
     status: _status,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
     ["/api/collections/list"],
     // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET. Therefore, there is no way to kill a mutation that transforms "GET" to ""
     { method: "GET", url: "/api/collections/list" },

@@ -10,9 +10,13 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { React } from "react";
 import { vi } from "vitest";
+import * as useBackendModule from "main/utils/useBackend";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
+const useBackendMutationSpy = vi.spyOn(useBackendModule, "useBackendMutation");
 
 const mockToast = vi.fn();
 vi.mock("react-toastify", async (importOriginal) => {
@@ -28,6 +32,10 @@ describe("HomePageLoggedIn tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
     mockToast.mockReset();
+  });
+  afterEach(() => {
+    useBackendSpy.mockClear();
+    useBackendMutationSpy.mockClear();
   });
 
   const setupUserOnly = () => {
@@ -428,5 +436,45 @@ describe("HomePageLoggedIn tests", () => {
     );
 
     await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  });
+  test("useBackend and useBackendMutation are called with correct cache query key", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendSpy).toHaveBeenNthCalledWith(
+      1,
+      ["/api/courses/staffCourses"],
+      { method: "GET", url: "/api/courses/staffCourses" },
+      [],
+    );
+
+    expect(useBackendSpy).toHaveBeenNthCalledWith(
+      2,
+      ["/api/courses/allForInstructors"],
+      { method: "GET", url: "/api/courses/allForInstructors" },
+      [],
+      false,
+      {
+        enabled: false,
+      },
+    );
+
+    expect(useBackendMutationSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Function),
+      { onSuccess: expect.any(Function), onError: expect.any(Function) },
+      ["/api/courses/staffCourses"],
+    );
+    expect(useBackendMutationSpy).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Function),
+      { onSuccess: expect.any(Function) },
+      ["/api/courses/allForInstructors"],
+    );
   });
 });

@@ -6,10 +6,14 @@ import { MemoryRouter } from "react-router";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
+import * as useBackendModule from "main/utils/useBackend";
 
 const queryClient = new QueryClient();
 const mockToast = vi.fn();
+
+const useBackendMutationSpy = vi.spyOn(useBackendModule, "useBackendMutation");
+
 vi.mock("react-toastify", async (importOriginal) => {
   return {
     ...(await importOriginal()),
@@ -42,6 +46,10 @@ describe("CourseStaffTable tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
     mockToast.mockClear();
+  });
+
+  afterEach(() => {
+    useBackendMutationSpy.mockClear();
   });
 
   test("renders empty table correctly", () => {
@@ -484,5 +492,35 @@ describe("CourseStaffTable tests", () => {
 
     const tooltip = await screen.findByRole("tooltip");
     expect(tooltip).toHaveAttribute("id", "member-tooltip");
+  });
+  test("useBackendMutation is called with correct cache query key", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    const courseId = 7;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseStaffTable
+            staff={courseStaffFixtures.staffWithEachStatus}
+            currentUser={currentUser}
+            courseId={courseId}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendMutationSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Function),
+      { onSuccess: expect.any(Function) },
+      [`/api/coursestaff/course?courseId=${courseId}`],
+    );
+
+    expect(useBackendMutationSpy).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Function),
+      { onSuccess: expect.any(Function) },
+      [`/api/coursestaff/course?courseId=${courseId}`],
+    );
   });
 });

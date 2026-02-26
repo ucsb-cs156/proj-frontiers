@@ -5,7 +5,8 @@ import { MemoryRouter } from "react-router";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
+import * as useBackendModule from "main/utils/useBackend";
 
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
@@ -29,6 +30,8 @@ vi.mock("react-router", async (importOriginal) => {
   };
 });
 
+const useBackendMutationSpy = vi.spyOn(useBackendModule, "useBackendMutation");
+
 describe("AdminsCreatePage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
 
@@ -42,6 +45,9 @@ describe("AdminsCreatePage tests", () => {
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
+  });
+  afterEach(() => {
+    useBackendMutationSpy.mockClear();
   });
 
   const queryClient = new QueryClient();
@@ -104,5 +110,20 @@ describe("AdminsCreatePage tests", () => {
     expect(mockNavigate).toHaveBeenCalledWith({
       to: "/admin/admins",
     });
+  });
+  test("useBackendMutation is called with correct cache query key", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminsCreatePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendMutationSpy).toHaveBeenCalledWith(
+      expect.any(Function),
+      { onSuccess: expect.any(Function) },
+      [`/api/admin/all`],
+    );
   });
 });

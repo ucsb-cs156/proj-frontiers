@@ -63,14 +63,11 @@ export default function CourseStaffTable({
     hideDeleteModal();
   };
 
-  // Stryker disable all : hard to test for query caching
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
-    // Stryker disable next-line all
     [`/api/coursestaff/course?courseId=${courseId}`],
   );
-  // Stryker restore all
 
   // Stryker disable next-line all
   const deleteCallback = async (cell) => {
@@ -88,7 +85,6 @@ export default function CourseStaffTable({
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     { onSuccess: onEditSuccess },
-    // Stryker disable next-line all
     [`/api/coursestaff/course?courseId=${courseId}`],
   );
 

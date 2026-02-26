@@ -11,7 +11,6 @@ const AdminUsersPage = () => {
     error: _error,
     status: _status,
   } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
     [`/api/admin/users/${currentPage - 1}`],
     {
       method: "GET",

@@ -1,16 +1,21 @@
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { StudentCoursesTable } from "main/components/Courses/StudentCoursesTable";
 import React from "react";
+import * as useBackendModule from "main/utils/useBackend";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 const mockToast = vi.fn();
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
+const useBackendMutationSpy = vi.spyOn(useBackendModule, "useBackendMutation");
+
 vi.mock("react-toastify", async (importOriginal) => {
   return {
     ...(await importOriginal()),
@@ -24,6 +29,11 @@ describe("StudentCoursesTable tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
     mockToast.mockReset();
+  });
+
+  afterEach(() => {
+    useBackendSpy.mockClear();
+    useBackendMutationSpy.mockClear();
   });
 
   test("renders correctly with courses", async () => {
@@ -212,5 +222,30 @@ describe("StudentCoursesTable tests", () => {
     expect(
       screen.getByTestId("CoursesTable-cell-row-6-col-studentStatus-button"),
     ).toHaveTextContent("Join Course");
+  });
+  test("useBackend and useBackendMutation are called with correct cache query key", async () => {
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      ["/api/courses/list"],
+      { method: "GET", url: "/api/courses/list" },
+      [],
+    );
+
+    expect(useBackendMutationSpy).toHaveBeenCalledWith(
+      expect.any(Function),
+      { onSuccess: expect.any(Function), onError: expect.any(Function) },
+      ["/api/courses/list"],
+    );
   });
 });

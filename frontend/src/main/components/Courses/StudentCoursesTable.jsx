@@ -5,7 +5,6 @@ import React from "react";
 
 export function StudentCoursesTable({ testid }) {
   const { data: courses } = useBackend(
-    // Stryker disable next-line all : don't test internal caching of React Query
     ["/api/courses/list"],
     // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET. Therefore, there is no way to kill a mutation that transforms "GET" to ""
     { method: "GET", url: "/api/courses/list" },

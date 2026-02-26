@@ -23,7 +23,6 @@ export default function SettingsTabComponent({ courseId, testIdPrefix }) {
     {
       onSuccess: onSuccessCanvasCredentialsAdded,
     },
-    // Stryker disable next-line all : hard to set up test for caching
     [`/api/courses/getCanvasInfo?courseId=${courseId}`],
   );
 
