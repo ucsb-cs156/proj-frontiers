@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Accordion } from "react-bootstrap";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import csvFixtures from "fixtures/csvFixtures";
+import { useLocation } from "react-router";
 
 export default function HelpCsvPage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const element = document.getElementById(location.hash.slice(1));
+    if (element) {
+      element.scrollIntoView();
+    }
+  }, [location.hash]);
+
   return (
     <BasicLayout>
       <div className="pt-2">
@@ -174,7 +185,9 @@ export default function HelpCsvPage() {
           </Accordion.Item>
         </Accordion>
 
-        <h2 className="mt-4">Team Information</h2>
+        <h2 id="team-information" className="mt-4">
+          Team Information
+        </h2>
         <p>
           Teams can be managed using a simple CSV upload with the following
           format.

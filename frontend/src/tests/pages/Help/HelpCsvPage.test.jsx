@@ -2,6 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import HelpCsvPage from "main/pages/Help/HelpCsvPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
+import * as reactRouter from "react-router";
+import { vi } from "vitest";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
@@ -18,6 +20,95 @@ describe("HelpCsvPage tests", () => {
     .reply(200, systemInfoFixtures.showingNeither);
 
   const queryClient = new QueryClient();
+  test("scrolls to teams section when hash is present", async () => {
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/help/csv#team-information"]}>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Team Information");
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
+  test("does not scroll when there is no hash", async () => {
+    const scrollIntoViewMock = vi.fn();
+    const getElementByIdSpy = vi.spyOn(document, "getElementById");
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/help/csv"]}>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Team Information");
+    expect(getElementByIdSpy).not.toHaveBeenCalled();
+    expect(scrollIntoViewMock).not.toHaveBeenCalled();
+  });
+
+  test("does not scroll when hash points to missing element", async () => {
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/help/csv#missing-section"]}>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Team Information");
+    expect(scrollIntoViewMock).not.toHaveBeenCalled();
+  });
+
+  test("re-runs scroll effect when hash changes", async () => {
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    let currentHash = "";
+    const useLocationSpy = vi
+      .spyOn(reactRouter, "useLocation")
+      .mockImplementation(() => ({
+        hash: currentHash,
+        pathname: "/help/csv",
+        search: "",
+        state: null,
+        key: "default",
+      }));
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Team Information");
+    expect(scrollIntoViewMock).not.toHaveBeenCalled();
+
+    currentHash = "#team-information";
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
+    useLocationSpy.mockRestore();
+  });
+
   test("renders with separate Team Information section and examples", async () => {
     render(
       <QueryClientProvider client={queryClient}>
