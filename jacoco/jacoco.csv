@@ -22,8 +22,8 @@ frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeRe
 frontiers,edu.ucsb.cs156.frontiers.services,UpdateUserService,0,139,0,12,0,36,0,13,0,7
 frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,173,0,0,0,41,0,4,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,0,7,0,4
-frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,JwtService,0,152,0,4,0,37,0,7,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,357,0,4,0,90,0,8,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,465,0,20,0,105,0,23,0,13
@@ -34,7 +34,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,67,0,2,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController,0,536,0,42,0,128,0,37,0,16
-frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,668,0,38,0,126,0,41,0,22
+frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,694,0,38,0,136,0,42,0,23
 frontiers,edu.ucsb.cs156.frontiers.controllers,CanvasController,0,275,0,12,0,66,0,17,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,595,0,34,0,157,0,46,0,29
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
