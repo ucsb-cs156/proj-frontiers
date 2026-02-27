@@ -1,0 +1,46 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "009-add-user-course-filter-to-job",
+        "author": "copilot/summit.haque",
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "JOBS",
+              "columns": [
+                {
+                  "column": {
+                    "name": "USER_EMAIL",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "COURSE_NAME",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "COURSE_ID",
+                    "type": "BIGINT",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

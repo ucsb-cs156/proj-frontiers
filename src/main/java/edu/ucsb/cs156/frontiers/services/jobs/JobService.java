@@ -32,6 +32,7 @@ public class JobService {
             .createdBy(currentUserService.getUser())
             .status("running")
             .jobName(jobName)
+            .userEmail(currentUserService.getUser().getEmail())
             .build();
 
     log.info("Starting job: {}, jobName={}", job.getId(), job.getJobName());

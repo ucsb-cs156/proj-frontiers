@@ -25,11 +25,18 @@ public class Job {
   @ToString.Exclude
   private User createdBy;
 
+  @ManyToOne(fetch = FetchType.LAZY, optional = true)
+  @JoinColumn(name = "course_id", nullable = true)
+  @JsonIgnore
+  private Course course;
+
   @CreatedDate private ZonedDateTime createdAt;
   @LastModifiedDate private ZonedDateTime updatedAt;
 
   private String status;
   private String jobName;
+  private String userEmail;
+  private String courseName;
 
   // 1048576 is 2^20, which is the max size of a mediumtext in MySQL
   @Column(
