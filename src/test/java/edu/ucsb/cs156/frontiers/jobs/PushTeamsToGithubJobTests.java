@@ -1,5 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -37,6 +39,43 @@ public class PushTeamsToGithubJobTests {
   @BeforeEach
   public void setup() {
     MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  public void test_getCourse_returnsCourse_whenFound() {
+    Long courseId = 1L;
+    Course course = Course.builder().id(courseId).courseName("Test Course").build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .build();
+
+    Course result = job.getCourse();
+
+    assertEquals(course, result);
+    verify(courseRepository, times(1)).findById(courseId);
+  }
+
+  @Test
+  public void test_getCourse_returnsNull_whenNotFound() {
+    Long courseId = 1L;
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .build();
+
+    Course result = job.getCourse();
+
+    assertNull(result);
+    verify(courseRepository, times(1)).findById(courseId);
   }
 
   @Test

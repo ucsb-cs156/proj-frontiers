@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -43,6 +44,13 @@ public class MembershipAuditJobTests {
   @BeforeEach
   public void setup() {
     MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  public void test_getCourse_returnsNull() {
+    MembershipAuditJob job = MembershipAuditJob.builder().build();
+
+    assertNull(job.getCourse());
   }
 
   @Test

@@ -35,6 +35,15 @@ public class DeleteTeamFromGithubJobTests {
   }
 
   @Test
+  public void test_getCourse_returnsCourse() {
+    Course course = Course.builder().id(1L).courseName("Test Course").build();
+
+    DeleteTeamFromGithubJob job = DeleteTeamFromGithubJob.builder().course(course).build();
+
+    assertEquals(course, job.getCourse());
+  }
+
+  @Test
   public void test_successfully_delete_team() throws Exception {
     Course course = Course.builder().orgName("test-org").installationId("123").build();
     when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
