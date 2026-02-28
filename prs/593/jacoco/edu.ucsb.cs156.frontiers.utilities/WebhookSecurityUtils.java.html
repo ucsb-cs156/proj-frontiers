@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebhookSecurityUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.utilities</a> &gt; <span class="el_source">WebhookSecurityUtils.java</span></div><h1>WebhookSecurityUtils.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.utilities;
+
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import lombok.extern.slf4j.Slf4j;
+
+/** Utility class for webhook security validation */
+<span class="fc" id="L11">@Slf4j</span>
+public class WebhookSecurityUtils {
+
+  private WebhookSecurityUtils() {
+    // Utility Class
+  }
+
+  private static final String HMAC_SHA256 = &quot;HmacSHA256&quot;;
+
+  /**
+   * Validates GitHub webhook signature using HMAC-SHA256
+   *
+   * @param payload the raw payload body as string
+   * @param signature the GitHub signature header (e.g., &quot;sha256=abc123...&quot;)
+   * @param secret the webhook secret
+   * @return true if signature is valid, false otherwise
+   */
+  public static boolean validateGitHubSignature(String payload, String signature, String secret)
+      throws NoSuchAlgorithmException, InvalidKeyException {
+<span class="fc bfc" id="L30" title="All 6 branches covered.">    if (payload == null || signature == null || secret == null) {</span>
+<span class="fc" id="L31">      log.warn(&quot;Null values provided for webhook validation&quot;);</span>
+<span class="fc" id="L32">      return false;</span>
+    }
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">    if (!signature.startsWith(&quot;sha256=&quot;)) {</span>
+<span class="fc" id="L36">      log.warn(&quot;Invalid signature format: {}&quot;, signature);</span>
+<span class="fc" id="L37">      return false;</span>
+    }
+
+<span class="fc" id="L40">    String expectedSignature = &quot;sha256=&quot; + calculateHmacSha256(payload, secret);</span>
+<span class="fc" id="L41">    boolean isValid = safeEquals(signature, expectedSignature);</span>
+
+<span class="fc bfc" id="L43" title="All 2 branches covered.">    if (!isValid) {</span>
+<span class="fc" id="L44">      log.warn(&quot;Webhook signature validation failed&quot;);</span>
+<span class="fc" id="L45">      return false;</span>
+    }
+
+<span class="fc" id="L48">    return true;</span>
+  }
+
+  /**
+   * Calculates HMAC-SHA256 signature for given payload and secret
+   *
+   * @param payload the payload to sign
+   * @param secret the secret key
+   * @return hex-encoded signature
+   */
+  private static String calculateHmacSha256(String payload, String secret)
+      throws NoSuchAlgorithmException, InvalidKeyException {
+<span class="fc" id="L60">    Mac mac = Mac.getInstance(HMAC_SHA256);</span>
+<span class="fc" id="L61">    SecretKeySpec secretKeySpec =</span>
+<span class="fc" id="L62">        new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256);</span>
+<span class="fc" id="L63">    mac.init(secretKeySpec);</span>
+<span class="fc" id="L64">    byte[] signature = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L65">    return bytesToHex(signature);</span>
+  }
+
+  /**
+   * Converts byte array to hexadecimal string
+   *
+   * @param bytes the byte array
+   * @return hex string
+   */
+  private static String bytesToHex(byte[] bytes) {
+<span class="fc" id="L75">    StringBuilder result = new StringBuilder();</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">    for (byte b : bytes) {</span>
+<span class="fc" id="L77">      result.append(String.format(&quot;%02x&quot;, b));</span>
+    }
+<span class="fc" id="L79">    return result.toString();</span>
+  }
+
+  /**
+   * Constant-time string comparison to prevent timing attacks
+   *
+   * @param a first string
+   * @param b second string
+   * @return true if strings are equal
+   */
+  private static boolean safeEquals(String a, String b) {
+<span class="fc bfc" id="L90" title="All 2 branches covered.">    if (a.length() != b.length()) {</span>
+<span class="fc" id="L91">      return false;</span>
+    }
+
+<span class="fc" id="L94">    int result = 0;</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">    for (int i = 0; i &lt; a.length(); i++) {</span>
+<span class="fc" id="L96">      result |= a.charAt(i) ^ b.charAt(i);</span>
+    }
+<span class="fc bfc" id="L98" title="All 2 branches covered.">    return result == 0;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
