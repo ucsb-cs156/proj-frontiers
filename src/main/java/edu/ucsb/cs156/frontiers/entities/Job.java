@@ -1,6 +1,5 @@
 package edu.ucsb.cs156.frontiers.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 import lombok.*;
@@ -19,11 +18,15 @@ public class Job {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
 
-  @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_id")
   @ToString.Exclude
   private User createdBy;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "course_id")
+  @ToString.Exclude
+  private Course course;
 
   @CreatedDate private ZonedDateTime createdAt;
   @LastModifiedDate private ZonedDateTime updatedAt;
