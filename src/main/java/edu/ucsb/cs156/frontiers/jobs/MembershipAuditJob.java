@@ -24,6 +24,11 @@ public class MembershipAuditJob implements JobContextConsumer {
   CourseStaffRepository courseStaffRepository;
 
   @Override
+  public Course getCourse() {
+    return null;
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Auditing membership for each course with an attached GitHub Organization...");
     Iterable<Course> courses = courseRepository.findAll();

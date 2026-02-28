@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
@@ -18,6 +19,11 @@ public class RemoveStudentsJob implements JobContextConsumer {
   private OrganizationMemberService organizationMemberService;
   private List<RosterStudent> students;
   private RosterStudentRepository rosterStudentRepository;
+
+  @Override
+  public Course getCourse() {
+    return null;
+  }
 
   @Override
   public void accept(JobContext c) throws Exception {

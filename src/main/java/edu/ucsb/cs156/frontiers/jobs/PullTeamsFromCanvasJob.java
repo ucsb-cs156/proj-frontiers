@@ -34,6 +34,11 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
   CourseRepository courseRepository;
 
   @Override
+  public Course getCourse() {
+    return course;
+  }
+
+  @Override
   @Transactional
   public void accept(JobContext ctx) throws Exception {
     // Prior to attempting to optimize this code or modify any repository calls, please see here:
