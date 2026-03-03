@@ -127,7 +127,7 @@ describe("JobsTable tests", () => {
     expect(screen.getByText("No Course Job")).toBeInTheDocument();
     expect(screen.getByText("user2@example.com")).toBeInTheDocument();
     const courseCell = screen.getByTestId(
-      "JobsTable-cell-row-0-col-courseName"
+      "JobsTable-cell-row-0-col-courseName",
     );
 
     expect(courseCell).toBeEmptyDOMElement();
