@@ -112,14 +112,36 @@ describe("JobsTable tests", () => {
       </QueryClientProvider>,
     );
 
-    // Get all cells in the row
-    const cells = screen.getAllByRole("cell");
+    // Check that the table headers are rendered
+    expect(screen.getByText("id")).toBeInTheDocument();
+    expect(screen.getByText("Job Name")).toBeInTheDocument();
+    expect(screen.getByText("User Email")).toBeInTheDocument();
+    expect(screen.getByText("Course Name")).toBeInTheDocument();
+    expect(screen.getByText("Created")).toBeInTheDocument();
+    expect(screen.getByText("Updated")).toBeInTheDocument();
+    expect(screen.getByText("Status")).toBeInTheDocument();
+    expect(screen.getByText("Log")).toBeInTheDocument();
 
-    // Adjust index if needed depending on column order
-    // Based on your test order: id, jobName, email, courseName, ...
-    const courseCell = cells[3];
+    // Check that the job data is rendered
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("No Course Job")).toBeInTheDocument();
+    expect(screen.getByText("user2@example.com")).toBeInTheDocument();
+    expect(screen.getByText("")).toBeInTheDocument();
+    expect(screen.getByText("2023-01-01 10:00:00")).toBeInTheDocument();
+    expect(screen.getByText("2023-01-01 10:05:00")).toBeInTheDocument();
+    expect(screen.getByText("pending")).toBeInTheDocument();
+    expect(screen.getByText("No course attached")).toBeInTheDocument();
+    expect(screen.getByTestId("JobsTable-header-log")).toBeInTheDocument();
+    expect(screen.getByText("Job completed successfully")).toHaveStyle({
+      whiteSpace: "pre-wrap",
+    });
+    expect(screen.getByTestId("JobsTable-cell-row-0-col-log-div")).toHaveStyle(
+      "max-width: 450px; max-height: 100px; overflow-y: auto;",
+    );
 
-    // This must be EXACTLY empty string — not a space
-    expect(courseCell.textContent).toBe("");
+    // Verify formatTime was called with the correct arguments
+    expect(formatTime).toHaveBeenCalledTimes(2);
+    expect(formatTime).toHaveBeenNthCalledWith(1, "2023-01-01T10:00:00");
+    expect(formatTime).toHaveBeenNthCalledWith(2, "2023-01-01T10:05:00");
   });
 });
