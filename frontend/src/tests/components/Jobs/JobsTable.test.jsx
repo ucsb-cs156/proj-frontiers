@@ -36,6 +36,8 @@ describe("JobsTable tests", () => {
       {
         id: 1,
         jobName: "Test Job",
+        createdBy: { email: "user1@example.com" },
+        course: { courseName: "CS 101" },
         createdAt: "2023-01-01T10:00:00",
         updatedAt: "2023-01-01T10:05:00",
         status: "complete",
@@ -54,6 +56,8 @@ describe("JobsTable tests", () => {
     // Check that the table headers are rendered
     expect(screen.getByText("id")).toBeInTheDocument();
     expect(screen.getByText("Job Name")).toBeInTheDocument();
+    expect(screen.getByText("User Email")).toBeInTheDocument();
+    expect(screen.getByText("Course Name")).toBeInTheDocument();
     expect(screen.getByText("Created")).toBeInTheDocument();
     expect(screen.getByText("Updated")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
@@ -62,6 +66,71 @@ describe("JobsTable tests", () => {
     // Check that the job data is rendered
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("Test Job")).toBeInTheDocument();
+    expect(screen.getByText("user1@example.com")).toBeInTheDocument();
+    expect(screen.getByText("CS 101")).toBeInTheDocument();
+    expect(screen.getByText("2023-01-01 10:00:00")).toBeInTheDocument();
+    expect(screen.getByText("2023-01-01 10:05:00")).toBeInTheDocument();
+    expect(screen.getByText("complete")).toBeInTheDocument();
+    expect(screen.getByText("Job completed successfully")).toBeInTheDocument();
+    expect(screen.getByTestId("JobsTable-header-log")).toBeInTheDocument();
+    expect(screen.getByText("Job completed successfully")).toHaveStyle({
+      whiteSpace: "pre-wrap",
+    });
+    expect(screen.getByTestId("JobsTable-cell-row-0-col-log-div")).toHaveStyle(
+      "max-width: 450px; max-height: 100px; overflow-y: auto;",
+    );
+
+    // Verify formatTime was called with the correct arguments
+    expect(formatTime).toHaveBeenCalledTimes(2);
+    expect(formatTime).toHaveBeenNthCalledWith(1, "2023-01-01T10:00:00");
+    expect(formatTime).toHaveBeenNthCalledWith(2, "2023-01-01T10:05:00");
+  });
+
+  test("renders empty string for Course Name when course is null", () => {
+    formatTime
+      .mockReturnValueOnce("2023-01-01 10:00:00")
+      .mockReturnValueOnce("2023-01-01 10:05:00");
+
+    const jobsFixture = [
+      {
+        id: 2,
+        jobName: "No Course Job",
+        createdBy: { email: "user2@example.com" },
+        course: null,
+        createdAt: "2023-01-01T10:00:00",
+        updatedAt: "2023-01-01T10:05:00",
+        status: "complete",
+        log: "Job completed successfully",
+      },
+    ];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <JobsTable jobs={jobsFixture} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Check that the table headers are rendered
+    expect(screen.getByText("id")).toBeInTheDocument();
+    expect(screen.getByText("Job Name")).toBeInTheDocument();
+    expect(screen.getByText("User Email")).toBeInTheDocument();
+    expect(screen.getByText("Course Name")).toBeInTheDocument();
+    expect(screen.getByText("Created")).toBeInTheDocument();
+    expect(screen.getByText("Updated")).toBeInTheDocument();
+    expect(screen.getByText("Status")).toBeInTheDocument();
+    expect(screen.getByText("Log")).toBeInTheDocument();
+
+    // Check that the job data is rendered
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("No Course Job")).toBeInTheDocument();
+    expect(screen.getByText("user2@example.com")).toBeInTheDocument();
+    const courseCell = screen.getByTestId(
+      "JobsTable-cell-row-0-col-courseName",
+    );
+
+    expect(courseCell).toBeEmptyDOMElement();
     expect(screen.getByText("2023-01-01 10:00:00")).toBeInTheDocument();
     expect(screen.getByText("2023-01-01 10:05:00")).toBeInTheDocument();
     expect(screen.getByText("complete")).toBeInTheDocument();

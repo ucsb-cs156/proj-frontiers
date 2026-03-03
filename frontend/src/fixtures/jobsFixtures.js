@@ -3,6 +3,8 @@ const jobsFixtures = {
     {
       id: 1,
       jobName: "MembershipAuditJob",
+      createdBy: { email: "user1@example.com" },
+      course: { courseName: "CS 101" },
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
@@ -11,6 +13,8 @@ const jobsFixtures = {
     {
       id: 2,
       jobName: "DataSyncJob",
+      createdBy: { email: "user2@example.com" },
+      course: { courseName: "CS 102" },
       createdAt: "2023-01-02T10:00:00",
       updatedAt: "2023-01-02T10:05:00",
       status: "error",
@@ -19,6 +23,8 @@ const jobsFixtures = {
     {
       id: 3,
       jobName: "UpdateAllJob",
+      createdBy: { email: "user3@example.com" },
+      course: { courseName: "CS 103" },
       createdAt: "2023-01-03T10:00:00",
       updatedAt: "2023-01-03T10:05:00",
       status: "running",
@@ -29,6 +35,8 @@ const jobsFixtures = {
     {
       id: 1,
       jobName: "MembershipAuditJob",
+      createdBy: { email: "user1@example.com" },
+      course: { courseName: "CS 101" },
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
@@ -39,6 +47,8 @@ const jobsFixtures = {
     {
       id: 1,
       jobName: "LongLogJob",
+      createdBy: { email: "user1@example.com" },
+      course: { courseName: "CS 101" },
       createdAt: "2023-01-01T10:00:00",
       updatedAt: "2023-01-01T10:05:00",
       status: "complete",
