@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RemoveStudentsJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">RemoveStudentsJob.java</span></div><h1>RemoveStudentsJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import java.util.List;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpStatusCodeException;
+
+@Builder
+@EqualsAndHashCode
+public class RemoveStudentsJob implements JobContextConsumer {
+  private OrganizationMemberService organizationMemberService;
+  private List&lt;RosterStudent&gt; students;
+  private RosterStudentRepository rosterStudentRepository;
+
+  @Override
+  public void accept(JobContext c) throws Exception {
+<span class="fc bfc" id="L24" title="All 2 branches covered.">    for (RosterStudent student : students) {</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">      if (student.getCourse().getOrgName() != null</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">          &amp;&amp; student.getCourse().getInstallationId() != null) {</span>
+<span class="fc bfc" id="L27" title="All 4 branches covered.">        if (student.getGithubLogin() != null &amp;&amp; student.getGithubId() != null) {</span>
+          try {
+<span class="fc" id="L29">            organizationMemberService.removeOrganizationMember(student);</span>
+<span class="fc" id="L30">            c.log(&quot;Removed student %s from Organization&quot;.formatted(student.getGithubLogin()));</span>
+<span class="fc" id="L31">          } catch (HttpStatusCodeException e) {</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {</span>
+<span class="fc" id="L33">              c.log(&quot;Student %s not in Organization&quot;.formatted(student.getGithubLogin()));</span>
+            } else {
+<span class="fc" id="L35">              throw new RuntimeException(e);</span>
+            }
+<span class="fc" id="L37">          }</span>
+<span class="fc" id="L38">          student.setGithubId(null);</span>
+<span class="fc" id="L39">          student.setGithubLogin(null);</span>
+<span class="fc" id="L40">          student.setOrgStatus(OrgStatus.REMOVED);</span>
+<span class="fc" id="L41">          rosterStudentRepository.save(student);</span>
+        }
+      }
+<span class="fc" id="L44">    }</span>
+<span class="fc" id="L45">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
