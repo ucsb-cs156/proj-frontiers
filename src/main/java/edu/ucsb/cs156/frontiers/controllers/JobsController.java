@@ -218,4 +218,15 @@ public class JobsController extends ApiController {
             .build();
     return jobService.runAsJob(job);
   }
+
+  @Operation(summary = "List jobs by courseId")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("/byCourse")
+  public Iterable<Job> jobsByCourse(@Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    Iterable<Job> jobs =
+        jobsRepository.findByCourse_Id(courseId, by(Sort.Direction.DESC, "createdAt"));
+
+    return jobs;
+  }
 }

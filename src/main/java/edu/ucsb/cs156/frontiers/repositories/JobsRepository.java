@@ -1,11 +1,10 @@
 package edu.ucsb.cs156.frontiers.repositories;
 
 import edu.ucsb.cs156.frontiers.entities.Job;
-import org.springdoc.core.converters.models.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JobsRepository extends JpaRepository<Job, Long> {
-  Iterable<Job> findByCourse_Id(Long courseId, Sort sort);
+  Iterable<Job> findByCourse_Id(Long courseId, org.springframework.data.domain.Sort sort);
 }
