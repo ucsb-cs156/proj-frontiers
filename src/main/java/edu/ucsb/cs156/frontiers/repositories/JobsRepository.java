@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JobsRepository extends JpaRepository<Job, Long> {
-  Iterable<Job> findByCourseId(Long courseId, Sort sort);
+  Iterable<Job> findByCourse_Id(Long courseId, Sort sort);
 }
