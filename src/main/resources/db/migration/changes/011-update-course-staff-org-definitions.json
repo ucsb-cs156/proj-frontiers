@@ -1,0 +1,94 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "011-update-course-staff-org-definitions",
+      "author": "Division7",
+      "changes": [
+        {
+          "update": {
+            "tableName": "COURSE_STAFF",
+            "columns": [
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "value": "PENDING"
+                }
+              }
+            ],
+            "where": "ORG_STATUS = '0'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE_STAFF",
+            "columns": [
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "value": "JOINCOURSE"
+                }
+              }
+            ],
+            "where": "ORG_STATUS = '1'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE_STAFF",
+            "columns": [
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "value": "INVITED"
+                }
+              }
+            ],
+            "where": "ORG_STATUS = '2'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE_STAFF",
+            "columns": [
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "value": "MEMBER"
+                }
+              }
+            ],
+            "where": "ORG_STATUS = '3'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE_STAFF",
+            "columns": [
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "value": "OWNER"
+                }
+              }
+            ],
+            "where": "ORG_STATUS = '4'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE_STAFF",
+            "columns": [
+              {
+                "column": {
+                  "name": "ORG_STATUS",
+                  "value": "REMOVED"
+                }
+              }
+            ],
+            "where": "ORG_STATUS = '5'"
+          }
+        }
+      ]
+    }
+  }
+]}
