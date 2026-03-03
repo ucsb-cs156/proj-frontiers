@@ -35,6 +35,15 @@ public class AddTeamToGithubJobTests {
   }
 
   @Test
+  public void test_getCourse_returnsCourse() {
+    Course course = Course.builder().id(1L).courseName("Test Course").build();
+
+    AddTeamToGithubJob job = AddTeamToGithubJob.builder().course(course).build();
+
+    assertEquals(course, job.getCourse());
+  }
+
+  @Test
   public void test_successfully_add_team() throws Exception {
     Course course = Course.builder().orgName("test-org").id(2L).installationId("123").build();
     Team team = Team.builder().name("test-team").id(1L).build();

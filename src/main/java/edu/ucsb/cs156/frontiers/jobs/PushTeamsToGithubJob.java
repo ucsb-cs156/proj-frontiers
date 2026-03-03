@@ -23,6 +23,12 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
   GithubTeamService githubTeamService;
 
   @Override
+  public Course getCourse() {
+    Optional<Course> courseOpt = courseRepository.findById(courseId);
+    return courseOpt.orElse(null);
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Starting push teams to GitHub job for course ID: " + courseId);
 

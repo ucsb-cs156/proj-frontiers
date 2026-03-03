@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
@@ -9,6 +10,11 @@ import lombok.Builder;
 public class UpdateAllJob implements JobContextConsumer {
 
   private final UpdateUserService updateUserService;
+
+  @Override
+  public Course getCourse() {
+    return null;
+  }
 
   @Override
   public void accept(JobContext ctx) throws Exception {

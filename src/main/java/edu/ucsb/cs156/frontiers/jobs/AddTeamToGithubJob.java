@@ -16,6 +16,11 @@ public class AddTeamToGithubJob implements JobContextConsumer {
   GithubTeamService githubTeamService;
 
   @Override
+  public Course getCourse() {
+    return course;
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Starting add team to GitHub job for team: " + teamName);
 

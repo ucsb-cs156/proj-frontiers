@@ -32,6 +32,7 @@ public class JobService {
             .createdBy(currentUserService.getUser())
             .status("running")
             .jobName(jobName)
+            .course(jobFunction.getCourse())
             .build();
 
     log.info("Starting job: {}, jobName={}", job.getId(), job.getJobName());

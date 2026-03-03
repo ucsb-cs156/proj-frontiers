@@ -37,6 +37,16 @@ public class CreateStudentOrStaffRepositoriesJobTest {
   }
 
   @Test
+  public void test_getCourse_returnsCourse() {
+    Course course = Course.builder().id(1L).courseName("Test Course").build();
+
+    CreateStudentOrStaffRepositoriesJob job =
+        CreateStudentOrStaffRepositoriesJob.builder().course(course).build();
+
+    assertEquals(course, job.getCourse());
+  }
+
+  @Test
   public void testCreateStudentRepository_public() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     RosterStudent student =
