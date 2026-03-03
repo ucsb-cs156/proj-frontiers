@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import lombok.Builder;
 
@@ -80,6 +81,7 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
         localTeam = localByName.get(githubTeam.name());
       }
 
+      boolean wasCreated = false;
       if (localTeam == null) {
         Team newTeam =
             Team.builder()
@@ -96,63 +98,68 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
                 + githubTeam.name()
                 + "' with GitHub team ID: "
                 + githubTeam.id());
-        continue;
+        localTeam = newTeam;
+        wasCreated = true;
       }
 
-      boolean changed = false;
-      if (!githubTeam.name().equals(localTeam.getName())) {
-        localByName.remove(localTeam.getName());
-        localTeam.setName(githubTeam.name());
-        changed = true;
-      }
-      if (!githubTeam.id().equals(localTeam.getGithubTeamId())) {
-        if (localTeam.getGithubTeamId() != null) {
-          localByGithubId.remove(localTeam.getGithubTeamId());
+      if (!wasCreated) {
+        boolean changed = false;
+        if (!githubTeam.name().equals(localTeam.getName())) {
+          localByName.remove(localTeam.getName());
+          localTeam.setName(githubTeam.name());
+          changed = true;
         }
-        localTeam.setGithubTeamId(githubTeam.id());
-        changed = true;
-      }
+        if (!githubTeam.id().equals(localTeam.getGithubTeamId())) {
+          if (localTeam.getGithubTeamId() != null) {
+            localByGithubId.remove(localTeam.getGithubTeamId());
+          }
+          localTeam.setGithubTeamId(githubTeam.id());
+          changed = true;
+        }
 
-      if (changed) {
-        teamRepository.save(localTeam);
-        updated++;
-        ctx.log(
-            "Updated local team '"
-                + localTeam.getName()
-                + "' with GitHub team ID: "
-                + githubTeam.id());
-      } else {
-        unchanged++;
+        if (changed) {
+          teamRepository.save(localTeam);
+          updated++;
+          ctx.log(
+              "Updated local team '"
+                  + localTeam.getName()
+                  + "' with GitHub team ID: "
+                  + githubTeam.id());
+        } else {
+          unchanged++;
+        }
       }
 
       localByGithubId.put(githubTeam.id(), localTeam);
       localByName.put(localTeam.getName(), localTeam);
 
-      for (RosterStudent student : localStudentsByGithubLogin.values()) {
-        TeamStatus membershipStatus =
-            githubTeamService.getTeamMembershipStatus(
-                student.getGithubLogin(), githubTeam.id(), course);
-        if (membershipStatus != TeamStatus.TEAM_MEMBER
-            && membershipStatus != TeamStatus.TEAM_MAINTAINER) {
-          continue;
-        }
+      if (!localStudentsByGithubLogin.isEmpty()) {
+        Map<String, TeamStatus> githubMemberships =
+            githubTeamService.getTeamMemberships(githubTeam.id(), course);
+        for (Entry<String, TeamStatus> membership : githubMemberships.entrySet()) {
+          RosterStudent student = localStudentsByGithubLogin.get(membership.getKey());
+          if (student == null) {
+            continue;
+          }
+          TeamStatus membershipStatus = membership.getValue();
 
-        Optional<TeamMember> existingTeamMember =
-            teamMemberRepository.findByTeamAndRosterStudent(localTeam, student);
-        if (existingTeamMember.isPresent()) {
-          TeamMember teamMember = existingTeamMember.get();
-          teamMember.setTeamStatus(membershipStatus);
-          teamMemberRepository.save(teamMember);
-          membersUpdated++;
-        } else {
-          TeamMember newTeamMember =
-              TeamMember.builder()
-                  .team(localTeam)
-                  .rosterStudent(student)
-                  .teamStatus(membershipStatus)
-                  .build();
-          teamMemberRepository.save(newTeamMember);
-          membersCreated++;
+          Optional<TeamMember> existingTeamMember =
+              teamMemberRepository.findByTeamAndRosterStudent(localTeam, student);
+          if (existingTeamMember.isPresent()) {
+            TeamMember teamMember = existingTeamMember.get();
+            teamMember.setTeamStatus(membershipStatus);
+            teamMemberRepository.save(teamMember);
+            membersUpdated++;
+          } else {
+            TeamMember newTeamMember =
+                TeamMember.builder()
+                    .team(localTeam)
+                    .rosterStudent(student)
+                    .teamStatus(membershipStatus)
+                    .build();
+            teamMemberRepository.save(newTeamMember);
+            membersCreated++;
+          }
         }
       }
     }

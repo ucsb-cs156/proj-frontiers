@@ -32,6 +32,8 @@ public class GithubTeamService {
 
   public record GithubTeamInfo(Integer id, String name) {}
 
+  public record GithubTeamMemberInfo(String login) {}
+
   private final JwtService jwtService;
   private final ObjectMapper objectMapper;
   private final RestTemplate restTemplate;
@@ -307,6 +309,73 @@ public class GithubTeamService {
 
     restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);
     log.info("Successfully removed member {} from team ID {}", githubLogin, teamId);
+  }
+
+  /**
+   * Returns all team members for a GitHub team, grouped by membership role.
+   *
+   * @param teamId The GitHub team ID
+   * @param course The course containing the organization
+   * @return A map of github login to TeamStatus for members and maintainers
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   * @throws JsonProcessingException if there is an error processing JSON
+   */
+  public Map<String, TeamStatus> getTeamMemberships(Integer teamId, Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    Map<String, TeamStatus> memberships = new HashMap<>();
+    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamId, course, "member")) {
+      memberships.put(member.login(), TeamStatus.TEAM_MEMBER);
+    }
+    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamId, course, "maintainer")) {
+      memberships.put(member.login(), TeamStatus.TEAM_MAINTAINER);
+    }
+    return memberships;
+  }
+
+  private List<GithubTeamMemberInfo> getTeamMembersByRole(
+      Integer teamId, Course course, String role)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String endpoint =
+        "https://api.github.com/orgs/"
+            + course.getOrgName()
+            + "/teams/"
+            + teamId
+            + "/members?per_page=100&role="
+            + role;
+    Pattern pattern = Pattern.compile("(?<=<)([\\S]*)(?=>; rel=\"next\")");
+
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    ResponseEntity<String> response =
+        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+    List<GithubTeamMemberInfo> members = new ArrayList<>();
+
+    while (true) {
+      members.addAll(
+          objectMapper.convertValue(
+              objectMapper.readTree(response.getBody()),
+              new TypeReference<List<GithubTeamMemberInfo>>() {}));
+
+      List<String> responseLinks = response.getHeaders().getOrEmpty("link");
+      if (responseLinks.isEmpty() || !responseLinks.getFirst().contains("next")) {
+        break;
+      }
+
+      Matcher matcher = pattern.matcher(responseLinks.getFirst());
+      if (!matcher.find()) {
+        break;
+      }
+
+      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);
+    }
+
+    return members;
   }
 
   /**
