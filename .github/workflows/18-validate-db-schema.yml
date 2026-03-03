@@ -10,8 +10,9 @@ on:
 
 jobs:
   call-validate-db-schema:
-    uses: ucsb-cs156/workflows/.github/workflows/18-validate-db-schema.yml@main
+    uses: ucsb-cs156/workflows/.github/workflows/18-validate-db-schema.yml@Division7-patch-1
     with:
       JAVA_DISTRIBUTION: ${{ vars.JAVA_DISTRIBUTION || 'temurin' }}
+      WEBHOOK_SECRET: "FAKE_WEBHOOK_SECRET"
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
