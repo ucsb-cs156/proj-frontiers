@@ -21,13 +21,13 @@ export default function JobsTable({ jobs }) {
       header: "Course Name",
       accessorFn: (row) => row.course?.courseName ?? "",
       id: "courseName",
-      cell: ({ cell }) => (
-        <div
-          data-testid={`JobsTable-cell-row-${cell.row.index}-col-courseName`}
-        >
-          {cell.getValue()}
-        </div>
-      ),
+      //cell: ({ cell }) => (
+      //  <div
+      //    data-testid={`JobsTable-cell-row-${cell.row.index}-col-courseName`}
+      //  >
+      //    {cell.getValue()}
+      //  </div>
+      //),
     },
     {
       header: "Created",
