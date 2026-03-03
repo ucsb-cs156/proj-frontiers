@@ -280,4 +280,41 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
     String expectedResponse = objectMapper.writeValueAsString(jobStarted);
     assertEquals(expectedResponse, responseString);
   }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_get_jobs_by_course() throws Exception {
+
+    // arrange
+    Long courseId = 5L;
+
+    Job job1 = Job.builder().log("job for course 5 - 1").build();
+    Job job2 = Job.builder().log("job for course 5 - 2").build();
+
+    ArrayList<Job> expectedJobs = new ArrayList<>();
+    expectedJobs.addAll(Arrays.asList(job1, job2));
+
+    when(jobsRepository.findByCourse_Id(eq(courseId), any(Sort.class))).thenReturn(expectedJobs);
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course").param("courseId", courseId.toString()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    // verify correct repository method called
+    org.mockito.ArgumentCaptor<Sort> sortCaptor = org.mockito.ArgumentCaptor.forClass(Sort.class);
+
+    verify(jobsRepository).findByCourse_Id(eq(courseId), sortCaptor.capture());
+
+    Sort usedSort = sortCaptor.getValue();
+    assertEquals(Sort.Direction.DESC, usedSort.getOrderFor("createdAt").getDirection());
+
+    String expectedJson = objectMapper.writeValueAsString(expectedJobs);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
 }
