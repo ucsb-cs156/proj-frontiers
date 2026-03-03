@@ -96,11 +96,11 @@ describe("JobsTable tests", () => {
         id: 2,
         jobName: "No Course Job",
         createdBy: { email: "user2@example.com" },
-        course: null, 
+        course: null,
         createdAt: "2023-01-01T10:00:00",
         updatedAt: "2023-01-01T10:05:00",
-        status: "pending",
-        log: "No course attached",
+        status: "complete",
+        log: "Job completed successfully",
       },
     ];
 
@@ -126,11 +126,14 @@ describe("JobsTable tests", () => {
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("No Course Job")).toBeInTheDocument();
     expect(screen.getByText("user2@example.com")).toBeInTheDocument();
-    expect(screen.getByText("")).toBeInTheDocument();
+    const courseCell = screen.getByTestId(
+      "JobsTable-cell-row-0-col-courseName-div",
+    );
+    expect(courseCell.textContent.trim()).toBe("");
     expect(screen.getByText("2023-01-01 10:00:00")).toBeInTheDocument();
     expect(screen.getByText("2023-01-01 10:05:00")).toBeInTheDocument();
-    expect(screen.getByText("pending")).toBeInTheDocument();
-    expect(screen.getByText("No course attached")).toBeInTheDocument();
+    expect(screen.getByText("complete")).toBeInTheDocument();
+    expect(screen.getByText("Job completed successfully")).toBeInTheDocument();
     expect(screen.getByTestId("JobsTable-header-log")).toBeInTheDocument();
     expect(screen.getByText("Job completed successfully")).toHaveStyle({
       whiteSpace: "pre-wrap",

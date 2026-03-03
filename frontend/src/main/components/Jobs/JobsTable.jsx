@@ -19,7 +19,7 @@ export default function JobsTable({ jobs }) {
     },
     {
       header: "Course Name",
-      accessorFn: (row) => row.course?.courseName ?? " ",
+      accessorFn: (row) => row.course?.courseName ?? "",
       id: "courseName",
     },
     {
