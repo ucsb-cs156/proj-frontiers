@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.enums.TeamStatus;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -492,6 +493,70 @@ public class GithubTeamServiceTests {
     assertEquals("Bearer " + token, headers.getFirst("Authorization"));
     assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
     assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
+
+  @Test
+  public void testGetAllTeams_SinglePage() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "[{\"id\": 11, \"name\": \"team-a\"}, {\"id\": 12, \"name\": \"team-b\"}]";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    List<GithubTeamService.GithubTeamInfo> teams = githubTeamService.getAllTeams(course);
+
+    assertEquals(2, teams.size());
+    assertEquals(Integer.valueOf(11), teams.get(0).id());
+    assertEquals("team-a", teams.get(0).name());
+    assertEquals(Integer.valueOf(12), teams.get(1).id());
+    assertEquals("team-b", teams.get(1).name());
+  }
+
+  @Test
+  public void testGetAllTeams_WithPagination() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String firstPage = "[{\"id\": 11, \"name\": \"team-a\"}]";
+    String secondPage = "[{\"id\": 12, \"name\": \"team-b\"}]";
+    String nextUrl = "https://api.github.com/orgs/test-org/teams?per_page=100&page=2";
+
+    HttpHeaders firstHeaders = new HttpHeaders();
+    firstHeaders.add(
+        "link",
+        "<"
+            + nextUrl
+            + ">; rel=\"next\", <https://api.github.com/orgs/test-org/teams?per_page=100&page=2>; rel=\"last\"");
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(firstPage, firstHeaders, HttpStatus.OK));
+    when(restTemplate.exchange(
+            eq(nextUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(secondPage, HttpStatus.OK));
+
+    List<GithubTeamService.GithubTeamInfo> teams = githubTeamService.getAllTeams(course);
+
+    assertEquals(2, teams.size());
+    assertEquals(Integer.valueOf(11), teams.get(0).id());
+    assertEquals(Integer.valueOf(12), teams.get(1).id());
+    verify(restTemplate)
+        .exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class));
+    verify(restTemplate)
+        .exchange(eq(nextUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
   }
 
   @Test

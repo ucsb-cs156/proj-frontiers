@@ -11,6 +11,7 @@ import edu.ucsb.cs156.frontiers.jobs.AddTeamToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
+import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -142,6 +143,22 @@ public class JobsController extends ApiController {
             .courseRepository(courseRepository)
             .teamRepository(teamRepository)
             .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(summary = "Launch Pull Teams from GitHub Job")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/launch/pullTeamsFromGithub")
+  public Job launchPullTeamsFromGithubJob(
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
+
+    PullTeamsFromGithubJob job =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
             .githubTeamService(githubTeamService)
             .build();
     return jobService.runAsJob(job);
