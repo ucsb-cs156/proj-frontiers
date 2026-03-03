@@ -221,7 +221,7 @@ public class JobsController extends ApiController {
 
   @Operation(summary = "List jobs by courseId")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @GetMapping("/byCourse")
+  @GetMapping("/course")
   public Iterable<Job> jobsByCourse(@Parameter(name = "courseId") @RequestParam Long courseId) {
 
     Iterable<Job> jobs =
