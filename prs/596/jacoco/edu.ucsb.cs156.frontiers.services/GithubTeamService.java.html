@@ -332,29 +332,28 @@ public class GithubTeamService {
 
 <span class="fc" id="L333">    ResponseEntity&lt;String&gt; response =</span>
 <span class="fc" id="L334">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L335">    List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
-<span class="fc" id="L336">    List&lt;GithubTeamInfo&gt; teams = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L335">    List&lt;GithubTeamInfo&gt; teams = new ArrayList&lt;&gt;();</span>
 
-<span class="pc bpc" id="L338" title="1 of 4 branches missed.">    while (!responseLinks.isEmpty() &amp;&amp; responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
-<span class="fc" id="L339">      teams.addAll(</span>
-<span class="fc" id="L340">          objectMapper.convertValue(</span>
-<span class="fc" id="L341">              objectMapper.readTree(response.getBody()),</span>
-<span class="fc" id="L342">              new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
+    while (true) {
+<span class="fc" id="L338">      teams.addAll(</span>
+<span class="fc" id="L339">          objectMapper.convertValue(</span>
+<span class="fc" id="L340">              objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L341">              new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
 
-<span class="fc" id="L344">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
-<span class="pc bpc" id="L345" title="1 of 2 branches missed.">      if (!matcher.find()) {</span>
-<span class="nc" id="L346">        break;</span>
+<span class="fc" id="L343">      List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc bfc" id="L344" title="All 4 branches covered.">      if (responseLinks.isEmpty() || !responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
+<span class="fc" id="L345">        break;</span>
       }
 
-<span class="fc" id="L349">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L350">      responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
-<span class="fc" id="L351">    }</span>
+<span class="fc" id="L348">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">      if (!matcher.find()) {</span>
+<span class="fc" id="L350">        break;</span>
+      }
 
-<span class="fc" id="L353">    teams.addAll(</span>
-<span class="fc" id="L354">        objectMapper.convertValue(</span>
-<span class="fc" id="L355">            objectMapper.readTree(response.getBody()),</span>
-<span class="fc" id="L356">            new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
-<span class="fc" id="L357">    return teams;</span>
+<span class="fc" id="L353">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L354">    }</span>
+
+<span class="fc" id="L356">    return teams;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

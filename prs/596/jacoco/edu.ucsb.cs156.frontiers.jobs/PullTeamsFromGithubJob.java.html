@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PullTeamsFromGithubJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">PullTeamsFromGithubJob.java</span></div><h1>PullTeamsFromGithubJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
@@ -19,113 +23,156 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
   Long courseId;
   CourseRepository courseRepository;
   TeamRepository teamRepository;
+  TeamMemberRepository teamMemberRepository;
   GithubTeamService githubTeamService;
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L26">    ctx.log(&quot;Starting pull teams from GitHub job for course ID: &quot; + courseId);</span>
+<span class="fc" id="L31">    ctx.log(&quot;Starting pull teams from GitHub job for course ID: &quot; + courseId);</span>
 
-<span class="fc" id="L28">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(courseId);</span>
-<span class="fc bfc" id="L29" title="All 2 branches covered.">    if (courseOpt.isEmpty()) {</span>
-<span class="fc" id="L30">      ctx.log(&quot;ERROR: Course with ID &quot; + courseId + &quot; not found&quot;);</span>
-<span class="fc" id="L31">      return;</span>
+<span class="fc" id="L33">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(courseId);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">    if (courseOpt.isEmpty()) {</span>
+<span class="fc" id="L35">      ctx.log(&quot;ERROR: Course with ID &quot; + courseId + &quot; not found&quot;);</span>
+<span class="fc" id="L36">      return;</span>
     }
 
-<span class="fc" id="L34">    Course course = courseOpt.get();</span>
-<span class="fc" id="L35">    ctx.log(&quot;Processing course: &quot; + course.getCourseName() + &quot; (org: &quot; + course.getOrgName() + &quot;)&quot;);</span>
-<span class="pc bpc" id="L36" title="1 of 4 branches missed.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L37">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
-<span class="fc" id="L38">      return;</span>
+<span class="fc" id="L39">    Course course = courseOpt.get();</span>
+<span class="fc" id="L40">    ctx.log(&quot;Processing course: &quot; + course.getCourseName() + &quot; (org: &quot; + course.getOrgName() + &quot;)&quot;);</span>
+<span class="fc bfc" id="L41" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L42">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
+<span class="fc" id="L43">      return;</span>
     }
 
     List&lt;GithubTeamInfo&gt; githubTeams;
     try {
-<span class="fc" id="L43">      githubTeams = githubTeamService.getAllTeams(course);</span>
-<span class="fc" id="L44">    } catch (Exception e) {</span>
-<span class="fc" id="L45">      ctx.log(&quot;ERROR: Failed to pull teams from GitHub: &quot; + e.getMessage());</span>
-<span class="fc" id="L46">      return;</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L48">      githubTeams = githubTeamService.getAllTeams(course);</span>
+<span class="fc" id="L49">    } catch (Exception e) {</span>
+<span class="fc" id="L50">      ctx.log(&quot;ERROR: Failed to pull teams from GitHub: &quot; + e.getMessage());</span>
+<span class="fc" id="L51">      return;</span>
+<span class="fc" id="L52">    }</span>
 
-<span class="fc" id="L49">    Map&lt;Integer, Team&gt; localByGithubId = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L50">    Map&lt;String, Team&gt; localByName = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L51" title="All 2 branches covered.">    for (Team localTeam : teamRepository.findByCourseId(courseId)) {</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">      if (localTeam.getGithubTeamId() != null) {</span>
-<span class="fc" id="L53">        localByGithubId.put(localTeam.getGithubTeamId(), localTeam);</span>
+<span class="fc" id="L54">    Map&lt;Integer, Team&gt; localByGithubId = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L55">    Map&lt;String, Team&gt; localByName = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L56">    Map&lt;String, RosterStudent&gt; localStudentsByGithubLogin = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">    for (Team localTeam : teamRepository.findByCourseId(courseId)) {</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">      if (localTeam.getGithubTeamId() != null) {</span>
+<span class="fc" id="L59">        localByGithubId.put(localTeam.getGithubTeamId(), localTeam);</span>
       }
-<span class="fc" id="L55">      localByName.put(localTeam.getName(), localTeam);</span>
-<span class="fc" id="L56">    }</span>
-
-<span class="fc" id="L58">    int created = 0;</span>
-<span class="fc" id="L59">    int updated = 0;</span>
-<span class="fc" id="L60">    int unchanged = 0;</span>
-
-<span class="fc bfc" id="L62" title="All 2 branches covered.">    for (GithubTeamInfo githubTeam : githubTeams) {</span>
-<span class="fc" id="L63">      Team localTeam = localByGithubId.get(githubTeam.id());</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">      if (localTeam == null) {</span>
-<span class="fc" id="L65">        localTeam = localByName.get(githubTeam.name());</span>
-      }
-
-<span class="fc bfc" id="L68" title="All 2 branches covered.">      if (localTeam == null) {</span>
-        Team newTeam =
-<span class="fc" id="L70">            Team.builder()</span>
-<span class="fc" id="L71">                .name(githubTeam.name())</span>
-<span class="fc" id="L72">                .course(course)</span>
-<span class="fc" id="L73">                .githubTeamId(githubTeam.id())</span>
-<span class="fc" id="L74">                .build();</span>
-<span class="fc" id="L75">        teamRepository.save(newTeam);</span>
-<span class="fc" id="L76">        localByGithubId.put(githubTeam.id(), newTeam);</span>
-<span class="fc" id="L77">        localByName.put(githubTeam.name(), newTeam);</span>
-<span class="fc" id="L78">        created++;</span>
-<span class="fc" id="L79">        ctx.log(</span>
-            &quot;Created local team '&quot;
-<span class="fc" id="L81">                + githubTeam.name()</span>
-                + &quot;' with GitHub team ID: &quot;
-<span class="fc" id="L83">                + githubTeam.id());</span>
-<span class="fc" id="L84">        continue;</span>
-      }
-
-<span class="fc" id="L87">      boolean changed = false;</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">      if (!githubTeam.name().equals(localTeam.getName())) {</span>
-<span class="fc" id="L89">        localByName.remove(localTeam.getName());</span>
-<span class="fc" id="L90">        localTeam.setName(githubTeam.name());</span>
-<span class="fc" id="L91">        changed = true;</span>
-      }
-<span class="fc bfc" id="L93" title="All 2 branches covered.">      if (!githubTeam.id().equals(localTeam.getGithubTeamId())) {</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (localTeam.getGithubTeamId() != null) {</span>
-<span class="nc" id="L95">          localByGithubId.remove(localTeam.getGithubTeamId());</span>
+<span class="fc" id="L61">      localByName.put(localTeam.getName(), localTeam);</span>
+<span class="fc" id="L62">    }</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">    if (course.getRosterStudents() != null) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">      for (RosterStudent student : course.getRosterStudents()) {</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (student.getGithubLogin() != null) {</span>
+<span class="fc" id="L66">          localStudentsByGithubLogin.put(student.getGithubLogin(), student);</span>
         }
-<span class="fc" id="L97">        localTeam.setGithubTeamId(githubTeam.id());</span>
-<span class="fc" id="L98">        changed = true;</span>
+<span class="fc" id="L68">      }</span>
+    }
+
+<span class="fc" id="L71">    int created = 0;</span>
+<span class="fc" id="L72">    int updated = 0;</span>
+<span class="fc" id="L73">    int unchanged = 0;</span>
+<span class="fc" id="L74">    int membersCreated = 0;</span>
+<span class="fc" id="L75">    int membersUpdated = 0;</span>
+
+<span class="fc bfc" id="L77" title="All 2 branches covered.">    for (GithubTeamInfo githubTeam : githubTeams) {</span>
+<span class="fc" id="L78">      Team localTeam = localByGithubId.get(githubTeam.id());</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">      if (localTeam == null) {</span>
+<span class="fc" id="L80">        localTeam = localByName.get(githubTeam.name());</span>
       }
 
-<span class="fc bfc" id="L101" title="All 2 branches covered.">      if (changed) {</span>
-<span class="fc" id="L102">        teamRepository.save(localTeam);</span>
-<span class="fc" id="L103">        updated++;</span>
-<span class="fc" id="L104">        ctx.log(</span>
-            &quot;Updated local team '&quot;
-<span class="fc" id="L106">                + localTeam.getName()</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">      if (localTeam == null) {</span>
+        Team newTeam =
+<span class="fc" id="L85">            Team.builder()</span>
+<span class="fc" id="L86">                .name(githubTeam.name())</span>
+<span class="fc" id="L87">                .course(course)</span>
+<span class="fc" id="L88">                .githubTeamId(githubTeam.id())</span>
+<span class="fc" id="L89">                .build();</span>
+<span class="fc" id="L90">        teamRepository.save(newTeam);</span>
+<span class="fc" id="L91">        localByGithubId.put(githubTeam.id(), newTeam);</span>
+<span class="fc" id="L92">        localByName.put(githubTeam.name(), newTeam);</span>
+<span class="fc" id="L93">        created++;</span>
+<span class="fc" id="L94">        ctx.log(</span>
+            &quot;Created local team '&quot;
+<span class="fc" id="L96">                + githubTeam.name()</span>
                 + &quot;' with GitHub team ID: &quot;
-<span class="fc" id="L108">                + githubTeam.id());</span>
-      } else {
-<span class="fc" id="L110">        unchanged++;</span>
+<span class="fc" id="L98">                + githubTeam.id());</span>
+<span class="fc" id="L99">        continue;</span>
       }
 
-<span class="fc" id="L113">      localByGithubId.put(githubTeam.id(), localTeam);</span>
-<span class="fc" id="L114">      localByName.put(localTeam.getName(), localTeam);</span>
-<span class="fc" id="L115">    }</span>
+<span class="fc" id="L102">      boolean changed = false;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">      if (!githubTeam.name().equals(localTeam.getName())) {</span>
+<span class="fc" id="L104">        localByName.remove(localTeam.getName());</span>
+<span class="fc" id="L105">        localTeam.setName(githubTeam.name());</span>
+<span class="fc" id="L106">        changed = true;</span>
+      }
+<span class="fc bfc" id="L108" title="All 2 branches covered.">      if (!githubTeam.id().equals(localTeam.getGithubTeamId())) {</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (localTeam.getGithubTeamId() != null) {</span>
+<span class="fc" id="L110">          localByGithubId.remove(localTeam.getGithubTeamId());</span>
+        }
+<span class="fc" id="L112">        localTeam.setGithubTeamId(githubTeam.id());</span>
+<span class="fc" id="L113">        changed = true;</span>
+      }
 
-<span class="fc" id="L117">    ctx.log(</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">      if (changed) {</span>
+<span class="fc" id="L117">        teamRepository.save(localTeam);</span>
+<span class="fc" id="L118">        updated++;</span>
+<span class="fc" id="L119">        ctx.log(</span>
+            &quot;Updated local team '&quot;
+<span class="fc" id="L121">                + localTeam.getName()</span>
+                + &quot;' with GitHub team ID: &quot;
+<span class="fc" id="L123">                + githubTeam.id());</span>
+      } else {
+<span class="fc" id="L125">        unchanged++;</span>
+      }
+
+<span class="fc" id="L128">      localByGithubId.put(githubTeam.id(), localTeam);</span>
+<span class="fc" id="L129">      localByName.put(localTeam.getName(), localTeam);</span>
+
+<span class="fc bfc" id="L131" title="All 2 branches covered.">      for (RosterStudent student : localStudentsByGithubLogin.values()) {</span>
+<span class="fc" id="L132">        TeamStatus membershipStatus =</span>
+<span class="fc" id="L133">            githubTeamService.getTeamMembershipStatus(</span>
+<span class="fc" id="L134">                student.getGithubLogin(), githubTeam.id(), course);</span>
+<span class="fc bfc" id="L135" title="All 4 branches covered.">        if (membershipStatus != TeamStatus.TEAM_MEMBER</span>
+            &amp;&amp; membershipStatus != TeamStatus.TEAM_MAINTAINER) {
+<span class="fc" id="L137">          continue;</span>
+        }
+
+<span class="fc" id="L140">        Optional&lt;TeamMember&gt; existingTeamMember =</span>
+<span class="fc" id="L141">            teamMemberRepository.findByTeamAndRosterStudent(localTeam, student);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (existingTeamMember.isPresent()) {</span>
+<span class="fc" id="L143">          TeamMember teamMember = existingTeamMember.get();</span>
+<span class="fc" id="L144">          teamMember.setTeamStatus(membershipStatus);</span>
+<span class="fc" id="L145">          teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L146">          membersUpdated++;</span>
+<span class="fc" id="L147">        } else {</span>
+          TeamMember newTeamMember =
+<span class="fc" id="L149">              TeamMember.builder()</span>
+<span class="fc" id="L150">                  .team(localTeam)</span>
+<span class="fc" id="L151">                  .rosterStudent(student)</span>
+<span class="fc" id="L152">                  .teamStatus(membershipStatus)</span>
+<span class="fc" id="L153">                  .build();</span>
+<span class="fc" id="L154">          teamMemberRepository.save(newTeamMember);</span>
+<span class="fc" id="L155">          membersCreated++;</span>
+        }
+<span class="fc" id="L157">      }</span>
+<span class="fc" id="L158">    }</span>
+
+<span class="fc" id="L160">    ctx.log(</span>
         &quot;Completed pull teams from GitHub job for course ID: &quot;
             + courseId
             + &quot; (GitHub teams: &quot;
-<span class="fc" id="L121">            + githubTeams.size()</span>
+<span class="fc" id="L164">            + githubTeams.size()</span>
             + &quot;, created: &quot;
             + created
             + &quot;, updated: &quot;
             + updated
             + &quot;, unchanged: &quot;
             + unchanged
+            + &quot;, members created: &quot;
+            + membersCreated
+            + &quot;, members updated: &quot;
+            + membersUpdated
             + &quot;)&quot;);
-<span class="fc" id="L129">  }</span>
+<span class="fc" id="L176">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
