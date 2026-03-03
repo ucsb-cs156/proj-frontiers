@@ -48,6 +48,7 @@ public class GithubGraphQLService {
 
     log.info("githubToken: {}", githubToken);
 
+    // language=GraphQL
     String query =
         """
                                 query getDefaultBranch($owner: String!, $repo: String!) {
@@ -88,7 +89,7 @@ public class GithubGraphQLService {
     String githubToken = jwtService.getInstallationToken(course);
 
     log.info("githubToken: {}", githubToken);
-
+    // language=GraphQL
     String query =
         """
             query GetBranchCommits($owner: String!, $repo: String!, $branch: String!, $first: Int!, $after: String) {

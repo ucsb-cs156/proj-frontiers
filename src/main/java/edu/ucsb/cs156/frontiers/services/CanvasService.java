@@ -48,6 +48,7 @@ public class CanvasService {
   }
 
   public List<CanvasGroupSet> getCanvasGroupSets(@HasLinkedCanvasCourse Course course) {
+    // language=GraphQL
     String query =
         """
         query GetGroupSets($courseId: ID!) {
@@ -83,6 +84,8 @@ public class CanvasService {
    * @return list of RosterStudent objects from Canvas
    */
   public List<RosterStudent> getCanvasRoster(@HasLinkedCanvasCourse Course course) {
+
+    // language=GraphQL
     String query =
         """
               query GetRoster($courseId: ID!) {
@@ -132,6 +135,7 @@ public class CanvasService {
 
   public List<CanvasGroup> getCanvasGroups(
       @HasLinkedCanvasCourse Course course, String groupSetId) {
+    // language=GraphQL
     String query =
         """
             query GetTeams($groupId: ID!) {
