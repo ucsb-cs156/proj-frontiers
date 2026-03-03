@@ -85,4 +85,41 @@ describe("JobsTable tests", () => {
     expect(formatTime).toHaveBeenNthCalledWith(1, "2023-01-01T10:00:00");
     expect(formatTime).toHaveBeenNthCalledWith(2, "2023-01-01T10:05:00");
   });
+
+  test("renders empty string for Course Name when course is null", () => {
+    formatTime
+      .mockReturnValueOnce("2023-01-01 10:00:00")
+      .mockReturnValueOnce("2023-01-01 10:05:00");
+
+    const jobsFixture = [
+      {
+        id: 2,
+        jobName: "No Course Job",
+        createdBy: { email: "user2@example.com" },
+        course: null, 
+        createdAt: "2023-01-01T10:00:00",
+        updatedAt: "2023-01-01T10:05:00",
+        status: "pending",
+        log: "No course attached",
+      },
+    ];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <JobsTable jobs={jobsFixture} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // Get all cells in the row
+    const cells = screen.getAllByRole("cell");
+
+    // Adjust index if needed depending on column order
+    // Based on your test order: id, jobName, email, courseName, ...
+    const courseCell = cells[3];
+
+    // This must be EXACTLY empty string — not a space
+    expect(courseCell.textContent).toBe("");
+  });
 });
