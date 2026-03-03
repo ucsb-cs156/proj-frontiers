@@ -127,9 +127,9 @@ describe("JobsTable tests", () => {
     expect(screen.getByText("No Course Job")).toBeInTheDocument();
     expect(screen.getByText("user2@example.com")).toBeInTheDocument();
     const courseCell = screen.getByTestId(
-      "JobsTable-cell-row-0-col-courseName-div",
+      "JobsTable-cell-row-0-col-courseName",
     );
-    expect(courseCell.textContent.trim()).toBe("");
+    expect(courseCell).toHaveTextContent("");
     expect(screen.getByText("2023-01-01 10:00:00")).toBeInTheDocument();
     expect(screen.getByText("2023-01-01 10:05:00")).toBeInTheDocument();
     expect(screen.getByText("complete")).toBeInTheDocument();
