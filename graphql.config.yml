@@ -1,0 +1,7 @@
+projects:
+  github:
+    schema: ./graphql-schemas/github-schema.graphqls
+    documents: ./src/**/*GithubGraphQL*.java
+  canvas:
+    schema: ./graphql-schemas/canvas-schema.graphqls
+    documents: ./src/**/*Canvas*.java
