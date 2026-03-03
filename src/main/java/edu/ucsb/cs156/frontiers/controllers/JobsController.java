@@ -159,6 +159,7 @@ public class JobsController extends ApiController {
             .courseId(courseId)
             .courseRepository(courseRepository)
             .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
             .githubTeamService(githubTeamService)
             .build();
     return jobService.runAsJob(job);

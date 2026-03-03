@@ -332,14 +332,18 @@ public class GithubTeamService {
 
     ResponseEntity<String> response =
         restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
-    List<String> responseLinks = response.getHeaders().getOrEmpty("link");
     List<GithubTeamInfo> teams = new ArrayList<>();
 
-    while (!responseLinks.isEmpty() && responseLinks.getFirst().contains("next")) {
+    while (true) {
       teams.addAll(
           objectMapper.convertValue(
               objectMapper.readTree(response.getBody()),
               new TypeReference<List<GithubTeamInfo>>() {}));
+
+      List<String> responseLinks = response.getHeaders().getOrEmpty("link");
+      if (responseLinks.isEmpty() || !responseLinks.getFirst().contains("next")) {
+        break;
+      }
 
       Matcher matcher = pattern.matcher(responseLinks.getFirst());
       if (!matcher.find()) {
@@ -347,13 +351,8 @@ public class GithubTeamService {
       }
 
       response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);
-      responseLinks = response.getHeaders().getOrEmpty("link");
     }
 
-    teams.addAll(
-        objectMapper.convertValue(
-            objectMapper.readTree(response.getBody()),
-            new TypeReference<List<GithubTeamInfo>>() {}));
     return teams;
   }
 }

@@ -519,6 +519,30 @@ public class GithubTeamServiceTests {
   }
 
   @Test
+  public void testGetAllTeams_VerifyHeaders() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "[{\"id\": 11, \"name\": \"team-a\"}]";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    githubTeamService.getAllTeams(course);
+
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
+
+  @Test
   public void testGetAllTeams_WithPagination() throws Exception {
     Course course = Course.builder().orgName("test-org").installationId("123").build();
     String token = "test-token";
@@ -557,6 +581,59 @@ public class GithubTeamServiceTests {
             eq(String.class));
     verify(restTemplate)
         .exchange(eq(nextUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
+  }
+
+  @Test
+  public void testGetAllTeams_WithNonNextLinkHeader() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "[{\"id\": 11, \"name\": \"team-a\"}]";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(
+        "link", "<https://api.github.com/orgs/test-org/teams?per_page=100&page=1>; rel=\"last\"");
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, headers, HttpStatus.OK));
+
+    List<GithubTeamService.GithubTeamInfo> teams = githubTeamService.getAllTeams(course);
+
+    assertEquals(1, teams.size());
+    assertEquals(Integer.valueOf(11), teams.get(0).id());
+    assertEquals("team-a", teams.get(0).name());
+    verify(restTemplate, times(1))
+        .exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
+  }
+
+  @Test
+  public void testGetAllTeams_WithMalformedNextLink() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "[{\"id\": 11, \"name\": \"team-a\"}]";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("link", "next");
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, headers, HttpStatus.OK));
+
+    List<GithubTeamService.GithubTeamInfo> teams = githubTeamService.getAllTeams(course);
+
+    assertEquals(1, teams.size());
+    assertEquals(Integer.valueOf(11), teams.get(0).id());
+    assertEquals("team-a", teams.get(0).name());
+    verify(restTemplate, times(1))
+        .exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
   }
 
   @Test

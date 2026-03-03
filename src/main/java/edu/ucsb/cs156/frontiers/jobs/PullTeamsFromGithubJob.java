@@ -1,8 +1,12 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
@@ -19,6 +23,7 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
   Long courseId;
   CourseRepository courseRepository;
   TeamRepository teamRepository;
+  TeamMemberRepository teamMemberRepository;
   GithubTeamService githubTeamService;
 
   @Override
@@ -48,16 +53,26 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
 
     Map<Integer, Team> localByGithubId = new HashMap<>();
     Map<String, Team> localByName = new HashMap<>();
+    Map<String, RosterStudent> localStudentsByGithubLogin = new HashMap<>();
     for (Team localTeam : teamRepository.findByCourseId(courseId)) {
       if (localTeam.getGithubTeamId() != null) {
         localByGithubId.put(localTeam.getGithubTeamId(), localTeam);
       }
       localByName.put(localTeam.getName(), localTeam);
     }
+    if (course.getRosterStudents() != null) {
+      for (RosterStudent student : course.getRosterStudents()) {
+        if (student.getGithubLogin() != null) {
+          localStudentsByGithubLogin.put(student.getGithubLogin(), student);
+        }
+      }
+    }
 
     int created = 0;
     int updated = 0;
     int unchanged = 0;
+    int membersCreated = 0;
+    int membersUpdated = 0;
 
     for (GithubTeamInfo githubTeam : githubTeams) {
       Team localTeam = localByGithubId.get(githubTeam.id());
@@ -112,6 +127,34 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
 
       localByGithubId.put(githubTeam.id(), localTeam);
       localByName.put(localTeam.getName(), localTeam);
+
+      for (RosterStudent student : localStudentsByGithubLogin.values()) {
+        TeamStatus membershipStatus =
+            githubTeamService.getTeamMembershipStatus(
+                student.getGithubLogin(), githubTeam.id(), course);
+        if (membershipStatus != TeamStatus.TEAM_MEMBER
+            && membershipStatus != TeamStatus.TEAM_MAINTAINER) {
+          continue;
+        }
+
+        Optional<TeamMember> existingTeamMember =
+            teamMemberRepository.findByTeamAndRosterStudent(localTeam, student);
+        if (existingTeamMember.isPresent()) {
+          TeamMember teamMember = existingTeamMember.get();
+          teamMember.setTeamStatus(membershipStatus);
+          teamMemberRepository.save(teamMember);
+          membersUpdated++;
+        } else {
+          TeamMember newTeamMember =
+              TeamMember.builder()
+                  .team(localTeam)
+                  .rosterStudent(student)
+                  .teamStatus(membershipStatus)
+                  .build();
+          teamMemberRepository.save(newTeamMember);
+          membersCreated++;
+        }
+      }
     }
 
     ctx.log(
@@ -125,6 +168,10 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
             + updated
             + ", unchanged: "
             + unchanged
+            + ", members created: "
+            + membersCreated
+            + ", members updated: "
+            + membersUpdated
             + ")");
   }
 }
