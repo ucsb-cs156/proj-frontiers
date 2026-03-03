@@ -26,7 +26,9 @@ public class CourseStaff {
   private String lastName;
   private String email;
 
+  @Enumerated(EnumType.STRING)
   private OrgStatus orgStatus;
+
   private Integer githubId;
   private String githubLogin;
 
