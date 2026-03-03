@@ -224,10 +224,10 @@ import org.springframework.web.bind.annotation.RestController;
   @GetMapping(&quot;/course&quot;)
   public Iterable&lt;Job&gt; jobsByCourse(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-<span class="nc" id="L227">    Iterable&lt;Job&gt; jobs =</span>
-<span class="nc" id="L228">        jobsRepository.findByCourse_Id(courseId, by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
+<span class="fc" id="L227">    Iterable&lt;Job&gt; jobs =</span>
+<span class="fc" id="L228">        jobsRepository.findByCourse_Id(courseId, by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
 
-<span class="nc" id="L230">    return jobs;</span>
+<span class="fc" id="L230">    return jobs;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
