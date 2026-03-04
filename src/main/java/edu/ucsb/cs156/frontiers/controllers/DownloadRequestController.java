@@ -141,9 +141,6 @@ public class DownloadRequestController extends ApiController {
             .filename(request.getOrg() + "_" + request.getRepo() + ".csv")
             .build());
 
-    return ResponseEntity.ok()
-        .contentType(MediaType.parseMediaType("text/csv"))
-        .headers(headers)
-        .body(new ByteArrayResource(baos.toByteArray()));
+    return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(baos.toByteArray()));
   }
 }

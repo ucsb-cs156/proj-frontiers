@@ -186,6 +186,7 @@ public class GithubGraphQLServiceTests {
            }
           """;
 
+  @Test
   public void handles_two_pages() throws Exception {
     mockServer
         .expect(requestTo("https://api.github.com/graphql"))
@@ -196,7 +197,6 @@ public class GithubGraphQLServiceTests {
         .andExpect(jsonPath("$.variables.repo").value("proj-frontiers"))
         .andExpect(jsonPath("$.variables.branch").value("main"))
         .andExpect(jsonPath("$.variables.first").value(100))
-        .andExpect(jsonPath("$.variables.after").value("pageOne"))
         .andExpect(jsonPath("$.variables.since").value("2023-03-11T00:00:00Z"))
         .andExpect(jsonPath("$.variables.until").value("2023-03-21T00:00:00Z"))
         .andRespond(withSuccess(responsePageOne, MediaType.APPLICATION_JSON));
@@ -210,10 +210,10 @@ public class GithubGraphQLServiceTests {
         .andExpect(jsonPath("$.variables.repo").value("proj-frontiers"))
         .andExpect(jsonPath("$.variables.branch").value("main"))
         .andExpect(jsonPath("$.variables.first").value(100))
-        .andExpect(jsonPath("$.variables.after").value("thereIsStillAnEndCursor"))
+        .andExpect(jsonPath("$.variables.after").value("page2"))
         .andExpect(jsonPath("$.variables.since").value("2023-03-11T00:00:00Z"))
         .andExpect(jsonPath("$.variables.until").value("2023-03-21T00:00:00Z"))
-        .andRespond(withSuccess(responsePageOne, MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess(responsePageTwo, MediaType.APPLICATION_JSON));
 
     DownloadRequest request =
         DownloadRequest.builder()
@@ -244,6 +244,7 @@ public class GithubGraphQLServiceTests {
     githubGraphQLService.downloadCommitHistory(request);
 
     verify(downloadedCommitRepository, times(1)).saveAll(List.of(firstCommit, secondCommit));
+    mockServer.verify();
   }
 
   @Test
@@ -257,9 +258,6 @@ public class GithubGraphQLServiceTests {
         .andExpect(jsonPath("$.variables.repo").value("proj-frontiers"))
         .andExpect(jsonPath("$.variables.branch").value("main"))
         .andExpect(jsonPath("$.variables.first").value(100))
-        .andExpect(jsonPath("$.variables.after").value("pageOne"))
-        .andExpect(jsonPath("$.variables.since").value("2023-03-11T00:00:00Z"))
-        .andExpect(jsonPath("$.variables.until").value("2023-03-21T00:00:00Z"))
         .andRespond(withSuccess(responsePageOne, MediaType.APPLICATION_JSON));
 
     mockServer
@@ -271,9 +269,7 @@ public class GithubGraphQLServiceTests {
         .andExpect(jsonPath("$.variables.repo").value("proj-frontiers"))
         .andExpect(jsonPath("$.variables.branch").value("main"))
         .andExpect(jsonPath("$.variables.first").value(100))
-        .andExpect(jsonPath("$.variables.after").value("thereIsStillAnEndCursor"))
-        .andExpect(jsonPath("$.variables.since").value("null"))
-        .andExpect(jsonPath("$.variables.until").value("null"))
+        .andExpect(jsonPath("$.variables.after").value("page2"))
         .andRespond(withSuccess(responsePageTwo, MediaType.APPLICATION_JSON));
 
     DownloadRequest request =
@@ -305,5 +301,6 @@ public class GithubGraphQLServiceTests {
     githubGraphQLService.downloadCommitHistory(request);
 
     verify(downloadedCommitRepository, times(1)).saveAll(List.of(firstCommit, secondCommit));
+    mockServer.verify();
   }
 }

@@ -1,7 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -13,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -246,67 +244,6 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
     mockMvc
         .perform(
             get("/api/github/graphql/commits")
-                .param("courseId", "1")
-                .param("owner", "ucsb-cs156-f24")
-                .param("repo", "STARTER-jpa00")
-                .param("branch", "main")
-                .param("first", "10")
-                .param("after", ""))
-        .andExpect(status().isNotFound());
-
-    verify(courseRepository, times(1)).findById(eq(1L));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void testCsvCommits() throws Exception {
-
-    User user = currentUserService.getCurrentUser().getUser();
-
-    Course course =
-        Course.builder()
-            .id(1L)
-            .courseName("CS156")
-            .term("S25")
-            .school("UCSB")
-            .instructorEmail(user.getEmail())
-            .build();
-
-    Job job = Job.builder().id(1L).status("running").build();
-
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(jobService.runAsJob(any())).thenReturn(job);
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                get("/api/github/graphql/csvCommits")
-                    .param("courseId", "1")
-                    .param("owner", "ucsb-cs156-f24")
-                    .param("repo", "STARTER-jpa00")
-                    .param("branch", "main")
-                    .param("first", "10")
-                    .param("after", ""))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    verify(jobService, times(1)).runAsJob(any());
-    Job returnedJob =
-        objectMapper.readValue(response.getResponse().getContentAsString(), Job.class);
-    assertEquals(job, returnedJob);
-  }
-
-  @Test
-  @WithMockUser(roles = {"ADMIN"})
-  public void test_get_commits_csv_not_found() throws Exception {
-
-    // arrange
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
-
-    // act & assert
-    mockMvc
-        .perform(
-            get("/api/github/graphql/csvCommits")
                 .param("courseId", "1")
                 .param("owner", "ucsb-cs156-f24")
                 .param("repo", "STARTER-jpa00")

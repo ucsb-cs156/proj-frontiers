@@ -106,6 +106,69 @@ public class DownloadRequestControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void test_download_request_non_default_branch() throws Exception {
+
+    Course course = Course.builder().id(1L).build();
+    DownloadRequest request =
+        DownloadRequest.builder()
+            .downloadType(DownloadRequestType.COMMITS)
+            .org("ucsb-cs156")
+            .repo("proj-frontiers")
+            .branch("trunk")
+            .course(course)
+            .build();
+
+    DownloadRequest requestSaved =
+        DownloadRequest.builder()
+            .id(1L)
+            .downloadType(DownloadRequestType.COMMITS)
+            .org("ucsb-cs156")
+            .repo("proj-frontiers")
+            .branch("trunk")
+            .course(course)
+            .build();
+
+    Job job = Job.builder().id(1L).build();
+
+    DownloadRequest finalRequest =
+        DownloadRequest.builder()
+            .id(1L)
+            .downloadType(DownloadRequestType.COMMITS)
+            .org("ucsb-cs156")
+            .repo("proj-frontiers")
+            .branch("trunk")
+            .course(course)
+            .job(job)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(downloadRequestRepository.save(request)).thenReturn(requestSaved);
+    when(downloadRequestRepository.save(finalRequest)).thenReturn(finalRequest);
+    when(jobService.runAsJob(any(CommitDownloadRequestJob.class))).thenReturn(job);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/downloads/create")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("type", "COMMITS")
+                    .param("org", "ucsb-cs156")
+                    .param("repo", "proj-frontiers")
+                    .param("branch", "trunk"))
+            .andExpect(status().isAccepted())
+            .andReturn();
+    verify(downloadRequestRepository).save(finalRequest);
+    verify(downloadRequestRepository).save(request);
+    verify(jobService).runAsJob(any(CommitDownloadRequestJob.class));
+
+    String responseString = result.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(finalRequest);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void testCreateDownloadRequestWithInvalidCourseId() throws Exception {
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());

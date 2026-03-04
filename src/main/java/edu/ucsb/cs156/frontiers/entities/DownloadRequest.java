@@ -1,6 +1,5 @@
 package edu.ucsb.cs156.frontiers.entities;
 
-
 import edu.ucsb.cs156.frontiers.enums.DownloadRequestType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
