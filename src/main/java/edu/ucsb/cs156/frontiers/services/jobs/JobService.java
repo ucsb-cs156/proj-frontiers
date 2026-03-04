@@ -47,18 +47,20 @@ public class JobService {
   /**
    * Runs a job asynchronously.
    *
-   * <p>This method is annotated with @Transactional because outside of the Spring context, you
-   * cannot delete entities that are unmanaged by Hibernate. Adding @Transactional keeps the
+   * <p>This method uses a TransactionTemplate because outside of the Spring context, you cannot
+   * delete entities that are unmanaged by Hibernate. Using the transactionTemplate lambda keeps the
    * database session open and allows Hibernate to maintain it's knowledge of the object graph (i.e.
    * the entities)
    *
    * <p>To learn more, read about Hibernate and the concept of a Spring Context.
    *
-   * <p>Note that @Transactional means that if there is an unhandled exception, either every
-   * database transactions succeeds, or all of them are rolled back.
+   * <p>Note that using the transactionTemplate lambda means that if there is an unhandled
+   * exception, either every database transactions succeeds, or all of them are rolled back.
    *
-   * @param job
-   * @param jobFunction
+   * <p>However, the job entity metadata will still be saved.
+   *
+   * @param job metadata entity about the job
+   * @param jobFunction runnable job function
    */
   @Async
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
