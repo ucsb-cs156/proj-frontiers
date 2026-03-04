@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.config;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.DownloadRequestRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import java.util.Collection;
@@ -36,16 +37,19 @@ public class CourseSecurity {
   private final RoleHierarchy roleHierarchy;
   private final CourseRepository courseRepository;
   private final RosterStudentRepository rosterStudentRepository;
+  private final DownloadRequestRepository downloadRequestRepository;
 
   public CourseSecurity(
       CurrentUserService currentUserService,
       RoleHierarchy roleHierarchy,
       CourseRepository courseRepository,
-      RosterStudentRepository rosterStudentRepository) {
+      RosterStudentRepository rosterStudentRepository,
+      DownloadRequestRepository downloadRequestRepository) {
     this.currentUserService = currentUserService;
     this.roleHierarchy = roleHierarchy;
     this.courseRepository = courseRepository;
     this.rosterStudentRepository = rosterStudentRepository;
+    this.downloadRequestRepository = downloadRequestRepository;
   }
 
   /**
@@ -132,5 +136,14 @@ public class CourseSecurity {
       }
       return currentUser.getUser().getEmail().equals(course.getInstructorEmail());
     }
+  }
+
+  @PreAuthorize("hasRole('ROLE_USER')")
+  public Boolean hasDownloadPermissions(
+      MethodSecurityExpressionOperations operations, Long downloadId) {
+    return downloadRequestRepository
+        .findById(downloadId)
+        .map(downloadRequest -> baseHasManagePermissions(operations, downloadRequest.getCourse()))
+        .orElse(true);
   }
 }

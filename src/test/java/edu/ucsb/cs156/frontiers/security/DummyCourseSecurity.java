@@ -2,9 +2,11 @@ package edu.ucsb.cs156.frontiers.security;
 
 import edu.ucsb.cs156.frontiers.config.SecurityConfig;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.DownloadRequest;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.DownloadRequestRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestComponent;
@@ -18,6 +20,7 @@ public class DummyCourseSecurity {
   @Autowired CourseRepository courseRepository;
 
   @Autowired RosterStudentRepository rosterStudentRepository;
+  @Autowired private DownloadRequestRepository downloadRequestRepository;
 
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   public Course loadCourse(Long courseId) {
@@ -62,6 +65,13 @@ public class DummyCourseSecurity {
     return rosterStudentRepository
         .findById(id)
         .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+  }
+
+  @PreAuthorize("@CourseSecurity.hasDownloadPermissions(#root, #id)")
+  public DownloadRequest loadDownloadRequest(Long id) {
+    return downloadRequestRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException(DownloadRequest.class, id));
   }
 
   @Bean

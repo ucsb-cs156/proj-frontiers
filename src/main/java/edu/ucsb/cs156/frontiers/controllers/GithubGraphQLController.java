@@ -1,9 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
-import edu.ucsb.cs156.frontiers.jobs.ReturnCsvCommitHistoryJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
@@ -112,47 +110,5 @@ public class GithubGraphQLController extends ApiController {
     log.info("Result from getCommits: {}", result);
 
     return result;
-  }
-
-  /**
-   * Return default branch name for a given repository.
-   *
-   * @param courseId the id of the course whose installation is being used for credentails
-   * @param owner the owner of the repository
-   * @param repo the name of the repository
-   * @return the default branch name
-   */
-  @Operation(summary = "Get commits")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @GetMapping("csvCommits")
-  public Job commitCsv(
-      @Parameter Long courseId,
-      @Parameter String owner,
-      @Parameter String repo,
-      @Parameter String branch,
-      @Parameter Integer count)
-      throws Exception {
-    log.info(
-        "commitCsv called with courseId: {}, owner: {}, repo: {}, branch: {}, first: {}",
-        courseId,
-        owner,
-        repo,
-        branch,
-        count);
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-
-    ReturnCsvCommitHistoryJob job =
-        ReturnCsvCommitHistoryJob.builder()
-            .course(course)
-            .owner(owner)
-            .repo(repo)
-            .branch(branch)
-            .count(count)
-            .githubService(githubGraphQLService)
-            .build();
-    return jobService.runAsJob(job);
   }
 }

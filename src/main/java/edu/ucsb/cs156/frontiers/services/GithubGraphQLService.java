@@ -4,15 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.DownloadRequest;
+import edu.ucsb.cs156.frontiers.entities.DownloadedCommit;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
-import edu.ucsb.cs156.frontiers.models.Commit;
-import edu.ucsb.cs156.frontiers.models.CommitHistory;
+import edu.ucsb.cs156.frontiers.repositories.DownloadedCommitRepository;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.graphql.GraphQlResponse;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.http.HttpHeaders;
@@ -30,21 +32,21 @@ public class GithubGraphQLService {
 
   private final String githubBaseUrl = "https://api.github.com/graphql";
 
-  private final DateTimeProvider dateTimeProvider;
   private final ObjectMapper jacksonObjectMapper;
+  private final DownloadedCommitRepository downloadedCommitRepository;
 
   public GithubGraphQLService(
       RestClient.Builder builder,
       JwtService jwtService,
-      DateTimeProvider dateTimeProvider,
-      ObjectMapper jacksonObjectMapper) {
+      ObjectMapper jacksonObjectMapper,
+      DownloadedCommitRepository downloadedCommitRepository) {
     this.jwtService = jwtService;
     this.graphQlClient =
         HttpSyncGraphQlClient.builder(builder.baseUrl(githubBaseUrl).build())
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build();
-    this.dateTimeProvider = dateTimeProvider;
     this.jacksonObjectMapper = jacksonObjectMapper;
+    this.downloadedCommitRepository = downloadedCommitRepository;
   }
 
   /**
@@ -69,14 +71,14 @@ public class GithubGraphQLService {
     // language=GraphQL
     String query =
         """
-                                query getDefaultBranch($owner: String!, $repo: String!) {
-                                  repository(owner: $owner, name: $repo) {
-                                    defaultBranchRef {
-                                      name
-                                    }
-                                  }
-                                }
-                                """;
+        query getDefaultBranch($owner: String!, $repo: String!) {
+          repository(owner: $owner, name: $repo) {
+            defaultBranchRef {
+              name
+            }
+          }
+        }
+        """;
 
     return graphQlClient
         .mutate()
@@ -96,29 +98,49 @@ public class GithubGraphQLService {
           NoSuchAlgorithmException,
           InvalidKeySpecException,
           NoLinkedOrganizationException {
-    log.info(
-        "getCommits called with course.getId(): {} owner: {}, repo: {}, branch: {}, first: {}, after: {}",
-        course.getId(),
-        owner,
-        repo,
-        branch,
-        first,
-        after);
-    String githubToken = jwtService.getInstallationToken(course);
+    return getCommits(course, owner, repo, branch, null, null, first, after);
+  }
 
-<<<<<<< HEAD
-    log.info("githubToken: {}", githubToken);
+  /**
+   * Retrieves the commit history for a specified branch of a GitHub repository within a given time
+   * range.
+   *
+   * @param course The course entity, used to fetch the associated GitHub installation token.
+   * @param owner The owner of the GitHub repository.
+   * @param repo The name of the GitHub repository.
+   * @param branch The branch of the repository for which the commit history is retrieved.
+   * @param since The start time for fetching commits (inclusive). Optional. Can be null.
+   * @param until The end time for fetching commits (exclusive). Optional. Can be null.
+   * @param size The maximum number of commits to retrieve in one request.
+   * @param cursor The pagination cursor pointing to the start of the commit history to fetch.
+   *     Optional. Can be null.
+   * @return A JSON string representing the commit history and associated metadata.
+   * @throws NoLinkedOrganizationException If no linked organization exists for the specified
+   *     course.
+   */
+  public String getCommits(
+      Course course,
+      String owner,
+      String repo,
+      String branch,
+      Instant since,
+      Instant until,
+      int size,
+      String cursor)
+      throws JsonProcessingException,
+          NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          NoLinkedOrganizationException {
+    String githubToken = jwtService.getInstallationToken(course);
     // language=GraphQL
-=======
->>>>>>> e696097603 (dj - created platform-amorphous return for commits csv)
     String query =
         """
-            query GetBranchCommits($owner: String!, $repo: String!, $branch: String!, $first: Int!, $after: String) {
+            query GetBranchCommits($owner: String!, $repo: String!, $branch: String!, $first: Int!, $after: String, $since: GitTimestamp, $until: GitTimestamp) {
               repository(owner: $owner, name: $repo) {
                 ref(qualifiedName: $branch) {
                   target {
                     ... on Commit {
-                      history(first: $first, after: $after) {
+                      history(first: $first, after: $after, since: $since, until: $until) {
                         pageInfo {
                           hasNextPage
                           endCursor
@@ -162,8 +184,10 @@ public class GithubGraphQLService {
             .variable("owner", owner)
             .variable("repo", repo)
             .variable("branch", branch)
-            .variable("first", first)
-            .variable("after", after)
+            .variable("first", size)
+            .variable("after", cursor)
+            .variable("since", since)
+            .variable("until", until)
             .executeSync();
 
     Map<String, Object> data = response.getData();
@@ -171,19 +195,23 @@ public class GithubGraphQLService {
     return jsonData;
   }
 
-  public CommitHistory returnCommitHistory(
-      Course course, String owner, String repo, String branch, int count)
+  public void downloadCommitHistory(DownloadRequest downloadRequest)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-    ZonedDateTime retrievedTime = ZonedDateTime.from(dateTimeProvider.getNow().get());
-    CommitHistory history =
-        CommitHistory.builder().owner(owner).repo(repo).retrievedTime(retrievedTime).build();
-
     String pointer = null;
     boolean hasNextPage;
-    int commitCount = 0;
+    List<DownloadedCommit> downloadedCommits = new ArrayList<>(4000);
     do {
       JsonNode currentPage =
-          jacksonObjectMapper.readTree(getCommits(course, owner, repo, branch, 100, pointer));
+          jacksonObjectMapper.readTree(
+              getCommits(
+                  downloadRequest.getCourse(),
+                  downloadRequest.getOrg(),
+                  downloadRequest.getRepo(),
+                  downloadRequest.getBranch(),
+                  downloadRequest.getStartDate(),
+                  downloadRequest.getEndDate(),
+                  100,
+                  pointer));
       pointer =
           currentPage
               .path("repository")
@@ -205,13 +233,13 @@ public class GithubGraphQLService {
       JsonNode commits =
           currentPage.path("repository").path("ref").path("target").path("history").path("edges");
       for (JsonNode node : commits) {
-        history.getCommits().add(jacksonObjectMapper.treeToValue(node.get("node"), Commit.class));
-        commitCount++;
-        if (commitCount >= count) break;
+        DownloadedCommit newCommit =
+            jacksonObjectMapper.treeToValue(node.get("node"), DownloadedCommit.class);
+        newCommit.setRequest(downloadRequest);
+        downloadedCommits.add(newCommit);
       }
 
-    } while (hasNextPage && commitCount < count);
-    history.setCount(history.getCommits().size());
-    return history;
+    } while (hasNextPage);
+    downloadedCommitRepository.saveAll(downloadedCommits);
   }
 }
