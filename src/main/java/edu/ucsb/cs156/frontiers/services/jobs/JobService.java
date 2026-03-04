@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @Slf4j
@@ -23,6 +23,7 @@ public class JobService {
    * This is a self-referential bean to allow for async method calls within the same class.
    */
   @Lazy @Autowired private JobService self;
+  @Autowired private TransactionTemplate transactionTemplate;
 
   public Job runAsJob(JobContextConsumer jobFunction) {
     String jobName = jobFunction.getClass().getName().replace("edu.ucsb.cs156.frontiers.jobs.", "");
@@ -60,12 +61,21 @@ public class JobService {
    * @param jobFunction
    */
   @Async
-  @Transactional
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
     JobContext context = contextFactory.createContext(job);
 
     try {
-      jobFunction.accept(context);
+      transactionTemplate.executeWithoutResult(
+          status -> {
+            try {
+              jobFunction.accept(context);
+              /*lambdas cannot throw checked exceptions
+              have to repackage as a runtime exception
+              to catch outside transactional boundary*/
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          });
     } catch (Exception e) {
       job.setStatus("error");
       context.log(e.getMessage());
