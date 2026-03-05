@@ -13,6 +13,7 @@ import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { teamsFixtures } from "fixtures/TeamsFixtures";
 import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
+import { jobsFixtures } from "fixtures/jobsByCourseFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -218,6 +219,72 @@ ExampleWithOrganizationAgeWarning.parameters = {
       http.get("/api/courses/warnings/7", () =>
         HttpResponse.json(showOrganizationAgeWarning),
       ),
+    ],
+  },
+};
+
+export const ExampleCourseThreeJobs = Template.bind({});
+ExampleCourseThreeJobs.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseThreeJobs.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        if (courseId === "7") {
+          return HttpResponse.json(courseStaff, {
+            status: 200,
+          });
+        }
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/teams/all", () => {
+        return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
+      }),
+      http.get("/api/jobs/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        if (courseId === "7") {
+          return HttpResponse.json(jobsFixtures.threeJobs, { status: 200 });
+        }
+        return HttpResponse.json([], { status: 200 });
+      }),
+    ],
+  },
+};
+
+export const ExampleCourseNoJobs = Template.bind({});
+ExampleCourseNoJobs.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseNoJobs.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json([], {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/jobs/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        if (courseId === "7") {
+          return HttpResponse.json([], { status: 200 });
+        }
+        return HttpResponse.json([], { status: 200 });
+      }),
     ],
   },
 };
