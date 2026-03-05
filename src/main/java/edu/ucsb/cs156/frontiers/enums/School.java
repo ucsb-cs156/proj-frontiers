@@ -33,6 +33,9 @@ public enum School {
   private final String displayName;
   private final String key = this.name();
 
+  /*
+   * This is mostly to allow tests to serialize back in objects with school properties.
+   */
   @JsonCreator
   public static School fromKey(JsonNode node) {
     if (node == null) {
@@ -44,6 +47,7 @@ public enum School {
     if (node.has("key")) {
       return School.valueOf(node.get("key").asText().toUpperCase());
     }
-    return null;
+
+    throw new IllegalArgumentException("Invalid JSON node for School enum");
   }
 }
