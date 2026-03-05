@@ -347,30 +347,31 @@ public class GithubTeamService {
 
 <span class="fc" id="L348">    ResponseEntity&lt;String&gt; response =</span>
 <span class="fc" id="L349">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L350">    Map&lt;String, TeamStatus&gt; memberships = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L350">    List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L351">    Map&lt;String, TeamStatus&gt; memberships = new HashMap&lt;&gt;();</span>
 
-    while (true) {
+<span class="fc bfc" id="L353" title="All 4 branches covered.">    while (!responseLinks.isEmpty() &amp;&amp; responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
       for (GithubTeamMemberInfo member :
-<span class="fc bfc" id="L354" title="All 2 branches covered.">          objectMapper.convertValue(</span>
-<span class="fc" id="L355">              objectMapper.readTree(response.getBody()),</span>
-<span class="fc" id="L356">              new TypeReference&lt;List&lt;GithubTeamMemberInfo&gt;&gt;() {})) {</span>
-<span class="fc" id="L357">        memberships.put(member.login(), TeamStatus.TEAM_MEMBER);</span>
-<span class="fc" id="L358">      }</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">          objectMapper.convertValue(</span>
+<span class="fc" id="L356">              objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L357">              new TypeReference&lt;List&lt;GithubTeamMemberInfo&gt;&gt;() {})) {</span>
+<span class="fc" id="L358">        memberships.put(member.login(), TeamStatus.TEAM_MEMBER);</span>
+<span class="fc" id="L359">      }</span>
 
-<span class="fc" id="L360">      List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
-<span class="fc bfc" id="L361" title="All 4 branches covered.">      if (responseLinks.isEmpty() || !responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
-<span class="fc" id="L362">        break;</span>
-      }
+<span class="fc" id="L361">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
+<span class="fc" id="L362">      matcher.find();</span>
+<span class="fc" id="L363">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L364">      responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L365">    }</span>
 
-<span class="fc" id="L365">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
-<span class="fc bfc" id="L366" title="All 2 branches covered.">      if (!matcher.find()) {</span>
-<span class="fc" id="L367">        break;</span>
-      }
+    for (GithubTeamMemberInfo member :
+<span class="fc bfc" id="L368" title="All 2 branches covered.">        objectMapper.convertValue(</span>
+<span class="fc" id="L369">            objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L370">            new TypeReference&lt;List&lt;GithubTeamMemberInfo&gt;&gt;() {})) {</span>
+<span class="fc" id="L371">      memberships.put(member.login(), TeamStatus.TEAM_MEMBER);</span>
+<span class="fc" id="L372">    }</span>
 
-<span class="fc" id="L370">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L371">    }</span>
-
-<span class="fc" id="L373">    return memberships;</span>
+<span class="fc" id="L374">    return memberships;</span>
   }
 
   /**
@@ -384,38 +385,37 @@ public class GithubTeamService {
    */
   public List&lt;GithubTeamInfo&gt; getAllTeams(Course course)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc" id="L387">    String endpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/teams?per_page=100&quot;;</span>
-<span class="fc" id="L388">    Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
+<span class="fc" id="L388">    String endpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/teams?per_page=100&quot;;</span>
+<span class="fc" id="L389">    Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
 
-<span class="fc" id="L390">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L391">    String token = jwtService.getInstallationToken(course);</span>
-<span class="fc" id="L392">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L393">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L394">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L395">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L391">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L392">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L393">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L394">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L395">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L396">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
 
-<span class="fc" id="L397">    ResponseEntity&lt;String&gt; response =</span>
-<span class="fc" id="L398">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L399">    List&lt;GithubTeamInfo&gt; teams = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L398">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L399">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L400">    List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L401">    List&lt;GithubTeamInfo&gt; teams = new ArrayList&lt;&gt;();</span>
 
-    while (true) {
-<span class="fc" id="L402">      teams.addAll(</span>
-<span class="fc" id="L403">          objectMapper.convertValue(</span>
-<span class="fc" id="L404">              objectMapper.readTree(response.getBody()),</span>
-<span class="fc" id="L405">              new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
+<span class="fc bfc" id="L403" title="All 4 branches covered.">    while (!responseLinks.isEmpty() &amp;&amp; responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
+<span class="fc" id="L404">      teams.addAll(</span>
+<span class="fc" id="L405">          objectMapper.convertValue(</span>
+<span class="fc" id="L406">              objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L407">              new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
 
-<span class="fc" id="L407">      List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
-<span class="fc bfc" id="L408" title="All 4 branches covered.">      if (responseLinks.isEmpty() || !responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
-<span class="fc" id="L409">        break;</span>
-      }
+<span class="fc" id="L409">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
+<span class="fc" id="L410">      matcher.find();</span>
+<span class="fc" id="L411">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L412">      responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L413">    }</span>
 
-<span class="fc" id="L412">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
-<span class="fc bfc" id="L413" title="All 2 branches covered.">      if (!matcher.find()) {</span>
-<span class="fc" id="L414">        break;</span>
-      }
-
-<span class="fc" id="L417">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
-<span class="fc" id="L418">    }</span>
+<span class="fc" id="L415">    teams.addAll(</span>
+<span class="fc" id="L416">        objectMapper.convertValue(</span>
+<span class="fc" id="L417">            objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L418">            new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
 
 <span class="fc" id="L420">    return teams;</span>
   }
