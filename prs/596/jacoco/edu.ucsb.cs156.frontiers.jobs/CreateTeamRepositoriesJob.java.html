@@ -17,14 +17,19 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
   RepositoryPermissions permissions;
 
   @Override
-  public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L21">    ctx.log(&quot;Creating team repositories...&quot;);</span>
+  public Course getCourse() {
+<span class="fc" id="L21">    return course;</span>
+  }
 
-<span class="fc bfc" id="L23" title="All 2 branches covered.">    for (Team team : course.getTeams()) {</span>
-<span class="fc" id="L24">      repositoryService.createTeamRepository(</span>
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L26">    ctx.log(&quot;Creating team repositories...&quot;);</span>
+
+<span class="fc bfc" id="L28" title="All 2 branches covered.">    for (Team team : course.getTeams()) {</span>
+<span class="fc" id="L29">      repositoryService.createTeamRepository(</span>
           course, team, repositoryPrefix, isPrivate, permissions);
-<span class="fc" id="L26">    }</span>
-<span class="fc" id="L27">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L28">  }</span>
+<span class="fc" id="L31">    }</span>
+<span class="fc" id="L32">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L33">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

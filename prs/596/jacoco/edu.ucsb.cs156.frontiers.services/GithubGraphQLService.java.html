@@ -48,7 +48,8 @@ public class GithubGraphQLService {
 
 <span class="fc" id="L49">    log.info(&quot;githubToken: {}&quot;, githubToken);</span>
 
-<span class="fc" id="L51">    String query =</span>
+    // language=GraphQL
+<span class="fc" id="L52">    String query =</span>
         &quot;&quot;&quot;
                                 query getDefaultBranch($owner: String!, $repo: String!) {
                                   repository(owner: $owner, name: $repo) {
@@ -59,16 +60,16 @@ public class GithubGraphQLService {
                                 }
                                 &quot;&quot;&quot;;
 
-<span class="fc" id="L62">    return graphQlClient</span>
-<span class="fc" id="L63">        .mutate()</span>
-<span class="fc" id="L64">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
-<span class="fc" id="L65">        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
-<span class="fc" id="L66">        .build()</span>
-<span class="fc" id="L67">        .document(query)</span>
-<span class="fc" id="L68">        .variable(&quot;owner&quot;, owner)</span>
-<span class="fc" id="L69">        .variable(&quot;repo&quot;, repo)</span>
-<span class="fc" id="L70">        .retrieveSync(&quot;repository.defaultBranchRef.name&quot;)</span>
-<span class="fc" id="L71">        .toEntity(String.class);</span>
+<span class="fc" id="L63">    return graphQlClient</span>
+<span class="fc" id="L64">        .mutate()</span>
+<span class="fc" id="L65">        .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
+<span class="fc" id="L66">        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="fc" id="L67">        .build()</span>
+<span class="fc" id="L68">        .document(query)</span>
+<span class="fc" id="L69">        .variable(&quot;owner&quot;, owner)</span>
+<span class="fc" id="L70">        .variable(&quot;repo&quot;, repo)</span>
+<span class="fc" id="L71">        .retrieveSync(&quot;repository.defaultBranchRef.name&quot;)</span>
+<span class="fc" id="L72">        .toEntity(String.class);</span>
   }
 
   public String getCommits(
@@ -77,19 +78,19 @@ public class GithubGraphQLService {
           NoSuchAlgorithmException,
           InvalidKeySpecException,
           NoLinkedOrganizationException {
-<span class="fc" id="L80">    log.info(</span>
+<span class="fc" id="L81">    log.info(</span>
         &quot;getCommits called with course.getId(): {} owner: {}, repo: {}, branch: {}, first: {}, after: {}&quot;,
-<span class="fc" id="L82">        course.getId(),</span>
+<span class="fc" id="L83">        course.getId(),</span>
         owner,
         repo,
         branch,
-<span class="fc" id="L86">        first,</span>
+<span class="fc" id="L87">        first,</span>
         after);
-<span class="fc" id="L88">    String githubToken = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L89">    String githubToken = jwtService.getInstallationToken(course);</span>
 
-<span class="fc" id="L90">    log.info(&quot;githubToken: {}&quot;, githubToken);</span>
-
-<span class="fc" id="L92">    String query =</span>
+<span class="fc" id="L91">    log.info(&quot;githubToken: {}&quot;, githubToken);</span>
+    // language=GraphQL
+<span class="fc" id="L93">    String query =</span>
         &quot;&quot;&quot;
             query GetBranchCommits($owner: String!, $repo: String!, $branch: String!, $first: Int!, $after: String) {
               repository(owner: $owner, name: $repo) {
@@ -131,23 +132,23 @@ public class GithubGraphQLService {
             }
             &quot;&quot;&quot;;
 
-<span class="fc" id="L134">    GraphQlResponse response =</span>
+<span class="fc" id="L135">    GraphQlResponse response =</span>
         graphQlClient
-<span class="fc" id="L136">            .mutate()</span>
-<span class="fc" id="L137">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
-<span class="fc" id="L138">            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
-<span class="fc" id="L139">            .build()</span>
-<span class="fc" id="L140">            .document(query)</span>
-<span class="fc" id="L141">            .variable(&quot;owner&quot;, owner)</span>
-<span class="fc" id="L142">            .variable(&quot;repo&quot;, repo)</span>
-<span class="fc" id="L143">            .variable(&quot;branch&quot;, branch)</span>
-<span class="fc" id="L144">            .variable(&quot;first&quot;, first)</span>
-<span class="fc" id="L145">            .variable(&quot;after&quot;, after)</span>
-<span class="fc" id="L146">            .executeSync();</span>
+<span class="fc" id="L137">            .mutate()</span>
+<span class="fc" id="L138">            .header(&quot;Authorization&quot;, &quot;Bearer &quot; + githubToken)</span>
+<span class="fc" id="L139">            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="fc" id="L140">            .build()</span>
+<span class="fc" id="L141">            .document(query)</span>
+<span class="fc" id="L142">            .variable(&quot;owner&quot;, owner)</span>
+<span class="fc" id="L143">            .variable(&quot;repo&quot;, repo)</span>
+<span class="fc" id="L144">            .variable(&quot;branch&quot;, branch)</span>
+<span class="fc" id="L145">            .variable(&quot;first&quot;, first)</span>
+<span class="fc" id="L146">            .variable(&quot;after&quot;, after)</span>
+<span class="fc" id="L147">            .executeSync();</span>
 
-<span class="fc" id="L148">    Map&lt;String, Object&gt; data = response.getData();</span>
-<span class="fc" id="L149">    String jsonData = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data);</span>
-<span class="fc" id="L150">    return jsonData;</span>
+<span class="fc" id="L149">    Map&lt;String, Object&gt; data = response.getData();</span>
+<span class="fc" id="L150">    String jsonData = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data);</span>
+<span class="fc" id="L151">    return jsonData;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
