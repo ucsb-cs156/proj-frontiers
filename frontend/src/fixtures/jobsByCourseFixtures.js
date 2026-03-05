@@ -1,4 +1,4 @@
-const jobsFixtures = {
+const jobsByCourseFixtures = {
   threeJobs: [
     {
       id: 1,
@@ -59,4 +59,4 @@ const jobsFixtures = {
   ],
 };
 
-export { jobsFixtures };
+export { jobsByCourseFixtures };

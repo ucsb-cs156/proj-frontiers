@@ -13,7 +13,7 @@ import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { teamsFixtures } from "fixtures/TeamsFixtures";
 import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
-import { jobsFixtures } from "fixtures/jobsByCourseFixtures";
+import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -39,6 +39,7 @@ const exampleCourse = {
 
 const rosterStudents = rosterStudentFixtures.threeStudents;
 const courseStaff = courseStaffFixtures.threeStaff;
+const courseJobs = jobsByCourseFixtures.threeJobs;
 
 export const ExampleCourseNoStudents = Template.bind({});
 ExampleCourseNoStudents.args = {
@@ -136,6 +137,11 @@ ExampleCourseNoStudents.parameters = {
       http.get("/api/coursestaff/course", () => {
         return HttpResponse.json([], { status: 200 });
       }),
+      http.get("/api/jobs/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        return HttpResponse.json([], { status: 200 });
+      }),
     ],
   },
 };
@@ -154,6 +160,11 @@ ExampleCourseThreeStudents.parameters = {
         });
       }),
       http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/jobs/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
         return HttpResponse.json([], { status: 200 });
       }),
     ],
@@ -185,6 +196,11 @@ ExampleCourseThreeStudentsThreeStaff.parameters = {
       }),
       http.get("/api/teams/all", () => {
         return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
+      }),
+      http.get("/api/jobs/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        return HttpResponse.json([], { status: 200 });
       }),
     ],
   },
@@ -219,15 +235,20 @@ ExampleWithOrganizationAgeWarning.parameters = {
       http.get("/api/courses/warnings/7", () =>
         HttpResponse.json(showOrganizationAgeWarning),
       ),
+      http.get("/api/jobs/course", ({ request }) => {
+        const url = new URL(request.url);
+        const courseId = url.searchParams.get("courseId");
+        return HttpResponse.json([], { status: 200 });
+      }),
     ],
   },
 };
 
-export const ExampleCourseThreeJobs = Template.bind({});
-ExampleCourseThreeJobs.args = {
+export const ExampleCourseThreeStudentsThreeStaffsThreeJobs = Template.bind({});
+ExampleCourseThreeStudentsThreeStaffsThreeJobs.args = {
   suppressMemoryRouter: true,
 };
-ExampleCourseThreeJobs.parameters = {
+ExampleCourseThreeStudentsThreeStaffsThreeJobs.parameters = {
   msw: {
     handlers: [
       ...basicHandlers,
@@ -253,7 +274,7 @@ ExampleCourseThreeJobs.parameters = {
         const url = new URL(request.url);
         const courseId = url.searchParams.get("courseId");
         if (courseId === "7") {
-          return HttpResponse.json(jobsFixtures.threeJobs, { status: 200 });
+          return HttpResponse.json(courseJobs, { status: 200 });
         }
         return HttpResponse.json([], { status: 200 });
       }),
@@ -261,30 +282,4 @@ ExampleCourseThreeJobs.parameters = {
   },
 };
 
-export const ExampleCourseNoJobs = Template.bind({});
-ExampleCourseNoJobs.args = {
-  suppressMemoryRouter: true,
-};
-ExampleCourseNoJobs.parameters = {
-  msw: {
-    handlers: [
-      ...basicHandlers,
-      http.get("/api/rosterStudents/course/7", () => {
-        return HttpResponse.json([], {
-          status: 200,
-        });
-      }),
-      http.get("/api/coursestaff/course", () => {
-        return HttpResponse.json([], { status: 200 });
-      }),
-      http.get("/api/jobs/course", ({ request }) => {
-        const url = new URL(request.url);
-        const courseId = url.searchParams.get("courseId");
-        if (courseId === "7") {
-          return HttpResponse.json([], { status: 200 });
-        }
-        return HttpResponse.json([], { status: 200 });
-      }),
-    ],
-  },
-};
+
