@@ -19,6 +19,7 @@ import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CourseWarning;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
@@ -81,7 +82,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .canvasApiToken("canvas-token")
             .canvasCourseId("12345")
@@ -125,7 +126,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .canvasApiToken("canvas-token")
             .canvasCourseId("12345")
@@ -163,11 +164,11 @@ public class CoursesControllerTests extends ControllerTestCase {
   public void testAllCourses_ROLE_ADMIN() throws Exception {
 
     // arrange
-    Course course1 = Course.builder().courseName("CS156").term("S25").school("UCSB").build();
+    Course course1 = Course.builder().courseName("CS156").term("S25").school(School.UCSB).build();
 
     InstructorCourseView courseView1 = new InstructorCourseView(course1);
 
-    Course course2 = Course.builder().courseName("CS148").term("S25").school("UCSB").build();
+    Course course2 = Course.builder().courseName("CS148").term("S25").school(School.UCSB).build();
     InstructorCourseView courseView2 = new InstructorCourseView(course2);
 
     when(courseRepository.findAll()).thenReturn(java.util.List.of(course1, course2));
@@ -196,7 +197,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .build();
 
@@ -246,7 +247,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .id(1L)
             .build();
@@ -264,7 +265,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .installationId("1234")
             .orgName("ucsb-cs156-s25")
@@ -300,7 +301,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .courseStaff(List.of())
             .rosterStudents(List.of())
@@ -311,7 +312,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .installationId("1234")
             .orgName("ucsb-cs156-s25")
@@ -364,7 +365,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(separateUser.getEmail())
             .id(1L)
             .build();
@@ -393,7 +394,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(separateUser.getEmail())
             .courseStaff(List.of())
             .rosterStudents(List.of())
@@ -404,7 +405,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(separateUser.getEmail())
             .installationId("1234")
             .orgName("ucsb-cs156-s25")
@@ -463,7 +464,7 @@ public class CoursesControllerTests extends ControllerTestCase {
         Course.builder()
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .id(1L)
             .build();
@@ -517,7 +518,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .orgName("Test Org")
             .courseName("Test Course")
             .term("S25")
-            .school("Engineering")
+            .school(School.UCSB)
             .build();
 
     RosterStudent rs = new RosterStudent();
@@ -540,7 +541,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     expected.put("orgName", course.getOrgName());
     expected.put("courseName", course.getCourseName());
     expected.put("term", course.getTerm());
-    expected.put("school", course.getSchool());
+    expected.put("school", course.getSchool().getDisplayName());
     expected.put("studentStatus", new RosterStudentDTO(rs).orgStatus());
     expected.put("rosterStudentId", rs.getId());
 
@@ -560,7 +561,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .build();
 
     Course course2 =
@@ -569,7 +570,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS24")
             .orgName("ucsb-cs24-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .build();
 
     CourseStaff cs1 =
@@ -642,7 +643,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .build();
 
@@ -696,7 +697,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(otherInstructorUser.getEmail())
             .build();
 
@@ -719,7 +720,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(otherInstructorUser.getEmail())
             .installationId("inst-1")
             .canvasApiToken("canvas-token-1234567890")
@@ -782,7 +783,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(otherInstructorUser.getEmail())
             .installationId("inst-1")
             .canvasApiToken("12")
@@ -821,7 +822,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(otherInstructorUser.getEmail())
             .installationId("inst-1")
             .build();
@@ -858,7 +859,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(otherInstructorUser.getEmail())
             .installationId("inst-1")
             .canvasApiToken("123")
@@ -897,7 +898,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(otherInstructorUser.getEmail())
             .installationId("inst-1")
             .canvasApiToken("1234")
@@ -1113,7 +1114,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("old-instructor@example.com")
             .build();
 
@@ -1126,7 +1127,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("new-instructor@example.com")
             .build();
 
@@ -1162,7 +1163,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("old-instructor@example.com")
             .build();
 
@@ -1175,7 +1176,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("new-instructor@example.com")
             .build();
 
@@ -1211,7 +1212,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("old-instructor@example.com")
             .build();
 
@@ -1224,7 +1225,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("new-instructor@example.com")
             .build();
 
@@ -1262,7 +1263,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("old-instructor@example.com")
             .build();
 
@@ -1308,7 +1309,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("OldName")
             .term("OldTerm")
-            .school("OldSchool")
+            .school(School.UCSB)
             .instructorEmail("rando@example.com")
             .build();
 
@@ -1317,7 +1318,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("NewName")
             .term("NewTerm")
-            .school("NewSchool")
+            .school(School.CHICO_STATE)
             .instructorEmail("rando@example.com")
             .build();
 
@@ -1331,7 +1332,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .param("courseId", "1")
                     .param("courseName", "NewName")
                     .param("term", "NewTerm")
-                    .param("school", "NewSchool")
+                    .param("school", "CHICO_STATE")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
@@ -1355,7 +1356,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .param("courseId", "2")
                     .param("courseName", "AnyName")
                     .param("term", "AnyTerm")
-                    .param("school", "AnySchool")
+                    .param("school", "CHICO_STATE")
                     .with(csrf()))
             .andExpect(status().isForbidden())
             .andReturn();
@@ -1372,7 +1373,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                 .param("courseId", "1")
                 .param("courseName", "NewName")
                 .param("term", "NewTerm")
-                .param("school", "NewSchool")
+                .param("school", "CHICO_STATE")
                 .with(csrf()))
         .andExpect(status().isForbidden());
   }
@@ -1388,7 +1389,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .param("courseId", "1")
                     .param("courseName", "Updated Course")
                     .param("term", "F25")
-                    .param("school", "Updated School")
+                    .param("school", "CHICO_STATE")
                     .with(csrf()))
             .andExpect(status().isNotFound())
             .andReturn();
@@ -1413,7 +1414,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .build();
 
@@ -1422,7 +1423,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Updated Course")
             .term("F25")
-            .school("Updated School")
+            .school(School.CHICO_STATE)
             .instructorEmail(user.getEmail())
             .build();
 
@@ -1436,7 +1437,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .param("courseId", "1")
                     .param("courseName", "Updated Course")
                     .param("term", "F25")
-                    .param("school", "Updated School")
+                    .param("school", "CHICO_STATE")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
@@ -1461,7 +1462,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(instructorUser.getEmail())
             .build();
 
@@ -1470,7 +1471,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Admin Updated Course")
             .term("F25")
-            .school("Admin Updated School")
+            .school(School.CHICO_STATE)
             .instructorEmail(instructorUser.getEmail())
             .build();
 
@@ -1484,7 +1485,7 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .param("courseId", "1")
                     .param("courseName", "Admin Updated Course")
                     .param("term", "F25")
-                    .param("school", "Admin Updated School")
+                    .param("school", "CHICO_STATE")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
@@ -1506,7 +1507,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Name")
             .term("Term")
-            .school("School")
+            .school(School.UCSB)
             .instructorEmail("rando@example.com")
             .canvasApiToken("oldToken")
             .canvasCourseId("oldCourseId")
@@ -1517,7 +1518,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Name")
             .term("Term")
-            .school("School")
+            .school(School.UCSB)
             .instructorEmail("rando@example.com")
             .canvasApiToken("newToken")
             .canvasCourseId("newCourseId")
@@ -1611,7 +1612,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .canvasApiToken("originalToken")
             .canvasCourseId("originalCourseId")
@@ -1622,7 +1623,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .canvasApiToken("newToken")
             .canvasCourseId("newCourseId")
@@ -1662,7 +1663,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(instructorUser.getEmail())
             .canvasApiToken("originalToken")
             .canvasCourseId("originalCourseId")
@@ -1673,7 +1674,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(instructorUser.getEmail())
             .canvasApiToken("newToken")
             .canvasCourseId("newCourseId")
@@ -1711,7 +1712,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("instructor@example.com")
             .installationId("123")
             .orgName("test-org")
@@ -1726,7 +1727,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(1L, view.id());
     assertEquals("CS156", view.courseName());
     assertEquals("S25", view.term());
-    assertEquals("UCSB", view.school());
+    assertEquals(School.UCSB, view.school());
     assertEquals("instructor@example.com", view.instructorEmail());
     assertEquals("123", view.installationId());
     assertEquals("test-org", view.orgName());
@@ -1742,7 +1743,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(2L)
             .courseName("CS148")
             .term("F25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("instructor@example.com")
             .installationId("456")
             .orgName("test-org-2")
@@ -1757,7 +1758,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(2L, view.id());
     assertEquals("CS148", view.courseName());
     assertEquals("F25", view.term());
-    assertEquals("UCSB", view.school());
+    assertEquals(School.UCSB, view.school());
     assertEquals("instructor@example.com", view.instructorEmail());
     assertEquals("456", view.installationId());
     assertEquals("test-org-2", view.orgName());
@@ -1773,7 +1774,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(3L)
             .courseName("CS24")
             .term("W25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("instructor@example.com")
             .installationId("789")
             .orgName("test-org-3")
@@ -1788,7 +1789,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(3L, view.id());
     assertEquals("CS24", view.courseName());
     assertEquals("W25", view.term());
-    assertEquals("UCSB", view.school());
+    assertEquals(School.UCSB, view.school());
     assertEquals("instructor@example.com", view.instructorEmail());
     assertEquals("789", view.installationId());
     assertEquals("test-org-3", view.orgName());
@@ -1810,7 +1811,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(4L)
             .courseName("CS130A")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("instructor@example.com")
             .installationId("101112")
             .orgName("test-org-4")
@@ -1824,7 +1825,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     // assert
     assertEquals("CS130A", view.courseName());
     assertEquals("S25", view.term());
-    assertEquals("UCSB", view.school());
+    assertEquals(School.UCSB, view.school());
     assertEquals("instructor@example.com", view.instructorEmail());
     assertEquals("101112", view.installationId());
     assertEquals("test-org-4", view.orgName());
@@ -1840,7 +1841,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("test@example.com")
             .build();
 
@@ -1875,7 +1876,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail("test@example.com")
             .build();
 
@@ -1921,7 +1922,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .canvasApiToken("sameToken")
             .canvasCourseId("sameCourseId")
@@ -1953,7 +1954,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .canvasApiToken("existingToken")
             .canvasCourseId("existingCourseId")
@@ -1983,7 +1984,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("Original Course")
             .term("S25")
-            .school("Original School")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .canvasApiToken("existingToken")
             .canvasCourseId("existingCourseId")

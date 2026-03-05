@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.ucsb.cs156.frontiers.enums.School;
 import jakarta.persistence.*;
 import java.util.List;
 import lombok.*;
@@ -27,7 +28,8 @@ public class Course {
 
   private String term;
 
-  private String school;
+  @Enumerated(EnumType.STRING)
+  private School school;
 
   @JsonIgnore private String canvasApiToken;
 

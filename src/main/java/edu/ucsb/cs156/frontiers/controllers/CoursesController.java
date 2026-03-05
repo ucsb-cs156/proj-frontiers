@@ -6,6 +6,7 @@ import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CourseWarning;
@@ -70,7 +71,7 @@ public class CoursesController extends ApiController {
   public InstructorCourseView postCourse(
       @Parameter(name = "courseName") @RequestParam String courseName,
       @Parameter(name = "term") @RequestParam String term,
-      @Parameter(name = "school") @RequestParam String school,
+      @Parameter(name = "school") @RequestParam School school,
       @Parameter(name = "canvasApiToken") @RequestParam(required = false) String canvasApiToken,
       @Parameter(name = "canvasCourseId") @RequestParam(required = false) String canvasCourseId) {
     // get current date right now and set status to pending
@@ -96,7 +97,7 @@ public class CoursesController extends ApiController {
       String orgName,
       String courseName,
       String term,
-      String school,
+      School school,
       String instructorEmail,
       int numStudents,
       int numStaff) {
@@ -332,7 +333,7 @@ public class CoursesController extends ApiController {
                       course.getOrgName(),
                       course.getCourseName(),
                       course.getTerm(),
-                      course.getSchool(),
+                      course.getSchool().getDisplayName(),
                       rs.getOrgStatus(),
                       rs.getId());
               return rsDto;
@@ -346,7 +347,7 @@ public class CoursesController extends ApiController {
       String orgName,
       String courseName,
       String term,
-      String school,
+      School school,
       OrgStatus studentStatus,
       Long staffId) {}
 
@@ -449,7 +450,7 @@ public class CoursesController extends ApiController {
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "courseName") @RequestParam String courseName,
       @Parameter(name = "term") @RequestParam String term,
-      @Parameter(name = "school") @RequestParam String school) {
+      @Parameter(name = "school") @RequestParam School school) {
     Course course =
         courseRepository
             .findById(courseId)

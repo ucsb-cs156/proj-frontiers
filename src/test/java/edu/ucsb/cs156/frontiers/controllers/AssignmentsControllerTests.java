@@ -20,6 +20,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.AssignmentType;
 import edu.ucsb.cs156.frontiers.enums.Permission;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.enums.Visibility;
 import edu.ucsb.cs156.frontiers.repositories.AssignmentRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -68,7 +69,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .build();
 
@@ -153,7 +154,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .instructorEmail(user.getEmail())
             .build();
 

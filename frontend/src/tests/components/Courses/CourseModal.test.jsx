@@ -3,24 +3,36 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import AxiosMockAdapter from "axios-mock-adapter";
+import axios from "axios";
+import schoolFixtures from "fixtures/schoolFixtures";
 
 const mockSubmit = vi.fn();
 const showModal = vi.fn();
 const toggleShowModal = vi.fn();
 
+const queryClient = new QueryClient();
+const axiosMock = new AxiosMockAdapter(axios);
 describe("CourseModal Tests", () => {
+  beforeEach(() => {
+    queryClient.clear();
+    axiosMock.reset();
+  });
   test("Validation works correctly", async () => {
     render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-        />
-      </div>,
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+          />
+        </div>
+      </QueryClientProvider>,
     );
 
     const modalTitle = screen.getByText("Create Course");
@@ -37,20 +49,23 @@ describe("CourseModal Tests", () => {
   });
 
   test("Can see initialContents", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={coursesFixtures.severalCourses[0]}
-          buttonText={"Edit"}
-          modalTitle={"Edit Course"}
-        />
-      </div>,
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+            initialContents={coursesFixtures.severalCourses[0]}
+            buttonText={"Edit"}
+            modalTitle={"Edit Course"}
+          />
+        </div>
+      </QueryClientProvider>,
     );
 
     const modalTitle = screen.getByText("Edit Course");
@@ -63,17 +78,20 @@ describe("CourseModal Tests", () => {
   });
 
   test("Can submit successfully", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-        />
-      </div>,
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+          />
+        </div>
+      </QueryClientProvider>,
     );
 
     const courseName = screen.getByLabelText("Course Name");
@@ -82,6 +100,7 @@ describe("CourseModal Tests", () => {
     fireEvent.change(courseName, { target: { value: "CMPSC 156" } });
     fireEvent.change(courseTerm, { target: { value: "Spring 2025" } });
     fireEvent.change(school, { target: { value: "UCSB" } });
+    fireEvent.click(screen.getByText("UCSB"));
     expect(screen.getByTestId("CourseModal-courseName")).toBeInTheDocument();
     expect(screen.getByTestId("CourseModal-term")).toBeInTheDocument();
     expect(screen.getByTestId("CourseModal-school")).toBeInTheDocument();
@@ -96,16 +115,18 @@ describe("CourseModal Tests", () => {
 
   test("Can click close", async () => {
     render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-        />
-      </div>,
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+          />
+        </div>
+      </QueryClientProvider>,
     );
 
     const closeButton = screen.getByTestId("CourseModal-closeButton");
@@ -115,17 +136,20 @@ describe("CourseModal Tests", () => {
   });
 
   test("Form starts empty without initialContents", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-        />
-      </div>,
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+          />
+        </div>
+      </QueryClientProvider>,
     );
 
     const courseNameInput = screen.getByTestId("CourseModal-courseName");
@@ -138,18 +162,21 @@ describe("CourseModal Tests", () => {
   });
 
   test("Form gets populated when initialContents change from empty to filled", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     const MockCourseModal = ({ initialContents }) => (
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={initialContents}
-        />
-      </div>
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+            initialContents={initialContents}
+          />
+        </div>
+      </QueryClientProvider>
     );
 
     // Start with no initial contents
@@ -178,18 +205,21 @@ describe("CourseModal Tests", () => {
   });
 
   test("Form updates when initialContents change from one course to another", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     const MockCourseModal = ({ initialContents }) => (
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={initialContents}
-        />
-      </div>
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+            initialContents={initialContents}
+          />
+        </div>
+      </QueryClientProvider>
     );
 
     // Start with first course
@@ -220,18 +250,21 @@ describe("CourseModal Tests", () => {
   });
 
   test("useEffect handles undefined initialContents correctly", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     const MockCourseModal = ({ initialContents }) => (
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={initialContents}
-        />
-      </div>
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+            initialContents={initialContents}
+          />
+        </div>
+      </QueryClientProvider>
     );
 
     // Start with undefined initial contents
@@ -263,18 +296,22 @@ describe("CourseModal Tests", () => {
 
   test("defaultValues prop works correctly with initialContents", async () => {
     // This test verifies that the defaultValues prop in useForm works
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={coursesFixtures.severalCourses[0]}
-        />
-      </div>,
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+            initialContents={coursesFixtures.severalCourses[0]}
+          />
+        </div>
+        ,
+      </QueryClientProvider>,
     );
 
     // The form should be immediately populated due to defaultValues
@@ -288,18 +325,21 @@ describe("CourseModal Tests", () => {
   });
 
   test("defaultValues uses empty object when initialContents is null", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
     render(
-      <div
-        className="modal show"
-        style={{ display: "block", position: "initial" }}
-      >
-        <CourseModal
-          showModal={showModal}
-          toggleShowModal={toggleShowModal}
-          onSubmitAction={mockSubmit}
-          initialContents={null}
-        />
-      </div>,
+      <QueryClientProvider client={queryClient}>
+        <div
+          className="modal show"
+          style={{ display: "block", position: "initial" }}
+        >
+          <CourseModal
+            showModal={showModal}
+            toggleShowModal={toggleShowModal}
+            onSubmitAction={mockSubmit}
+            initialContents={null}
+          />
+        </div>
+      </QueryClientProvider>,
     );
 
     const courseNameInput = screen.getByTestId("CourseModal-courseName");

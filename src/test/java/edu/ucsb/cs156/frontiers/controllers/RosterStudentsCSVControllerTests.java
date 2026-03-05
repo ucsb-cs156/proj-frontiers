@@ -21,6 +21,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -110,7 +111,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .courseName("CSED 500")
             .orgName("csed-500-s25")
             .term("S25")
-            .school("CSU Chico")
+            .school(School.CHICO_STATE)
             .build();
 
     RosterStudent rs1BeforeWithId =
@@ -418,7 +419,7 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             .courseName("OSU 101")
             .orgName("osu-101-s25")
             .term("S25")
-            .school("Oregon State")
+            .school(School.OREGON_STATE)
             .rosterStudents(List.of())
             .build();
     MockMultipartFile file =

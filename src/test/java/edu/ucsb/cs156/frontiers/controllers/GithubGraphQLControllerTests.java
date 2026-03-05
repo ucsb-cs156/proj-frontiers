@@ -50,7 +50,6 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
             .instructorEmail(user.getEmail())
             .build();
 
@@ -91,7 +90,6 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
             .instructorEmail(user.getEmail())
             .build();
 
@@ -151,7 +149,6 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
             .instructorEmail(user.getEmail())
             .build();
 
@@ -195,7 +192,6 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("CS156")
             .term("S25")
-            .school("UCSB")
             .instructorEmail(user.getEmail())
             .build();
 

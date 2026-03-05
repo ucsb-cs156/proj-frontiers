@@ -16,7 +16,8 @@ const columns = [
   },
   {
     header: "School",
-    accessorKey: "school",
+    id: "school",
+    accessorKey: "school.displayName",
   },
 ];
 

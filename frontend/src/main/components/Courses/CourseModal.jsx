@@ -2,6 +2,7 @@ import Modal from "react-bootstrap/Modal";
 import { Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
+import { SchoolTypeahead } from "main/components/Courses/SchoolTypeahead";
 
 function CourseModal({
   onSubmitAction,
@@ -16,6 +17,7 @@ function CourseModal({
     formState: { errors },
     handleSubmit,
     reset,
+    control,
   } = useForm({});
 
   // Reset form when initialContents changes (e.g., when editing)
@@ -76,14 +78,9 @@ function CourseModal({
           </Form.Group>
           <Form.Group>
             <Form.Label htmlFor="school">School</Form.Label>
-            <Form.Control
-              data-testid={"CourseModal-school"}
-              id="school"
-              type="text"
-              isInvalid={Boolean(errors.school)}
-              {...register("school", {
-                required: "School is required.",
-              })}
+            <SchoolTypeahead
+              rules={{ required: "School is required." }}
+              control={control}
             />
             <Form.Control.Feedback type="invalid">
               {errors.school?.message}

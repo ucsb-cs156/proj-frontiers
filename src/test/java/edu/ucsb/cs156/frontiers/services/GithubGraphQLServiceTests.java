@@ -47,7 +47,6 @@ public class GithubGraphQLServiceTests {
           .orgName("test-org")
           .courseName("Test Course")
           .term("Fall 2023")
-          .school("UCSB")
           .build();
 
   @BeforeEach
