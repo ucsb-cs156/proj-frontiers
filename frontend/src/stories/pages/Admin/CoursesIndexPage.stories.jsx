@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 
 import { roleEmailFixtures } from "fixtures/roleEmailFixtures";
+import { schoolList } from "fixtures/schoolFixtures";
 
 export default {
   title: "pages/Admin/CoursesIndexPage",
@@ -51,6 +52,9 @@ AdminViewWithCourses.parameters = {
     }),
     http.get("/api/courses/allForAdmins", () => {
       return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
+    }),
+    http.get("/api/systemInfo/schools", () => {
+      return HttpResponse.json(schoolList);
     }),
     http.post("/api/admin/courses/post", () => {
       return HttpResponse.json(roleEmailFixtures.oneItem, {

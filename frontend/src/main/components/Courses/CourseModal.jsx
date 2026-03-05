@@ -81,6 +81,7 @@ function CourseModal({
             <SchoolTypeahead
               rules={{ required: "School is required." }}
               control={control}
+              testid={"CourseModal-school"}
             />
             <Form.Control.Feedback type="invalid">
               {errors.school?.message}

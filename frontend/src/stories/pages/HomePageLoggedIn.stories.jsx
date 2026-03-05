@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import coursesFixtures from "fixtures/coursesFixtures";
+import { schoolList } from "fixtures/schoolFixtures";
 export default {
   title: "pages/HomePageLoggedIn",
   component: HomePageLoggedIn,
@@ -129,6 +130,9 @@ LoggedInInstructorUserWithNoCourses.parameters = {
       http.get("/api/courses/staffCourses", () => {
         return HttpResponse.json([]);
       }),
+      http.get("/api/systemInfo/schools", () => {
+        return HttpResponse.json(schoolList);
+      }),
       http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
@@ -164,6 +168,9 @@ LoggedInInstructorUser.parameters = {
         return HttpResponse.json(
           coursesFixtures.oneRosterStudentWithEachStatus,
         );
+      }),
+      http.get("/api/systemInfo/schools", () => {
+        return HttpResponse.json(schoolList);
       }),
       http.get("/api/courses/staffCourses", () => {
         return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
@@ -204,6 +211,9 @@ LoggedInAdminUserNoCourses.parameters = {
       http.get("/api/courses/allForAdmins", () => {
         return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
       }),
+      http.get("/api/systemInfo/schools", () => {
+        return HttpResponse.json(schoolList);
+      }),
       http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {
           status: 202,
@@ -241,6 +251,9 @@ LoggedInAdminUserShowingSwaggerAndH2Console.parameters = {
       }),
       http.get("/api/courses/allForAdmins", () => {
         return HttpResponse.json(coursesFixtures.oneStaffMemberWithEachStatus);
+      }),
+      http.get("/api/systemInfo/schools", () => {
+        return HttpResponse.json(schoolList);
       }),
       http.put("/api/coursestaff/joinCourse", () => {
         return HttpResponse.json("Joining course successful", {

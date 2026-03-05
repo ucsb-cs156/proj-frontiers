@@ -2,8 +2,8 @@ import { useBackend } from "main/utils/useBackend";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { Controller } from "react-hook-form";
 
-export function SchoolTypeahead({ control, rules }) {
-  const { data: schools } = useBackend(
+export function SchoolTypeahead({ control, rules, testid }) {
+  const { data: schools = [] } = useBackend(
     [`/api/systemInfo/schools`],
     {
       method: "GET",
@@ -12,7 +12,6 @@ export function SchoolTypeahead({ control, rules }) {
     undefined,
     true,
     {
-      placeholderData: [],
       staleTime: "static",
     },
   );
@@ -33,11 +32,12 @@ export function SchoolTypeahead({ control, rules }) {
         <Typeahead
           selected={field.value ? [field.value] : []}
           onChange={(selected) => field.onChange(selected[0] ?? null)}
-          onInputChange={() => {
-            if (field.value) field.onChange(null);
-          }}
-          id="school"
+          id="school-typeahead"
           isInvalid={fieldState.invalid}
+          inputProps={{
+            "aria-label": "Choose a school",
+            "data-testid": testid,
+          }}
           options={schools}
           labelKey="displayName"
           filterBy={filterByFields}

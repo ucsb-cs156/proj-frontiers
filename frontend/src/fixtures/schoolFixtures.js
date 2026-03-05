@@ -29,4 +29,11 @@ const schoolFixtures = {
   },
 };
 
-export default schoolFixtures;
+const schoolList = [
+  schoolFixtures.chicoState,
+  schoolFixtures.oregonState,
+  schoolFixtures.ucsb,
+  schoolFixtures.wsu,
+];
+
+export { schoolFixtures, schoolList };

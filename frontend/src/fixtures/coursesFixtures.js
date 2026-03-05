@@ -1,4 +1,4 @@
-import schoolFixtures from "./schoolFixtures";
+import { schoolFixtures } from "./schoolFixtures";
 const coursesFixtures = {
   severalCourses: [
     {

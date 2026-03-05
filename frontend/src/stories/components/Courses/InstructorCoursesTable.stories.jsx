@@ -4,14 +4,33 @@ import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTab
 import coursesFixtures from "fixtures/coursesFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { http, HttpResponse } from "msw";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { schoolList } from "fixtures/schoolFixtures";
 
 export default {
   title: "components/Courses/InstructorCoursesTable",
   component: InstructorCoursesTable,
 };
 
+const QueryWrapper = ({ children }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false, // Don't retry failed queries in Storybook
+      },
+    },
+  });
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
 const Template = (args) => {
-  return <InstructorCoursesTable {...args} />;
+  return (
+    <QueryWrapper>
+      <InstructorCoursesTable {...args} />
+    </QueryWrapper>
+  );
 };
 
 export const AdminUser = Template.bind({});
@@ -25,14 +44,21 @@ AdminUser.args = {
   storybook: true,
   enableInstructorUpdate: true,
 };
-AdminUser.parameters = {};
 
 InstructorUser.args = {
   courses: coursesFixtures.severalCourses,
   currentUser: currentUserFixtures.instructorUser,
   storybook: true,
 };
-InstructorUser.parameters = {};
+InstructorUser.parameters = {
+  msw: [
+    http.get("/api/systemInfo/schools", () => {
+      return HttpResponse.json(schoolList, {
+        status: 200,
+      });
+    }),
+  ],
+};
 
 EmptyTable.args = {
   courses: [],
@@ -55,6 +81,11 @@ AdminUser.parameters = {
         `Would have made HTTP request: ${request.method} ${request.url}`,
       );
       return HttpResponse.text("Mocked response for storybook", {
+        status: 200,
+      });
+    }),
+    http.get("/api/systemInfo/schools", () => {
+      return HttpResponse.json(schoolList, {
         status: 200,
       });
     }),
@@ -82,6 +113,11 @@ AdminUserWithBadEmailError.parameters = {
           status: 400,
         },
       );
+    }),
+    http.get("/api/systemInfo/schools", () => {
+      return HttpResponse.json(schoolList, {
+        status: 200,
+      });
     }),
   ],
 };

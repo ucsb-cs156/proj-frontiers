@@ -6,7 +6,7 @@ import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
-import schoolFixtures from "fixtures/schoolFixtures";
+import { schoolList } from "fixtures/schoolFixtures";
 
 const mockSubmit = vi.fn();
 const showModal = vi.fn();
@@ -49,7 +49,7 @@ describe("CourseModal Tests", () => {
   });
 
   test("Can see initialContents", async () => {
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     render(
       <QueryClientProvider client={queryClient}>
         <div
@@ -78,7 +78,7 @@ describe("CourseModal Tests", () => {
   });
 
   test("Can submit successfully", async () => {
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     render(
       <QueryClientProvider client={queryClient}>
         <div
@@ -96,14 +96,18 @@ describe("CourseModal Tests", () => {
 
     const courseName = screen.getByLabelText("Course Name");
     const courseTerm = screen.getByLabelText("Term");
-    const school = screen.getByLabelText("School");
+    const school = screen.getByTestId("CourseModal-school");
     fireEvent.change(courseName, { target: { value: "CMPSC 156" } });
     fireEvent.change(courseTerm, { target: { value: "Spring 2025" } });
     fireEvent.change(school, { target: { value: "UCSB" } });
-    fireEvent.click(screen.getByText("UCSB"));
+    fireEvent.click(await screen.findByText("UCSB"));
     expect(screen.getByTestId("CourseModal-courseName")).toBeInTheDocument();
     expect(screen.getByTestId("CourseModal-term")).toBeInTheDocument();
     expect(screen.getByTestId("CourseModal-school")).toBeInTheDocument();
+    expect(screen.getByTestId("CourseModal-school")).toHaveAttribute(
+      "aria-label",
+      "Choose a school",
+    );
     expect(screen.getByTestId("CourseModal-base")).toHaveClass(
       "modal-dialog-centered",
     );
@@ -136,7 +140,7 @@ describe("CourseModal Tests", () => {
   });
 
   test("Form starts empty without initialContents", async () => {
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     render(
       <QueryClientProvider client={queryClient}>
         <div
@@ -162,7 +166,7 @@ describe("CourseModal Tests", () => {
   });
 
   test("Form gets populated when initialContents change from empty to filled", async () => {
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     const MockCourseModal = ({ initialContents }) => (
       <QueryClientProvider client={queryClient}>
         <div
@@ -205,7 +209,7 @@ describe("CourseModal Tests", () => {
   });
 
   test("Form updates when initialContents change from one course to another", async () => {
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     const MockCourseModal = ({ initialContents }) => (
       <QueryClientProvider client={queryClient}>
         <div
@@ -245,12 +249,12 @@ describe("CourseModal Tests", () => {
     await waitFor(() => {
       expect(courseNameInput.value).toBe("CPTS 489");
       expect(termInput.value).toBe("Fall 2020");
-      expect(schoolInput.value).toBe("WSU");
+      expect(schoolInput.value).toBe("Washington State University");
     });
   });
 
   test("useEffect handles undefined initialContents correctly", async () => {
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     const MockCourseModal = ({ initialContents }) => (
       <QueryClientProvider client={queryClient}>
         <div
@@ -296,7 +300,7 @@ describe("CourseModal Tests", () => {
 
   test("defaultValues prop works correctly with initialContents", async () => {
     // This test verifies that the defaultValues prop in useForm works
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     render(
       <QueryClientProvider client={queryClient}>
         <div
@@ -325,7 +329,7 @@ describe("CourseModal Tests", () => {
   });
 
   test("defaultValues uses empty object when initialContents is null", async () => {
-    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolFixtures);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     render(
       <QueryClientProvider client={queryClient}>
         <div
