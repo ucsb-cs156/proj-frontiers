@@ -138,8 +138,6 @@ ExampleCourseNoStudents.parameters = {
         return HttpResponse.json([], { status: 200 });
       }),
       http.get("/api/jobs/course", ({ request }) => {
-        const url = new URL(request.url);
-        const courseId = url.searchParams.get("courseId");
         return HttpResponse.json([], { status: 200 });
       }),
     ],
@@ -163,8 +161,6 @@ ExampleCourseThreeStudents.parameters = {
         return HttpResponse.json([], { status: 200 });
       }),
       http.get("/api/jobs/course", ({ request }) => {
-        const url = new URL(request.url);
-        const courseId = url.searchParams.get("courseId");
         return HttpResponse.json([], { status: 200 });
       }),
     ],
@@ -198,8 +194,6 @@ ExampleCourseThreeStudentsThreeStaff.parameters = {
         return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
       }),
       http.get("/api/jobs/course", ({ request }) => {
-        const url = new URL(request.url);
-        const courseId = url.searchParams.get("courseId");
         return HttpResponse.json([], { status: 200 });
       }),
     ],
@@ -236,8 +230,6 @@ ExampleWithOrganizationAgeWarning.parameters = {
         HttpResponse.json(showOrganizationAgeWarning),
       ),
       http.get("/api/jobs/course", ({ request }) => {
-        const url = new URL(request.url);
-        const courseId = url.searchParams.get("courseId");
         return HttpResponse.json([], { status: 200 });
       }),
     ],
