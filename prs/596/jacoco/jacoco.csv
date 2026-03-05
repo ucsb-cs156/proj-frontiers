@@ -19,7 +19,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference(
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.GithubTeamMemberInfo,0,6,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,RosterStudentDTOService,0,24,0,0,0,6,0,3,0,3
-frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService,0,805,0,28,0,169,0,26,0,12
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService,0,824,0,28,0,173,0,27,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationLinkerService,0,261,0,10,0,59,0,10,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,CanvasService,0,193,0,0,0,70,0,8,0,8
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
