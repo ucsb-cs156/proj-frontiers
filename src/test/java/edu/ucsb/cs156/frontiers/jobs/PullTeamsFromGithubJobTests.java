@@ -1,7 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
@@ -20,9 +20,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +37,11 @@ public class PullTeamsFromGithubJobTests {
 
   Job jobStarted = Job.builder().build();
   JobContext ctx = new JobContext(null, jobStarted);
+
+  @BeforeEach
+  public void setup() {
+    MockitoAnnotations.openMocks(this);
+  }
 
   @Test
   public void testAccept_CourseNotFound() throws Exception {
@@ -78,10 +85,16 @@ public class PullTeamsFromGithubJobTests {
   }
 
   @Test
-  public void testAccept_CourseWithoutInstallationId() throws Exception {
+  public void testAccept_CourseWithOrgNameButNoInstallationId() throws Exception {
+    // Test case where orgName is not null but installationId is null
     Long courseId = 1L;
     Course course =
-        Course.builder().id(courseId).courseName("Test Course").orgName("test-org").build();
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId(null)
+            .build();
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
     PullTeamsFromGithubJob job =
@@ -93,8 +106,10 @@ public class PullTeamsFromGithubJobTests {
             .githubTeamService(githubTeamService)
             .build();
 
+    // Act
     job.accept(ctx);
 
+    // Assert
     verify(courseRepository).findById(courseId);
     verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
   }
@@ -130,7 +145,7 @@ public class PullTeamsFromGithubJobTests {
   }
 
   @Test
-  public void testAccept_UpsertsTeamsByGithubIdAndName() throws Exception {
+  public void testAccept_UpdatesExistingTeamsByGithubIdAndNameAndCreatesTeam() throws Exception {
     Long courseId = 1L;
     Course course =
         Course.builder()
@@ -320,7 +335,7 @@ public class PullTeamsFromGithubJobTests {
                         && tm.getRosterStudent().equals(existingStudent)
                         && tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
     verify(teamMemberRepository, times(2)).save(any(TeamMember.class));
-    assertTrue(jobStarted.getLog().contains("members created: 1, members updated: 1"));
+    assertTrue(jobStarted.getLog().contains("created: 0, updated: 1, unchanged: 0"));
   }
 
   @Test
@@ -378,6 +393,151 @@ public class PullTeamsFromGithubJobTests {
                         && tm.getTeam().getGithubTeamId().equals(111)
                         && tm.getRosterStudent().equals(memberStudent)
                         && tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
-    assertTrue(jobStarted.getLog().contains("members created: 1, members updated: 0"));
+    assertTrue(jobStarted.getLog().contains("created: 1, updated: 0, unchanged: 0"));
+  }
+
+  @Test
+  public void testAccept_DoesNotUpdateOrLogWhenMembershipStatusIsUnchanged() throws Exception {
+    Long courseId = 1L;
+    RosterStudent existingStudent = RosterStudent.builder().githubLogin("existing-login").build();
+
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(Arrays.asList(existingStudent))
+            .build();
+
+    Team localTeam = Team.builder().name("team-a").githubTeamId(111).course(course).build();
+    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "team-a", "team-a"));
+    TeamMember existingTeamMember =
+        TeamMember.builder()
+            .team(localTeam)
+            .rosterStudent(existingStudent)
+            .teamStatus(TeamStatus.TEAM_MEMBER)
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course)).thenReturn(githubTeams);
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(localTeam));
+    when(githubTeamService.getTeamMemberships("team-a", course))
+        .thenReturn(Map.of("existing-login", TeamStatus.TEAM_MEMBER));
+    when(teamMemberRepository.findByTeamAndRosterStudent(localTeam, existingStudent))
+        .thenReturn(Optional.of(existingTeamMember));
+
+    PullTeamsFromGithubJob job =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(teamMemberRepository).findByTeamAndRosterStudent(localTeam, existingStudent);
+    verify(teamMemberRepository, never()).save(any(TeamMember.class));
+    assertFalse(jobStarted.getLog().contains("Updated team member 'existing-login'"));
+    assertTrue(jobStarted.getLog().contains("created: 0, updated: 0, unchanged: 1"));
+  }
+
+  @Test
+  public void testAccept_CountsTeamUpdatedWhenOnlyMembershipUpdateOccurs() throws Exception {
+    Long courseId = 1L;
+    RosterStudent existingStudent = RosterStudent.builder().githubLogin("existing-login").build();
+
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(Arrays.asList(existingStudent))
+            .build();
+
+    Team localTeam = Team.builder().name("team-a").githubTeamId(111).course(course).build();
+    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "team-a", "team-a"));
+    TeamMember existingTeamMember =
+        TeamMember.builder()
+            .team(localTeam)
+            .rosterStudent(existingStudent)
+            .teamStatus(TeamStatus.TEAM_MEMBER)
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course)).thenReturn(githubTeams);
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(localTeam));
+    when(githubTeamService.getTeamMemberships("team-a", course))
+        .thenReturn(Map.of("existing-login", TeamStatus.TEAM_MAINTAINER));
+    when(teamMemberRepository.findByTeamAndRosterStudent(localTeam, existingStudent))
+        .thenReturn(Optional.of(existingTeamMember));
+
+    PullTeamsFromGithubJob job =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(teamMemberRepository)
+        .save(
+            argThat(
+                tm ->
+                    tm == existingTeamMember
+                        && tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
+    assertTrue(jobStarted.getLog().contains("created: 0, updated: 1, unchanged: 0"));
+  }
+
+  @Test
+  public void testAccept_CountsTeamUpdatedWhenOnlyMembershipCreateOccurs() throws Exception {
+    Long courseId = 1L;
+    RosterStudent memberStudent = RosterStudent.builder().githubLogin("member-login").build();
+
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(Arrays.asList(memberStudent))
+            .build();
+
+    Team localTeam = Team.builder().name("team-a").githubTeamId(111).course(course).build();
+    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "team-a", "team-a"));
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course)).thenReturn(githubTeams);
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(localTeam));
+    when(githubTeamService.getTeamMemberships("team-a", course))
+        .thenReturn(Map.of("member-login", TeamStatus.TEAM_MEMBER));
+    when(teamMemberRepository.findByTeamAndRosterStudent(localTeam, memberStudent))
+        .thenReturn(Optional.empty());
+
+    PullTeamsFromGithubJob job =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(teamMemberRepository)
+        .save(
+            argThat(
+                tm ->
+                    tm.getTeam().equals(localTeam)
+                        && tm.getRosterStudent().equals(memberStudent)
+                        && tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
+    assertTrue(jobStarted.getLog().contains("created: 0, updated: 1, unchanged: 0"));
   }
 }

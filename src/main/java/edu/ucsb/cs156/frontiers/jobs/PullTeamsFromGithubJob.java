@@ -15,8 +15,8 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Builder;
 
 @Builder
@@ -29,16 +29,18 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-    ctx.log("Starting pull teams from GitHub job for course ID: " + courseId);
+    ctx.log(String.format("Starting pull teams from GitHub job for course ID: %s", courseId));
 
     Optional<Course> courseOpt = courseRepository.findById(courseId);
     if (courseOpt.isEmpty()) {
-      ctx.log("ERROR: Course with ID " + courseId + " not found");
+      ctx.log(String.format("ERROR: Course with ID %s not found", courseId));
       return;
     }
-
     Course course = courseOpt.get();
-    ctx.log("Processing course: " + course.getCourseName() + " (org: " + course.getOrgName() + ")");
+    ctx.log(
+        String.format(
+            "Processing course: %s (org: %s)", course.getCourseName(), course.getOrgName()));
+
     if (course.getOrgName() == null || course.getInstallationId() == null) {
       ctx.log("ERROR: Course has no linked GitHub organization");
       return;
@@ -48,7 +50,7 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
     try {
       githubTeams = githubTeamService.getAllTeams(course);
     } catch (Exception e) {
-      ctx.log("ERROR: Failed to pull teams from GitHub: " + e.getMessage());
+      ctx.log(String.format("ERROR: Failed to pull teams from GitHub: %s", e.getMessage()));
       return;
     }
 
@@ -72,8 +74,6 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
     int created = 0;
     int updated = 0;
     int unchanged = 0;
-    int membersCreated = 0;
-    int membersUpdated = 0;
 
     for (GithubTeamInfo githubTeam : githubTeams) {
       Team localTeam = localByGithubId.get(githubTeam.id());
@@ -81,7 +81,7 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
         localTeam = localByName.get(githubTeam.name());
       }
 
-      boolean wasCreated = false;
+      boolean teamCreated = false;
       if (localTeam == null) {
         Team newTeam =
             Team.builder()
@@ -94,39 +94,34 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
         localByName.put(githubTeam.name(), newTeam);
         created++;
         ctx.log(
-            "Created local team '"
-                + githubTeam.name()
-                + "' with GitHub team ID: "
-                + githubTeam.id());
+            String.format(
+                "Created local team '%s' with GitHub team ID: %d",
+                githubTeam.name(), githubTeam.id()));
         localTeam = newTeam;
-        wasCreated = true;
+        teamCreated = true;
       }
 
-      if (!wasCreated) {
-        boolean changed = false;
+      AtomicBoolean teamUnchanged = new AtomicBoolean(true);
+      if (!teamCreated) {
         if (!githubTeam.name().equals(localTeam.getName())) {
           localByName.remove(localTeam.getName());
           localTeam.setName(githubTeam.name());
-          changed = true;
+          teamUnchanged.set(false);
         }
         if (!githubTeam.id().equals(localTeam.getGithubTeamId())) {
           if (localTeam.getGithubTeamId() != null) {
             localByGithubId.remove(localTeam.getGithubTeamId());
           }
           localTeam.setGithubTeamId(githubTeam.id());
-          changed = true;
+          teamUnchanged.set(false);
         }
 
-        if (changed) {
+        if (!teamUnchanged.get()) {
           teamRepository.save(localTeam);
-          updated++;
           ctx.log(
-              "Updated local team '"
-                  + localTeam.getName()
-                  + "' with GitHub team ID: "
-                  + githubTeam.id());
-        } else {
-          unchanged++;
+              String.format(
+                  "Updated local team '%s' with GitHub team ID: %d",
+                  localTeam.getName(), githubTeam.id()));
         }
       }
 
@@ -136,49 +131,56 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
       if (!localStudentsByGithubLogin.isEmpty()) {
         Map<String, TeamStatus> githubMemberships =
             githubTeamService.getTeamMemberships(githubTeam.slug(), course);
-        for (Entry<String, TeamStatus> membership : githubMemberships.entrySet()) {
-          RosterStudent student = localStudentsByGithubLogin.get(membership.getKey());
-          if (student == null) {
-            continue;
-          }
-          TeamStatus membershipStatus = membership.getValue();
+        Team currentTeam = localTeam;
+        githubMemberships.forEach(
+            (githubLogin, membershipStatus) -> {
+              RosterStudent student = localStudentsByGithubLogin.get(githubLogin);
+              if (student == null) {
+                return;
+              }
 
-          Optional<TeamMember> existingTeamMember =
-              teamMemberRepository.findByTeamAndRosterStudent(localTeam, student);
-          if (existingTeamMember.isPresent()) {
-            TeamMember teamMember = existingTeamMember.get();
-            teamMember.setTeamStatus(membershipStatus);
-            teamMemberRepository.save(teamMember);
-            membersUpdated++;
-          } else {
-            TeamMember newTeamMember =
-                TeamMember.builder()
-                    .team(localTeam)
-                    .rosterStudent(student)
-                    .teamStatus(membershipStatus)
-                    .build();
-            teamMemberRepository.save(newTeamMember);
-            membersCreated++;
-          }
+              Optional<TeamMember> existingTeamMember =
+                  teamMemberRepository.findByTeamAndRosterStudent(currentTeam, student);
+              if (existingTeamMember.isPresent()) {
+                TeamMember teamMember = existingTeamMember.get();
+                if (teamMember.getTeamStatus() != membershipStatus) {
+                  teamMember.setTeamStatus(membershipStatus);
+                  teamMemberRepository.save(teamMember);
+                  teamUnchanged.set(false);
+                  ctx.log(
+                      String.format(
+                          "Updated team member '%s' in team '%s' with status %s",
+                          githubLogin, currentTeam.getName(), membershipStatus));
+                }
+              } else {
+                TeamMember newTeamMember =
+                    TeamMember.builder()
+                        .team(currentTeam)
+                        .rosterStudent(student)
+                        .teamStatus(membershipStatus)
+                        .build();
+                teamMemberRepository.save(newTeamMember);
+                teamUnchanged.set(false);
+                ctx.log(
+                    String.format(
+                        "Created team member '%s' in team '%s' with status %s",
+                        githubLogin, currentTeam.getName(), membershipStatus));
+              }
+            });
+      }
+
+      if (!teamCreated) {
+        if (teamUnchanged.get()) {
+          unchanged++;
+        } else {
+          updated++;
         }
       }
     }
 
     ctx.log(
-        "Completed pull teams from GitHub job for course ID: "
-            + courseId
-            + " (GitHub teams: "
-            + githubTeams.size()
-            + ", created: "
-            + created
-            + ", updated: "
-            + updated
-            + ", unchanged: "
-            + unchanged
-            + ", members created: "
-            + membersCreated
-            + ", members updated: "
-            + membersUpdated
-            + ")");
+        String.format(
+            "Completed pull teams from GitHub job for course ID: %s (GitHub teams: %d, created: %d, updated: %d, unchanged: %d)",
+            courseId, githubTeams.size(), created, updated, unchanged));
   }
 }

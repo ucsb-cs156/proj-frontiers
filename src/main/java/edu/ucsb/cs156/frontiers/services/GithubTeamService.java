@@ -316,29 +316,16 @@ public class GithubTeamService {
   }
 
   /**
-   * Returns all team members for a GitHub team, grouped by membership role.
+   * Returns all team members for a GitHub team.
    *
-   * @param teamId The GitHub team ID
+   * @param teamSlug The GitHub team slug
    * @param course The course containing the organization
-   * @return A map of github login to TeamStatus for members and maintainers
+   * @return A map of github login to TeamStatus
    * @throws NoSuchAlgorithmException if there is an algorithm error
    * @throws InvalidKeySpecException if there is a key specification error
    * @throws JsonProcessingException if there is an error processing JSON
    */
   public Map<String, TeamStatus> getTeamMemberships(String teamSlug, Course course)
-      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-    Map<String, TeamStatus> memberships = new HashMap<>();
-    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamSlug, course, "member")) {
-      memberships.put(member.login(), TeamStatus.TEAM_MEMBER);
-    }
-    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamSlug, course, "maintainer")) {
-      memberships.put(member.login(), TeamStatus.TEAM_MAINTAINER);
-    }
-    return memberships;
-  }
-
-  private List<GithubTeamMemberInfo> getTeamMembersByRole(
-      String teamSlug, Course course, String role)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
     if (teamSlug == null || teamSlug.isBlank()) {
       throw new IllegalArgumentException("teamSlug must be provided");
@@ -348,8 +335,7 @@ public class GithubTeamService {
             + course.getOrgName()
             + "/teams/"
             + teamSlug
-            + "/members?per_page=100&role="
-            + role;
+            + "/members?per_page=100";
     Pattern pattern = Pattern.compile("(?<=<)([\\S]*)(?=>; rel=\"next\")");
 
     HttpHeaders headers = new HttpHeaders();
@@ -361,13 +347,15 @@ public class GithubTeamService {
 
     ResponseEntity<String> response =
         restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
-    List<GithubTeamMemberInfo> members = new ArrayList<>();
+    Map<String, TeamStatus> memberships = new HashMap<>();
 
     while (true) {
-      members.addAll(
+      for (GithubTeamMemberInfo member :
           objectMapper.convertValue(
               objectMapper.readTree(response.getBody()),
-              new TypeReference<List<GithubTeamMemberInfo>>() {}));
+              new TypeReference<List<GithubTeamMemberInfo>>() {})) {
+        memberships.put(member.login(), TeamStatus.TEAM_MEMBER);
+      }
 
       List<String> responseLinks = response.getHeaders().getOrEmpty("link");
       if (responseLinks.isEmpty() || !responseLinks.getFirst().contains("next")) {
@@ -382,7 +370,7 @@ public class GithubTeamService {
       response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);
     }
 
-    return members;
+    return memberships;
   }
 
   /**
