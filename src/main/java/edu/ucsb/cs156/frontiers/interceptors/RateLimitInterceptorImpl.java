@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -46,15 +45,10 @@ public class RateLimitInterceptorImpl implements RateLimitInterceptor {
     try {
       long remaining = Long.parseLong(headers.getFirst());
       newPoint.setRemaining(remaining);
-      saveDataPoint(newPoint);
+      rateLimitDataPointRepository.save(newPoint);
     } catch (NumberFormatException e) {
       return response;
     }
     return response;
-  }
-
-  @Async
-  public void saveDataPoint(RateLimitDataPoint point) {
-    rateLimitDataPointRepository.save(point);
   }
 }
