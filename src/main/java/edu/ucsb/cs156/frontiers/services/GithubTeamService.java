@@ -196,7 +196,7 @@ public class GithubTeamService {
    * Gets the current team membership status for a user.
    *
    * @param githubLogin The GitHub login of the user
-   * @param teamSlug The GitHub team slug
+   * @param teamId The GitHub team ID
    * @param course The course containing the organization
    * @return The team status of the user
    * @throws JsonProcessingException if there is an error processing JSON
@@ -243,7 +243,7 @@ public class GithubTeamService {
    * Adds a member to a GitHub team.
    *
    * @param githubLogin The GitHub login of the user to add
-   * @param teamSlug The GitHub team slug
+   * @param teamId The GitHub team ID
    * @param role The role to assign ("member" or "maintainer")
    * @param course The course containing the organization
    * @return The resulting team status
