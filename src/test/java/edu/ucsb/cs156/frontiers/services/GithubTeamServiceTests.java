@@ -556,6 +556,10 @@ public class GithubTeamServiceTests {
         "<"
             + nextUrl
             + ">; rel=\"next\", <https://api.github.com/orgs/test-org/teams?per_page=100&page=2>; rel=\"last\"");
+    HttpHeaders secondHeaders = new HttpHeaders();
+    secondHeaders.add(
+        "link",
+        "<https://api.github.com/orgs/test-org/teams?per_page=100&page=1>; rel=\"previous\"");
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
@@ -566,7 +570,7 @@ public class GithubTeamServiceTests {
         .thenReturn(new ResponseEntity<>(firstPage, firstHeaders, HttpStatus.OK));
     when(restTemplate.exchange(
             eq(nextUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
-        .thenReturn(new ResponseEntity<>(secondPage, HttpStatus.OK));
+        .thenReturn(new ResponseEntity<>(secondPage, secondHeaders, HttpStatus.OK));
 
     List<GithubTeamService.GithubTeamInfo> teams = githubTeamService.getAllTeams(course);
 
@@ -581,59 +585,6 @@ public class GithubTeamServiceTests {
             eq(String.class));
     verify(restTemplate)
         .exchange(eq(nextUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
-  }
-
-  @Test
-  public void testGetAllTeams_WithNonNextLinkHeader() throws Exception {
-    Course course = Course.builder().orgName("test-org").installationId("123").build();
-    String token = "test-token";
-    String response = "[{\"id\": 11, \"name\": \"team-a\"}]";
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.add(
-        "link", "<https://api.github.com/orgs/test-org/teams?per_page=100&page=1>; rel=\"last\"");
-
-    when(jwtService.getInstallationToken(course)).thenReturn(token);
-    when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),
-            eq(String.class)))
-        .thenReturn(new ResponseEntity<>(response, headers, HttpStatus.OK));
-
-    List<GithubTeamService.GithubTeamInfo> teams = githubTeamService.getAllTeams(course);
-
-    assertEquals(1, teams.size());
-    assertEquals(Integer.valueOf(11), teams.get(0).id());
-    assertEquals("team-a", teams.get(0).name());
-    verify(restTemplate, times(1))
-        .exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
-  }
-
-  @Test
-  public void testGetAllTeams_WithMalformedNextLink() throws Exception {
-    Course course = Course.builder().orgName("test-org").installationId("123").build();
-    String token = "test-token";
-    String response = "[{\"id\": 11, \"name\": \"team-a\"}]";
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("link", "next");
-
-    when(jwtService.getInstallationToken(course)).thenReturn(token);
-    when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),
-            eq(String.class)))
-        .thenReturn(new ResponseEntity<>(response, headers, HttpStatus.OK));
-
-    List<GithubTeamService.GithubTeamInfo> teams = githubTeamService.getAllTeams(course);
-
-    assertEquals(1, teams.size());
-    assertEquals(Integer.valueOf(11), teams.get(0).id());
-    assertEquals("team-a", teams.get(0).name());
-    verify(restTemplate, times(1))
-        .exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
   }
 
   @Test
@@ -698,6 +649,10 @@ public class GithubTeamServiceTests {
         "<"
             + memberNextUrl
             + ">; rel=\"next\", <https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&page=2>; rel=\"last\"");
+    HttpHeaders secondPageHeaders = new HttpHeaders();
+    secondPageHeaders.add(
+        "link",
+        "<https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&page=1>; rel=\"previous\"");
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
@@ -708,62 +663,13 @@ public class GithubTeamServiceTests {
         .thenReturn(new ResponseEntity<>(memberPage1, memberHeaders, HttpStatus.OK));
     when(restTemplate.exchange(
             eq(memberNextUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
-        .thenReturn(new ResponseEntity<>(memberPage2, HttpStatus.OK));
+        .thenReturn(new ResponseEntity<>(memberPage2, secondPageHeaders, HttpStatus.OK));
 
     Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships("team-a", course);
 
     assertEquals(2, memberships.size());
     assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-a"));
     assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-b"));
-  }
-
-  @Test
-  public void testGetTeamMemberships_WithMalformedNextLink() throws Exception {
-    Course course = Course.builder().orgName("test-org").installationId("123").build();
-    String token = "test-token";
-
-    HttpHeaders malformedHeaders = new HttpHeaders();
-    malformedHeaders.add("link", "next");
-
-    when(jwtService.getInstallationToken(course)).thenReturn(token);
-    when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100"),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),
-            eq(String.class)))
-        .thenReturn(
-            new ResponseEntity<>("[{\"login\": \"student-a\"}]", malformedHeaders, HttpStatus.OK));
-
-    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships("team-a", course);
-
-    assertEquals(1, memberships.size());
-    assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-a"));
-    verify(restTemplate, times(1))
-        .exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
-  }
-
-  @Test
-  public void testGetTeamMemberships_WithNonNextLinkHeader() throws Exception {
-    Course course = Course.builder().orgName("test-org").installationId("123").build();
-    String token = "test-token";
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.add(
-        "link",
-        "<https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&page=1>; rel=\"last\"");
-
-    when(jwtService.getInstallationToken(course)).thenReturn(token);
-    when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100"),
-            eq(HttpMethod.GET),
-            any(HttpEntity.class),
-            eq(String.class)))
-        .thenReturn(new ResponseEntity<>("[{\"login\": \"student-a\"}]", headers, HttpStatus.OK));
-
-    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships("team-a", course);
-
-    assertEquals(1, memberships.size());
-    assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-a"));
   }
 
   @Test

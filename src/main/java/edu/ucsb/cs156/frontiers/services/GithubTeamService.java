@@ -347,9 +347,10 @@ public class GithubTeamService {
 
     ResponseEntity<String> response =
         restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+    List<String> responseLinks = response.getHeaders().getOrEmpty("link");
     Map<String, TeamStatus> memberships = new HashMap<>();
 
-    while (true) {
+    while (!responseLinks.isEmpty() && responseLinks.getFirst().contains("next")) {
       for (GithubTeamMemberInfo member :
           objectMapper.convertValue(
               objectMapper.readTree(response.getBody()),
@@ -357,17 +358,17 @@ public class GithubTeamService {
         memberships.put(member.login(), TeamStatus.TEAM_MEMBER);
       }
 
-      List<String> responseLinks = response.getHeaders().getOrEmpty("link");
-      if (responseLinks.isEmpty() || !responseLinks.getFirst().contains("next")) {
-        break;
-      }
-
       Matcher matcher = pattern.matcher(responseLinks.getFirst());
-      if (!matcher.find()) {
-        break;
-      }
-
+      matcher.find();
       response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);
+      responseLinks = response.getHeaders().getOrEmpty("link");
+    }
+
+    for (GithubTeamMemberInfo member :
+        objectMapper.convertValue(
+            objectMapper.readTree(response.getBody()),
+            new TypeReference<List<GithubTeamMemberInfo>>() {})) {
+      memberships.put(member.login(), TeamStatus.TEAM_MEMBER);
     }
 
     return memberships;
@@ -396,26 +397,25 @@ public class GithubTeamService {
 
     ResponseEntity<String> response =
         restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+    List<String> responseLinks = response.getHeaders().getOrEmpty("link");
     List<GithubTeamInfo> teams = new ArrayList<>();
 
-    while (true) {
+    while (!responseLinks.isEmpty() && responseLinks.getFirst().contains("next")) {
       teams.addAll(
           objectMapper.convertValue(
               objectMapper.readTree(response.getBody()),
               new TypeReference<List<GithubTeamInfo>>() {}));
 
-      List<String> responseLinks = response.getHeaders().getOrEmpty("link");
-      if (responseLinks.isEmpty() || !responseLinks.getFirst().contains("next")) {
-        break;
-      }
-
       Matcher matcher = pattern.matcher(responseLinks.getFirst());
-      if (!matcher.find()) {
-        break;
-      }
-
+      matcher.find();
       response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);
+      responseLinks = response.getHeaders().getOrEmpty("link");
     }
+
+    teams.addAll(
+        objectMapper.convertValue(
+            objectMapper.readTree(response.getBody()),
+            new TypeReference<List<GithubTeamInfo>>() {}));
 
     return teams;
   }
