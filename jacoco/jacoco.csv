@@ -13,8 +13,13 @@ frontiers,edu.ucsb.cs156.frontiers.enums,AssignmentType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,TeamStatus,0,27,0,0,0,5,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,OrgStatus,0,39,0,0,0,7,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.interceptors,RoleUpdateInterceptor,0,100,0,12,0,26,0,9,0,3
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.GithubTeamMemberInfo,0,6,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,RosterStudentDTOService,0,24,0,0,0,6,0,3,0,3
-frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService,0,518,0,12,0,114,0,16,0,10
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService,0,824,0,28,0,173,0,27,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationLinkerService,0,261,0,10,0,59,0,10,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,CanvasService,0,193,0,0,0,70,0,8,0,8
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
@@ -27,6 +32,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,JwtService,0,152,0,4,0,37,0,7,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,357,0,4,0,90,0,8,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,465,0,20,0,105,0,23,0,13
+frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.GithubTeamInfo,0,18,0,0,0,3,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.RosterStudentCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CustomErrorController,0,129,0,14,0,29,0,10,0,3
@@ -45,7 +51,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamCreationRespo
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController.AdminDTO,0,18,0,0,0,3,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamSourceType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,86,0,2,0,19,0,8,0,7
-frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,226,0,2,0,60,0,16,0,15
+frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,248,0,2,0,68,0,17,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,117,0,0,0,29,0,9,0,9
@@ -80,6 +86,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,98
 frontiers,edu.ucsb.cs156.frontiers.jobs,AddTeamMemberToGithubJob,0,116,0,10,0,33,0,7,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,50,0,4,0,13,0,4,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamMemberFromGithubJob,0,82,0,8,0,26,0,6,0,2
+frontiers,edu.ucsb.cs156.frontiers.jobs,PullTeamsFromGithubJob,0,467,0,44,0,111,0,24,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,12,0,0,0,5,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamRepositoriesJob,0,35,0,2,0,7,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,17,0,0,0,4,0,3,0,3
