@@ -23,6 +23,7 @@ import edu.ucsb.cs156.frontiers.jobs.AddTeamToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
+import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
 import edu.ucsb.cs156.frontiers.repositories.*;
@@ -174,6 +175,37 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
     String response = result.getResponse().getContentAsString();
     verify(jobService, times(1)).runAsJob(any(PushTeamsToGithubJob.class));
+    assertEquals(expectedResponse, response);
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_launch_pullTeamsFromGithub_job() throws Exception {
+
+    User user = currentUserService.getUser();
+
+    Job jobStarted =
+        Job.builder()
+            .id(0L)
+            .createdBy(user)
+            .createdAt(null)
+            .updatedAt(null)
+            .status("started")
+            .build();
+
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
+
+    when(jobService.runAsJob(any(PullTeamsFromGithubJob.class))).thenReturn(jobStarted);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/jobs/launch/pullTeamsFromGithub").param("courseId", "1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    verify(jobService, times(1)).runAsJob(any(PullTeamsFromGithubJob.class));
     assertEquals(expectedResponse, response);
   }
 
