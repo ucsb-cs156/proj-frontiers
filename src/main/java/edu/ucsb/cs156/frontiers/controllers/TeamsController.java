@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -141,10 +142,10 @@ public class TeamsController extends ApiController {
 
     List<String> failed = new ArrayList<>();
 
-    CSVReader csvReader =
-        new CSVReader(new InputStreamReader(new BufferedInputStream(file.getInputStream())));
-    Throwable throwable = null;
-    try {
+    try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
+        InputStreamReader reader = new InputStreamReader(inputStream);
+        CSVReader csvReader = new CSVReader(reader); ) {
+
       String[] headers = csvReader.readNext();
       TeamSourceType sourceType = getRosterSourceType(headers);
       List<String[]> myEntries = csvReader.readAll();
@@ -169,19 +170,6 @@ public class TeamsController extends ApiController {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
       } else {
         return ResponseEntity.ok(response);
-      }
-    } catch (Throwable t) {
-      throwable = t;
-      throw t;
-    } finally {
-      if (throwable == null) {
-        csvReader.close();
-      } else {
-        try {
-          csvReader.close();
-        } catch (Throwable closeError) {
-          throwable.addSuppressed(closeError);
-        }
       }
     }
   }

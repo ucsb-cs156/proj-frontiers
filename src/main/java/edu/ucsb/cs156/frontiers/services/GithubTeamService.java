@@ -30,7 +30,11 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class GithubTeamService {
 
-  public record GithubTeamInfo(Integer id, String name) {}
+  public record GithubTeamInfo(Integer id, String name, String slug) {
+    public GithubTeamInfo(Integer id, String name) {
+      this(id, name, null);
+    }
+  }
 
   public record GithubTeamMemberInfo(String login) {}
 
@@ -192,7 +196,7 @@ public class GithubTeamService {
    * Gets the current team membership status for a user.
    *
    * @param githubLogin The GitHub login of the user
-   * @param teamId The GitHub team ID
+   * @param teamSlug The GitHub team slug
    * @param course The course containing the organization
    * @return The team status of the user
    * @throws JsonProcessingException if there is an error processing JSON
@@ -239,7 +243,7 @@ public class GithubTeamService {
    * Adds a member to a GitHub team.
    *
    * @param githubLogin The GitHub login of the user to add
-   * @param teamId The GitHub team ID
+   * @param teamSlug The GitHub team slug
    * @param role The role to assign ("member" or "maintainer")
    * @param course The course containing the organization
    * @return The resulting team status
@@ -321,26 +325,29 @@ public class GithubTeamService {
    * @throws InvalidKeySpecException if there is a key specification error
    * @throws JsonProcessingException if there is an error processing JSON
    */
-  public Map<String, TeamStatus> getTeamMemberships(Integer teamId, Course course)
+  public Map<String, TeamStatus> getTeamMemberships(String teamSlug, Course course)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
     Map<String, TeamStatus> memberships = new HashMap<>();
-    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamId, course, "member")) {
+    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamSlug, course, "member")) {
       memberships.put(member.login(), TeamStatus.TEAM_MEMBER);
     }
-    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamId, course, "maintainer")) {
+    for (GithubTeamMemberInfo member : getTeamMembersByRole(teamSlug, course, "maintainer")) {
       memberships.put(member.login(), TeamStatus.TEAM_MAINTAINER);
     }
     return memberships;
   }
 
   private List<GithubTeamMemberInfo> getTeamMembersByRole(
-      Integer teamId, Course course, String role)
+      String teamSlug, Course course, String role)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    if (teamSlug == null || teamSlug.isBlank()) {
+      throw new IllegalArgumentException("teamSlug must be provided");
+    }
     String endpoint =
         "https://api.github.com/orgs/"
             + course.getOrgName()
             + "/teams/"
-            + teamId
+            + teamSlug
             + "/members?per_page=100&role="
             + role;
     Pattern pattern = Pattern.compile("(?<=<)([\\S]*)(?=>; rel=\"next\")");

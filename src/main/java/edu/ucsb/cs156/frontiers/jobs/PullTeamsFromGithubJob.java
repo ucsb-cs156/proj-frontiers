@@ -135,7 +135,7 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
 
       if (!localStudentsByGithubLogin.isEmpty()) {
         Map<String, TeamStatus> githubMemberships =
-            githubTeamService.getTeamMemberships(githubTeam.id(), course);
+            githubTeamService.getTeamMemberships(githubTeam.slug(), course);
         for (Entry<String, TeamStatus> membership : githubMemberships.entrySet()) {
           RosterStudent student = localStudentsByGithubLogin.get(membership.getKey());
           if (student == null) {

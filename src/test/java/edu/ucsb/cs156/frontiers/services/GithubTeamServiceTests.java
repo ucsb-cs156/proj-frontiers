@@ -646,24 +646,59 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=member"),
+            eq(
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>(memberResponse, HttpStatus.OK));
     when(restTemplate.exchange(
             eq(
-                "https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=maintainer"),
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=maintainer"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>(maintainerResponse, HttpStatus.OK));
 
-    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships(456, course);
+    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships("team-a", course);
 
     assertEquals(2, memberships.size());
     assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-a"));
     assertEquals(TeamStatus.TEAM_MAINTAINER, memberships.get("maintainer-a"));
+  }
+
+  @Test
+  public void testGetTeamMemberships_VerifyHeaders() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String memberUrl =
+        "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member";
+    String maintainerUrl =
+        "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=maintainer";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq(memberUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[{\"login\": \"student-a\"}]", HttpStatus.OK));
+    when(restTemplate.exchange(
+            eq(maintainerUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
+
+    githubTeamService.getTeamMemberships("team-a", course);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<HttpEntity<String>> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+    verify(restTemplate)
+        .exchange(eq(memberUrl), eq(HttpMethod.GET), entityCaptor.capture(), eq(String.class));
+    verify(restTemplate)
+        .exchange(eq(maintainerUrl), eq(HttpMethod.GET), entityCaptor.capture(), eq(String.class));
+
+    for (HttpEntity<String> capturedEntity : entityCaptor.getAllValues()) {
+      HttpHeaders headers = capturedEntity.getHeaders();
+      assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+      assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+      assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+    }
   }
 
   @Test
@@ -673,18 +708,19 @@ public class GithubTeamServiceTests {
     String memberPage1 = "[{\"login\": \"student-a\"}]";
     String memberPage2 = "[{\"login\": \"student-b\"}]";
     String memberNextUrl =
-        "https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=member&page=2";
+        "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member&page=2";
 
     HttpHeaders memberHeaders = new HttpHeaders();
     memberHeaders.add(
         "link",
         "<"
             + memberNextUrl
-            + ">; rel=\"next\", <https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=member&page=2>; rel=\"last\"");
+            + ">; rel=\"next\", <https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member&page=2>; rel=\"last\"");
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=member"),
+            eq(
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
@@ -694,13 +730,13 @@ public class GithubTeamServiceTests {
         .thenReturn(new ResponseEntity<>(memberPage2, HttpStatus.OK));
     when(restTemplate.exchange(
             eq(
-                "https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=maintainer"),
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=maintainer"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
 
-    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships(456, course);
+    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships("team-a", course);
 
     assertEquals(2, memberships.size());
     assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-a"));
@@ -717,7 +753,8 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=member"),
+            eq(
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
@@ -725,13 +762,13 @@ public class GithubTeamServiceTests {
             new ResponseEntity<>("[{\"login\": \"student-a\"}]", malformedHeaders, HttpStatus.OK));
     when(restTemplate.exchange(
             eq(
-                "https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=maintainer"),
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=maintainer"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
 
-    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships(456, course);
+    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships("team-a", course);
 
     assertEquals(1, memberships.size());
     assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-a"));
@@ -747,27 +784,56 @@ public class GithubTeamServiceTests {
     HttpHeaders headers = new HttpHeaders();
     headers.add(
         "link",
-        "<https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=member&page=1>; rel=\"last\"");
+        "<https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member&page=1>; rel=\"last\"");
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=member"),
+            eq(
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=member"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>("[{\"login\": \"student-a\"}]", headers, HttpStatus.OK));
     when(restTemplate.exchange(
             eq(
-                "https://api.github.com/orgs/test-org/teams/456/members?per_page=100&role=maintainer"),
+                "https://api.github.com/orgs/test-org/teams/team-a/members?per_page=100&role=maintainer"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
 
-    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships(456, course);
+    Map<String, TeamStatus> memberships = githubTeamService.getTeamMemberships("team-a", course);
 
     assertEquals(1, memberships.size());
     assertEquals(TeamStatus.TEAM_MEMBER, memberships.get("student-a"));
+  }
+
+  @Test
+  public void testGetTeamMemberships_ThrowsWhenTeamSlugIsNull() {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> githubTeamService.getTeamMemberships(null, course));
+
+    assertEquals("teamSlug must be provided", exception.getMessage());
+    verifyNoInteractions(jwtService);
+    verifyNoInteractions(restTemplate);
+  }
+
+  @Test
+  public void testGetTeamMemberships_ThrowsWhenTeamSlugIsBlank() {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> githubTeamService.getTeamMemberships("   ", course));
+
+    assertEquals("teamSlug must be provided", exception.getMessage());
+    verifyNoInteractions(jwtService);
+    verifyNoInteractions(restTemplate);
   }
 
   @Test

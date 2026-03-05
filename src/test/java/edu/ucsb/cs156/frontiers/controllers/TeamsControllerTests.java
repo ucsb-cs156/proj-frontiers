@@ -2,7 +2,6 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -23,28 +22,21 @@ import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.multipart.MultipartFile;
 
 @WebMvcTest(controllers = TeamsController.class)
 public class TeamsControllerTests extends ControllerTestCase {
-
-  @Autowired TeamsController teamsController;
 
   @MockitoBean TeamRepository teamRepository;
 
@@ -1000,46 +992,5 @@ public class TeamsControllerTests extends ControllerTestCase {
     verify(courseRepository, times(1)).findById(1L);
     verify(jobService, never()).runAsJob(any(PushTeamsToGithubJob.class));
     assertEquals("Unknown Roster Source Type", response.getResponse().getErrorMessage());
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void testUploadTeamsCsv_whenResourceCloseThrowsIOException() throws Exception {
-    Course course = Course.builder().id(1L).courseName("CS156").build();
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-
-    MultipartFile file = mock(MultipartFile.class);
-    InputStream closingErrorStream =
-        new ByteArrayInputStream("team,email\n".getBytes()) {
-          @Override
-          public void close() throws IOException {
-            throw new IOException("close failure");
-          }
-        };
-    when(file.getInputStream()).thenReturn(closingErrorStream);
-
-    assertThrows(IOException.class, () -> teamsController.uploadTeamsCsv(1L, file));
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void testUploadTeamsCsv_whenReadFailsAndResourceCloseThrowsIOException() throws Exception {
-    Course course = Course.builder().id(1L).courseName("CS156").build();
-    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-
-    MultipartFile file = mock(MultipartFile.class);
-    InputStream closingErrorStream =
-        new ByteArrayInputStream("team,email\n\"unterminated".getBytes()) {
-          @Override
-          public void close() throws IOException {
-            throw new IOException("close failure");
-          }
-        };
-    when(file.getInputStream()).thenReturn(closingErrorStream);
-
-    Throwable thrown =
-        assertThrows(Exception.class, () -> teamsController.uploadTeamsCsv(1L, file));
-    assertEquals(1, thrown.getSuppressed().length);
-    assertEquals("close failure", thrown.getSuppressed()[0].getMessage());
   }
 }

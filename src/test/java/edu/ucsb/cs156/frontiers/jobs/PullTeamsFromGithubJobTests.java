@@ -265,14 +265,14 @@ public class PullTeamsFromGithubJobTests {
             .build();
 
     Team localTeam = Team.builder().name("team-a").githubTeamId(111).course(course).build();
-    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "team-a"));
+    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "team-a", "team-a"));
     TeamMember existingTeamMember =
         TeamMember.builder().team(localTeam).rosterStudent(existingStudent).build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(githubTeamService.getAllTeams(course)).thenReturn(githubTeams);
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(localTeam));
-    when(githubTeamService.getTeamMemberships(111, course))
+    when(githubTeamService.getTeamMemberships("team-a", course))
         .thenReturn(
             Map.of(
                 "member-login",
@@ -297,7 +297,7 @@ public class PullTeamsFromGithubJobTests {
 
     job.accept(ctx);
 
-    verify(githubTeamService).getTeamMemberships(111, course);
+    verify(githubTeamService).getTeamMemberships("team-a", course);
 
     verify(teamMemberRepository).findByTeamAndRosterStudent(localTeam, memberStudent);
     verify(teamMemberRepository).findByTeamAndRosterStudent(localTeam, existingStudent);
@@ -337,12 +337,13 @@ public class PullTeamsFromGithubJobTests {
             .rosterStudents(Arrays.asList(memberStudent))
             .build();
 
-    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "new-team"));
+    List<GithubTeamInfo> githubTeams =
+        Arrays.asList(new GithubTeamInfo(111, "new-team", "new-team"));
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(githubTeamService.getAllTeams(course)).thenReturn(githubTeams);
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList());
-    when(githubTeamService.getTeamMemberships(111, course))
+    when(githubTeamService.getTeamMemberships("new-team", course))
         .thenReturn(Map.of("member-login", TeamStatus.TEAM_MEMBER));
     when(teamMemberRepository.findByTeamAndRosterStudent(any(Team.class), eq(memberStudent)))
         .thenReturn(Optional.empty());
