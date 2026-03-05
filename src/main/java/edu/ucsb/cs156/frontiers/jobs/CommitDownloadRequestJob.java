@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.DownloadRequest;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
@@ -13,6 +14,11 @@ public class CommitDownloadRequestJob implements JobContextConsumer {
 
   GithubGraphQLService githubService;
   DownloadRequest request;
+
+  @Override
+  public Course getCourse() {
+    return request.getCourse();
+  }
 
   @Override
   public void accept(JobContext c) throws Exception {

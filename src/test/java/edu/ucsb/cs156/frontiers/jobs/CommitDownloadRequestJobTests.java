@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -27,11 +28,8 @@ public class CommitDownloadRequestJobTests {
 
   @Test
   public void simple_pass_through_test() throws Exception {
-    DownloadRequest request =
-        DownloadRequest.builder()
-            .id(1L)
-            .course(Course.builder().courseName("banana").build())
-            .build();
+    Course course = Course.builder().courseName("banana").build();
+    DownloadRequest request = DownloadRequest.builder().id(1L).course(course).build();
 
     CommitDownloadRequestJob job =
         CommitDownloadRequestJob.builder().request(request).githubService(githubService).build();
@@ -42,5 +40,6 @@ public class CommitDownloadRequestJobTests {
 
     verify(ctx, times(1)).log(contains("Starting download for course banana"));
     verify(ctx, times(1)).log(contains("Download completed successfully"));
+    assertEquals(course, job.getCourse());
   }
 }
