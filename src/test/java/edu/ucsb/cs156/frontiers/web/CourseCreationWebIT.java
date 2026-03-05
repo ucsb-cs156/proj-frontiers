@@ -28,7 +28,8 @@ public class CourseCreationWebIT extends WebTestCase {
     page.getByText("Create Course").click();
     page.getByLabel("Course Name").fill("test course");
     page.getByLabel("Term").fill("Fall 2025");
-    page.getByLabel("School").fill("UCSB");
+    page.getByTestId("CourseModal-school").fill("UCSB");
+    page.getByLabel("UCSB").click();
     page.getByText("Create", new Page.GetByTextOptions().setExact(true)).click();
     assertThat(page.getByTestId("CoursesTable-cell-row-0-col-courseName-link"))
         .containsText("test course");
