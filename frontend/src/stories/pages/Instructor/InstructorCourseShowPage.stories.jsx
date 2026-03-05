@@ -137,7 +137,7 @@ ExampleCourseNoStudents.parameters = {
       http.get("/api/coursestaff/course", () => {
         return HttpResponse.json([], { status: 200 });
       }),
-      http.get("/api/jobs/course", ({ request }) => {
+      http.get("/api/jobs/course", () => {
         return HttpResponse.json([], { status: 200 });
       }),
     ],
@@ -160,7 +160,7 @@ ExampleCourseThreeStudents.parameters = {
       http.get("/api/coursestaff/course", () => {
         return HttpResponse.json([], { status: 200 });
       }),
-      http.get("/api/jobs/course", ({ request }) => {
+      http.get("/api/jobs/course", () => {
         return HttpResponse.json([], { status: 200 });
       }),
     ],
@@ -193,7 +193,7 @@ ExampleCourseThreeStudentsThreeStaff.parameters = {
       http.get("/api/teams/all", () => {
         return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
       }),
-      http.get("/api/jobs/course", ({ request }) => {
+      http.get("/api/jobs/course", () => {
         return HttpResponse.json([], { status: 200 });
       }),
     ],
@@ -229,7 +229,7 @@ ExampleWithOrganizationAgeWarning.parameters = {
       http.get("/api/courses/warnings/7", () =>
         HttpResponse.json(showOrganizationAgeWarning),
       ),
-      http.get("/api/jobs/course", ({ request }) => {
+      http.get("/api/jobs/course", () => {
         return HttpResponse.json([], { status: 200 });
       }),
     ],
