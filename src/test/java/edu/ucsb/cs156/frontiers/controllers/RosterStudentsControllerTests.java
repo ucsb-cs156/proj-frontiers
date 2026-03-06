@@ -31,6 +31,7 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.InsertStatus;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.jobs.UpdateOrgMembershipJob;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.models.UpsertResponse;
@@ -78,7 +79,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
           .rosterStudents(List.of())
           .orgName("ucsb-cs156-s25")
           .term("S25")
-          .school("UCSB")
+          .school(School.UCSB)
           .build();
 
   Course course2 =
@@ -88,7 +89,7 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
           .orgName("ucsb-cs156-s25")
           .rosterStudents(List.of())
           .term("S25")
-          .school("UCSB")
+          .school(School.UCSB)
           .installationId("12345")
           .build();
 

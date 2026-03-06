@@ -1,0 +1,52 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "012-add-school-enum",
+      "author": "Division7",
+      "changes": [
+        {
+          "update": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "SCHOOL",
+                  "value": "CHICO_STATE"
+                }
+              }
+            ],
+            "where": "SCHOOL = 'Chico State'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "SCHOOL",
+                  "value": "OREGON_STATE"
+                }
+              }
+            ],
+            "where": "SCHOOL = 'Oregon State University'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "SCHOOL",
+                  "value": "UCSB"
+                }
+              }
+            ],
+            "where": "SCHOOL NOT IN ('CHICO_STATE', 'OREGON_STATE')"
+          }
+        }
+      ]
+    }
+  }
+]}

@@ -6,9 +6,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.models.SystemInfo;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.SystemInfoService;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -41,6 +43,15 @@ public class SystemInfoControllerTests extends ControllerTestCase {
 
     // assert
     String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  public void school_list_matches() throws Exception {
+    MvcResult response =
+        mockMvc.perform(get("/api/systemInfo/schools")).andExpect(status().isOk()).andReturn();
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(List.of(School.values()));
     assertEquals(expectedJson, responseString);
   }
 }

@@ -16,6 +16,7 @@ import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.RosterStudentDTOService;
@@ -110,7 +111,12 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void mockMvcSRBTest() throws Exception {
     Course course =
-        Course.builder().id(1L).courseName("ucsb-cs156-s25").term("S25").school("UCSB").build();
+        Course.builder()
+            .id(1L)
+            .courseName("ucsb-cs156-s25")
+            .term("S25")
+            .school(School.UCSB)
+            .build();
 
     RosterStudentDTO rosterStudentDTO =
         new RosterStudentDTO(

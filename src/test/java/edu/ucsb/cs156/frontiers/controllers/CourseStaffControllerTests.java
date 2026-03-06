@@ -13,6 +13,7 @@ import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.*;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -56,7 +57,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
           .courseName("CS156")
           .orgName("ucsb-cs156-s25")
           .term("S25")
-          .school("UCSB")
+          .school(School.UCSB)
           .build();
 
   CourseStaff cs1 =
@@ -87,7 +88,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .build();
 
     CourseStaff cs2 =
@@ -139,7 +140,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .build();
 
     CourseStaff cs2 =
@@ -192,7 +193,7 @@ public class CourseStaffControllerTests extends ControllerTestCase {
             .orgName("ucsb-cs156-s25")
             .installationId("12345")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .build();
 
     CourseStaff cs2 =

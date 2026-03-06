@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -12,6 +18,7 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { afterEach, vi } from "vitest";
 import * as useBackendModule from "main/utils/useBackend";
+import { schoolList } from "fixtures/schoolFixtures";
 
 const mockToast = vi.fn();
 
@@ -153,6 +160,7 @@ describe("CoursesIndexPage tests", () => {
     axiosMock
       .onGet("/api/courses/allForAdmins")
       .reply(200, coursesFixtures.severalCourses);
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -170,10 +178,13 @@ describe("CoursesIndexPage tests", () => {
     await screen.findByLabelText("Course Name");
     const courseName = screen.getByLabelText("Course Name");
     const courseTerm = screen.getByLabelText("Term");
-    const school = screen.getByLabelText("School");
+    const school = screen.getByTestId("CourseModal-school");
     fireEvent.change(courseName, { target: { value: "CMPSC 156" } });
     fireEvent.change(courseTerm, { target: { value: "Spring 2025" } });
     fireEvent.change(school, { target: { value: "UCSB" } });
+    fireEvent.click(
+      await within(screen.getByTestId("CourseModal-base")).findByText("UCSB"),
+    );
     fireEvent.click(screen.getByText("Create"));
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
     expect(axiosMock.history.post[0].url).toBe("/api/courses/post");

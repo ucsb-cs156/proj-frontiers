@@ -20,6 +20,7 @@ import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromCanvasJob;
 import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
@@ -71,7 +72,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>())
@@ -141,7 +142,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(existingStudent)))
@@ -193,7 +194,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(studentWithId, studentWithEmail)))
@@ -256,7 +257,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(existingStudent)))
@@ -333,7 +334,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .installationId("12345")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
@@ -374,7 +375,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .installationId(null)
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
@@ -426,7 +427,7 @@ public class CanvasControllerTests extends ControllerTestCase {
             .courseName("CS156")
             .orgName("ucsb-cs156-s25")
             .term("S25")
-            .school("UCSB")
+            .school(School.UCSB)
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
             .rosterStudents(new ArrayList<>(List.of(manualStudent)))

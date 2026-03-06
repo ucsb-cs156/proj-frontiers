@@ -86,7 +86,8 @@ export default function InstructorCoursesTable({
     },
     {
       header: "School",
-      accessorKey: "school",
+      id: "school",
+      accessorKey: "school.displayName",
     },
     {
       header: "Edit",
@@ -233,6 +234,7 @@ export default function InstructorCoursesTable({
 
   const handleUpdateCourse = async (formData) => {
     formData.courseId = selectedCourseForEdit.id;
+    formData.school = formData.school.key;
     courseEditMutation.mutate(formData);
   };
 

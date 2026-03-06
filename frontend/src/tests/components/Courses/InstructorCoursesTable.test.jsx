@@ -7,6 +7,7 @@ import { BrowserRouter, MemoryRouter } from "react-router";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { vi } from "vitest";
+import { schoolList } from "fixtures/schoolFixtures";
 
 window.alert = vi.fn();
 
@@ -1015,6 +1016,7 @@ describe("InstructorCoursesTable tests", () => {
       axiosMock.reset();
       axiosMock.resetHistory();
       axiosMock.onPut("/api/courses").reply(200, {});
+      axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
 
       render(
         <QueryClientProvider client={new QueryClient()}>
@@ -1048,8 +1050,8 @@ describe("InstructorCoursesTable tests", () => {
         target: { value: "Updated Course" },
       });
       fireEvent.change(termInput, { target: { value: "Fall 2025" } });
-      fireEvent.change(schoolInput, { target: { value: "Updated School" } });
-
+      fireEvent.change(schoolInput, { target: { value: "Oregon State" } });
+      fireEvent.click(await screen.findByText("Oregon State"));
       // Click the Update button
       const updateButton = screen.getByTestId("CourseModal-submit");
       fireEvent.click(updateButton);
@@ -1060,7 +1062,7 @@ describe("InstructorCoursesTable tests", () => {
         courseId: 1,
         courseName: "Updated Course",
         term: "Fall 2025",
-        school: "Updated School",
+        school: "OREGON_STATE",
       });
 
       // Verify success toast was shown
@@ -1239,6 +1241,7 @@ describe("InstructorCoursesTable tests", () => {
       axiosMock.reset();
       axiosMock.resetHistory();
       axiosMock.onPut("/api/courses").reply(200, {});
+      axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
 
       render(
         <QueryClientProvider client={queryClient}>
@@ -1269,7 +1272,8 @@ describe("InstructorCoursesTable tests", () => {
         target: { value: "Updated Course" },
       });
       fireEvent.change(termInput, { target: { value: "Fall 2025" } });
-      fireEvent.change(schoolInput, { target: { value: "Updated School" } });
+      fireEvent.change(schoolInput, { target: { value: "Oregon State" } });
+      fireEvent.click(await screen.findByText("Oregon State"));
 
       const updateButton = screen.getByTestId("CourseModal-submit");
       fireEvent.click(updateButton);

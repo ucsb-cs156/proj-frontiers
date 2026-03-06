@@ -44,6 +44,7 @@ export default function CoursesIndexPage() {
   ]);
 
   const onSubmit = async (data) => {
+    data.school = data.school.key;
     mutation.mutate(data);
   };
 

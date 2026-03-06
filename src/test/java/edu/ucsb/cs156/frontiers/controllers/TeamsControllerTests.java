@@ -54,7 +54,7 @@ public class TeamsControllerTests extends ControllerTestCase {
   @Test
   public void testPostTeam_byAdmin() throws Exception {
     // arrange
-    Course course = Course.builder().id(1L).courseName("CS156").term("F23").school("UCSB").build();
+    Course course = Course.builder().id(1L).courseName("CS156").term("F23").build();
 
     Team team = Team.builder().id(1L).name("Team Alpha").course(course).build();
 
@@ -87,7 +87,7 @@ public class TeamsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void testPostTeam_byInstructor() throws Exception {
     // arrange
-    Course course = Course.builder().id(1L).courseName("CS156").term("F23").school("UCSB").build();
+    Course course = Course.builder().id(1L).courseName("CS156").term("F23").build();
 
     Team team = Team.builder().id(1L).name("Team Beta").course(course).build();
 
@@ -120,7 +120,7 @@ public class TeamsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void testPostTeam_not_unique() throws Exception {
     // arrange
-    Course course = Course.builder().id(1L).courseName("CS156").term("F23").school("UCSB").build();
+    Course course = Course.builder().id(1L).courseName("CS156").term("F23").build();
 
     Team team = Team.builder().id(1L).name("Team Beta").course(course).build();
 
