@@ -17,11 +17,14 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContextFactory;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class JobServiceTests {
 
@@ -32,6 +35,8 @@ public class JobServiceTests {
   @Mock private JobService injectedJobService;
 
   @Mock private CurrentUserService currentUserService;
+
+  @Mock private TransactionTemplate transactionTemplate;
 
   @InjectMocks private JobService jobService;
 
@@ -45,6 +50,14 @@ public class JobServiceTests {
             .roles(List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
             .user(User.builder().id(1L).build())
             .build();
+    doAnswer(
+            invocation -> {
+              Consumer<TransactionStatus> consumer = invocation.getArgument(0);
+              consumer.accept(null);
+              return null;
+            })
+        .when(transactionTemplate)
+        .executeWithoutResult(any());
   }
 
   @Test
