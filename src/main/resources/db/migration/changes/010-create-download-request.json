@@ -1,0 +1,190 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "add-download-request-table",
+        "author": "Division7 / IntelliJ IDEA JPA Buddy",
+        "changes": [
+          {
+            "createTable": {
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_download_request"
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "course_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "job_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "download_type",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "org",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "repo",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "branch",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "start_date",
+                    "type": "TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "end_date",
+                    "type": "TIMESTAMP"
+                  }
+                }
+              ],
+              "tableName": "download_request"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "add-downloaded-commit-table",
+        "author": "Division7 / IntelliJ IDEA JPA Buddy",
+        "changes": [
+          {
+            "createTable": {
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_downloaded_commit"
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "request_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "commit_url",
+                    "type": "VARCHAR(255)"
+                  }
+                }
+              ],
+              "tableName": "downloaded_commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "add-download-fk",
+        "author": "Division7 / IntelliJ IDEA JPA Buddy",
+        "changes": [
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "request_id",
+              "baseTableName": "downloaded_commit",
+              "constraintName": "DOWNLOADED_COMMIT_REQUEST_ID_FK",
+              "onDelete": "CASCADE",
+              "referencedColumnNames": "id",
+              "referencedTableName": "download_request"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "add-courseid-fk",
+        "author": "Division7 / IntelliJ IDEA JPA Buddy",
+        "changes": [
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "course_id",
+              "baseTableName": "download_request",
+              "constraintName": "FK_DOWNLOAD_REQUEST_ON_COURSE",
+              "onDelete": "CASCADE",
+              "referencedColumnNames": "id",
+              "referencedTableName": "course"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "add-jobid-fk",
+        "author": "Division7 / IntelliJ IDEA JPA Buddy",
+        "changes": [
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "job_id",
+              "baseTableName": "download_request",
+              "constraintName": "FK_DOWNLOAD_REQUEST_ON_JOB",
+              "onDelete": "CASCADE",
+              "referencedColumnNames": "id",
+              "referencedTableName": "jobs"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
