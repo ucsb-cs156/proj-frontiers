@@ -44,6 +44,7 @@ describe("InstructorCourseShowPage tests", () => {
       canvasApiToken: "",
       canvasCourseId: "",
     });
+    axiosMock.onGet("/api/jobs/course").reply(200, []);
   });
 
   const setupInstructorUser = () => {
@@ -253,6 +254,10 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.getByText("Assignments")).toHaveAttribute(
       "aria-selected",
       "true",
+    );
+    expect(screen.getByText("Jobs")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "jobs",
     );
     expect(screen.getByText("Settings")).toHaveAttribute(
       "data-rr-ui-event-key",
