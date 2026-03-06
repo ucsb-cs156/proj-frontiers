@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 <span class="fc" id="L14">@Slf4j</span>
@@ -23,67 +23,79 @@ import org.springframework.transaction.annotation.Transactional;
    * This is a self-referential bean to allow for async method calls within the same class.
    */
   @Lazy @Autowired private JobService self;
+  @Autowired private TransactionTemplate transactionTemplate;
 
   public Job runAsJob(JobContextConsumer jobFunction) {
-<span class="fc" id="L28">    String jobName = jobFunction.getClass().getName().replace(&quot;edu.ucsb.cs156.frontiers.jobs.&quot;, &quot;&quot;);</span>
+<span class="fc" id="L29">    String jobName = jobFunction.getClass().getName().replace(&quot;edu.ucsb.cs156.frontiers.jobs.&quot;, &quot;&quot;);</span>
 
     Job job =
-<span class="fc" id="L31">        Job.builder()</span>
-<span class="fc" id="L32">            .createdBy(currentUserService.getUser())</span>
-<span class="fc" id="L33">            .status(&quot;running&quot;)</span>
-<span class="fc" id="L34">            .jobName(jobName)</span>
-<span class="fc" id="L35">            .course(jobFunction.getCourse())</span>
-<span class="fc" id="L36">            .build();</span>
+<span class="fc" id="L32">        Job.builder()</span>
+<span class="fc" id="L33">            .createdBy(currentUserService.getUser())</span>
+<span class="fc" id="L34">            .status(&quot;running&quot;)</span>
+<span class="fc" id="L35">            .jobName(jobName)</span>
+<span class="fc" id="L36">            .course(jobFunction.getCourse())</span>
+<span class="fc" id="L37">            .build();</span>
 
-<span class="fc" id="L38">    log.info(&quot;Starting job: {}, jobName={}&quot;, job.getId(), job.getJobName());</span>
+<span class="fc" id="L39">    log.info(&quot;Starting job: {}, jobName={}&quot;, job.getId(), job.getJobName());</span>
 
-<span class="fc" id="L40">    jobsRepository.save(job);</span>
-<span class="fc" id="L41">    self.runJobAsync(job, jobFunction);</span>
+<span class="fc" id="L41">    jobsRepository.save(job);</span>
+<span class="fc" id="L42">    self.runJobAsync(job, jobFunction);</span>
 
-<span class="fc" id="L43">    return job;</span>
+<span class="fc" id="L44">    return job;</span>
   }
 
   /**
    * Runs a job asynchronously.
    *
-   * &lt;p&gt;This method is annotated with @Transactional because outside of the Spring context, you
-   * cannot delete entities that are unmanaged by Hibernate. Adding @Transactional keeps the
+   * &lt;p&gt;This method uses a TransactionTemplate because outside of the Spring context, you cannot
+   * delete entities that are unmanaged by Hibernate. Using the transactionTemplate lambda keeps the
    * database session open and allows Hibernate to maintain it's knowledge of the object graph (i.e.
    * the entities)
    *
    * &lt;p&gt;To learn more, read about Hibernate and the concept of a Spring Context.
    *
-   * &lt;p&gt;Note that @Transactional means that if there is an unhandled exception, either every
-   * database transactions succeeds, or all of them are rolled back.
+   * &lt;p&gt;Note that using the transactionTemplate lambda means that if there is an unhandled
+   * exception, either every database transactions succeeds, or all of them are rolled back.
    *
-   * @param job
-   * @param jobFunction
+   * &lt;p&gt;However, the job entity metadata will still be saved.
+   *
+   * @param job metadata entity about the job
+   * @param jobFunction runnable job function
    */
   @Async
-  @Transactional
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
-<span class="fc" id="L65">    JobContext context = contextFactory.createContext(job);</span>
+<span class="fc" id="L67">    JobContext context = contextFactory.createContext(job);</span>
 
     try {
-<span class="fc" id="L68">      jobFunction.accept(context);</span>
-<span class="fc" id="L69">    } catch (Exception e) {</span>
-<span class="fc" id="L70">      job.setStatus(&quot;error&quot;);</span>
-<span class="fc" id="L71">      context.log(e.getMessage());</span>
-<span class="fc" id="L72">      return;</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L70">      transactionTemplate.executeWithoutResult(</span>
+          status -&gt; {
+            try {
+<span class="fc" id="L73">              jobFunction.accept(context);</span>
+              /*lambdas cannot throw checked exceptions
+              have to repackage as a runtime exception
+              to catch outside transactional boundary*/
+<span class="fc" id="L77">            } catch (Exception e) {</span>
+<span class="fc" id="L78">              throw new RuntimeException(e);</span>
+<span class="fc" id="L79">            }</span>
+<span class="fc" id="L80">          });</span>
+<span class="fc" id="L81">    } catch (Exception e) {</span>
+<span class="fc" id="L82">      job.setStatus(&quot;error&quot;);</span>
+<span class="fc" id="L83">      context.log(e.getMessage());</span>
+<span class="fc" id="L84">      return;</span>
+<span class="fc" id="L85">    }</span>
 
-<span class="fc" id="L75">    job.setStatus(&quot;complete&quot;);</span>
-<span class="fc" id="L76">    jobsRepository.save(job);</span>
-<span class="fc" id="L77">  }</span>
+<span class="fc" id="L87">    job.setStatus(&quot;complete&quot;);</span>
+<span class="fc" id="L88">    jobsRepository.save(job);</span>
+<span class="fc" id="L89">  }</span>
 
   public String getJobLogs(Long jobId) {
-<span class="fc" id="L80">    Job job =</span>
+<span class="fc" id="L92">    Job job =</span>
         jobsRepository
-<span class="fc" id="L82">            .findById(jobId)</span>
-<span class="fc" id="L83">            .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Job not found&quot;));</span>
+<span class="fc" id="L94">            .findById(jobId)</span>
+<span class="fc" id="L95">            .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Job not found&quot;));</span>
 
-<span class="fc" id="L85">    String log = job.getLog();</span>
-<span class="fc bfc" id="L86" title="All 2 branches covered.">    return log != null ? log : &quot;&quot;;</span>
+<span class="fc" id="L97">    String log = job.getLog();</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">    return log != null ? log : &quot;&quot;;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

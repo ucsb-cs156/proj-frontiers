@@ -72,7 +72,7 @@ frontiers,edu.ucsb.cs156.frontiers.models,UpsertResponse,0,12,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,78,0,2,0,16,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,LoadResult,0,15,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,UserDataDTO,0,30,0,0,0,12,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.services.jobs,JobService,0,97,0,2,0,28,0,7,0,6
+frontiers,edu.ucsb.cs156.frontiers.services.jobs,JobService,0,111,0,2,0,33,0,8,0,7
 frontiers,edu.ucsb.cs156.frontiers.services.jobs,JobContextFactory,0,13,0,0,0,4,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.services.jobs,JobContextConsumer,0,2,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services.jobs,JobContext,0,48,0,4,0,6,0,4,0,2
