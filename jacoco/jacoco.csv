@@ -3,6 +3,7 @@ frontiers,edu.ucsb.cs156.frontiers.errors,DuplicateGroupException,0,4,0,0,0,2,0,
 frontiers,edu.ucsb.cs156.frontiers.errors,NoLinkedOrganizationException,0,5,0,0,0,2,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.errors,EntityNotFoundException,0,17,0,0,0,2,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.errors,InvalidInstallationTypeException,0,5,0,0,0,2,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.enums,DownloadRequestType,0,18,0,0,0,5,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.enums,Visibility,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,RosterStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,RepositoryPermissions,0,39,0,0,0,8,0,2,0,2
@@ -25,7 +26,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,CanvasService,0,193,0,0,0,70,0,8,0,8
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,UpdateUserService,0,139,0,12,0,36,0,13,0,7
-frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,173,0,0,0,41,0,4,0,4
+frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,268,0,4,0,82,0,8,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,0,7,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
@@ -41,6 +42,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController,0,536,0,42,0,128,0,37,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,694,0,38,0,136,0,42,0,23
+frontiers,edu.ucsb.cs156.frontiers.controllers,DownloadRequestController,0,183,0,6,0,52,0,9,0,6
 frontiers,edu.ucsb.cs156.frontiers.controllers,CanvasController,0,275,0,12,0,66,0,17,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,595,0,34,0,157,0,46,0,29
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
@@ -59,7 +61,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,636,0,78,0,164,0,61,0,22
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,0,23,0,5,0,5
-frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,137,0,0,0,23,0,6,0,6
+frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,140,0,0,0,24,0,6,0,6
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,105,0,8,0,28,0,9,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffController,0,307,0,36,0,83,0,30,0,12
 frontiers,edu.ucsb.cs156.frontiers.controllers,UsersController,0,8,0,0,0,2,0,2,0,2
@@ -80,6 +82,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToGithubJob,0,273,0,22,0,74,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,249,0,30,0,63,0,23,0,8
 frontiers,edu.ucsb.cs156.frontiers.jobs,AddTeamToGithubJob,0,83,0,8,0,23,0,6,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,RemoveStudentsJob,0,81,0,12,0,18,0,8,0,2
+frontiers,edu.ucsb.cs156.frontiers.jobs,CommitDownloadRequestJob,0,20,0,0,0,5,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,PullTeamsFromCanvasJob,0,264,0,18,0,63,0,17,0,8
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamFromGithubJob,0,71,0,6,0,23,0,5,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,98,0,24,0,18,0,14,0,2

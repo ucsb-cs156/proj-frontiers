@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,18 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;GithubGraphQL&quot;)
 @RequestMapping(&quot;/api/github/graphql/&quot;)
 @RestController
-<span class="fc" id="L21">@Slf4j</span>
+<span class="fc" id="L22">@Slf4j</span>
 public class GithubGraphQLController extends ApiController {
 
   private final GithubGraphQLService githubGraphQLService;
   private final CourseRepository courseRepository;
+  private final JobService jobService;
 
   public GithubGraphQLController(
       @Autowired GithubGraphQLService gitHubGraphQLService,
-<span class="fc" id="L29">      @Autowired CourseRepository courseRepository) {</span>
-<span class="fc" id="L30">    this.githubGraphQLService = gitHubGraphQLService;</span>
-<span class="fc" id="L31">    this.courseRepository = courseRepository;</span>
-<span class="fc" id="L32">  }</span>
+      @Autowired CourseRepository courseRepository,
+<span class="fc" id="L32">      JobService jobService) {</span>
+<span class="fc" id="L33">    this.githubGraphQLService = gitHubGraphQLService;</span>
+<span class="fc" id="L34">    this.courseRepository = courseRepository;</span>
+<span class="fc" id="L35">    this.jobService = jobService;</span>
+<span class="fc" id="L36">  }</span>
 
   /**
    * Return default branch name for a given repository.
@@ -44,25 +48,25 @@ public class GithubGraphQLController extends ApiController {
   @GetMapping(&quot;defaultBranchName&quot;)
   public String getDefaultBranchName(
       @Parameter Long courseId, @Parameter String owner, @Parameter String repo) throws Exception {
-<span class="fc" id="L47">    log.info(</span>
+<span class="fc" id="L51">    log.info(</span>
         &quot;getDefaultBranchName called with courseId: {}, owner: {}, repo: {}&quot;,
         courseId,
         owner,
         repo);
-<span class="fc" id="L52">    Course course =</span>
+<span class="fc" id="L56">    Course course =</span>
         courseRepository
-<span class="fc" id="L54">            .findById(courseId)</span>
-<span class="fc" id="L55">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L58">            .findById(courseId)</span>
+<span class="fc" id="L59">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L57">    log.info(&quot;Found course: {}&quot;, course);</span>
+<span class="fc" id="L61">    log.info(&quot;Found course: {}&quot;, course);</span>
 
-<span class="fc" id="L59">    log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
+<span class="fc" id="L63">    log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
 
-<span class="fc" id="L61">    String result = this.githubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
+<span class="fc" id="L65">    String result = this.githubGraphQLService.getDefaultBranchName(course, owner, repo);</span>
 
-<span class="fc" id="L63">    log.info(&quot;Result from getDefaultBranchName: {}&quot;, result);</span>
+<span class="fc" id="L67">    log.info(&quot;Result from getDefaultBranchName: {}&quot;, result);</span>
 
-<span class="fc" id="L65">    return result;</span>
+<span class="fc" id="L69">    return result;</span>
   }
 
   /**
@@ -84,7 +88,7 @@ public class GithubGraphQLController extends ApiController {
       @Parameter Integer first,
       @RequestParam(name = &quot;after&quot;, required = false) @Parameter String after)
       throws Exception {
-<span class="fc" id="L87">    log.info(</span>
+<span class="fc" id="L91">    log.info(</span>
         &quot;getCommits called with courseId: {}, owner: {}, repo: {}, branch: {}, first: {}, after: {} &quot;,
         courseId,
         owner,
@@ -92,20 +96,20 @@ public class GithubGraphQLController extends ApiController {
         branch,
         first,
         after);
-<span class="fc" id="L95">    Course course =</span>
+<span class="fc" id="L99">    Course course =</span>
         courseRepository
-<span class="fc" id="L97">            .findById(courseId)</span>
-<span class="fc" id="L98">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L101">            .findById(courseId)</span>
+<span class="fc" id="L102">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L100">    log.info(&quot;Found course: {}&quot;, course);</span>
+<span class="fc" id="L104">    log.info(&quot;Found course: {}&quot;, course);</span>
 
-<span class="fc" id="L102">    log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
+<span class="fc" id="L106">    log.info(&quot;Current user is authorized to access course: {}&quot;, course.getId());</span>
 
-<span class="fc" id="L104">    String result = this.githubGraphQLService.getCommits(course, owner, repo, branch, first, after);</span>
+<span class="fc" id="L108">    String result = this.githubGraphQLService.getCommits(course, owner, repo, branch, first, after);</span>
 
-<span class="fc" id="L106">    log.info(&quot;Result from getCommits: {}&quot;, result);</span>
+<span class="fc" id="L110">    log.info(&quot;Result from getCommits: {}&quot;, result);</span>
 
-<span class="fc" id="L108">    return result;</span>
+<span class="fc" id="L112">    return result;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
