@@ -27,29 +27,28 @@ public class RateLimitInterceptorImpl implements RateLimitInterceptor {
     if (!request.getURI().getHost().equals("api.github.com")) {
       return execution.execute(request, body);
     }
-
-    try (ClientHttpResponse response = execution.execute(request, body)) {
-      List<String> headers = response.getHeaders().get("X-RateLimit-Remaining");
-      if (response.getStatusCode() != HttpStatus.TOO_MANY_REQUESTS
-          && response.getStatusCode() != HttpStatus.UNAUTHORIZED) {
-        return response;
-      }
-      if (headers == null || headers.isEmpty()) {
-        return response;
-      }
-      try {
-        int remaining = Integer.parseInt(headers.getFirst());
-        if (remaining == 0) {
-          log.error("ERROR: RATE LIMIT EXCEEDED");
-          log.error("URI: {}", request.getURI());
-          log.error("HEADERS: {}", response.getHeaders());
-          log.error("BODY: {}", response.getBody());
-          throw new RuntimeException("Rate limit exceeded");
-        }
-      } catch (NumberFormatException e) {
-        return response;
-      }
+    ClientHttpResponse response = execution.execute(request, body);
+    List<String> headers = response.getHeaders().get("X-RateLimit-Remaining");
+    if (response.getStatusCode() != HttpStatus.TOO_MANY_REQUESTS
+        && response.getStatusCode() != HttpStatus.UNAUTHORIZED) {
       return response;
     }
+    if (headers == null || headers.isEmpty()) {
+      return response;
+    }
+    try {
+      int remaining = Integer.parseInt(headers.getFirst());
+      if (remaining == 0) {
+        log.error("ERROR: RATE LIMIT EXCEEDED");
+        log.error("URI: {}", request.getURI());
+        log.error("HEADERS: {}", response.getHeaders());
+        log.error("BODY: {}", response.getBody());
+        response.close();
+        throw new RuntimeException("Rate limit exceeded");
+      }
+    } catch (NumberFormatException e) {
+      return response;
+    }
+    return response;
   }
 }

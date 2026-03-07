@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.testconfig;
 
+import edu.ucsb.cs156.frontiers.interceptors.RateLimitInterceptor;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GithubSignInService;
 import edu.ucsb.cs156.frontiers.services.GoogleSignInService;
@@ -30,5 +31,12 @@ public class TestConfig {
   @Bean
   public GoogleSignInService googleSignInService() {
     return new MockGoogleSignInService();
+  }
+
+  @Bean
+  public RateLimitInterceptor interceptor() {
+    return (request, body, execute) -> {
+      return execute.execute(request, body);
+    };
   }
 }
