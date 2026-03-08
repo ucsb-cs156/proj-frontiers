@@ -12,15 +12,15 @@ public enum School {
   CHICO_STATE(
       "Chico State",
       List.of("Chico State University", "Chico State", "CSUCS"),
-      "https://canvas.csuchico.edu/"),
+      "https://canvas.csuchico.edu/api/graphql"),
   OREGON_STATE(
       "Oregon State University",
       List.of("Oregon State University", "Oregon State", "OSU"),
-      "https://canvas.oregonstate.edu/"),
+      "https://canvas.oregonstate.edu/api/graphql"),
   UCSB(
       "UCSB",
       List.of("UC Santa Barbara", "University of California, Santa Barbara", "SB"),
-      "https://ucsb.instructure.com/");
+      "https://ucsb.instructure.com/api/graphql");
 
   private School(String displayName, List<String> alternateNames, String canvasImplementation) {
     this.displayName = displayName;

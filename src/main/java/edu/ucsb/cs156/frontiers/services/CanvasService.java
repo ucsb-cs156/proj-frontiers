@@ -23,13 +23,13 @@ import org.springframework.web.client.RestClient;
  * <p>Note that the Canvas API uses a GraphQL endpoint, which allows for more flexible queries
  * compared to traditional REST APIs.
  *
- * <p>For more information on the Canvas API, visit the official documentation at
- * https://canvas.instructure.com/doc/api/.
+ * <p>For more information on the Canvas API, visit the official documentation at <a
+ * href="https://canvas.instructure.com/doc/api/">...</a>.
  *
  * <p>You can typically interact with Canvas API GraphQL endpoints interactively by appending
  * /graphiql to the URL of the Canvas instance.
  *
- * <p>For example, for UCSB Canvas, use: https://ucsb.instructure.com/graphiql
+ * <p>For example, for UCSB Canvas, use: <a href="https://ucsb.instructure.com/graphiql">...</a>
  */
 @Service
 @Validated
@@ -38,11 +38,8 @@ public class CanvasService {
   private HttpSyncGraphQlClient graphQlClient;
   private ObjectMapper mapper;
 
-  private static final String CANVAS_GRAPHQL_URL = "https://ucsb.instructure.com/api/graphql";
-
   public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {
-    this.graphQlClient =
-        HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();
+    this.graphQlClient = HttpSyncGraphQlClient.builder(builder.build()).build();
     this.mapper = mapper;
     this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
@@ -66,6 +63,7 @@ public class CanvasService {
         graphQlClient
             .mutate()
             .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .url(course.getSchool().getCanvasImplementation())
             .build();
 
     List<CanvasGroupSet> groupSets =
@@ -109,6 +107,7 @@ public class CanvasService {
         graphQlClient
             .mutate()
             .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .url(course.getSchool().getCanvasImplementation())
             .build();
 
     List<CanvasStudent> students =
@@ -165,6 +164,7 @@ public class CanvasService {
         graphQlClient
             .mutate()
             .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .url(course.getSchool().getCanvasImplementation())
             .build();
 
     List<JsonNode> groups =
