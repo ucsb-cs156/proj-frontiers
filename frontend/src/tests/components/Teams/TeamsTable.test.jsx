@@ -45,6 +45,7 @@ describe("TeamsTable tests", () => {
     mockToast.mockClear();
 
     invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
+    invalidateQueriesSpy.mockClear();
   });
   test("table renders corretly when there are teams", () => {
     // arrange

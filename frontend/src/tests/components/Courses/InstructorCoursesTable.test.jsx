@@ -57,7 +57,6 @@ describe("InstructorCoursesTable tests", () => {
         "Course Name",
         "Term",
         "School",
-        "Edit",
         "Instructor",
         "Students",
         "Staff",
@@ -73,17 +72,14 @@ describe("InstructorCoursesTable tests", () => {
       ];
 
       expectedHeaders.forEach((headerText) => {
-        if (headerText === "Edit") {
-          const header = screen.getByTestId(
-            "InstructorCoursesTable-header-edit-sort-header",
-          );
-          expect(header).toBeInTheDocument();
-          expect(header).toHaveTextContent("Edit");
-        } else {
-          const header = screen.getByText(headerText);
-          expect(header).toBeInTheDocument();
-        }
+        const header = screen.getByText(headerText);
+        expect(header).toBeInTheDocument();
       });
+      const header = screen.getByTestId(
+        "InstructorCoursesTable-header-edit-sort-header",
+      );
+      expect(header).toBeInTheDocument();
+      expect(header).toHaveTextContent("Edit");
 
       expectedFields.forEach((field) => {
         const header = screen.getByTestId(`${testId}-cell-row-0-col-${field}`);

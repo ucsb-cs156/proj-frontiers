@@ -160,6 +160,8 @@ describe("utils/useBackend tests", () => {
         </QueryClientProvider>
       );
 
+      queryClient.setQueryData(["/api/ucsbdates/all"], []);
+
       axiosMock.onPost("/api/ucsbdates/post").reply(202, {
         id: 17,
         quarterYYYYQ: "20221",
@@ -204,6 +206,77 @@ describe("utils/useBackend tests", () => {
       expect(mockToast).toHaveBeenCalledWith(
         "New ucsbDate Created - id: 17 name: Groundhog Day",
       );
+      expect(
+        queryClient.getQueryState(["/api/ucsbdates/all"]).isInvalidated,
+      ).toBe(true);
+    });
+    test("useBackendMutation silently ignores non-array keys", async () => {
+      // See: https://react-query.tanstack.com/guides/testing#turn-off-retries
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: {
+            // ✅ turns retries off
+            retry: false,
+          },
+        },
+      });
+      const wrapper = ({ children }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+
+      queryClient.setQueryData(["/api/ucsbdates/all"], []);
+
+      axiosMock.onPost("/api/ucsbdates/post").reply(202, {
+        id: 17,
+        quarterYYYYQ: "20221",
+        name: "Groundhog Day",
+        localDateTime: "2022-02-02T12:00",
+      });
+
+      const objectToAxiosParams = (ucsbDate) => ({
+        url: "/api/ucsbdates/post",
+        method: "POST",
+        params: {
+          quarterYYYYQ: ucsbDate.quarterYYYYQ,
+          name: ucsbDate.name,
+          localDateTime: ucsbDate.localDateTime,
+        },
+      });
+
+      const onSuccess = vi.fn().mockImplementation((ucsbDate) => {
+        mockToast(
+          `New ucsbDate Created - id: ${ucsbDate.id} name: ${ucsbDate.name}`,
+        );
+      });
+
+      const { result } = renderHook(
+        () =>
+          useBackendMutation(
+            objectToAxiosParams,
+            { onSuccess },
+            "/api/ucsbdates/all",
+          ),
+        { wrapper },
+      );
+
+      const mutation = result.current;
+      act(() =>
+        mutation.mutate({
+          quarterYYYYQ: "20221",
+          name: "Groundhog Day",
+          localDateTime: "2022-02-02T12:00",
+        }),
+      );
+
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      expect(mockToast).toHaveBeenCalledWith(
+        "New ucsbDate Created - id: 17 name: Groundhog Day",
+      );
+      expect(
+        queryClient.getQueryState(["/api/ucsbdates/all"]).isInvalidated,
+      ).toBe(false);
     });
     test("useBackendMutation handles error correctly", async () => {
       // See: https://react-query.tanstack.com/guides/testing#turn-off-retries
@@ -273,5 +346,7 @@ describe("utils/useBackend tests", () => {
       const errorMessage2 = console.error.mock.calls[0][0];
       expect(errorMessage2).toMatch(/onError from mutation.mutate called!/);
     });
+
+    test("invalidation behavior", async () => {});
   });
 });
