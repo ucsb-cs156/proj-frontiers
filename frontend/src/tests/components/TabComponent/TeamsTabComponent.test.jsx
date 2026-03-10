@@ -1057,9 +1057,6 @@ describe("TeamTabComponent tests", () => {
         },
       },
     });
-    // axiosMock
-    //   .onGet("/api/teams/all?courseId=1")
-    //   .reply(200, teamsFixtures.teams);
 
     axiosMock.onPost("/api/jobs/launch/pullTeamsFromGithub").reply(200, {
       id: 1,
