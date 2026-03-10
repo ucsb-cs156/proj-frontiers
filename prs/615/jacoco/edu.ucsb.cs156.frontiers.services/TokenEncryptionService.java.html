@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TokenEncryptionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">TokenEncryptionService.java</span></div><h1>TokenEncryptionService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.codec.Hex;
+import org.springframework.security.crypto.encrypt.AesBytesEncryptor;
+import org.springframework.security.crypto.keygen.KeyGenerators;
+import org.springframework.stereotype.Service;
+
+@Service
+public class TokenEncryptionService {
+
+  private final AesBytesEncryptor encryptor;
+
+<span class="fc" id="L18">  public TokenEncryptionService(@Value(&quot;${app.secret}&quot;) String secret) {</span>
+<span class="fc" id="L19">    byte[] keyBytes = Hex.decode(secret);</span>
+<span class="fc" id="L20">    SecretKey key = new SecretKeySpec(keyBytes, &quot;AES&quot;);</span>
+<span class="fc" id="L21">    this.encryptor =</span>
+        new AesBytesEncryptor(
+<span class="fc" id="L23">            key, KeyGenerators.secureRandom(12), AesBytesEncryptor.CipherAlgorithm.GCM);</span>
+<span class="fc" id="L24">  }</span>
+
+  public String encryptToken(String token) {
+<span class="fc" id="L27">    byte[] encrypted = encryptor.encrypt(token.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L28">    return Base64.getEncoder().encodeToString(encrypted);</span>
+  }
+
+  public String decryptToken(String encryptedToken) {
+<span class="fc" id="L32">    byte[] decrypted = encryptor.decrypt(Base64.getDecoder().decode(encryptedToken));</span>
+<span class="fc" id="L33">    return new String(decrypted, StandardCharsets.UTF_8);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
