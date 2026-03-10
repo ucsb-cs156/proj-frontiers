@@ -178,7 +178,7 @@ export default function EnrollmentTabComponent({
               overlay={
                 <Tooltip id="csv-help-tooltip">CSV Upload Format Help</Tooltip>
               }
-            > 
+            >
               <BsInfoCircle
                 onClick={openCsvHelp}
                 style={{
