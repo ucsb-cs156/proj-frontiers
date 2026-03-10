@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.ucsb.cs156.frontiers.enums.School;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.*;
 import org.hibernate.annotations.Fetch;
@@ -32,6 +33,10 @@ public class Course {
   private School school;
 
   @JsonIgnore private String canvasApiToken;
+
+  private String canvasTokenLastFour;
+
+  private LocalDateTime canvasTokenLastUpdated;
 
   private String canvasCourseId;
 

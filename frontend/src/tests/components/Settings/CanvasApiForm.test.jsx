@@ -133,16 +133,19 @@ describe("CanvasApiForm tests", () => {
   });
   test("Placeholder shows correct text when no token is set", async () => {
     const mockSubmitAction = vi.fn();
-    axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
-      courseId: "",
-      canvasApiToken: "",
-      canvasCourseId: "",
+    useBackendSpy.mockReturnValue({
+      data: {
+        courseId: "",
+        canvasTokenLastFour: "",
+        canvasTokenLastUpdated: "",
+        canvasCourseId: "",
+      },
     });
 
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <CanvasApiForm submitAction={mockSubmitAction} />
+          <CanvasApiForm submitAction={mockSubmitAction} courseId={1} />
         </Router>
       </QueryClientProvider>,
     );
@@ -161,10 +164,13 @@ describe("CanvasApiForm tests", () => {
 
   test("Placeholder shows correct text when a token is set", async () => {
     const mockSubmitAction = vi.fn();
-    axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
-      courseId: "1",
-      canvasApiToken: "***************d1U",
-      canvasCourseId: "1234567",
+    useBackendSpy.mockReturnValue({
+      data: {
+        courseId: "1",
+        canvasTokenLastFour: "d1U3",
+        canvasTokenLastUpdated: "2025-01-14T10:30:00",
+        canvasCourseId: "1234567",
+      },
     });
 
     render(
@@ -178,7 +184,7 @@ describe("CanvasApiForm tests", () => {
     await waitFor(() => {
       expect(screen.getByTestId(`${testId}-canvasApiToken`)).toHaveAttribute(
         "placeholder",
-        "Current Token: ***************d1U",
+        "Token ending in d1U3 · last updated January 14, 2025",
       );
     });
 
