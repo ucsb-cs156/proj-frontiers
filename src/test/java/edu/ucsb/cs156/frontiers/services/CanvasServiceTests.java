@@ -11,6 +11,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.models.CanvasGroup;
 import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
@@ -46,6 +47,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     // Create GraphQL response that matches what Canvas API would return
@@ -102,6 +104,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     // GraphQL response with empty edges array
@@ -142,6 +145,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     // Student with null integrationId - should use sisId
@@ -185,6 +189,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     // Student with integrationId - should use integrationId over sisId
@@ -228,6 +233,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     String graphqlResponse =
@@ -276,6 +282,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     String graphqlResponse =
@@ -312,6 +319,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     String graphqlResponse =
@@ -386,6 +394,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     String graphqlResponse =
@@ -425,6 +434,7 @@ public class CanvasServiceTests {
             .courseName("CS156")
             .canvasApiToken("test-api-token")
             .canvasCourseId("12345")
+            .school(School.UCSB)
             .build();
 
     String graphqlResponse =
