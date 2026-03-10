@@ -11,7 +11,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
-import { BsInfoCircleFill } from "react-icons/bs";
+import { BsInfoCircle } from "react-icons/bs";
 import TeamsCSVUploadForm from "main/components/Teams/TeamsCSVUploadForm";
 import TeamsForm from "main/components/Teams/TeamsForm";
 import Modal from "react-bootstrap/Modal";
@@ -69,6 +69,14 @@ export default function TeamsTabComponent({
     },
   });
 
+  const objectToAxiosParamsPullTeamsFromGithub = () => ({
+    url: `/api/jobs/launch/pullTeamsFromGithub`,
+    method: "POST",
+    params: {
+      courseId: courseId,
+    },
+  });
+
   const objectToAxiosParamsAddTeamToGithub = (team) => ({
     url: `/api/jobs/launch/addTeamToGithub`,
     method: "POST",
@@ -86,6 +94,10 @@ export default function TeamsTabComponent({
 
   const onSuccessPushTeamsToGithub = () => {
     toast("Push teams to Github job successfully started.");
+  };
+
+  const onSuccessPullTeamsFromGithub = () => {
+    toast("Pull teams from Github job successfully started.");
   };
 
   const onSuccessAddTeamToGithub = () => {
@@ -151,6 +163,11 @@ export default function TeamsTabComponent({
     { onSuccess: onSuccessPushTeamsToGithub },
   );
 
+  const pullTeamsFromGithubMutation = useBackendMutation(
+    objectToAxiosParamsPullTeamsFromGithub,
+    { onSuccess: onSuccessPullTeamsFromGithub },
+  );
+
   const addTeamToGithubMutation = useBackendMutation(
     objectToAxiosParamsAddTeamToGithub,
     { onSuccess: onSuccessAddTeamToGithub },
@@ -166,6 +183,10 @@ export default function TeamsTabComponent({
 
   const handlePushTeamsToGithub = () => {
     pushTeamsToGithubMutation.mutate();
+  };
+
+  const handlePullTeamsFromGithub = () => {
+    pullTeamsFromGithubMutation.mutate();
   };
 
   const openCsvHelp = () => {
@@ -240,13 +261,13 @@ export default function TeamsTabComponent({
         </ModalHeader>
         <ModalBody>{partialSuccessPostCSVTeamModal.message}</ModalBody>
       </Modal>
-      <Row sm={3} className="p-2">
+      <Row sm={4} className="p-2 g-3">
         <Col>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center position-relative">
             <Button
               onClick={() => setCsvModal(true)}
               data-testid={`${testIdPrefix}-csv-button`}
-              className="w-100"
+              className="w-100 pe-5"
             >
               Upload Teams by CSV
             </Button>
@@ -258,9 +279,14 @@ export default function TeamsTabComponent({
                 </Tooltip>
               }
             >
-              <BsInfoCircleFill
+              <BsInfoCircle
                 onClick={openCsvHelp}
                 style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "0.75rem",
+                  transform: "translateY(-50%)",
+                  color: "#fff",
                   cursor: "pointer",
                   fontSize: "0.9rem",
                   userSelect: "none",
@@ -286,6 +312,15 @@ export default function TeamsTabComponent({
             data-testid={`${testIdPrefix}-push-teams-button`}
           >
             Push Teams to Github
+          </Button>
+        </Col>
+        <Col>
+          <Button
+            onClick={handlePullTeamsFromGithub}
+            className="w-100"
+            data-testid={`${testIdPrefix}-pull-teams-button`}
+          >
+            Pull Teams From Github
           </Button>
         </Col>
       </Row>

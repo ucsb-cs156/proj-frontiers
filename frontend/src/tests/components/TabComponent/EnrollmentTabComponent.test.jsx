@@ -603,6 +603,11 @@ describe("EnrollmentTabComponent Tests", () => {
 
     const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
     expect(infoIcon).toBeInTheDocument();
+    expect(infoIcon).toHaveStyle({ position: "absolute" });
+    expect(infoIcon).toHaveStyle({ top: "50%" });
+    expect(infoIcon).toHaveStyle({ right: "0.75rem" });
+    expect(infoIcon).toHaveStyle({ transform: "translateY(-50%)" });
+    expect(infoIcon).toHaveStyle({ color: "#fff" });
     expect(infoIcon).toHaveStyle({ cursor: "pointer" });
     expect(infoIcon).toHaveStyle({ fontSize: "0.9rem" });
     expect(infoIcon).toHaveStyle({ userSelect: "none" });
