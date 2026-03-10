@@ -11,7 +11,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
-import { BsInfoCircleFill } from "react-icons/bs";
+import { BsInfoCircle } from "react-icons/bs";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
@@ -165,11 +165,11 @@ export default function EnrollmentTabComponent({
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center position-relative">
             <Button
               onClick={() => setCsvModal(true)}
               data-testid={`${testIdPrefix}-csv-button`}
-              className="w-100"
+              className="w-100 pe-5"
             >
               Upload CSV Roster
             </Button>
@@ -178,10 +178,15 @@ export default function EnrollmentTabComponent({
               overlay={
                 <Tooltip id="csv-help-tooltip">CSV Upload Format Help</Tooltip>
               }
-            >
-              <BsInfoCircleFill
+            > 
+              <BsInfoCircle
                 onClick={openCsvHelp}
                 style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "0.75rem",
+                  transform: "translateY(-50%)",
+                  color: "#fff",
                   cursor: "pointer",
                   fontSize: "0.9rem",
                   userSelect: "none",

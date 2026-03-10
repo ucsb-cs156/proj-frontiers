@@ -665,6 +665,11 @@ describe("TeamTabComponent tests", () => {
 
     const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
     expect(infoIcon).toBeInTheDocument();
+    expect(infoIcon).toHaveStyle({ position: "absolute" });
+    expect(infoIcon).toHaveStyle({ top: "50%" });
+    expect(infoIcon).toHaveStyle({ right: "0.75rem" });
+    expect(infoIcon).toHaveStyle({ transform: "translateY(-50%)" });
+    expect(infoIcon).toHaveStyle({ color: "#fff" });
     expect(infoIcon).toHaveStyle({ cursor: "pointer" });
     expect(infoIcon).toHaveStyle({ fontSize: "0.9rem" });
     expect(infoIcon).toHaveStyle({ userSelect: "none" });
@@ -1040,6 +1045,60 @@ describe("TeamTabComponent tests", () => {
 
     expect(toast).toBeCalledWith(
       "Push teams to Github job successfully started.",
+    );
+  });
+
+  test("Pull teams from Github button works correctly", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    // axiosMock
+    //   .onGet("/api/teams/all?courseId=1")
+    //   .reply(200, teamsFixtures.teams);
+
+    axiosMock.onPost("/api/jobs/launch/pullTeamsFromGithub").reply(200, {
+      id: 1,
+      status: "running",
+    });
+
+    render(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClientSpecific}>
+          <TeamsTabComponent
+            courseId={1}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+
+    const pullTeamsButton = await screen.findByTestId(
+      `${testId}-pull-teams-button`,
+    );
+    expect(pullTeamsButton).toBeInTheDocument();
+    expect(pullTeamsButton).toBeEnabled();
+
+    fireEvent.click(pullTeamsButton);
+
+    await waitFor(() => {
+      expect(axiosMock.history.post.length).toEqual(1);
+    });
+
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/jobs/launch/pullTeamsFromGithub",
+    );
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: 1,
+    });
+
+    expect(toast).toBeCalledWith(
+      "Pull teams from Github job successfully started.",
     );
   });
 });
