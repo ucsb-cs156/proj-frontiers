@@ -24,11 +24,13 @@ public class TokenEncryptionService {
   }
 
   public String encryptToken(String token) {
+    if (token == null || token.isEmpty()) return null;
     byte[] encrypted = encryptor.encrypt(token.getBytes(StandardCharsets.UTF_8));
     return Base64.getEncoder().encodeToString(encrypted);
   }
 
   public String decryptToken(String encryptedToken) {
+    if (encryptedToken == null || encryptedToken.isEmpty()) return null;
     byte[] decrypted = encryptor.decrypt(Base64.getDecoder().decode(encryptedToken));
     return new String(decrypted, StandardCharsets.UTF_8);
   }

@@ -46,4 +46,10 @@ public class TokenEncryptionServiceTests {
   public void testDecrypt_throwsOnGarbageInput() {
     assertThrows(Exception.class, () -> tokenEncryptionService.decryptToken("notvalidbase64!!!"));
   }
+
+  @Test
+  public void testEncryptToken_nullOrEmpty() {
+    assertEquals(null, tokenEncryptionService.encryptToken(null));
+    assertEquals(null, tokenEncryptionService.encryptToken(""));
+  }
 }

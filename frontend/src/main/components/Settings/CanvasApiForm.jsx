@@ -47,8 +47,8 @@ function CanvasApiForm({
           id="canvasApiToken"
           type="text"
           placeholder={
-            canvasInfo.canvasTokenLastFour
-              ? `Token ending in ${canvasInfo.canvasTokenLastFour} · last updated ${new Date(canvasInfo.canvasTokenLastUpdated).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`
+            canvasInfo.canvasApiToken
+              ? `Current Token: ${canvasInfo.canvasApiToken}`
               : "Token not set yet."
           }
           isInvalid={Boolean(errors.canvasApiToken)}
