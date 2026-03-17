@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -15,6 +16,7 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.Arrays;
 import java.util.Optional;
@@ -191,9 +193,11 @@ public class PushTeamsToGithubJobTests {
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team1, team2));
 
     // Mock GitHub service calls
-    when(githubTeamService.createOrGetTeamId(team1, course)).thenReturn(123);
-    when(githubTeamService.createOrGetTeamId(team2, course)).thenReturn(456);
-    when(githubTeamService.getTeamMembershipStatus("student1", 123, course))
+    when(githubTeamService.createOrGetTeamInfo(team1, course))
+        .thenReturn(new GithubTeamInfo(123, "team1", "team1"));
+    when(githubTeamService.createOrGetTeamInfo(team2, course))
+        .thenReturn(new GithubTeamInfo(456, "team2", "team2"));
+    when(githubTeamService.getTeamMembershipStatus("student1", 123, course, 1))
         .thenReturn(TeamStatus.NOT_ORG_MEMBER);
     when(githubTeamService.addMemberToGithubTeam("student1", 123, "member", course, 1))
         .thenReturn(TeamStatus.TEAM_MEMBER);
@@ -214,14 +218,19 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(courseRepository).findById(courseId);
     verify(teamRepository).findByCourseId(courseId);
-    verify(githubTeamService).createOrGetTeamId(team1, course);
-    verify(githubTeamService).createOrGetTeamId(team2, course);
-    verify(githubTeamService).getTeamMembershipStatus("student1", 123, course);
+    verify(githubTeamService).createOrGetTeamInfo(team1, course);
+    verify(githubTeamService).createOrGetTeamInfo(team2, course);
+    verify(githubTeamService).getTeamMembershipStatus("student1", 123, course, 1);
     verify(githubTeamService).addMemberToGithubTeam("student1", 123, "member", course, 1);
 
     // Verify team1 was updated with GitHub team ID
     verify(teamRepository)
-        .save(argThat(t -> t.getName().equals("team1") && t.getGithubTeamId().equals(123)));
+        .save(
+            argThat(
+                t ->
+                    t.getName().equals("team1")
+                        && t.getGithubTeamId().equals(123)
+                        && t.getGithubTeamSlug().equals("team1")));
 
     // Verify team members were updated with correct status
     verify(teamMemberRepository)
@@ -260,15 +269,18 @@ public class PushTeamsToGithubJobTests {
         Team.builder()
             .name("team1")
             .githubTeamId(123)
+            .githubTeamSlug("team1")
             .teamMembers(Arrays.asList(teamMember))
             .build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
-    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    when(githubTeamService.createOrGetTeamInfo(team, course))
+        .thenReturn(new GithubTeamInfo(123, "team1", "team1"));
     // This specifically tests the TEAM_MEMBER branch of the condition (first part of ||)
-    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
+    when(githubTeamService.getTeamMembershipStatus("student", 123, course, 1))
         .thenReturn(TeamStatus.TEAM_MEMBER);
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
 
     PushTeamsToGithubJob job =
         PushTeamsToGithubJob.builder()
@@ -283,11 +295,13 @@ public class PushTeamsToGithubJobTests {
     job.accept(ctx);
 
     // Assert
-    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    verify(githubTeamService).getTeamMembershipStatus("student", 123, course, 1);
+    verify(teamRepository, never()).save(any(Team.class));
     // Should not try to add member since they're already a member
     verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
+    assertTrue(jobStarted.getLog().contains("already has correct GitHub team ID: 123"));
   }
 
   @Test
@@ -312,15 +326,18 @@ public class PushTeamsToGithubJobTests {
         Team.builder()
             .name("team1")
             .githubTeamId(123)
+            .githubTeamSlug("team1")
             .teamMembers(Arrays.asList(teamMember))
             .build();
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
-    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    when(githubTeamService.createOrGetTeamInfo(team, course))
+        .thenReturn(new GithubTeamInfo(123, "team1", "team1"));
     // This specifically tests the TEAM_MAINTAINER branch of the condition
-    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
+    when(githubTeamService.getTeamMembershipStatus("student", 123, course, 1))
         .thenReturn(TeamStatus.TEAM_MAINTAINER);
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
 
     PushTeamsToGithubJob job =
         PushTeamsToGithubJob.builder()
@@ -335,11 +352,105 @@ public class PushTeamsToGithubJobTests {
     job.accept(ctx);
 
     // Assert
-    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    verify(githubTeamService).getTeamMembershipStatus("student", 123, course, 1);
+    verify(teamRepository, never()).save(any(Team.class));
     // Should not try to add member since they're already a maintainer
     verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
+    assertTrue(jobStarted.getLog().contains("already has correct GitHub team ID: 123"));
+  }
+
+  @Test
+  public void testAccept_UpdatesTeamWhenOnlyGithubTeamIdDiffers() throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    Team team =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(999)
+            .githubTeamSlug("team1")
+            .teamMembers(Arrays.asList())
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
+    when(githubTeamService.createOrGetTeamInfo(team, course))
+        .thenReturn(new GithubTeamInfo(123, "team1", "team1"));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(teamRepository)
+        .save(
+            argThat(
+                t ->
+                    t == team
+                        && t.getGithubTeamId().equals(123)
+                        && t.getGithubTeamSlug().equals("team1")));
+    assertTrue(jobStarted.getLog().contains("Updated team 'team1' with GitHub team ID: 123"));
+  }
+
+  @Test
+  public void testAccept_UpdatesTeamWhenOnlyGithubTeamSlugDiffers() throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+
+    Team team =
+        Team.builder()
+            .name("team1")
+            .githubTeamId(123)
+            .githubTeamSlug("old-slug")
+            .teamMembers(Arrays.asList())
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
+    when(githubTeamService.createOrGetTeamInfo(team, course))
+        .thenReturn(new GithubTeamInfo(123, "team1", "team1"));
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(teamRepository)
+        .save(
+            argThat(
+                t ->
+                    t == team
+                        && t.getGithubTeamId().equals(123)
+                        && t.getGithubTeamSlug().equals("team1")));
+    assertTrue(jobStarted.getLog().contains("Updated team 'team1' with GitHub team ID: 123"));
   }
 
   @Test
@@ -360,7 +471,7 @@ public class PushTeamsToGithubJobTests {
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
-    when(githubTeamService.createOrGetTeamId(team, course))
+    when(githubTeamService.createOrGetTeamInfo(team, course))
         .thenThrow(new RuntimeException("GitHub API error"));
 
     PushTeamsToGithubJob job =
@@ -378,7 +489,7 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(courseRepository).findById(courseId);
     verify(teamRepository).findByCourseId(courseId);
-    verify(githubTeamService).createOrGetTeamId(team, course);
+    verify(githubTeamService).createOrGetTeamInfo(team, course);
     // Should not save team or process members when creation fails
     verify(teamRepository, never()).save(any());
   }
@@ -411,7 +522,7 @@ public class PushTeamsToGithubJobTests {
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
     // Make team creation fail so GitHub team ID remains null
-    when(githubTeamService.createOrGetTeamId(team, course))
+    when(githubTeamService.createOrGetTeamInfo(team, course))
         .thenThrow(new RuntimeException("Creation failed"));
 
     PushTeamsToGithubJob job =
@@ -429,9 +540,9 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(courseRepository).findById(courseId);
     verify(teamRepository).findByCourseId(courseId);
-    verify(githubTeamService).createOrGetTeamId(team, course);
+    verify(githubTeamService).createOrGetTeamInfo(team, course);
     // Should not process team members when team has no GitHub team ID
-    verify(githubTeamService, never()).getTeamMembershipStatus(any(), any(), any());
+    verify(githubTeamService, never()).getTeamMembershipStatus(any(), any(), any(), any());
     verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
     verify(teamMemberRepository, never()).save(any());
   }
@@ -462,10 +573,12 @@ public class PushTeamsToGithubJobTests {
 
     when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
     when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(team));
-    when(githubTeamService.createOrGetTeamId(team, course)).thenReturn(123);
+    when(githubTeamService.createOrGetTeamInfo(team, course))
+        .thenReturn(new GithubTeamInfo(123, "team1", "team1"));
     // Make team member processing fail
-    when(githubTeamService.getTeamMembershipStatus("student", 123, course))
+    when(githubTeamService.getTeamMembershipStatus("student", 123, course, 1))
         .thenThrow(new RuntimeException("GitHub API error"));
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
 
     PushTeamsToGithubJob job =
         PushTeamsToGithubJob.builder()
@@ -482,8 +595,8 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(courseRepository).findById(courseId);
     verify(teamRepository).findByCourseId(courseId);
-    verify(githubTeamService).createOrGetTeamId(team, course);
-    verify(githubTeamService).getTeamMembershipStatus("student", 123, course);
+    verify(githubTeamService).createOrGetTeamInfo(team, course);
+    verify(githubTeamService).getTeamMembershipStatus("student", 123, course, 1);
     // Should set status to NOT_ORG_MEMBER when processing fails
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.NOT_ORG_MEMBER)));

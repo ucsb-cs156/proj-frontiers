@@ -43,10 +43,19 @@ public class GithubTeamServiceTests {
   }
 
   @Test
+  public void testGithubTeamSlugIsNullByDefault() {
+    GithubTeamService.GithubTeamInfo teamInfo = new GithubTeamService.GithubTeamInfo(123, "team-a");
+
+    assertEquals(123, teamInfo.id());
+    assertEquals("team-a", teamInfo.name());
+    assertNull(teamInfo.slug());
+  }
+
+  @Test
   public void testCreateOrGetTeamId_WhenTeamExists() throws Exception {
     // Arrange
     Course course = Course.builder().orgName("test-org").installationId("123").build();
-    Team team = Team.builder().name("test-team").build();
+    Team team = Team.builder().name("test-team").githubTeamSlug("test-team").build();
     String token = "test-token";
     String existingTeamResponse = "{\"id\": 456, \"name\": \"test-team\"}";
 
@@ -73,12 +82,47 @@ public class GithubTeamServiceTests {
   }
 
   @Test
+  public void testCreateOrGetTeamInfo_WhenTeamExists() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    Team team = Team.builder().name("test-team").githubTeamSlug("test-team").build();
+    String token = "test-token";
+    String existingTeamResponse = "{\"id\": 456, \"name\": \"test-team\", \"slug\": \"test-team\"}";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/test-team"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(existingTeamResponse, HttpStatus.OK));
+
+    GithubTeamService.GithubTeamInfo result = githubTeamService.createOrGetTeamInfo(team, course);
+
+    assertEquals(456, result.id());
+    assertEquals("test-team", result.slug());
+  }
+
+  @Test
+  public void testCreateOrGetTeamId_ReturnsNullWhenCreateOrGetTeamInfoReturnsNull()
+      throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    Team team = Team.builder().name("test-team").build();
+    GithubTeamService spyService = spy(githubTeamService);
+
+    doReturn(null).when(spyService).createOrGetTeamInfo(team, course);
+
+    Integer result = spyService.createOrGetTeamId(team, course);
+
+    assertNull(result);
+  }
+
+  @Test
   public void testCreateOrGetTeamId_WhenTeamDoesNotExist() throws Exception {
     // Arrange
     Course course = Course.builder().orgName("test-org").installationId("123").build();
-    Team team = Team.builder().name("test-team").build();
+    Team team = Team.builder().name("test-team").githubTeamSlug("test-team").build();
     String token = "test-token";
-    String createTeamResponse = "{\"id\": 789, \"name\": \"test-team\"}";
+    String createTeamResponse = "{\"id\": 789, \"name\": \"test-team\", \"slug\": \"test-team\"}";
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
@@ -87,6 +131,12 @@ public class GithubTeamServiceTests {
             any(HttpEntity.class),
             eq(String.class)))
         .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
     when(restTemplate.exchange(
             eq("https://api.github.com/orgs/test-org/teams"),
             eq(HttpMethod.POST),
@@ -99,10 +149,16 @@ public class GithubTeamServiceTests {
 
     // Assert
     assertEquals(789, result);
-    verify(jwtService, times(2)).getInstallationToken(course);
+    verify(jwtService, times(3)).getInstallationToken(course);
     verify(restTemplate)
         .exchange(
             eq("https://api.github.com/orgs/test-org/teams/test-team"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class));
+    verify(restTemplate)
+        .exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class));
@@ -112,6 +168,57 @@ public class GithubTeamServiceTests {
             eq(HttpMethod.POST),
             any(HttpEntity.class),
             eq(String.class));
+  }
+
+  @Test
+  public void testCreateTeamInfo_WhenTeamDoesNotExist() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String createTeamResponse = "{\"id\": 789, \"name\": \"test-team\", \"slug\": \"test-team\"}";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(createTeamResponse, HttpStatus.CREATED));
+
+    GithubTeamService.GithubTeamInfo result = githubTeamService.createTeamInfo("test-team", course);
+
+    assertEquals(789, result.id());
+    assertEquals("test-team", result.slug());
+  }
+
+  @Test
+  public void testCreateTeam_ReturnsIdWhenTeamDoesNotExist() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String createTeamResponse = "{\"id\": 789, \"name\": \"test-team\", \"slug\": \"test-team\"}";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(createTeamResponse, HttpStatus.CREATED));
+
+    Integer result = githubTeamService.createTeam("test-team", course);
+
+    assertEquals(789, result);
+  }
+
+  @Test
+  public void testCreateTeam_ReturnsNullWhenCreateTeamInfoReturnsNull() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    GithubTeamService spyService = spy(githubTeamService);
+
+    doReturn(null).when(spyService).createTeamInfo("test-team", course);
+
+    Integer result = spyService.createTeam("test-team", course);
+
+    assertNull(result);
   }
 
   @Test
@@ -137,6 +244,46 @@ public class GithubTeamServiceTests {
   }
 
   @Test
+  public void testGetTeamInfo_WhenTeamExists() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"id\": 456, \"name\": \"test-team\", \"slug\": \"test-team\"}";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams/test-team"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    GithubTeamService.GithubTeamInfo result = githubTeamService.getTeamInfo("test-team", course);
+
+    assertEquals(456, result.id());
+    assertEquals("test-team", result.slug());
+  }
+
+  @Test
+  public void testGetTeamInfoById_WhenTeamExists() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"id\": 456, \"name\": \"test-team\", \"slug\": \"test-team\"}";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/organizations/1/team/456"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    GithubTeamService.GithubTeamInfo result = githubTeamService.getTeamInfoById(1, 456, course);
+
+    assertEquals(456, result.id());
+    assertEquals("test-team", result.slug());
+  }
+
+  @Test
   public void testGetTeamId_WhenTeamDoesNotExist() throws Exception {
     // Arrange
     Course course = Course.builder().orgName("test-org").installationId("123").build();
@@ -158,12 +305,68 @@ public class GithubTeamServiceTests {
   }
 
   @Test
+  public void testGetTeamInfoById_WhenTeamDoesNotExist() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/organizations/1/team/456"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+    GithubTeamService.GithubTeamInfo result = githubTeamService.getTeamInfoById(1, 456, course);
+
+    assertNull(result);
+  }
+
+  @Test
+  public void testGetTeamInfoById_NonNotFoundError() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/organizations/1/team/456"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
+
+    assertThrows(
+        HttpClientErrorException.class, () -> githubTeamService.getTeamInfoById(1, 456, course));
+  }
+
+  @Test
+  public void testGetTeamInfoByName_WhenNoMatchReturnsNull() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String allTeamsResponse =
+        "[{\"id\": 111, \"name\": \"team-a\", \"slug\": \"team-a\"}, {\"id\": 222, \"name\": \"team-b\", \"slug\": \"team-b\"}]";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(allTeamsResponse, HttpStatus.OK));
+
+    GithubTeamService.GithubTeamInfo result =
+        githubTeamService.getTeamInfoByName("missing-team", course);
+
+    assertNull(result);
+  }
+
+  @Test
   public void testGetTeamMembershipStatus_NoGithubId() throws Exception {
     // Arrange
     Course course = Course.builder().orgName("test-org").installationId("123").build();
 
     // Act
-    TeamStatus result = githubTeamService.getTeamMembershipStatus(null, 456, course);
+    TeamStatus result = githubTeamService.getTeamMembershipStatus(null, 456, course, 1);
 
     // Assert
     assertEquals(TeamStatus.NO_GITHUB_ID, result);
@@ -178,14 +381,14 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
 
     // Act
-    TeamStatus result = githubTeamService.getTeamMembershipStatus("testuser", 456, course);
+    TeamStatus result = githubTeamService.getTeamMembershipStatus("testuser", 456, course, 1);
 
     // Assert
     assertEquals(TeamStatus.TEAM_MEMBER, result);
@@ -200,14 +403,14 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
 
     // Act
-    TeamStatus result = githubTeamService.getTeamMembershipStatus("testuser", 456, course);
+    TeamStatus result = githubTeamService.getTeamMembershipStatus("testuser", 456, course, 1);
 
     // Assert
     assertEquals(TeamStatus.TEAM_MAINTAINER, result);
@@ -221,14 +424,14 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
         .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
     // Act
-    TeamStatus result = githubTeamService.getTeamMembershipStatus("testuser", 456, course);
+    TeamStatus result = githubTeamService.getTeamMembershipStatus("testuser", 456, course, 1);
 
     // Assert
     assertEquals(TeamStatus.NOT_ORG_MEMBER, result);
@@ -312,7 +515,7 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.GET),
             any(HttpEntity.class),
             eq(String.class)))
@@ -322,7 +525,7 @@ public class GithubTeamServiceTests {
     assertThrows(
         HttpClientErrorException.class,
         () -> {
-          githubTeamService.getTeamMembershipStatus("testuser", 456, course);
+          githubTeamService.getTeamMembershipStatus("testuser", 456, course, 1);
         });
   }
 
@@ -354,12 +557,36 @@ public class GithubTeamServiceTests {
   }
 
   @Test
+  public void testGetTeamInfoById_VerifyHeaders() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    String token = "test-token";
+    String response = "{\"id\": 456, \"name\": \"test-team\", \"slug\": \"test-team\"}";
+    ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/organizations/1/team/456"),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
+
+    githubTeamService.getTeamInfoById(1, 456, course);
+
+    HttpEntity<String> capturedEntity = entityCaptor.getValue();
+    HttpHeaders headers = capturedEntity.getHeaders();
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", headers.getFirst("Accept"));
+    assertEquals("2022-11-28", headers.getFirst("X-GitHub-Api-Version"));
+  }
+
+  @Test
   public void testCreateTeam_VerifyHeaders() throws Exception {
     // Arrange
     Course course = Course.builder().orgName("test-org").installationId("123").build();
-    Team team = Team.builder().name("test-team").build();
+    Team team = Team.builder().name("test-team").githubTeamSlug("test-team").build();
     String token = "test-token";
-    String createTeamResponse = "{\"id\": 789, \"name\": \"test-team\"}";
+    String createTeamResponse = "{\"id\": 789, \"name\": \"test-team\", \"slug\": \"test-team\"}";
     ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
@@ -370,6 +597,12 @@ public class GithubTeamServiceTests {
             any(HttpEntity.class),
             eq(String.class)))
         .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
     // Second call to createTeam
     when(restTemplate.exchange(
             eq("https://api.github.com/orgs/test-org/teams"),
@@ -390,6 +623,62 @@ public class GithubTeamServiceTests {
   }
 
   @Test
+  public void testCreateOrGetTeamInfo_FallsBackToLookupByNameWhenSlugMissing() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    Team team = Team.builder().name("Display Name").build();
+    String token = "test-token";
+    String allTeamsResponse =
+        "[{\"id\": 456, \"name\": \"Display Name\", \"slug\": \"display-name\"}]";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(allTeamsResponse, HttpStatus.OK));
+
+    GithubTeamService.GithubTeamInfo result = githubTeamService.createOrGetTeamInfo(team, course);
+
+    assertEquals(456, result.id());
+    assertEquals("display-name", result.slug());
+    verify(restTemplate, never())
+        .exchange(
+            eq("https://api.github.com/orgs/test-org/teams"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class));
+  }
+
+  @Test
+  public void testCreateOrGetTeamInfo_FallsBackToLookupByNameWhenSlugBlank() throws Exception {
+    Course course = Course.builder().orgName("test-org").installationId("123").build();
+    Team team = Team.builder().name("Display Name").githubTeamSlug("   ").build();
+    String token = "test-token";
+    String allTeamsResponse =
+        "[{\"id\": 456, \"name\": \"Display Name\", \"slug\": \"display-name\"}]";
+
+    when(jwtService.getInstallationToken(course)).thenReturn(token);
+    when(restTemplate.exchange(
+            eq("https://api.github.com/orgs/test-org/teams?per_page=100"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class)))
+        .thenReturn(new ResponseEntity<>(allTeamsResponse, HttpStatus.OK));
+
+    GithubTeamService.GithubTeamInfo result = githubTeamService.createOrGetTeamInfo(team, course);
+
+    assertEquals(456, result.id());
+    assertEquals("display-name", result.slug());
+    verify(restTemplate, never())
+        .exchange(
+            eq("https://api.github.com/orgs/test-org/teams/   "),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(String.class));
+  }
+
+  @Test
   public void testGetTeamMembershipStatus_VerifyHeaders() throws Exception {
     // Arrange
     Course course = Course.builder().orgName("test-org").installationId("123").build();
@@ -399,14 +688,14 @@ public class GithubTeamServiceTests {
 
     when(jwtService.getInstallationToken(course)).thenReturn(token);
     when(restTemplate.exchange(
-            eq("https://api.github.com/orgs/test-org/teams/456/memberships/testuser"),
+            eq("https://api.github.com/organizations/1/team/456/memberships/testuser"),
             eq(HttpMethod.GET),
             entityCaptor.capture(),
             eq(String.class)))
         .thenReturn(new ResponseEntity<>(response, HttpStatus.OK));
 
     // Act
-    githubTeamService.getTeamMembershipStatus("testuser", 456, course);
+    githubTeamService.getTeamMembershipStatus("testuser", 456, course, 1);
 
     // Assert
     HttpEntity<String> capturedEntity = entityCaptor.getValue();

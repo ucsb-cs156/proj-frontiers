@@ -17,6 +17,7 @@ import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import java.util.Map;
@@ -37,6 +38,8 @@ public class RepositoryControllerTests extends ControllerTestCase {
   @MockitoBean private JobService service;
 
   @MockitoBean private RepositoryService repositoryService;
+
+  @MockitoBean private GithubTeamService githubTeamService;
 
   @Autowired private CurrentUserService currentUserService;
   @Autowired private ObjectMapper objectMapper;

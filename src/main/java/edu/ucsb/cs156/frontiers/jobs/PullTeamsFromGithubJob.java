@@ -88,6 +88,7 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
                 .name(githubTeam.name())
                 .course(course)
                 .githubTeamId(githubTeam.id())
+                .githubTeamSlug(githubTeam.slug())
                 .build();
         teamRepository.save(newTeam);
         localByGithubId.put(githubTeam.id(), newTeam);
@@ -113,6 +114,11 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
             localByGithubId.remove(localTeam.getGithubTeamId());
           }
           localTeam.setGithubTeamId(githubTeam.id());
+          teamUnchanged.set(false);
+        }
+        if (localTeam.getGithubTeamSlug() == null
+            || !githubTeam.slug().equals(localTeam.getGithubTeamSlug())) {
+          localTeam.setGithubTeamSlug(githubTeam.slug());
           teamUnchanged.set(false);
         }
 

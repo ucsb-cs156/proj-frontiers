@@ -10,6 +10,7 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,8 @@ public class AddTeamToGithubJobTests {
     Course course = Course.builder().orgName("test-org").id(2L).installationId("123").build();
     Team team = Team.builder().name("test-team").id(1L).build();
     when(teamRepository.findByCourseIdAndName(2L, "test-team")).thenReturn(Optional.of(team));
-    when(githubTeamService.createTeam("test-team", course)).thenReturn(11);
+    when(githubTeamService.createTeamInfo("test-team", course))
+        .thenReturn(new GithubTeamInfo(11, "test-team", "test-team"));
     AddTeamToGithubJob job =
         AddTeamToGithubJob.builder()
             .teamName("test-team")
@@ -59,8 +61,9 @@ public class AddTeamToGithubJobTests {
 
     job.accept(ctx);
 
-    verify(githubTeamService, times(1)).createTeam(eq("test-team"), eq(course));
+    verify(githubTeamService, times(1)).createTeamInfo(eq("test-team"), eq(course));
     assertEquals(11, team.getGithubTeamId());
+    assertEquals("test-team", team.getGithubTeamSlug());
     verify(teamRepository, times(1)).save(team);
   }
 
@@ -79,7 +82,7 @@ public class AddTeamToGithubJobTests {
 
     job.accept(ctx);
 
-    verify(githubTeamService, never()).createTeam(anyString(), any(Course.class));
+    verify(githubTeamService, never()).createTeamInfo(anyString(), any(Course.class));
     assertTrue(jobStarted.getLog().contains("ERROR: Team has no name"));
   }
 
@@ -172,7 +175,7 @@ public class AddTeamToGithubJobTests {
 
     doThrow(new RuntimeException("GitHub API error"))
         .when(githubTeamService)
-        .createTeam("test-team", course);
+        .createTeamInfo("test-team", course);
 
     AddTeamToGithubJob job =
         AddTeamToGithubJob.builder()
@@ -184,7 +187,7 @@ public class AddTeamToGithubJobTests {
 
     job.accept(ctx);
 
-    verify(githubTeamService).createTeam("test-team", course);
+    verify(githubTeamService).createTeamInfo("test-team", course);
     assertTrue(
         jobStarted.getLog().contains("ERROR: Failed to add team to GitHub: GitHub API error"));
   }

@@ -62,14 +62,35 @@ public class GithubTeamService {
    */
   public Integer createOrGetTeamId(Team team, Course course)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-    // First check if team already exists by getting team info
-    Integer existingTeamId = getTeamId(team.getName(), course);
-    if (existingTeamId != null) {
-      return existingTeamId;
+    GithubTeamInfo teamInfo = createOrGetTeamInfo(team, course);
+    return teamInfo == null ? null : teamInfo.id();
+  }
+
+  /**
+   * Creates a team on GitHub if it doesn't exist, or returns the existing team info.
+   *
+   * @param team The team to create
+   * @param course The course containing the organization
+   * @return The GitHub team info
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo createOrGetTeamInfo(Team team, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    GithubTeamInfo existingTeamInfo = null;
+    if (team.getGithubTeamSlug() != null && !team.getGithubTeamSlug().isBlank()) {
+      existingTeamInfo = getTeamInfo(team.getGithubTeamSlug(), course);
+    }
+    if (existingTeamInfo == null) {
+      existingTeamInfo = getTeamInfoByName(team.getName(), course);
+    }
+    if (existingTeamInfo != null) {
+      return existingTeamInfo;
     }
 
     // Create the team if it doesn't exist
-    return createTeam(team.getName(), course);
+    return createTeamInfo(team.getName(), course);
   }
 
   /**
@@ -102,18 +123,34 @@ public class GithubTeamService {
   }
 
   /**
-   * Gets the team ID for a team name, returns null if team doesn't exist.
+   * Gets the team ID for a team slug, returns null if team doesn't exist.
    *
-   * @param teamName The name of the team
+   * @param teamSlug The slug of the team
    * @param course The course containing the organization
    * @return The GitHub team ID or null if not found
    * @throws JsonProcessingException if there is an error processing JSON
    * @throws NoSuchAlgorithmException if there is an algorithm error
    * @throws InvalidKeySpecException if there is a key specification error
    */
-  public Integer getTeamId(String teamName, Course course)
+  public Integer getTeamId(String teamSlug, Course course)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-    String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/teams/" + teamName;
+    GithubTeamInfo teamInfo = getTeamInfo(teamSlug, course);
+    return teamInfo == null ? null : teamInfo.id();
+  }
+
+  /**
+   * Gets the team info for a team slug, returns null if team doesn't exist.
+   *
+   * @param teamSlug The slug of the team
+   * @param course The course containing the organization
+   * @return The GitHub team info or null if not found
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo getTeamInfo(String teamSlug, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/teams/" + teamSlug;
     HttpHeaders headers = new HttpHeaders();
     String token = jwtService.getInstallationToken(course);
     headers.add("Authorization", "Bearer " + token);
@@ -124,14 +161,66 @@ public class GithubTeamService {
     try {
       ResponseEntity<String> response =
           restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
-      JsonNode responseJson = objectMapper.readTree(response.getBody());
-      return responseJson.get("id").asInt();
+      return objectMapper.readValue(response.getBody(), GithubTeamInfo.class);
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().value() == 404) {
         return null; // Team doesn't exist
       }
       throw e;
     }
+  }
+
+  /**
+   * Gets the team info for a team ID, returns null if team doesn't exist.
+   *
+   * @param orgId The GitHub organization ID
+   * @param teamId The GitHub team ID
+   * @param course The course containing the organization
+   * @return The GitHub team info or null if not found
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo getTeamInfoById(Integer orgId, Integer teamId, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    String endpoint = "https://api.github.com/organizations/" + orgId + "/team/" + teamId;
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    try {
+      ResponseEntity<String> response =
+          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+      return objectMapper.readValue(response.getBody(), GithubTeamInfo.class);
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode().value() == 404) {
+        return null;
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * Finds team info by display name by searching the organization's teams.
+   *
+   * @param teamName The display name of the team
+   * @param course The course containing the organization
+   * @return The GitHub team info or null if not found
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo getTeamInfoByName(String teamName, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    for (GithubTeamInfo teamInfo : getAllTeams(course)) {
+      if (teamName.equals(teamInfo.name())) {
+        return teamInfo;
+      }
+    }
+    return null;
   }
 
   /**
@@ -145,6 +234,22 @@ public class GithubTeamService {
    * @throws InvalidKeySpecException if there is a key specification error
    */
   public Integer createTeam(String teamName, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    GithubTeamInfo teamInfo = createTeamInfo(teamName, course);
+    return teamInfo == null ? null : teamInfo.id();
+  }
+
+  /**
+   * Creates a new team on GitHub.
+   *
+   * @param teamName The name of the team to create
+   * @param course The course containing the organization
+   * @return The GitHub team info
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo createTeamInfo(String teamName, Course course)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/teams";
     HttpHeaders headers = new HttpHeaders();
@@ -161,11 +266,13 @@ public class GithubTeamService {
 
     ResponseEntity<String> response =
         restTemplate.exchange(endpoint, HttpMethod.POST, entity, String.class);
-    JsonNode responseJson = objectMapper.readTree(response.getBody());
-    Integer teamId = responseJson.get("id").asInt();
+    GithubTeamInfo teamInfo = objectMapper.readValue(response.getBody(), GithubTeamInfo.class);
     log.info(
-        "Created team '{}' with ID {} in organization {}", teamName, teamId, course.getOrgName());
-    return teamId;
+        "Created team '{}' with ID {} in organization {}",
+        teamName,
+        teamInfo.id(),
+        course.getOrgName());
+    return teamInfo;
   }
 
   /**
@@ -198,21 +305,23 @@ public class GithubTeamService {
    * @param githubLogin The GitHub login of the user
    * @param teamId The GitHub team ID
    * @param course The course containing the organization
+   * @param orgId The GitHub organization ID
    * @return The team status of the user
    * @throws JsonProcessingException if there is an error processing JSON
    * @throws NoSuchAlgorithmException if there is an algorithm error
    * @throws InvalidKeySpecException if there is a key specification error
    */
-  public TeamStatus getTeamMembershipStatus(String githubLogin, Integer teamId, Course course)
+  public TeamStatus getTeamMembershipStatus(
+      String githubLogin, Integer teamId, Course course, Integer orgId)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     if (githubLogin == null) {
       return TeamStatus.NO_GITHUB_ID;
     }
 
     String endpoint =
-        "https://api.github.com/orgs/"
-            + course.getOrgName()
-            + "/teams/"
+        "https://api.github.com/organizations/"
+            + orgId
+            + "/team/"
             + teamId
             + "/memberships/"
             + githubLogin;
