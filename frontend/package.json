@@ -14,13 +14,13 @@
     "@uiw/react-json-view": "^2.0.0-alpha.36",
     "axios": "^1.11.0",
     "bootstrap": "^5.3.8",
-    "react": "^19.1.1",
+    "react": "^19.2.4",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-typeahead": "^6.4.1",
-    "react-dom": "^19.1.1",
-    "react-hook-form": "^7.62.0",
+    "react-dom": "^19.2.4",
+    "react-hook-form": "^7.71.2",
     "react-icons": "^5.5.0",
-    "react-router": "^7.8.1",
+    "react-router": "^7.13.1",
     "react-toastify": "^11.0.5",
     "react18-json-view": "^0.2.9"
   },
@@ -62,7 +62,7 @@
     "@testing-library/react": "^16.3.0",
     "@vitejs/plugin-react": "^5.0.1",
     "@vitejs/plugin-react-swc": "^4.0.1",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "@vitest/eslint-plugin": "^1.6.9",
     "axios-mock-adapter": "^2.1.0",
     "chromatic": "^13.1.3",
@@ -82,7 +82,7 @@
     "storybook-addon-remix-react-router": "^5.0.0",
     "typescript-eslint": "^8.40.0",
     "vite": "^7.1.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   },
   "msw": {
     "workerDirectory": [
