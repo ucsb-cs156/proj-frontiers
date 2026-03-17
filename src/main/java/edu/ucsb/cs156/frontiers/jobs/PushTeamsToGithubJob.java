@@ -9,8 +9,10 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
 
@@ -68,14 +70,20 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
     for (Team team : teams) {
       ctx.log("Processing team: " + team.getName());
       try {
-        Integer githubTeamId = githubTeamService.createOrGetTeamId(team, course);
-        if (!githubTeamId.equals(team.getGithubTeamId())) {
-          team.setGithubTeamId(githubTeamId);
+        GithubTeamInfo githubTeamInfo = githubTeamService.createOrGetTeamInfo(team, course);
+        if (!githubTeamInfo.id().equals(team.getGithubTeamId())
+            || !Objects.equals(githubTeamInfo.slug(), team.getGithubTeamSlug())) {
+          team.setGithubTeamId(githubTeamInfo.id());
+          team.setGithubTeamSlug(githubTeamInfo.slug());
           teamRepository.save(team);
-          ctx.log("Updated team '" + team.getName() + "' with GitHub team ID: " + githubTeamId);
+          ctx.log(
+              "Updated team '" + team.getName() + "' with GitHub team ID: " + githubTeamInfo.id());
         } else {
           ctx.log(
-              "Team '" + team.getName() + "' already has correct GitHub team ID: " + githubTeamId);
+              "Team '"
+                  + team.getName()
+                  + "' already has correct GitHub team ID: "
+                  + githubTeamInfo.id());
         }
       } catch (Exception e) {
         ctx.log("ERROR: Failed to create/get team '" + team.getName() + "': " + e.getMessage());
@@ -105,7 +113,7 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
           // Check current status
           TeamStatus currentStatus =
               githubTeamService.getTeamMembershipStatus(
-                  student.getGithubLogin(), team.getGithubTeamId(), course);
+                  student.getGithubLogin(), team.getGithubTeamId(), course, orgId);
 
           if (currentStatus == TeamStatus.TEAM_MEMBER
               || currentStatus == TeamStatus.TEAM_MAINTAINER) {

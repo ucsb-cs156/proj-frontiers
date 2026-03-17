@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import lombok.Builder;
@@ -45,14 +46,15 @@ public class AddTeamToGithubJob implements JobContextConsumer {
     }
 
     try {
-      Integer githubTeamId = githubTeamService.createTeam(teamName, course);
-      team.setGithubTeamId(githubTeamId);
+      GithubTeamInfo githubTeamInfo = githubTeamService.createTeamInfo(teamName, course);
+      team.setGithubTeamId(githubTeamInfo.id());
+      team.setGithubTeamSlug(githubTeamInfo.slug());
       teamRepository.save(team);
       ctx.log(
           "Successfully added team '"
               + team.getName()
               + "' to GitHub with GitHub team ID: "
-              + githubTeamId);
+              + githubTeamInfo.id());
     } catch (Exception e) {
       ctx.log("ERROR: Failed to add team to GitHub: " + e.getMessage());
     }
