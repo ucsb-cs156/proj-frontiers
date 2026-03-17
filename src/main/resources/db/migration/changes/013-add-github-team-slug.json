@@ -1,0 +1,26 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "013-add-github-team-slug-to-team",
+      "author": "DerekKirschbaum",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "TEAM",
+            "columns": [
+              {
+                "column": {
+                  "name": "GITHUB_TEAM_SLUG",
+                  "type": "VARCHAR(255)",
+                  "constraints": {
+                    "nullable": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

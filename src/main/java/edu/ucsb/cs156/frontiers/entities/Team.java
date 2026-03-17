@@ -37,5 +37,8 @@ public class Team {
   @Column(nullable = true)
   private Integer githubTeamId;
 
+  @Column(nullable = true)
+  private String githubTeamSlug;
+
   private Integer canvasId;
 }
