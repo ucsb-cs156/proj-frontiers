@@ -321,8 +321,8 @@ describe("InstructorCoursesTable tests", () => {
       );
       expect(githubSettingsIcon).toBeInTheDocument();
       expect(githubSettingsIcon).toHaveStyle({
-        display: "absolute",
-        alignItems: "inline-block",
+        display: "inline-block",
+        position: "absolute",
       });
 
       const githubIcon = screen.getByTestId(

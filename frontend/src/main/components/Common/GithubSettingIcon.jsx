@@ -8,7 +8,7 @@ export default function GithubSettingIcon({
 }) {
   return (
     <span
-      style={{ display: "absolute", alignItems: "inline-block" }}
+      style={{ display: "inline-block", position: "absolute" }}
       data-testid={dataTestId}
     >
       <FaGithub
