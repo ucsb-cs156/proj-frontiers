@@ -29,8 +29,8 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
 
   @Override
   public Course getCourse() {
-<span class="nc" id="L32">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(courseId);</span>
-<span class="nc" id="L33">    return courseOpt.orElse(null);</span>
+<span class="fc" id="L32">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(courseId);</span>
+<span class="fc" id="L33">    return courseOpt.orElse(null);</span>
   }
 
   @Override
