@@ -9,6 +9,7 @@ import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +31,8 @@ public class RepositoryController extends ApiController {
   @Autowired JobService jobService;
 
   @Autowired CourseRepository courseRepository;
+
+  @Autowired GithubTeamService githubTeamService;
 
   /**
    * Fires a job that creates a repo for every RosterStudent with a linked user with a GitHub
@@ -98,6 +101,7 @@ public class RepositoryController extends ApiController {
               .repositoryPrefix(repoPrefix)
               .isPrivate(isPrivate.orElse(false))
               .repositoryService(repositoryService)
+              .githubTeamService(githubTeamService)
               .course(course)
               .permissions(permissions)
               .build();

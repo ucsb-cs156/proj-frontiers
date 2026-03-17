@@ -7,6 +7,7 @@ import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
@@ -22,6 +23,8 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class RepositoryService {
   private final JwtService jwtService;
+  private final GithubTeamService githubTeamService;
+  private final TeamRepository teamRepository;
   private final RestTemplate restTemplate;
   private final ObjectMapper mapper;
 
@@ -115,8 +118,14 @@ public class RepositoryService {
   }
 
   public RepositoryService(
-      JwtService jwtService, RestTemplateBuilder restTemplateBuilder, ObjectMapper mapper) {
+      JwtService jwtService,
+      GithubTeamService githubTeamService,
+      TeamRepository teamRepository,
+      RestTemplateBuilder restTemplateBuilder,
+      ObjectMapper mapper) {
     this.jwtService = jwtService;
+    this.githubTeamService = githubTeamService;
+    this.teamRepository = teamRepository;
     this.restTemplate = restTemplateBuilder.build();
     this.mapper = mapper;
   }
@@ -175,9 +184,10 @@ public class RepositoryService {
    *
    * @param course the course whose organization the repo belongs to
    * @param team the team for which the repo is being created
-   * @param repoPrefix prefix for the repository name (repoPrefix-teamName)
+   * @param repoPrefix prefix for the repository name (repoPrefix-teamSlug)
    * @param isPrivate whether the created repository should be private
    * @param permissions collaborator permissions to grant the user
+   * @param orgId GitHub organization ID used for team-based repo provisioning
    * @throws NoSuchAlgorithmException if signing fails
    * @throws InvalidKeySpecException if signing fails
    * @throws JsonProcessingException if JSON serialization fails
@@ -187,11 +197,10 @@ public class RepositoryService {
       Team team,
       String repoPrefix,
       Boolean isPrivate,
-      RepositoryPermissions permissions)
+      RepositoryPermissions permissions,
+      Integer orgId)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-    // Should update Team entity with a team slug field. Would need to update all instances in code
-    // base where teams are created
-    String teamSlug = team.getName().toLowerCase().replaceAll("[^a-z0-9-]+", "-");
+    String teamSlug = getOrFetchTeamSlug(course, team, orgId);
     String newRepoName = repoPrefix + "-" + teamSlug;
     String token = jwtService.getInstallationToken(course);
 
@@ -199,7 +208,9 @@ public class RepositoryService {
         "https://api.github.com/repos/" + course.getOrgName() + "/" + newRepoName;
     String createEndpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos";
     String provisionEndpoint =
-        "https://api.github.com/teams/"
+        "https://api.github.com/organizations/"
+            + orgId
+            + "/team/"
             + team.getGithubTeamId()
             + "/repos/"
             + course.getOrgName()
@@ -248,5 +259,31 @@ public class RepositoryService {
     } catch (HttpClientErrorException ignored) {
       // silently ignore if provisioning fails (same as before)
     }
+  }
+
+  private String getOrFetchTeamSlug(Course course, Team team, Integer orgId)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+    if (team.getGithubTeamSlug() != null && !team.getGithubTeamSlug().isBlank()) {
+      return team.getGithubTeamSlug();
+    }
+
+    if (team.getGithubTeamId() == null) {
+      throw new IllegalStateException(
+          "Cannot create team repository without a GitHub team ID for team '"
+              + team.getName()
+              + "'");
+    }
+
+    GithubTeamService.GithubTeamInfo teamInfo =
+        githubTeamService.getTeamInfoById(orgId, team.getGithubTeamId(), course);
+
+    if (teamInfo == null || teamInfo.slug() == null || teamInfo.slug().isBlank()) {
+      throw new IllegalStateException(
+          "Cannot determine GitHub team slug for team '" + team.getName() + "'");
+    }
+
+    team.setGithubTeamSlug(teamInfo.slug());
+    teamRepository.save(team);
+    return teamInfo.slug();
   }
 }

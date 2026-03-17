@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -12,6 +13,7 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class CreateTeamRepositoriesJobTest {
 
   @Mock private RepositoryService service;
+  @Mock private GithubTeamService githubTeamService;
 
   Job jobStarted = Job.builder().build();
   JobContext ctx = new JobContext(null, jobStarted);
@@ -63,11 +66,13 @@ public class CreateTeamRepositoriesJobTest {
     team2.setTeamMembers(List.of(member2, member3));
 
     course.setTeams(List.of(team1, team2));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
 
     var repoJob =
         spy(
             CreateTeamRepositoriesJob.builder()
                 .repositoryService(service)
+                .githubTeamService(githubTeamService)
                 .repositoryPrefix("repo-prefix")
                 .course(course)
                 .isPrivate(false)
@@ -86,14 +91,16 @@ public class CreateTeamRepositoriesJobTest {
             eq(team1),
             contains("repo-prefix"),
             eq(false),
-            eq(RepositoryPermissions.WRITE));
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
     verify(service, times(1))
         .createTeamRepository(
             eq(course),
             eq(team2),
             contains("repo-prefix"),
             eq(false),
-            eq(RepositoryPermissions.WRITE));
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
   }
 
   @Test
@@ -115,11 +122,13 @@ public class CreateTeamRepositoriesJobTest {
     team2.setTeamMembers(List.of(member2, member3));
 
     course.setTeams(List.of(team1, team2));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
 
     var repoJob =
         spy(
             CreateTeamRepositoriesJob.builder()
                 .repositoryService(service)
+                .githubTeamService(githubTeamService)
                 .repositoryPrefix("repo-prefix")
                 .course(course)
                 .isPrivate(true)
@@ -138,13 +147,47 @@ public class CreateTeamRepositoriesJobTest {
             eq(team1),
             contains("repo-prefix"),
             eq(true),
-            eq(RepositoryPermissions.WRITE));
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
     verify(service, times(1))
         .createTeamRepository(
             eq(course),
             eq(team2),
             contains("repo-prefix"),
             eq(true),
-            eq(RepositoryPermissions.WRITE));
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+  }
+
+  @Test
+  public void testCreateTeamRepository_logsAndReturnsWhenGetOrgIdFails() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    Team team = Team.builder().name("test-team1").build();
+    course.setTeams(List.of(team));
+
+    when(githubTeamService.getOrgId("ucsb-cs156", course))
+        .thenThrow(new RuntimeException("GitHub API error"));
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .build());
+
+    repoJob.accept(ctx);
+
+    assertTrue(jobStarted.getLog().contains("Creating team repositories..."));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "ERROR: Failed to get organization ID for org: ucsb-cs156 - GitHub API error"));
+    verify(githubTeamService).getOrgId("ucsb-cs156", course);
+    verifyNoInteractions(service);
   }
 }
