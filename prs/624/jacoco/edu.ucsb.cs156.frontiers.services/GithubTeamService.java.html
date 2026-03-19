@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GithubTeamService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">GithubTeamService.java</span></div><h1>GithubTeamService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+<span class="fc" id="L29">@Slf4j</span>
+@Service
+public class GithubTeamService {
+
+<span class="fc" id="L33">  public record GithubTeamInfo(Integer id, String name, String slug) {</span>
+    public GithubTeamInfo(Integer id, String name) {
+<span class="fc" id="L35">      this(id, name, null);</span>
+<span class="fc" id="L36">    }</span>
+  }
+
+<span class="fc" id="L39">  public record GithubTeamMemberInfo(String login) {}</span>
+
+  private final JwtService jwtService;
+  private final ObjectMapper objectMapper;
+  private final RestTemplate restTemplate;
+
+  public GithubTeamService(
+<span class="fc" id="L46">      JwtService jwtService, ObjectMapper objectMapper, RestTemplateBuilder builder) {</span>
+<span class="fc" id="L47">    this.jwtService = jwtService;</span>
+<span class="fc" id="L48">    this.objectMapper = objectMapper;</span>
+<span class="fc" id="L49">    this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);</span>
+<span class="fc" id="L50">    this.restTemplate = builder.build();</span>
+<span class="fc" id="L51">  }</span>
+
+  /**
+   * Creates a team on GitHub if it doesn't exist, or returns the existing team ID.
+   *
+   * @param team The team to create
+   * @param course The course containing the organization
+   * @return The GitHub team ID
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public Integer createOrGetTeamId(Team team, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L65">    GithubTeamInfo teamInfo = createOrGetTeamInfo(team, course);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    return teamInfo == null ? null : teamInfo.id();</span>
+  }
+
+  /**
+   * Creates a team on GitHub if it doesn't exist, or returns the existing team info.
+   *
+   * @param team The team to create
+   * @param course The course containing the organization
+   * @return The GitHub team info
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo createOrGetTeamInfo(Team team, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L81">    GithubTeamInfo existingTeamInfo = null;</span>
+<span class="fc bfc" id="L82" title="All 4 branches covered.">    if (team.getGithubTeamSlug() != null &amp;&amp; !team.getGithubTeamSlug().isBlank()) {</span>
+<span class="fc" id="L83">      existingTeamInfo = getTeamInfo(team.getGithubTeamSlug(), course);</span>
+    }
+<span class="fc bfc" id="L85" title="All 2 branches covered.">    if (existingTeamInfo == null) {</span>
+<span class="fc" id="L86">      existingTeamInfo = getTeamInfoByName(team.getName(), course);</span>
+    }
+<span class="fc bfc" id="L88" title="All 2 branches covered.">    if (existingTeamInfo != null) {</span>
+<span class="fc" id="L89">      return existingTeamInfo;</span>
+    }
+
+    // Create the team if it doesn't exist
+<span class="fc" id="L93">    return createTeamInfo(team.getName(), course);</span>
+  }
+
+  /**
+   * Get the org id, given the org name.
+   *
+   * &lt;p&gt;Note: in the future, it would be better to cache this value in the Course row in the
+   * database at the time the Github App is linked to the org, since it doesn't change.
+   *
+   * @param orgName
+   * @param course
+   * @return
+   * @throws JsonProcessingException
+   * @throws NoSuchAlgorithmException
+   * @throws InvalidKeySpecException
+   */
+  public Integer getOrgId(String orgName, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L111">    String endpoint = &quot;https://api.github.com/orgs/&quot; + orgName;</span>
+<span class="fc" id="L112">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L113">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L114">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L115">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L116">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L117">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L119">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L120">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L121">    JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L122">    return responseJson.get(&quot;id&quot;).asInt();</span>
+  }
+
+  /**
+   * Gets the team ID for a team slug, returns null if team doesn't exist.
+   *
+   * @param teamSlug The slug of the team
+   * @param course The course containing the organization
+   * @return The GitHub team ID or null if not found
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public Integer getTeamId(String teamSlug, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L137">    GithubTeamInfo teamInfo = getTeamInfo(teamSlug, course);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">    return teamInfo == null ? null : teamInfo.id();</span>
+  }
+
+  /**
+   * Gets the team info for a team slug, returns null if team doesn't exist.
+   *
+   * @param teamSlug The slug of the team
+   * @param course The course containing the organization
+   * @return The GitHub team info or null if not found
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo getTeamInfo(String teamSlug, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L153">    String endpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/teams/&quot; + teamSlug;</span>
+<span class="fc" id="L154">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L155">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L156">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L157">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L158">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L159">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+    try {
+<span class="fc" id="L162">      ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L163">          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L164">      return objectMapper.readValue(response.getBody(), GithubTeamInfo.class);</span>
+<span class="fc" id="L165">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">      if (e.getStatusCode().value() == 404) {</span>
+<span class="fc" id="L167">        return null; // Team doesn't exist</span>
+      }
+<span class="fc" id="L169">      throw e;</span>
+    }
+  }
+
+  /**
+   * Gets the team info for a team ID, returns null if team doesn't exist.
+   *
+   * @param orgId The GitHub organization ID
+   * @param teamId The GitHub team ID
+   * @param course The course containing the organization
+   * @return The GitHub team info or null if not found
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo getTeamInfoById(Integer orgId, Integer teamId, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L186">    String endpoint = &quot;https://api.github.com/organizations/&quot; + orgId + &quot;/team/&quot; + teamId;</span>
+<span class="fc" id="L187">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L188">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L189">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L190">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L191">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L192">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+    try {
+<span class="fc" id="L195">      ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L196">          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L197">      return objectMapper.readValue(response.getBody(), GithubTeamInfo.class);</span>
+<span class="fc" id="L198">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">      if (e.getStatusCode().value() == 404) {</span>
+<span class="fc" id="L200">        return null;</span>
+      }
+<span class="fc" id="L202">      throw e;</span>
+    }
+  }
+
+  /**
+   * Finds team info by display name by searching the organization's teams.
+   *
+   * @param teamName The display name of the team
+   * @param course The course containing the organization
+   * @return The GitHub team info or null if not found
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo getTeamInfoByName(String teamName, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc bfc" id="L218" title="All 2 branches covered.">    for (GithubTeamInfo teamInfo : getAllTeams(course)) {</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">      if (teamName.equals(teamInfo.name())) {</span>
+<span class="fc" id="L220">        return teamInfo;</span>
+      }
+<span class="fc" id="L222">    }</span>
+<span class="fc" id="L223">    return null;</span>
+  }
+
+  /**
+   * Creates a new team on GitHub.
+   *
+   * @param teamName The name of the team to create
+   * @param course The course containing the organization
+   * @return The GitHub team ID
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public Integer createTeam(String teamName, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L238">    GithubTeamInfo teamInfo = createTeamInfo(teamName, course);</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">    return teamInfo == null ? null : teamInfo.id();</span>
+  }
+
+  /**
+   * Creates a new team on GitHub.
+   *
+   * @param teamName The name of the team to create
+   * @param course The course containing the organization
+   * @return The GitHub team info
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public GithubTeamInfo createTeamInfo(String teamName, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L254">    String endpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/teams&quot;;</span>
+<span class="fc" id="L255">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L256">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L257">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L258">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L259">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+
+<span class="fc" id="L261">    Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L262">    body.put(&quot;name&quot;, teamName);</span>
+<span class="fc" id="L263">    body.put(&quot;privacy&quot;, &quot;closed&quot;); // Teams are private by default</span>
+<span class="fc" id="L264">    String bodyAsJson = objectMapper.writeValueAsString(body);</span>
+<span class="fc" id="L265">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(bodyAsJson, headers);</span>
+
+<span class="fc" id="L267">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L268">        restTemplate.exchange(endpoint, HttpMethod.POST, entity, String.class);</span>
+<span class="fc" id="L269">    GithubTeamInfo teamInfo = objectMapper.readValue(response.getBody(), GithubTeamInfo.class);</span>
+<span class="fc" id="L270">    log.info(</span>
+        &quot;Created team '{}' with ID {} in organization {}&quot;,
+        teamName,
+<span class="fc" id="L273">        teamInfo.id(),</span>
+<span class="fc" id="L274">        course.getOrgName());</span>
+<span class="fc" id="L275">    return teamInfo;</span>
+  }
+
+  /**
+   * Deletes a team on GitHub.
+   *
+   * @param orgId The ID of the organization
+   * @param githubTeamId The ID of the team to delete
+   * @param course The course containing the organization
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public void deleteGithubTeam(Integer orgId, Integer teamId, Course course)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L290">    String endpoint = &quot;https://api.github.com/organizations/&quot; + orgId + &quot;/team/&quot; + teamId;</span>
+<span class="fc" id="L291">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L292">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L293">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L294">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L295">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L296">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L298">    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);</span>
+<span class="fc" id="L299">    log.info(&quot;Deleted team with ID {} in organization {}&quot;, teamId, course.getOrgName());</span>
+<span class="fc" id="L300">  }</span>
+
+  /**
+   * Gets the current team membership status for a user.
+   *
+   * @param githubLogin The GitHub login of the user
+   * @param teamId The GitHub team ID
+   * @param course The course containing the organization
+   * @param orgId The GitHub organization ID
+   * @return The team status of the user
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public TeamStatus getTeamMembershipStatus(
+      String githubLogin, Integer teamId, Course course, Integer orgId)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc bfc" id="L317" title="All 2 branches covered.">    if (githubLogin == null) {</span>
+<span class="fc" id="L318">      return TeamStatus.NO_GITHUB_ID;</span>
+    }
+
+<span class="fc" id="L321">    String endpoint =</span>
+        &quot;https://api.github.com/organizations/&quot;
+            + orgId
+            + &quot;/team/&quot;
+            + teamId
+            + &quot;/memberships/&quot;
+            + githubLogin;
+<span class="fc" id="L328">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L329">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L330">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L331">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L332">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L333">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+    try {
+<span class="fc" id="L336">      ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L337">          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L338">      JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L339">      String role = responseJson.get(&quot;role&quot;).asText();</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">      return &quot;maintainer&quot;.equalsIgnoreCase(role)</span>
+<span class="fc" id="L341">          ? TeamStatus.TEAM_MAINTAINER</span>
+<span class="fc" id="L342">          : TeamStatus.TEAM_MEMBER;</span>
+<span class="fc" id="L343">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L344" title="All 2 branches covered.">      if (e.getStatusCode().value() == 404) {</span>
+<span class="fc" id="L345">        return TeamStatus.NOT_ORG_MEMBER; // User is not a member of the team</span>
+      }
+<span class="fc" id="L347">      throw e;</span>
+    }
+  }
+
+  /**
+   * Adds a member to a GitHub team.
+   *
+   * @param githubLogin The GitHub login of the user to add
+   * @param teamId The GitHub team ID
+   * @param role The role to assign (&quot;member&quot; or &quot;maintainer&quot;)
+   * @param course The course containing the organization
+   * @return The resulting team status
+   * @throws JsonProcessingException if there is an error processing JSON
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   */
+  public TeamStatus addMemberToGithubTeam(
+      String githubLogin, Integer teamId, String role, Course course, Integer orgId)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L366">    String endpoint =</span>
+        &quot;https://api.github.com/organizations/&quot;
+            + orgId
+            + &quot;/team/&quot;
+            + teamId
+            + &quot;/memberships/&quot;
+            + githubLogin;
+<span class="fc" id="L373">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L374">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L375">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L376">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L377">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+
+<span class="fc" id="L379">    Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L380">    body.put(&quot;role&quot;, role);</span>
+<span class="fc" id="L381">    String bodyAsJson = objectMapper.writeValueAsString(body);</span>
+<span class="fc" id="L382">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(bodyAsJson, headers);</span>
+
+<span class="fc" id="L384">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L385">        restTemplate.exchange(endpoint, HttpMethod.PUT, entity, String.class);</span>
+<span class="fc" id="L386">    JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L387">    String resultRole = responseJson.get(&quot;role&quot;).asText();</span>
+<span class="fc" id="L388">    log.info(&quot;Added user '{}' to team ID {} with role '{}'&quot;, githubLogin, teamId, resultRole);</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">    return &quot;maintainer&quot;.equalsIgnoreCase(resultRole)</span>
+<span class="fc" id="L390">        ? TeamStatus.TEAM_MAINTAINER</span>
+<span class="fc" id="L391">        : TeamStatus.TEAM_MEMBER;</span>
+  }
+
+  /**
+   * Removes a member from a GitHub team
+   *
+   * @param orgId
+   * @param githubLogin
+   * @param teamId
+   * @param course
+   * @throws NoSuchAlgorithmException
+   * @throws InvalidKeySpecException
+   * @throws JsonProcessingException
+   */
+  public void removeMemberFromGithubTeam(
+      Integer orgId, String githubLogin, Integer teamId, Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+<span class="fc" id="L409">    String endpoint =</span>
+        &quot;https://api.github.com/organizations/&quot;
+            + orgId
+            + &quot;/team/&quot;
+            + teamId
+            + &quot;/memberships/&quot;
+            + githubLogin;
+<span class="fc" id="L416">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L417">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L418">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L419">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L420">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L421">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L423">    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);</span>
+<span class="fc" id="L424">    log.info(&quot;Successfully removed member {} from team ID {}&quot;, githubLogin, teamId);</span>
+<span class="fc" id="L425">  }</span>
+
+  /**
+   * Returns all team members for a GitHub team.
+   *
+   * @param teamSlug The GitHub team slug
+   * @param course The course containing the organization
+   * @return A map of github login to TeamStatus
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   * @throws JsonProcessingException if there is an error processing JSON
+   */
+  public Map&lt;String, TeamStatus&gt; getTeamMemberships(String teamSlug, Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc bfc" id="L439" title="All 4 branches covered.">    if (teamSlug == null || teamSlug.isBlank()) {</span>
+<span class="fc" id="L440">      throw new IllegalArgumentException(&quot;teamSlug must be provided&quot;);</span>
+    }
+<span class="fc" id="L442">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L443">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L444">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L445">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L446">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L447">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L449">    Map&lt;String, TeamStatus&gt; memberships = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L450">    String endpointPrefix =</span>
+<span class="fc" id="L451">        &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/teams/&quot; + teamSlug + &quot;/members&quot;;</span>
+<span class="fc" id="L452">    addMembershipsByRole(endpointPrefix, &quot;member&quot;, TeamStatus.TEAM_MEMBER, entity, memberships);</span>
+<span class="fc" id="L453">    addMembershipsByRole(</span>
+        endpointPrefix, &quot;maintainer&quot;, TeamStatus.TEAM_MAINTAINER, entity, memberships);
+
+<span class="fc" id="L456">    return memberships;</span>
+  }
+
+  private void addMembershipsByRole(
+      String endpointPrefix,
+      String role,
+      TeamStatus status,
+      HttpEntity&lt;String&gt; entity,
+      Map&lt;String, TeamStatus&gt; memberships)
+      throws JsonProcessingException {
+<span class="fc" id="L466">    String endpoint = endpointPrefix + &quot;?per_page=100&amp;role=&quot; + role;</span>
+<span class="fc" id="L467">    Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
+
+<span class="fc" id="L469">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L470">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L471">    List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+
+<span class="fc bfc" id="L473" title="All 4 branches covered.">    while (!responseLinks.isEmpty() &amp;&amp; responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
+      for (GithubTeamMemberInfo member :
+<span class="fc bfc" id="L475" title="All 2 branches covered.">          objectMapper.convertValue(</span>
+<span class="fc" id="L476">              objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L477">              new TypeReference&lt;List&lt;GithubTeamMemberInfo&gt;&gt;() {})) {</span>
+<span class="fc" id="L478">        memberships.put(member.login(), status);</span>
+<span class="fc" id="L479">      }</span>
+
+<span class="fc" id="L481">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
+<span class="fc" id="L482">      matcher.find();</span>
+<span class="fc" id="L483">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L484">      responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L485">    }</span>
+
+    for (GithubTeamMemberInfo member :
+<span class="fc bfc" id="L488" title="All 2 branches covered.">        objectMapper.convertValue(</span>
+<span class="fc" id="L489">            objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L490">            new TypeReference&lt;List&lt;GithubTeamMemberInfo&gt;&gt;() {})) {</span>
+<span class="fc" id="L491">      memberships.put(member.login(), status);</span>
+<span class="fc" id="L492">    }</span>
+<span class="fc" id="L493">  }</span>
+
+  /**
+   * Returns all teams for an organization, following pagination links when present.
+   *
+   * @param course The course containing the organization
+   * @return A list of GitHub teams with id and name
+   * @throws NoSuchAlgorithmException if there is an algorithm error
+   * @throws InvalidKeySpecException if there is a key specification error
+   * @throws JsonProcessingException if there is an error processing JSON
+   */
+  public List&lt;GithubTeamInfo&gt; getAllTeams(Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L506">    String endpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/teams?per_page=100&quot;;</span>
+<span class="fc" id="L507">    Pattern pattern = Pattern.compile(&quot;(?&lt;=&lt;)([\\S]*)(?=&gt;; rel=\&quot;next\&quot;)&quot;);</span>
+
+<span class="fc" id="L509">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L510">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L511">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L512">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L513">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L514">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L516">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L517">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L518">    List&lt;String&gt; responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L519">    List&lt;GithubTeamInfo&gt; teams = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L521" title="All 4 branches covered.">    while (!responseLinks.isEmpty() &amp;&amp; responseLinks.getFirst().contains(&quot;next&quot;)) {</span>
+<span class="fc" id="L522">      teams.addAll(</span>
+<span class="fc" id="L523">          objectMapper.convertValue(</span>
+<span class="fc" id="L524">              objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L525">              new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
+
+<span class="fc" id="L527">      Matcher matcher = pattern.matcher(responseLinks.getFirst());</span>
+<span class="fc" id="L528">      matcher.find();</span>
+<span class="fc" id="L529">      response = restTemplate.exchange(matcher.group(0), HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L530">      responseLinks = response.getHeaders().getOrEmpty(&quot;link&quot;);</span>
+<span class="fc" id="L531">    }</span>
+
+<span class="fc" id="L533">    teams.addAll(</span>
+<span class="fc" id="L534">        objectMapper.convertValue(</span>
+<span class="fc" id="L535">            objectMapper.readTree(response.getBody()),</span>
+<span class="fc" id="L536">            new TypeReference&lt;List&lt;GithubTeamInfo&gt;&gt;() {}));</span>
+
+<span class="fc" id="L538">    return teams;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
