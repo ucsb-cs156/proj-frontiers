@@ -44,21 +44,18 @@ public class DeleteTeamMemberFromGithubJob implements JobContextConsumer {
     Integer orgId = null;
     try {
       orgId = githubTeamService.getOrgId(course.getOrgName(), course);
-
     } catch (Exception e) {
-      ctx.log(
-          "ERROR: Failed to get organization ID for org: "
-              + course.getOrgName()
-              + " - "
-              + e.getMessage());
-      return;
+      throw new IllegalStateException(
+          "Failed to get organization ID for org: " + course.getOrgName() + " - " + e.getMessage(),
+          e);
     }
 
     try {
       githubTeamService.removeMemberFromGithubTeam(orgId, memberGithubLogin, githubTeamId, course);
       ctx.log("Successfully removed user from GitHub team");
     } catch (Exception e) {
-      ctx.log("ERROR: Failed to remove user from GitHub team: " + e.getMessage());
+      throw new IllegalStateException(
+          "Failed to remove user from GitHub team: " + e.getMessage(), e);
     }
 
     ctx.log("Done");

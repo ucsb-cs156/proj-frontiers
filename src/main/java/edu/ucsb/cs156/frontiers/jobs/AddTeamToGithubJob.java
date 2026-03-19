@@ -56,7 +56,7 @@ public class AddTeamToGithubJob implements JobContextConsumer {
               + "' to GitHub with GitHub team ID: "
               + githubTeamInfo.id());
     } catch (Exception e) {
-      ctx.log("ERROR: Failed to add team to GitHub: " + e.getMessage());
+      throw new IllegalStateException("Failed to add team to GitHub: " + e.getMessage(), e);
     }
 
     ctx.log("Done");

@@ -185,10 +185,10 @@ public class AddTeamToGithubJobTests {
             .teamRepository(teamRepository)
             .build();
 
-    job.accept(ctx);
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> job.accept(ctx));
 
     verify(githubTeamService).createTeamInfo("test-team", course);
-    assertTrue(
-        jobStarted.getLog().contains("ERROR: Failed to add team to GitHub: GitHub API error"));
+    verify(teamRepository, never()).save(any());
+    assertEquals("Failed to add team to GitHub: GitHub API error", e.getMessage());
   }
 }

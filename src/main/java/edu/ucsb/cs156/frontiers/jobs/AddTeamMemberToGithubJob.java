@@ -49,14 +49,10 @@ public class AddTeamMemberToGithubJob implements JobContextConsumer {
     Integer orgId = null;
     try {
       orgId = githubTeamService.getOrgId(course.getOrgName(), course);
-
     } catch (Exception e) {
-      ctx.log(
-          "ERROR: Failed to get organization ID for org: "
-              + course.getOrgName()
-              + " - "
-              + e.getMessage());
-      return;
+      throw new IllegalStateException(
+          "Failed to get organization ID for org: " + course.getOrgName() + " - " + e.getMessage(),
+          e);
     }
 
     try {
@@ -75,7 +71,7 @@ public class AddTeamMemberToGithubJob implements JobContextConsumer {
         ctx.log("ERROR: Could not find team member in database with ID: " + teamMemberId);
       }
     } catch (Exception e) {
-      ctx.log("ERROR: Failed to add user to GitHub team: " + e.getMessage());
+      throw new IllegalStateException("Failed to add user to GitHub team: " + e.getMessage(), e);
     }
 
     ctx.log("Done");
