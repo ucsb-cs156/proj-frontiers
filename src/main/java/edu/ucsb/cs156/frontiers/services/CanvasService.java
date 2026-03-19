@@ -115,14 +115,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-<<<<<<< HEAD
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
-            .url(course.getSchool().getCanvasImplementation())
-=======
             .header(
                 "Authorization",
                 "Bearer " + tokenEncryptionService.decryptToken(course.getCanvasApiToken()))
->>>>>>> d4f1e98154 (dp - added canvas encryption to the backend and updated frontend accordingly.)
             .build();
 
     List<CanvasStudent> students =
@@ -178,14 +173,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-<<<<<<< HEAD
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
-            .url(course.getSchool().getCanvasImplementation())
-=======
             .header(
                 "Authorization",
                 "Bearer " + tokenEncryptionService.decryptToken(course.getCanvasApiToken()))
->>>>>>> d4f1e98154 (dp - added canvas encryption to the backend and updated frontend accordingly.)
             .build();
 
     List<JsonNode> groups =
