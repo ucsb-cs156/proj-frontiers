@@ -53,100 +53,96 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
 <span class="fc" id="L53">    Integer orgId = null;</span>
     try {
 <span class="fc" id="L55">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
-
-<span class="fc" id="L57">    } catch (Exception e) {</span>
-<span class="fc" id="L58">      ctx.log(</span>
-          &quot;ERROR: Failed to get organization ID for org: &quot;
-<span class="fc" id="L60">              + course.getOrgName()</span>
-              + &quot; - &quot;
-<span class="fc" id="L62">              + e.getMessage());</span>
-<span class="fc" id="L63">      return;</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L56">    } catch (Exception e) {</span>
+<span class="fc" id="L57">      throw new IllegalStateException(</span>
+<span class="fc" id="L58">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
+          e);
+<span class="fc" id="L60">    }</span>
 
     // Get all teams for this course
-<span class="fc" id="L67">    Iterable&lt;Team&gt; teams = teamRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L63">    Iterable&lt;Team&gt; teams = teamRepository.findByCourseId(courseId);</span>
 
     // First pass: Create teams on GitHub and update githubTeamId
-<span class="fc bfc" id="L70" title="All 2 branches covered.">    for (Team team : teams) {</span>
-<span class="fc" id="L71">      ctx.log(&quot;Processing team: &quot; + team.getName());</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    for (Team team : teams) {</span>
+<span class="fc" id="L67">      ctx.log(&quot;Processing team: &quot; + team.getName());</span>
       try {
-<span class="fc" id="L73">        GithubTeamInfo githubTeamInfo = githubTeamService.createOrGetTeamInfo(team, course);</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (!githubTeamInfo.id().equals(team.getGithubTeamId())</span>
-<span class="fc bfc" id="L75" title="All 2 branches covered.">            || !Objects.equals(githubTeamInfo.slug(), team.getGithubTeamSlug())) {</span>
-<span class="fc" id="L76">          team.setGithubTeamId(githubTeamInfo.id());</span>
-<span class="fc" id="L77">          team.setGithubTeamSlug(githubTeamInfo.slug());</span>
-<span class="fc" id="L78">          teamRepository.save(team);</span>
-<span class="fc" id="L79">          ctx.log(</span>
-<span class="fc" id="L80">              &quot;Updated team '&quot; + team.getName() + &quot;' with GitHub team ID: &quot; + githubTeamInfo.id());</span>
+<span class="fc" id="L69">        GithubTeamInfo githubTeamInfo = githubTeamService.createOrGetTeamInfo(team, course);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (!githubTeamInfo.id().equals(team.getGithubTeamId())</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            || !Objects.equals(githubTeamInfo.slug(), team.getGithubTeamSlug())) {</span>
+<span class="fc" id="L72">          team.setGithubTeamId(githubTeamInfo.id());</span>
+<span class="fc" id="L73">          team.setGithubTeamSlug(githubTeamInfo.slug());</span>
+<span class="fc" id="L74">          teamRepository.save(team);</span>
+<span class="fc" id="L75">          ctx.log(</span>
+<span class="fc" id="L76">              &quot;Updated team '&quot; + team.getName() + &quot;' with GitHub team ID: &quot; + githubTeamInfo.id());</span>
         } else {
-<span class="fc" id="L82">          ctx.log(</span>
+<span class="fc" id="L78">          ctx.log(</span>
               &quot;Team '&quot;
-<span class="fc" id="L84">                  + team.getName()</span>
+<span class="fc" id="L80">                  + team.getName()</span>
                   + &quot;' already has correct GitHub team ID: &quot;
-<span class="fc" id="L86">                  + githubTeamInfo.id());</span>
+<span class="fc" id="L82">                  + githubTeamInfo.id());</span>
         }
-<span class="fc" id="L88">      } catch (Exception e) {</span>
-<span class="fc" id="L89">        ctx.log(&quot;ERROR: Failed to create/get team '&quot; + team.getName() + &quot;': &quot; + e.getMessage());</span>
-<span class="fc" id="L90">      }</span>
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L84">      } catch (Exception e) {</span>
+<span class="fc" id="L85">        ctx.log(&quot;ERROR: Failed to create/get team '&quot; + team.getName() + &quot;': &quot; + e.getMessage());</span>
+<span class="fc" id="L86">      }</span>
+<span class="fc" id="L87">    }</span>
 
     // Second pass: Process team members
-<span class="fc bfc" id="L94" title="All 2 branches covered.">    for (Team team : teams) {</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">      if (team.getGithubTeamId() == null) {</span>
-<span class="fc" id="L96">        ctx.log(&quot;Skipping team members for '&quot; + team.getName() + &quot;' - no GitHub team ID&quot;);</span>
-<span class="fc" id="L97">        continue;</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">    for (Team team : teams) {</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">      if (team.getGithubTeamId() == null) {</span>
+<span class="fc" id="L92">        ctx.log(&quot;Skipping team members for '&quot; + team.getName() + &quot;' - no GitHub team ID&quot;);</span>
+<span class="fc" id="L93">        continue;</span>
       }
 
-<span class="fc" id="L100">      ctx.log(&quot;Processing members for team: &quot; + team.getName());</span>
-<span class="fc bfc" id="L101" title="All 2 branches covered.">      for (TeamMember teamMember : team.getTeamMembers()) {</span>
-<span class="fc" id="L102">        RosterStudent student = teamMember.getRosterStudent();</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (student.getGithubLogin() == null) {</span>
+<span class="fc" id="L96">      ctx.log(&quot;Processing members for team: &quot; + team.getName());</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">      for (TeamMember teamMember : team.getTeamMembers()) {</span>
+<span class="fc" id="L98">        RosterStudent student = teamMember.getRosterStudent();</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (student.getGithubLogin() == null) {</span>
           // Update status to NO_GITHUB_ID
-<span class="fc" id="L105">          teamMember.setTeamStatus(TeamStatus.NO_GITHUB_ID);</span>
-<span class="fc" id="L106">          teamMemberRepository.save(teamMember);</span>
-<span class="fc" id="L107">          ctx.log(</span>
-<span class="fc" id="L108">              &quot;Student &quot; + student.getEmail() + &quot; has no GitHub login - marked as NO_GITHUB_ID&quot;);</span>
-<span class="fc" id="L109">          continue;</span>
+<span class="fc" id="L101">          teamMember.setTeamStatus(TeamStatus.NO_GITHUB_ID);</span>
+<span class="fc" id="L102">          teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L103">          ctx.log(</span>
+<span class="fc" id="L104">              &quot;Student &quot; + student.getEmail() + &quot; has no GitHub login - marked as NO_GITHUB_ID&quot;);</span>
+<span class="fc" id="L105">          continue;</span>
         }
 
         try {
           // Check current status
-<span class="fc" id="L114">          TeamStatus currentStatus =</span>
-<span class="fc" id="L115">              githubTeamService.getTeamMembershipStatus(</span>
-<span class="fc" id="L116">                  student.getGithubLogin(), team.getGithubTeamId(), course, orgId);</span>
+<span class="fc" id="L110">          TeamStatus currentStatus =</span>
+<span class="fc" id="L111">              githubTeamService.getTeamMembershipStatus(</span>
+<span class="fc" id="L112">                  student.getGithubLogin(), team.getGithubTeamId(), course, orgId);</span>
 
-<span class="fc bfc" id="L118" title="All 4 branches covered.">          if (currentStatus == TeamStatus.TEAM_MEMBER</span>
+<span class="fc bfc" id="L114" title="All 4 branches covered.">          if (currentStatus == TeamStatus.TEAM_MEMBER</span>
               || currentStatus == TeamStatus.TEAM_MAINTAINER) {
             // Already a member, just update the status
-<span class="fc" id="L121">            teamMember.setTeamStatus(currentStatus);</span>
-<span class="fc" id="L122">            teamMemberRepository.save(teamMember);</span>
-<span class="fc" id="L123">            ctx.log(</span>
-<span class="fc" id="L124">                &quot;Student &quot; + student.getGithubLogin() + &quot; already has status: &quot; + currentStatus);</span>
+<span class="fc" id="L117">            teamMember.setTeamStatus(currentStatus);</span>
+<span class="fc" id="L118">            teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L119">            ctx.log(</span>
+<span class="fc" id="L120">                &quot;Student &quot; + student.getGithubLogin() + &quot; already has status: &quot; + currentStatus);</span>
           } else {
             // Add as member
-<span class="fc" id="L127">            TeamStatus newStatus =</span>
-<span class="fc" id="L128">                githubTeamService.addMemberToGithubTeam(</span>
-<span class="fc" id="L129">                    student.getGithubLogin(), team.getGithubTeamId(), &quot;member&quot;, course, orgId);</span>
-<span class="fc" id="L130">            teamMember.setTeamStatus(newStatus);</span>
-<span class="fc" id="L131">            teamMemberRepository.save(teamMember);</span>
-<span class="fc" id="L132">            ctx.log(</span>
-<span class="fc" id="L133">                &quot;Added student &quot; + student.getGithubLogin() + &quot; to team with status: &quot; + newStatus);</span>
+<span class="fc" id="L123">            TeamStatus newStatus =</span>
+<span class="fc" id="L124">                githubTeamService.addMemberToGithubTeam(</span>
+<span class="fc" id="L125">                    student.getGithubLogin(), team.getGithubTeamId(), &quot;member&quot;, course, orgId);</span>
+<span class="fc" id="L126">            teamMember.setTeamStatus(newStatus);</span>
+<span class="fc" id="L127">            teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L128">            ctx.log(</span>
+<span class="fc" id="L129">                &quot;Added student &quot; + student.getGithubLogin() + &quot; to team with status: &quot; + newStatus);</span>
           }
-<span class="fc" id="L135">        } catch (Exception e) {</span>
-<span class="fc" id="L136">          ctx.log(</span>
+<span class="fc" id="L131">        } catch (Exception e) {</span>
+<span class="fc" id="L132">          ctx.log(</span>
               &quot;ERROR: Failed to process team member &quot;
-<span class="fc" id="L138">                  + student.getGithubLogin()</span>
+<span class="fc" id="L134">                  + student.getGithubLogin()</span>
                   + &quot; for team '&quot;
-<span class="fc" id="L140">                  + team.getName()</span>
+<span class="fc" id="L136">                  + team.getName()</span>
                   + &quot;': &quot;
-<span class="fc" id="L142">                  + e.getMessage());</span>
-<span class="fc" id="L143">          teamMember.setTeamStatus(TeamStatus.NOT_ORG_MEMBER);</span>
-<span class="fc" id="L144">          teamMemberRepository.save(teamMember);</span>
-<span class="fc" id="L145">        }</span>
-<span class="fc" id="L146">      }</span>
-<span class="fc" id="L147">    }</span>
+<span class="fc" id="L138">                  + e.getMessage());</span>
+<span class="fc" id="L139">          teamMember.setTeamStatus(TeamStatus.NOT_ORG_MEMBER);</span>
+<span class="fc" id="L140">          teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L141">        }</span>
+<span class="fc" id="L142">      }</span>
+<span class="fc" id="L143">    }</span>
 
-<span class="fc" id="L149">    ctx.log(&quot;Completed push teams to GitHub job for course ID: &quot; + courseId);</span>
-<span class="fc" id="L150">  }</span>
+<span class="fc" id="L145">    ctx.log(&quot;Completed push teams to GitHub job for course ID: &quot; + courseId);</span>
+<span class="fc" id="L146">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
