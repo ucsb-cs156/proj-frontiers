@@ -88,100 +88,106 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
 <span class="fc" id="L88">                .name(githubTeam.name())</span>
 <span class="fc" id="L89">                .course(course)</span>
 <span class="fc" id="L90">                .githubTeamId(githubTeam.id())</span>
-<span class="fc" id="L91">                .build();</span>
-<span class="fc" id="L92">        teamRepository.save(newTeam);</span>
-<span class="fc" id="L93">        localByGithubId.put(githubTeam.id(), newTeam);</span>
-<span class="fc" id="L94">        localByName.put(githubTeam.name(), newTeam);</span>
-<span class="fc" id="L95">        created++;</span>
-<span class="fc" id="L96">        ctx.log(</span>
-<span class="fc" id="L97">            String.format(</span>
+<span class="fc" id="L91">                .githubTeamSlug(githubTeam.slug())</span>
+<span class="fc" id="L92">                .build();</span>
+<span class="fc" id="L93">        teamRepository.save(newTeam);</span>
+<span class="fc" id="L94">        localByGithubId.put(githubTeam.id(), newTeam);</span>
+<span class="fc" id="L95">        localByName.put(githubTeam.name(), newTeam);</span>
+<span class="fc" id="L96">        created++;</span>
+<span class="fc" id="L97">        ctx.log(</span>
+<span class="fc" id="L98">            String.format(</span>
                 &quot;Created local team '%s' with GitHub team ID: %d&quot;,
-<span class="fc" id="L99">                githubTeam.name(), githubTeam.id()));</span>
-<span class="fc" id="L100">        localTeam = newTeam;</span>
-<span class="fc" id="L101">        teamCreated = true;</span>
+<span class="fc" id="L100">                githubTeam.name(), githubTeam.id()));</span>
+<span class="fc" id="L101">        localTeam = newTeam;</span>
+<span class="fc" id="L102">        teamCreated = true;</span>
       }
 
-<span class="fc" id="L104">      AtomicBoolean teamUnchanged = new AtomicBoolean(true);</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">      if (!teamCreated) {</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (!githubTeam.name().equals(localTeam.getName())) {</span>
-<span class="fc" id="L107">          localByName.remove(localTeam.getName());</span>
-<span class="fc" id="L108">          localTeam.setName(githubTeam.name());</span>
-<span class="fc" id="L109">          teamUnchanged.set(false);</span>
+<span class="fc" id="L105">      AtomicBoolean teamUnchanged = new AtomicBoolean(true);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">      if (!teamCreated) {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (!githubTeam.name().equals(localTeam.getName())) {</span>
+<span class="fc" id="L108">          localByName.remove(localTeam.getName());</span>
+<span class="fc" id="L109">          localTeam.setName(githubTeam.name());</span>
+<span class="fc" id="L110">          teamUnchanged.set(false);</span>
         }
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (!githubTeam.id().equals(localTeam.getGithubTeamId())) {</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">          if (localTeam.getGithubTeamId() != null) {</span>
-<span class="fc" id="L113">            localByGithubId.remove(localTeam.getGithubTeamId());</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (!githubTeam.id().equals(localTeam.getGithubTeamId())) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">          if (localTeam.getGithubTeamId() != null) {</span>
+<span class="fc" id="L114">            localByGithubId.remove(localTeam.getGithubTeamId());</span>
           }
-<span class="fc" id="L115">          localTeam.setGithubTeamId(githubTeam.id());</span>
-<span class="fc" id="L116">          teamUnchanged.set(false);</span>
+<span class="fc" id="L116">          localTeam.setGithubTeamId(githubTeam.id());</span>
+<span class="fc" id="L117">          teamUnchanged.set(false);</span>
+        }
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (localTeam.getGithubTeamSlug() == null</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">            || !githubTeam.slug().equals(localTeam.getGithubTeamSlug())) {</span>
+<span class="fc" id="L121">          localTeam.setGithubTeamSlug(githubTeam.slug());</span>
+<span class="fc" id="L122">          teamUnchanged.set(false);</span>
         }
 
-<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (!teamUnchanged.get()) {</span>
-<span class="fc" id="L120">          teamRepository.save(localTeam);</span>
-<span class="fc" id="L121">          ctx.log(</span>
-<span class="fc" id="L122">              String.format(</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (!teamUnchanged.get()) {</span>
+<span class="fc" id="L126">          teamRepository.save(localTeam);</span>
+<span class="fc" id="L127">          ctx.log(</span>
+<span class="fc" id="L128">              String.format(</span>
                   &quot;Updated local team '%s' with GitHub team ID: %d&quot;,
-<span class="fc" id="L124">                  localTeam.getName(), githubTeam.id()));</span>
+<span class="fc" id="L130">                  localTeam.getName(), githubTeam.id()));</span>
         }
       }
 
-<span class="fc" id="L128">      localByGithubId.put(githubTeam.id(), localTeam);</span>
-<span class="fc" id="L129">      localByName.put(localTeam.getName(), localTeam);</span>
+<span class="fc" id="L134">      localByGithubId.put(githubTeam.id(), localTeam);</span>
+<span class="fc" id="L135">      localByName.put(localTeam.getName(), localTeam);</span>
 
-<span class="fc bfc" id="L131" title="All 2 branches covered.">      if (!localStudentsByGithubLogin.isEmpty()) {</span>
-<span class="fc" id="L132">        Map&lt;String, TeamStatus&gt; githubMemberships =</span>
-<span class="fc" id="L133">            githubTeamService.getTeamMemberships(githubTeam.slug(), course);</span>
-<span class="fc" id="L134">        Team currentTeam = localTeam;</span>
-<span class="fc" id="L135">        githubMemberships.forEach(</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">      if (!localStudentsByGithubLogin.isEmpty()) {</span>
+<span class="fc" id="L138">        Map&lt;String, TeamStatus&gt; githubMemberships =</span>
+<span class="fc" id="L139">            githubTeamService.getTeamMemberships(githubTeam.slug(), course);</span>
+<span class="fc" id="L140">        Team currentTeam = localTeam;</span>
+<span class="fc" id="L141">        githubMemberships.forEach(</span>
             (githubLogin, membershipStatus) -&gt; {
-<span class="fc" id="L137">              RosterStudent student = localStudentsByGithubLogin.get(githubLogin);</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">              if (student == null) {</span>
-<span class="fc" id="L139">                return;</span>
+<span class="fc" id="L143">              RosterStudent student = localStudentsByGithubLogin.get(githubLogin);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">              if (student == null) {</span>
+<span class="fc" id="L145">                return;</span>
               }
 
-<span class="fc" id="L142">              Optional&lt;TeamMember&gt; existingTeamMember =</span>
-<span class="fc" id="L143">                  teamMemberRepository.findByTeamAndRosterStudent(currentTeam, student);</span>
-<span class="fc bfc" id="L144" title="All 2 branches covered.">              if (existingTeamMember.isPresent()) {</span>
-<span class="fc" id="L145">                TeamMember teamMember = existingTeamMember.get();</span>
-<span class="fc bfc" id="L146" title="All 2 branches covered.">                if (teamMember.getTeamStatus() != membershipStatus) {</span>
-<span class="fc" id="L147">                  teamMember.setTeamStatus(membershipStatus);</span>
-<span class="fc" id="L148">                  teamMemberRepository.save(teamMember);</span>
-<span class="fc" id="L149">                  teamUnchanged.set(false);</span>
-<span class="fc" id="L150">                  ctx.log(</span>
-<span class="fc" id="L151">                      String.format(</span>
+<span class="fc" id="L148">              Optional&lt;TeamMember&gt; existingTeamMember =</span>
+<span class="fc" id="L149">                  teamMemberRepository.findByTeamAndRosterStudent(currentTeam, student);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">              if (existingTeamMember.isPresent()) {</span>
+<span class="fc" id="L151">                TeamMember teamMember = existingTeamMember.get();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                if (teamMember.getTeamStatus() != membershipStatus) {</span>
+<span class="fc" id="L153">                  teamMember.setTeamStatus(membershipStatus);</span>
+<span class="fc" id="L154">                  teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L155">                  teamUnchanged.set(false);</span>
+<span class="fc" id="L156">                  ctx.log(</span>
+<span class="fc" id="L157">                      String.format(</span>
                           &quot;Updated team member '%s' in team '%s' with status %s&quot;,
-<span class="fc" id="L153">                          githubLogin, currentTeam.getName(), membershipStatus));</span>
+<span class="fc" id="L159">                          githubLogin, currentTeam.getName(), membershipStatus));</span>
                 }
-<span class="fc" id="L155">              } else {</span>
+<span class="fc" id="L161">              } else {</span>
                 TeamMember newTeamMember =
-<span class="fc" id="L157">                    TeamMember.builder()</span>
-<span class="fc" id="L158">                        .team(currentTeam)</span>
-<span class="fc" id="L159">                        .rosterStudent(student)</span>
-<span class="fc" id="L160">                        .teamStatus(membershipStatus)</span>
-<span class="fc" id="L161">                        .build();</span>
-<span class="fc" id="L162">                teamMemberRepository.save(newTeamMember);</span>
-<span class="fc" id="L163">                teamUnchanged.set(false);</span>
-<span class="fc" id="L164">                ctx.log(</span>
-<span class="fc" id="L165">                    String.format(</span>
+<span class="fc" id="L163">                    TeamMember.builder()</span>
+<span class="fc" id="L164">                        .team(currentTeam)</span>
+<span class="fc" id="L165">                        .rosterStudent(student)</span>
+<span class="fc" id="L166">                        .teamStatus(membershipStatus)</span>
+<span class="fc" id="L167">                        .build();</span>
+<span class="fc" id="L168">                teamMemberRepository.save(newTeamMember);</span>
+<span class="fc" id="L169">                teamUnchanged.set(false);</span>
+<span class="fc" id="L170">                ctx.log(</span>
+<span class="fc" id="L171">                    String.format(</span>
                         &quot;Created team member '%s' in team '%s' with status %s&quot;,
-<span class="fc" id="L167">                        githubLogin, currentTeam.getName(), membershipStatus));</span>
+<span class="fc" id="L173">                        githubLogin, currentTeam.getName(), membershipStatus));</span>
               }
-<span class="fc" id="L169">            });</span>
+<span class="fc" id="L175">            });</span>
       }
 
-<span class="fc bfc" id="L172" title="All 2 branches covered.">      if (!teamCreated) {</span>
-<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (teamUnchanged.get()) {</span>
-<span class="fc" id="L174">          unchanged++;</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">      if (!teamCreated) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (teamUnchanged.get()) {</span>
+<span class="fc" id="L180">          unchanged++;</span>
         } else {
-<span class="fc" id="L176">          updated++;</span>
+<span class="fc" id="L182">          updated++;</span>
         }
       }
-<span class="fc" id="L179">    }</span>
+<span class="fc" id="L185">    }</span>
 
-<span class="fc" id="L181">    ctx.log(</span>
-<span class="fc" id="L182">        String.format(</span>
+<span class="fc" id="L187">    ctx.log(</span>
+<span class="fc" id="L188">        String.format(</span>
             &quot;Completed pull teams from GitHub job for course ID: %s (GitHub teams: %d, created: %d, updated: %d, unchanged: %d)&quot;,
-<span class="fc" id="L184">            courseId, githubTeams.size(), created, updated, unchanged));</span>
-<span class="fc" id="L185">  }</span>
+<span class="fc" id="L190">            courseId, githubTeams.size(), created, updated, unchanged));</span>
+<span class="fc" id="L191">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

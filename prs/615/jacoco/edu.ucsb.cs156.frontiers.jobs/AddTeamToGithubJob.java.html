@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import lombok.Builder;
@@ -17,47 +18,48 @@ public class AddTeamToGithubJob implements JobContextConsumer {
 
   @Override
   public Course getCourse() {
-<span class="fc" id="L20">    return course;</span>
+<span class="fc" id="L21">    return course;</span>
   }
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L25">    ctx.log(&quot;Starting add team to GitHub job for team: &quot; + teamName);</span>
+<span class="fc" id="L26">    ctx.log(&quot;Starting add team to GitHub job for team: &quot; + teamName);</span>
 
-<span class="fc bfc" id="L27" title="All 2 branches covered.">    if (teamName == null) {</span>
-<span class="fc" id="L28">      ctx.log(&quot;ERROR: Team has no name&quot;);</span>
-<span class="fc" id="L29">      return;</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">    if (teamName == null) {</span>
+<span class="fc" id="L29">      ctx.log(&quot;ERROR: Team has no name&quot;);</span>
+<span class="fc" id="L30">      return;</span>
     }
 
-<span class="fc bfc" id="L32" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L33">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
-<span class="fc" id="L34">      return;</span>
+<span class="fc bfc" id="L33" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L34">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
+<span class="fc" id="L35">      return;</span>
     }
 
-<span class="fc" id="L37">    Team team = teamRepository.findByCourseIdAndName(course.getId(), teamName).orElse(null);</span>
-<span class="fc bfc" id="L38" title="All 2 branches covered.">    if (team == null) {</span>
-<span class="fc" id="L39">      ctx.log(</span>
+<span class="fc" id="L38">    Team team = teamRepository.findByCourseIdAndName(course.getId(), teamName).orElse(null);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">    if (team == null) {</span>
+<span class="fc" id="L40">      ctx.log(</span>
           &quot;ERROR: Team with name '&quot;
               + teamName
               + &quot;' not found for course &quot;
-<span class="fc" id="L43">              + course.getCourseName());</span>
-<span class="fc" id="L44">      return;</span>
+<span class="fc" id="L44">              + course.getCourseName());</span>
+<span class="fc" id="L45">      return;</span>
     }
 
     try {
-<span class="fc" id="L48">      Integer githubTeamId = githubTeamService.createTeam(teamName, course);</span>
-<span class="fc" id="L49">      team.setGithubTeamId(githubTeamId);</span>
-<span class="fc" id="L50">      teamRepository.save(team);</span>
-<span class="fc" id="L51">      ctx.log(</span>
+<span class="fc" id="L49">      GithubTeamInfo githubTeamInfo = githubTeamService.createTeamInfo(teamName, course);</span>
+<span class="fc" id="L50">      team.setGithubTeamId(githubTeamInfo.id());</span>
+<span class="fc" id="L51">      team.setGithubTeamSlug(githubTeamInfo.slug());</span>
+<span class="fc" id="L52">      teamRepository.save(team);</span>
+<span class="fc" id="L53">      ctx.log(</span>
           &quot;Successfully added team '&quot;
-<span class="fc" id="L53">              + team.getName()</span>
+<span class="fc" id="L55">              + team.getName()</span>
               + &quot;' to GitHub with GitHub team ID: &quot;
-              + githubTeamId);
-<span class="fc" id="L56">    } catch (Exception e) {</span>
-<span class="fc" id="L57">      ctx.log(&quot;ERROR: Failed to add team to GitHub: &quot; + e.getMessage());</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L57">              + githubTeamInfo.id());</span>
+<span class="fc" id="L58">    } catch (Exception e) {</span>
+<span class="fc" id="L59">      ctx.log(&quot;ERROR: Failed to add team to GitHub: &quot; + e.getMessage());</span>
+<span class="fc" id="L60">    }</span>
 
-<span class="fc" id="L60">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L61">  }</span>
+<span class="fc" id="L62">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L63">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
