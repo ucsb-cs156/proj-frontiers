@@ -1320,11 +1320,11 @@ describe("InstructorCoursesTable tests", () => {
         </QueryClientProvider>,
       );
 
-      expect(
-        screen.queryByTestId(
-          "InstructorCoursesTable-header-delete-sort-header",
-        ),
-      ).toBeInTheDocument();
+      const deleteHeader = screen.queryByTestId(
+        "InstructorCoursesTable-header-delete-sort-header",
+      );
+      expect(deleteHeader).toBeInTheDocument();
+      expect(deleteHeader).toHaveTextContent("Delete");
     });
 
     test("No Delete column or buttons are shown when default deleteCourseButton=false", () => {

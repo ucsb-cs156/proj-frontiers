@@ -399,6 +399,7 @@ export default function InstructorCoursesTable({
                     }
                   >
                     <span className="d-inline-block">
+                      {/* Stryker disable ObjectLiteral,StringLiteral : cosmetic styling for disabled button */}
                       <div
                         style={{
                           background: "#A0A0A0",
@@ -406,6 +407,7 @@ export default function InstructorCoursesTable({
                           borderRadius: "4px",
                         }}
                       >
+                      {/* Stryker restore ObjectLiteral,StringLiteral */}
                         <Button variant="light" size="sm" disabled>
                           Delete
                         </Button>
