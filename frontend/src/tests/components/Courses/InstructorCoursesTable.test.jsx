@@ -1421,6 +1421,44 @@ describe("InstructorCoursesTable tests", () => {
     expect(request.params).toEqual({ courseId: 3 });
   });
 
+  test("Successful delete shows toast and closes modal", async () => {
+    axiosMock = new AxiosMockAdapter(axios);
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    mockToast.mockClear();
+    axiosMock.onDelete("/api/courses").reply(200);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <InstructorCoursesTable
+            courses={coursesFixtures.severalCourses}
+            currentUser={currentUserFixtures.adminUser}
+            storybook={false}
+            deleteCourseButton={true}
+          />
+        </BrowserRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(
+      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button"),
+    );
+
+    const confirmButton = await screen.findByRole("button", {
+      name: "Yes, Delete",
+    });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith("Course deleted successfully");
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument();
+    });
+  });
+
   test("Delete mutation uses correct cache keys for invalidation", async () => {
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
