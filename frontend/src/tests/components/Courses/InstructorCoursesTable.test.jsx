@@ -1632,6 +1632,13 @@ describe("InstructorCoursesTable tests", () => {
 
     expect(await screen.findByText("Confirm Delete")).toBeInTheDocument();
 
+    expect(
+      screen.getByText((content, element) =>
+        element.tagName === "P" &&
+        element.textContent.includes("delete course CMPSC 156"),
+      ),
+    ).toBeInTheDocument();
+
     const cancelButton = screen.getByRole("button", { name: "Do not delete" });
     fireEvent.click(cancelButton);
 
