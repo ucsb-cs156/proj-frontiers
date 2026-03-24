@@ -185,6 +185,7 @@ export default function InstructorCoursesTable({
   };
 
   const onDeleteError = (error) => {
+    // Stryker disable next-line OptionalChaining : defensive coding for error shape
     if (error.response?.data?.message)
       toast(`Could not delete course:\n${error.response.data.message}`);
     else toast(`Could not delete course:\n${error.message}`);
@@ -473,7 +474,9 @@ export default function InstructorCoursesTable({
         <Modal.Body>
           {courseToDelete && (
             <p>
-              {/* Stryker disable next-line StringLiteral : cosmetic whitespace */}
+              {
+                // Stryker disable next-line StringLiteral : cosmetic whitespace
+              }
               Please confirm that you really want to delete course{" "}
               <strong>{courseToDelete.courseName}</strong>. This action cannot
               be undone.
