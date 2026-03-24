@@ -65,7 +65,7 @@ Without the Google OAuth setup, you will see an error like this when trying to l
 ### GitHub App setup for deployed environments
 
 * On localhost: [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md)
-* On dokku: [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md)
+* On dokku: [`docs/github-app-setup-dokku.md`](docs/github-app-setup-dokku.md)
 
 # Getting Started on localhost
 
