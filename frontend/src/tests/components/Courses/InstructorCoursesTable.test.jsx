@@ -1385,6 +1385,47 @@ describe("InstructorCoursesTable tests", () => {
       expect(enabledDeleteButton).toBeEnabled();
       expect(enabledDeleteButton).toHaveTextContent("Delete");
     });
+
+    test("Delete button is disabled when only one of numStudents or numStaff is zero", async () => {
+      const mixedCourses = [
+        {
+          id: 10,
+          courseName: "Test Course A",
+          term: "Spring 2026",
+          school: coursesFixtures.severalCourses[0].school,
+          instructorEmail: "test@ucsb.edu",
+          numStudents: 0,
+          numStaff: 2,
+        },
+        {
+          id: 11,
+          courseName: "Test Course B",
+          term: "Spring 2026",
+          school: coursesFixtures.severalCourses[0].school,
+          instructorEmail: "test@ucsb.edu",
+          numStudents: 5,
+          numStaff: 0,
+        },
+      ];
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={mixedCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={true}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const deleteButtons = screen.getAllByRole("button", { name: "Delete" });
+      deleteButtons.forEach((btn) => {
+        expect(btn).toBeDisabled();
+      });
+    });
   });
 
   test("Clicking the enabled delete button calls the correct axios DELETE request", async () => {
