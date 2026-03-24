@@ -22,11 +22,11 @@ describe("GithubSettingIcon tests", () => {
     ).toBeInTheDocument();
     expect(gearIcon).toHaveStyle({
       position: "absolute",
-      top: "0px",
+      bottom: "0px",
     });
     expect(gearIcon).toHaveStyle({
-      left: "0px",
-      transform: "translate(-15%, 60%)",
+      right: "0px",
+      transform: "translate(65%, 20%)",
     });
   });
   test("renders correctly with custom props", () => {
@@ -38,11 +38,11 @@ describe("GithubSettingIcon tests", () => {
     expect(settingsIcon).toBeInTheDocument();
     expect(settingsIcon).toHaveStyle({
       position: "absolute",
-      top: "0px",
+      bottom: "0px",
     });
     expect(settingsIcon).toHaveStyle({
-      left: "0px",
-      transform: "translate(-15%, 60%)",
+      right: "0px",
+      transform: "translate(65%, 20%)",
     });
   });
 });

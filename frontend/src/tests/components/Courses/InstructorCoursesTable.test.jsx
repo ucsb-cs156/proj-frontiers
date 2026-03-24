@@ -341,9 +341,9 @@ describe("InstructorCoursesTable tests", () => {
       expect(settingsIcon).toHaveAttribute("height", "16");
       expect(settingsIcon).toHaveAttribute("color", "blue");
       expect(settingsIcon).toHaveStyle({ position: "absolute" });
-      expect(settingsIcon).toHaveStyle({ top: "0px" });
-      expect(settingsIcon).toHaveStyle({ left: "0px" });
-      expect(settingsIcon).toHaveStyle({ transform: "translate(-15%, 60%)" });
+      expect(settingsIcon).toHaveStyle({ bottom: "0px" });
+      expect(settingsIcon).toHaveStyle({ right: "0px" });
+      expect(settingsIcon).toHaveStyle({ transform: "translate(65%, 20%)" });
     });
     test("Tests that when storybook is false by default all works as expected", async () => {
       render(
