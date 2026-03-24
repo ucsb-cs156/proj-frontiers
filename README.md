@@ -30,18 +30,42 @@ As of April 2025, we have only a minimum viable product for Tier 1 functionality
 
 # Setup before running application
 
-Before running the application for the first time,
-you need to do the steps documented in [`docs/oauth.md`](docs/oauth.md).
+Before running the application for the first time, you need to configure several environment variables. Start by copying the sample environment file:
 
-Otherwise, when you try to login for the first time, you 
-will likely see an error such as:
+```
+cp .env.SAMPLE .env
+```
+
+Then fill in the following values in your `.env` file:
+
+| Variable | Description | Setup Guide |
+|----------|-------------|-------------|
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID for authentication | [`docs/oauth.md`](docs/oauth.md) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | [`docs/oauth.md`](docs/oauth.md) |
+| `GITHUB_CLIENT_ID` | GitHub App client ID for GitHub integration | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
+| `GITHUB_CLIENT_SECRET` | GitHub App client secret | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
+| `app_private_key` | GitHub App private key (generated via `./keyconvert-localhost.sh`) | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
+| `WEBHOOK_SECRET` | Secret for validating GitHub webhook payloads (10+ characters) | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
+| `ADMIN_EMAILS` | Comma-separated list of admin email addresses | [`docs/oauth.md`](docs/oauth.md) |
+
+### Step-by-step setup
+
+1. **Google OAuth** (required for login): Follow the instructions in [`docs/oauth.md`](docs/oauth.md) to create a Google OAuth client and obtain your `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+
+2. **GitHub App** (required for GitHub features): Follow [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) to create a GitHub App and obtain your `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and `app_private_key`.
+
+3. **Webhook Secret** (required): Set `WEBHOOK_SECRET` to any string of 10+ characters in your `.env` file. For localhost, a placeholder like `localhost_dev_secret_123` is fine.
+
+4. **Admin Emails**: Set `ADMIN_EMAILS` to a comma-separated list (no spaces) of email addresses that should have admin access.
+
+Without the Google OAuth setup, you will see an error like this when trying to log in:
 
 <img src="https://user-images.githubusercontent.com/1119017/149858436-c9baa238-a4f7-4c52-b995-0ed8bee97487.png" alt="Authorization Error; Error 401: invalid_client; The OAuth client was not found." width="400"/>
 
-For certain functions to work properly, you'll also need to set up the app as a Github App.  Here's how:
+### GitHub App setup for deployed environments
 
 * On localhost: [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md)
-* On dokku: [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md)
+* On dokku: [`docs/github-app-setup-dokku.md`](docs/github-app-setup-dokku.md)
 
 # Getting Started on localhost
 
