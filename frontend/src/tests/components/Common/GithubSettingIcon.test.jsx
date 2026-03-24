@@ -21,12 +21,12 @@ describe("GithubSettingIcon tests", () => {
       screen.getByTestId("GithubSettingIcon-github-icon"),
     ).toBeInTheDocument();
     expect(gearIcon).toHaveStyle({
-      position: "relative",
-      top: "0px",
+      position: "absolute",
+      bottom: "0px",
     });
     expect(gearIcon).toHaveStyle({
-      left: "0px",
-      transform: "translate(-15%, 60%)",
+      right: "0px",
+      transform: "translate(65%, 20%)",
     });
   });
   test("renders correctly with custom props", () => {
@@ -37,12 +37,12 @@ describe("GithubSettingIcon tests", () => {
     const settingsIcon = screen.getByTestId("GithubSettingIcon-settings-icon");
     expect(settingsIcon).toBeInTheDocument();
     expect(settingsIcon).toHaveStyle({
-      position: "relative",
-      top: "0px",
+      position: "absolute",
+      bottom: "0px",
     });
     expect(settingsIcon).toHaveStyle({
-      left: "0px",
-      transform: "translate(-15%, 60%)",
+      right: "0px",
+      transform: "translate(65%, 20%)",
     });
   });
 });

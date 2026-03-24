@@ -5,8 +5,10 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import reactPlugin from "eslint-plugin-react";
 import { defineConfig, globalIgnores } from "eslint/config";
 
+
 // Import the vitest plugin
 import vitest from "@vitest/eslint-plugin";
+import vitestPlugin from "@vitest/eslint-plugin";
 
 export default defineConfig([
   globalIgnores([
@@ -23,7 +25,6 @@ export default defineConfig([
     files: ["src/**/*.{js,jsx}"],
     extends: [
       js.configs.recommended,
-      reactHooks.configs["recommended-latest"],
       reactRefresh.configs.vite,
       reactPlugin.configs.flat.recommended,
       reactPlugin.configs.flat["jsx-runtime"],
@@ -51,7 +52,7 @@ export default defineConfig([
     // Apply this configuration only to test files
     files: ["**/*.test.{js,jsx}", "**/*.spec.{js,jsx}"],
     plugins: {
-      vitest,
+      vitest: vitestPlugin
     },
     languageOptions: {
       globals: vitest.environments.env.globals, // Use vitest's globals

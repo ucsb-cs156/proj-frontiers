@@ -8,7 +8,11 @@ export default function GithubSettingIcon({
 }) {
   return (
     <span
-      style={{ display: "absolute", alignItems: "inline-block" }}
+      style={{
+        position: "relative",
+        display: "inline-block",
+        marginRight: "12px",
+      }}
       data-testid={dataTestId}
     >
       <FaGithub
@@ -21,10 +25,10 @@ export default function GithubSettingIcon({
         color={gearColor}
         data-testid={`${dataTestId}-settings-icon`}
         style={{
-          position: "relative",
-          top: 0,
-          left: 0,
-          transform: "translate(-15%, 60%)",
+          position: "absolute",
+          bottom: 0,
+          right: 0,
+          transform: "translate(65%, 20%)",
         }}
       />
     </span>

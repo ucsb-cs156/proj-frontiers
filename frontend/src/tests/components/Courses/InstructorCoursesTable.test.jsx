@@ -321,8 +321,8 @@ describe("InstructorCoursesTable tests", () => {
       );
       expect(githubSettingsIcon).toBeInTheDocument();
       expect(githubSettingsIcon).toHaveStyle({
-        display: "absolute",
-        alignItems: "inline-block",
+        position: "relative",
+        display: "inline-block",
       });
 
       const githubIcon = screen.getByTestId(
@@ -340,10 +340,10 @@ describe("InstructorCoursesTable tests", () => {
       expect(settingsIcon).toHaveAttribute("width", "16");
       expect(settingsIcon).toHaveAttribute("height", "16");
       expect(settingsIcon).toHaveAttribute("color", "blue");
-      expect(settingsIcon).toHaveStyle({ position: "relative" });
-      expect(settingsIcon).toHaveStyle({ top: "0px" });
-      expect(settingsIcon).toHaveStyle({ left: "0px" });
-      expect(settingsIcon).toHaveStyle({ transform: "translate(-15%, 60%)" });
+      expect(settingsIcon).toHaveStyle({ position: "absolute" });
+      expect(settingsIcon).toHaveStyle({ bottom: "0px" });
+      expect(settingsIcon).toHaveStyle({ right: "0px" });
+      expect(settingsIcon).toHaveStyle({ transform: "translate(65%, 20%)" });
     });
     test("Tests that when storybook is false by default all works as expected", async () => {
       render(
@@ -1320,11 +1320,11 @@ describe("InstructorCoursesTable tests", () => {
         </QueryClientProvider>,
       );
 
-      expect(
-        screen.queryByTestId(
-          "InstructorCoursesTable-header-delete-sort-header",
-        ),
-      ).toBeInTheDocument();
+      const deleteHeader = screen.queryByTestId(
+        "InstructorCoursesTable-header-delete-sort-header",
+      );
+      expect(deleteHeader).toBeInTheDocument();
+      expect(deleteHeader).toHaveTextContent("Delete");
     });
 
     test("No Delete column or buttons are shown when default deleteCourseButton=false", () => {
@@ -1385,6 +1385,47 @@ describe("InstructorCoursesTable tests", () => {
       expect(enabledDeleteButton).toBeEnabled();
       expect(enabledDeleteButton).toHaveTextContent("Delete");
     });
+
+    test("Delete button is disabled when only one of numStudents or numStaff is zero", async () => {
+      const mixedCourses = [
+        {
+          id: 10,
+          courseName: "Test Course A",
+          term: "Spring 2026",
+          school: coursesFixtures.severalCourses[0].school,
+          instructorEmail: "test@ucsb.edu",
+          numStudents: 0,
+          numStaff: 2,
+        },
+        {
+          id: 11,
+          courseName: "Test Course B",
+          term: "Spring 2026",
+          school: coursesFixtures.severalCourses[0].school,
+          instructorEmail: "test@ucsb.edu",
+          numStudents: 5,
+          numStaff: 0,
+        },
+      ];
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={mixedCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={true}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const deleteButtons = screen.getAllByRole("button", { name: "Delete" });
+      deleteButtons.forEach((btn) => {
+        expect(btn).toBeDisabled();
+      });
+    });
   });
 
   test("Clicking the enabled delete button calls the correct axios DELETE request", async () => {
@@ -1419,6 +1460,44 @@ describe("InstructorCoursesTable tests", () => {
 
     expect(request.url).toBe("/api/courses");
     expect(request.params).toEqual({ courseId: 3 });
+  });
+
+  test("Successful delete shows toast and closes modal", async () => {
+    axiosMock = new AxiosMockAdapter(axios);
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    mockToast.mockClear();
+    axiosMock.onDelete("/api/courses").reply(200);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <InstructorCoursesTable
+            courses={coursesFixtures.severalCourses}
+            currentUser={currentUserFixtures.adminUser}
+            storybook={false}
+            deleteCourseButton={true}
+          />
+        </BrowserRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(
+      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button"),
+    );
+
+    const confirmButton = await screen.findByRole("button", {
+      name: "Yes, Delete",
+    });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith("Course deleted successfully");
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument();
+    });
   });
 
   test("Delete mutation uses correct cache keys for invalidation", async () => {
@@ -1552,6 +1631,14 @@ describe("InstructorCoursesTable tests", () => {
     fireEvent.click(deleteButton);
 
     expect(await screen.findByText("Confirm Delete")).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        (content, element) =>
+          element.tagName === "P" &&
+          element.textContent.includes("delete course CMPSC 156"),
+      ),
+    ).toBeInTheDocument();
 
     const cancelButton = screen.getByRole("button", { name: "Do not delete" });
     fireEvent.click(cancelButton);
