@@ -473,6 +473,7 @@ export default function InstructorCoursesTable({
         <Modal.Body>
           {courseToDelete && (
             <p>
+              {/* Stryker disable next-line StringLiteral : cosmetic whitespace */}
               Please confirm that you really want to delete course{" "}
               <strong>{courseToDelete.courseName}</strong>. This action cannot
               be undone.
