@@ -21,7 +21,7 @@ describe("GithubSettingIcon tests", () => {
       screen.getByTestId("GithubSettingIcon-github-icon"),
     ).toBeInTheDocument();
     expect(gearIcon).toHaveStyle({
-      position: "relative",
+      position: "absolute",
       top: "0px",
     });
     expect(gearIcon).toHaveStyle({
@@ -37,7 +37,7 @@ describe("GithubSettingIcon tests", () => {
     const settingsIcon = screen.getByTestId("GithubSettingIcon-settings-icon");
     expect(settingsIcon).toBeInTheDocument();
     expect(settingsIcon).toHaveStyle({
-      position: "relative",
+      position: "absolute",
       top: "0px",
     });
     expect(settingsIcon).toHaveStyle({

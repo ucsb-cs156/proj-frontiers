@@ -321,8 +321,8 @@ describe("InstructorCoursesTable tests", () => {
       );
       expect(githubSettingsIcon).toBeInTheDocument();
       expect(githubSettingsIcon).toHaveStyle({
+        position: "relative",
         display: "inline-block",
-        position: "absolute",
       });
 
       const githubIcon = screen.getByTestId(
@@ -340,7 +340,7 @@ describe("InstructorCoursesTable tests", () => {
       expect(settingsIcon).toHaveAttribute("width", "16");
       expect(settingsIcon).toHaveAttribute("height", "16");
       expect(settingsIcon).toHaveAttribute("color", "blue");
-      expect(settingsIcon).toHaveStyle({ position: "relative" });
+      expect(settingsIcon).toHaveStyle({ position: "absolute" });
       expect(settingsIcon).toHaveStyle({ top: "0px" });
       expect(settingsIcon).toHaveStyle({ left: "0px" });
       expect(settingsIcon).toHaveStyle({ transform: "translate(-15%, 60%)" });
