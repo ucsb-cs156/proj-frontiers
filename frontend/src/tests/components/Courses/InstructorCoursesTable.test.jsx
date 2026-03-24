@@ -1633,9 +1633,10 @@ describe("InstructorCoursesTable tests", () => {
     expect(await screen.findByText("Confirm Delete")).toBeInTheDocument();
 
     expect(
-      screen.getByText((content, element) =>
-        element.tagName === "P" &&
-        element.textContent.includes("delete course CMPSC 156"),
+      screen.getByText(
+        (content, element) =>
+          element.tagName === "P" &&
+          element.textContent.includes("delete course CMPSC 156"),
       ),
     ).toBeInTheDocument();
 
