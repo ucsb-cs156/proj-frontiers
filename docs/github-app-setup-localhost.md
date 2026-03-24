@@ -24,7 +24,7 @@ Select "New Github App". Fill in an appropriate name, and write it down. You wil
 
 For the homepage url, fill in `http://localhost:8080`.
 
-![image](https://github.com/user-attachments/assets/bec66087-ca4a-4fc4-af3d-9ad663c24eb2)
+![image](https://github.com/user-attachments/assets/fa37f61d-4a7e-4f76-bba1-02e52bcd99b9)
 
 Under `Identifying and authorizing users`, click the button "Add Callback URL"; this should make it so that you see two spaces in which you can add a Callback URL.
 
