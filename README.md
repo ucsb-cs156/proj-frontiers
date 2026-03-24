@@ -45,7 +45,7 @@ Then fill in the following values in your `.env` file:
 | `GITHUB_CLIENT_ID` | GitHub App client ID for GitHub integration | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
 | `GITHUB_CLIENT_SECRET` | GitHub App client secret | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
 | `app_private_key` | GitHub App private key (generated via `./keyconvert-localhost.sh`) | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
-| `WEBHOOK_SECRET` | Secret for validating GitHub webhook payloads (10+ characters) | [`docs/github-app-setup-dokku.md`](docs/github-app-setup-dokku.md) |
+| `WEBHOOK_SECRET` | Secret for validating GitHub webhook payloads (10+ characters) | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
 | `ADMIN_EMAILS` | Comma-separated list of admin email addresses | [`docs/oauth.md`](docs/oauth.md) |
 
 ### Step-by-step setup
