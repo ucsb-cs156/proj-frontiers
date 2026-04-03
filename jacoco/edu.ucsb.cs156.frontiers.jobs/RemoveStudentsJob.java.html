@@ -38,16 +38,21 @@ public class RemoveStudentsJob implements JobContextConsumer {
 <span class="fc bfc" id="L38" title="All 2 branches covered.">            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {</span>
 <span class="fc" id="L39">              c.log(&quot;Student %s not in Organization&quot;.formatted(student.getGithubLogin()));</span>
             } else {
-<span class="fc" id="L41">              throw new RuntimeException(e);</span>
+<span class="fc" id="L41">              throw new IllegalStateException(</span>
+                  &quot;Failed to remove student &quot;
+<span class="fc" id="L43">                      + student.getGithubLogin()</span>
+                      + &quot; from Organization: &quot;
+<span class="fc" id="L45">                      + e.getMessage(),</span>
+                  e);
             }
-<span class="fc" id="L43">          }</span>
-<span class="fc" id="L44">          student.setGithubId(null);</span>
-<span class="fc" id="L45">          student.setGithubLogin(null);</span>
-<span class="fc" id="L46">          student.setOrgStatus(OrgStatus.REMOVED);</span>
-<span class="fc" id="L47">          rosterStudentRepository.save(student);</span>
+<span class="fc" id="L48">          }</span>
+<span class="fc" id="L49">          student.setGithubId(null);</span>
+<span class="fc" id="L50">          student.setGithubLogin(null);</span>
+<span class="fc" id="L51">          student.setOrgStatus(OrgStatus.REMOVED);</span>
+<span class="fc" id="L52">          rosterStudentRepository.save(student);</span>
         }
       }
-<span class="fc" id="L50">    }</span>
-<span class="fc" id="L51">  }</span>
+<span class="fc" id="L55">    }</span>
+<span class="fc" id="L56">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
