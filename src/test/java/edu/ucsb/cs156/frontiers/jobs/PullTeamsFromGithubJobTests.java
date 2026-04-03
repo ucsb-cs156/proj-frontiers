@@ -44,6 +44,43 @@ public class PullTeamsFromGithubJobTests {
   }
 
   @Test
+  public void test_getCourse_returnsCourse_whenFound() {
+    Long courseId = 1L;
+    Course course = Course.builder().id(courseId).courseName("Test Course").build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    PullTeamsFromGithubJob job =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .build();
+
+    Course result = job.getCourse();
+
+    assertEquals(course, result);
+    verify(courseRepository, times(1)).findById(courseId);
+  }
+
+  @Test
+  public void test_getCourse_returnsNull_whenNotFound() {
+    Long courseId = 1L;
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+    PullTeamsFromGithubJob job =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .build();
+
+    Course result = job.getCourse();
+
+    assertNull(result);
+    verify(courseRepository, times(1)).findById(courseId);
+  }
+
+  @Test
   public void testAccept_CourseNotFound() throws Exception {
     Long courseId = 1L;
     when(courseRepository.findById(courseId)).thenReturn(Optional.empty());

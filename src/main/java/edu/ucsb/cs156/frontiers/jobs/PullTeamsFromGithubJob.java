@@ -28,6 +28,12 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
   GithubTeamService githubTeamService;
 
   @Override
+  public Course getCourse() {
+    Optional<Course> courseOpt = courseRepository.findById(courseId);
+    return courseOpt.orElse(null);
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log(String.format("Starting pull teams from GitHub job for course ID: %s", courseId));
 
