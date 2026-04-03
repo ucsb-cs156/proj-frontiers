@@ -31,12 +31,9 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
     try {
       orgId = githubTeamService.getOrgId(course.getOrgName(), course);
     } catch (Exception e) {
-      ctx.log(
-          "ERROR: Failed to get organization ID for org: "
-              + course.getOrgName()
-              + " - "
-              + e.getMessage());
-      return;
+      throw new IllegalStateException(
+          "Failed to get organization ID for org: " + course.getOrgName() + " - " + e.getMessage(),
+          e);
     }
 
     for (Team team : course.getTeams()) {

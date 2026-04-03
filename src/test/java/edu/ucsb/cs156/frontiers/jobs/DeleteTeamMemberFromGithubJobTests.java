@@ -172,13 +172,10 @@ public class DeleteTeamMemberFromGithubJobTests {
             .githubTeamService(githubTeamService)
             .build();
 
-    job.accept(ctx);
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> job.accept(ctx));
 
     verify(githubTeamService).removeMemberFromGithubTeam(1, "testuser", 456, course);
-    assertTrue(
-        jobStarted
-            .getLog()
-            .contains("ERROR: Failed to remove user from GitHub team: GitHub API error"));
+    assertEquals("Failed to remove user from GitHub team: GitHub API error", e.getMessage());
   }
 
   @Test
@@ -205,14 +202,12 @@ public class DeleteTeamMemberFromGithubJobTests {
             .githubTeamService(githubTeamService)
             .build();
 
-    job.accept(ctx);
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> job.accept(ctx));
 
     verify(githubTeamService).getOrgId("test-org", course);
     verify(githubTeamService, never())
         .removeMemberFromGithubTeam(anyInt(), anyString(), anyInt(), any(Course.class));
-    assertTrue(
-        jobStarted
-            .getLog()
-            .contains("ERROR: Failed to get organization ID for org: test-org - GitHub API error"));
+    assertEquals(
+        "Failed to get organization ID for org: test-org - GitHub API error", e.getMessage());
   }
 }

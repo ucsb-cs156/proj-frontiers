@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -627,12 +628,12 @@ public class PushTeamsToGithubJobTests {
             .githubTeamService(githubTeamService)
             .build();
 
-    // Act
-    job.accept(ctx);
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> job.accept(ctx));
 
-    // Assert
     verify(courseRepository).findById(courseId);
     verify(githubTeamService).getOrgId(course.getOrgName(), course);
     verifyNoInteractions(teamRepository, teamMemberRepository);
+    assertEquals(
+        "Failed to get organization ID for org: test-org - GitHub API error", e.getMessage());
   }
 }

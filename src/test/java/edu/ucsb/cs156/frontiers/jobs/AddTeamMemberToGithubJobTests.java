@@ -216,11 +216,11 @@ public class AddTeamMemberToGithubJobTests {
             .teamMemberRepository(teamMemberRepository)
             .build();
 
-    job.accept(ctx);
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> job.accept(ctx));
 
     verify(githubTeamService).addMemberToGithubTeam("testuser", 456, "member", course, 1);
-    assertTrue(
-        jobStarted.getLog().contains("ERROR: Failed to add user to GitHub team: GitHub API error"));
+    verify(teamMemberRepository, never()).save(any());
+    assertEquals("Failed to add user to GitHub team: GitHub API error", e.getMessage());
   }
 
   @Test
@@ -249,14 +249,12 @@ public class AddTeamMemberToGithubJobTests {
             .teamMemberRepository(teamMemberRepository)
             .build();
 
-    job.accept(ctx);
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> job.accept(ctx));
 
     verify(githubTeamService).getOrgId("test-org", course);
     verify(githubTeamService, never())
         .addMemberToGithubTeam(anyString(), anyInt(), anyString(), any(Course.class), anyInt());
-    assertTrue(
-        jobStarted
-            .getLog()
-            .contains("ERROR: Failed to get organization ID for org: test-org - GitHub API error"));
+    assertEquals(
+        "Failed to get organization ID for org: test-org - GitHub API error", e.getMessage());
   }
 }

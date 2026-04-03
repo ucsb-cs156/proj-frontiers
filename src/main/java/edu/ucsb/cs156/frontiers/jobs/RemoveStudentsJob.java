@@ -38,7 +38,12 @@ public class RemoveStudentsJob implements JobContextConsumer {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
               c.log("Student %s not in Organization".formatted(student.getGithubLogin()));
             } else {
-              throw new RuntimeException(e);
+              throw new IllegalStateException(
+                  "Failed to remove student "
+                      + student.getGithubLogin()
+                      + " from Organization: "
+                      + e.getMessage(),
+                  e);
             }
           }
           student.setGithubId(null);

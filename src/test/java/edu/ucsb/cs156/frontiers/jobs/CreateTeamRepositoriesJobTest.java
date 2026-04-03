@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -179,14 +180,11 @@ public class CreateTeamRepositoriesJobTest {
                 .permissions(RepositoryPermissions.WRITE)
                 .build());
 
-    repoJob.accept(ctx);
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> repoJob.accept(ctx));
 
     assertTrue(jobStarted.getLog().contains("Creating team repositories..."));
-    assertTrue(
-        jobStarted
-            .getLog()
-            .contains(
-                "ERROR: Failed to get organization ID for org: ucsb-cs156 - GitHub API error"));
+    assertEquals(
+        "Failed to get organization ID for org: ucsb-cs156 - GitHub API error", e.getMessage());
     verify(githubTeamService).getOrgId("ucsb-cs156", course);
     verifyNoInteractions(service);
   }

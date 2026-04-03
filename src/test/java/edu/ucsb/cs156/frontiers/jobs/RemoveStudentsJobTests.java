@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
@@ -138,9 +139,13 @@ public class RemoveStudentsJobTests {
     doThrow(new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS))
         .when(organizationMemberService)
         .removeOrganizationMember(eq(student1));
-    assertThrows(RuntimeException.class, () -> removeStudentsJob.accept(jobContext));
+    IllegalStateException e =
+        assertThrows(IllegalStateException.class, () -> removeStudentsJob.accept(jobContext));
     verify(organizationMemberService, times(1)).removeOrganizationMember(eq(student1));
     verify(rosterStudentRepository, never()).save(student1Updated);
+    assertEquals(
+        "Failed to remove student testLogin1 from Organization: 429 TOO_MANY_REQUESTS",
+        e.getMessage());
   }
 
   @Test
