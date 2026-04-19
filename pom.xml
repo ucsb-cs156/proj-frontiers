@@ -542,6 +542,7 @@
                     </condition>
                     <condition property="frontend.build.skip">
                       <and>
+                        <istrue value="${frontend.dependency.skip}" />
                         <uptodate>
                           <srcfiles dir="${project.basedir}/frontend/node_modules" includes="**/*" />
                           <srcfiles dir="${project.basedir}/frontend/src" includes="**/*" />
@@ -549,7 +550,6 @@
                           <srcfiles file="${project.basedir}/frontend/vite.config.js" />
                           <mapper type="merge" to="${project.build.outputDirectory}/public/index.html" />
                         </uptodate>
-                        <istrue value="${frontend.dependency.skip}" />
                       </and>
                     </condition>
 
