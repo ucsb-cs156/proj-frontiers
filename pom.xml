@@ -533,22 +533,33 @@
                 </goals>
                 <configuration>
                   <target>
-                    <condition property="frontend.skip">
+                    <condition property="frontend.dependency.skip">
                       <uptodate>
-                        <srcfiles dir="${project.basedir}/frontend/src" includes="**/*" />
-                        <srcfiles dir="${project.basedir}/frontend/build" includes="**/*" />
-                        <srcfiles dir="${project.basedir}/frontend/node_modules" includes="**/*" />
                         <srcfiles file="${project.basedir}/frontend/package.json" />
                         <srcfiles file="${project.basedir}/frontend/package-lock.json" />
-                        <srcfiles file="${project.basedir}/frontend/vite.config.js" />
                         <mapper type="merge" to="${project.build.outputDirectory}/public/index.html" />
                       </uptodate>
+                    </condition>
+                    <condition property="frontend.build.skip">
+                      <and>
+                        <istrue value="${frontend.dependency.skip}" />
+                        <uptodate>
+                          <srcfiles dir="${project.basedir}/frontend/node_modules" includes="**/*" />
+                          <srcfiles dir="${project.basedir}/frontend/src" includes="**/*" />
+                          <srcfiles dir="${project.basedir}/frontend/build" includes="**/*" />
+                          <srcfiles file="${project.basedir}/frontend/vite.config.js" />
+                          <mapper type="merge" to="${project.build.outputDirectory}/public/index.html" />
+                        </uptodate>
+                      </and>
                     </condition>
 
                     <condition property="build.message"
                       value="No frontend changes detected - skipping npm build"
                       else="Frontend changes detected - will rebuild">
-                      <istrue value="${frontend.skip}" />
+                      <and>
+                        <istrue value="${frontend.build.skip}" />
+                        <istrue value="${frontend.dependency.skip}" />
+                      </and>
                     </condition>
                     <echo message="${build.message}" level="info" />
                   </target>
@@ -563,7 +574,7 @@
                   <goal>run</goal>
                 </goals>
                 <configuration>
-                  <skip>${frontend.skip}</skip>
+                  <skip>${frontend.build.skip}</skip>
                   <target>
                     <copy todir="${project.build.outputDirectory}/public" failonerror="false">
                       <fileset dir="${project.basedir}/frontend/build" />
@@ -582,7 +593,6 @@
             <configuration>
               <workingDirectory>frontend</workingDirectory>
               <installDirectory>${project.build.directory}</installDirectory>
-              <skip>${frontend.skip}</skip>
             </configuration>
             <executions>
               <execution>
@@ -592,6 +602,7 @@
                 </goals>
                 <configuration>
                   <nodeVersion>${app.frontend.nodeVersion}</nodeVersion>
+                  <skip>${frontend.dependency.skip}</skip>
                 </configuration>
               </execution>
               <execution>
@@ -601,6 +612,7 @@
                 </goals>
                 <configuration>
                   <arguments>ci</arguments>
+                  <skip>${frontend.dependency.skip}</skip>
                 </configuration>
               </execution>
               <execution>
@@ -610,6 +622,7 @@
                 </goals>
                 <configuration>
                   <arguments>run build</arguments>
+                  <skip>${frontend.build.skip}</skip>
                 </configuration>
               </execution>
             </executions>
