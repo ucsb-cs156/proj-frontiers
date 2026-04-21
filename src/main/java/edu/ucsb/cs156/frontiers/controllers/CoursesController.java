@@ -18,6 +18,7 @@ import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.services.TokenEncryptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -56,6 +57,8 @@ public class CoursesController extends ApiController {
 
   @Autowired private OrganizationLinkerService linkerService;
 
+  @Autowired private TokenEncryptionService tokenEncryptionService;
+
   /**
    * This method creates a new Course.
    *
@@ -82,7 +85,8 @@ public class CoursesController extends ApiController {
             .term(term)
             .school(school)
             .instructorEmail(currentUser.getUser().getEmail().strip())
-            .canvasApiToken(canvasApiToken)
+            .canvasApiToken(
+                canvasApiToken != null ? tokenEncryptionService.encryptToken(canvasApiToken) : null)
             .canvasCourseId(canvasCourseId)
             .build();
     Course savedCourse = courseRepository.save(course);
@@ -188,7 +192,7 @@ public class CoursesController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
-    String obscuredToken = null;
+    String obscuredToken = tokenEncryptionService.decryptToken(course.getCanvasApiToken());
 
     if (course.getCanvasApiToken() != null) {
       String token = course.getCanvasApiToken();
@@ -491,7 +495,7 @@ public class CoursesController extends ApiController {
     if (canvasApiToken != null
         && !canvasApiToken.isEmpty()
         && !canvasApiToken.equals(course.getCanvasApiToken())) {
-      course.setCanvasApiToken(canvasApiToken);
+      course.setCanvasApiToken(tokenEncryptionService.encryptToken(canvasApiToken));
     }
 
     if (canvasCourseId != null

@@ -37,11 +37,19 @@ public class CanvasService {
 
   private HttpSyncGraphQlClient graphQlClient;
   private ObjectMapper mapper;
+  private TokenEncryptionService tokenEncryptionService;
 
-  public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {
-    this.graphQlClient = HttpSyncGraphQlClient.builder(builder.build()).build();
+  private static final String CANVAS_GRAPHQL_URL = "https://ucsb.instructure.com/api/graphql";
+
+  public CanvasService(
+      ObjectMapper mapper,
+      RestClient.Builder builder,
+      TokenEncryptionService tokenEncryptionService) {
+    this.graphQlClient =
+        HttpSyncGraphQlClient.builder(builder.baseUrl(CANVAS_GRAPHQL_URL).build()).build();
     this.mapper = mapper;
     this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    this.tokenEncryptionService = tokenEncryptionService;
   }
 
   public List<CanvasGroupSet> getCanvasGroupSets(@HasLinkedCanvasCourse Course course) {
@@ -62,8 +70,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
-            .url(course.getSchool().getCanvasImplementation())
+            .header(
+                "Authorization",
+                "Bearer " + tokenEncryptionService.decryptToken(course.getCanvasApiToken()))
             .build();
 
     List<CanvasGroupSet> groupSets =
@@ -106,8 +115,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
-            .url(course.getSchool().getCanvasImplementation())
+            .header(
+                "Authorization",
+                "Bearer " + tokenEncryptionService.decryptToken(course.getCanvasApiToken()))
             .build();
 
     List<CanvasStudent> students =
@@ -163,8 +173,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
-            .url(course.getSchool().getCanvasImplementation())
+            .header(
+                "Authorization",
+                "Bearer " + tokenEncryptionService.decryptToken(course.getCanvasApiToken()))
             .build();
 
     List<JsonNode> groups =

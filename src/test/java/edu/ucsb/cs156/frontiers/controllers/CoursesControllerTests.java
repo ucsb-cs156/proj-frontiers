@@ -31,6 +31,7 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.frontiers.services.TokenEncryptionService;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,6 +71,8 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @MockitoBean private AdminRepository adminRepository;
 
+  @MockitoBean private TokenEncryptionService tokenEncryptionService;
+
   /** Test that ROLE_ADMIN can create a course */
   @Test
   @WithMockUser(roles = {"ADMIN"})
@@ -84,14 +87,14 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school(School.UCSB)
             .instructorEmail(user.getEmail())
-            .canvasApiToken("canvas-token")
+            .canvasApiToken("encrypted-canvas-token")
             .canvasCourseId("12345")
             .build();
 
+    when(tokenEncryptionService.encryptToken("canvas-token")).thenReturn("encrypted-canvas-token");
     when(courseRepository.save(any(Course.class))).thenReturn(course);
 
     // act
-
     MvcResult response =
         mockMvc
             .perform(
@@ -106,7 +109,6 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-
     verify(courseRepository, times(1)).save(eq(course));
 
     String responseString = response.getResponse().getContentAsString();
@@ -128,14 +130,14 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school(School.UCSB)
             .instructorEmail(user.getEmail())
-            .canvasApiToken("canvas-token")
+            .canvasApiToken("encrypted-canvas-token")
             .canvasCourseId("12345")
             .build();
 
+    when(tokenEncryptionService.encryptToken("canvas-token")).thenReturn("encrypted-canvas-token");
     when(courseRepository.save(any(Course.class))).thenReturn(course);
 
     // act
-
     MvcResult response =
         mockMvc
             .perform(
@@ -150,7 +152,6 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
-
     verify(courseRepository, times(1)).save(eq(course));
 
     String responseString = response.getResponse().getContentAsString();
@@ -1520,7 +1521,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("Term")
             .school(School.UCSB)
             .instructorEmail("rando@example.com")
-            .canvasApiToken("newToken")
+            .canvasApiToken("encryptedNewToken")
             .canvasCourseId("newCourseId")
             .build();
 
@@ -1625,11 +1626,12 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school(School.UCSB)
             .instructorEmail(user.getEmail())
-            .canvasApiToken("newToken")
+            .canvasApiToken("encryptedNewToken")
             .canvasCourseId("newCourseId")
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+    when(tokenEncryptionService.encryptToken("newToken")).thenReturn("encryptedNewToken");
     when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
 
     MvcResult response =
@@ -1676,11 +1678,12 @@ public class CoursesControllerTests extends ControllerTestCase {
             .term("S25")
             .school(School.UCSB)
             .instructorEmail(instructorUser.getEmail())
-            .canvasApiToken("newToken")
+            .canvasApiToken("encryptedNewToken")
             .canvasCourseId("newCourseId")
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+    when(tokenEncryptionService.encryptToken("newToken")).thenReturn("encryptedNewToken");
     when(courseRepository.save(any(Course.class))).thenReturn(updatedCourse);
 
     MvcResult response =

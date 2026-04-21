@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -23,6 +24,7 @@ import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 @RestClientTest(CanvasService.class)
@@ -33,9 +35,13 @@ public class CanvasServiceTests {
 
   @Autowired private CanvasService canvasService;
 
+  @MockitoBean private TokenEncryptionService tokenEncryptionService;
+
   @BeforeEach
   public void setup() {
     mockServer.reset();
+    when(tokenEncryptionService.decryptToken("encrypted-api-token"))
+        .thenReturn("decrypted-api-token");
   }
 
   @Test
@@ -45,7 +51,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -70,7 +76,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
@@ -102,7 +108,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -124,7 +130,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
     // Act
@@ -143,7 +149,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -167,7 +173,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
     // Act
@@ -187,7 +193,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -211,7 +217,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
     // Act
@@ -231,7 +237,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -253,7 +259,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
@@ -280,7 +286,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -299,7 +305,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
     // Act
@@ -317,7 +323,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -358,7 +364,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
@@ -392,7 +398,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -413,7 +419,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
     // Act
@@ -432,7 +438,7 @@ public class CanvasServiceTests {
         Course.builder()
             .id(1L)
             .courseName("CS156")
-            .canvasApiToken("test-api-token")
+            .canvasApiToken("encrypted-api-token")
             .canvasCourseId("12345")
             .school(School.UCSB)
             .build();
@@ -461,7 +467,7 @@ public class CanvasServiceTests {
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
         .andExpect(method(HttpMethod.POST))
-        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(header("Authorization", "Bearer decrypted-api-token"))
         .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
 
     // Act
