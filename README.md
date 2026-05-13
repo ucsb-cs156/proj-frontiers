@@ -1,5 +1,9 @@
 # proj-frontiers
 
+## Deployments
+
+Note: CMPSC 156 Student teams should not change the prod/qa links below to match their team's links; you should maintain the README.md file so that it can be merged into the https://github.com/ucsb-cs156/proj-frontiers/ repo at the end of the quarter.
+
 * Prod: <https://frontiers.dokku-00.cs.ucsb.edu>
 * QA: <https://frontiers-qa.dokku-00.cs.ucsb.edu>
 
