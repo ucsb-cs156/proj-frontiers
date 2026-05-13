@@ -10,8 +10,8 @@ on:
   workflow_dispatch:  # Allows manual triggering
 
 env:
-  PAT: ${{ secrets.PAT }}
-  TEAM_TO_CHANNEL: ${{vars.TEAM_TO_CHANNEL}}
+  PAT: ${{ secrets.CLASSIC_PAT }}
+  GH_TOKEN: ${{ secrets.CLASSIC_PAT }}
   ORG_NAME: ${{ github.repository_owner }}
   REPO_NAME: ${{ github.event.repository.name }}
   # The columns in the Kanban board that we are interested in
@@ -101,177 +101,116 @@ jobs:
       project_id: ${{ steps.find_project.outputs.project_id }}
       project_data: ${{ steps.output_query.outputs.project_data }}
       issue_counts: ${{ steps.count_issues.outputs.issue_counts }}
+    env:
+      REPOSITORY: ${{ needs.get_team_name.outputs.repository }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Debugging Output
         run: |
           echo "needs.get_team_name.outputs.team=${{needs.get_team_name.outputs.team}}"
           echo "needs.get_team_name.outputs.repository=${{needs.get_team_name.outputs.repository}}"
           echo "github.repository_owner=${{ github.repository_owner }}"
-      - name: Fetch Project ID
-        id: find_project
-        shell: pwsh
+      - name: Fetch Project Id using gh
+        id: find_project_gh
         run: |
-          $query = @"
-          {
-            organization(login: "${{ github.repository_owner }}") {
-              projectsV2(first: 100) {
-                nodes {
-                  id
-                  title
-                  updatedAt
+          # -e: exit immediately if any command fails (non-zero), instead of continuing
+          # -u: treat unset variables as errors to catch typos/missing env vars
+          # -o pipefail: pipelines fail if any command in the pipe fails (not just the last)
+          set -euo pipefail
+
+          ORG_LOGIN="${{ github.repository_owner }}"
+          PROJECT_TITLE=${{ needs.get_team_name.outputs.repository }}
+
+          # Query first 100 projects; paginate if you might have more than 100.
+          PROJECT_ID="$(
+            gh api graphql -f query='
+              query($org: String!, $first: Int!) {
+                organization(login: $org) {
+                  projectsV2(first: $first) {
+                    nodes { id title }
+                  }
                 }
-              }
-            }
-          }
-          "@
-          $headers = @{
-              Authorization = "Bearer ${{ secrets.PAT }}"
-              "Content-Type" = "application/json"
-          }
-          $body = @{ query = $query } | ConvertTo-Json
-          $response = Invoke-WebRequest -Uri "https://api.github.com/graphql" -Method Post -Headers $headers -Body $body
-          Write-Host "Projects JSON Output: $($response.Content)"
-          
-          $projectID = ($response.Content | ConvertFrom-Json).data.organization.projectsV2.nodes | Where-Object { $_.title -like "*${{ needs.get_team_name.outputs.repository }}*" } | Select-Object -First 1 -ExpandProperty id
-          
-          if (-not $projectID) {
-              Write-Host "No project found named ${{ needs.get_team_name.outputs.repository }}."
-              exit 1
-          }
-          
-          Write-Host "Found Project ID: $projectID"
-          echo "project_id=$projectID"
-          echo $projectID >> project_id.txt
+              }' \
+              -f org="$ORG_LOGIN" \
+              -F first=100 \
+              --jq ".data.organization.projectsV2.nodes[] | select(.title == \"$PROJECT_TITLE\") | .id"
+          )"
+
+          if [[ -z "${PROJECT_ID}" ]]; then
+            echo "ERROR: No project titled '$PROJECT_TITLE' found in org '$ORG_LOGIN'." >&2
+            exit 1
+          fi
+
+          echo "PROJECT_ID=$PROJECT_ID"
+          echo "$PROJECT_ID" >> project_id.txt
           ls project_id.txt
           cat project_id.txt
-          pwd
+          pwd  
+
        
       - name: Output GraphQL Query Result
         id: output_query
-        shell: pwsh
         env:
-          PAT: ${{ secrets.PAT }}
-          PROJECT_ID: ${{ steps.get_project_id_from_file.outputs.project_id }}
+          PAT: ${{ secrets.CLASSIC_PAT }}
         run: |
-          dir
-          $PROJECT_ID = ( Get-Content -Path project_id.txt )
-          $TOKEN = $env:PAT
-          $query = @"
-          {
-            node(id: "$PROJECT_ID") {
-              ... on ProjectV2 {
-                items(first: 100) {
-                  nodes {
-                    id
-                    fieldValues(first: 100) {
-                      nodes {
-                        ... on ProjectV2ItemFieldSingleSelectValue {
-                          field {
-                            ... on ProjectV2Field {
-                              name
-                            }
-                          }
-                          name
-                        }
-                        ... on ProjectV2ItemFieldTextValue {
-                          field {
-                            ... on ProjectV2Field {
-                              name
-                            }
-                          }
-                          text
-                        }
-                      }
-                    }
-                    content {
-                      ... on Issue {
-                        title
-                        assignees(first: 10) {
-                          nodes {
-                            login
-                          }
-                        }
-                      }
-                      ... on PullRequest {
-                        title
-                        assignees(first: 10) {
-                          nodes {
-                            login
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-          "@
-          $headers = @{
-              Authorization = "Bearer $TOKEN"
-              "Content-Type" = "application/json"
-          }
-          $body = @{ query = $query } | ConvertTo-Json
-          $response = Invoke-WebRequest -Uri "https://api.github.com/graphql" -Method Post -Headers $headers -Body $body
-          Write-Host $response.Content
-          echo "project_data=$($response.Content)" >> $GITHUB_OUTPUT
-          echo "$($response.Content)" >> project_data.json
+          ls
+          PROJECT_ID=$(cat project_id.txt)
+          GQL_QUERY="{ node(id: \"$PROJECT_ID\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 100) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { field { ... on ProjectV2Field { name } } name } ... on ProjectV2ItemFieldTextValue { field { ... on ProjectV2Field { name } } text } } } content { ... on Issue { title assignees(first: 10) { nodes { login } } } ... on PullRequest { title assignees(first: 10) { nodes { login } } } } } } } } }"
+          QUERY=$(jq -nc --arg q "$GQL_QUERY" '{"query": $q}')
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $PAT" \
+            -H "Content-Type: application/json" \
+            -d "$QUERY" \
+            https://api.github.com/graphql)
+          echo "$RESPONSE"
+          echo "project_data=$RESPONSE" >> "$GITHUB_OUTPUT"
+          echo "$RESPONSE" >> project_data.json
           ls project_data.json
           cat project_data.json
 
       - name: Count Issues by Column and Assignee
         id: count_issues
-        shell: pwsh
+        shell: python
         env:
-          project_data: ${{ needs.get_project_id.outputs.project_data }}
           columns: ${{ env.COLUMNS }}
         run: |
-          $data = ( Get-Content -Path project_data.json ) | ConvertFrom-Json
-          Write-Host "Project Data JSON: $($data | ConvertTo-Json -Depth 10)"
-          $issueCounts = @{}
-          $columns = $env:columns -split ", "
-          foreach ($item in $data.data.node.items.nodes) {
-            Write-Host "Processing item: $($item.id)"
-            $columnField = $item.fieldValues.nodes | Where-Object { $columns -contains $_.name }
-            if ($null -ne $columnField) {
-              Write-Host "Found column field: $($columnField | ConvertTo-Json -Depth 10)"
-              $column = $columnField.name
-              Write-Host "Processing column: $column"
-              if ($null -ne $column) {
-                $assignees = $item.content.assignees.nodes | Select-Object -ExpandProperty login
-                if ($assignees.Count -eq 0) {
-                  $assignees = @("UNASSIGNED")
-                }
-                foreach ($assignee in $assignees) {
-                  Write-Host "Processing assignee: $assignee"
-                  if (-not $issueCounts.ContainsKey($column)) {
-                    $issueCounts[$column] = @{}
-                  }
-                  if (-not $issueCounts[$column].ContainsKey($assignee)) {
-                    $issueCounts[$column][$assignee] = 0
-                  }
-                  $issueCounts[$column][$assignee]++
-                }
-              }
-            } else {
-              Write-Host "No column field found for item: $($item.id)"
-            }
-          }
-          foreach ($column in $issueCounts.Keys) {
-            Write-Host "Column: $column"
-            foreach ($assignee in $issueCounts[$column].Keys) {
-              Write-Host "  Assignee: $assignee, Count: $($issueCounts[$column][$assignee])"
-            }
-          }
-          $issueCountsJson = $issueCounts | ConvertTo-Json -Depth 10
-          Write-Host "Issue Counts JSON: $issueCountsJson"  # Debugging: Output the issue counts JSON
-          $issueCountsJson | Out-File issue_counts.json
-          echo "issue_counts=${issueCountsJson}" >> $GITHUB_OUTPUT
-          Write-Host "Issue count process completed"
+          import json
+          import os
+          with open('project_data.json', 'r') as f:
+              data = json.load(f)
+
+          issue_counts = {}
+          columns = [c.strip() for c in os.environ.get('columns', '').split(',')]
+
+          for item in data['data']['node']['items']['nodes']:
+              column_field = next(
+                  (n for n in item['fieldValues']['nodes'] if n.get('name') in columns),
+                  None
+              )
+              if column_field is not None:
+                  column = column_field.get('name')
+                  if column is not None:
+                      assignees = [n['login'] for n in item['content'].get('assignees', {}).get('nodes', [])]
+                      if not assignees:
+                          assignees = ['UNASSIGNED']
+                      for assignee in assignees:
+                          if column not in issue_counts:
+                              issue_counts[column] = {}
+                          if assignee not in issue_counts[column]:
+                              issue_counts[column][assignee] = 0
+                          issue_counts[column][assignee] += 1
+
+          issue_counts_json = json.dumps(issue_counts, indent=2)
+          with open('issue_counts.json', 'w') as f:
+              f.write(issue_counts_json)
+          print("Issue count process completed")      
+      - name: Display issue_counts.json for debugging
+        run: |
+          echo "Contents of issue_counts.json:"
+          cat issue_counts.json
       - name: Upload issue counts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: issue_counts
           path: issue_counts.json
@@ -292,108 +231,179 @@ jobs:
       ascii_table: ${{ steps.generate_table.outputs.ascii_table }}
     steps:
       - name: Download issue counts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: issue_counts
 
       - name: Generate ASCII Table
         id: generate_table
-        shell: pwsh
+        shell: python
         env:
           columns: ${{ env.COLUMNS }}
         run: |
-          $issueCounts = Get-Content issue_counts.json
-          if (-not $issueCounts) {
-            Write-Host "ISSUE_COUNTS is empty or not set"
-            exit 1
-          }
-          $issueCounts = $issueCounts | ConvertFrom-Json
+          import json
+          import os
+          import sys
+
+          with open('issue_counts.json', 'r') as f:
+              content = f.read()
+
+          if not content.strip():
+              print("ISSUE_COUNTS is empty or not set")
+              sys.exit(1)
+
+          issue_counts = json.loads(content)
 
           # Collect all assignees and track unassigned issues
-          $assignees = @{}
-          $unassignedCounts = @{}
-          foreach ($column in $issueCounts.PSObject.Properties.Name) {
-            $unassignedCounts[$column] = 0
-            foreach ($assignee in $issueCounts.$column.PSObject.Properties.Name) {
-              if ($assignee -eq "UNASSIGNED") {
-                $unassignedCounts[$column] += $issueCounts.$column.$assignee
-              } else {
-                if (-not $assignees.ContainsKey($assignee)) {
-                  $assignees[$assignee] = @{}
-                }
-                $assignees[$assignee][$column] = $issueCounts.$column.$assignee
-              }
-            }
-          }
+          assignees = {}
+          unassigned_counts = {}
+          columns = [c.strip() for c in os.environ.get('columns', '').split(',')]
 
-          # Define the column names and fixed widths
-          $columns = $env:columns -split ", "
-          $columnWidths = @(18, 3, 3, 3, 3)  # Fixed widths for each column
-
-          # Left align the text within each cell
-          function LeftAlignText($text, $width) {
-            $text = [string]$text  # Ensure $text is treated as a string
-            $padding = " " * [math]::Max(0, $width - $text.Length)
-            return $text + $padding
-          }
+          for column in issue_counts:
+              unassigned_counts[column] = 0
+              for assignee, count in issue_counts[column].items():
+                  if assignee == 'UNASSIGNED':
+                      unassigned_counts[column] += count
+                  else:
+                      if assignee not in assignees:
+                          assignees[assignee] = {}
+                      assignees[assignee][column] = count
 
           # Generate the table header with left-aligned text
-          $header = "| login            |"
-          foreach ($column in $columns) {
-            $header += " " + $column.Substring(0, 4) + " |"
-          }
-
+          header = "| login            |"
+          for column in columns:
+              header += f" {column[:4]} |"
 
           # Define the separator with exact dash counts for each column
-          $separator = "|------------------|"
-          foreach ($width in $columnWidths[1..$columnWidths.Length]) {
-            $separator += "------|"
-          }
+          separator = "|------------------|"
+          for _ in columns:
+              separator += "------|"
 
           # Construct the full table
-          $table = "$header`n$separator`n"
+          table = f"{header}\n{separator}\n"
 
           # Generate the table rows
-          foreach ($assignee in $assignees.Keys) {
-            $row = "| " + (LeftAlignText $assignee 17) + "|"
-            foreach ($column in $columns) {
-              $count = if ($assignees[$assignee].ContainsKey($column)) { "$($assignees[$assignee][$column])" } else { "0" }
-              $leftAlignedCount = printf "%4s" $count
-              $row += " $leftAlignedCount |"
-
-            }
-            $table += "$row`n"
-          }
+          for assignee in assignees:
+              row = f"| {assignee[:17]:<17}|"
+              for column in columns:
+                  count = str(assignees[assignee].get(column, 0))
+                  row += f" {count:>4} |"
+              table += row + "\n"
 
           # Add the unassigned row
-          $unassignedRow = "| " + (LeftAlignText "UNASSIGNED" 17) + "|"
-          foreach ($column in $columns) {
-            $unassignedCount = $unassignedCounts[$column]
-            $leftAlignedUnassignedCount = printf "%4s" $unassignedCount
-            $unassignedRow += " $leftAlignedUnassignedCount |"
-          }
-          $table += "$unassignedRow`n"
+          unassigned_row = f"| {'UNASSIGNED':<17}|"
+          for column in columns:
+              count = str(unassigned_counts.get(column, 0))
+              unassigned_row += f" {count:>4} |"
+          table += unassigned_row + "\n"
 
-          Write-Host "ASCII Table:`n$table"
-          $table | Out-File ascii_table.txt
-          echo "ascii_table=${table}" >> $GITHUB_OUTPUT
-
+          print(f"ASCII Table:\n{table}")
+          with open('ascii_table.txt', 'w') as f:
+              f.write(table)
+   
       - name: Upload ASCII Table
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ascii_table
           path: ascii_table.txt
           overwrite: true
 
+  compute_team_to_channel:
+    name: Compute Team to Channel Mapping
+    runs-on: ubuntu-latest
 
+    # 1) Expose a JOB output so another job can consume it
+    outputs:
+      TEAM_TO_CHANNEL: ${{ steps.compute_team_to_channel.outputs.TEAM_TO_CHANNEL }}
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # Compute the JSON once, and publish it in TWO ways:
+      #  - to $GITHUB_ENV for later STEPS in this job
+      #  - to $GITHUB_OUTPUT for OTHER JOBS (and also steps.*.outputs)
+      - name: Compute TEAM_TO_CHANNEL JSON
+        id: compute_team_to_channel
+        env:
+          qxx: s26
+          SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests slack_sdk
+
+          python - <<'PY'
+          import os
+          import json
+          from slack_sdk import WebClient
+          from slack_sdk.errors import SlackApiError
+
+          def lookupChannels(prefix, token):
+            """
+            Creates a new public Slack channel with the given name.
+
+            Parameters:
+            - channelName (str): The name of the new public channel to be created.
+            - token (str): The OAuth token for the Slack API.
+            Returns:
+            - dict: A dictionary mapping channel names to their corresponding channel IDs.
+            """
+
+            client = WebClient(token=token)
+            channels = {}
+            try:
+              # Call the conversations.list method using the WebClient
+              result = client.conversations_list(types="public_channel")
+              for channel in result["channels"]:
+                name = channel["name"]
+                if name.startswith(prefix):
+                  channels[name] = channel["id"]
+            except SlackApiError as e:
+              print(f"Error fetching channels: {e.response['error']}")
+            return channels
+
+          def get_team_to_channel_id(prefix, token):
+            channels = lookupChannels(prefix, token)
+            print(f"Channels found with prefix '{prefix}': {channels}")
+            return channels
+          
+          qxx = os.getenv("qxx")
+          token = os.environ.get("SLACK_BOT_USER_OAUTH_ACCESS_TOKEN")
+          if not token:
+              raise EnvironmentError("SLACK_BOT_USER_OAUTH_ACCESS_TOKEN is not set.")
+
+          print(f"Looking up channels with prefix '{qxx}' using provided token of length {len(token)}")    
+          d = get_team_to_channel_id(qxx, token)
+          json.dump(
+            d,
+            open("team_to_channel.json", "w"),
+            separators=(",", ":")
+          )
+          PY
+       
+
+          TEAM_TO_CHANNEL_JSON=$(cat team_to_channel.json)
+          echo "Computed TEAM_TO_CHANNEL JSON: $TEAM_TO_CHANNEL_JSON"
+          cat team_to_channel.json
+
+          {
+            echo "TEAM_TO_CHANNEL<<EOF"
+            echo "$TEAM_TO_CHANNEL_JSON"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+    
   send-to-slack:
     name: Send Report to Slack
     runs-on: ubuntu-latest
-    needs: [generate_ascii_table, get_team_name]
+    needs: [generate_ascii_table, get_team_name, compute_team_to_channel]
+    env:
+      TEAM_TO_CHANNEL: ${{ needs.compute_team_to_channel.outputs.TEAM_TO_CHANNEL }}
     if: needs.check_date.outputs.continue == 'true'
     steps:
       - name: Download ASCII Table
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: ascii_table
 
@@ -404,7 +414,7 @@ jobs:
           echo "ASCII Table Content:"
           printf "%s\n" "$table"  # Use printf for better handling of multiline text
           echo "$table" > ascii_table_content.txt
-          echo "ascii_table_content<<'EOF'" >> $GITHUB_ENV  # Quote EOF to avoid backtick evaluation, see: https://tldp.org/LDP/abs/html/here-docs.html#EX71C
+          echo "ascii_table_content<<EOF" >> $GITHUB_ENV
           cat ascii_table_content.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       #This step is used to debug the environment variables and Slack text
