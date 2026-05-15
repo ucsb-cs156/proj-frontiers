@@ -61,7 +61,7 @@ public class DeleteReposJob implements JobContextConsumer {
         ctx.log("ERROR deleting repo " + repoName + ": " + e.getMessage());
       }
 
-      if (sleepMillis > 0) {
+      if (sleepMillis >= 1) {
         Thread.sleep(sleepMillis);
       }
     }

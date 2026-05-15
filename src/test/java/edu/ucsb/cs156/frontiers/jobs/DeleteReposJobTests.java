@@ -185,9 +185,14 @@ public class DeleteReposJobTests {
   public void accept_sleepsBetweenReposWhenSleepMillisIsPositive() throws Exception {
     Course course = Course.builder().id(10L).orgName("ucsb-cs156").installationId("1234").build();
     when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
-    when(repositoryService.getRepositoryNamesWithPrefix(course, "lab"))
-        .thenReturn(List.of("lab-a"));
-    when(repositoryService.repositoryHasCommits(course, "lab-a")).thenReturn(false);
+    List<String> repos =
+        List.of(
+            "lab-a", "lab-b", "lab-c", "lab-d", "lab-e", "lab-f", "lab-g", "lab-h", "lab-i",
+            "lab-j", "lab-k", "lab-l");
+    when(repositoryService.getRepositoryNamesWithPrefix(course, "lab")).thenReturn(repos);
+    for (String repoName : repos) {
+      when(repositoryService.repositoryHasCommits(course, repoName)).thenReturn(false);
+    }
 
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
@@ -201,11 +206,16 @@ public class DeleteReposJobTests {
             .sleepMillis(1L)
             .build();
 
+    long startTime = System.nanoTime();
     job.accept(ctx);
+    long elapsedMillis = (System.nanoTime() - startTime) / 1_000_000;
 
     assertEquals(
-        "1 repos found with prefix lab\n1 repos deleted\n0 repos retained\n0 errors",
+        "12 repos found with prefix lab\n12 repos deleted\n0 repos retained\n0 errors",
         jobStarted.getLog());
-    verify(repositoryService).deleteRepository(course, "lab-a");
+    assertEquals(true, elapsedMillis >= 10);
+    for (String repoName : repos) {
+      verify(repositoryService).deleteRepository(course, repoName);
+    }
   }
 }
