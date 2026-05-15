@@ -134,6 +134,7 @@ export default function StaffTabComponent({
             >
               <BsInfoCircle
                 onClick={openCsvHelp}
+                // Stryker disable ObjectLiteral,StringLiteral : cosmetic styling for info icon
                 style={{
                   position: "absolute",
                   top: "50%",
@@ -144,6 +145,7 @@ export default function StaffTabComponent({
                   fontSize: "0.9rem",
                   userSelect: "none",
                 }}
+                // Stryker restore ObjectLiteral,StringLiteral
                 data-testid={`${testIdPrefix}-download-csv-info-icon`}
               />
             </OverlayTrigger>
