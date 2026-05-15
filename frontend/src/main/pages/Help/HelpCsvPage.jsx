@@ -310,16 +310,12 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>githubId</td>
                     <td>GitHub user ID</td>
-                    <td>
-                      Staff member&apos;s GitHub account ID, if connected
-                    </td>
+                    <td>Staff member&apos;s GitHub account ID, if connected</td>
                   </tr>
                   <tr>
                     <td>githubLogin</td>
                     <td>GitHub username</td>
-                    <td>
-                      Staff member&apos;s GitHub username, if connected
-                    </td>
+                    <td>Staff member&apos;s GitHub username, if connected</td>
                   </tr>
                   <tr>
                     <td>orgStatus</td>

@@ -143,9 +143,7 @@ describe("HelpCsvPage tests", () => {
     expect(screen.getByText("Team Information")).toBeInTheDocument();
 
     // Check staff download section
-    const staffDownloadAccordion = screen.getByTestId(
-      "staffDownloadAccordion",
-    );
+    const staffDownloadAccordion = screen.getByTestId("staffDownloadAccordion");
     const staffDownloadCsvExample = screen.getByTestId(
       "staffDownloadCsvExample",
     );

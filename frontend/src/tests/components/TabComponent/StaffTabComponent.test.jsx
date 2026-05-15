@@ -460,10 +460,7 @@ describe("StaffTabComponent Tests", () => {
     fireEvent.click(helpIcon);
 
     await waitFor(() => expect(openWindow).toBeCalled());
-    expect(openWindow).toBeCalledWith(
-      "/help/csv#staff-csv-download",
-      "_blank",
-    );
+    expect(openWindow).toBeCalledWith("/help/csv#staff-csv-download", "_blank");
   });
 
   test("Create Staff Member Modals closes on close button", async () => {
