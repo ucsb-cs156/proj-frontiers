@@ -56,6 +56,25 @@ public class DeleteReposJobTests {
   }
 
   @Test
+  public void getCourse_returnsNullWhenCourseRepositoryMissing() {
+    DeleteReposJob job = DeleteReposJob.builder().courseId(7L).prefix("lab").build();
+
+    assertNull(job.getCourse());
+  }
+
+  @Test
+  public void getCourse_returnsNullWhenCourseIdMissing() {
+    DeleteReposJob job =
+        DeleteReposJob.builder()
+            .courseRepository(courseRepository)
+            .repositoryService(repositoryService)
+            .prefix("lab")
+            .build();
+
+    assertNull(job.getCourse());
+  }
+
+  @Test
   public void accept_logsAndReturnsWhenCourseMissing() throws Exception {
     when(courseRepository.findById(8L)).thenReturn(Optional.empty());
 
@@ -80,6 +99,29 @@ public class DeleteReposJobTests {
   @Test
   public void accept_logsAndReturnsWhenCourseHasNoLinkedOrg() throws Exception {
     Course course = Course.builder().id(8L).courseName("CMPSC 156").build();
+    when(courseRepository.findById(8L)).thenReturn(Optional.of(course));
+
+    Job jobStarted = Job.builder().build();
+    JobContext ctx = new JobContext(null, jobStarted);
+
+    DeleteReposJob job =
+        DeleteReposJob.builder()
+            .courseId(8L)
+            .courseRepository(courseRepository)
+            .repositoryService(repositoryService)
+            .prefix("lab")
+            .sleepMillis(0L)
+            .build();
+
+    job.accept(ctx);
+
+    assertEquals("ERROR: Course has no linked GitHub organization", jobStarted.getLog());
+    verifyNoInteractions(repositoryService);
+  }
+
+  @Test
+  public void accept_logsAndReturnsWhenCourseHasNoInstallationId() throws Exception {
+    Course course = Course.builder().id(8L).courseName("CMPSC 156").orgName("ucsb-cs156").build();
     when(courseRepository.findById(8L)).thenReturn(Optional.of(course));
 
     Job jobStarted = Job.builder().build();
@@ -137,5 +179,33 @@ public class DeleteReposJobTests {
     verify(repositoryService).deleteRepository(course, "lab-a");
     verify(repositoryService, never()).deleteRepository(course, "lab-b");
     verify(repositoryService, never()).deleteRepository(course, "lab-c");
+  }
+
+  @Test
+  public void accept_sleepsBetweenReposWhenSleepMillisIsPositive() throws Exception {
+    Course course = Course.builder().id(10L).orgName("ucsb-cs156").installationId("1234").build();
+    when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
+    when(repositoryService.getRepositoryNamesWithPrefix(course, "lab"))
+        .thenReturn(List.of("lab-a"));
+    when(repositoryService.repositoryHasCommits(course, "lab-a")).thenReturn(false);
+
+    Job jobStarted = Job.builder().build();
+    JobContext ctx = new JobContext(null, jobStarted);
+
+    DeleteReposJob job =
+        DeleteReposJob.builder()
+            .courseId(10L)
+            .courseRepository(courseRepository)
+            .repositoryService(repositoryService)
+            .prefix("lab")
+            .sleepMillis(1L)
+            .build();
+
+    job.accept(ctx);
+
+    assertEquals(
+        "1 repos found with prefix lab\n1 repos deleted\n0 repos retained\n0 errors",
+        jobStarted.getLog());
+    verify(repositoryService).deleteRepository(course, "lab-a");
   }
 }

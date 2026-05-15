@@ -35,6 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.HttpClientErrorException;
 
 @RestClientTest(RepositoryService.class)
 @Import(TestConfig.class)
@@ -695,6 +696,54 @@ public class RepositoryServiceTests {
   }
 
   @Test
+  public void getRepositoryNamesWithPrefix_stopsWhenResponseIsNotArray() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100&page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("{\"message\":\"unexpected\"}", MediaType.APPLICATION_JSON));
+
+    List<String> repoNames = repositoryService.getRepositoryNamesWithPrefix(course, "lab01");
+
+    assertEquals(List.of(), repoNames);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void getRepositoryNamesWithPrefix_ignoresReposWithoutNames() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100&page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                """
+                [
+                  {"id":12345},
+                  {"name":"lab01-a"}
+                ]
+                """,
+                MediaType.APPLICATION_JSON));
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100&page=2"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+    List<String> repoNames = repositoryService.getRepositoryNamesWithPrefix(course, "lab01");
+
+    assertEquals(List.of("lab01-a"), repoNames);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
   public void repositoryHasCommits_returnsTrueWhenCommitsEndpointSucceeds() throws Exception {
     mockRestServiceServer
         .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-a/commits?per_page=1"))
@@ -719,6 +768,22 @@ public class RepositoryServiceTests {
         .andRespond(withStatus(HttpStatus.CONFLICT));
 
     assertEquals(false, repositoryService.repositoryHasCommits(course, "lab01-a"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void repositoryHasCommits_rethrowsNonConflictErrors() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-a/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withStatus(HttpStatus.FORBIDDEN));
+
+    assertThrows(
+        HttpClientErrorException.Forbidden.class,
+        () -> repositoryService.repositoryHasCommits(course, "lab01-a"));
     mockRestServiceServer.verify();
   }
 
