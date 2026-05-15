@@ -142,6 +142,17 @@ describe("HelpCsvPage tests", () => {
     // New header exists
     expect(screen.getByText("Team Information")).toBeInTheDocument();
 
+    // Check staff download section
+    const staffDownloadAccordion = screen.getByTestId(
+      "staffDownloadAccordion",
+    );
+    const staffDownloadCsvExample = screen.getByTestId(
+      "staffDownloadCsvExample",
+    );
+    expect(staffDownloadAccordion).toBeInTheDocument();
+    expect(staffDownloadCsvExample).toBeInTheDocument();
+    expect(staffDownloadCsvExample).toHaveClass("csvExample");
+
     // Check accordions separation
     const rosterUploadsAccordion = screen.getByTestId("rosterUploadsAccordion");
     const teamsAccordion = screen.getByTestId("teamsAccordion");
