@@ -31,6 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
 
@@ -657,5 +659,80 @@ public class RepositoryServiceTests {
 
     assertEquals("Cannot determine GitHub team slug for team 'Display Name'", e.getMessage());
     verify(teamRepository, never()).save(any());
+  }
+
+  @Test
+  public void getRepositoryNamesWithPrefix_filtersAndPaginates() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100&page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                """
+                [
+                  {"name":"lab01-a"},
+                  {"name":"notes-repo"},
+                  {"name":"lab01-b"}
+                ]
+                """,
+                MediaType.APPLICATION_JSON));
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100&page=2"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+    List<String> repoNames = repositoryService.getRepositoryNamesWithPrefix(course, "lab01");
+
+    assertEquals(List.of("lab01-a", "lab01-b"), repoNames);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void repositoryHasCommits_returnsTrueWhenCommitsEndpointSucceeds() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-a/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("[{\"sha\":\"abc123\"}]", MediaType.APPLICATION_JSON));
+
+    assertEquals(true, repositoryService.repositoryHasCommits(course, "lab01-a"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void repositoryHasCommits_returnsFalseWhenRepoIsEmpty() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-a/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withStatus(HttpStatus.CONFLICT));
+
+    assertEquals(false, repositoryService.repositoryHasCommits(course, "lab01-a"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void deleteRepository_issuesDeleteRequest() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-a"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andRespond(withNoContent());
+
+    repositoryService.deleteRepository(course, "lab01-a");
+    mockRestServiceServer.verify();
   }
 }

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -15,6 +16,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.DeleteReposJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
@@ -315,6 +317,102 @@ public class RepositoryControllerTests extends ControllerTestCase {
                     .param("courseId", "2")
                     .param("repoPrefix", "repo1")
                     .param("permissions", "WRITE"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Course with id 2 not found", json.get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  public void delete_repos_job_not_the_creator() throws Exception {
+    Course course = Course.builder().instructorEmail("test@example.com").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    mockMvc
+        .perform(delete("/api/repos").with(csrf()).param("courseId", "2").param("prefix", "lab"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_repos_job_not_registered_org() throws Exception {
+    Course course =
+        Course.builder()
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/repos").with(csrf()).param("courseId", "2").param("prefix", "lab"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("NoLinkedOrganizationException", json.get("type"));
+    assertEquals(
+        "No linked GitHub Organization to course. Please link a GitHub Organization first.",
+        json.get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_repos_job_just_no_install_id() throws Exception {
+    Course course =
+        Course.builder()
+            .courseName("course")
+            .orgName("ucsb-cs156")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/repos").with(csrf()).param("courseId", "2").param("prefix", "lab"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("NoLinkedOrganizationException", json.get("type"));
+    assertEquals(
+        "No linked GitHub Organization to course. Please link a GitHub Organization first.",
+        json.get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_repos_job_actually_fires() throws Exception {
+    Course course =
+        Course.builder()
+            .id(2L)
+            .orgName("ucsb-cs156")
+            .installationId("1234")
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    Job job = Job.builder().status("processing").build();
+    doReturn(job).when(service).runAsJob(any(DeleteReposJob.class));
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/repos").with(csrf()).param("courseId", "2").param("prefix", "lab"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String expectedJson = objectMapper.writeValueAsString(job);
+    String actualJson = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, actualJson);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_repos_job_notFound() throws Exception {
+    doReturn(Optional.empty()).when(courseRepository).findById(eq(2L));
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/repos").with(csrf()).param("courseId", "2").param("prefix", "lab"))
             .andExpect(status().isNotFound())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
