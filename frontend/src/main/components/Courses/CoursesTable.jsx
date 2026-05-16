@@ -181,5 +181,7 @@ export default function CoursesTable({
       },
     },
   ];
-  return <OurTable data={courses} columns={columnsWithStatus} testid={testId} />;
+  return (
+    <OurTable data={courses} columns={columnsWithStatus} testid={testId} />
+  );
 }

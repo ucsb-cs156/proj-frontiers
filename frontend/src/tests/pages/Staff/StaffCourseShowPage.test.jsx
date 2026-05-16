@@ -44,7 +44,10 @@ describe("StaffCourseShowPage tests", () => {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
-            <Route path="/staff/courses/:id" element={<StaffCourseShowPage />} />
+            <Route
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
+            />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
