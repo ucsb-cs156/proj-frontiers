@@ -56,6 +56,9 @@ describe("CoursesTable tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-courseName`),
     ).toHaveTextContent("CMPSC 156");
     expect(
+      screen.queryByTestId(`${testId}-cell-row-0-col-courseName-link`),
+    ).not.toBeInTheDocument();
+    expect(
       screen.getByTestId(`${testId}-cell-row-0-col-term`),
     ).toHaveTextContent("Spring 2025");
     expect(
@@ -129,6 +132,10 @@ describe("CoursesTable tests", () => {
     await waitFor(() => {
       expect(screen.getByText("View course details")).toBeInTheDocument();
     });
+    expect(screen.getByRole("tooltip")).toHaveAttribute(
+      "id",
+      "tooltip-coursename-0",
+    );
   });
 
   test("the loading render", async () => {
