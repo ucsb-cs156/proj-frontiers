@@ -94,10 +94,47 @@ describe("StaffCourseShowPage tests", () => {
     expect(
       screen.queryByRole("tab", { name: "Settings" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Students" })).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "students",
+    );
+    expect(screen.getByRole("tab", { name: "Staff" })).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "staff",
+    );
+    expect(screen.getByRole("tab", { name: "Teams" })).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "teams",
+    );
+    expect(screen.getByRole("tab", { name: "Assignments" })).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "default",
+    );
+    expect(screen.getByRole("tab", { name: "Assignments" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "Jobs" })).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "jobs",
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(mockedNavigate).not.toHaveBeenCalled();
+    vi.useRealTimers();
 
     expect(
       screen.getByTestId("StaffCourseShowPage-github-org-image"),
     ).toHaveAttribute("src", "https://github.com/ucsb-cs156-s25.png?size=64");
+    expect(
+      screen.getByTestId("StaffCourseShowPage-github-org-image"),
+    ).toHaveStyle("width: 48px; height: 48px;");
     expect(
       screen.getByTestId("StaffCourseShowPage-github-org-link"),
     ).toHaveAttribute("href", "https://github.com/ucsb-cs156-s25");
@@ -111,7 +148,12 @@ describe("StaffCourseShowPage tests", () => {
     fireEvent.mouseOver(
       screen.getByTestId("StaffCourseShowPage-github-settings-icon"),
     );
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveAttribute(
+      "id",
+      "StaffCourseShowPage-tooltip-github-settings",
+    );
+    expect(tooltip).toHaveTextContent(
       "Manage settings for association between your GitHub organization and this web application.",
     );
   });
@@ -187,6 +229,7 @@ describe("StaffCourseShowPage tests", () => {
       "Course not found. You will be returned to the course list in 3 seconds.",
     );
     expect(screen.getByText("Course Not Found")).toBeInTheDocument();
+    expect(screen.getByText("Close")).toHaveClass("btn-primary");
 
     fireEvent.click(screen.getByText("Close"));
     await waitFor(() =>

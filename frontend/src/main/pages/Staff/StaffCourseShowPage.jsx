@@ -26,10 +26,12 @@ export default function StaffCourseShowPage() {
     status: _statusCourse,
     failureCount: courseBackendFailureCount,
   } = useBackend(
+    // Stryker disable next-line ArrayDeclaration,StringLiteral : query key only affects cache identity, not rendered behavior
     [`/api/courses/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     { method: "GET", url: `/api/courses/${courseId}` },
     null,
+    // Stryker disable next-line BooleanLiteral : retry behavior is covered by useBackend tests
     true,
   );
 
