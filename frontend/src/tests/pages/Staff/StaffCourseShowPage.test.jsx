@@ -1,4 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import StaffCourseShowPage from "main/pages/Staff/StaffCourseShowPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -88,6 +94,52 @@ describe("StaffCourseShowPage tests", () => {
     expect(
       screen.queryByRole("tab", { name: "Settings" }),
     ).not.toBeInTheDocument();
+
+    expect(
+      screen.getByTestId("StaffCourseShowPage-github-org-image"),
+    ).toHaveAttribute("src", "https://github.com/ucsb-cs156-s25.png?size=64");
+    expect(
+      screen.getByTestId("StaffCourseShowPage-github-org-link"),
+    ).toHaveAttribute("href", "https://github.com/ucsb-cs156-s25");
+    expect(
+      screen.getByTestId("StaffCourseShowPage-github-settings-link"),
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
+    );
+
+    fireEvent.mouseOver(
+      screen.getByTestId("StaffCourseShowPage-github-settings-icon"),
+    );
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Manage settings for association between your GitHub organization and this web application.",
+    );
+  });
+
+  test("renders course details when course has no GitHub org", async () => {
+    setupStaffUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[2]);
+    axiosMock.onGet("/api/coursestaff/course?courseId=7").reply(200, []);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("StaffCourseShowPage-title")).toHaveTextContent(
+        "CMPSC 156",
+      );
+    });
+
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-github-org-image"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-github-org-link"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-github-settings-link"),
+    ).not.toBeInTheDocument();
   });
 
   test("does not allow staff users to add, edit, or delete staff", async () => {
@@ -114,5 +166,38 @@ describe("StaffCourseShowPage tests", () => {
         "StaffCourseShowPage-CourseStaffTable-cell-row-0-col-Delete-button",
       ),
     ).not.toBeInTheDocument();
+  });
+
+  test("returns to home page when course lookup fails", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
+    setupStaffUser();
+    axiosMock.onGet("/api/courses/7").timeout();
+    axiosMock.onGet("/api/coursestaff/course?courseId=7").reply(200, []);
+
+    renderPage();
+
+    expect(screen.getByTestId("StaffCourseShowPage-loading")).toHaveTextContent(
+      "Course: Loading...",
+    );
+
+    await screen.findByText(
+      "Course not found. You will be returned to the course list in 3 seconds.",
+    );
+    expect(screen.getByText("Course Not Found")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Close"));
+    await waitFor(() =>
+      expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument(),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(mockedNavigate).toHaveBeenCalledWith("/", { replace: true });
+    vi.useRealTimers();
   });
 });

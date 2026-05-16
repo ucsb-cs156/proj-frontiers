@@ -109,6 +109,28 @@ describe("CoursesTable tests", () => {
     expect(firstCourseLink).toHaveTextContent("CMPSC 156");
   });
 
+  test("shows course details tooltip for linked course names", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+          courseShowRoutePrefix="/staff/courses"
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(
+      screen.getByTestId("CoursesTable-cell-row-0-col-courseName-link"),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("View course details")).toBeInTheDocument();
+    });
+  });
+
   test("the loading render", async () => {
     const loadingMocks = [
       {
