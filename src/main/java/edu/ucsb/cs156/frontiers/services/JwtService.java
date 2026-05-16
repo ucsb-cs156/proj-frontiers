@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.interceptors.RateLimitInterceptor;
 import io.jsonwebtoken.Jwts;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -44,8 +45,9 @@ public class JwtService {
   public JwtService(
       RestTemplateBuilder restTemplateBuilder,
       ObjectMapper objectMapper,
-      DateTimeProvider dateTimeProvider) {
-    this.restTemplate = restTemplateBuilder.build();
+      DateTimeProvider dateTimeProvider,
+      RateLimitInterceptor interceptor) {
+    this.restTemplate = restTemplateBuilder.additionalInterceptors(interceptor).build();
     this.objectMapper = objectMapper;
     this.dateTimeProvider = dateTimeProvider;
   }
