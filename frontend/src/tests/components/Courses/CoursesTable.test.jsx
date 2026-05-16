@@ -89,6 +89,26 @@ describe("CoursesTable tests", () => {
     expect(joinCallback).not.toHaveBeenCalled();
   });
 
+  test("renders course names as links when route prefix is provided", () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+          courseShowRoutePrefix="/staff/courses"
+        />
+      </BrowserRouter>,
+    );
+
+    const firstCourseLink = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-courseName-link",
+    );
+    expect(firstCourseLink).toHaveAttribute("href", "/staff/courses/1");
+    expect(firstCourseLink).toHaveTextContent("CMPSC 156");
+  });
+
   test("the loading render", async () => {
     const loadingMocks = [
       {
