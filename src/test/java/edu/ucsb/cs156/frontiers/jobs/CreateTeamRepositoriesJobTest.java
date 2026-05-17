@@ -161,6 +161,171 @@ public class CreateTeamRepositoriesJobTest {
   }
 
   @Test
+  public void testCreateTeamRepository_withTeamRegex() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    RosterStudent student1 =
+        RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
+    Team team1 = Team.builder().name("proj-courses-s26-01").build();
+    team1.setTeamMembers(List.of(member1));
+
+    RosterStudent student2 =
+        RosterStudent.builder().githubLogin("student2").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member2 = TeamMember.builder().rosterStudent(student2).build();
+    Team team2 = Team.builder().name("proj-courses-s26-02").build();
+    team2.setTeamMembers(List.of(member2));
+
+    RosterStudent student3 =
+        RosterStudent.builder().githubLogin("student3").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
+    Team team3 = Team.builder().name("proj-frontiers-s26-11").build();
+    team3.setTeamMembers(List.of(member3));
+
+    course.setTeams(List.of(team1, team2, team3));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .teamRegex("proj-courses-s26-.*")
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+        Creating team repositories...
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team2),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+    verify(service, never())
+        .createTeamRepository(
+            eq(course),
+            eq(team3),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+  }
+
+  @Test
+  public void testCreateTeamRepository_withBlankTeamRegex() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    RosterStudent student1 =
+        RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
+    Team team1 = Team.builder().name("proj-courses-s26-01").build();
+    team1.setTeamMembers(List.of(member1));
+
+    RosterStudent student2 =
+        RosterStudent.builder().githubLogin("student2").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member2 = TeamMember.builder().rosterStudent(student2).build();
+    Team team2 = Team.builder().name("proj-frontiers-s26-11").build();
+    team2.setTeamMembers(List.of(member2));
+
+    course.setTeams(List.of(team1, team2));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .teamRegex("  ")
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+        Creating team repositories...
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team2),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+  }
+
+  @Test
+  public void testCreateTeamRepository_withTeamRegex_noMatchingTeams() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    RosterStudent student1 =
+        RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
+    Team team1 = Team.builder().name("proj-frontiers-s26-11").build();
+    team1.setTeamMembers(List.of(member1));
+
+    course.setTeams(List.of(team1));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .teamRegex("proj-courses-.*")
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+        Creating team repositories...
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, never())
+        .createTeamRepository(
+            eq(course),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+  }
+
+  @Test
   public void testCreateTeamRepository_logsAndReturnsWhenGetOrgIdFails() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
     Team team = Team.builder().name("test-team1").build();
