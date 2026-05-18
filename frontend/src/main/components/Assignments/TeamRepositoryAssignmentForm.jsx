@@ -56,7 +56,6 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
       </Form.Group>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="teamRegex">
-          Team Regex
           <OverlayTrigger
             placement="right"
             overlay={
@@ -73,6 +72,7 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
               <FaQuestionCircle />
             </span>
           </OverlayTrigger>
+          Team Regex
         </Form.Label>
         <Form.Control
           id="teamRegex"
