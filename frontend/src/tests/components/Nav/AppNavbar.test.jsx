@@ -118,7 +118,7 @@ describe("AppNavbar tests", () => {
       "Running on http://localhost:3000/ with no backend.",
     );
     expect(screen.getByTestId("AppNavbarLocalhost-message2").textContent).toBe(
-      "You probably want http://localhost:8081 instead.",
+      "You probably want http://localhost:8080 instead.",
     );
   });
 
@@ -144,12 +144,12 @@ describe("AppNavbar tests", () => {
     await screen.findByTestId("AppNavbarLocalhost");
   });
 
-  test("does NOT render the AppNavbarLocalhost when on localhost:8081", async () => {
+  test("does NOT render the AppNavbarLocalhost when on localhost:8080", async () => {
     const currentUser = currentUserFixtures.userOnly;
     const systemInfo = systemInfoFixtures.showingBoth;
 
     delete window.location;
-    window.location = new URL("http://localhost:8081");
+    window.location = new URL("http://localhost:8080");
 
     render(
       <QueryClientProvider client={queryClient}>

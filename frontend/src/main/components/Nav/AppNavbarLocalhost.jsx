@@ -10,7 +10,7 @@ export default function AppNavbarLocalhost({ url }) {
         data-testid="AppNavbarLocalhost"
       >
         <Container>
-          <Navbar.Brand href="http://localhost:8081">Warning</Navbar.Brand>
+          <Navbar.Brand href="http://localhost:8080">Warning</Navbar.Brand>
 
           <Navbar.Toggle />
 
@@ -22,7 +22,7 @@ export default function AppNavbarLocalhost({ url }) {
                 </p>
                 <p data-testid="AppNavbarLocalhost-message2">
                   You probably want{" "}
-                  <a href="http://localhost:8081">http://localhost:8081</a>{" "}
+                  <a href="http://localhost:8080">http://localhost:8080</a>{" "}
                   instead.
                 </p>
               </Nav.Item>
