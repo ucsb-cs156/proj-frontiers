@@ -275,7 +275,7 @@ public class GithubGraphQLService {
         .build()
         .document(query)
         .variable("login", course.getInstallationId())
-        .retrieveSync("repository.defaultRepositoryPermission")
+        .retrieveSync("organization.defaultRepositoryPermission")
         .toEntity(String.class);
   }
 }

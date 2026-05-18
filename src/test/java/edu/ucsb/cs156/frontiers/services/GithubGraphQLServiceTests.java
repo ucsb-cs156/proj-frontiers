@@ -95,6 +95,28 @@ public class GithubGraphQLServiceTests {
     assertEquals(GithubGraphQLFixtures.COMMITS_RESPONSE.trim(), commitsJson.trim());
   }
 
+  @Test
+  public void testGetDefaultBasePermission() throws Exception {
+    when(jwtService.getInstallationToken(eq(course))).thenReturn("mocked-token");
+
+    String graphqlResponse =
+        """
+            {"data": {"organization": {"name": "org", "defaultRepositoryPermission": "READ"}}}
+            """;
+
+    mockServer
+        .expect(requestTo("https://api.github.com/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer mocked-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    String result = githubGraphQLService.getDefaultBasePermission(course);
+
+    mockServer.verify();
+    assertEquals("READ", result);
+  }
+
   // language=JSON
   final String responsePageOne =
       """
