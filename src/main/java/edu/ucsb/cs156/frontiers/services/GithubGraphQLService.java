@@ -242,4 +242,40 @@ public class GithubGraphQLService {
     } while (hasNextPage);
     downloadedCommitRepository.saveAll(downloadedCommits);
   }
+
+  /**
+   * Retrieves the name of the default base permission for a given GitHub organization.
+   *
+   * @param course The course entity.
+   * @return A Mono emitting the default base permission, or an empty Mono if not found.
+   */
+  public String getDefaultBasePermission(Course course)
+      throws JsonProcessingException,
+          NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          NoLinkedOrganizationException {
+    log.info("getDefaultBasePermission called with course.getId(): {}", course.getId());
+    String githubToken = jwtService.getInstallationToken(course);
+
+    // language=GraphQL
+    String query =
+        """
+        query GetOrgDefaultPermission($login: String!) {
+          organization(login: $login) {
+            name
+            defaultRepositoryPermission
+          }
+        }
+        """;
+
+    return graphQlClient
+        .mutate()
+        .header("Authorization", "Bearer " + githubToken)
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .build()
+        .document(query)
+        .variable("login", course.getInstallationId())
+        .retrieveSync("repository.defaultRepositoryPermission")
+        .toEntity(String.class);
+  }
 }
