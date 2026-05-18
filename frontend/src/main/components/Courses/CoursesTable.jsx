@@ -1,25 +1,6 @@
 import OurTable from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
-
-const columns = [
-  {
-    header: "id",
-    accessorKey: "id", // accessor is the "key" in the data
-  },
-  {
-    header: "Course Name",
-    accessorKey: "courseName",
-  },
-  {
-    header: "Term",
-    accessorKey: "term",
-  },
-  {
-    header: "School",
-    id: "school",
-    accessorKey: "school.displayName",
-  },
-];
+import { Link } from "react-router";
 
 export default function CoursesTable({
   courses,
@@ -27,6 +8,36 @@ export default function CoursesTable({
   joinCallback,
   isLoading,
 }) {
+  const columns = [
+    {
+      header: "id",
+      accessorKey: "id", // accessor is the "key" in the data
+    },
+    {
+      header: "Course Name",
+      id: "courseName",
+      cell: ({ cell }) => {
+        return (
+          <Link
+            to={`/student/courses/${cell.row.original.id}`}
+            data-testid={`${testId}-cell-row-${cell.row.index}-col-courseName-link`}
+          >
+            {cell.row.original.courseName}
+          </Link>
+        );
+      },
+    },
+    {
+      header: "Term",
+      accessorKey: "term",
+    },
+    {
+      header: "School",
+      id: "school",
+      accessorKey: "school.displayName",
+    },
+  ];
+
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/orgs/${organizationName}/invitation`;
