@@ -56,7 +56,7 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
       </Form.Group>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="teamRegex">
-          Team Regex{" "}
+          Team Regex
           <OverlayTrigger
             placement="right"
             overlay={
@@ -68,7 +68,7 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
               </Tooltip>
             }
           >
-            <span style={{ cursor: "pointer" }}>
+            <span>
               <FaQuestionCircle />
             </span>
           </OverlayTrigger>
@@ -79,9 +79,6 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
           data-testid="TeamRepositoryAssignmentForm-teamRegex"
           {...register("teamRegex")}
         />
-        <Form.Text className="text-muted">
-          Optional. Only create repos for teams whose name matches this regex.
-        </Form.Text>
       </Form.Group>
       <Form.Group>
         <Button type="submit" data-testid="TeamRepositoryAssignmentForm-submit">
