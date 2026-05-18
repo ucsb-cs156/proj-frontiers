@@ -136,3 +136,35 @@ test("Sends non-default team creation option to backend", async () => {
     permissions: "ADMIN",
   });
 });
+
+test("Sends teamRegex to backend when provided", async () => {
+  axiosMock.onPost("/api/repos/createTeamRepos").reply(200);
+  const client = new QueryClient();
+  render(
+    <QueryClientProvider client={client}>
+      <AssignmentTabComponent courseId={7} />
+    </QueryClientProvider>,
+  );
+
+  await screen.findByTestId("TeamRepositoryAssignmentForm-submit");
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-repoPrefix"),
+    {
+      target: { value: "proj-courses" },
+    },
+  );
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-teamRegex"),
+    { target: { value: "proj-courses-s26-0[1-4]" } },
+  );
+  fireEvent.click(screen.getByTestId("TeamRepositoryAssignmentForm-submit"));
+  await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  expect(axiosMock.history.post.length).toEqual(1);
+  expect(axiosMock.history.post[0].params).toEqual({
+    courseId: 7,
+    repoPrefix: "proj-courses",
+    isPrivate: false,
+    permissions: "MAINTAIN",
+    teamRegex: "proj-courses-s26-0[1-4]",
+  });
+});
