@@ -69,6 +69,21 @@ public class GithubGraphQLController extends ApiController {
     return result;
   }
 
+  @Operation(summary = "Get default base permission for course organization")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("defaultbasepermission")
+  public String getDefaultBasePermission(@Parameter Long courseId) throws Exception {
+    log.info("getDefaultBasePermission called with courseId: {}", courseId);
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    log.info("Found course: {}", course);
+    String result = this.githubGraphQLService.getDefaultBasePermission(course);
+    log.info("Result from getDefaultBasePermission: {}", result);
+    return result;
+  }
+
   /**
    * Return default branch name for a given repository.
    *
