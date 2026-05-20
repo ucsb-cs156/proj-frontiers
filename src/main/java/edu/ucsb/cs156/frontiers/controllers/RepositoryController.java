@@ -108,4 +108,22 @@ public class RepositoryController extends ApiController {
       return jobService.runAsJob(job);
     }
   }
+
+  @Operation(summary = "Delete repo job with prefix")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @DeleteMapping("/delete")
+   public Object deleteRepoJob(
+  @Parameter(name = "courseID") @RequestParam Long courseID,
+  @Paramer(name = "prefix") @RequestParam String prefix) 
+  {
+    
+    
+    if (!jobsRepository.existsById(id)) {
+      return Map.of("message", String.format("Job with id %d not found", id));
+    }
+    jobsRepository.deleteById(id);
+    return Map.of("message", String.format("Job with id %d deleted", id));
+  }
+
+
 }
