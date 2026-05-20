@@ -46,9 +46,9 @@ describe("StudentCourseShowPage tests", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("StudentCourseShowPage-title")).toHaveTextContent(
-        "CMPSC 156",
-      );
+      expect(
+        screen.getByTestId("StudentCourseShowPage-title"),
+      ).toHaveTextContent("CMPSC 156");
     });
 
     expect(screen.getByText("Spring 2025")).toBeInTheDocument();
