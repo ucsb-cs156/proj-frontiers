@@ -70,6 +70,31 @@ public class GithubGraphQLController extends ApiController {
   }
 
   /**
+   * Return the default base repository permission for the course's linked GitHub organization.
+   *
+   * @param courseId the id of the course whose installation is being used for credentials
+   * @return the organization's default repository permission (e.g. NONE, READ)
+   */
+  @Operation(summary = "Get default base repository permission for course organization")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("defaultbasepermission")
+  public String getDefaultBasePermission(@Parameter Long courseId) throws Exception {
+    log.info("getDefaultBasePermission called with courseId: {}", courseId);
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    log.info("Found course: {}", course);
+
+    String result = this.githubGraphQLService.getDefaultRepositoryPermission(course);
+
+    log.info("Result from getDefaultRepositoryPermission: {}", result);
+
+    return result;
+  }
+
+  /**
    * Return default branch name for a given repository.
    *
    * @param courseId the id of the course whose installation is being used for credentails
