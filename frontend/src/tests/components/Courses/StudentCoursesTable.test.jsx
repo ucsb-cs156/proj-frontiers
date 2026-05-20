@@ -64,6 +64,9 @@ describe("StudentCoursesTable tests", () => {
       screen.getByTestId(`CoursesTable-cell-row-0-col-courseName`),
     ).toHaveTextContent("CMPSC 156");
     expect(
+      screen.getByTestId(`CoursesTable-cell-row-0-col-courseName-link`),
+    ).toHaveAttribute("href", "/student/courses/1");
+    expect(
       screen.getByTestId(`CoursesTable-cell-row-0-col-term`),
     ).toHaveTextContent("Spring 2025");
     expect(
