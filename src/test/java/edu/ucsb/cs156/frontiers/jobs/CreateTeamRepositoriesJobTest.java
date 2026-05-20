@@ -188,4 +188,54 @@ public class CreateTeamRepositoriesJobTest {
     verify(githubTeamService).getOrgId("ucsb-cs156", course);
     verifyNoInteractions(service);
   }
+
+  @Test
+  public void testCreateTeamRepository_onlyCreatesReposForTeamsMatchingRegex() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+    Team team3 = Team.builder().name("other-team").build();
+    course.setTeams(List.of(team1, team2, team3));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .teamRegex("test-team[12]")
+                .build());
+
+    repoJob.accept(ctx);
+
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team2),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+    verify(service, never())
+        .createTeamRepository(
+            eq(course),
+            eq(team3),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+  }
 }
