@@ -111,31 +111,4 @@ public class GithubGraphQLController extends ApiController {
 
     return result;
   }
-
-  /**
-   * Return default base permission for a given repository.
-   *
-   * @param courseId the id of the course whose installation is being used for credentails
-   */
-  @Operation(summary = "Get default base permission")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @GetMapping("defaultBasePermission")
-  public String getDefaultBasePermission(@Parameter Long courseId) throws Exception {
-    log.info("getDefaultBasePermission called with courseId: {}", courseId);
-
-    Course course =
-        courseRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
-
-    log.info("Found course: {}", course);
-
-    log.info("Current user is authorized to access course: {}", course.getId());
-
-    String result = this.githubGraphQLService.getDefaultBasePermission(course);
-
-    log.info("Result from getDefaultBasePermission: {}", result);
-
-    return result;
-  }
 }
