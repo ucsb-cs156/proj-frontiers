@@ -24,40 +24,13 @@ export default function StudentCourseShowPage() {
         <div data-testid={`${testId}-loading`}>Course: Loading...</div>
       ) : (
         <div className="border rounded-3 p-4 mb-4">
-          <div className="d-flex align-items-center gap-3">
-            {course.orgName && (
-              <img
-                src={`https://github.com/${course.orgName}.png?size=64`}
-                alt={course.orgName}
-                data-testid={`${testId}-github-org-image`}
-                className="rounded-circle border"
-                style={{ width: 48, height: 48 }}
-              />
-            )}
-            <div>
-              <div className="d-flex align-items-center gap-2">
-                <h1
-                  data-testid={`${testId}-title`}
-                  className="h3 mb-0 fw-semibold"
-                >
-                  {course.courseName}
-                </h1>
-                <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill">
-                  {course.term}
-                </span>
-              </div>
-              {course.orgName && (
-                <a
-                  href={`https://github.com/${course.orgName}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary text-decoration-none fs-5"
-                  data-testid={`${testId}-github-org-link`}
-                >
-                  {course.orgName}
-                </a>
-              )}
-            </div>
+          <div className="d-flex align-items-center gap-2">
+            <h1 data-testid={`${testId}-title`} className="h3 mb-0 fw-semibold">
+              {course.courseName}
+            </h1>
+            <span className="badge bg-primary-subtle text-primary-emphasis rounded-pill">
+              {course.term}
+            </span>
           </div>
         </div>
       )}
