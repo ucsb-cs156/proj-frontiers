@@ -92,36 +92,6 @@ public class GithubGraphQLService {
         .toEntity(String.class);
   }
 
-  public String getDefaultBasePermission(Course course)
-      throws JsonProcessingException,
-          NoSuchAlgorithmException,
-          InvalidKeySpecException,
-          NoLinkedOrganizationException {
-    log.info("getDefaultBasePermission called with course.getId(): {}", course.getId());
-    String githubToken = jwtService.getInstallationToken(course);
-
-    // language=GraphQL
-    String query =
-        """
-        query GetOrgDefaultPermission($login: String!) {
-          organization(login: $login) {
-            name
-            defaultRepositoryPermission
-          }
-        }
-        """;
-
-    return graphQlClient
-        .mutate()
-        .header("Authorization", "Bearer " + githubToken)
-        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .build()
-        .document(query)
-        .variable("login", course.getOrgName())
-        .retrieveSync("organization.defaultRepositoryPermission")
-        .toEntity(String.class);
-  }
-
   public String getCommits(
       Course course, String owner, String repo, String branch, int first, String after)
       throws JsonProcessingException,

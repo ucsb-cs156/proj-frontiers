@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,14 +26,17 @@ public class GithubGraphQLController extends ApiController {
   private final GithubGraphQLService githubGraphQLService;
   private final CourseRepository courseRepository;
   private final JobService jobService;
+  private final OrganizationLinkerService organizationLinkerService;
 
   public GithubGraphQLController(
       @Autowired GithubGraphQLService gitHubGraphQLService,
       @Autowired CourseRepository courseRepository,
+      @Autowired OrganizationLinkerService organizationLinkerService,
       JobService jobService) {
     this.githubGraphQLService = gitHubGraphQLService;
     this.courseRepository = courseRepository;
     this.jobService = jobService;
+    this.organizationLinkerService = organizationLinkerService;
   }
 
   /**
@@ -79,7 +83,7 @@ public class GithubGraphQLController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     log.info("Found course: {}", course);
-    String result = this.githubGraphQLService.getDefaultBasePermission(course);
+    String result = this.organizationLinkerService.getDefaultBasePermission(course);
     log.info("Result from getDefaultBasePermission: {}", result);
     return result;
   }
