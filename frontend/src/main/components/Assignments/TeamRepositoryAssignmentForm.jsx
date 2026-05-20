@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { BsInfoCircle } from "react-icons/bs";
 
 export default function TeamRepositoryAssignmentForm({ submitAction }) {
   const {
@@ -53,6 +54,31 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
           <option value="ADMIN">Admin</option>
         </Form.Control>
       </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label htmlFor="teamRegex">
+          Team Regex{" "}
+          <OverlayTrigger
+            placement="right"
+            overlay={
+              <Tooltip id="teamRegex-tooltip">
+                Field Optional. Only teams whose names match this regex will
+                have repositories created. Leave blank to create repos for all
+                teams.
+              </Tooltip>
+            }
+          >
+            <BsInfoCircle />
+          </OverlayTrigger>
+        </Form.Label>
+        <Form.Control
+          id="teamRegex"
+          type="text"
+          data-testid="TeamRepositoryAssignmentForm-teamRegex"
+          {...register("teamRegex")}
+        />
+      </Form.Group>
+
       <Form.Group>
         <Button type="submit" data-testid="TeamRepositoryAssignmentForm-submit">
           Create
