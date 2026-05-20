@@ -1,42 +1,55 @@
 import OurTable from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
 import { Link } from "react-router";
+const columns = (courseShowRoutePrefix, testId) => [
+  {
+    header: "id",
+    accessorKey: "id", // accessor is the "key" in the data
+  },
+  {
+    header: "Course Name",
+    id: "courseName",
+    cell: ({ cell }) => {
+      if (!courseShowRoutePrefix) {
+        return cell.row.original.courseName;
+      }
+      return (
+        <OverlayTrigger
+          placement="right"
+          overlay={
+            <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
+              View course details
+            </Tooltip>
+          }
+        >
+          <Link
+            to={`${courseShowRoutePrefix}/${cell.row.original.id}`}
+            data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+          >
+            {cell.row.original.courseName}
+          </Link>
+        </OverlayTrigger>
+      );
+    },
+  },
+  {
+    header: "Term",
+    accessorKey: "term",
+  },
+  {
+    header: "School",
+    id: "school",
+    accessorKey: "school.displayName",
+  },
+];
 
 export default function CoursesTable({
   courses,
   testId,
   joinCallback,
   isLoading,
+  courseShowRoutePrefix,
 }) {
-  const columns = [
-    {
-      header: "id",
-      accessorKey: "id", // accessor is the "key" in the data
-    },
-    {
-      header: "Course Name",
-      id: "courseName",
-      cell: ({ cell }) => {
-        return (
-          <Link
-            to={`/student/courses/${cell.row.original.id}`}
-            data-testid={`${testId}-cell-row-${cell.row.index}-col-courseName-link`}
-          >
-            {cell.row.original.courseName}
-          </Link>
-        );
-      },
-    },
-    {
-      header: "Term",
-      accessorKey: "term",
-    },
-    {
-      header: "School",
-      id: "school",
-      accessorKey: "school.displayName",
-    },
-  ];
 
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
@@ -81,7 +94,7 @@ export default function CoursesTable({
     };
 
   const columnsWithStatus = [
-    ...columns,
+    ...columns(courseShowRoutePrefix, testId),
     {
       header: "Status",
       accessorKey: "studentStatus",
