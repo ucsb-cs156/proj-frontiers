@@ -50,7 +50,6 @@ export default function CoursesTable({
   isLoading,
   courseShowRoutePrefix,
 }) {
-
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/orgs/${organizationName}/invitation`;
