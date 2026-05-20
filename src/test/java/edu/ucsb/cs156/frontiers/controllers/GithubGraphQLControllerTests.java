@@ -145,6 +145,55 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"ADMIN"})
+  public void test_getDefaultBasePermission_happyPath_Admin() throws Exception {
+
+    User user = currentUserService.getCurrentUser().getUser();
+
+    // arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .orgName("ucsb-cs156-s26")
+            .instructorEmail(user.getEmail())
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(githubGraphQLService.getDefaultBasePermission(eq(course), eq("ucsb-cs156-s26")))
+        .thenReturn("READ");
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/github/graphql/defaultbasepermission").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(courseRepository, times(1)).findById(eq(1L));
+
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals("READ", responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_getDefaultBasePermission_courseNotFound() throws Exception {
+
+    // arrange
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    // act & assert
+    mockMvc
+        .perform(get("/api/github/graphql/defaultbasepermission").param("courseId", "1"))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
   public void test_getCommits_happyPath_Admin() throws Exception {
 
     User user = currentUserService.getCurrentUser().getUser();
