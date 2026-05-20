@@ -72,7 +72,7 @@ public class GithubGraphQLController extends ApiController {
   @Operation(summary = "Get default base permission for course organization")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("defaultbasepermission")
-  public String getDefaultBasePermission(@Parameter Long courseId) throws Exception {
+  public String getDefaultBasePermission(@RequestParam @Parameter Long courseId) throws Exception {
     log.info("getDefaultBasePermission called with courseId: {}", courseId);
     Course course =
         courseRepository
