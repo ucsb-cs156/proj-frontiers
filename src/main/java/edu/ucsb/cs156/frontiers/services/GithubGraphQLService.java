@@ -92,6 +92,47 @@ public class GithubGraphQLService {
         .toEntity(String.class);
   }
 
+  /**
+   * Retrieves the default base repository permission for a GitHub organization.
+   *
+   * @param course The course entity, used to fetch the associated GitHub installation token.
+   * @param orgLogin The GitHub organization login.
+   * @return The default repository permission for the organization.
+   */
+  public String getDefaultBasePermission(Course course, String orgLogin)
+      throws JsonProcessingException,
+          NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          NoLinkedOrganizationException {
+    log.info(
+        "getDefaultBasePermission called with course.getId(): {} orgLogin: {}",
+        course.getId(),
+        orgLogin);
+
+    String githubToken = jwtService.getInstallationToken(course);
+
+    // language=GraphQL
+    String query =
+        """
+        query GetOrgDefaultPermission($orgLogin: String!) {
+          organization(login: $orgLogin) {
+            name
+            defaultRepositoryPermission
+          }
+        }
+        """;
+
+    return graphQlClient
+        .mutate()
+        .header("Authorization", "Bearer " + githubToken)
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .build()
+        .document(query)
+        .variable("orgLogin", orgLogin)
+        .retrieveSync("organization.defaultRepositoryPermission")
+        .toEntity(String.class);
+  }
+
   public String getCommits(
       Course course, String owner, String repo, String branch, int first, String after)
       throws JsonProcessingException,
