@@ -42,7 +42,7 @@ export default function AssignmentTabComponent({ courseId }) {
       repoPrefix: teamAssignment.repoPrefix,
       isPrivate: teamAssignment.assignmentPrivacy,
       permissions: teamAssignment.permissions,
-      teamRegex: teamAssignment.teamRegex,
+      teamRegex: teamAssignment.teamRegex || undefined,
     },
   });
 
