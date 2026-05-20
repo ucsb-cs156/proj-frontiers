@@ -80,6 +80,8 @@ public class RepositoryController extends ApiController {
    * @param repoPrefix each team repo created will begin with this prefix, followed by a dash and
    *     the team's name
    * @param isPrivate determines whether the repository being created is private
+   * @param teamRegex optional regular expression that will only create repos for team names that
+   *     match this expression if omitted, repos will be created for every team
    * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
    */
   @PostMapping("/createTeamRepos")
@@ -88,7 +90,8 @@ public class RepositoryController extends ApiController {
       @RequestParam Long courseId,
       @RequestParam String repoPrefix,
       @RequestParam Optional<Boolean> isPrivate,
-      @RequestParam RepositoryPermissions permissions) {
+      @RequestParam RepositoryPermissions permissions,
+      @RequestParam(required = false) String teamRegex) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -104,6 +107,7 @@ public class RepositoryController extends ApiController {
               .githubTeamService(githubTeamService)
               .course(course)
               .permissions(permissions)
+              .teamRegex(teamRegex)
               .build();
       return jobService.runAsJob(job);
     }
