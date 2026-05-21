@@ -36,6 +36,16 @@ public class CreateStudentOrStaffRepositoriesJobTest {
     MockitoAnnotations.openMocks(this);
   }
 
+  private String expectedLog(Boolean isPrivate, RepositoryCreationOption creationOption) {
+    return """
+        repositoryPrefix=repo-prefix
+        isPrivate=%s
+        permissions=WRITE
+        creationOption=%s
+        Done"""
+        .formatted(isPrivate, creationOption);
+  }
+
   @Test
   public void test_getCourse_returnsCourse() {
     Course course = Course.builder().id(1L).courseName("Test Course").build();
@@ -64,9 +74,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(false, RepositoryCreationOption.STUDENTS_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
@@ -96,9 +104,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(true, RepositoryCreationOption.STUDENTS_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
@@ -128,9 +134,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(true, RepositoryCreationOption.STUDENTS_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
@@ -159,9 +163,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(false, RepositoryCreationOption.STUDENTS_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
@@ -184,9 +186,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(false, RepositoryCreationOption.STUDENTS_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
@@ -217,9 +217,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(false, RepositoryCreationOption.STAFF_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
@@ -258,9 +256,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(true, RepositoryCreationOption.STUDENTS_AND_STAFF);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
@@ -300,9 +296,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(false, RepositoryCreationOption.STAFF_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(0)).createStaffRepository(any(), any(), any(), any(), any());
@@ -332,9 +326,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(false, RepositoryCreationOption.STAFF_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(0)).createStaffRepository(any(), any(), any(), any(), any());
@@ -362,9 +354,7 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
-        Done""";
+    String expected = expectedLog(false, RepositoryCreationOption.STAFF_ONLY);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
