@@ -34,7 +34,10 @@ describe("CourseWarningBanner tests", () => {
       undefined,
       true,
       {
-        placeholderData: { showOrganizationAgeWarning: false },
+        placeholderData: {
+          showOrganizationAgeWarning: false,
+          showDefaultBasePermissions: false,
+        },
         staleTime: "static",
       },
     );
@@ -70,6 +73,68 @@ describe("CourseWarningBanner tests", () => {
     });
     expect(
       screen.queryByText(/This GitHub Organization/i),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders default base permission warning with settings link", async () => {
+    axiosMock.onGet("/api/courses/warnings/1").reply(200, {
+      showOrganizationAgeWarning: false,
+      showDefaultBasePermissions: true,
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CourseWarningBanner courseId={1} orgName="ucsb-cs156-s26" />
+      </QueryClientProvider>,
+    );
+    await screen.findByTestId("CourseWarningBanner-defaultBasePermission");
+    expect(
+      screen.getByText(/Default Base Permission is not the recommended value/i),
+    ).toBeInTheDocument();
+    const link = screen.getByTestId(
+      "CourseWarningBanner-defaultBasePermission-link",
+    );
+    expect(link).toHaveAttribute(
+      "href",
+      "https://github.com/organizations/ucsb-cs156-s26/settings/member_privileges",
+    );
+    expect(link).toHaveTextContent("You can change that setting here");
+  });
+
+  test("does not render default base permission warning when hideBasePermissionWarning is true", async () => {
+    axiosMock.onGet("/api/courses/warnings/1").reply(200, {
+      showDefaultBasePermissions: true,
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CourseWarningBanner
+          courseId={1}
+          orgName="ucsb-cs156-s26"
+          hideBasePermissionWarning={true}
+        />
+      </QueryClientProvider>,
+    );
+    await waitFor(() => {
+      expect(useBackend.useBackend).toBeCalled();
+    });
+    expect(
+      screen.queryByTestId("CourseWarningBanner-defaultBasePermission"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not render default base permission warning without orgName", async () => {
+    axiosMock.onGet("/api/courses/warnings/1").reply(200, {
+      showDefaultBasePermissions: true,
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CourseWarningBanner courseId={1} />
+      </QueryClientProvider>,
+    );
+    await waitFor(() => {
+      expect(useBackend.useBackend).toBeCalled();
+    });
+    expect(
+      screen.queryByTestId("CourseWarningBanner-defaultBasePermission"),
     ).not.toBeInTheDocument();
   });
 });
