@@ -177,7 +177,7 @@ describe("InstructorCoursesTable tests", () => {
     });
 
     test("supports permission override props", async () => {
-      render(
+      const { unmount } = render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <InstructorCoursesTable
@@ -196,6 +196,28 @@ describe("InstructorCoursesTable tests", () => {
       expect(
         screen.getByTestId(`${testId}-cell-row-0-col-orgName-no-org`),
       ).toBeInTheDocument();
+
+      unmount();
+
+      render(
+        <QueryClientProvider client={new QueryClient()}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={[coursesFixtures.severalCourses[2]]}
+              currentUser={currentUserFixtures.userOnly}
+              canEditCourse={false}
+              canInstallCourse={() => true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-edit-no-permission`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-orgName-button`),
+      ).toHaveTextContent("Install GitHub App");
     });
 
     test("Has the expected column headers and content for admin user", async () => {

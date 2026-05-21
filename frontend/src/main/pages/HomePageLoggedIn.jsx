@@ -1,3 +1,4 @@
+import CoursesTable from "main/components/Courses/CoursesTable";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
@@ -37,6 +38,39 @@ export default function HomePageLoggedIn() {
       enabled: Boolean(hasRole(currentUser, "ROLE_INSTRUCTOR")),
     },
   );
+
+  const cellToAxiosParamsStaff = (cell) => ({
+    url: `/api/coursestaff/joinCourse`,
+    method: "PUT",
+    params: {
+      courseStaffId: cell.row.original.staffId,
+    },
+  });
+
+  const onJoinSuccess = (message) => {
+    toast(message);
+  };
+
+  const onJoinFail = (result) => {
+    toast(result.response.data ? result.response.data : result.message);
+  };
+
+  const staffJoinMutation = useBackendMutation(
+    cellToAxiosParamsStaff,
+    { onSuccess: onJoinSuccess, onError: onJoinFail },
+    [`/api/courses/staffCourses`],
+  );
+
+  const joinStaffCourseCallback = async (cell) => {
+    staffJoinMutation.mutate(cell);
+  };
+
+  const isStaffJoining = (cell) => {
+    return (
+      staffJoinMutation.isPending &&
+      staffJoinMutation.variables.row.index === cell.row.index
+    );
+  };
 
   const [viewModal, setViewModal] = React.useState(false);
 
@@ -106,14 +140,12 @@ export default function HomePageLoggedIn() {
         <h1>Your Staff Courses</h1>
         {staffCourses.length === 0 && <p>No staff courses yet.</p>}
         {staffCourses.length > 0 && (
-          <InstructorCoursesTable
+          <CoursesTable
             courses={staffCourses}
-            currentUser={currentUser}
             testId={"StaffCoursesTable"}
+            joinCallback={joinStaffCourseCallback}
+            isLoading={isStaffJoining}
             courseNameLinkPrefix="/staff/courses"
-            canEditCourse={true}
-            canInstallCourse={(row) => !row.original.orgName}
-            mutationQueryKeys={["/api/courses/staffCourses"]}
           />
         )}
       </div>
