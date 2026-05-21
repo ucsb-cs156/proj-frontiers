@@ -292,7 +292,7 @@ public class RepositoryService {
 
   /** Gets all repositories in the course's organization that start with the given prefix. */
   public List<String> getRepoNamesWithPrefix(Course course, String prefix)
-      throws JsonProcessingException {
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String token = jwtService.getInstallationToken(course);
     // Grabs up to 100 repos (adjust if your org has more repos and you need pagination)
     String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos?per_page=100";
@@ -319,7 +319,8 @@ public class RepositoryService {
   }
 
   /** Checks if a repository has any commits. */
-  public boolean repoHasCommits(Course course, String repoName) {
+  public boolean repoHasCommits(Course course, String repoName)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String token = jwtService.getInstallationToken(course);
     String endpoint =
         "https://api.github.com/repos/"
@@ -350,7 +351,8 @@ public class RepositoryService {
   }
 
   /** Deletes a repository using the GitHub REST API. */
-  public void deleteRepository(Course course, String repoName) {
+  public void deleteRepository(Course course, String repoName)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String token = jwtService.getInstallationToken(course);
     String endpoint = "https://api.github.com/repos/" + course.getOrgName() + "/" + repoName;
 
