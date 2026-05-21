@@ -16,6 +16,7 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import AdminJobsPage from "main/pages/Admin/AdminJobsPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
+import StaffCourseShowPage from "main/pages/Staff/StaffCourseShowPage";
 import HomePageLoggedIn from "main/pages/HomePageLoggedIn";
 import HomePageConnectGithub from "main/pages/HomePageConnectGithub";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
@@ -148,6 +149,16 @@ function App() {
             <ProtectedPage
               component={<InstructorCourseShowPage />}
               enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/staff/courses/:id"
+          element={
+            <ProtectedPage
+              component={<StaffCourseShowPage />}
+              enforceRole={"ROLE_USER"}
               currentUser={currentUser}
             />
           }

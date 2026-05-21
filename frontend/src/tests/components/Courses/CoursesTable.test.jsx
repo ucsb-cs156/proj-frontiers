@@ -56,6 +56,9 @@ describe("CoursesTable tests", () => {
       screen.getByTestId(`${testId}-cell-row-0-col-courseName`),
     ).toHaveTextContent("CMPSC 156");
     expect(
+      screen.queryByTestId(`${testId}-cell-row-0-col-courseName-link`),
+    ).not.toBeInTheDocument();
+    expect(
       screen.getByTestId(`${testId}-cell-row-0-col-term`),
     ).toHaveTextContent("Spring 2025");
     expect(
@@ -87,6 +90,52 @@ describe("CoursesTable tests", () => {
 
     // expect that the mocked joinCallback function is not called
     expect(joinCallback).not.toHaveBeenCalled();
+  });
+
+  test("renders course names as links when route prefix is provided", () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+          courseShowRoutePrefix="/staff/courses"
+        />
+      </BrowserRouter>,
+    );
+
+    const firstCourseLink = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-courseName-link",
+    );
+    expect(firstCourseLink).toHaveAttribute("href", "/staff/courses/1");
+    expect(firstCourseLink).toHaveTextContent("CMPSC 156");
+  });
+
+  test("shows course details tooltip for linked course names", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+          courseShowRoutePrefix="/staff/courses"
+        />
+      </BrowserRouter>,
+    );
+
+    fireEvent.mouseOver(
+      screen.getByTestId("CoursesTable-cell-row-0-col-courseName-link"),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("View course details")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("tooltip")).toHaveAttribute(
+      "id",
+      "tooltip-coursename-0",
+    );
   });
 
   test("the loading render", async () => {
