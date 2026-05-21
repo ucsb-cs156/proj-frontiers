@@ -176,6 +176,28 @@ describe("InstructorCoursesTable tests", () => {
       expect(noEditPermission).toBeEmptyDOMElement();
     });
 
+    test("supports permission override props", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={[coursesFixtures.severalCourses[2]]}
+              currentUser={currentUserFixtures.userOnly}
+              canEditCourse={() => true}
+              canInstallCourse={false}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-edit-button`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-orgName-no-org`),
+      ).toBeInTheDocument();
+    });
+
     test("Has the expected column headers and content for admin user", async () => {
       render(
         <QueryClientProvider client={new QueryClient()}>
