@@ -372,6 +372,97 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.getByText("Spring 2025")).toBeInTheDocument();
     expect(screen.getByText(/This GitHub Organization/i)).toBeInTheDocument();
   });
+
+  test("displays default base permission warning when hideBasePermissionWarning is omitted", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showDefaultBasePermissions: true,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("CourseWarningBanner-defaultBasePermission");
+  });
+
+  test("displays default base permission warning when hideBasePermissionWarning is false", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      hideBasePermissionWarning: false,
+    });
+
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+      showDefaultBasePermissions: true,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("CourseWarningBanner-defaultBasePermission");
+    expect(
+      screen.getByText(/Default Base Permission is not the recommended value/i),
+    ).toBeInTheDocument();
+  });
+
+  test("hides default base permission warning when hideBasePermissionWarning is true", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      hideBasePermissionWarning: true,
+    });
+
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showDefaultBasePermissions: true,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+    expect(
+      screen.queryByTestId("CourseWarningBanner-defaultBasePermission"),
+    ).not.toBeInTheDocument();
+  });
+
   test("expect the correct URL to the organization for the course", async () => {
     setupInstructorUser();
 
