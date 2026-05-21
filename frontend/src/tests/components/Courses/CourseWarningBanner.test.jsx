@@ -99,7 +99,8 @@ describe("CourseWarningBanner tests", () => {
     );
     expect(link).toHaveTextContent("You can change that setting here");
     expect(
-      screen.getByTestId("CourseWarningBanner-defaultBasePermission").textContent,
+      screen.getByTestId("CourseWarningBanner-defaultBasePermission")
+        .textContent,
     ).toContain("private repos. You can change");
   });
 
