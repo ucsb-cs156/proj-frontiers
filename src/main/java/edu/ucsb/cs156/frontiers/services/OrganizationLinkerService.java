@@ -86,10 +86,13 @@ public class OrganizationLinkerService {
   }
 
   public CourseWarning checkCourseWarnings(Course course)
-      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+      throws NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          JsonProcessingException,
+          NoLinkedOrganizationException {
 
     if (course.getOrgName() == null || course.getInstallationId() == null) {
-      return new CourseWarning(false);
+      return new CourseWarning(false, false);
     }
 
     String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
@@ -104,7 +107,10 @@ public class OrganizationLinkerService {
     JsonNode responseJson = response.getBody();
     ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get("created_at").asText());
     ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());
-    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)));
+    boolean showOrganizationAgeWarning = creationDate.isAfter(now.minusMonths(1));
+    String defaultRepositoryPermission = getDefaultRepositoryPermission(course);
+    boolean showDefaultBasePermissions = !"none".equals(defaultRepositoryPermission);
+    return new CourseWarning(showOrganizationAgeWarning, showDefaultBasePermissions);
   }
 
   /**
