@@ -109,21 +109,31 @@ public class RepositoryController extends ApiController {
     }
   }
 
-  @Operation(summary = "Delete repo job with prefix")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-  @DeleteMapping("/delete")
-   public Object deleteRepoJob(
-  @Parameter(name = "courseID") @RequestParam Long courseID,
-  @Paramer(name = "prefix") @RequestParam String prefix) 
-  {
-    
-    
-    if (!jobsRepository.existsById(id)) {
-      return Map.of("message", String.format("Job with id %d not found", id));
+  @Operation(summary = "Delete empty repos matching a prefix for a specific course")
+  @PreAuthorize(
+      "@CourseSecurity.hasManagePermissions(#root, #courseId)") // Adjusted to match your other
+                                                                // course endpoints
+  @DeleteMapping("") // Maps to /api/repos per your acceptance criteria
+  public Job launchDeleteRepoJob(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "prefix") @RequestParam String prefix) {
+
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      throw new NoLinkedOrganizationException(course.getCourseName());
     }
-    jobsRepository.deleteById(id);
-    return Map.of("message", String.format("Job with id %d deleted", id));
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix(prefix)
+            .repositoryService(repositoryService)
+            .build();
+
+    return jobService.runAsJob(job);
   }
-
-
 }

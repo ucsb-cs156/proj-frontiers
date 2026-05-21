@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
@@ -10,7 +11,9 @@ import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -285,5 +288,78 @@ public class RepositoryService {
     team.setGithubTeamSlug(teamInfo.slug());
     teamRepository.save(team);
     return teamInfo.slug();
+  }
+
+  /** Gets all repositories in the course's organization that start with the given prefix. */
+  public List<String> getRepoNamesWithPrefix(Course course, String prefix)
+      throws JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    // Grabs up to 100 repos (adjust if your org has more repos and you need pagination)
+    String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos?per_page=100";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<String> response =
+        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+
+    JsonNode root = mapper.readTree(response.getBody());
+    List<String> matchingRepos = new ArrayList<>();
+
+    for (JsonNode repoNode : root) {
+      String name = repoNode.get("name").asText();
+      if (name.startsWith(prefix)) {
+        matchingRepos.add(name);
+      }
+    }
+    return matchingRepos;
+  }
+
+  /** Checks if a repository has any commits. */
+  public boolean repoHasCommits(Course course, String repoName) {
+    String token = jwtService.getInstallationToken(course);
+    String endpoint =
+        "https://api.github.com/repos/"
+            + course.getOrgName()
+            + "/"
+            + repoName
+            + "/commits?per_page=1";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    try {
+      ResponseEntity<String> response =
+          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+      // If it returns 200 OK, there are commits
+      return response.getStatusCode().is2xxSuccessful();
+    } catch (HttpClientErrorException e) {
+      // GitHub throws a 409 Conflict when you ask for commits on a completely empty repo
+      if (e.getStatusCode() == HttpStatus.CONFLICT) {
+        return false;
+      }
+      throw e; // Re-throw if it's a different error (like 404 Not Found)
+    }
+  }
+
+  /** Deletes a repository using the GitHub REST API. */
+  public void deleteRepository(Course course, String repoName) {
+    String token = jwtService.getInstallationToken(course);
+    String endpoint = "https://api.github.com/repos/" + course.getOrgName() + "/" + repoName;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);
   }
 }
