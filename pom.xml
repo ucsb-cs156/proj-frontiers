@@ -269,13 +269,6 @@
         <artifactId>git-code-format-maven-plugin</artifactId>
         <version>5.3</version>
         <executions>
-            <!-- On commit, format the modified files -->
-            <execution>
-                <id>install-formatter-hook</id>
-                <goals>
-                    <goal>install-hooks</goal>
-                </goals>
-            </execution>
             <!-- On Maven verify phase, fail if any file
             (including unmodified) is badly formatted -->
             <execution>
