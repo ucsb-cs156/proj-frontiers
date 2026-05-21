@@ -178,6 +178,7 @@ describe("HomePageLoggedIn tests", () => {
     expect(
       screen.getByTestId(`StaffCoursesTable-cell-row-0-col-studentStatus`),
     ).toHaveTextContent("Pending");
+    expect(screen.queryByText("No staff courses yet.")).not.toBeInTheDocument();
   });
 
   test("staff courses section renders empty message when there are no staffCourses", async () => {
@@ -195,6 +196,7 @@ describe("HomePageLoggedIn tests", () => {
 
     expect(screen.getByText("Your Staff Courses")).toBeInTheDocument();
     expect(screen.getByText("No staff courses yet.")).toBeInTheDocument();
+    expect(screen.queryByTestId("StaffCoursesTable")).not.toBeInTheDocument();
     expect(
       screen.queryByTestId(`StaffCoursesTable-cell-row-0-col-id`),
     ).not.toBeInTheDocument();
