@@ -249,4 +249,27 @@ public class OrganizationLinkerServiceTests {
     assertFalse(warning.showOrganizationAgeWarning());
     mockRestServiceServer.verify();
   }
+
+  @Test
+  public void testGetDefaultRepositoryPermission() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+            {
+              "default_repository_permission": "read"
+            }
+            """;
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer definitely.real.jwt"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
+
+    String permission = organizationLinkerService.getDefaultRepositoryPermission(course);
+    assertEquals("read", permission);
+    mockRestServiceServer.verify();
+  }
 }

@@ -17,6 +17,7 @@ import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,8 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
   @MockitoBean private CourseRepository courseRepository;
 
   @MockitoBean private GithubGraphQLService githubGraphQLService;
+
+  @MockitoBean private OrganizationLinkerService organizationLinkerService;
 
   @MockitoBean private JobService jobService;
 
@@ -268,7 +271,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(githubGraphQLService.getDefaultRepositoryPermission(eq(course))).thenReturn("NONE");
+    when(organizationLinkerService.getDefaultRepositoryPermission(eq(course))).thenReturn("none");
 
     MvcResult response =
         mockMvc
@@ -279,7 +282,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
     verify(courseRepository, times(1)).findById(eq(1L));
 
     String responseString = response.getResponse().getContentAsString();
-    assertEquals("NONE", responseString);
+    assertEquals("none", responseString);
   }
 
   @Test
@@ -299,7 +302,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(githubGraphQLService.getDefaultRepositoryPermission(eq(course))).thenReturn("READ");
+    when(organizationLinkerService.getDefaultRepositoryPermission(eq(course))).thenReturn("read");
 
     MvcResult response =
         mockMvc
@@ -310,7 +313,7 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
     verify(courseRepository, times(1)).findById(eq(1L));
 
     String responseString = response.getResponse().getContentAsString();
-    assertEquals("READ", responseString);
+    assertEquals("read", responseString);
   }
 
   @Test
