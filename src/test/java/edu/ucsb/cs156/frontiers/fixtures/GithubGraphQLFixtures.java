@@ -66,7 +66,10 @@ public class GithubGraphQLFixtures {
 
   public static final String DEFAULT_BASE_PERMISSION_RESPONSE =
       """
-      {"data": {"organization": {"name": "test-org", "defaultRepositoryPermission": "NONE"}}}
+      {
+        "login": "test-org",
+        "default_repository_permission": "none"
+      }
       """;
 
   public static final Map<String, Object> COMMITS_RESPONSE_MAP;
