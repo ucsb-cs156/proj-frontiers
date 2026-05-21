@@ -1914,6 +1914,66 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void hide_base_permission_warning_sets_field_to_true() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("test@example.com")
+            .hideBasePermissionWarning(false)
+            .build();
+
+    Course savedCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("test@example.com")
+            .hideBasePermissionWarning(true)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseRepository.save(eq(savedCourse))).thenReturn(savedCourse);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/course/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository).save(eq(savedCourse));
+    assertEquals(true, course.getHideBasePermissionWarning());
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(savedCourse);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hide_base_permission_warning_not_found() throws Exception {
+    doReturn(Optional.empty()).when(courseRepository).findById(eq(1L));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/course/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 1 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void updateCourseCanvasToken_same_value_does_not_change() throws Exception {
     User user = currentUserService.getCurrentUser().getUser();
 
