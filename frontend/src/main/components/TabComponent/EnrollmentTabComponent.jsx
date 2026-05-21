@@ -17,6 +17,7 @@ import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
 import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsTable";
+import DownloadStudentCSVButton from "main/components/TabComponent/DownloadStudentCSVButton";
 
 export default function EnrollmentTabComponent({
   courseId,
@@ -107,10 +108,6 @@ export default function EnrollmentTabComponent({
 
   const handlePostSubmit = (student) => {
     rosterPostMutation.mutate(student);
-  };
-
-  const downloadCsv = () => {
-    window.open(`/api/csv/rosterstudents?courseId=${courseId}`, "_blank");
   };
 
   const openCsvHelp = () => {
@@ -206,9 +203,7 @@ export default function EnrollmentTabComponent({
           </Button>
         </Col>
         <Col>
-          <Button onClick={downloadCsv} className="w-100">
-            Download Student CSV
-          </Button>
+          <DownloadStudentCSVButton courseId={courseId} />
         </Col>
       </Row>
       <Row className="mb-1">
