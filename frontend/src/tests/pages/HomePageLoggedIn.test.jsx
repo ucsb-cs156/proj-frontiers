@@ -166,6 +166,9 @@ describe("HomePageLoggedIn tests", () => {
       screen.getByTestId(`StaffCoursesTable-cell-row-0-col-courseName`),
     ).toHaveTextContent("CMPSC 156");
     expect(
+      screen.getByTestId(`StaffCoursesTable-cell-row-0-col-courseName-link`),
+    ).toHaveAttribute("href", "/staff/courses/1");
+    expect(
       screen.getByTestId(`StaffCoursesTable-cell-row-0-col-term`),
     ).toHaveTextContent("Spring 2025");
     expect(
