@@ -15,6 +15,7 @@ import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
+import DeleteEmptyReposForm from "main/components/Jobs/DeleteEmptyRepoForm";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -162,6 +163,10 @@ export default function InstructorCourseShowPage() {
             testIdPrefix={testId}
             currentUser={currentUser}
           />
+        </Tab>
+        <Tab eventKey={"repos"} title={"Repos"} className="pt-2">
+          {/* We drop the form directly in here, passing it the courseId */}
+          <DeleteEmptyReposForm courseId={courseId} />
         </Tab>
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
