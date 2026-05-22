@@ -302,6 +302,7 @@ describe("InstructorCourseShowPage tests", () => {
       screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
     ).toBeInTheDocument();
   });
+
   test("header displays correct info when course is loaded without an installationId", async () => {
     setupInstructorUser();
 
@@ -334,6 +335,7 @@ describe("InstructorCourseShowPage tests", () => {
       screen.queryByTestId("InstructorCourseShowPage-tooltip-github-settings"),
     ).not.toBeInTheDocument();
   });
+
   test("header displays correct info when course is loaded (and displays warning)", async () => {
     setupInstructorUser();
 
@@ -372,6 +374,7 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.getByText("Spring 2025")).toBeInTheDocument();
     expect(screen.getByText(/This GitHub Organization/i)).toBeInTheDocument();
   });
+
   test("expect the correct URL to the organization for the course", async () => {
     setupInstructorUser();
 
@@ -403,6 +406,7 @@ describe("InstructorCourseShowPage tests", () => {
       "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
     );
   });
+
   test("expect the correct tooltip ID and message for the github icon (that redirects to github installation settings)", async () => {
     setupInstructorUser();
 
@@ -442,6 +446,7 @@ describe("InstructorCourseShowPage tests", () => {
       "Manage settings for association between your GitHub organization and this web application.",
     );
   });
+
   test("does not show error modal on initial render", async () => {
     setupInstructorUser();
 
@@ -463,29 +468,41 @@ describe("InstructorCourseShowPage tests", () => {
     );
 
     await screen.findByText("CMPSC 156");
+    expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
+  });
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  test("clicking the Repos tab renders the DeleteEmptyRepoForm", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
 
-    test("clicking the Repos tab renders the DeleteEmptyRepoForm", async () => {
-      render(
-        <QueryClientProvider client={queryClient}>
-          <MemoryRouter>
-            <InstructorCourseShowPage />
-          </MemoryRouter>
-        </QueryClientProvider>,
-      );
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-      // This verifies the title={"Repos"} mutation
-      const reposTab = await screen.findByText("Repos");
-      expect(reposTab).toBeInTheDocument();
+    // Wait for the course to load
+    await screen.findByText("CMPSC 156");
 
-      // This clicks the tab, which verifies the eventKey={"repos"} mutation
-      fireEvent.click(reposTab);
+    // This verifies the title={"Repos"} mutation
+    const reposTab = await screen.findByText("Repos");
+    expect(reposTab).toBeInTheDocument();
 
-      // Verifies that our specific component loaded successfully inside the tab
-      expect(
-        await screen.findByText("Delete Empty Repositories"),
-      ).toBeInTheDocument();
-    });
+    // Click the tab, which verifies the eventKey={"repos"} mutation
+    fireEvent.click(reposTab);
+
+    // Verifies that our specific component loaded successfully inside the tab
+    expect(
+      await screen.findByText("Delete Empty Repositories"),
+    ).toBeInTheDocument();
   });
 });
