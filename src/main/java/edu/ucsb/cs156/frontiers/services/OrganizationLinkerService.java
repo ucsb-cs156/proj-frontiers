@@ -107,6 +107,28 @@ public class OrganizationLinkerService {
   }
 
   /**
+   * Returns the default base permission for the organization linked to a course. Uses the GitHub
+   * REST API since this field is not available in the GraphQL API.
+   *
+   * @param course The course whose linked organization is being queried
+   * @return The default repository permission string (e.g. "none", "read", "write", "admin")
+   */
+  public String getDefaultBasePermission(Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<JsonNode> response =
+        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);
+    JsonNode responseJson = response.getBody();
+    return responseJson.get("default_repository_permission").asText();
+  }
+
+  /**
    * Removes the Frontiers installation from the linked GitHub org
    *
    * @param course The entity for the course about to be deleted
