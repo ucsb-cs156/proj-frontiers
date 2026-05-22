@@ -123,6 +123,7 @@ describe("StaffTabComponent Tests", () => {
     const expectedHeaders = ["id", "First Name", "Last Name", "Email"];
     const expectedFields = ["id", "firstName", "lastName", "email"];
 
+    // assert
     expectedHeaders.forEach((headerText, index) => {
       const header = screen.getByTestId(
         `InstructorCourseShowPage-CourseStaffTable-header-${expectedFields[index]}`,
@@ -167,6 +168,7 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
+    //Great time to check initial values
     expect(
       queryClientSpecific.getQueryData(["/api/coursestaff/course?courseId=7"]),
     ).toStrictEqual([]);
@@ -185,6 +187,7 @@ describe("StaffTabComponent Tests", () => {
       "modal-dialog modal-dialog-centered",
     );
 
+    // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
     fireEvent.change(searchInput, { target: { value: "test search" } });
     expect(searchInput.value).toBe("test search");
@@ -217,6 +220,7 @@ describe("StaffTabComponent Tests", () => {
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
 
+    // Verify that the search filter is cleared
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
@@ -302,9 +306,10 @@ describe("StaffTabComponent Tests", () => {
         ).toBeInTheDocument();
       });
 
+      // Verify search input is rendered
       const searchInput = screen.getByTestId(`${testId}-search`);
 
-      const fullNameStaff = courseStaffFixtures.staffWithEachStatus[2];
+      const fullNameStaff = courseStaffFixtures.staffWithEachStatus[2]; // Emma Watson
       fireEvent.change(searchInput, {
         target: {
           value:
@@ -413,6 +418,7 @@ describe("StaffTabComponent Tests", () => {
     expect(
       screen.getByTestId("CourseStaffCSVUploadForm-upload"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Upload Staff CSV")).toBeInTheDocument();
   });
 
   test("CSV upload modal closes on close button", async () => {
@@ -503,6 +509,7 @@ describe("StaffTabComponent Tests", () => {
     );
 
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    expect(axiosMock.history.post[0].url).toBe("/api/coursestaff/upload/csv");
     await waitFor(() => expect(mockToast).toBeCalled());
     expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
 
@@ -577,6 +584,13 @@ describe("StaffTabComponent Tests", () => {
         expect.stringContaining("Error uploading CSV:"),
       ),
     );
+
+    // Verify modal closes after error
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument();
+    });
   });
 
   test("CSV help icon opens help page", async () => {
@@ -622,12 +636,14 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
+    // Wait for table to render
     await waitFor(() => {
       expect(
         screen.getByTestId(`${testId}-CourseStaffTable`),
       ).toBeInTheDocument();
     });
 
+    // Download CSV button (no testId, but can find by text)
     const downloadCsvButton = screen.getByText("Download Staff CSV");
     expect(downloadCsvButton).toBeDisabled();
     expect(downloadCsvButton).toHaveStyle("pointerEvents: none");
