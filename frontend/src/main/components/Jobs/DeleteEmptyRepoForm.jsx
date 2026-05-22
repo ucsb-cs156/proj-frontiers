@@ -63,9 +63,9 @@ const DeleteEmptyReposForm = ({ courseId }) => {
               variant="danger"
               type="submit"
               data-testid="DeleteEmptyReposForm-submit"
-              disabled={deleteMutation.isLoading}
+              disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isLoading
+              {deleteMutation.isPending
                 ? "Launching..."
                 : "Delete Empty Matching Repos"}
             </Button>
