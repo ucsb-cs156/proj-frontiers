@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -46,8 +47,13 @@ public class DeleteRepoJobTests {
     when(repositoryService.repoHasCommits(course, "lab01-brian")).thenReturn(true);
     when(repositoryService.repoHasCommits(course, "lab01-empty")).thenReturn(false);
 
-    // Run Job
+    // Run Job with a timer to catch the Thread.sleep Pitest mutation
+    long startTime = System.currentTimeMillis();
     job.accept(ctx);
+    long endTime = System.currentTimeMillis();
+
+    // We expect 2 repos to take ~2000ms. 1900ms allows for minor test environment variance
+    assertTrue(endTime - startTime >= 1900, "Job should sleep for 1000ms per repo");
 
     // Verify Logging (capturing all logs to verify stats at the end)
     verify(ctx, times(7)).log(logCaptor.capture());
@@ -86,8 +92,13 @@ public class DeleteRepoJobTests {
     when(repositoryService.repoHasCommits(course, "lab01-error"))
         .thenThrow(new RuntimeException("GitHub API down"));
 
-    // Run Job
+    // Run Job with timer to catch Thread.sleep mutation
+    long startTime = System.currentTimeMillis();
     job.accept(ctx);
+    long endTime = System.currentTimeMillis();
+
+    // 1 repo should take ~1000ms. 900ms to avoid test flakiness
+    assertTrue(endTime - startTime >= 900, "Job should sleep for 1000ms per repo");
 
     // Verify Error Logging and Stats
     verify(ctx, times(6)).log(logCaptor.capture());
