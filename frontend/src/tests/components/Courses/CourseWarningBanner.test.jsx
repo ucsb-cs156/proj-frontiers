@@ -3,10 +3,28 @@ import axios from "axios";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
-import * as useBackend from "main/utils/useBackend";
+import * as useBackendModule from "main/utils/useBackend";
+import { useBackend } from "main/utils/useBackend";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
+
+function BannerWithProbe({ courseId, orgName }) {
+  const { data } = useBackend([`/api/courses/warnings/${courseId}`], {
+    method: "GET",
+    url: `/api/courses/warnings/${courseId}`,
+  });
+  return (
+    <>
+      <div data-testid="probe">
+        {data?.defaultBasePermission ?? "loading"}|
+        {String(data?.showOrganizationAgeWarning ?? "loading")}
+      </div>
+      <CourseWarningBanner courseId={courseId} orgName={orgName} />
+    </>
+  );
+}
+
 describe("CourseWarningBanner tests", () => {
   beforeEach(() => {
     axiosMock.reset();
@@ -15,7 +33,7 @@ describe("CourseWarningBanner tests", () => {
   });
 
   test("renders warning banner on warning return", async () => {
-    vi.spyOn(useBackend, "useBackend");
+    vi.spyOn(useBackendModule, "useBackend");
     axiosMock.onGet("/api/courses/warnings/1").reply(200, {
       showOrganizationAgeWarning: true,
       defaultBasePermission: "none",
@@ -26,7 +44,7 @@ describe("CourseWarningBanner tests", () => {
       </QueryClientProvider>,
     );
     await screen.findByText(/This GitHub Organization/i);
-    expect(useBackend.useBackend).toHaveBeenCalledWith(
+    expect(useBackendModule.useBackend).toHaveBeenCalledWith(
       [`/api/courses/warnings/1`],
       {
         method: "GET",
@@ -40,30 +58,30 @@ describe("CourseWarningBanner tests", () => {
       },
     );
   });
+
   test("Does not render banner on false", async () => {
-    vi.spyOn(useBackend, "useBackend");
     axiosMock.onGet("/api/courses/warnings/1").reply(200, {
       showOrganizationAgeWarning: false,
       defaultBasePermission: "none",
     });
     render(
       <QueryClientProvider client={queryClient}>
-        <CourseWarningBanner courseId={1} />
+        <BannerWithProbe courseId={1} />
       </QueryClientProvider>,
     );
-
     await waitFor(() => {
-      expect(useBackend.useBackend).toBeCalled();
+      expect(screen.getByTestId("probe")).toHaveTextContent("none|false");
     });
     expect(
       screen.queryByText(/This GitHub Organization/i),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/default base permission/i),
+      screen.queryByText(/default base permission for this organization/i),
     ).not.toBeInTheDocument();
   });
+
   test("No misbehavior on empty return", async () => {
-    vi.spyOn(useBackend, "useBackend");
+    vi.spyOn(useBackendModule, "useBackend");
     axiosMock.onGet("/api/courses/warnings/1").reply(200, {});
     render(
       <QueryClientProvider client={queryClient}>
@@ -71,13 +89,13 @@ describe("CourseWarningBanner tests", () => {
       </QueryClientProvider>,
     );
     await waitFor(() => {
-      expect(useBackend.useBackend).toBeCalled();
+      expect(useBackendModule.useBackend).toBeCalled();
     });
     expect(
       screen.queryByText(/This GitHub Organization/i),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/default base permission/i),
+      screen.queryByText(/default base permission for this organization/i),
     ).not.toBeInTheDocument();
   });
 
@@ -131,18 +149,17 @@ describe("CourseWarningBanner tests", () => {
   });
 
   test("does not render permission warning when value is none", async () => {
-    vi.spyOn(useBackend, "useBackend");
     axiosMock.onGet("/api/courses/warnings/1").reply(200, {
       showOrganizationAgeWarning: false,
       defaultBasePermission: "none",
     });
     render(
       <QueryClientProvider client={queryClient}>
-        <CourseWarningBanner courseId={1} orgName="ucsb-cs156-s25" />
+        <BannerWithProbe courseId={1} orgName="ucsb-cs156-s25" />
       </QueryClientProvider>,
     );
     await waitFor(() => {
-      expect(useBackend.useBackend).toBeCalled();
+      expect(screen.getByTestId("probe")).toHaveTextContent("none|false");
     });
     expect(
       screen.queryByText(/default base permission for this organization/i),
@@ -150,18 +167,17 @@ describe("CourseWarningBanner tests", () => {
   });
 
   test("does not render permission warning when value is null (no org)", async () => {
-    vi.spyOn(useBackend, "useBackend");
     axiosMock.onGet("/api/courses/warnings/1").reply(200, {
       showOrganizationAgeWarning: false,
       defaultBasePermission: "null",
     });
     render(
       <QueryClientProvider client={queryClient}>
-        <CourseWarningBanner courseId={1} />
+        <BannerWithProbe courseId={1} />
       </QueryClientProvider>,
     );
     await waitFor(() => {
-      expect(useBackend.useBackend).toBeCalled();
+      expect(screen.getByTestId("probe")).toHaveTextContent("null|false");
     });
     expect(
       screen.queryByText(/default base permission for this organization/i),

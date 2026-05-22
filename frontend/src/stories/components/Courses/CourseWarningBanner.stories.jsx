@@ -123,9 +123,7 @@ NoOrgLinked.args = {
 NoOrgLinked.parameters = {
   msw: {
     handlers: [
-      http.get("/api/courses/warnings/1", () =>
-        HttpResponse.json(noOrgLinked),
-      ),
+      http.get("/api/courses/warnings/1", () => HttpResponse.json(noOrgLinked)),
     ],
   },
 };

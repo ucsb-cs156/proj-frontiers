@@ -37,18 +37,20 @@ export default function InstructorCourseShowPage() {
   const getCourseFailed = courseBackendFailureCount > 0;
 
   const { data: warnings } = useBackend(
+    // Stryker disable next-line ArrayDeclaration,StringLiteral : cache key
     [`/api/courses/warnings/${courseId}`],
+    // Stryker disable next-line ObjectLiteral,StringLiteral : GET and empty string are equivalent
     { method: "GET", url: `/api/courses/warnings/${courseId}` },
     undefined,
     true,
+    // Stryker disable next-line ObjectLiteral,StringLiteral : placeholder + staleTime are perf hints
     {
       placeholderData: { defaultBasePermission: "null" },
       staleTime: "static",
     },
   );
   const basePermission = warnings?.defaultBasePermission;
-  const showBasePermissionBadge =
-    basePermission && basePermission !== "null";
+  const showBasePermissionBadge = basePermission && basePermission !== "null";
 
   const navigate = useNavigate();
   useEffect(() => {
