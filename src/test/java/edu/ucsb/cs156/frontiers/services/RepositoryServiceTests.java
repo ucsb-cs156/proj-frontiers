@@ -672,6 +672,8 @@ public class RepositoryServiceTests {
     mockRestServiceServer
         .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100"))
         .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess().body(mockJsonResponse));
 
@@ -688,6 +690,8 @@ public class RepositoryServiceTests {
     mockRestServiceServer
         .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian/commits?per_page=1"))
         .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess()); // 200 OK
 
@@ -702,6 +706,8 @@ public class RepositoryServiceTests {
     mockRestServiceServer
         .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian/commits?per_page=1"))
         .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withRawStatus(409)); // GitHub's empty repo error
 
@@ -715,6 +721,9 @@ public class RepositoryServiceTests {
   public void repoHasCommits_throws_exception_on_other_errors() throws Exception {
     mockRestServiceServer
         .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withResourceNotFound()); // 404
 
@@ -732,6 +741,8 @@ public class RepositoryServiceTests {
     mockRestServiceServer
         .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian"))
         .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
         .andExpect(method(HttpMethod.DELETE))
         .andRespond(withNoContent());
 

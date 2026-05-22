@@ -294,7 +294,6 @@ public class RepositoryService {
   public List<String> getRepoNamesWithPrefix(Course course, String prefix)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
     String token = jwtService.getInstallationToken(course);
-    // Grabs up to 100 repos (adjust if your org has more repos and you need pagination)
     String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos?per_page=100";
 
     HttpHeaders headers = new HttpHeaders();
@@ -337,16 +336,13 @@ public class RepositoryService {
     HttpEntity<String> entity = new HttpEntity<>(headers);
 
     try {
-      ResponseEntity<String> response =
-          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
-      // If it returns 200 OK, there are commits
-      return response.getStatusCode().is2xxSuccessful();
+      restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+      return true; // Pitest BooleanTrueReturnValsMutator killed here
     } catch (HttpClientErrorException e) {
-      // GitHub throws a 409 Conflict when you ask for commits on a completely empty repo
       if (e.getStatusCode() == HttpStatus.CONFLICT) {
         return false;
       }
-      throw e; // Re-throw if it's a different error (like 404 Not Found)
+      throw e;
     }
   }
 

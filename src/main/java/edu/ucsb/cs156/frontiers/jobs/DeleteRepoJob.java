@@ -1,60 +1,144 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import java.util.List;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@Builder
-@Slf4j
-public class DeleteRepoJob implements JobContextConsumer {
+@ExtendWith(MockitoExtension.class)
+public class DeleteRepoJobTests {
 
-  private final Course course;
-  private final String prefix;
-  private final RepositoryService repositoryService;
+  @Mock RepositoryService repositoryService;
+  @Mock JobContext ctx;
+  @Captor ArgumentCaptor<String> logCaptor;
 
-  @Override
-  public void accept(JobContext ctx) throws Exception {
-    ctx.log(
-        String.format(
-            "Starting DeleteRepoJob for course %s with prefix %s", course.getCourseName(), prefix));
+  @Test
+  void test_delete_repo_job_success_mixed_repos() throws Exception {
+    // Setup
+    Course course = Course.builder().courseName("CS156").build();
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("lab01")
+            .repositoryService(repositoryService)
+            .build();
 
-    // Now returns a List of Strings
-    List<String> matchingRepos = repositoryService.getRepoNamesWithPrefix(course, prefix);
+    // Mock returning 2 repos matching the prefix
+    when(repositoryService.getRepoNamesWithPrefix(course, "lab01"))
+        .thenReturn(List.of("lab01-brian", "lab01-empty"));
 
-    ctx.log(String.format("%d repos found with prefix %s", matchingRepos.size(), prefix));
+    // First repo has commits, second repo is empty
+    when(repositoryService.repoHasCommits(course, "lab01-brian")).thenReturn(true);
+    when(repositoryService.repoHasCommits(course, "lab01-empty")).thenReturn(false);
 
-    int reposDeleted = 0;
-    int reposRetained = 0;
-    int repoErrors = 0;
+    // Run Job with a timer to catch the Thread.sleep Pitest mutation
+    long startTime = System.currentTimeMillis();
+    job.accept(ctx);
+    long endTime = System.currentTimeMillis();
 
-    for (String repoName : matchingRepos) {
-      try {
-        // Sleep to prevent GitHub API rate limiting
-        Thread.sleep(1000);
+    // We expect 2 repos to take ~2000ms. 1900ms allows for minor test environment variance
+    assertTrue(endTime - startTime >= 1900, "Job should sleep for 1000ms per repo");
 
-        // Pass the course and repo name
-        boolean hasCommits = repositoryService.repoHasCommits(course, repoName);
+    // Verify Logging (capturing all logs to verify stats at the end)
+    verify(ctx, times(7)).log(logCaptor.capture());
+    List<String> logs = logCaptor.getAllValues();
 
-        if (hasCommits) {
-          reposRetained++;
-          ctx.log(String.format("Repo %s not deleted; commits exist.", repoName));
-        } else {
-          repositoryService.deleteRepository(course, repoName);
-          reposDeleted++;
-          ctx.log(String.format("Deleted repo %s", repoName));
-        }
-      } catch (Exception e) {
-        repoErrors++;
-        ctx.log(String.format("Error processing repo %s: %s", repoName, e.getMessage()));
-      }
-    }
+    assertEquals("Starting DeleteRepoJob for course CS156 with prefix lab01", logs.get(0));
+    assertEquals("2 repos found with prefix lab01", logs.get(1));
+    assertEquals("Repo lab01-brian not deleted; commits exist.", logs.get(2));
+    assertEquals("Deleted repo lab01-empty", logs.get(3));
 
-    ctx.log(String.format("%d repos deleted", reposDeleted));
-    ctx.log(String.format("%d repos retained", reposRetained));
-    ctx.log(String.format("%d errors", repoErrors));
+    // Verify final stats logs
+    assertEquals("1 repos deleted", logs.get(4));
+    assertEquals("1 repos retained", logs.get(5));
+    assertEquals("0 errors", logs.get(6));
+
+    // Verify RepositoryService interactions
+    verify(repositoryService, never()).deleteRepository(course, "lab01-brian");
+    verify(repositoryService, times(1)).deleteRepository(course, "lab01-empty");
+  }
+
+  @Test
+  void test_delete_repo_job_handles_exceptions() throws Exception {
+    // Setup
+    Course course = Course.builder().courseName("CS156").build();
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("lab01")
+            .repositoryService(repositoryService)
+            .build();
+
+    when(repositoryService.getRepoNamesWithPrefix(course, "lab01"))
+        .thenReturn(List.of("lab01-error"));
+
+    // Force an error when checking commits
+    when(repositoryService.repoHasCommits(course, "lab01-error"))
+        .thenThrow(new RuntimeException("GitHub API down"));
+
+    // Run Job with timer to catch Thread.sleep mutation
+    long startTime = System.currentTimeMillis();
+    job.accept(ctx);
+    long endTime = System.currentTimeMillis();
+
+    // 1 repo should take ~1000ms. 900ms to avoid test flakiness
+    assertTrue(endTime - startTime >= 900, "Job should sleep for 1000ms per repo");
+
+    // Verify Error Logging and Stats
+    verify(ctx, times(6)).log(logCaptor.capture());
+    List<String> logs = logCaptor.getAllValues();
+
+    assertEquals("Error processing repo lab01-error: GitHub API down", logs.get(2));
+    assertEquals("0 repos deleted", logs.get(3));
+    assertEquals("0 repos retained", logs.get(4));
+    assertEquals("1 errors", logs.get(5));
+
+    verify(repositoryService, never()).deleteRepository(eq(course), anyString());
+  }
+
+  @Test
+  void test_delete_repo_job_no_repos_found() throws Exception {
+    // Setup
+    Course course = Course.builder().courseName("CS156").build();
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("lab01")
+            .repositoryService(repositoryService)
+            .build();
+
+    // Return an empty list to skip the for-loop
+    when(repositoryService.getRepoNamesWithPrefix(course, "lab01")).thenReturn(List.of());
+
+    // Run Job
+    job.accept(ctx);
+
+    // Verify Logging bypassed the loop
+    verify(ctx, times(5)).log(logCaptor.capture());
+    List<String> logs = logCaptor.getAllValues();
+
+    assertEquals("Starting DeleteRepoJob for course CS156 with prefix lab01", logs.get(0));
+    assertEquals("0 repos found with prefix lab01", logs.get(1));
+    assertEquals("0 repos deleted", logs.get(2));
+    assertEquals("0 repos retained", logs.get(3));
+    assertEquals("0 errors", logs.get(4));
+
+    verify(repositoryService, never()).deleteRepository(any(), anyString());
   }
 }
