@@ -1,7 +1,8 @@
 import OurTable from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
+import { Link } from "react-router";
 
-const columns = [
+const baseColumns = [
   {
     header: "id",
     accessorKey: "id", // accessor is the "key" in the data
@@ -26,12 +27,32 @@ export default function CoursesTable({
   testId,
   joinCallback,
   isLoading,
+  courseNameLinkPrefix,
 }) {
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/orgs/${organizationName}/invitation`;
     window.open(gitInvite, "_blank");
   };
+
+  const columns = courseNameLinkPrefix
+    ? baseColumns.map((column) =>
+        column.accessorKey === "courseName"
+          ? {
+              ...column,
+              id: "courseName",
+              cell: ({ cell }) => (
+                <Link
+                  to={`${courseNameLinkPrefix}/${cell.row.original.id}`}
+                  data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+                >
+                  {cell.row.original.courseName}
+                </Link>
+              ),
+            }
+          : column,
+      )
+    : baseColumns;
 
   const renderTooltip = (studentStatus) =>
     function TooltipWrapper(props) {
