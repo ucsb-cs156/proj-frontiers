@@ -1,9 +1,15 @@
-name: 46-tag-docker-image.yml
+name: "46-tag-docker-image"
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+  # temporarily included so that I can test the workflow
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   publish-docker-image:
