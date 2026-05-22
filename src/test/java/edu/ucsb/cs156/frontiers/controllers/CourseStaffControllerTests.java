@@ -1,6 +1,9 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -78,6 +81,52 @@ public class CourseStaffControllerTests extends ControllerTestCase {
           .email("ldelplaya@ucsb.edu")
           .course(course1)
           .build();
+
+  @Test
+  public void hasStaffCSVHeaders_returns_true_for_valid_headers() {
+    assertTrue(
+        CourseStaffController.hasStaffCSVHeaders(new String[] {"firstName", "lastName", "email"}));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_true_for_headers_with_extra_columns() {
+    assertTrue(
+        CourseStaffController.hasStaffCSVHeaders(
+            new String[] {" firstName ", " lastName ", " email ", "role"}));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_false_for_null_headers() {
+    assertFalse(CourseStaffController.hasStaffCSVHeaders(null));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_false_for_too_few_headers() {
+    assertFalse(CourseStaffController.hasStaffCSVHeaders(new String[] {"firstName", "lastName"}));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_false_for_wrong_headers() {
+    assertFalse(CourseStaffController.hasStaffCSVHeaders(new String[] {"name", "email", "role"}));
+  }
+
+  @Test
+  public void fromStaffCSVRow_trims_staff_fields() {
+    CourseStaff staff =
+        CourseStaffController.fromStaffCSVRow(
+            new String[] {" Ada ", " Lovelace ", " ada@ucsb.edu "});
+
+    assertEquals("Ada", staff.getFirstName());
+    assertEquals("Lovelace", staff.getLastName());
+    assertEquals("ada@ucsb.edu", staff.getEmail());
+  }
+
+  @Test
+  public void fromStaffCSVRow_throws_for_too_few_columns() {
+    assertThrows(
+        org.springframework.web.server.ResponseStatusException.class,
+        () -> CourseStaffController.fromStaffCSVRow(new String[] {"Ada", "Lovelace"}));
+  }
 
   @Test
   @WithInstructorCoursePermissions
