@@ -6,9 +6,15 @@ import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { vi } from "vitest";
 
-const mockToast = vi.fn();
-const mockToastError = vi.fn();
+// 1. Tell Vitest to hoist the creation of our mock functions
+const { mockToast, mockToastError } = vi.hoisted(() => {
+  return {
+    mockToast: vi.fn(),
+    mockToastError: vi.fn(),
+  };
+});
 
+// 2. Now the mock can safely use them!
 vi.mock("react-toastify", async (importOriginal) => {
   const originalModule = await importOriginal();
   return {
