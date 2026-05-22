@@ -4,19 +4,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
-import { vi } from "vitest"; // <-- Import Vitest instead of using global jest
+import { vi } from "vitest";
 
 const mockToast = vi.fn();
 const mockToastError = vi.fn();
 
 vi.mock("react-toastify", async (importOriginal) => {
-    const originalModule = await importOriginal();
-    return {
-        ...originalModule,
-        toast: Object.assign(mockToast, {
-            error: mockToastError
-        })
-    };
+  const originalModule = await importOriginal();
+  return {
+    ...originalModule,
+    toast: Object.assign(mockToast, {
+      error: mockToastError,
+    }),
+  };
 });
 
 describe("DeleteEmptyRepoForm tests", () => {
