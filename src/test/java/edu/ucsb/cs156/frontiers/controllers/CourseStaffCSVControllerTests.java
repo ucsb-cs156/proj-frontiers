@@ -50,10 +50,10 @@ public class CourseStaffCSVControllerTests extends ControllerTestCase {
 
   private final String sampleCSV =
       """
-      firstName,lastName,email
-      Phill,Conrad,phtcon@ucsb.edu
-      Dan,Nov,dan@ucsb.edu
-      """;
+            firstName,lastName,email
+            Phill,Conrad,phtcon@ucsb.edu
+            Dan,Nov,dan@ucsb.edu
+            """;
 
   Course courseWithOrg =
       Course.builder()
@@ -101,6 +101,10 @@ public class CourseStaffCSVControllerTests extends ControllerTestCase {
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithOrg));
     when(courseStaffRepository.save(any(CourseStaff.class))).thenReturn(saved1, saved2);
+    when(courseStaffRepository.findByEmailAndCourse(eq("phtcon@ucsb.edu"), eq(courseWithOrg)))
+        .thenReturn(Optional.empty());
+    when(courseStaffRepository.findByEmailAndCourse(eq("dan@ucsb.edu"), eq(courseWithOrg)))
+        .thenReturn(Optional.empty());
 
     MockMultipartFile file =
         new MockMultipartFile(
@@ -132,6 +136,8 @@ public class CourseStaffCSVControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithOrg));
     when(courseStaffRepository.save(any(CourseStaff.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
+    when(courseStaffRepository.findByEmailAndCourse(eq("phtcon@ucsb.edu"), eq(courseWithOrg)))
+        .thenReturn(Optional.empty());
 
     String singleRowCSV = "firstName,lastName,email\nPhill,Conrad,phtcon@ucsb.edu\n";
     MockMultipartFile file =
@@ -155,6 +161,8 @@ public class CourseStaffCSVControllerTests extends ControllerTestCase {
     when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(courseWithoutOrg));
     when(courseStaffRepository.save(any(CourseStaff.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
+    when(courseStaffRepository.findByEmailAndCourse(eq("phtcon@ucsb.edu"), eq(courseWithOrg)))
+        .thenReturn(Optional.empty());
 
     String singleRowCSV = "firstName,lastName,email\nPhill,Conrad,phtcon@ucsb.edu\n";
     MockMultipartFile file =
@@ -214,5 +222,49 @@ public class CourseStaffCSVControllerTests extends ControllerTestCase {
         .perform(
             multipart("/api/coursestaff/upload/csv").file(file).param("courseId", "1").with(csrf()))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void staff_already_in_course_are_skipped() throws Exception {
+
+    CourseStaff existing =
+        CourseStaff.builder()
+            .id(10L)
+            .firstName("Phill")
+            .lastName("Conrad")
+            .email("phtcon@ucsb.edu")
+            .course(courseWithOrg)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithOrg));
+    when(courseStaffRepository.findByEmailAndCourse(eq("phtcon@ucsb.edu"), eq(courseWithOrg)))
+        .thenReturn(Optional.of(existing));
+    when(courseStaffRepository.findByEmailAndCourse(eq("dan@ucsb.edu"), eq(courseWithOrg)))
+        .thenReturn(Optional.empty());
+    when(courseStaffRepository.save(any(CourseStaff.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "staff.csv", MediaType.TEXT_PLAIN_VALUE, sampleCSV.getBytes());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/coursestaff/upload/csv")
+                    .file(file)
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseStaffRepository, times(1)).save(any(CourseStaff.class));
+    verify(updateUserService, times(1)).attachUserToCourseStaff(any(CourseStaff.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, Object> expectedMap = Map.of("inserted", 1);
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
   }
 }
