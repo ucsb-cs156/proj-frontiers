@@ -479,18 +479,13 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
-    // Wait for actual table data to load
-    await waitFor(() => {
-      expect(
-        screen.getByTestId(`${testId}-CourseStaffTable-cell-row-0-col-id`),
-      ).toBeInTheDocument();
-    });
-
+    // Use findByTestId (same pattern as the working "StaffForm submit" test)
+    const csvButton = await screen.findByTestId(`${testId}-csv-button`);
     const updateCountBefore = queryClientSpecific.getQueryState([
       "/api/coursestaff/course?courseId=7",
     ]).dataUpdateCount;
 
-    fireEvent.click(screen.getByTestId(`${testId}-csv-button`));
+    fireEvent.click(csvButton);
     await waitFor(() => {
       expect(screen.getByTestId(`${testId}-csv-modal`)).toBeInTheDocument();
     });
