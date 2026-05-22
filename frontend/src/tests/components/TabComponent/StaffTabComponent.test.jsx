@@ -89,6 +89,32 @@ describe("StaffTabComponent Tests", () => {
     expect(staffId0).toHaveTextContent(courseStaffFixtures.threeStaff[0].id);
   });
 
+  test("hides add staff member controls when user is not an instructor", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={"StaffCourseShowPage"}
+          currentUser={currentUserFixtures.userOnly}
+          isInstructor={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("StaffCourseShowPage-CourseStaffTable");
+
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-post-button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-post-modal"),
+    ).not.toBeInTheDocument();
+  });
+
   test("Table Renders with no students", async () => {
     axiosMock.onGet("/api/coursestaff/course?courseId=7").reply(200, []);
 
