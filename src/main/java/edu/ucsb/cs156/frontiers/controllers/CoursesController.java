@@ -99,6 +99,7 @@ public class CoursesController extends ApiController {
       String term,
       School school,
       String instructorEmail,
+      boolean hideBasePermissionWarning,
       int numStudents,
       int numStaff) {
 
@@ -112,6 +113,7 @@ public class CoursesController extends ApiController {
           c.getTerm(),
           c.getSchool(),
           c.getInstructorEmail(),
+          c.getHideBasePermissionWarning(),
           c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
           c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);
     }
