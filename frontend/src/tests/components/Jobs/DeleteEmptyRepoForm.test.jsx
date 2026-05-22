@@ -1,22 +1,22 @@
-/* global jest */
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import DeleteEmptyRepoForm from "main/components/Jobs/DeleteEmptyRepoForm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
+import { vi } from "vitest"; // <-- Import Vitest instead of using global jest
 
-const mockToast = jest.fn();
-const mockToastError = jest.fn();
-jest.mock("react-toastify", () => {
-  const originalModule = jest.requireActual("react-toastify");
-  return {
-    __esModule: true,
-    ...originalModule,
-    toast: Object.assign(mockToast, {
-      error: mockToastError,
-    }),
-  };
+const mockToast = vi.fn();
+const mockToastError = vi.fn();
+
+vi.mock("react-toastify", async (importOriginal) => {
+    const originalModule = await importOriginal();
+    return {
+        ...originalModule,
+        toast: Object.assign(mockToast, {
+            error: mockToastError
+        })
+    };
 });
 
 describe("DeleteEmptyRepoForm tests", () => {
