@@ -465,5 +465,27 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText("CMPSC 156");
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    test("clicking the Repos tab renders the DeleteEmptyRepoForm", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <InstructorCourseShowPage />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // This verifies the title={"Repos"} mutation
+      const reposTab = await screen.findByText("Repos");
+      expect(reposTab).toBeInTheDocument();
+
+      // This clicks the tab, which verifies the eventKey={"repos"} mutation
+      fireEvent.click(reposTab);
+
+      // Verifies that our specific component loaded successfully inside the tab
+      expect(
+        await screen.findByText("Delete Empty Repositories"),
+      ).toBeInTheDocument();
+    });
   });
 });

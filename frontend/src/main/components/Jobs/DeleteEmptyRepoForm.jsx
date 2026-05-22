@@ -31,7 +31,7 @@ const DeleteEmptyReposForm = ({ courseId }) => {
       },
     },
     // We don't necessarily need to invalidate a cache key here unless you display jobs on the same page
-    [],
+    ["/api/repos"],
   );
 
   const onSubmit = (event) => {
