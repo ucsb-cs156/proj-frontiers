@@ -456,6 +456,9 @@ describe("StaffTabComponent Tests", () => {
           retry: false,
           staleTime: Infinity,
         },
+        mutations: {
+          retry: false,
+        },
       },
     });
 
@@ -475,8 +478,11 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
+    // Wait for actual table data to load before capturing update count
     await waitFor(() => {
-      expect(screen.getByTestId(`${testId}-csv-button`)).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${testId}-CourseStaffTable-cell-row-0-col-id`),
+      ).toBeInTheDocument();
     });
 
     const updateCountBefore = queryClientSpecific.getQueryState([
@@ -502,10 +508,13 @@ describe("StaffTabComponent Tests", () => {
     await waitFor(() => expect(mockToast).toBeCalled());
     expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
 
-    expect(
-      queryClientSpecific.getQueryState(["/api/coursestaff/course?courseId=7"])
-        .dataUpdateCount,
-    ).toEqual(updateCountBefore + 1);
+    await waitFor(() => {
+      expect(
+        queryClientSpecific.getQueryState([
+          "/api/coursestaff/course?courseId=7",
+        ]).dataUpdateCount,
+      ).toEqual(updateCountBefore + 1);
+    });
 
     await waitFor(() => {
       expect(
@@ -515,6 +524,17 @@ describe("StaffTabComponent Tests", () => {
   });
 
   test("CSV upload shows error toast on failure", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+        mutations: {
+          retry: false,
+        },
+      },
+    });
+
     axiosMock
       .onGet("/api/coursestaff/course?courseId=1")
       .reply(200, courseStaffFixtures.threeStaff);
@@ -523,7 +543,7 @@ describe("StaffTabComponent Tests", () => {
       .reply(400, { message: "Invalid CSV format" });
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClientSpecific}>
         <StaffTabComponent
           courseId={1}
           testIdPrefix={testId}
