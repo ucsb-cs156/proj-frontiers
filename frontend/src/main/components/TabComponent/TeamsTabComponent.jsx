@@ -22,6 +22,7 @@ export default function TeamsTabComponent({
   testIdPrefix,
   currentUser,
   instructorView = true,
+  canManageTeams,
 }) {
   const [postTeamModal, setPostTeamModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
@@ -379,6 +380,7 @@ export default function TeamsTabComponent({
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-teams-table`}
           instructorView={instructorView}
+          canManageTeams={canManageTeams}
         />
       </Row>
     </div>

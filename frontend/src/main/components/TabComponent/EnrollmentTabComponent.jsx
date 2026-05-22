@@ -22,6 +22,7 @@ export default function EnrollmentTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
+  canEditStudents,
 }) {
   const [postModal, setPostModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
@@ -254,6 +255,7 @@ export default function EnrollmentTabComponent({
           currentUser={currentUser}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-RosterStudentTable`}
+          canEditStudents={canEditStudents}
         />
       </Row>
       <Row>

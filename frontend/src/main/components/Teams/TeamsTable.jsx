@@ -18,11 +18,15 @@ export default function TeamsTable({
   courseId,
   testIdPrefix = "TeamsTable",
   instructorView = true,
+  canManageTeams,
 }) {
   const [postMemberModal, setPostMemberModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [errorPostMemberModal, setErrorPostMemberModal] = useState(false);
   const [openTeamKeys, setOpenTeamKeys] = useState([]);
+  const canManage =
+    canManageTeams ??
+    (instructorView && hasRole(currentUser, "ROLE_INSTRUCTOR"));
 
   useEffect(() => {
     if (!instructorView) {
@@ -270,7 +274,7 @@ export default function TeamsTable({
                   {team.name}
                 </h3>
 
-                {instructorView && hasRole(currentUser, "ROLE_INSTRUCTOR") && (
+                {canManage && (
                   <span className="ms-auto me-3">
                     <Button
                       onClick={(e) => {
@@ -302,7 +306,7 @@ export default function TeamsTable({
                 data={team.teamMembers}
                 columns={[
                   ...memberColumns,
-                  ...(instructorView && hasRole(currentUser, "ROLE_INSTRUCTOR")
+                  ...(canManage
                     ? [
                         ButtonColumn(
                           "Remove",
