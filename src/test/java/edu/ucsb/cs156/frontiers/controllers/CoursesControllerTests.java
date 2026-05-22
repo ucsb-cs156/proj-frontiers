@@ -1945,6 +1945,72 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void hideBasePermissionWarning_sets_flag_true() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("test@example.com")
+            .hideBasePermissionWarning(false)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verify(courseRepository).save(argThat(Course::getHideBasePermissionWarning));
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(
+            Map.of("message", "hideBasePermissionWarning set to true for course with id 1"));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hideBasePermissionWarning_not_found_returns_not_found() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 1 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+    verify(courseRepository).findById(eq(1L));
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void hideBasePermissionWarning_forbidden_for_non_instructor() throws Exception {
+    mockMvc
+        .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+        .andExpect(status().isForbidden());
+
+    verify(courseRepository, never()).findById(any());
+    verify(courseRepository, never()).save(any(Course.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void updateCourseCanvasToken_same_value_does_not_change() throws Exception {
     User user = currentUserService.getCurrentUser().getUser();
 
