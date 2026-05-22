@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import {
@@ -478,7 +479,7 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
-    // Wait for actual table data to load before capturing update count
+    // Wait for actual table data to load
     await waitFor(() => {
       expect(
         screen.getByTestId(`${testId}-CourseStaffTable-cell-row-0-col-id`),
@@ -500,9 +501,11 @@ describe("StaffTabComponent Tests", () => {
       { type: "text/csv" },
     );
     const input = screen.getByTestId("CourseStaffCSVUploadForm-upload");
-    fireEvent.change(input, { target: { files: [file] } });
+    await userEvent.upload(input, file);
 
-    fireEvent.click(screen.getByTestId("CourseStaffCSVUploadForm-submit"));
+    await userEvent.click(
+      screen.getByTestId("CourseStaffCSVUploadForm-submit"),
+    );
 
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     await waitFor(() => expect(mockToast).toBeCalled());
@@ -567,9 +570,11 @@ describe("StaffTabComponent Tests", () => {
       type: "text/csv",
     });
     const input = screen.getByTestId("CourseStaffCSVUploadForm-upload");
-    fireEvent.change(input, { target: { files: [file] } });
+    await userEvent.upload(input, file);
 
-    fireEvent.click(screen.getByTestId("CourseStaffCSVUploadForm-submit"));
+    await userEvent.click(
+      screen.getByTestId("CourseStaffCSVUploadForm-submit"),
+    );
 
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     await waitFor(() => expect(mockToastError).toBeCalled());
