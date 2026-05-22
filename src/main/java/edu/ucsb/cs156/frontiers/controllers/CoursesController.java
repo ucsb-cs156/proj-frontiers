@@ -99,6 +99,7 @@ public class CoursesController extends ApiController {
       String term,
       School school,
       String instructorEmail,
+      boolean hideBasePermissionWarning,
       int numStudents,
       int numStaff) {
 
@@ -112,6 +113,7 @@ public class CoursesController extends ApiController {
           c.getTerm(),
           c.getSchool(),
           c.getInstructorEmail(),
+          c.getHideBasePermissionWarning(),
           c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
           c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);
     }
@@ -505,13 +507,30 @@ public class CoursesController extends ApiController {
     return new InstructorCourseView(savedCourse);
   }
 
+  @Operation(summary = "Get course warnings")
   @GetMapping("/warnings/{courseId}")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  public CourseWarning warnings(@PathVariable Long courseId) throws Exception {
+  public CourseWarning warnings(@PathVariable @Parameter Long courseId) throws Exception {
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     return linkerService.checkCourseWarnings(course);
+  }
+
+  @Operation(summary = "Hide base permission warning for a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/warnings/hideBasePermissionWarning/{courseId}")
+  public Object hideBasePermissionWarning(@PathVariable @Parameter Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    course.setHideBasePermissionWarning(true);
+    courseRepository.save(course);
+
+    return genericMessage(
+        "hideBasePermissionWarning set to true for course with id %s".formatted(courseId));
   }
 }
