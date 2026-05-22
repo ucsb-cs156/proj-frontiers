@@ -14,10 +14,13 @@ import { vi } from "vitest";
 const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
 const mockToast = vi.fn();
+const mockToastError = vi.fn();
 vi.mock("react-toastify", async (importOriginal) => {
+  const toast = (x) => mockToast(x);
+  toast.error = (x) => mockToastError(x);
   return {
     ...(await importOriginal()),
-    toast: (x) => mockToast(x),
+    toast,
   };
 });
 
@@ -376,7 +379,11 @@ describe("StaffTabComponent Tests", () => {
     });
   });
 
-  test("for coming soon tooltip on disabled upload CSV button", async () => {
+  test("Upload Staff CSV button opens modal", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
     render(
       <QueryClientProvider client={queryClient}>
         <StaffTabComponent
@@ -387,25 +394,198 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
-    // Wait for table to render
     await waitFor(() => {
       expect(
         screen.getByTestId(`${testId}-CourseStaffTable`),
       ).toBeInTheDocument();
     });
 
-    // Find the disabled buttons
     const uploadCsvButton = screen.getByTestId(`${testId}-csv-button`);
-    expect(uploadCsvButton).toBeDisabled();
-    expect(uploadCsvButton).toHaveStyle({ pointerEvents: "none" });
+    expect(uploadCsvButton).not.toBeDisabled();
+    expect(uploadCsvButton).toHaveTextContent("Upload Staff CSV");
 
-    // Simulate mouse over to trigger tooltip
-    fireEvent.mouseOver(uploadCsvButton);
+    fireEvent.click(uploadCsvButton);
 
-    // Tooltip should appear
     await waitFor(() => {
-      expect(screen.getByText("Coming Soon")).toBeInTheDocument();
+      expect(screen.getByTestId(`${testId}-csv-modal`)).toBeInTheDocument();
     });
+
+    expect(
+      screen.getByTestId("CourseStaffCSVUploadForm-upload"),
+    ).toBeInTheDocument();
+  });
+
+  test("CSV upload modal closes on close button", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-CourseStaffTable`),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId(`${testId}-csv-button`));
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-csv-modal`)).toBeInTheDocument();
+    });
+
+    const closeButton = screen.getByRole("button", { name: "Close" });
+    fireEvent.click(closeButton);
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  test("CSV upload submits and invalidates cache", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
+    axiosMock
+      .onPost("/api/coursestaff/upload/csv")
+      .reply(200, { count: 2 });
+
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <ArbitraryTestQueryComponent />
+        <StaffTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const updateCountBefore = queryClientSpecific.getQueryState([
+      "/api/coursestaff/course?courseId=7",
+    ]).dataUpdateCount;
+
+    fireEvent.click(screen.getByTestId(`${testId}-csv-button`));
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-csv-modal`)).toBeInTheDocument();
+    });
+
+    // Upload a file
+    const file = new File(
+      ["firstName,lastName,email\nChris,Gaucho,cgaucho@ucsb.edu"],
+      "staff.csv",
+      { type: "text/csv" },
+    );
+    const input = screen.getByTestId("CourseStaffCSVUploadForm-upload");
+    fireEvent.change(input, { target: { files: [file] } });
+
+    fireEvent.click(screen.getByTestId("CourseStaffCSVUploadForm-submit"));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    await waitFor(() => expect(mockToast).toBeCalled());
+    expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
+
+    // Verify cache was invalidated
+    expect(
+      queryClientSpecific.getQueryState(["/api/coursestaff/course?courseId=7"])
+        .dataUpdateCount,
+    ).toEqual(updateCountBefore + 1);
+
+    // Modal should be closed
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  test("CSV upload shows error toast on failure", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+    axiosMock
+      .onPost("/api/coursestaff/upload/csv")
+      .reply(400, { message: "Invalid CSV format" });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-CourseStaffTable`),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId(`${testId}-csv-button`));
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-csv-modal`)).toBeInTheDocument();
+    });
+
+    const file = new File(
+      ["bad,headers\nfoo,bar"],
+      "staff.csv",
+      { type: "text/csv" },
+    );
+    const input = screen.getByTestId("CourseStaffCSVUploadForm-upload");
+    fireEvent.change(input, { target: { files: [file] } });
+
+    fireEvent.click(screen.getByTestId("CourseStaffCSVUploadForm-submit"));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    await waitFor(() => expect(mockToastError).toBeCalled());
+  });
+
+  test("CSV help icon opens help page", async () => {
+    const openSpy = vi.fn();
+    window.open = openSpy;
+
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-CourseStaffTable`),
+      ).toBeInTheDocument();
+    });
+
+    const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
+    fireEvent.click(infoIcon);
+    expect(openSpy).toHaveBeenCalledWith("/help/csv#staff-information", "_blank");
   });
 
   test("for coming soon tooltip on disabled download CSV button", async () => {

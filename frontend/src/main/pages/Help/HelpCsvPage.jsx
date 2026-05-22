@@ -232,7 +232,55 @@ export default function HelpCsvPage() {
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>
-
+        <h2 id="staff-information" className="mt-4">
+          Staff Information
+        </h2>
+        <p>
+          Instructors can upload course staff from a simple CSV file with the
+          following format.
+        </p>
+        <Accordion data-testid="staffAccordion">
+          <Accordion.Item eventKey="0">
+            <Accordion.Header>Staff (by Email)</Accordion.Header>
+            <Accordion.Body>
+              <p>
+                Upload staff using a CSV with the following columns:
+              </p>
+              <pre className={"csvExample"} data-testid="staffCsvExample">
+                {csvFixtures.staffByEmail}
+              </pre>
+              <p>We interpret the fields as follows:</p>
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>CSV Field</th>
+                    <th>Description</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>firstName</td>
+                    <td>Staff member&apos;s first name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>lastName</td>
+                    <td>Staff member&apos;s last name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>email</td>
+                    <td>Staff member&apos;s email address</td>
+                    <td>
+                      Used to match to user accounts in the system.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
         <h2 className="mt-4">Roster Student CSV Download formats</h2>
         <p>
           Instructors can download a course roster as a CSV file. The download
