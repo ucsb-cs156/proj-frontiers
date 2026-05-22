@@ -89,6 +89,171 @@ describe("TeamTabComponent tests", () => {
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     expect(screen.queryByTestId(`TeamsForm-cancel`)).not.toBeInTheDocument();
   });
+
+  test("student view shows only current user's teams with no instructor controls", async () => {
+    const studentTeams = [
+      ...teamsFixtures.teams,
+      {
+        id: 10,
+        name: "team-without-current-student",
+        teamMembers: [
+          {
+            id: 20,
+            rosterStudent: {
+              id: 30,
+              firstName: "Other",
+              lastName: "Student",
+              email: "other@example.org",
+              githubLogin: "other-student",
+              user: { id: 999 },
+            },
+          },
+        ],
+      },
+    ];
+
+    axiosMock.onGet("/api/teams/all?courseId=1").reply(200, studentTeams);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TeamsTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.userOnly}
+          instructorView={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText("team1")).toBeInTheDocument();
+    expect(screen.getByText("team2")).toBeInTheDocument();
+    expect(
+      screen.queryByText("team-without-current-student"),
+    ).not.toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: /team1/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    fireEvent.click(screen.getByRole("button", { name: /team1/ }));
+    expect(screen.getByRole("button", { name: /team1/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getByRole("button", { name: /team2/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+
+    expect(screen.queryByTestId(`${testId}-search`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-post-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-csv-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-push-teams-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-pull-teams-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-teams-table-3-add-member-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-teams-table-3-delete-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(
+        `${testId}-teams-table-3-cell-row-0-col-Remove-button`,
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Roster Student ID")).not.toBeInTheDocument();
+    expect(screen.getAllByText("First Name")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Last Name")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Email")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("GitHub ID")[0]).toBeInTheDocument();
+    expect(screen.queryByText("GitHub Login")).not.toBeInTheDocument();
+  });
+
+  test("student view matches teams by user id or email and ignores missing members", async () => {
+    const studentUser = {
+      loggedIn: true,
+      root: {
+        user: {
+          id: 200,
+          email: "student@example.edu",
+          githubLogin: "student-gh",
+          githubId: 999,
+        },
+        rolesList: ["ROLE_USER"],
+      },
+    };
+    const studentTeams = [
+      {
+        id: 20,
+        name: "email-team",
+        teamMembers: [
+          {
+            id: 200,
+            rosterStudent: {
+              firstName: "Email",
+              lastName: "Match",
+              email: "student@example.edu",
+              githubId: 100,
+              githubLogin: "other-gh",
+              user: null,
+            },
+          },
+        ],
+      },
+      {
+        id: 21,
+        name: "user-id-team",
+        teamMembers: [
+          {
+            id: 201,
+            rosterStudent: {
+              firstName: "User",
+              lastName: "Match",
+              email: "user-id@example.edu",
+              githubId: 101,
+              githubLogin: "other-gh",
+              user: { id: 200 },
+            },
+          },
+        ],
+      },
+      { id: 23, name: "no-members-team" },
+      {
+        id: 24,
+        name: "missing-roster-student-team",
+        teamMembers: [{ id: 203, rosterStudent: null }],
+      },
+    ];
+
+    axiosMock.onGet("/api/teams/all?courseId=1").reply(200, studentTeams);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TeamsTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={studentUser}
+          instructorView={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText("email-team")).toBeInTheDocument();
+    expect(screen.getByText("user-id-team")).toBeInTheDocument();
+    expect(screen.queryByText("no-members-team")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("missing-roster-student-team"),
+    ).not.toBeInTheDocument();
+  });
+
   test("Cancel button is not rendered when not editing", async () => {
     axiosMock
       .onGet("/api/teams/all?courseId=1")

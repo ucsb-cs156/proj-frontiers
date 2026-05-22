@@ -5,7 +5,7 @@ import { useBackendMutation } from "main/utils/useBackend";
 import { hasRole } from "main/utils/currentUser";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import Modal from "react-bootstrap/Modal";
@@ -17,10 +17,18 @@ export default function TeamsTable({
   currentUser,
   courseId,
   testIdPrefix = "TeamsTable",
+  instructorView = true,
 }) {
   const [postMemberModal, setPostMemberModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [errorPostMemberModal, setErrorPostMemberModal] = useState(false);
+  const [openTeamKeys, setOpenTeamKeys] = useState([]);
+
+  useEffect(() => {
+    if (!instructorView) {
+      setOpenTeamKeys(teams.map((_team, index) => `${index}`));
+    }
+  }, [instructorView, teams]);
 
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
@@ -28,6 +36,7 @@ export default function TeamsTable({
     { method: "GET", url: `/api/rosterstudents/course/${courseId}` },
     [],
     true,
+    { enabled: instructorView },
   );
   const onSuccessMember = (modalFn) => {
     toast("Member added successfully");
@@ -182,10 +191,14 @@ export default function TeamsTable({
   };
 
   const memberColumns = [
-    {
-      Header: "Roster Student ID",
-      accessor: "rosterStudent.id",
-    },
+    ...(instructorView
+      ? [
+          {
+            Header: "Roster Student ID",
+            accessor: "rosterStudent.id",
+          },
+        ]
+      : []),
     {
       Header: "First Name",
       accessor: "rosterStudent.firstName",
@@ -198,10 +211,15 @@ export default function TeamsTable({
       Header: "Email",
       accessor: "rosterStudent.email",
     },
-    {
-      Header: "GitHub Login",
-      accessor: "rosterStudent.githubLogin",
-    },
+    instructorView
+      ? {
+          Header: "GitHub Login",
+          accessor: "rosterStudent.githubLogin",
+        }
+      : {
+          Header: "GitHub ID",
+          accessor: "rosterStudent.githubId",
+        },
   ];
 
   return (
@@ -234,7 +252,16 @@ export default function TeamsTable({
         </ModalHeader>
         <ModalBody>{errorPostMemberModal.message}</ModalBody>
       </Modal>
-      <Accordion data-testid={`${testIdPrefix}-accordion`}>
+      <Accordion
+        alwaysOpen={!instructorView}
+        activeKey={instructorView ? undefined : openTeamKeys}
+        onSelect={(eventKey) => {
+          if (!instructorView) {
+            setOpenTeamKeys(eventKey);
+          }
+        }}
+        data-testid={`${testIdPrefix}-accordion`}
+      >
         {teams.map((team, index) => (
           <Accordion.Item eventKey={index.toString()} key={team.id}>
             <Accordion.Header>
@@ -243,7 +270,7 @@ export default function TeamsTable({
                   {team.name}
                 </h3>
 
-                {hasRole(currentUser, "ROLE_INSTRUCTOR") && (
+                {instructorView && hasRole(currentUser, "ROLE_INSTRUCTOR") && (
                   <span className="ms-auto me-3">
                     <Button
                       onClick={(e) => {
@@ -275,7 +302,7 @@ export default function TeamsTable({
                 data={team.teamMembers}
                 columns={[
                   ...memberColumns,
-                  ...(hasRole(currentUser, "ROLE_INSTRUCTOR")
+                  ...(instructorView && hasRole(currentUser, "ROLE_INSTRUCTOR")
                     ? [
                         ButtonColumn(
                           "Remove",
