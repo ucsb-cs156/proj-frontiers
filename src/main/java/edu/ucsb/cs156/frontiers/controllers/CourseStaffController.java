@@ -1,6 +1,8 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import edu.ucsb.cs156.frontiers.entities.*;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
@@ -10,14 +12,23 @@ import edu.ucsb.cs156.frontiers.services.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @Tag(name = "CourseStaff")
 @RequestMapping("/api/coursestaff")
@@ -34,6 +45,59 @@ public class CourseStaffController extends ApiController {
   @Autowired private UpdateUserService updateUserService;
 
   @Autowired private CurrentUserService currentUserService;
+
+  public static final String STAFF_CSV_HEADERS = "firstName,lastName,email";
+
+  private CourseStaff buildCourseStaffForCourse(
+      Course course, String firstName, String lastName, String email) {
+    CourseStaff courseStaff =
+        CourseStaff.builder()
+            .firstName(firstName)
+            .lastName(lastName)
+            .email(email.strip())
+            .course(course)
+            .build();
+
+    if (course.getInstallationId() != null) {
+      courseStaff.setOrgStatus(OrgStatus.JOINCOURSE);
+    } else {
+      courseStaff.setOrgStatus(OrgStatus.PENDING);
+    }
+
+    return courseStaff;
+  }
+
+  public static boolean hasStaffCSVHeaders(String[] headers) {
+    String[] expectedHeaders = STAFF_CSV_HEADERS.split(",");
+
+    if (headers == null || headers.length < expectedHeaders.length) {
+      return false;
+    }
+
+    for (int i = 0; i < expectedHeaders.length; i++) {
+      if (!expectedHeaders[i].trim().equalsIgnoreCase(headers[i].trim())) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public static CourseStaff fromStaffCSVRow(String[] row) {
+    if (row.length < 3) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          String.format(
+              "Staff CSV row does not have enough columns. Length = %d Row content = [%s]",
+              row.length, Arrays.toString(row)));
+    }
+
+    return CourseStaff.builder()
+        .firstName(row[0].strip())
+        .lastName(row[1].strip())
+        .email(row[2].strip())
+        .build();
+  }
 
   /**
    * This method creates a new CourseStaff.
@@ -57,25 +121,55 @@ public class CourseStaffController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
-    CourseStaff courseStaff =
-        CourseStaff.builder()
-            .firstName(firstName)
-            .lastName(lastName)
-            .email(email.strip())
-            .course(course)
-            .build();
-
-    if (course.getInstallationId() != null) {
-      courseStaff.setOrgStatus(OrgStatus.JOINCOURSE);
-    } else {
-      courseStaff.setOrgStatus(OrgStatus.PENDING);
-    }
+    CourseStaff courseStaff = buildCourseStaffForCourse(course, firstName, lastName, email);
 
     CourseStaff savedCourseStaff = courseStaffRepository.save(courseStaff);
 
     updateUserService.attachUserToCourseStaff(savedCourseStaff);
 
     return savedCourseStaff;
+  }
+
+  @Operation(summary = "Upload course staff from CSV")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  @PostMapping(
+      value = "/upload/csv",
+      consumes = {"multipart/form-data"})
+  public ResponseEntity<List<CourseStaff>> uploadCourseStaffCSV(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "file") @RequestParam("file") MultipartFile file)
+      throws IOException, CsvException {
+
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    List<CourseStaff> courseStaff;
+    try (InputStream inputStream = new BufferedInputStream(file.getInputStream());
+        InputStreamReader reader = new InputStreamReader(inputStream);
+        CSVReader csvReader = new CSVReader(reader); ) {
+
+      String[] headers = csvReader.readNext();
+      if (!hasStaffCSVHeaders(headers)) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST, "Unknown Course Staff CSV format");
+      }
+
+      courseStaff =
+          csvReader.readAll().stream()
+              .map(CourseStaffController::fromStaffCSVRow)
+              .map(
+                  staff ->
+                      buildCourseStaffForCourse(
+                          course, staff.getFirstName(), staff.getLastName(), staff.getEmail()))
+              .toList();
+    }
+
+    List<CourseStaff> savedCourseStaff = courseStaffRepository.saveAll(courseStaff);
+    savedCourseStaff.forEach(updateUserService::attachUserToCourseStaff);
+
+    return ResponseEntity.ok(savedCourseStaff);
   }
 
   /**

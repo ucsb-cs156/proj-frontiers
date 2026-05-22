@@ -56,6 +56,7 @@ export function StudentCoursesTable({ testid }) {
             testId={testid}
             joinCallback={joinStudentCourseCallback}
             isLoading={isStudentJoining}
+            courseShowRoutePrefix="/student/courses"
           />
         </>
       ) : (
