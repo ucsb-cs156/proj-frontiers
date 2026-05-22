@@ -14,7 +14,6 @@ const { mockToast, mockToastError } = vi.hoisted(() => {
   };
 });
 
-// 2. Now the mock can safely use them!
 vi.mock("react-toastify", async (importOriginal) => {
   const originalModule = await importOriginal();
   return {
@@ -159,6 +158,37 @@ describe("DeleteEmptyRepoForm tests", () => {
     // Kills onError generic message parsing mutation
     expect(mockToastError).toHaveBeenCalledWith(
       "Error starting job: Network Error",
+    );
+  });
+  test("button shows Launching... and is disabled while mutating", async () => {
+    // Mock a delayed response so the component has time to render the Loading state
+    axiosMock.onDelete("/api/repos").reply(() => {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve([200, { message: "Job Launched" }]), 50);
+      });
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <DeleteEmptyRepoForm courseId={17} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const prefixInput = screen.getByTestId("DeleteEmptyReposForm-prefix");
+    const submitButton = screen.getByTestId("DeleteEmptyReposForm-submit");
+
+    fireEvent.change(prefixInput, { target: { value: "lab01" } });
+    fireEvent.click(submitButton);
+
+    // This verifies the deleteMutation.isLoading === true branch
+    expect(await screen.findByText("Launching...")).toBeInTheDocument();
+    expect(submitButton).toBeDisabled();
+
+    // Wait for the mutation to finish so the test cleans up properly
+    await waitFor(() =>
+      expect(screen.queryByText("Launching...")).not.toBeInTheDocument(),
     );
   });
 });
