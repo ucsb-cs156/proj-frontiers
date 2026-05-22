@@ -55,6 +55,7 @@ describe("CoursesTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-courseName`),
     ).toHaveTextContent("CMPSC 156");
+
     expect(
       screen.queryByTestId(`${testId}-cell-row-0-col-courseName-link`),
     ).not.toBeInTheDocument();
