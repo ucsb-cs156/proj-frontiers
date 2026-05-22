@@ -1,6 +1,9 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -29,6 +32,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -76,6 +81,217 @@ public class CourseStaffControllerTests extends ControllerTestCase {
           .email("ldelplaya@ucsb.edu")
           .course(course1)
           .build();
+
+  @Test
+  public void hasStaffCSVHeaders_returns_true_for_valid_headers() {
+    assertTrue(
+        CourseStaffController.hasStaffCSVHeaders(new String[] {"firstName", "lastName", "email"}));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_true_for_headers_with_extra_columns() {
+    assertTrue(
+        CourseStaffController.hasStaffCSVHeaders(
+            new String[] {" firstName ", " lastName ", " email ", "role"}));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_false_for_null_headers() {
+    assertFalse(CourseStaffController.hasStaffCSVHeaders(null));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_false_for_too_few_headers() {
+    assertFalse(CourseStaffController.hasStaffCSVHeaders(new String[] {"firstName", "lastName"}));
+  }
+
+  @Test
+  public void hasStaffCSVHeaders_returns_false_for_wrong_headers() {
+    assertFalse(CourseStaffController.hasStaffCSVHeaders(new String[] {"name", "email", "role"}));
+  }
+
+  @Test
+  public void fromStaffCSVRow_trims_staff_fields() {
+    CourseStaff staff =
+        CourseStaffController.fromStaffCSVRow(
+            new String[] {" Ada ", " Lovelace ", " ada@ucsb.edu "});
+
+    assertEquals("Ada", staff.getFirstName());
+    assertEquals("Lovelace", staff.getLastName());
+    assertEquals("ada@ucsb.edu", staff.getEmail());
+  }
+
+  @Test
+  public void fromStaffCSVRow_throws_for_too_few_columns() {
+    assertThrows(
+        org.springframework.web.server.ResponseStatusException.class,
+        () -> CourseStaffController.fromStaffCSVRow(new String[] {"Ada", "Lovelace"}));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_upload_course_staff_csv_for_existing_course() throws Exception {
+    String csvContents =
+        """
+        firstName,lastName,email
+        Ada,Lovelace,ada@ucsb.edu
+        Grace,Hopper, grace@ucsb.edu
+        """;
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .orgName("ucsb-cs156-s25")
+            .installationId("12345")
+            .term("S25")
+            .school(School.UCSB)
+            .build();
+
+    CourseStaff adaNoId =
+        CourseStaff.builder()
+            .firstName("Ada")
+            .lastName("Lovelace")
+            .email("ada@ucsb.edu")
+            .course(course)
+            .orgStatus(OrgStatus.JOINCOURSE)
+            .build();
+
+    CourseStaff graceNoId =
+        CourseStaff.builder()
+            .firstName("Grace")
+            .lastName("Hopper")
+            .email("grace@ucsb.edu")
+            .course(course)
+            .orgStatus(OrgStatus.JOINCOURSE)
+            .build();
+
+    CourseStaff adaWithId =
+        CourseStaff.builder()
+            .id(1L)
+            .firstName("Ada")
+            .lastName("Lovelace")
+            .email("ada@ucsb.edu")
+            .course(course)
+            .orgStatus(OrgStatus.JOINCOURSE)
+            .build();
+
+    CourseStaff graceWithId =
+        CourseStaff.builder()
+            .id(2L)
+            .firstName("Grace")
+            .lastName("Hopper")
+            .email("grace@ucsb.edu")
+            .course(course)
+            .orgStatus(OrgStatus.JOINCOURSE)
+            .build();
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "staff.csv", MediaType.TEXT_PLAIN_VALUE, csvContents.getBytes());
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseStaffRepository.saveAll(List.of(adaNoId, graceNoId)))
+        .thenReturn(List.of(adaWithId, graceWithId));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/coursestaff/upload/csv")
+                    .file(file)
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseStaffRepository, times(1)).saveAll(List.of(adaNoId, graceNoId));
+    verify(updateUserService, times(1)).attachUserToCourseStaff(eq(adaWithId));
+    verify(updateUserService, times(1)).attachUserToCourseStaff(eq(graceWithId));
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(List.of(adaWithId, graceWithId));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_cannot_upload_course_staff_csv_for_missing_course() throws Exception {
+    String csvContents =
+        """
+        firstName,lastName,email
+        Ada,Lovelace,ada@ucsb.edu
+        """;
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "staff.csv", MediaType.TEXT_PLAIN_VALUE, csvContents.getBytes());
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            multipart("/api/coursestaff/upload/csv").file(file).param("courseId", "1").with(csrf()))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseStaffRepository, never()).saveAll(any());
+    verify(updateUserService, never()).attachUserToCourseStaff(any(CourseStaff.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_cannot_upload_course_staff_csv_with_unknown_headers() throws Exception {
+    String csvContents = """
+        name,email
+        Ada Lovelace,ada@ucsb.edu
+        """;
+
+    Course course =
+        Course.builder().id(1L).courseName("CS156").term("S25").school(School.UCSB).build();
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "staff.csv", MediaType.TEXT_PLAIN_VALUE, csvContents.getBytes());
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(
+            multipart("/api/coursestaff/upload/csv").file(file).param("courseId", "1").with(csrf()))
+        .andExpect(status().isBadRequest());
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseStaffRepository, never()).saveAll(any());
+    verify(updateUserService, never()).attachUserToCourseStaff(any(CourseStaff.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_cannot_upload_course_staff_csv_with_short_row() throws Exception {
+    String csvContents = """
+        firstName,lastName,email
+        Ada,Lovelace
+        """;
+
+    Course course =
+        Course.builder().id(1L).courseName("CS156").term("S25").school(School.UCSB).build();
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "staff.csv", MediaType.TEXT_PLAIN_VALUE, csvContents.getBytes());
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(
+            multipart("/api/coursestaff/upload/csv").file(file).param("courseId", "1").with(csrf()))
+        .andExpect(status().isBadRequest());
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+    verify(courseStaffRepository, never()).saveAll(any());
+    verify(updateUserService, never()).attachUserToCourseStaff(any(CourseStaff.class));
+  }
 
   /** Test the POST endpoint */
   @Test
