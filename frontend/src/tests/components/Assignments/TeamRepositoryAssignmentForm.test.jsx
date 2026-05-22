@@ -56,3 +56,38 @@ test("Submit passes selected assignment privacy", async () => {
   const firstCallArg = mockSubmit.mock.calls[0][0];
   expect(firstCallArg.assignmentPrivacy).toBe(false);
 });
+
+test("teamRegex field renders and is optional", async () => {
+  render(<TeamRepositoryAssignmentForm submitAction={mockSubmit} />);
+
+  expect(
+    screen.getByTestId("TeamRepositoryAssignmentForm-teamRegex"),
+  ).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText("Team Repository Prefix"), {
+    target: { value: "testprefix" },
+  });
+  fireEvent.click(screen.getByTestId("TeamRepositoryAssignmentForm-submit"));
+  await waitFor(() => expect(mockSubmit).toHaveBeenCalled());
+});
+
+test("Submit passes teamRegex when provided", async () => {
+  render(<TeamRepositoryAssignmentForm submitAction={mockSubmit} />);
+
+  expect(
+    screen.getByTestId("TeamRepositoryAssignmentForm-teamRegex"),
+  ).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText("Team Repository Prefix"), {
+    target: { value: "testprefix" },
+  });
+
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-teamRegex"),
+    { target: { value: "testteam*" } },
+  );
+  fireEvent.click(screen.getByTestId("TeamRepositoryAssignmentForm-submit"));
+  await waitFor(() => expect(mockSubmit).toHaveBeenCalled());
+  const firstCallArg = mockSubmit.mock.calls[0][0];
+  expect(firstCallArg.teamRegex).toBe("testteam*");
+});
