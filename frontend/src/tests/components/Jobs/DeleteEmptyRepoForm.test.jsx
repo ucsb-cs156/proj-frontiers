@@ -161,12 +161,14 @@ describe("DeleteEmptyRepoForm tests", () => {
     );
   });
   test("button shows Launching... and is disabled while mutating", async () => {
-    // Mock a delayed response so the component has time to render the Loading state
-    axiosMock.onDelete("/api/repos").reply(() => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve([200, { message: "Job Launched" }]), 50);
-      });
+    // 1. Create a promise that we can manually resolve whenever we want
+    let resolveApi;
+    const controlledPromise = new Promise((resolve) => {
+      resolveApi = resolve;
     });
+
+    // 2. Tell Axios to return our frozen promise
+    axiosMock.onDelete("/api/repos").reply(() => controlledPromise);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -182,11 +184,13 @@ describe("DeleteEmptyRepoForm tests", () => {
     fireEvent.change(prefixInput, { target: { value: "lab01" } });
     fireEvent.click(submitButton);
 
-    // This verifies the deleteMutation.isLoading === true branch
+    // 3. Because the promise is frozen, the button is guaranteed to be stuck in the Loading state!
     expect(await screen.findByText("Launching...")).toBeInTheDocument();
     expect(submitButton).toBeDisabled();
 
-    // Wait for the mutation to finish so the test cleans up properly
+    // 4. Now we manually finish the API call to clean up the test properly
+    resolveApi([200, { message: "Job Launched" }]);
+
     await waitFor(() =>
       expect(screen.queryByText("Launching...")).not.toBeInTheDocument(),
     );
