@@ -12,6 +12,8 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
+RUN apk add bash
+
 COPY --from=0 /home/app/target/frontiers-1.0.0.jar .
 
 COPY --from=0 /home/app/startup.sh .
