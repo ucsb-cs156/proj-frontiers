@@ -46,6 +46,8 @@ describe("StaffTabComponent Tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    mockToast.mockClear();
+    mockToastError.mockClear();
   });
 
   afterEach(() => {
@@ -120,7 +122,6 @@ describe("StaffTabComponent Tests", () => {
     const expectedHeaders = ["id", "First Name", "Last Name", "Email"];
     const expectedFields = ["id", "firstName", "lastName", "email"];
 
-    // assert
     expectedHeaders.forEach((headerText, index) => {
       const header = screen.getByTestId(
         `InstructorCourseShowPage-CourseStaffTable-header-${expectedFields[index]}`,
@@ -165,7 +166,6 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
-    //Great time to check initial values
     expect(
       queryClientSpecific.getQueryData(["/api/coursestaff/course?courseId=7"]),
     ).toStrictEqual([]);
@@ -184,7 +184,6 @@ describe("StaffTabComponent Tests", () => {
       "modal-dialog modal-dialog-centered",
     );
 
-    // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
     fireEvent.change(searchInput, { target: { value: "test search" } });
     expect(searchInput.value).toBe("test search");
@@ -217,7 +216,6 @@ describe("StaffTabComponent Tests", () => {
         .dataUpdateCount,
     ).toEqual(updateCountStudent + 1);
 
-    // Verify that the search filter is cleared
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
@@ -249,6 +247,8 @@ describe("StaffTabComponent Tests", () => {
         .onGet("/api/coursestaff/course?courseId=1")
         .reply(200, staffList);
       queryClient.clear();
+      mockToast.mockClear();
+      mockToastError.mockClear();
     });
 
     test("Placeholder, initial check", async () => {
@@ -301,10 +301,9 @@ describe("StaffTabComponent Tests", () => {
         ).toBeInTheDocument();
       });
 
-      // Verify search input is rendered
       const searchInput = screen.getByTestId(`${testId}-search`);
 
-      const fullNameStaff = courseStaffFixtures.staffWithEachStatus[2]; // Emma Watson
+      const fullNameStaff = courseStaffFixtures.staffWithEachStatus[2];
       fireEvent.change(searchInput, {
         target: {
           value:
@@ -463,9 +462,7 @@ describe("StaffTabComponent Tests", () => {
     axiosMock
       .onGet("/api/coursestaff/course?courseId=7")
       .reply(200, courseStaffFixtures.threeStaff);
-    axiosMock
-      .onPost("/api/coursestaff/upload/csv")
-      .reply(200, { count: 2 });
+    axiosMock.onPost("/api/coursestaff/upload/csv").reply(200, { count: 2 });
 
     render(
       <QueryClientProvider client={queryClientSpecific}>
@@ -478,6 +475,10 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-csv-button`)).toBeInTheDocument();
+    });
+
     const updateCountBefore = queryClientSpecific.getQueryState([
       "/api/coursestaff/course?courseId=7",
     ]).dataUpdateCount;
@@ -487,7 +488,6 @@ describe("StaffTabComponent Tests", () => {
       expect(screen.getByTestId(`${testId}-csv-modal`)).toBeInTheDocument();
     });
 
-    // Upload a file
     const file = new File(
       ["firstName,lastName,email\nChris,Gaucho,cgaucho@ucsb.edu"],
       "staff.csv",
@@ -502,13 +502,11 @@ describe("StaffTabComponent Tests", () => {
     await waitFor(() => expect(mockToast).toBeCalled());
     expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
 
-    // Verify cache was invalidated
     expect(
       queryClientSpecific.getQueryState(["/api/coursestaff/course?courseId=7"])
         .dataUpdateCount,
     ).toEqual(updateCountBefore + 1);
 
-    // Modal should be closed
     await waitFor(() => {
       expect(
         screen.queryByTestId(`${testId}-csv-modal`),
@@ -545,11 +543,9 @@ describe("StaffTabComponent Tests", () => {
       expect(screen.getByTestId(`${testId}-csv-modal`)).toBeInTheDocument();
     });
 
-    const file = new File(
-      ["bad,headers\nfoo,bar"],
-      "staff.csv",
-      { type: "text/csv" },
-    );
+    const file = new File(["bad,headers\nfoo,bar"], "staff.csv", {
+      type: "text/csv",
+    });
     const input = screen.getByTestId("CourseStaffCSVUploadForm-upload");
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -585,7 +581,10 @@ describe("StaffTabComponent Tests", () => {
 
     const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
     fireEvent.click(infoIcon);
-    expect(openSpy).toHaveBeenCalledWith("/help/csv#staff-information", "_blank");
+    expect(openSpy).toHaveBeenCalledWith(
+      "/help/csv#staff-information",
+      "_blank",
+    );
   });
 
   test("for coming soon tooltip on disabled download CSV button", async () => {
@@ -599,14 +598,12 @@ describe("StaffTabComponent Tests", () => {
       </QueryClientProvider>,
     );
 
-    // Wait for table to render
     await waitFor(() => {
       expect(
         screen.getByTestId(`${testId}-CourseStaffTable`),
       ).toBeInTheDocument();
     });
 
-    // Download CSV button (no testId, but can find by text)
     const downloadCsvButton = screen.getByText("Download Staff CSV");
     expect(downloadCsvButton).toBeDisabled();
     expect(downloadCsvButton).toHaveStyle("pointerEvents: none");

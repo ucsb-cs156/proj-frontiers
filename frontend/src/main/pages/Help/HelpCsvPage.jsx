@@ -243,9 +243,7 @@ export default function HelpCsvPage() {
           <Accordion.Item eventKey="0">
             <Accordion.Header>Staff (by Email)</Accordion.Header>
             <Accordion.Body>
-              <p>
-                Upload staff using a CSV with the following columns:
-              </p>
+              <p>Upload staff using a CSV with the following columns:</p>
               <pre className={"csvExample"} data-testid="staffCsvExample">
                 {csvFixtures.staffByEmail}
               </pre>
@@ -272,9 +270,7 @@ export default function HelpCsvPage() {
                   <tr>
                     <td>email</td>
                     <td>Staff member&apos;s email address</td>
-                    <td>
-                      Used to match to user accounts in the system.
-                    </td>
+                    <td>Used to match to user accounts in the system.</td>
                   </tr>
                 </tbody>
               </table>
