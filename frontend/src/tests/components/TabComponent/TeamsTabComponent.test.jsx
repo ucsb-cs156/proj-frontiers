@@ -174,7 +174,13 @@ describe("TeamTabComponent tests", () => {
     expect(screen.getAllByText("Last Name")[0]).toBeInTheDocument();
     expect(screen.getAllByText("Email")[0]).toBeInTheDocument();
     expect(screen.getAllByText("GitHub ID")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("26347897")[0]).toBeInTheDocument();
     expect(screen.queryByText("GitHub Login")).not.toBeInTheDocument();
+    expect(
+      axiosMock.history.get.some((request) =>
+        request.url.includes("/api/rosterstudents/course/1"),
+      ),
+    ).toBe(false);
   });
 
   test("student view matches teams by user id or email and ignores missing members", async () => {

@@ -5,7 +5,7 @@ import { useBackendMutation } from "main/utils/useBackend";
 import { hasRole } from "main/utils/currentUser";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import Modal from "react-bootstrap/Modal";
@@ -23,16 +23,12 @@ export default function TeamsTable({
   const [postMemberModal, setPostMemberModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [errorPostMemberModal, setErrorPostMemberModal] = useState(false);
-  const [openTeamKeys, setOpenTeamKeys] = useState([]);
+  const [selectedTeamKeys, setSelectedTeamKeys] = useState();
   const canManage =
     canManageTeams ??
     (instructorView && hasRole(currentUser, "ROLE_INSTRUCTOR"));
-
-  useEffect(() => {
-    if (!instructorView) {
-      setOpenTeamKeys(teams.map((_team, index) => `${index}`));
-    }
-  }, [instructorView, teams]);
+  const defaultOpenTeamKeys = teams.map((_team, index) => `${index}`);
+  const openTeamKeys = selectedTeamKeys ?? defaultOpenTeamKeys;
 
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
@@ -259,11 +255,7 @@ export default function TeamsTable({
       <Accordion
         alwaysOpen={!instructorView}
         activeKey={instructorView ? undefined : openTeamKeys}
-        onSelect={(eventKey) => {
-          if (!instructorView) {
-            setOpenTeamKeys(eventKey);
-          }
-        }}
+        onSelect={instructorView ? undefined : setSelectedTeamKeys}
         data-testid={`${testIdPrefix}-accordion`}
       >
         {teams.map((team, index) => (
