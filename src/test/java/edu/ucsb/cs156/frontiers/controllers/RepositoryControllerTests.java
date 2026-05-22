@@ -402,4 +402,27 @@ public class RepositoryControllerTests extends ControllerTestCase {
     Map<String, Object> json = responseToJson(response);
     assertEquals("EntityNotFoundException", json.get("type"));
   }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void delete_repo_job_just_no_install_id() throws Exception {
+    Course course =
+        Course.builder()
+            .courseName("course")
+            .orgName("ucsb-cs156") // orgName exists, so it checks installationId next
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build(); // installationId is implicitly null
+
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/repos").with(csrf()).param("courseId", "2").param("prefix", "lab01"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("NoLinkedOrganizationException", json.get("type"));
+  }
 }

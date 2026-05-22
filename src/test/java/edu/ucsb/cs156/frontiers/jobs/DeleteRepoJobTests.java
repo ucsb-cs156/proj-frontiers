@@ -99,4 +99,34 @@ public class DeleteRepoJobTests {
 
     verify(repositoryService, never()).deleteRepository(eq(course), anyString());
   }
+
+  @Test
+  void test_delete_repo_job_no_repos_found() throws Exception {
+    // Setup
+    Course course = Course.builder().courseName("CS156").build();
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("lab01")
+            .repositoryService(repositoryService)
+            .build();
+
+    // Return an empty list to skip the for-loop
+    when(repositoryService.getRepoNamesWithPrefix(course, "lab01")).thenReturn(List.of());
+
+    // Run Job
+    job.accept(ctx);
+
+    // Verify Logging bypassed the loop
+    verify(ctx, times(5)).log(logCaptor.capture());
+    List<String> logs = logCaptor.getAllValues();
+
+    assertEquals("Starting DeleteRepoJob for course CS156 with prefix lab01", logs.get(0));
+    assertEquals("0 repos found with prefix lab01", logs.get(1));
+    assertEquals("0 repos deleted", logs.get(2));
+    assertEquals("0 repos retained", logs.get(3));
+    assertEquals("0 errors", logs.get(4));
+
+    verify(repositoryService, never()).deleteRepository(any(), anyString());
+  }
 }
