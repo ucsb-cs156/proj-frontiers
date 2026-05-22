@@ -572,7 +572,11 @@ describe("StaffTabComponent Tests", () => {
     );
 
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
-    await waitFor(() => expect(mockToastError).toBeCalled());
+    await waitFor(() =>
+      expect(mockToastError).toBeCalledWith(
+        expect.stringContaining("Error uploading CSV:"),
+      ),
+    );
   });
 
   test("CSV help icon opens help page", async () => {
