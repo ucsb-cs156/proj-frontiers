@@ -31,9 +31,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6.1.0
         with:
-          images: |
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=sha,format=long
+            type=ref,event=pr
+
       - name: Build and push Docker images
         id: push
         uses: docker/build-push-action@v7.2.0
