@@ -30,10 +30,9 @@ export function CourseWarningBanner({ courseId, orgName }) {
       )}
       {showPermissionWarning && (
         <Alert variant="warning">
-          Warning: The default base permission for this organization is{" "}
+          Warning: The default base permission for this organization is&nbsp;
           {`"${permission.charAt(0).toUpperCase() + permission.slice(1)}"`}.
-          Students may be able to view one another&apos;s private repos.
-          {/* Stryker disable next-line StringLiteral : whitespace only */}{" "}
+          Students may be able to view one another&apos;s private repos.&nbsp;
           {orgName && (
             <Alert.Link
               href={`https://github.com/organizations/${orgName}/settings/member_privileges`}

@@ -43,9 +43,11 @@ export default function InstructorCourseShowPage() {
     { method: "GET", url: `/api/courses/warnings/${courseId}` },
     undefined,
     true,
-    // Stryker disable next-line ObjectLiteral,StringLiteral : placeholder + staleTime are perf hints
+    // Stryker disable next-line ObjectLiteral : entire options block is perf hints
     {
+      // Stryker disable next-line all : placeholder perf hint, not behavior
       placeholderData: { defaultBasePermission: "null" },
+      // Stryker disable next-line all : staleTime perf hint, not behavior
       staleTime: "static",
     },
   );
