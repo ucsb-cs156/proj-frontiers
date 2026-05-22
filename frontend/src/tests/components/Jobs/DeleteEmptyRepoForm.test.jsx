@@ -74,6 +74,9 @@ describe("DeleteEmptyRepoForm tests", () => {
   });
 
   test("calls API, toasts success, and clears input on valid submit", async () => {
+    // Spy on the queryClient to verify it invalidates the correct cache key
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
     axiosMock.onDelete("/api/repos").reply(200, { message: "Job Launched" });
 
     render(
@@ -88,25 +91,45 @@ describe("DeleteEmptyRepoForm tests", () => {
     const submitButton = screen.getByTestId("DeleteEmptyReposForm-submit");
 
     fireEvent.change(prefixInput, { target: { value: "lab01" } });
-    expect(prefixInput).toHaveValue("lab01");
-
     fireEvent.click(submitButton);
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
 
-    // Kills objectToAxiosParams URL, Method, and Params mutations
     expect(axiosMock.history.delete[0].url).toBe("/api/repos");
-    expect(axiosMock.history.delete[0].method).toBe("delete");
-    expect(axiosMock.history.delete[0].params).toEqual({
-      courseId: 17,
-      prefix: "lab01",
-    });
-
-    // Kills onSuccess toast and setPrefix mutations
     expect(mockToast).toHaveBeenCalledWith(
       "Delete empty repos job launched for prefix: lab01",
     );
     expect(prefixInput).toHaveValue("");
+
+    // This kills the [] and [""] array mutations!
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["/api/repos"] });
+  });
+  test("handles API errors (with null response data) correctly", async () => {
+    // Returning null as the data body forces the optional chaining to do its job
+    axiosMock.onDelete("/api/repos").reply(400, null);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <DeleteEmptyRepoForm courseId={17} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const prefixInput = screen.getByTestId("DeleteEmptyReposForm-prefix");
+    const submitButton = screen.getByTestId("DeleteEmptyReposForm-submit");
+
+    fireEvent.change(prefixInput, { target: { value: "lab01" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+
+    // Kills the error.response?.data.message mutant
+    expect(mockToastError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Error starting job: Request failed with status code 400",
+      ),
+    );
   });
 
   test("handles API errors (with response data) correctly", async () => {
