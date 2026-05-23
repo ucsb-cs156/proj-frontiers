@@ -269,6 +269,13 @@
         <artifactId>git-code-format-maven-plugin</artifactId>
         <version>5.3</version>
         <executions>
+            <!-- On commit, format the modified files -->
+            <execution>
+                <id>install-formatter-hook</id>
+                <goals>
+                    <goal>install-hooks</goal>
+                </goals>
+            </execution>
             <!-- On Maven verify phase, fail if any file
             (including unmodified) is badly formatted -->
             <execution>
@@ -447,8 +454,6 @@
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
           <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
           <commitIdGenerationMode>full</commitIdGenerationMode>
-          <failOnNoGitDirectory>false</failOnNoGitDirectory>
-          <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
         </configuration>
       </plugin>
     </plugins>
@@ -619,30 +624,6 @@
                   <arguments>run build</arguments>
                   <skip>${frontend.build.skip}</skip>
                 </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>install-git-hooks</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.cosium.code</groupId>
-            <artifactId>git-code-format-maven-plugin</artifactId>
-            <version>5.3</version>
-            <executions>
-              <!-- Install the formatter hook for local developer workflows only. -->
-              <execution>
-                <id>install-formatter-hook</id>
-                <goals>
-                  <goal>install-hooks</goal>
-                </goals>
               </execution>
             </executions>
           </plugin>
