@@ -249,4 +249,76 @@ public class OrganizationLinkerServiceTests {
     assertFalse(warning.showOrganizationAgeWarning());
     mockRestServiceServer.verify();
   }
+
+  @Test
+  public void test_getDefaultBasePermission_returnsNone() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+        {
+          "login": "ucsb-cs156",
+          "default_repository_permission": "none"
+        }
+        """;
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer definitely.real.jwt"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
+
+    String result = organizationLinkerService.getDefaultBasePermission(course);
+    assertEquals("none", result);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void test_getDefaultBasePermission_returnsRead() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+        {
+          "login": "ucsb-cs156",
+          "default_repository_permission": "read"
+        }
+        """;
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer definitely.real.jwt"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
+
+    String result = organizationLinkerService.getDefaultBasePermission(course);
+    assertEquals("read", result);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void test_getDefaultBasePermission_usesOrgNameInUrl() throws Exception {
+    Course course = Course.builder().orgName("some-other-org").installationId("99999").build();
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+        {
+          "login": "some-other-org",
+          "default_repository_permission": "none"
+        }
+        """;
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/some-other-org"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer definitely.real.jwt"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
+
+    String result = organizationLinkerService.getDefaultBasePermission(course);
+    assertEquals("none", result);
+    mockRestServiceServer.verify();
+  }
 }

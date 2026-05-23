@@ -19,6 +19,7 @@ export default function StaffTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
+  isInstructor = true,
 }) {
   const [postModal, showPostModal] = useState(false);
   const { data: courseStaff } = useBackend(
@@ -67,20 +68,22 @@ export default function StaffTabComponent({
 
   return (
     <div data-testid={`${testIdPrefix}-StaffTabComponent`}>
-      <Modal
-        show={postModal}
-        onHide={() => showPostModal(false)}
-        centered={true}
-        data-testid={`${testIdPrefix}-post-modal`}
-      >
-        <ModalHeader closeButton>Add Staff Member</ModalHeader>
-        <ModalBody>
-          <CourseStaffForm
-            submitAction={handlePostSubmit}
-            cancelDisabled={true}
-          />
-        </ModalBody>
-      </Modal>
+      {isInstructor && (
+        <Modal
+          show={postModal}
+          onHide={() => showPostModal(false)}
+          centered={true}
+          data-testid={`${testIdPrefix}-post-modal`}
+        >
+          <ModalHeader closeButton>Add Staff Member</ModalHeader>
+          <ModalBody>
+            <CourseStaffForm
+              submitAction={handlePostSubmit}
+              cancelDisabled={true}
+            />
+          </ModalBody>
+        </Modal>
+      )}
       <Row sm={3} className="p-2">
         <Col>
           <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
@@ -97,15 +100,17 @@ export default function StaffTabComponent({
             </span>
           </OverlayTrigger>
         </Col>
-        <Col>
-          <Button
-            onClick={() => showPostModal(true)}
-            data-testid={`${testIdPrefix}-post-button`}
-            className="w-100"
-          >
-            Add Staff Member
-          </Button>
-        </Col>
+        {isInstructor && (
+          <Col>
+            <Button
+              onClick={() => showPostModal(true)}
+              data-testid={`${testIdPrefix}-post-button`}
+              className="w-100"
+            >
+              Add Staff Member
+            </Button>
+          </Col>
+        )}
         <Col>
           <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
             <span className="d-inline-block w-100">

@@ -1,14 +1,36 @@
 import OurTable from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
-
-const columns = [
+import { Link } from "react-router";
+const columns = (courseShowRoutePrefix, testId) => [
   {
     header: "id",
     accessorKey: "id", // accessor is the "key" in the data
   },
   {
     header: "Course Name",
-    accessorKey: "courseName",
+    id: "courseName",
+    cell: ({ cell }) => {
+      if (!courseShowRoutePrefix) {
+        return cell.row.original.courseName;
+      }
+      return (
+        <OverlayTrigger
+          placement="right"
+          overlay={
+            <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
+              View course details
+            </Tooltip>
+          }
+        >
+          <Link
+            to={`${courseShowRoutePrefix}/${cell.row.original.id}`}
+            data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+          >
+            {cell.row.original.courseName}
+          </Link>
+        </OverlayTrigger>
+      );
+    },
   },
   {
     header: "Term",
@@ -26,6 +48,7 @@ export default function CoursesTable({
   testId,
   joinCallback,
   isLoading,
+  courseShowRoutePrefix,
 }) {
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
@@ -70,7 +93,7 @@ export default function CoursesTable({
     };
 
   const columnsWithStatus = [
-    ...columns,
+    ...columns(courseShowRoutePrefix, testId),
     {
       header: "Status",
       accessorKey: "studentStatus",
