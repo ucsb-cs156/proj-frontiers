@@ -1,20 +1,18 @@
 import "bootstrap/dist/css/bootstrap.css";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 import "../src/index.css";
 
-import { initialize, mswLoader } from 'msw-storybook-addon'
+import { initialize, mswLoader } from "msw-storybook-addon";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router";
 import { ToastContainer, toast } from "react-toastify";
-import { useEffect } from "react";
-
-const queryClient = new QueryClient();
+import { useEffect, useState } from "react";
 
 // Initialize MSW
-initialize()
+initialize();
 
-// For conditional decorators trick, see: https://github.com/storybookjs/storybook/issues/23237#issuecomment-1611351405 
+// For conditional decorators trick, see: https://github.com/storybookjs/storybook/issues/23237#issuecomment-1611351405
 // Decorators are applied in order; the innermost decorator is applied first.
 // Here, if suppressMemoryRouter is true, then the MemoryRouter decorator is not applied,
 // and we don't use the useLocation hook to show a toast message when navigate is called.
@@ -34,24 +32,30 @@ export const decorators = [
     }
   },
   (Story) => {
-    return (<>
-      <ToastContainer />
-      <Story />
-    </>
+    return (
+      <>
+        <ToastContainer />
+        <Story />
+      </>
     );
   },
-  (Story, Context) => (
-    Context.args?.suppressMemoryRouter ?
-      <Story /> :
-      <MemoryRouter><Story /></MemoryRouter>
-  ),
-  (Story) => (
-    <QueryClientProvider client={queryClient}>
+  (Story, Context) =>
+    Context.args?.suppressMemoryRouter ? (
       <Story />
-    </QueryClientProvider >
-  ),
+    ) : (
+      <MemoryRouter>
+        <Story />
+      </MemoryRouter>
+    ),
+  (Story) => {
+    const [queryClient] = useState(() => new QueryClient());
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Story />
+      </QueryClientProvider>
+    );
+  },
 ];
-
 
 /** @type { import('@storybook/react-webpack5').Preview } */
 const preview = {
@@ -63,8 +67,7 @@ const preview = {
       },
     },
   },
-  loaders: [mswLoader]
+  loaders: [mswLoader],
 };
-
 
 export default preview;
