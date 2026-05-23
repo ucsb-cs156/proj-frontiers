@@ -13,6 +13,18 @@ describe("CourseStaffCSVUploadForm tests", () => {
     expect(
       screen.getByTestId("CourseStaffCSVUploadForm-submit"),
     ).toBeInTheDocument();
+
+    const fileInput = screen.getByTestId("CourseStaffCSVUploadForm-upload");
+    expect(fileInput).toHaveAttribute("type", "file");
+    expect(fileInput).toHaveAttribute("accept", ".csv");
+    expect(fileInput).toHaveAttribute("id", "upload");
+
+    const submitButton = screen.getByTestId("CourseStaffCSVUploadForm-submit");
+    expect(submitButton).toHaveAttribute("type", "submit");
+    expect(submitButton).toHaveTextContent("Upload");
+
+    const label = screen.getByLabelText("Upload Staff CSV");
+    expect(label).toBeInTheDocument();
   });
 
   test("shows validation error when no file is selected", async () => {
