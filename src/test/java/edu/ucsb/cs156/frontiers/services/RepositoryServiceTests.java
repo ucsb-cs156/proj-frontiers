@@ -788,6 +788,22 @@ public class RepositoryServiceTests {
   }
 
   @Test
+  public void isRepositoryEmpty_returns_false_when_commits_response_is_not_an_array()
+      throws Exception {
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+    assertFalse(repositoryService.isRepositoryEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
   public void isRepositoryEmpty_propagates_unexpected_github_api_errors() {
     mockRestServiceServer
         .expect(
