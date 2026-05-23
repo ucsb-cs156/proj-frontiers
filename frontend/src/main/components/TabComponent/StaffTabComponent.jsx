@@ -112,18 +112,15 @@ export default function StaffTabComponent({
           </Col>
         )}
         <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
-              >
-                Download Staff CSV
-              </Button>
-            </span>
-          </OverlayTrigger>
+          <Button
+            onClick={() =>
+              window.open(`/api/csv/coursestaff?courseId=${courseId}`, "_blank")
+            }
+            data-testid={`${testIdPrefix}-download-csv-button`}
+            className="w-100 button btn-secondary"
+          >
+            Download Staff CSV
+          </Button>
         </Col>
       </Row>
       <Row className="mb-1">
