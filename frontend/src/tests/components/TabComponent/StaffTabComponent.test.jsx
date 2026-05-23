@@ -418,7 +418,8 @@ describe("StaffTabComponent Tests", () => {
     expect(
       screen.getByTestId("CourseStaffCSVUploadForm-upload"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Upload Staff CSV")).toBeInTheDocument();
+    const modal = screen.getByTestId(`${testId}-csv-modal`);
+    expect(modal).toHaveTextContent("Upload Staff CSV");
   });
 
   test("CSV upload modal closes on close button", async () => {
