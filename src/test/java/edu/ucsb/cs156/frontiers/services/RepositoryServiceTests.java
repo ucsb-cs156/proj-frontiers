@@ -1,7 +1,9 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -31,8 +33,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.HttpClientErrorException;
 
 @RestClientTest(RepositoryService.class)
 @Import(TestConfig.class)
@@ -657,5 +662,214 @@ public class RepositoryServiceTests {
 
     assertEquals("Cannot determine GitHub team slug for team 'Display Name'", e.getMessage());
     verify(teamRepository, never()).save(any());
+  }
+
+  @Test
+  public void getRepositoriesMatchingPrefix_filters_matching_repositories() throws Exception {
+    String response =
+        """
+        [
+          {"name": "lab01-student1", "full_name": "ucsb-cs156/lab01-student1"},
+          {"name": "lab01-student2", "full_name": "ucsb-cs156/lab01-student2"},
+          {"name": "other-student3", "full_name": "ucsb-cs156/other-student3"}
+        ]
+        """;
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
+
+    List<RepositoryService.GithubRepository> repos =
+        repositoryService.getRepositoriesMatchingPrefix(course, "lab01");
+
+    assertEquals(2, repos.size());
+    assertEquals("lab01-student1", repos.get(0).name());
+    assertEquals("ucsb-cs156/lab01-student1", repos.get(0).fullName());
+    assertEquals("lab01-student2", repos.get(1).name());
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void getRepositoriesMatchingPrefix_returns_empty_list_when_no_repositories_match()
+      throws Exception {
+    String response =
+        """
+        [
+          {"name": "other-student1", "full_name": "ucsb-cs156/other-student1"}
+        ]
+        """;
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
+
+    List<RepositoryService.GithubRepository> repos =
+        repositoryService.getRepositoriesMatchingPrefix(course, "lab01");
+
+    assertTrue(repos.isEmpty());
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void getRepositoriesMatchingPrefix_propagates_github_api_errors() {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withForbiddenRequest());
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> repositoryService.getRepositoriesMatchingPrefix(course, "lab01"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void isRepositoryEmpty_returns_true_when_commits_response_is_empty_array()
+      throws Exception {
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+    assertTrue(repositoryService.isRepositoryEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void isRepositoryEmpty_returns_true_when_github_reports_empty_repository()
+      throws Exception {
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withStatus(HttpStatus.CONFLICT));
+
+    assertTrue(repositoryService.isRepositoryEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void isRepositoryEmpty_returns_false_when_commits_exist() throws Exception {
+    String response = """
+        [
+          {"sha": "abc123"}
+        ]
+        """;
+
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
+
+    assertFalse(repositoryService.isRepositoryEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void isRepositoryEmpty_propagates_unexpected_github_api_errors() {
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withForbiddenRequest());
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> repositoryService.isRepositoryEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void deleteRepositoryIfEmpty_deletes_empty_repository() throws Exception {
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andRespond(withNoContent());
+
+    assertTrue(repositoryService.deleteRepositoryIfEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void deleteRepositoryIfEmpty_does_not_delete_non_empty_repository() throws Exception {
+    String response = """
+        [
+          {"sha": "abc123"}
+        ]
+        """;
+
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
+
+    assertFalse(repositoryService.deleteRepositoryIfEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void deleteRepositoryIfEmpty_propagates_delete_errors() {
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andRespond(withForbiddenRequest());
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> repositoryService.deleteRepositoryIfEmpty(course, "lab01-student1"));
+    mockRestServiceServer.verify();
   }
 }
