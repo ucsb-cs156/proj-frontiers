@@ -19,6 +19,7 @@ export default function StaffTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
+  isInstructor = true,
 }) {
   const [postModal, showPostModal] = useState(false);
   const { data: courseStaff } = useBackend(
@@ -81,46 +82,48 @@ export default function StaffTabComponent({
           />
         </ModalBody>
       </Modal>
-      <Row sm={3} className="p-2">
-        <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                data-testid={`${testIdPrefix}-csv-button`}
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
-              >
-                Upload CSV Roster
-              </Button>
-            </span>
-          </OverlayTrigger>
-        </Col>
-        <Col>
-          <Button
-            onClick={() => showPostModal(true)}
-            data-testid={`${testIdPrefix}-post-button`}
-            className="w-100"
-          >
-            Add Staff Member
-          </Button>
-        </Col>
-        <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
-              >
-                Download Staff CSV
-              </Button>
-            </span>
-          </OverlayTrigger>
-        </Col>
-      </Row>
+      {isInstructor && (
+        <Row sm={3} className="p-2">
+          <Col>
+            <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
+              <span className="d-inline-block w-100">
+                <Button
+                  data-testid={`${testIdPrefix}-csv-button`}
+                  className="w-100 button btn-secondary disabled"
+                  disabled
+                  style={{ pointerEvents: "none" }}
+                  aria-disabled="true"
+                >
+                  Upload CSV Roster
+                </Button>
+              </span>
+            </OverlayTrigger>
+          </Col>
+          <Col>
+            <Button
+              onClick={() => showPostModal(true)}
+              data-testid={`${testIdPrefix}-post-button`}
+              className="w-100"
+            >
+              Add Staff Member
+            </Button>
+          </Col>
+          <Col>
+            <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
+              <span className="d-inline-block w-100">
+                <Button
+                  className="w-100 button btn-secondary disabled"
+                  disabled
+                  style={{ pointerEvents: "none" }}
+                  aria-disabled="true"
+                >
+                  Download Staff CSV
+                </Button>
+              </span>
+            </OverlayTrigger>
+          </Col>
+        </Row>
+      )}
       <Row className="mb-1">
         <Form>
           <Form.Group as={Row} controlId="searchFilter">
@@ -158,6 +161,7 @@ export default function StaffTabComponent({
           currentUser={currentUser}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-CourseStaffTable`}
+          isInstructor={isInstructor}
         />
       </Row>
     </div>
