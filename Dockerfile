@@ -2,20 +2,21 @@ FROM maven:3.9.16-eclipse-temurin-21-noble AS builder
 
 WORKDIR /home/app
 
-# Copy of pom & package is a cheap hack to have npm and maven dependencies already downloaded; no need
-# to redownload every time and even though CI reinstalls from scratch it at least won't have to redownload them
+# Copy of pom & package is a cheap hack to have npm and maven dependencies already loaded;
+# Most of the time, they're unlikely to change, so tying them to the file copies allows us not to
+# have to reload them constantly.
 
 COPY pom.xml .
 
-RUN ["mvn", "dependency:resolve"]
+RUN mvn --no-transfer-progress dependency:resolve
 
 COPY frontend/package-lock.json frontend/package.json frontend/
 
-RUN mvn com.github.eirslett:frontend-maven-plugin:install-node-and-npm com.github.eirslett:frontend-maven-plugin:npm -Dfrontend.npm.arguments=ci -DworkingDirectory=frontend
+RUN mvn -Pproduction com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm com.github.eirslett:frontend-maven-plugin:npm@npm-install
 
 COPY . .
 
-RUN mvn --no-transfer-progress -B -Pproduction -DskipTests clean package
+RUN mvn -B -Pproduction -DskipTests -Dcache.use=true package
 
 ENTRYPOINT ["./startup.sh","target/frontiers-1.0.0.jar"]
 

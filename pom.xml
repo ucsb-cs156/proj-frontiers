@@ -53,6 +53,7 @@
     <targetClasses>${targetClasses:edu.ucsb.cs156.*}</targetClasses>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     <nodeVersion>v22.18.0</nodeVersion>
+    <cache.use>false</cache.use>
   </properties>
 
   <!-- (22) <dependencyManagement/> -->
@@ -660,25 +661,27 @@
             </configuration>
             <executions>
               <execution>
-                <id>install node and npm</id>
+                <id>install-node-and-npm</id>
                 <goals>
                   <goal>install-node-and-npm</goal>
                 </goals>
                 <configuration>
                   <nodeVersion>${nodeVersion}</nodeVersion>
+                  <skip>${cache.use}</skip>
                 </configuration>
               </execution>
               <execution>
-                <id>npm install</id>
+                <id>npm-install</id>
                 <goals>
                   <goal>npm</goal>
                 </goals>
                 <configuration>
                   <arguments>ci</arguments>
+                  <skip>${cache.use}</skip>
                 </configuration>
               </execution>
               <execution>
-                <id>npm run build</id>
+                <id>npm-run-build</id>
                 <goals>
                   <goal>npm</goal>
                 </goals>
