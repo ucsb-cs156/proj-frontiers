@@ -16,7 +16,7 @@ RUN mvn --no-transfer-progress -Pproduction com.github.eirslett:frontend-maven-p
 
 COPY . .
 
-RUN mvn -B -Pproduction -DskipTests -Dcache.use=true package
+RUN mvn --no-transfer-progress -B -Pproduction -DskipTests -Dcache.use=true package
 
 FROM eclipse-temurin:21-jre-alpine
 
