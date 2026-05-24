@@ -11,6 +11,10 @@ Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 362 Computational T
 1,156,A123456,CHRIS,GAUCHO,cgaucho@ucsb.edu,W 5:00- 5:50 PHELP 3525,1001,12345678,cgaucho,ROSTER,MEMBER,Team Gaucho
 2,156,A987654,LAUREN,DEL PLAYA,ldelplaya@ucsb.edu,W 6:00- 6:50 PHELP 3525,1002,87654321,ldelplaya,ROSTER,MEMBER,Team 1
 3,156,1234567,SABADO,TARDE,sabadotarde@ucsb.edu,W 7:00- 7:50 PHELP 3525,1003,11223344,sabadotarde,MANUAL,INVITED,Team 2`,
+  staffDownload: `id,courseId,userId,firstName,lastName,email,orgStatus,githubId,githubLogin,role
+1,156,1001,CHRIS,GAUCHO,cgaucho@ucsb.edu,MEMBER,12345678,cgaucho,TA
+2,156,1002,LAUREN,DEL PLAYA,ldelplaya@ucsb.edu,MEMBER,87654321,ldelplaya,Instructor
+3,156,1003,SABADO,TARDE,sabadotarde@ucsb.edu,INVITED,11223344,sabadotarde,TA`,
   oregonStateCSV: `Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id
 Tom Smith,"Smith, Tom",6056208,96.25,80.4,2-Jul-25,11-Jun-25,21-May-25,tomsmith@oregonstate.edu,931551625
 Martha Washington,"Washington, Martha",9876543,100,100,8-Aug-25,12-Dec-25,5-May-25,martha@oregonstate.edu,123456789

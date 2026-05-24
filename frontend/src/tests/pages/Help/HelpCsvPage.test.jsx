@@ -127,20 +127,28 @@ describe("HelpCsvPage tests", () => {
       "rosterDownloadCsvExample",
     );
     const teamsCsvExample = screen.getByTestId("teamsCsvExample");
+    const staffDownloadCsvExample = screen.getByTestId(
+      "staffDownloadCsvExample",
+    );
 
     expect(chicoStateCsvExample).toBeInTheDocument();
     expect(oregonStateCsvExample).toBeInTheDocument();
     expect(rosterDownloadCsvExample).toBeInTheDocument();
     expect(ucsbEgradesCsvExample).toBeInTheDocument();
     expect(teamsCsvExample).toBeInTheDocument();
+    expect(staffDownloadCsvExample).toBeInTheDocument();
     expect(chicoStateCsvExample).toHaveClass("csvExample");
     expect(oregonStateCsvExample).toHaveClass("csvExample");
     expect(rosterDownloadCsvExample).toHaveClass("csvExample");
     expect(ucsbEgradesCsvExample).toHaveClass("csvExample");
     expect(teamsCsvExample).toHaveClass("csvExample");
+    expect(staffDownloadCsvExample).toHaveClass("csvExample");
 
     // New header exists
     expect(screen.getByText("Team Information")).toBeInTheDocument();
+    expect(
+      screen.getByText("Course Staff CSV Download formats"),
+    ).toBeInTheDocument();
 
     // Check accordions separation
     const rosterUploadsAccordion = screen.getByTestId("rosterUploadsAccordion");

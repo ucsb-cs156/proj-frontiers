@@ -11,6 +11,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { BsInfoCircle } from "react-icons/bs";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import CourseStaffTable from "main/components/CourseStaff/CourseStaffTable";
 import Modal from "react-bootstrap/Modal";
@@ -112,15 +113,45 @@ export default function StaffTabComponent({
           </Col>
         )}
         <Col>
-          <Button
-            onClick={() =>
-              window.open(`/api/csv/coursestaff?courseId=${courseId}`, "_blank")
-            }
-            data-testid={`${testIdPrefix}-download-csv-button`}
-            className="w-100 button btn-secondary"
-          >
-            Download Staff CSV
-          </Button>
+          <div className="d-flex align-items-center position-relative">
+            <Button
+              onClick={() =>
+                window.open(
+                  `/api/csv/coursestaff?courseId=${courseId}`,
+                  "_blank",
+                )
+              }
+              data-testid={`${testIdPrefix}-download-csv-button`}
+              className="w-100 button btn-secondary pe-5"
+            >
+              Download Staff CSV
+            </Button>
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="csv-help-tooltip">
+                  CSV Download Format Help
+                </Tooltip>
+              }
+            >
+              <BsInfoCircle
+                onClick={() =>
+                  window.open("/help/csv#staff-information", "_blank")
+                }
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "0.75rem",
+                  transform: "translateY(-50%)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  userSelect: "none",
+                }}
+                data-testid={`${testIdPrefix}-csv-info-icon`}
+              />
+            </OverlayTrigger>
+          </div>
         </Col>
       </Row>
       <Row className="mb-1">

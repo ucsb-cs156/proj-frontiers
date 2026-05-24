@@ -499,4 +499,45 @@ describe("StaffTabComponent Tests", () => {
       ).not.toBeInTheDocument(),
     );
   });
+
+  test("clicking csv info icon opens help page", async () => {
+    const mockOpen = vi.fn();
+    window.open = mockOpen;
+
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    // Wait for table to render
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-CourseStaffTable`),
+      ).toBeInTheDocument();
+    });
+
+    const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
+    expect(infoIcon).toBeInTheDocument();
+
+    // Simulate mouseOver to trigger tooltip
+    fireEvent.mouseOver(infoIcon);
+    await waitFor(() => {
+      expect(screen.getByText("CSV Download Format Help")).toBeInTheDocument();
+    });
+
+    fireEvent.click(infoIcon);
+    expect(mockOpen).toHaveBeenCalledWith(
+      "/help/csv#staff-information",
+      "_blank",
+    );
+  });
 });
