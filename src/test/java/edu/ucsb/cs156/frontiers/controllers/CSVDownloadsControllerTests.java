@@ -41,6 +41,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = {CSVDownloadsController.class})
 @Import(TestConfig.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
