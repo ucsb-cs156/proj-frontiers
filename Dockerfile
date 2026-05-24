@@ -23,7 +23,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-RUN apk add bash
+RUN apk add bash curl
 
 COPY --from=builder /home/app/target/frontiers-1.0.0.jar .
 
