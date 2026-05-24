@@ -420,6 +420,7 @@ describe("StaffTabComponent Tests", () => {
     ).toBeInTheDocument();
     const modal = screen.getByTestId(`${testId}-csv-modal`);
     expect(modal).toHaveTextContent("Upload Staff CSV");
+    expect(modal).toHaveClass("modal-dialog modal-dialog-centered");
   });
 
   test("CSV upload modal closes on close button", async () => {
@@ -511,6 +512,8 @@ describe("StaffTabComponent Tests", () => {
 
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     expect(axiosMock.history.post[0].url).toBe("/api/coursestaff/upload/csv");
+    expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
+    expect(axiosMock.history.post[0].data.get("file")).toBe(file);
     await waitFor(() => expect(mockToast).toBeCalled());
     expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
 
@@ -619,6 +622,16 @@ describe("StaffTabComponent Tests", () => {
     });
 
     const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
+    expect(infoIcon).toHaveStyle({
+      position: "absolute",
+      top: "50%",
+      right: "0.75rem",
+      transform: "translateY(-50%)",
+      color: "#fff",
+      cursor: "pointer",
+      fontSize: "0.9rem",
+      userSelect: "none",
+    });
     fireEvent.click(infoIcon);
     expect(openSpy).toHaveBeenCalledWith(
       "/help/csv#staff-information",
@@ -684,3 +697,4 @@ describe("StaffTabComponent Tests", () => {
     );
   });
 });
+
