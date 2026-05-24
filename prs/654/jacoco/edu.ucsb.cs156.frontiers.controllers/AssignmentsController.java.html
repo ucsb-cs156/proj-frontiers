@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssignmentsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">AssignmentsController.java</span></div><h1>AssignmentsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import edu.ucsb.cs156.frontiers.entities.Assignment;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.enums.AssignmentType;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.repositories.AssignmentRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@Tag(name = &quot;Assignments&quot;)
+@RequestMapping(&quot;/api/assignments&quot;)
+@RestController
+<span class="fc" id="L26">@Slf4j</span>
+<span class="fc" id="L27">public class AssignmentsController extends ApiController {</span>
+  @Autowired private AssignmentRepository assignmentRepository;
+
+  @Autowired private CourseRepository courseRepository;
+
+  /**
+   * This method creates a new Assignment.
+   *
+   * @param courseId the ID of the course the assignment is associated with
+   * @param name the name of the assignment
+   * @param asnType the assignment type (individual vs team)
+   * @param visibility the visbility of the assignment (public vs private)
+   * @param permission the permissions for the assignment (read, write, maintain, admin)
+   * @return the created Assignment
+   */
+  @Operation(summary = &quot;Create a new assignment&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/post&quot;)
+  public Assignment postAssignment(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;name&quot;) @RequestParam String name,
+      @Parameter(name = &quot;asnType&quot;) @RequestParam AssignmentType asnType,
+      @Parameter(name = &quot;visibility&quot;) @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Visibility visibility,
+      @Parameter(name = &quot;permission&quot;) @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Permission permission)
+      throws EntityNotFoundException {
+
+    // Get Course or else throw an error
+
+<span class="fc" id="L57">    Course course =</span>
+        courseRepository
+<span class="fc" id="L59">            .findById(courseId)</span>
+<span class="fc" id="L60">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+    Assignment assignment =
+<span class="fc" id="L63">        Assignment.builder()</span>
+<span class="fc" id="L64">            .course(course)</span>
+<span class="fc" id="L65">            .name(name)</span>
+<span class="fc" id="L66">            .asnType(asnType)</span>
+<span class="fc" id="L67">            .visibility(visibility)</span>
+<span class="fc" id="L68">            .permission(permission)</span>
+<span class="fc" id="L69">            .build();</span>
+
+<span class="fc" id="L71">    Assignment savedAssignment = assignmentRepository.save(assignment);</span>
+
+<span class="fc" id="L73">    return savedAssignment;</span>
+  }
+
+  /**
+   * This method updates an Assignment.
+   *
+   * @param assignmentId the ID of the course the assignment is associated with
+   * @param name the name of the assignment
+   * @param asnType the assignment type (individual vs team)
+   * @param visibility the visbility of the assignment (public vs private)
+   * @param permission the permissions for the assignment (read, write, maintain, admin)
+   * @return the created Assignment
+   */
+  @Operation(summary = &quot;Update an assignment&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #assignmentId)&quot;)
+  @PutMapping(&quot;/put&quot;)
+  public Assignment updateAssignment(
+      @Parameter(name = &quot;assignmentId&quot;) @RequestParam Long assignmentId,
+      @Parameter(name = &quot;name&quot;) @RequestParam String name,
+      @Parameter(name = &quot;asnType&quot;) @RequestParam AssignmentType asnType,
+      @Parameter(name = &quot;visibility&quot;) @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Visibility visibility,
+      @Parameter(name = &quot;permission&quot;) @RequestParam
+          edu.ucsb.cs156.frontiers.enums.Permission permission)
+      throws EntityNotFoundException {
+
+<span class="fc" id="L99">    Assignment assignment =</span>
+        assignmentRepository
+<span class="fc" id="L101">            .findById(assignmentId)</span>
+<span class="fc" id="L102">            .orElseThrow(() -&gt; new EntityNotFoundException(Assignment.class, assignmentId));</span>
+
+<span class="fc" id="L104">    assignment.setAsnType(asnType);</span>
+<span class="fc" id="L105">    assignment.setVisibility(visibility);</span>
+<span class="fc" id="L106">    assignment.setPermission(permission);</span>
+<span class="fc" id="L107">    return assignmentRepository.save(assignment);</span>
+  }
+
+  @Operation(summary = &quot;Delete an assignment&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @DeleteMapping(&quot;/{id}&quot;)
+  public Object deleteAssignment(
+      @Parameter(name = &quot;id&quot;) @PathVariable Long id,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+
+    // check course exists
+<span class="fc" id="L118">    courseRepository</span>
+<span class="fc" id="L119">        .findById(courseId)</span>
+<span class="fc" id="L120">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+    // find assignment or throw error
+<span class="fc" id="L123">    Assignment assignment =</span>
+        assignmentRepository
+<span class="fc" id="L125">            .findById(id)</span>
+<span class="fc" id="L126">            .orElseThrow(() -&gt; new EntityNotFoundException(Assignment.class, id));</span>
+
+    // delete the assignment
+<span class="fc" id="L129">    assignmentRepository.delete(assignment);</span>
+
+<span class="fc" id="L131">    return genericMessage(String.format(&quot;Assignment with id %s deleted&quot;, id));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
