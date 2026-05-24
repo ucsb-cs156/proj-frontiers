@@ -12,13 +12,11 @@ RUN mvn --no-transfer-progress dependency:resolve
 
 COPY frontend/package-lock.json frontend/package.json frontend/
 
-RUN mvn -Pproduction com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm com.github.eirslett:frontend-maven-plugin:npm@npm-install
+RUN mvn --no-transfer-progress -Pproduction com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm com.github.eirslett:frontend-maven-plugin:npm@npm-install
 
 COPY . .
 
 RUN mvn -B -Pproduction -DskipTests -Dcache.use=true package
-
-ENTRYPOINT ["./startup.sh","target/frontiers-1.0.0.jar"]
 
 FROM eclipse-temurin:21-jre-alpine
 
