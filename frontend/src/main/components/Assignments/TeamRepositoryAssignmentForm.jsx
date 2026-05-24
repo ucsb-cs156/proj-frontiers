@@ -54,39 +54,41 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
           <option value="ADMIN">Admin</option>
         </Form.Control>
       </Form.Group>
-    <Form.Group className="mb-3">
-      <Form.Label htmlFor="teamRegex">Team Regex</Form.Label>
-      <Form.Control
-        id="teamRegex"
-        type="text"
-        data-testid="TeamRepositoryAssignmentForm-teamRegex"
-        {...register("teamRegex")}
-      />
-      <OverlayTrigger
-      placement="right"
-      overlay={
-        <Tooltip id="teamRegex-help-tooltip">
-          For team names which contain this regex, a repository will be created.
-          If left blank, a repository will be created for all teams. 
-          <br/>
-          <br/>
-          Ex: 
-          <br/>
-          "s26-0[1-2]" will create [prefix]-s26-01 and [prefix]-s26-02
-          <br/>
-          <br/>
-          "s26" will create [prefix]-s26-01 | [prefix]-s26-02 | [prefix]-s26-03 | etc
-        </Tooltip>
-        }
-      >
-        <BsInfoCircle/>
-      </OverlayTrigger>
-    </Form.Group>
-    <Form.Group>
+      <Form.Group className="mb-3">
+        <Form.Label htmlFor="teamRegex">Team Regex</Form.Label>
+        <Form.Control
+          id="teamRegex"
+          type="text"
+          data-testid="TeamRepositoryAssignmentForm-teamRegex"
+          {...register("teamRegex")}
+        />
+        <OverlayTrigger
+          placement="right"
+          overlay={
+            <Tooltip id="teamRegex-help-tooltip"> 
+              For team names which contain this regex, a repository will be
+              created. If left blank, a repository will be created for all
+              teams.
+              <br />
+              <br />
+              Ex:
+              <br />
+              {"\"s26-0[1-2]\""} will create [prefix]-s26-01 and [prefix]-s26-02
+              <br />
+              <br />
+              {"\"s26\""} will create [prefix]-s26-01 | [prefix]-s26-02 |
+              [prefix]-s26-03 | etc
+            </Tooltip>
+          }
+        >
+          <BsInfoCircle />
+        </OverlayTrigger>
+      </Form.Group>
+      <Form.Group>
         <Button type="submit" data-testid="TeamRepositoryAssignmentForm-submit">
           Create
         </Button>
       </Form.Group>
-  </Form>    
+    </Form>
   );
 }
