@@ -65,7 +65,7 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
         <OverlayTrigger
           placement="right"
           overlay={
-            <Tooltip id="teamRegex-help-tooltip"> 
+            <Tooltip id="teamRegex-help-tooltip">
               For team names which contain this regex, a repository will be
               created. If left blank, a repository will be created for all
               teams.
@@ -73,10 +73,10 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
               <br />
               Ex:
               <br />
-              {"\"s26-0[1-2]\""} will create [prefix]-s26-01 and [prefix]-s26-02
+              {'"s26-0[1-2]"'} will create [prefix]-s26-01 and [prefix]-s26-02
               <br />
               <br />
-              {"\"s26\""} will create [prefix]-s26-01 | [prefix]-s26-02 |
+              {'"s26"'} will create [prefix]-s26-01 | [prefix]-s26-02 |
               [prefix]-s26-03 | etc
             </Tooltip>
           }
