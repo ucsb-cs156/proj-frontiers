@@ -1,6 +1,10 @@
-FROM maven:3.9.16-eclipse-temurin-21-noble
+FROM maven:3.9.16-eclipse-temurin-21-noble AS builder
 
 WORKDIR /home/app
+
+COPY pom.xml .
+
+RUN ["mvn", "dependency:resolve"]
 
 COPY . .
 
@@ -14,8 +18,8 @@ WORKDIR /app
 
 RUN apk add bash
 
-COPY --from=0 /home/app/target/frontiers-1.0.0.jar .
+COPY --from=builder /home/app/target/frontiers-1.0.0.jar .
 
-COPY --from=0 /home/app/startup.sh .
+COPY --from=builder /home/app/startup.sh .
 
 ENTRYPOINT ["./startup.sh", "frontiers-1.0.0.jar"]
