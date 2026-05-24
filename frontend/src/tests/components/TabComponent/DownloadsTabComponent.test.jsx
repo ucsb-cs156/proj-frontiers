@@ -44,52 +44,42 @@ describe("DownloadsTabComponent tests", () => {
     await screen.findByTestId("InstructorCourseShowPage-downloadsTab");
 
     expect(screen.getByText("Course Downloads")).toBeInTheDocument();
-    expect(screen.getByTestId("InstructorCourseShowPage-downloads-header")).toBeInTheDocument();
-    expect(screen.getByTestId("InstructorCourseShowPage-btn-download-students-csv")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-downloads-header"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-btn-download-students-csv"),
+    ).toBeInTheDocument();
   });
 
   test("Fires submit download handler cleanly on button click", async () => {
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     axiosMock.onGet("/api/courses/downloadStudentsCSV").reply(200);
     const client = new QueryClient();
     render(
       <QueryClientProvider client={client}>
-        <DownloadsTabComponent 
-          courseId={coursesFixtures.severalCourses[0].id} 
+        <DownloadsTabComponent
+          courseId={coursesFixtures.severalCourses[0].id}
           testIdPrefix="InstructorCourseShowPage"
         />
       </QueryClientProvider>,
     );
 
-    await screen.findByTestId("InstructorCourseShowPage-btn-download-students-csv");
+    await screen.findByTestId(
+      "InstructorCourseShowPage-btn-download-students-csv",
+    );
 
-    const submitButton = screen.getByTestId("InstructorCourseShowPage-btn-download-students-csv");
+    const submitButton = screen.getByTestId(
+      "InstructorCourseShowPage-btn-download-students-csv",
+    );
     fireEvent.click(submitButton);
 
     await waitFor(() => expect(mockToast).toHaveBeenCalled());
     expect(mockToast).toBeCalledWith("Download successfully initiated.");
-  });
 
-  test("useBackendMutation is called with correct structural options", async () => {
-    const client = new QueryClient();
-
-    render(
-      <QueryClientProvider client={client}>
-        <DownloadsTabComponent 
-          courseId={coursesFixtures.severalCourses[0].id} 
-          testIdPrefix="InstructorCourseShowPage"
-        />
-      </QueryClientProvider>,
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Frontend form submit action captured for course: 1",
     );
-
-    expect(useBackendMutationSpy).toHaveBeenCalledWith(
-      expect.any(Function),
-      { onSuccess: expect.any(Function) },
-      []
-    );
-
-    const extractedFunction = useBackendMutationSpy.mock.calls[0][0];
-    const result = extractedFunction();
-    expect(result.url).toBe("/api/courses/downloadStudentsCSV");
-    expect(result.method).toBe("GET");
+    consoleSpy.mockRestore();
   });
 });

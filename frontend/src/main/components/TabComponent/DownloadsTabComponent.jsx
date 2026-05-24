@@ -1,6 +1,5 @@
 import React from "react";
 import CourseDownloadsForm from "../Courses/CourseDownloadsForm";
-import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 
 export default function DownloadsTabComponent({ courseId, testIdPrefix }) {
@@ -8,28 +7,17 @@ export default function DownloadsTabComponent({ courseId, testIdPrefix }) {
     toast("Download successfully initiated.");
   };
 
-  const objectToAxiosParamsDownloads = (formData) => ({
-    url: `/api/courses/downloadStudentsCSV`,
-    method: "GET",
-    params: {
-      courseId: courseId,
-    },
-  });
-  const downloadMutation = useBackendMutation(
-    objectToAxiosParamsDownloads,
-    {
-      onSuccess: onSuccessDownloadTriggered,
-    },
-    [],
-  );
-  const handleSubmit = (formData) => {
+  const handleSubmit = () => {
     console.log(`Frontend form submit action captured for course: ${courseId}`);
-    onSuccessDownloadTriggered(); 
+    onSuccessDownloadTriggered();
   };
 
   return (
     <div data-testid={`${testIdPrefix}-downloadsTab`}>
-      <CourseDownloadsForm downloadAction={handleSubmit} testIdPrefix={testIdPrefix} />
+      <CourseDownloadsForm
+        downloadAction={handleSubmit}
+        testIdPrefix={testIdPrefix}
+      />
     </div>
   );
 }
