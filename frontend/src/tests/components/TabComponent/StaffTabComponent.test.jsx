@@ -288,7 +288,16 @@ describe("StaffTabComponent Tests", () => {
     );
 
     const icon = await screen.findByTestId(`${testId}-csv-info-icon`);
-    expect(icon).toHaveStyle({ position: "absolute", cursor: "pointer" });
+    expect(icon).toHaveStyle({
+      position: "absolute",
+      top: "50%",
+      right: "0.75rem",
+      transform: "translateY(-50%)",
+      color: "#fff",
+      fontSize: "0.9rem",
+      userSelect: "none",
+      cursor: "pointer",
+    });
     fireEvent.click(icon);
     expect(open).toHaveBeenCalledWith("/help/csv", "_blank");
   });
