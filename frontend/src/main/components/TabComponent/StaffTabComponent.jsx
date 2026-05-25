@@ -11,6 +11,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { BsInfoCircle } from "react-icons/bs";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import CourseStaffTable from "main/components/CourseStaff/CourseStaffTable";
 import Modal from "react-bootstrap/Modal";
@@ -56,6 +57,14 @@ export default function StaffTabComponent({
 
   const handlePostSubmit = (staff) => {
     staffPostMutation.mutate(staff);
+  };
+
+  const downloadCsv = () => {
+    window.open(`/api/csv/coursestaff?courseId=${courseId}`, "_blank");
+  };
+
+  const openCsvHelp = () => {
+    window.open("/help/csv#staff-csv-download", "_blank");
   };
 
   // Render tooltip for disabled buttons
@@ -107,18 +116,40 @@ export default function StaffTabComponent({
           </Button>
         </Col>
         <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
-              >
-                Download Staff CSV
-              </Button>
-            </span>
-          </OverlayTrigger>
+          <div className="d-flex align-items-center position-relative">
+            <Button
+              onClick={downloadCsv}
+              data-testid={`${testIdPrefix}-download-csv-button`}
+              className="w-100 pe-5"
+            >
+              Download Staff CSV
+            </Button>
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="csv-help-tooltip">
+                  Staff CSV Download Format Help
+                </Tooltip>
+              }
+            >
+              <BsInfoCircle
+                onClick={openCsvHelp}
+                // Stryker disable ObjectLiteral,StringLiteral : cosmetic styling for info icon
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "0.75rem",
+                  transform: "translateY(-50%)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  userSelect: "none",
+                }}
+                // Stryker restore ObjectLiteral,StringLiteral
+                data-testid={`${testIdPrefix}-download-csv-info-icon`}
+              />
+            </OverlayTrigger>
+          </div>
         </Col>
       </Row>
       <Row className="mb-1">
