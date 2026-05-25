@@ -222,6 +222,8 @@ export default function TeamsTable({
         },
   ];
 
+  const canManage = canManageTeams ?? hasRole(currentUser, "ROLE_INSTRUCTOR");
+
   return (
     <>
       <Modal
