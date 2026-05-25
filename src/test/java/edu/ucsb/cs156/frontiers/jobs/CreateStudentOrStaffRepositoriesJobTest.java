@@ -64,8 +64,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        creationOption=STUDENTS_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -96,8 +100,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=true
+        permissions=WRITE
+        creationOption=STUDENTS_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -128,8 +136,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=true
+        permissions=WRITE
+        creationOption=STUDENTS_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -159,8 +171,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        creationOption=STUDENTS_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -184,8 +200,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        creationOption=STUDENTS_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -217,8 +237,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        creationOption=STAFF_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -258,8 +282,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=true
+        permissions=WRITE
+        creationOption=STUDENTS_AND_STAFF
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -300,8 +328,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        creationOption=STAFF_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -332,8 +364,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        creationOption=STAFF_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -362,8 +398,12 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = """
-        Processing...
+    String expected =
+        """
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        creationOption=STAFF_ONLY
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
