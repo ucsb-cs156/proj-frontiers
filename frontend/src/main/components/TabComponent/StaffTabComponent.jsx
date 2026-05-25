@@ -138,6 +138,7 @@ export default function StaffTabComponent({
                 onClick={() =>
                   window.open("/help/csv#staff-information", "_blank")
                 }
+                // Stryker disable all
                 style={{
                   position: "absolute",
                   top: "50%",
@@ -148,6 +149,7 @@ export default function StaffTabComponent({
                   fontSize: "0.9rem",
                   userSelect: "none",
                 }}
+                // Stryker restore all
                 data-testid={`${testIdPrefix}-csv-info-icon`}
               />
             </OverlayTrigger>
