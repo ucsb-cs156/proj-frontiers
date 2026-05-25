@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import TeamRepositoryAssignmentForm from "main/components/Assignments/TeamRepositoryAssignmentForm";
 import { vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 
 const mockSubmit = vi.fn();
 
@@ -55,4 +56,34 @@ test("Submit passes selected assignment privacy", async () => {
   await waitFor(() => expect(mockSubmit).toHaveBeenCalled());
   const firstCallArg = mockSubmit.mock.calls[0][0];
   expect(firstCallArg.assignmentPrivacy).toBe(false);
+});
+
+test("Info icon displays tooltip", async () => {
+  const user = userEvent.setup();
+
+  render(<TeamRepositoryAssignmentForm submitAction={mockSubmit} />);
+
+  await waitFor(() => {
+    expect(
+      screen.getByTestId(`testid-teamRegex-info-icon`),
+    ).toBeInTheDocument();
+  });
+
+  const infoIcon = screen.getByTestId(`testid-teamRegex-info-icon`);
+  expect(infoIcon).toBeInTheDocument();
+
+  await user.hover(infoIcon);
+
+  expect(
+    screen.getByText(/For team names which contain this regex/i),
+  ).toBeInTheDocument();
+  expect(screen.getByText(/Ex:/i)).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      /"s26-0\[1-2\]" will create \[prefix\]-s26-01 and \[prefix\]-s26-02/i,
+    ),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/"s26" will create \[prefix\]-s26-01/i),
+  ).toBeInTheDocument();
 });
