@@ -17,6 +17,10 @@ Martha Washington,"Washington, Martha",9876543,100,100,8-Aug-25,12-Dec-25,5-May-
 John Doe,"Doe, John",1234567,88.5,75.0,15-Jul-25,10-Jun-25,5-May-25,johndoe@oregonstate.edu,987654321
 Alice Johnson,"Johnson, Alice",7654321,92.0,85.5,20-Jun-25,18-Jun-25,10-Jun-25,alicejohnson@oregonstate.edu,192837465
 Bob Lee,"Lee, Bob",2468135,78.75,60.0,5-May-25,2-May-25,1-May-25,boblee@oregonstate.edu,564738291`,
+  staffDownload: `id,courseId,firstName,lastName,email,role,userId,githubId,githubLogin,orgStatus
+1,156,Chris,Gaucho,cgaucho@ucsb.edu,TA,1001,12345678,cgaucho,MEMBER
+2,156,Lauren,Del Playa,ldelplaya@ucsb.edu,TA,1002,87654321,ldelplaya,MEMBER
+3,156,Sabado,Tarde,sabadotarde@ucsb.edu,LA,1003,11223344,sabadotarde,INVITED`,
   teamsByEmail: `team,email
 team1,bob@ucsb.edu
 team2,ldelplaya@ucsb.edu
