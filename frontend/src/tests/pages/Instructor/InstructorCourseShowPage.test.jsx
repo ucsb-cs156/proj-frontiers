@@ -16,6 +16,7 @@ import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { expect, vi } from "vitest";
 
 const mockedNavigate = vi.fn();
@@ -300,6 +301,47 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByTestId("AssignmentTabComponent");
     expect(
       screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
+    ).toBeInTheDocument();
+  });
+  test("staff tab defaults to instructor controls", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.oneCourseWithEachStatus[0]);
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.staffWithEachStatus);
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+    });
+    axiosMock.onGet("/api/rosterstudents/course/7").reply(200, []);
+    axiosMock.onGet("/api/teams/all?courseId=7").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Staff" }));
+
+    const postButtons = await screen.findAllByTestId(
+      "InstructorCourseShowPage-post-button",
+    );
+    expect(
+      postButtons.some((button) => button.textContent === "Add Staff Member"),
+    ).toBe(true);
+    expect(
+      screen.getByTestId(
+        "InstructorCourseShowPage-CourseStaffTable-cell-row-0-col-Edit-button",
+      ),
     ).toBeInTheDocument();
   });
   test("header displays correct info when course is loaded without an installationId", async () => {
