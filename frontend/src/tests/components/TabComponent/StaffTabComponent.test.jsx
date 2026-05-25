@@ -408,33 +408,59 @@ describe("StaffTabComponent Tests", () => {
     });
   });
 
-  test("for coming soon tooltip on disabled download CSV button", async () => {
+  test("Download Staff CSV button calls window.open with correct URL", async () => {
+    const download = vi.fn();
+    window.open = (a, b) => download(a, b);
+
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
+
     render(
       <QueryClientProvider client={queryClient}>
         <StaffTabComponent
-          courseId={1}
+          courseId={7}
           testIdPrefix={testId}
           currentUser={currentUserFixtures.instructorUser}
         />
       </QueryClientProvider>,
     );
 
-    // Wait for table to render
-    await waitFor(() => {
-      expect(
-        screen.getByTestId(`${testId}-CourseStaffTable`),
-      ).toBeInTheDocument();
-    });
+    const downloadCsvButton = screen.getByTestId(
+      `${testId}-download-csv-button`,
+    );
+    fireEvent.click(downloadCsvButton);
 
-    // Download CSV button (no testId, but can find by text)
-    const downloadCsvButton = screen.getByText("Download Staff CSV");
-    expect(downloadCsvButton).toBeDisabled();
-    expect(downloadCsvButton).toHaveStyle("pointerEvents: none");
-    fireEvent.mouseOver(downloadCsvButton);
+    await waitFor(() => expect(download).toBeCalled());
+    expect(download).toBeCalledWith(
+      "/api/csv/coursestaff?courseId=7",
+      "_blank",
+    );
+  });
 
-    await waitFor(() => {
-      expect(screen.getByText("Coming Soon")).toBeInTheDocument();
-    });
+  test("Help icon on Download Staff CSV opens help page", async () => {
+    const openWindow = vi.fn();
+    window.open = (a, b) => openWindow(a, b);
+
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const helpIcon = screen.getByTestId(`${testId}-download-csv-info-icon`);
+    fireEvent.click(helpIcon);
+
+    await waitFor(() => expect(openWindow).toBeCalled());
+    expect(openWindow).toBeCalledWith("/help/csv#staff-csv-download", "_blank");
   });
 
   test("Create Staff Member Modals closes on close button", async () => {

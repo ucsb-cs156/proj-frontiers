@@ -233,6 +233,101 @@ export default function HelpCsvPage() {
           </Accordion.Item>
         </Accordion>
 
+        <h2 id="staff-csv-download" className="mt-4">
+          Staff CSV Download Format
+        </h2>
+        <p>
+          Instructors can download a list of course staff as a CSV file. The
+          download will include all staff members with their current status
+          information.
+        </p>
+        <Accordion data-testid="staffDownloadAccordion">
+          <Accordion.Item eventKey="0">
+            <Accordion.Header>
+              Frontiers Staff CSV Download Format
+            </Accordion.Header>
+            <Accordion.Body>
+              <p>
+                When you download staff as CSV, you will get the following
+                format:
+              </p>
+              <pre
+                className={"csvExample"}
+                data-testid="staffDownloadCsvExample"
+              >
+                {csvFixtures.staffDownload}
+              </pre>
+              <p>The fields are described as follows:</p>
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>CSV Field</th>
+                    <th>Description</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>id</td>
+                    <td>Internal database ID</td>
+                    <td>Unique identifier for each staff entry</td>
+                  </tr>
+                  <tr>
+                    <td>courseId</td>
+                    <td>Course database ID</td>
+                    <td>
+                      Identifies which course this staff member is associated
+                      with
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>firstName</td>
+                    <td>Staff member&apos;s first name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>lastName</td>
+                    <td>Staff member&apos;s last name</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>email</td>
+                    <td>Staff member&apos;s email address</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td>role</td>
+                    <td>Staff role</td>
+                    <td>
+                      The role of the staff member (e.g., TA, LA, Instructor)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>userId</td>
+                    <td>Internal user ID</td>
+                    <td>Links to the user account in the system</td>
+                  </tr>
+                  <tr>
+                    <td>githubId</td>
+                    <td>GitHub user ID</td>
+                    <td>Staff member&apos;s GitHub account ID, if connected</td>
+                  </tr>
+                  <tr>
+                    <td>githubLogin</td>
+                    <td>GitHub username</td>
+                    <td>Staff member&apos;s GitHub username, if connected</td>
+                  </tr>
+                  <tr>
+                    <td>orgStatus</td>
+                    <td>GitHub organization status</td>
+                    <td>PENDING, JOINCOURSE, INVITED, MEMBER, or OWNER</td>
+                  </tr>
+                </tbody>
+              </table>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+
         <h2 className="mt-4">Roster Student CSV Download formats</h2>
         <p>
           Instructors can download a course roster as a CSV file. The download
