@@ -18,10 +18,22 @@ export default function InstructorCoursesTable({
   testId = "InstructorCoursesTable",
   enableInstructorUpdate = false,
   deleteCourseButton = false,
+  courseNameLinkPrefix = "/instructor/courses",
+  canEditCourse,
+  canInstallCourse,
+  mutationQueryKeys = [
+    "/api/courses/allForAdmins",
+    "/api/courses/allForInstructors",
+  ],
 }) {
   const location = useLocation();
 
   const canEdit = (row) => {
+    if (canEditCourse !== undefined) {
+      return typeof canEditCourse === "function"
+        ? canEditCourse(row)
+        : canEditCourse;
+    }
     if (hasRole(currentUser, "ROLE_ADMIN")) {
       return true;
     }
@@ -71,7 +83,7 @@ export default function InstructorCoursesTable({
             }
           >
             <Link
-              to={`/instructor/courses/${cell.row.original.id}`}
+              to={`${courseNameLinkPrefix}/${cell.row.original.id}`}
               data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
             >
               {cell.row.original.courseName}
@@ -197,7 +209,7 @@ export default function InstructorCoursesTable({
       onSuccess: onInstructorUpdateSuccess,
       onError: onInstructorUpdateError,
     },
-    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
+    mutationQueryKeys,
   );
 
   const courseEditMutation = useBackendMutation(
@@ -206,7 +218,7 @@ export default function InstructorCoursesTable({
       onSuccess: onCourseUpdateSuccess,
       onError: onCourseUpdateError,
     },
-    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
+    mutationQueryKeys,
   );
 
   const deleteMutation = useBackendMutation(
@@ -215,7 +227,7 @@ export default function InstructorCoursesTable({
       onSuccess: onDeleteSuccess,
       onError: onDeleteError,
     },
-    ["/api/courses/allForAdmins", "/api/courses/allForInstructors"],
+    mutationQueryKeys,
   );
 
   const handleShowModal = (course) => {
@@ -251,6 +263,11 @@ export default function InstructorCoursesTable({
   };
 
   const canInstall = (row) => {
+    if (canInstallCourse !== undefined) {
+      return typeof canInstallCourse === "function"
+        ? canInstallCourse(row)
+        : canInstallCourse;
+    }
     if (row.original.orgName) {
       return false;
     }

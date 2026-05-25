@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CourseWarning;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -104,6 +105,29 @@ public class OrganizationLinkerService {
     ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get("created_at").asText());
     ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());
     return new CourseWarning(creationDate.isAfter(now.minusMonths(1)));
+  }
+
+  /**
+   * Retrieves the default repository permission for the GitHub organization linked to a course.
+   *
+   * @param course The course whose linked organization is queried.
+   * @return The organization's default repository permission (e.g. {@code none}, {@code read}).
+   */
+  public String getDefaultRepositoryPermission(Course course)
+      throws NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          JsonProcessingException,
+          NoLinkedOrganizationException {
+    String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<JsonNode> response =
+        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);
+    return response.getBody().get("default_repository_permission").asText();
   }
 
   /**

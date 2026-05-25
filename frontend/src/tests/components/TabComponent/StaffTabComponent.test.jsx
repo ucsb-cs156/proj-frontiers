@@ -95,6 +95,44 @@ describe("StaffTabComponent Tests", () => {
     expect(staffId0).toHaveTextContent(courseStaffFixtures.threeStaff[0].id);
   });
 
+  test("StaffTabComponent hides staff management controls when not instructor", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+          isInstructor={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    const rsTestId = "InstructorCourseShowPage-CourseStaffTable";
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-id`),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByTestId(`${testId}-post-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-csv-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${rsTestId}-cell-row-0-col-Edit-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${rsTestId}-cell-row-0-col-Delete-button`),
+    ).not.toBeInTheDocument();
+  });
+
   test("Table Renders with no students", async () => {
     axiosMock.onGet("/api/coursestaff/course?courseId=7").reply(200, []);
 
