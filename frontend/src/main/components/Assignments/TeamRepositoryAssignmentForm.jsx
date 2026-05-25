@@ -81,7 +81,9 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
             </Tooltip>
           }
         >
-          <BsInfoCircle />
+          <span data-testid="testid-teamRegex-info-icon">
+            <BsInfoCircle />
+          </span>
         </OverlayTrigger>
       </Form.Group>
       <Form.Group>
