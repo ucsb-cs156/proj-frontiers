@@ -141,7 +141,9 @@ export default function StaffTabComponent({
             </Button>
             <OverlayTrigger
               placement="right"
-              overlay={<Tooltip id="csv-help-tooltip">CSV Upload Format Help</Tooltip>}
+              overlay={
+                <Tooltip id="csv-help-tooltip">CSV Upload Format Help</Tooltip>
+              }
             >
               <BsInfoCircle
                 onClick={openCsvHelp}

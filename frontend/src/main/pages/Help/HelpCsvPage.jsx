@@ -236,9 +236,7 @@ export default function HelpCsvPage() {
         <h2 id="staff-csv" className="mt-4">
           Staff CSV Upload Format
         </h2>
-        <p>
-          Instructors can upload a list of course staff from a CSV file.
-        </p>
+        <p>Instructors can upload a list of course staff from a CSV file.</p>
         <Accordion data-testid="staffCsvAccordion">
           <Accordion.Item eventKey="0">
             <Accordion.Header>Staff CSV Format</Accordion.Header>
@@ -273,8 +271,8 @@ export default function HelpCsvPage() {
                 </tbody>
               </table>
               <p>
-                <b>Note:</b> the header row (<code>firstName,lastName,email</code>) is
-                required.
+                <b>Note:</b> the header row (
+                <code>firstName,lastName,email</code>) is required.
               </p>
             </Accordion.Body>
           </Accordion.Item>
