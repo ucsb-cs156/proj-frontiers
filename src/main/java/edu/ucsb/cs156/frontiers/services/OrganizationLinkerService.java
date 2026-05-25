@@ -30,6 +30,8 @@ public class OrganizationLinkerService {
 
   @Autowired DateTimeProvider provider;
 
+  @Autowired GithubGraphQLService githubGraphQLService;
+
   public OrganizationLinkerService(RestTemplateBuilder restTemplateBuilder) {
     restTemplate = restTemplateBuilder.build();
   }
@@ -88,7 +90,7 @@ public class OrganizationLinkerService {
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
     if (course.getOrgName() == null || course.getInstallationId() == null) {
-      return new CourseWarning(false);
+      return new CourseWarning(false, false);
     }
 
     String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
@@ -103,7 +105,12 @@ public class OrganizationLinkerService {
     JsonNode responseJson = response.getBody();
     ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get("created_at").asText());
     ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());
-    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)));
+    String defaultBasePermission = githubGraphQLService.getDefaultBasePermission(course);
+    boolean showDefaultBasePermissions =
+        !course.getHideBasePermissionWarning()
+            && defaultBasePermission != null
+            && !defaultBasePermission.equalsIgnoreCase("NONE");
+    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)), showDefaultBasePermissions);
   }
 
   /**
