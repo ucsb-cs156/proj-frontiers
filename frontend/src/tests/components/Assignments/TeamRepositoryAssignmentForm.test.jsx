@@ -58,7 +58,7 @@ test("Submit passes selected assignment privacy", async () => {
   expect(firstCallArg.assignmentPrivacy).toBe(false);
 });
 
-test("Info icon displays tooltip and opens help page on click", async () => {
+test("Info icon displays tooltip", async () => {
   const user = userEvent.setup();
 
   render(<TeamRepositoryAssignmentForm submitAction={mockSubmit} />);
