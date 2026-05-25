@@ -17,7 +17,13 @@ import SettingsTabComponent from "main/components/TabComponent/SettingsTabCompon
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
 import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 
-export default function InstructorCourseShowPage() {
+export default function InstructorCourseShowPage({
+  testId = "InstructorCourseShowPage",
+  showSettingsTab = true,
+  staffTabIsInstructor = true,
+  canEditStudents,
+  canManageTeams,
+}) {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -51,7 +57,6 @@ export default function InstructorCourseShowPage() {
     }
   }, [getCourseFailed, navigate]);
 
-  const testId = "InstructorCourseShowPage";
   return (
     <BasicLayout>
       <Modal show={showErrorModal}>
@@ -68,7 +73,11 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <CourseWarningBanner courseId={courseId} />
+      <CourseWarningBanner
+        courseId={courseId}
+        orgName={course?.orgName}
+        hideBasePermissionWarning={course?.hideBasePermissionWarning ?? false}
+      />
       {!course ? (
         <div data-testid={`${testId}-loading`}>Course: Loading...</div>
       ) : (
@@ -141,6 +150,7 @@ export default function InstructorCourseShowPage() {
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
+            canEditStudents={canEditStudents}
           />
         </Tab>
         <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
@@ -148,6 +158,7 @@ export default function InstructorCourseShowPage() {
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
+            isInstructor={staffTabIsInstructor}
           />
         </Tab>
         <Tab eventKey={"teams"} title={"Teams"} className="pt-2">
@@ -155,6 +166,7 @@ export default function InstructorCourseShowPage() {
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
+            canManageTeams={canManageTeams}
           />
         </Tab>
         <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
@@ -167,12 +179,14 @@ export default function InstructorCourseShowPage() {
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
-        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-          <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
-        </Tab>
         <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
           <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
+        {showSettingsTab && (
+          <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
+            <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
+          </Tab>
+        )}
       </Tabs>
     </BasicLayout>
   );
