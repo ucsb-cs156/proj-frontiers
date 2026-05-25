@@ -238,7 +238,9 @@ describe("StaffTabComponent Tests", () => {
     fireEvent.click(screen.getByTestId("CourseStaffCSVUploadForm-submit"));
 
     await waitFor(() => {
-      expect(toast.error).toBeCalled();
+      expect(toast.error).toBeCalledWith(
+        expect.stringContaining("Error uploading CSV:"),
+      );
     });
   });
 
@@ -286,6 +288,7 @@ describe("StaffTabComponent Tests", () => {
     );
 
     const icon = await screen.findByTestId(`${testId}-csv-info-icon`);
+    expect(icon).toHaveStyle({ position: "absolute", cursor: "pointer" });
     fireEvent.click(icon);
     expect(open).toHaveBeenCalledWith("/help/csv", "_blank");
   });
