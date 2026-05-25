@@ -11,18 +11,14 @@ import userEvent from "@testing-library/user-event";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { vi } from "vitest";
+import { toast } from "react-toastify";
 
 const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
-const mockToast = vi.fn();
-vi.mock("react-toastify", async (importOriginal) => {
-  const mockToast = vi.fn();
-  mockToast.error = vi.fn();
-  return {
-    ...(await importOriginal()),
-    toast: mockToast,
-  };
-});
+vi.mock("react-toastify", async (importOriginal) => ({
+  ...(await importOriginal()),
+  toast: Object.assign(vi.fn(), { error: vi.fn() }),
+}));
 
 const mockedNavigate = vi.fn();
 vi.mock("react-router", async (importOriginal) => ({
@@ -46,8 +42,7 @@ describe("StaffTabComponent Tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
-    mockToast.mockReset();
-    mockToast.error.mockReset();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -199,7 +194,7 @@ describe("StaffTabComponent Tests", () => {
       expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
     });
     expect(axiosMock.history.post[0].data.get("file")).toEqual(file);
-    expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
+    expect(toast).toBeCalledWith("Staff roster successfully updated.");
 
     expect(
       queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
@@ -243,7 +238,7 @@ describe("StaffTabComponent Tests", () => {
     fireEvent.click(screen.getByTestId("CourseStaffCSVUploadForm-submit"));
 
     await waitFor(() => {
-      expect(mockToast.error).toBeCalled();
+      expect(toast.error).toBeCalled();
     });
   });
 
@@ -362,8 +357,8 @@ describe("StaffTabComponent Tests", () => {
       lastName: "Gaucho",
       email: "cgaucho@ucsb.edu",
     });
-    await waitFor(() => expect(mockToast).toBeCalled());
-    expect(mockToast).toBeCalledWith("Staff roster successfully updated.");
+    await waitFor(() => expect(toast).toBeCalled());
+    expect(toast).toBeCalledWith("Staff roster successfully updated.");
     expect(
       queryClientSpecific.getQueryState(["arbitraryQuery"]).dataUpdateCount,
     ).toBe(arbitraryUpdateCount);
