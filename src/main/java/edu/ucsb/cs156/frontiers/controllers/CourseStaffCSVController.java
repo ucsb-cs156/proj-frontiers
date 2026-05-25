@@ -73,12 +73,6 @@ public class CourseStaffCSVController extends ApiController {
       csvReader.readNext(); // skip header row
 
       for (String[] row : csvReader.readAll()) {
-        String email = row[2].trim();
-
-        if (courseStaffRepository.findByEmailAndCourse(email, course).isPresent()) {
-          continue;
-        }
-
         CourseStaff staff =
             CourseStaff.builder()
                 .firstName(row[0].trim())
