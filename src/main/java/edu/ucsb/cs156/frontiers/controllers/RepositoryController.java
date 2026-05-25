@@ -8,14 +8,18 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.DeleteRepoJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -111,5 +115,31 @@ public class RepositoryController extends ApiController {
               .build();
       return jobService.runAsJob(job);
     }
+  }
+
+  @Operation(summary = "Delete empty repos matching a prefix for a specific course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @DeleteMapping("") // Maps to /api/repos
+  public Job launchDeleteRepoJob(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "prefix") @RequestParam String prefix) {
+
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      throw new NoLinkedOrganizationException(course.getCourseName());
+    }
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix(prefix)
+            .repositoryService(repositoryService)
+            .build();
+
+    return jobService.runAsJob(job);
   }
 }
