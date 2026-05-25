@@ -16,9 +16,11 @@ const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
 const mockToast = vi.fn();
 vi.mock("react-toastify", async (importOriginal) => {
+  const mockToast = vi.fn();
+  mockToast.error = vi.fn();
   return {
     ...(await importOriginal()),
-    toast: (x) => mockToast(x),
+    toast: mockToast,
   };
 });
 
@@ -44,6 +46,8 @@ describe("StaffTabComponent Tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    mockToast.mockReset();
+    mockToast.error.mockReset();
   });
 
   afterEach(() => {
@@ -239,7 +243,7 @@ describe("StaffTabComponent Tests", () => {
     fireEvent.click(screen.getByTestId("CourseStaffCSVUploadForm-submit"));
 
     await waitFor(() => {
-      expect(mockToast).toBeCalled();
+      expect(mockToast.error).toBeCalled();
     });
   });
 
