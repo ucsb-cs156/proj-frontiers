@@ -188,4 +188,61 @@ public class CreateTeamRepositoriesJobTest {
     verify(githubTeamService).getOrgId("ucsb-cs156", course);
     verifyNoInteractions(service);
   }
+
+  @Test
+  public void testRegexOnlyTeamOne() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    RosterStudent student1 =
+        RosterStudent.builder().githubLogin("student1").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member1 = TeamMember.builder().rosterStudent(student1).build();
+    Team team1 = Team.builder().name("test-team1").build();
+    team1.setTeamMembers(List.of(member1));
+
+    RosterStudent student2 =
+        RosterStudent.builder().githubLogin("student2").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member2 = TeamMember.builder().rosterStudent(student2).build();
+    RosterStudent student3 =
+        RosterStudent.builder().githubLogin("student3").orgStatus(OrgStatus.MEMBER).build();
+    TeamMember member3 = TeamMember.builder().rosterStudent(student3).build();
+    Team team2 = Team.builder().name("test-team2").build();
+    team2.setTeamMembers(List.of(member2, member3));
+
+    course.setTeams(List.of(team1, team2));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .teamRegex("team1")
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+        Creating team repositories...
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+    verify(service, times(0))
+        .createTeamRepository(
+            eq(course),
+            eq(team2),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+  }
 }

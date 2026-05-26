@@ -88,7 +88,8 @@ public class RepositoryController extends ApiController {
       @RequestParam Long courseId,
       @RequestParam String repoPrefix,
       @RequestParam Optional<Boolean> isPrivate,
-      @RequestParam RepositoryPermissions permissions) {
+      @RequestParam RepositoryPermissions permissions,
+      @RequestParam Optional<String> teamRegex) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -104,6 +105,7 @@ public class RepositoryController extends ApiController {
               .githubTeamService(githubTeamService)
               .course(course)
               .permissions(permissions)
+              .teamRegex(teamRegex.orElse(null))
               .build();
       return jobService.runAsJob(job);
     }

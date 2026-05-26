@@ -7,6 +7,7 @@ import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import java.util.regex.Pattern;
 import lombok.Builder;
 
 @Builder
@@ -17,6 +18,7 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
   String repositoryPrefix;
   Boolean isPrivate;
   RepositoryPermissions permissions;
+  String teamRegex;
 
   @Override
   public Course getCourse() {
@@ -36,10 +38,22 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
           e);
     }
 
-    for (Team team : course.getTeams()) {
-      repositoryService.createTeamRepository(
-          course, team, repositoryPrefix, isPrivate, permissions, orgId);
+    if (teamRegex == null) {
+      for (Team team : course.getTeams()) {
+        repositoryService.createTeamRepository(
+            course, team, repositoryPrefix, isPrivate, permissions, orgId);
+      }
+    } else {
+      Pattern pattern = Pattern.compile(teamRegex);
+
+      for (Team team : course.getTeams()) {
+        if (pattern.matcher(team.getName()).find()) {
+          repositoryService.createTeamRepository(
+              course, team, repositoryPrefix, isPrivate, permissions, orgId);
+        }
+      }
     }
+
     ctx.log("Done");
   }
 }
