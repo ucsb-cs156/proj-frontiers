@@ -115,6 +115,14 @@ const basicHandlers = [
       status: 200,
     });
   }),
+  http.delete("/api/repos", ({ request }) => {
+    window.alert(
+      `Would have made HTTP request: ${request.method} ${request.url}`,
+    );
+    return HttpResponse.json([], {
+      status: 200,
+    });
+  }),
   http.post("/api/rosterstudents/upload/csv", async ({ request }) => {
     window.alert(
       `Would have made HTTP request: ${request.method} ${request.url}`,
