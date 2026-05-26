@@ -259,6 +259,10 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "jobs",
     );
+    expect(screen.getByText("Downloads")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "downloads",
+    );
     expect(screen.getByText("Settings")).toHaveAttribute(
       "data-rr-ui-event-key",
       "settings",
@@ -300,6 +304,9 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByTestId("AssignmentTabComponent");
     expect(
       screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-DownloadsTabComponent"),
     ).toBeInTheDocument();
   });
   test("header displays correct info when course is loaded without an installationId", async () => {
