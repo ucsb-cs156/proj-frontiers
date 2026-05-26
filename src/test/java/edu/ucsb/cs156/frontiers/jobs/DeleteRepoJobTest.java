@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -16,6 +17,8 @@ import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +35,7 @@ public class DeleteRepoJobTest {
 
   @Mock private JwtService jwtService;
   @Mock private RestTemplate restTemplate;
+  @Captor private ArgumentCaptor<HttpEntity<String>> entityCaptor;
 
   private final ObjectMapper mapper = new ObjectMapper();
 
@@ -85,16 +89,27 @@ public class DeleteRepoJobTest {
             .mapper(mapper)
             .build();
 
+    long startTime = System.currentTimeMillis();
     job.accept(ctx);
+    long endTime = System.currentTimeMillis();
 
     String log = jobStarted.getLog();
     assertTrue(log.contains("1 repos found with prefix repo-prefix-"));
     assertTrue(log.contains("1 repos deleted"));
     assertTrue(log.contains("0 repos retained"));
     assertTrue(log.contains("0 errors"));
+    assertFalse(log.contains("-1")); // Kills the increment mutator
 
+    // Kills Thread.sleep mutator (gives a 50ms buffer for OS thread scheduling)
+    assertTrue((endTime - startTime) >= 950, "Job must sleep for at least 1000ms");
+
+    // KILLS HEADER MUTATORS: Capture the entity sent to the DELETE request and check its headers
     verify(restTemplate, times(1))
-        .exchange(eq(deleteUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+        .exchange(eq(deleteUrl), eq(HttpMethod.DELETE), entityCaptor.capture(), eq(String.class));
+    HttpHeaders capturedHeaders = entityCaptor.getValue().getHeaders();
+    assertEquals("Bearer dummy-token", capturedHeaders.getFirst("Authorization"));
+    assertEquals("application/vnd.github+json", capturedHeaders.getFirst("Accept"));
+    assertEquals("2022-11-28", capturedHeaders.getFirst("X-GitHub-Api-Version"));
   }
 
   @Test
@@ -128,7 +143,9 @@ public class DeleteRepoJobTest {
             .mapper(mapper)
             .build();
 
+    long startTime = System.currentTimeMillis();
     job.accept(ctx);
+    long endTime = System.currentTimeMillis();
 
     String log = jobStarted.getLog();
     assertTrue(log.contains("1 repos found with prefix repo-prefix-"));
@@ -136,6 +153,10 @@ public class DeleteRepoJobTest {
     assertTrue(log.contains("0 repos deleted"));
     assertTrue(log.contains("1 repos retained"));
     assertTrue(log.contains("0 errors"));
+    assertFalse(log.contains("-1")); // Kills the increment mutator
+
+    // Kills Thread.sleep mutator
+    assertTrue((endTime - startTime) >= 950, "Job must sleep for at least 1000ms");
 
     // Ensure delete was NEVER called
     verify(restTemplate, times(0))
@@ -195,7 +216,9 @@ public class DeleteRepoJobTest {
             .mapper(mapper)
             .build();
 
+    long startTime = System.currentTimeMillis();
     job.accept(ctx);
+    long endTime = System.currentTimeMillis();
 
     String log = jobStarted.getLog();
     assertTrue(log.contains("2 repos found with prefix test-"));
@@ -203,5 +226,11 @@ public class DeleteRepoJobTest {
     assertTrue(log.contains("1 repos deleted"));
     assertTrue(log.contains("0 repos retained"));
     assertTrue(log.contains("1 errors"));
+    assertFalse(log.contains("-1 repos deleted"));
+    assertFalse(log.contains("-1 repos retained"));
+    assertFalse(log.contains("-1 errors"));
+
+    // Kills Thread.sleep mutator for 2 items in the loop (should be ~2000ms)
+    assertTrue((endTime - startTime) >= 1950, "Job must sleep for at least 2000ms for 2 items");
   }
 }
