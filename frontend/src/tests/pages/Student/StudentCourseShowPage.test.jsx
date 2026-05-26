@@ -8,6 +8,15 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+import { vi } from "vitest";
+
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    toast: (x) => mockToast(x),
+  };
+});
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
@@ -17,6 +26,7 @@ describe("StudentCourseShowPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    mockToast.mockReset();
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.userOnly);
@@ -41,9 +51,13 @@ describe("StudentCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
+    expect(queryClient.getQueryData(["/api/courses/1"])).toBe(null);
+
     expect(
       screen.getByTestId("StudentCourseShowPage-loading"),
     ).toHaveTextContent("Course: Loading...");
+
+    expect(mockToast).not.toHaveBeenCalled();
   });
 
   test("renders course name and term when data loads", async () => {

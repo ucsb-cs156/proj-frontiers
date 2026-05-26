@@ -41,6 +41,9 @@ const basicHandlers = [
 ];
 
 export const CourseLoaded = Template.bind({});
+CourseLoaded.args = {
+  suppressMemoryRouter: true,
+};
 CourseLoaded.parameters = {
   msw: {
     handlers: [
@@ -53,6 +56,9 @@ CourseLoaded.parameters = {
 };
 
 export const CourseLoading = Template.bind({});
+CourseLoading.args = {
+  suppressMemoryRouter: true,
+};
 CourseLoading.parameters = {
   msw: {
     handlers: [
