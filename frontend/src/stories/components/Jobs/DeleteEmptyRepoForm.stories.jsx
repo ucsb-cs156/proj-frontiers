@@ -1,22 +1,24 @@
 import React from "react";
+import { http, HttpResponse } from "msw";
 import DeleteEmptyRepoForm from "main/components/Jobs/DeleteEmptyRepoForm";
 
 export default {
   title: "components/Jobs/DeleteEmptyRepoForm",
   component: DeleteEmptyRepoForm,
   parameters: {
-    // If your team uses MSW to mock API calls in Storybook, you can mock the DELETE route here
-    // so that clicking the button in Storybook simulates a successful job launch!
-    mockData: [
-      {
-        url: "/api/repos",
-        method: "DELETE",
-        status: 200,
-        response: {
-          message: "Job Launched",
-        },
-      },
-    ],
+    msw: {
+      handlers: [
+        http.delete("/api/repos", ({ request }) => {
+          window.alert(
+            `Would have made HTTP request: ${request.method} ${request.url}`,
+          );
+          return HttpResponse.json(
+            { message: "Job Launched" },
+            { status: 200 },
+          );
+        }),
+      ],
+    },
   },
 };
 
