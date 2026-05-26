@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
@@ -10,7 +11,9 @@ import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -22,6 +25,9 @@ import org.springframework.web.client.RestTemplate;
 @Service
 @Slf4j
 public class RepositoryService {
+  private static final String GITHUB_ACCEPT = "application/vnd.github+json";
+  private static final String GITHUB_API_VERSION = "2022-11-28";
+
   private final JwtService jwtService;
   private final GithubTeamService githubTeamService;
   private final TeamRepository teamRepository;
@@ -72,10 +78,7 @@ public class RepositoryService {
             + "/collaborators/"
             + githubLogin;
 
-    HttpHeaders existenceHeaders = new HttpHeaders();
-    existenceHeaders.add("Authorization", "Bearer " + token);
-    existenceHeaders.add("Accept", "application/vnd.github+json");
-    existenceHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpHeaders existenceHeaders = githubHeaders(token);
 
     HttpEntity<String> existenceEntity = new HttpEntity<>(existenceHeaders);
 
@@ -83,17 +86,12 @@ public class RepositoryService {
       restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-        HttpHeaders createHeaders = new HttpHeaders();
-        createHeaders.add("Authorization", "Bearer " + token);
-        createHeaders.add("Accept", "application/vnd.github+json");
-        createHeaders.add("X-GitHub-Api-Version", "2022-11-28");
-
         Map<String, Object> body = new HashMap<>();
         body.put("name", newRepoName);
         body.put("private", isPrivate);
         String bodyAsJson = mapper.writeValueAsString(body);
 
-        HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, createHeaders);
+        HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, githubHeaders(token));
 
         restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);
       } else {
@@ -217,10 +215,7 @@ public class RepositoryService {
             + "/"
             + newRepoName;
 
-    HttpHeaders existenceHeaders = new HttpHeaders();
-    existenceHeaders.add("Authorization", "Bearer " + token);
-    existenceHeaders.add("Accept", "application/vnd.github+json");
-    existenceHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpHeaders existenceHeaders = githubHeaders(token);
 
     HttpEntity<String> existenceEntity = new HttpEntity<>(existenceHeaders);
 
@@ -228,17 +223,12 @@ public class RepositoryService {
       restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-        HttpHeaders createHeaders = new HttpHeaders();
-        createHeaders.add("Authorization", "Bearer " + token);
-        createHeaders.add("Accept", "application/vnd.github+json");
-        createHeaders.add("X-GitHub-Api-Version", "2022-11-28");
-
         Map<String, Object> body = new HashMap<>();
         body.put("name", newRepoName);
         body.put("private", isPrivate);
         String bodyAsJson = mapper.writeValueAsString(body);
 
-        HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, createHeaders);
+        HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, githubHeaders(token));
 
         restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);
       } else {
@@ -285,5 +275,71 @@ public class RepositoryService {
     team.setGithubTeamSlug(teamInfo.slug());
     teamRepository.save(team);
     return teamInfo.slug();
+  }
+
+  public List<String> getRepositoryNamesWithPrefix(Course course, String prefix)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    HttpEntity<String> requestEntity = new HttpEntity<>(githubHeaders(token));
+
+    List<String> repoNames = new ArrayList<>();
+    for (int page = 1; ; page++) {
+      String endpoint =
+          "https://api.github.com/orgs/" + course.getOrgName() + "/repos?per_page=100&page=" + page;
+      ResponseEntity<String> response =
+          restTemplate.exchange(endpoint, HttpMethod.GET, requestEntity, String.class);
+
+      JsonNode repos = mapper.readTree(response.getBody());
+      if (!repos.isArray() || repos.isEmpty()) {
+        break;
+      }
+
+      for (JsonNode repo : repos) {
+        String repoName = repo.path("name").asText(null);
+        if (repoName != null && repoName.startsWith(prefix)) {
+          repoNames.add(repoName);
+        }
+      }
+    }
+
+    return repoNames;
+  }
+
+  public boolean repositoryHasCommits(Course course, String repoName)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    String endpoint =
+        "https://api.github.com/repos/"
+            + course.getOrgName()
+            + "/"
+            + repoName
+            + "/commits?per_page=1";
+    HttpEntity<String> requestEntity = new HttpEntity<>(githubHeaders(token));
+
+    try {
+      restTemplate.exchange(endpoint, HttpMethod.GET, requestEntity, String.class);
+      return true;
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode().equals(HttpStatus.CONFLICT)) {
+        return false;
+      }
+      throw e;
+    }
+  }
+
+  public void deleteRepository(Course course, String repoName)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    String endpoint = "https://api.github.com/repos/" + course.getOrgName() + "/" + repoName;
+    HttpEntity<String> requestEntity = new HttpEntity<>(githubHeaders(token));
+    restTemplate.exchange(endpoint, HttpMethod.DELETE, requestEntity, String.class);
+  }
+
+  private HttpHeaders githubHeaders(String token) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", GITHUB_ACCEPT);
+    headers.add("X-GitHub-Api-Version", GITHUB_API_VERSION);
+    return headers;
   }
 }
