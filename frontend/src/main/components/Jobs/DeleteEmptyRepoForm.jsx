@@ -7,12 +7,13 @@ const DeleteEmptyReposForm = ({ courseId }) => {
   const [prefix, setPrefix] = useState("");
 
   // Configure the Axios request for the DELETE endpoint
+  // Configure the Axios request for the DELETE endpoint
   const objectToAxiosParams = () => ({
     url: "/api/repos",
     method: "DELETE",
     params: {
-      courseId: courseId,
-      prefix: prefix,
+      courseId,
+      prefix,
     },
   });
 

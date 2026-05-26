@@ -125,7 +125,7 @@ describe("InstructorCourseShowPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    //Great time to also check initial values
+
     expect(queryClient.getQueryData(["/api/courses/7"])).toBe(null);
     const testId = "InstructorCourseShowPage";
 
@@ -221,7 +221,6 @@ describe("InstructorCourseShowPage tests", () => {
       .onGet("/api/rosterstudents/course/7")
       .reply(200, rosterStudentFixtures.threeStudents);
 
-    //here
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
@@ -263,10 +262,13 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "settings",
     );
+
+    // Kills the Stryker eventKey mutation for the Repos tab
     expect(screen.getByText("Repos")).toHaveAttribute(
       "data-rr-ui-event-key",
       "repos",
     );
+
     const changeTabs = screen.getByText("Students");
     fireEvent.click(changeTabs);
   });
@@ -477,6 +479,7 @@ describe("InstructorCourseShowPage tests", () => {
 
   test("clicking the Repos tab renders the DeleteEmptyRepoForm", async () => {
     setupInstructorUser();
+
     axiosMock
       .onGet("/api/courses/7")
       .reply(200, coursesFixtures.severalCourses[0]);
@@ -494,17 +497,13 @@ describe("InstructorCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
-    // Wait for the course to load
     await screen.findByText("CMPSC 156");
 
-    // This verifies the title={"Repos"} mutation
     const reposTab = await screen.findByText("Repos");
     expect(reposTab).toBeInTheDocument();
 
-    // Click the tab, which verifies the eventKey={"repos"} mutation
     fireEvent.click(reposTab);
 
-    // Verifies that our specific component loaded successfully inside the tab
     expect(
       await screen.findByText("Delete Empty Repositories"),
     ).toBeInTheDocument();

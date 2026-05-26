@@ -6,7 +6,6 @@ import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { vi } from "vitest";
 
-// 1. Tell Vitest to hoist the creation of our mock functions
 const { mockToast, mockToastError } = vi.hoisted(() => {
   return {
     mockToast: vi.fn(),
@@ -48,11 +47,11 @@ describe("DeleteEmptyRepoForm tests", () => {
 
     const prefixInput = screen.getByTestId("DeleteEmptyReposForm-prefix");
     expect(prefixInput).toBeInTheDocument();
-    expect(prefixInput).toHaveValue(""); // Kills useState string mutation
+    expect(prefixInput).toHaveValue("");
 
     const submitButton = screen.getByTestId("DeleteEmptyReposForm-submit");
     expect(submitButton).toBeInTheDocument();
-    expect(submitButton).toHaveTextContent("Delete Empty Matching Repos"); // Kills button text mutation
+    expect(submitButton).toHaveTextContent("Delete Empty Matching Repos");
   });
 
   test("shows error toast if prefix is empty on submit", async () => {
@@ -70,11 +69,10 @@ describe("DeleteEmptyRepoForm tests", () => {
     await waitFor(() =>
       expect(mockToastError).toHaveBeenCalledWith("Please enter a prefix"),
     );
-    expect(axiosMock.history.delete.length).toBe(0); // Ensure API wasn't called
+    expect(axiosMock.history.delete.length).toBe(0);
   });
 
   test("calls API, toasts success, and clears input on valid submit", async () => {
-    // Spy on the queryClient to verify it invalidates the correct cache key
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
     axiosMock.onDelete("/api/repos").reply(200, { message: "Job Launched" });
@@ -91,45 +89,25 @@ describe("DeleteEmptyRepoForm tests", () => {
     const submitButton = screen.getByTestId("DeleteEmptyReposForm-submit");
 
     fireEvent.change(prefixInput, { target: { value: "lab01" } });
+    expect(prefixInput).toHaveValue("lab01");
+
     fireEvent.click(submitButton);
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
 
     expect(axiosMock.history.delete[0].url).toBe("/api/repos");
+    expect(axiosMock.history.delete[0].method).toBe("delete");
+    expect(axiosMock.history.delete[0].params).toEqual({
+      courseId: 17,
+      prefix: "lab01",
+    });
+
     expect(mockToast).toHaveBeenCalledWith(
       "Delete empty repos job launched for prefix: lab01",
     );
     expect(prefixInput).toHaveValue("");
 
-    // This kills the [] and [""] array mutations!
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["/api/repos"] });
-  });
-  test("handles API errors (with null response data) correctly", async () => {
-    // Returning null as the data body forces the optional chaining to do its job
-    axiosMock.onDelete("/api/repos").reply(400, null);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <DeleteEmptyRepoForm courseId={17} />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    const prefixInput = screen.getByTestId("DeleteEmptyReposForm-prefix");
-    const submitButton = screen.getByTestId("DeleteEmptyReposForm-submit");
-
-    fireEvent.change(prefixInput, { target: { value: "lab01" } });
-    fireEvent.click(submitButton);
-
-    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-
-    // Kills the error.response?.data.message mutant
-    expect(mockToastError).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "Error starting job: Request failed with status code 400",
-      ),
-    );
   });
 
   test("handles API errors (with response data) correctly", async () => {
@@ -153,14 +131,13 @@ describe("DeleteEmptyRepoForm tests", () => {
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
 
-    // Kills onError specific message parsing mutation
     expect(mockToastError).toHaveBeenCalledWith(
       "Error starting job: Course not found",
     );
   });
 
-  test("handles API errors (without response data fallback) correctly", async () => {
-    axiosMock.onDelete("/api/repos").networkError(); // Causes error.message to be used
+  test("handles API errors (with null response data) correctly", async () => {
+    axiosMock.onDelete("/api/repos").reply(400, null);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -178,19 +155,43 @@ describe("DeleteEmptyRepoForm tests", () => {
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
 
-    // Kills onError generic message parsing mutation
+    expect(mockToastError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "Error starting job: Request failed with status code 400",
+      ),
+    );
+  });
+
+  test("handles API errors (without response data fallback) correctly", async () => {
+    axiosMock.onDelete("/api/repos").networkError();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <DeleteEmptyRepoForm courseId={17} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const prefixInput = screen.getByTestId("DeleteEmptyReposForm-prefix");
+    const submitButton = screen.getByTestId("DeleteEmptyReposForm-submit");
+
+    fireEvent.change(prefixInput, { target: { value: "lab01" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+
     expect(mockToastError).toHaveBeenCalledWith(
       "Error starting job: Network Error",
     );
   });
+
   test("button shows Launching... and is disabled while mutating", async () => {
-    // 1. Create a promise that we can manually resolve whenever we want
     let resolveApi;
     const controlledPromise = new Promise((resolve) => {
       resolveApi = resolve;
     });
 
-    // 2. Tell Axios to return our frozen promise
     axiosMock.onDelete("/api/repos").reply(() => controlledPromise);
 
     render(
@@ -207,11 +208,9 @@ describe("DeleteEmptyRepoForm tests", () => {
     fireEvent.change(prefixInput, { target: { value: "lab01" } });
     fireEvent.click(submitButton);
 
-    // 3. Because the promise is frozen, the button is guaranteed to be stuck in the Loading state!
     expect(await screen.findByText("Launching...")).toBeInTheDocument();
     expect(submitButton).toBeDisabled();
 
-    // 4. Now we manually finish the API call to clean up the test properly
     resolveApi([200, { message: "Job Launched" }]);
 
     await waitFor(() =>
