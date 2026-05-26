@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,10 +25,12 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 
 @Slf4j
@@ -296,6 +299,37 @@ public class RepositoryControllerTests extends ControllerTestCase {
     String expectedJson = objectMapper.writeValueAsString(job);
     String actualJson = response.getResponse().getContentAsString();
     assertEquals(expectedJson, actualJson);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void team_repo_job_passes_teamRegex_to_job() throws Exception {
+    Course course =
+        Course.builder()
+            .id(2L)
+            .orgName("ucsb-cs156")
+            .installationId("1234")
+            .courseName("course")
+            .instructorEmail(currentUserService.getUser().getEmail())
+            .build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(2L));
+    Job job = Job.builder().status("processing").build();
+    doReturn(job).when(service).runAsJob(any(CreateTeamRepositoriesJob.class));
+
+    mockMvc
+        .perform(
+            post("/api/repos/createTeamRepos")
+                .with(csrf())
+                .param("courseId", "2")
+                .param("repoPrefix", "repo1")
+                .param("permissions", "WRITE")
+                .param("teamRegex", "test-team[12]"))
+        .andExpect(status().isOk());
+
+    ArgumentCaptor<CreateTeamRepositoriesJob> jobCaptor =
+        ArgumentCaptor.forClass(CreateTeamRepositoriesJob.class);
+    verify(service).runAsJob(jobCaptor.capture());
+    assertEquals("test-team[12]", ReflectionTestUtils.getField(jobCaptor.getValue(), "teamRegex"));
   }
 
   @Test
