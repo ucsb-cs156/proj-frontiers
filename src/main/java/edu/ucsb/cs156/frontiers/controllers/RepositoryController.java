@@ -8,14 +8,18 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.DeleteRepoJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -80,6 +84,8 @@ public class RepositoryController extends ApiController {
    * @param repoPrefix each team repo created will begin with this prefix, followed by a dash and
    *     the team's name
    * @param isPrivate determines whether the repository being created is private
+   * @param teamRegex optional regular expression that will only create repos for team names that
+   *     match this expression if omitted, repos will be created for every team
    * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
    */
   @PostMapping("/createTeamRepos")
@@ -88,7 +94,8 @@ public class RepositoryController extends ApiController {
       @RequestParam Long courseId,
       @RequestParam String repoPrefix,
       @RequestParam Optional<Boolean> isPrivate,
-      @RequestParam RepositoryPermissions permissions) {
+      @RequestParam RepositoryPermissions permissions,
+      @RequestParam(required = false) String teamRegex) {
     Course course =
         courseRepository
             .findById(courseId)
@@ -104,8 +111,35 @@ public class RepositoryController extends ApiController {
               .githubTeamService(githubTeamService)
               .course(course)
               .permissions(permissions)
+              .teamRegex(teamRegex)
               .build();
       return jobService.runAsJob(job);
     }
+  }
+
+  @Operation(summary = "Delete empty repos matching a prefix for a specific course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @DeleteMapping("") // Maps to /api/repos
+  public Job launchDeleteRepoJob(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "prefix") @RequestParam String prefix) {
+
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      throw new NoLinkedOrganizationException(course.getCourseName());
+    }
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix(prefix)
+            .repositoryService(repositoryService)
+            .build();
+
+    return jobService.runAsJob(job);
   }
 }
