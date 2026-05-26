@@ -236,4 +236,159 @@ public class DeleteRepoJobTest {
     // Kills Thread.sleep mutator for 2 items in the loop (should be ~2000ms)
     assertTrue(elapsedMs >= 1900, "Job must sleep for at least 2000ms for 2 items");
   }
+
+  @Test
+  public void test_no_repos_match_prefix() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").build();
+    when(jwtService.getInstallationToken(course)).thenReturn("dummy-token");
+
+    String reposUrl = "https://api.github.com/orgs/ucsb-cs156/repos?per_page=100";
+    String reposJson = "[{\"name\": \"unrelated-repo\"}, {\"name\": \"another-unrelated\"}]";
+
+    when(restTemplate.exchange(
+            eq(reposUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(reposJson, HttpStatus.OK));
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("repo-prefix-")
+            .jwtService(jwtService)
+            .restTemplate(restTemplate)
+            .mapper(mapper)
+            .build();
+
+    job.accept(ctx);
+
+    String log = jobStarted.getLog();
+    assertTrue(log.contains("0 repos found with prefix repo-prefix-"));
+    assertTrue(log.contains("0 repos deleted"));
+    assertTrue(log.contains("0 repos retained"));
+    assertTrue(log.contains("0 errors"));
+
+    // Delete should never be called
+    verify(restTemplate, times(0))
+        .exchange(
+            any(String.class), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+  }
+
+  @Test
+  public void test_link_header_present_but_no_next_rel() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").build();
+    when(jwtService.getInstallationToken(course)).thenReturn("dummy-token");
+
+    String reposUrl = "https://api.github.com/orgs/ucsb-cs156/repos?per_page=100";
+    String reposJson = "[]"; // No matching repos — we only need the pagination logic here
+
+    // Link header with only rel="prev" (i.e., this is the last page)
+    HttpHeaders responseHeaders = new HttpHeaders();
+    responseHeaders.add(
+        "Link", "<https://api.github.com/orgs/ucsb-cs156/repos?page=1>; rel=\"prev\"");
+    when(restTemplate.exchange(
+            eq(reposUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(reposJson, responseHeaders, HttpStatus.OK));
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("repo-prefix-")
+            .jwtService(jwtService)
+            .restTemplate(restTemplate)
+            .mapper(mapper)
+            .build();
+
+    job.accept(ctx);
+
+    // Only one GET call — the loop must have stopped after the first page
+    verify(restTemplate, times(1))
+        .exchange(eq(reposUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
+    assertTrue(jobStarted.getLog().contains("0 repos found with prefix repo-prefix-"));
+  }
+
+  @Test
+  public void test_multi_part_link_header_prev_before_next() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").build();
+    when(jwtService.getInstallationToken(course)).thenReturn("dummy-token");
+
+    String reposUrlPage1 = "https://api.github.com/orgs/ucsb-cs156/repos?per_page=100";
+    String reposUrlPage2 = "https://api.github.com/orgs/ucsb-cs156/repos?page=2";
+
+    // Multi-part Link header: rel="prev" part comes FIRST, rel="next" part comes second
+    // This forces the if (part.contains("rel=\"next\"")) to evaluate false on the first iteration
+    HttpHeaders headersPage1 = new HttpHeaders();
+    headersPage1.add(
+        "Link",
+        "<https://api.github.com/orgs/ucsb-cs156/repos?page=1>; rel=\"prev\","
+            + " <"
+            + reposUrlPage2
+            + ">; rel=\"next\"");
+    when(restTemplate.exchange(
+            eq(reposUrlPage1), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[]", headersPage1, HttpStatus.OK));
+
+    when(restTemplate.exchange(
+            eq(reposUrlPage2), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("repo-prefix-")
+            .jwtService(jwtService)
+            .restTemplate(restTemplate)
+            .mapper(mapper)
+            .build();
+
+    job.accept(ctx);
+
+    verify(restTemplate, times(1))
+        .exchange(eq(reposUrlPage1), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
+    verify(restTemplate, times(1))
+        .exchange(eq(reposUrlPage2), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
+    assertTrue(jobStarted.getLog().contains("0 repos found with prefix repo-prefix-"));
+  }
+
+  @Test
+  public void test_delete_repo_with_empty_commits_array_200() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").build();
+    when(jwtService.getInstallationToken(course)).thenReturn("dummy-token");
+
+    String reposUrl = "https://api.github.com/orgs/ucsb-cs156/repos?per_page=100";
+    String reposJson = "[{\"name\": \"repo-prefix-empty\"}]";
+    when(restTemplate.exchange(
+            eq(reposUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(reposJson, HttpStatus.OK));
+
+    // 200 OK with an empty array — no 409 Conflict, but no commits either
+    String commitsUrl = "https://api.github.com/repos/ucsb-cs156/repo-prefix-empty/commits";
+    when(restTemplate.exchange(
+            eq(commitsUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
+
+    String deleteUrl = "https://api.github.com/repos/ucsb-cs156/repo-prefix-empty";
+    when(restTemplate.exchange(
+            eq(deleteUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("", HttpStatus.NO_CONTENT));
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("repo-prefix-")
+            .jwtService(jwtService)
+            .restTemplate(restTemplate)
+            .mapper(mapper)
+            .build();
+
+    job.accept(ctx);
+
+    String log = jobStarted.getLog();
+    assertTrue(log.contains("1 repos found with prefix repo-prefix-"));
+    assertTrue(log.contains("1 repos deleted"));
+    assertTrue(log.contains("0 repos retained"));
+    assertTrue(log.contains("0 errors"));
+
+    // Confirm delete was called exactly once
+    verify(restTemplate, times(1))
+        .exchange(eq(deleteUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+  }
 }
