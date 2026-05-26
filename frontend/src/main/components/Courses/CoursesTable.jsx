@@ -1,6 +1,6 @@
 import OurTable from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
-import {Link} from "react-router";
+import { Link } from "react-router";
 
 export default function CoursesTable({
   courses,
@@ -10,14 +10,14 @@ export default function CoursesTable({
   courseShowRoutePrefix,
 }) {
   const columns = [
-  {
-    header: "id",
-    accessorKey: "id", // accessor is the "key" in the data
-  },
-  {
-    header: "Course Name",
-    accessorKey: "courseName",
-    cell: ({ cell }) => {
+    {
+      header: "id",
+      accessorKey: "id", // accessor is the "key" in the data
+    },
+    {
+      header: "Course Name",
+      accessorKey: "courseName",
+      cell: ({ cell }) => {
         return (
           <OverlayTrigger
             placement="right"
@@ -36,17 +36,17 @@ export default function CoursesTable({
           </OverlayTrigger>
         );
       },
-  },
-  {
-    header: "Term",
-    accessorKey: "term",
-  },
-  {
-    header: "School",
-    id: "school",
-    accessorKey: "school.displayName",
-  },
-];
+    },
+    {
+      header: "Term",
+      accessorKey: "term",
+    },
+    {
+      header: "School",
+      id: "school",
+      accessorKey: "school.displayName",
+    },
+  ];
 
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;

@@ -41,12 +41,14 @@ describe("StudentCourseShowPage tests", () => {
             />
           </Routes>
         </MemoryRouter>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("Student Course: 123")).toBeInTheDocument();
 
-    expect(screen.getByRole("tab", { name: "Placeholder" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Placeholder" }),
+    ).toBeInTheDocument();
 
     expect(screen.getByText("More features coming soon.")).toBeInTheDocument();
   });
