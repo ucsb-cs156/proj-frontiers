@@ -3,6 +3,7 @@ import StudentCourseShowPage from "main/pages/Student/StudentCourseShowPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
 import coursesFixtures from "fixtures/coursesFixtures";
+import { teamsFixtures } from "fixtures/TeamsFixtures";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
@@ -51,11 +52,14 @@ describe("StudentCourseShowPage tests", () => {
     ).toHaveTextContent("Course: Loading...");
   });
 
-  test("renders course header and placeholder tab", async () => {
+  test("renders course header and my teams tab", async () => {
     axiosMock.onGet("/api/courses/1").reply(200, {
       ...coursesFixtures.oneCourseWithEachStatus[0],
       id: 1,
     });
+    axiosMock
+      .onGet("/api/teams/all?courseId=1")
+      .reply(200, teamsFixtures.teams);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -77,19 +81,39 @@ describe("StudentCourseShowPage tests", () => {
     });
 
     expect(screen.getByText("Spring 2025")).toBeInTheDocument();
-    expect(screen.getByText("Placeholder")).toHaveAttribute(
+    expect(screen.getByText("My Teams")).toHaveAttribute(
       "data-rr-ui-event-key",
-      "placeholder",
+      "teams",
     );
-    expect(screen.getByRole("tab", { name: "Placeholder" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "My Teams" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    expect(screen.getByText("More features coming soon")).toBeInTheDocument();
+    expect(screen.queryByText("Placeholder")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("More features coming soon"),
+    ).not.toBeInTheDocument();
+    expect(await screen.findByText("team1")).toBeInTheDocument();
+    expect(screen.getByText("team2")).toBeInTheDocument();
+    expect(screen.queryByText("Roster Student ID")).not.toBeInTheDocument();
+    expect(screen.getAllByText("GitHub ID")[0]).toBeInTheDocument();
+    expect(screen.queryByText("GitHub Login")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("StudentCourseShowPage-post-button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("StudentCourseShowPage-csv-button"),
+    ).not.toBeInTheDocument();
     expect(useBackendSpy).toHaveBeenCalledWith(
       ["/api/courses/1"],
       { method: "GET", url: "/api/courses/1" },
       null,
+      true,
+    );
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      ["/api/teams/all?courseId=1"],
+      { method: "GET", url: "/api/teams/all?courseId=1" },
+      [],
       true,
     );
   });

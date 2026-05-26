@@ -3,10 +3,13 @@ import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { useParams } from "react-router";
+import { useCurrentUser } from "main/utils/currentUser";
 
 import { Tab, Tabs } from "react-bootstrap";
+import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 
 export default function StudentCourseShowPage() {
+  const currentUser = useCurrentUser();
   const courseId = useParams().id;
 
   const { data: course } = useBackend(
@@ -34,9 +37,14 @@ export default function StudentCourseShowPage() {
           </div>
         </div>
       )}
-      <Tabs defaultActiveKey={"placeholder"}>
-        <Tab eventKey={"placeholder"} title={"Placeholder"} className="pt-2">
-          <p>More features coming soon</p>
+      <Tabs defaultActiveKey={"teams"}>
+        <Tab eventKey={"teams"} title={"My Teams"} className="pt-2">
+          <TeamsTabComponent
+            courseId={courseId}
+            testIdPrefix={testId}
+            currentUser={currentUser}
+            instructorView={false}
+          />
         </Tab>
       </Tabs>
     </BasicLayout>
