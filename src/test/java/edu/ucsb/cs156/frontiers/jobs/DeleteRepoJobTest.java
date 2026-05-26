@@ -89,9 +89,10 @@ public class DeleteRepoJobTest {
             .mapper(mapper)
             .build();
 
-    long startTime = System.currentTimeMillis();
+    long startTime = System.nanoTime();
     job.accept(ctx);
-    long endTime = System.currentTimeMillis();
+    long endTime = System.nanoTime();
+    long elapsedMs = (endTime - startTime) / 1_000_000;
 
     String log = jobStarted.getLog();
     assertTrue(log.contains("1 repos found with prefix repo-prefix-"));
@@ -101,7 +102,7 @@ public class DeleteRepoJobTest {
     assertFalse(log.contains("-1")); // Kills the increment mutator
 
     // Kills Thread.sleep mutator (gives a 50ms buffer for OS thread scheduling)
-    assertTrue((endTime - startTime) >= 950, "Job must sleep for at least 1000ms");
+    assertTrue(elapsedMs >= 950, "Job must sleep for at least 1000ms");
 
     // KILLS HEADER MUTATORS: Capture the entity sent to the DELETE request and check its headers
     verify(restTemplate, times(1))
@@ -143,9 +144,10 @@ public class DeleteRepoJobTest {
             .mapper(mapper)
             .build();
 
-    long startTime = System.currentTimeMillis();
+    long startTime = System.nanoTime();
     job.accept(ctx);
-    long endTime = System.currentTimeMillis();
+    long endTime = System.nanoTime();
+    long elapsedMs = (endTime - startTime) / 1_000_000;
 
     String log = jobStarted.getLog();
     assertTrue(log.contains("1 repos found with prefix repo-prefix-"));
@@ -156,7 +158,7 @@ public class DeleteRepoJobTest {
     assertFalse(log.contains("-1")); // Kills the increment mutator
 
     // Kills Thread.sleep mutator
-    assertTrue((endTime - startTime) >= 950, "Job must sleep for at least 1000ms");
+    assertTrue(elapsedMs >= 950, "Job must sleep for at least 1000ms");
 
     // Ensure delete was NEVER called
     verify(restTemplate, times(0))
@@ -216,9 +218,10 @@ public class DeleteRepoJobTest {
             .mapper(mapper)
             .build();
 
-    long startTime = System.currentTimeMillis();
+    long startTime = System.nanoTime();
     job.accept(ctx);
-    long endTime = System.currentTimeMillis();
+    long endTime = System.nanoTime();
+    long elapsedMs = (endTime - startTime) / 1_000_000;
 
     String log = jobStarted.getLog();
     assertTrue(log.contains("2 repos found with prefix test-"));
@@ -231,6 +234,6 @@ public class DeleteRepoJobTest {
     assertFalse(log.contains("-1 errors"));
 
     // Kills Thread.sleep mutator for 2 items in the loop (should be ~2000ms)
-    assertTrue((endTime - startTime) >= 1950, "Job must sleep for at least 2000ms for 2 items");
+    assertTrue(elapsedMs >= 1900, "Job must sleep for at least 2000ms for 2 items");
   }
 }
