@@ -14,6 +14,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.services.JwtService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -388,6 +389,78 @@ public class DeleteRepoJobTest {
     assertTrue(log.contains("0 errors"));
 
     // Confirm delete was called exactly once
+    verify(restTemplate, times(1))
+        .exchange(eq(deleteUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
+  }
+
+  @Test
+  public void test_empty_link_header_list() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").build();
+    when(jwtService.getInstallationToken(course)).thenReturn("dummy-token");
+
+    String reposUrl = "https://api.github.com/orgs/ucsb-cs156/repos?per_page=100";
+
+    // Explicitly create an empty list for the Link header to evaluate !linkHeaders.isEmpty() to
+    // FALSE
+    HttpHeaders headers = new HttpHeaders();
+    headers.put("Link", new ArrayList<>());
+
+    when(restTemplate.exchange(
+            eq(reposUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("[]", headers, HttpStatus.OK));
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("repo-prefix-")
+            .jwtService(jwtService)
+            .restTemplate(restTemplate)
+            .mapper(mapper)
+            .build();
+
+    job.accept(ctx);
+
+    verify(restTemplate, times(1))
+        .exchange(eq(reposUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
+    assertTrue(jobStarted.getLog().contains("0 repos found with prefix repo-prefix-"));
+  }
+
+  @Test
+  public void test_commits_node_is_not_an_array() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").build();
+    when(jwtService.getInstallationToken(course)).thenReturn("dummy-token");
+
+    String reposUrl = "https://api.github.com/orgs/ucsb-cs156/repos?per_page=100";
+    String reposJson = "[{\"name\": \"repo-prefix-not-array\"}]";
+    when(restTemplate.exchange(
+            eq(reposUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(reposJson, HttpStatus.OK));
+
+    // Mock the commits endpoint returning a JSON Object instead of a JSON Array
+    String commitsUrl = "https://api.github.com/repos/ucsb-cs156/repo-prefix-not-array/commits";
+    String objectJson = "{\"message\": \"Git Repository is empty.\"}";
+    when(restTemplate.exchange(
+            eq(commitsUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(objectJson, HttpStatus.OK));
+
+    String deleteUrl = "https://api.github.com/repos/ucsb-cs156/repo-prefix-not-array";
+    when(restTemplate.exchange(
+            eq(deleteUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("", HttpStatus.NO_CONTENT));
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("repo-prefix-")
+            .jwtService(jwtService)
+            .restTemplate(restTemplate)
+            .mapper(mapper)
+            .build();
+
+    job.accept(ctx);
+
+    String log = jobStarted.getLog();
+    assertTrue(log.contains("1 repos deleted"));
     verify(restTemplate, times(1))
         .exchange(eq(deleteUrl), eq(HttpMethod.DELETE), any(HttpEntity.class), eq(String.class));
   }

@@ -65,14 +65,12 @@ public class DeleteRepoJob implements JobContextConsumer {
       hasNext = false;
       if (linkHeaders != null && !linkHeaders.isEmpty()) {
         String linkHeader = linkHeaders.get(0);
-        if (linkHeader.contains("rel=\"next\"")) {
-          String[] parts = linkHeader.split(",");
-          for (String part : parts) {
-            if (part.contains("rel=\"next\"")) {
-              reposUrl = part.substring(part.indexOf('<') + 1, part.indexOf('>'));
-              hasNext = true;
-              break;
-            }
+        String[] parts = linkHeader.split(",");
+        for (String part : parts) {
+          if (part.contains("rel=\"next\"")) {
+            reposUrl = part.substring(part.indexOf('<') + 1, part.indexOf('>'));
+            hasNext = true;
+            break;
           }
         }
       }
