@@ -17,6 +17,7 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
   String repositoryPrefix;
   Boolean isPrivate;
   RepositoryPermissions permissions;
+  String teamRegex;
 
   @Override
   public Course getCourse() {
@@ -37,8 +38,10 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
     }
 
     for (Team team : course.getTeams()) {
-      repositoryService.createTeamRepository(
-          course, team, repositoryPrefix, isPrivate, permissions, orgId);
+      if (teamRegex == null || teamRegex.isBlank() || team.getName().matches(teamRegex)) {
+        repositoryService.createTeamRepository(
+            course, team, repositoryPrefix, isPrivate, permissions, orgId);
+      }
     }
     ctx.log("Done");
   }
