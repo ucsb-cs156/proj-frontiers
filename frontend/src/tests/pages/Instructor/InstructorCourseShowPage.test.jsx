@@ -466,4 +466,120 @@ describe("InstructorCourseShowPage tests", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  test("renders Default Base Permission badge with value None", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+      defaultBasePermission: "none",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const badge = await screen.findByTestId(
+      "InstructorCourseShowPage-default-base-permission",
+    );
+    expect(badge).toHaveTextContent("Default Base Permission: None");
+  });
+
+  test("renders Default Base Permission badge with value Read", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+      defaultBasePermission: "read",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const badge = await screen.findByTestId(
+      "InstructorCourseShowPage-default-base-permission",
+    );
+    expect(badge).toHaveTextContent("Default Base Permission: Read");
+  });
+
+  test("renders Default Base Permission badge with value Write", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+      defaultBasePermission: "write",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const badge = await screen.findByTestId(
+      "InstructorCourseShowPage-default-base-permission",
+    );
+    expect(badge).toHaveTextContent("Default Base Permission: Write");
+  });
+
+  test("does not render Default Base Permission badge when value is null", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+      defaultBasePermission: "null",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-default-base-permission"),
+    ).not.toBeInTheDocument();
+  });
 });
