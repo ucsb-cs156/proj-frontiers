@@ -1,8 +1,7 @@
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
-import OurTable from "main/components/OurTable";
+import CoursesTable from "main/components/Courses/CoursesTable";
 import React from "react";
-import { Link } from "react-router";
 
 export function StudentCoursesTable({ testid }) {
   const { data: courses } = useBackend(
@@ -48,42 +47,18 @@ export function StudentCoursesTable({ testid }) {
     );
   };
 
-  const columns = [
-    {
-      header: "id",
-      accessorKey: "id", // accessor is the "key" in the data
-    },
-    {
-      header: "Course Name",
-      id: "courseName",
-      cell: ({ row }) => (
-        <Link
-          to={`/student/courses/${row.original.id}`}
-          data-testid={`${testid}-cell-row-${row.index}-col-courseName-link`}
-        >
-          {row.original.courseName}
-        </Link>
-      ),
-    },
-    {
-      header: "Term",
-      accessorKey: "term",
-    },
-    {
-      header: "School",
-      id: "school",
-      accessorKey: "school.displayName",
-    },
-    {
-      header: "Status",
-      accessorKey: "studentStatus",
-    },
-  ];
-
   return (
     <>
       {courses.length > 0 ? (
-        <OurTable data={courses} columns={columns} testid={testid} />
+        <>
+          <CoursesTable
+            courses={courses}
+            testId={testid}
+            joinCallback={joinStudentCourseCallback}
+            isLoading={isStudentJoining}
+            courseShowRoutePrefix="/student/courses/"
+          />
+        </>
       ) : (
         <p>You are not enrolled in any student courses yet.</p>
       )}
