@@ -4,7 +4,6 @@ import OurTable from "main/components/OurTable";
 import React from "react";
 import { Link } from "react-router";
 
-
 export function StudentCoursesTable({ testid }) {
   const { data: courses } = useBackend(
     ["/api/courses/list"],
@@ -78,7 +77,7 @@ export function StudentCoursesTable({ testid }) {
     {
       header: "Status",
       accessorKey: "studentStatus",
-    }
+    },
   ];
 
   return (
