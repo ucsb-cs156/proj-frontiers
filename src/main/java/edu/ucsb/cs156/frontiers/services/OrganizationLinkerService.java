@@ -88,7 +88,7 @@ public class OrganizationLinkerService {
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
     if (course.getOrgName() == null || course.getInstallationId() == null) {
-      return new CourseWarning(false);
+      return new CourseWarning(false, false);
     }
 
     String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
@@ -103,7 +103,32 @@ public class OrganizationLinkerService {
     JsonNode responseJson = response.getBody();
     ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get("created_at").asText());
     ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());
-    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)));
+    boolean showOrganizationAgeWarning = creationDate.isAfter(now.minusMonths(1));
+    String defaultPermission = responseJson.get("default_repository_permission").asText();
+    boolean showDefaultBasePermissions = !defaultPermission.equals("none");
+    return new CourseWarning(showOrganizationAgeWarning, showDefaultBasePermissions);
+  }
+
+  /**
+   * Returns the default base permission for the organization linked to a course. Uses the GitHub
+   * REST API since this field is not available in the GraphQL API.
+   *
+   * @param course The course whose linked organization is being queried
+   * @return The default repository permission string (e.g. "none", "read", "write", "admin")
+   */
+  public String getDefaultBasePermission(Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<JsonNode> response =
+        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);
+    JsonNode responseJson = response.getBody();
+    return responseJson.get("default_repository_permission").asText();
   }
 
   /**
