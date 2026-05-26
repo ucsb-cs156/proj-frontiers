@@ -379,7 +379,7 @@ describe("CoursesTable tests", () => {
     await waitFor(() => {
       const tooltip = screen.getByRole("tooltip");
       expect(tooltip).toHaveTextContent("View course details");
-      expect(tooltip).toHaveAttribute("id", "courseName-tooltip");
+      expect(tooltip).toHaveAttribute("id", "tooltip-coursename-0");
     });
   });
 });
