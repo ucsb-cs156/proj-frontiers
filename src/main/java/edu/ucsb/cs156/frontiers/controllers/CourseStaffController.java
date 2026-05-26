@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -43,25 +44,31 @@ public class CourseStaffController extends ApiController {
   @Operation(summary = "Add a staff member to a course")
   @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
   @PostMapping("/post")
-  public CourseStaff postCourseStaff(
+  public ResponseEntity<?> postCourseStaff(
       @Parameter(name = "firstName") @RequestParam String firstName,
       @Parameter(name = "lastName") @RequestParam String lastName,
       @Parameter(name = "email") @RequestParam String email,
       @Parameter(name = "courseId") @RequestParam Long courseId)
       throws EntityNotFoundException {
 
-    // Get Course or else throw an error
-
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
+    String sanitizedEmail = email.strip();
+
+    List<CourseStaff> existingStaff = courseStaffRepository.findAllByEmail(sanitizedEmail);
+    if (!existingStaff.isEmpty()) {
+      return ResponseEntity.badRequest()
+          .body("A staff member with email " + sanitizedEmail + " already exists.");
+    }
+
     CourseStaff courseStaff =
         CourseStaff.builder()
             .firstName(firstName)
             .lastName(lastName)
-            .email(email.strip())
+            .email(sanitizedEmail)
             .course(course)
             .build();
 
@@ -75,7 +82,7 @@ public class CourseStaffController extends ApiController {
 
     updateUserService.attachUserToCourseStaff(savedCourseStaff);
 
-    return savedCourseStaff;
+    return ResponseEntity.ok(savedCourseStaff);
   }
 
   /**
@@ -191,7 +198,6 @@ public class CourseStaffController extends ApiController {
     boolean orgRemovalSuccessful = false;
     String orgRemovalErrorMessage = null;
 
-    // Try to remove the course staff from the organization if they have a GitHub login
     if (staffMember.getGithubLogin() != null
         && course.getOrgName() != null
         && course.getInstallationId() != null
@@ -203,7 +209,6 @@ public class CourseStaffController extends ApiController {
       } catch (Exception e) {
         log.error("Error removing course staff from organization: {}", e.getMessage());
         orgRemovalErrorMessage = e.getMessage();
-        // Continue with deletion even if organization removal fails
       }
     }
 

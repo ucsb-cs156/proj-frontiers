@@ -43,14 +43,23 @@ export default function StaffTabComponent({
 
   const onSuccessStaff = (modalFn) => {
     toast("Staff roster successfully updated.");
-    // Clear the search filter to show the updated roster
     setSearchTerm("");
     modalFn(false);
   };
 
+  const onErrorStaff = (error) => {
+    toast.error(
+      error?.response?.data ||
+        "Error adding staff member. Please check whether this email already exists.",
+    );
+  };
+
   const staffPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
-    { onSuccess: () => onSuccessStaff(showPostModal) },
+    {
+      onSuccess: () => onSuccessStaff(showPostModal),
+      onError: onErrorStaff,
+    },
     [`/api/coursestaff/course?courseId=${courseId}`],
   );
 
@@ -58,7 +67,6 @@ export default function StaffTabComponent({
     staffPostMutation.mutate(staff);
   };
 
-  // Render tooltip for disabled buttons
   const renderComingSoonTooltip = (props) => (
     <Tooltip id="coming-soon-tooltip" {...props}>
       Coming Soon
