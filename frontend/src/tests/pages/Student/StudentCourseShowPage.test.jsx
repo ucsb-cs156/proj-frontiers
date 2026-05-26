@@ -35,11 +35,15 @@ describe("StudentCourseShowPage tests", () => {
       .reply(200, systemInfoFixtures.showingNeither);
   });
 
-  test("renders loading state before course data arrives", () => {
+  test("renders loading state before course data arrives", async () => {
+    const noRetryQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
     axiosMock.onGet("/api/courses/1").timeout();
 
     render(
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={noRetryQueryClient}>
         <MemoryRouter initialEntries={["/student/courses/1"]}>
           <Routes>
             <Route
@@ -51,11 +55,17 @@ describe("StudentCourseShowPage tests", () => {
       </QueryClientProvider>,
     );
 
-    expect(queryClient.getQueryData(["/api/courses/1"])).toBe(null);
+    expect(noRetryQueryClient.getQueryData(["/api/courses/1"])).toBe(null);
 
     expect(
       screen.getByTestId("StudentCourseShowPage-loading"),
     ).toHaveTextContent("Course: Loading...");
+
+    await waitFor(() => {
+      expect(noRetryQueryClient.getQueryState(["/api/courses/1"])?.status).toBe(
+        "error",
+      );
+    });
 
     expect(mockToast).not.toHaveBeenCalled();
   });
