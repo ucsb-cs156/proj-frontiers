@@ -145,6 +145,7 @@ export default function HomePageLoggedIn() {
               testId={"StaffCoursesTable"}
               joinCallback={joinStaffCourseCallback}
               isLoading={isStaffJoining}
+              courseDetailRoute="/staff/courses"
             />
           </>
         )}
