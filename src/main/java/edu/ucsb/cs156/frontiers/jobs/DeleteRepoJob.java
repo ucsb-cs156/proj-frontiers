@@ -17,12 +17,16 @@ public class DeleteRepoJob implements JobContextConsumer {
   private final RepositoryService repositoryService;
 
   @Override
+  public Course getCourse() {
+    return course;
+  }
+
+  @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log(
         String.format(
             "Starting DeleteRepoJob for course %s with prefix %s", course.getCourseName(), prefix));
 
-    // Now returns a List of Strings
     List<String> matchingRepos = repositoryService.getRepoNamesWithPrefix(course, prefix);
 
     ctx.log(String.format("%d repos found with prefix %s", matchingRepos.size(), prefix));
@@ -36,7 +40,6 @@ public class DeleteRepoJob implements JobContextConsumer {
         // Sleep to prevent GitHub API rate limiting
         Thread.sleep(1000);
 
-        // Pass the course and repo name
         boolean hasCommits = repositoryService.repoHasCommits(course, repoName);
 
         if (hasCommits) {
