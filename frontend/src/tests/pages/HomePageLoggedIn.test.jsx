@@ -488,4 +488,30 @@ describe("HomePageLoggedIn tests", () => {
       ["/api/courses/allForInstructors"],
     );
   });
+
+  test("staff course name is a link to staff course show page", async () => {
+    setupUserOnly();
+    axiosMock
+      .onGet("/api/courses/staffCourses")
+      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+    axiosMock.onGet("/api/courses/list").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePageLoggedIn />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("StaffCoursesTable-cell-row-0-col-courseName-link"),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByTestId("StaffCoursesTable-cell-row-0-col-courseName-link"),
+    ).toHaveAttribute("href", "/staff/courses/1");
+  });
 });

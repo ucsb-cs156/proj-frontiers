@@ -12,11 +12,11 @@ export default function CoursesTable({
   const columns = [
     {
       header: "id",
-      accessorKey: "id", // accessor is the "key" in the data
+      accessorKey: "id",
     },
     {
       header: "Course Name",
-      id: "courseName",
+      accessorKey: "courseName",
       cell: ({ cell }) => {
         if (courseDetailRoute) {
           return (
@@ -24,11 +24,11 @@ export default function CoursesTable({
               to={`${courseDetailRoute}/${cell.row.original.id}`}
               data-testid={`${testId}-cell-row-${cell.row.index}-col-courseName-link`}
             >
-              {cell.row.original.courseName}
+              {cell.getValue()}
             </Link>
           );
         }
-        return cell.row.original.courseName;
+        return cell.getValue();
       },
     },
     {
