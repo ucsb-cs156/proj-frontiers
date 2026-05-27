@@ -61,7 +61,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,117,0,0,0
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,636,0,78,0,164,0,61,0,22
-frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,101,0,0,0,23,0,5,0,5
+frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,261,0,6,0,50,0,11,0,8
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,140,0,0,0,24,0,6,0,6
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,108,0,8,0,29,0,9,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffController,0,307,0,36,0,83,0,30,0,12
@@ -83,8 +83,8 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToGithubJob,0,290,0,24,0,76,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,249,0,30,0,63,0,23,0,8
 frontiers,edu.ucsb.cs156.frontiers.jobs,AddTeamToGithubJob,0,92,0,8,0,25,0,6,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,RemoveStudentsJob,0,86,0,12,0,20,0,8,0,2
-frontiers,edu.ucsb.cs156.frontiers.jobs,CommitDownloadRequestJob,0,20,0,0,0,5,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,PullTeamsFromCanvasJob,0,264,0,18,0,63,0,17,0,8
+frontiers,edu.ucsb.cs156.frontiers.jobs,CommitDownloadRequestJob,0,20,0,0,0,5,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamFromGithubJob,0,76,0,6,0,21,0,5,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,98,0,24,0,18,0,14,0,2
 frontiers,edu.ucsb.cs156.frontiers.jobs,AddTeamMemberToGithubJob,0,121,0,10,0,31,0,7,0,2
