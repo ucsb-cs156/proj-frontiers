@@ -20,6 +20,7 @@ export default function StaffTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
+  isInstructor = true,
 }) {
   const [postModal, showPostModal] = useState(false);
   const { data: courseStaff } = useBackend(
@@ -91,30 +92,34 @@ export default function StaffTabComponent({
         </ModalBody>
       </Modal>
       <Row sm={3} className="p-2">
-        <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                data-testid={`${testIdPrefix}-csv-button`}
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
-              >
-                Upload CSV Roster
-              </Button>
-            </span>
-          </OverlayTrigger>
-        </Col>
-        <Col>
-          <Button
-            onClick={() => showPostModal(true)}
-            data-testid={`${testIdPrefix}-post-button`}
-            className="w-100"
-          >
-            Add Staff Member
-          </Button>
-        </Col>
+        {isInstructor && (
+          <Col>
+            <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
+              <span className="d-inline-block w-100">
+                <Button
+                  data-testid={`${testIdPrefix}-csv-button`}
+                  className="w-100 button btn-secondary disabled"
+                  disabled
+                  style={{ pointerEvents: "none" }}
+                  aria-disabled="true"
+                >
+                  Upload CSV Roster
+                </Button>
+              </span>
+            </OverlayTrigger>
+          </Col>
+        )}
+        {isInstructor && (
+          <Col>
+            <Button
+              onClick={() => showPostModal(true)}
+              data-testid={`${testIdPrefix}-post-button`}
+              className="w-100"
+            >
+              Add Staff Member
+            </Button>
+          </Col>
+        )}
         <Col>
           <div className="d-flex align-items-center position-relative">
             <Button
