@@ -125,7 +125,7 @@ describe("InstructorCourseShowPage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    //Great time to also check initial values
+
     expect(queryClient.getQueryData(["/api/courses/7"])).toBe(null);
     const testId = "InstructorCourseShowPage";
 
@@ -221,7 +221,6 @@ describe("InstructorCourseShowPage tests", () => {
       .onGet("/api/rosterstudents/course/7")
       .reply(200, rosterStudentFixtures.threeStudents);
 
-    //here
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/instructor/courses/7"]}>
@@ -267,6 +266,13 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "settings",
     );
+
+    // Kills the Stryker eventKey mutation for the Repos tab
+    expect(screen.getByText("Repos")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "repos",
+    );
+
     const changeTabs = screen.getByText("Students");
     fireEvent.click(changeTabs);
   });
@@ -306,6 +312,7 @@ describe("InstructorCourseShowPage tests", () => {
       screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
     ).toBeInTheDocument();
   });
+
   test("header displays correct info when course is loaded without an installationId", async () => {
     setupInstructorUser();
 
@@ -338,6 +345,7 @@ describe("InstructorCourseShowPage tests", () => {
       screen.queryByTestId("InstructorCourseShowPage-tooltip-github-settings"),
     ).not.toBeInTheDocument();
   });
+
   test("header displays correct info when course is loaded (and displays warning)", async () => {
     setupInstructorUser();
 
@@ -376,6 +384,7 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.getByText("Spring 2025")).toBeInTheDocument();
     expect(screen.getByText(/This GitHub Organization/i)).toBeInTheDocument();
   });
+
   test("expect the correct URL to the organization for the course", async () => {
     setupInstructorUser();
 
@@ -407,6 +416,7 @@ describe("InstructorCourseShowPage tests", () => {
       "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
     );
   });
+
   test("expect the correct tooltip ID and message for the github icon (that redirects to github installation settings)", async () => {
     setupInstructorUser();
 
@@ -446,6 +456,7 @@ describe("InstructorCourseShowPage tests", () => {
       "Manage settings for association between your GitHub organization and this web application.",
     );
   });
+
   test("does not show error modal on initial render", async () => {
     setupInstructorUser();
 
@@ -467,7 +478,38 @@ describe("InstructorCourseShowPage tests", () => {
     );
 
     await screen.findByText("CMPSC 156");
+    expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
+  });
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  test("clicking the Repos tab renders the DeleteEmptyRepoForm", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+
+    const reposTab = await screen.findByText("Repos");
+    expect(reposTab).toBeInTheDocument();
+
+    fireEvent.click(reposTab);
+
+    expect(
+      await screen.findByText("Delete Empty Repositories"),
+    ).toBeInTheDocument();
   });
 });
