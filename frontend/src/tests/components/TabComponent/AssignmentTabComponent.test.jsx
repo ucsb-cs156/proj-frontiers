@@ -190,19 +190,16 @@ test("Calls repo deletion successfully", async () => {
   );
 
   await screen.findByTestId("DeleteRepoForm-submit");
-  
-  fireEvent.change(
-    screen.getByTestId("DeleteRepoForm-repoPrefix"),
-    {
-      target: { value: "test-delete-prefix" },
-    },
-  );
-  
+
+  fireEvent.change(screen.getByTestId("DeleteRepoForm-repoPrefix"), {
+    target: { value: "test-delete-prefix" },
+  });
+
   fireEvent.click(screen.getByTestId("DeleteRepoForm-submit"));
-  
+
   await waitFor(() => expect(mockToast).toHaveBeenCalled());
   expect(mockToast).toBeCalledWith("Repo deletion successfully started.");
-  
+
   expect(axiosMock.history.delete.length).toEqual(1);
   expect(axiosMock.history.delete[0].params).toEqual({
     courseId: 7,

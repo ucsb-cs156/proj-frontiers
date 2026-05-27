@@ -9,10 +9,7 @@ export default function DeleteRepoForm({ submitAction }) {
   } = useForm();
 
   return (
-    <Form
-      onSubmit={handleSubmit(submitAction)}
-      data-testid="DeleteRepoForm"
-    >
+    <Form onSubmit={handleSubmit(submitAction)} data-testid="DeleteRepoForm">
       <Form.Group className="mb-3">
         <Form.Label htmlFor="repoPrefix">Repository Prefix</Form.Label>
         <Form.Control
@@ -28,7 +25,8 @@ export default function DeleteRepoForm({ submitAction }) {
           {errors.repoPrefix?.message}
         </Form.Control.Feedback>
         <Form.Text className="text-muted">
-          This will delete all repos in the organization that have names starting with the prefix, and have no commits.
+          This will delete all repos in the organization that have names
+          starting with the prefix, and have no commits.
         </Form.Text>
       </Form.Group>
       <Form.Group>
