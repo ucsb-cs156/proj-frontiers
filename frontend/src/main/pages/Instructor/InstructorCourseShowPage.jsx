@@ -15,6 +15,7 @@ import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
+import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -177,6 +178,9 @@ export default function InstructorCourseShowPage({
         </Tab>
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
+        </Tab>
+        <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
+          <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
         {showSettingsTab && (
           <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
