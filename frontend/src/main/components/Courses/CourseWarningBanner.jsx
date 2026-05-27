@@ -30,16 +30,17 @@ export function CourseWarningBanner({ courseId, orgName }) {
       )}
       {showPermissionWarning && (
         <Alert variant="warning">
-          Warning: The default base permission for this organization is&nbsp;
-          {`"${permission.charAt(0).toUpperCase() + permission.slice(1)}"`}.
-          Students may be able to view one another&apos;s private repos.&nbsp;
+          Warning: the organization setting for Default Base Permission is not
+          the recommended value of None. This means that students in the
+          organization may be able to access other students&apos; private
+          repos.&nbsp;
           {orgName && (
             <Alert.Link
               href={`https://github.com/organizations/${orgName}/settings/member_privileges`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              Change this in GitHub settings.
+              You can change that setting here
             </Alert.Link>
           )}
         </Alert>
