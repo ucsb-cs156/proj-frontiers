@@ -263,6 +263,10 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "settings",
     );
+    expect(screen.getByText("Downloads")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "downloads",
+    );
     const changeTabs = screen.getByText("Students");
     fireEvent.click(changeTabs);
   });
