@@ -1912,14 +1912,14 @@ public class CoursesControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true));
+    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true, false));
 
     MvcResult response =
         mockMvc.perform(get("/api/courses/warnings/1")).andExpect(status().isOk()).andReturn();
 
     verify(linkerService).checkCourseWarnings(eq(course));
     String responseString = response.getResponse().getContentAsString();
-    String expectedJson = mapper.writeValueAsString(new CourseWarning(true));
+    String expectedJson = mapper.writeValueAsString(new CourseWarning(true, false));
     assertEquals(expectedJson, responseString);
   }
 
