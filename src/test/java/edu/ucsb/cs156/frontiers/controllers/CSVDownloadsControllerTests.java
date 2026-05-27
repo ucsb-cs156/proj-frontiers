@@ -213,8 +213,16 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
     when(manualStudent.getRosterStatus()).thenReturn(RosterStatus.MANUAL);
     when(manualStudent.getTeams()).thenReturn(Collections.emptyList());
 
+    RosterStudent nullTeamsStudent = mock(RosterStudent.class);
+    when(nullTeamsStudent.getFirstName()).thenReturn("Taylor");
+    when(nullTeamsStudent.getLastName()).thenReturn("NoTeam");
+    when(nullTeamsStudent.getEmail()).thenReturn("taylor@ucsb.edu");
+    when(nullTeamsStudent.getStudentId()).thenReturn("34567");
+    when(nullTeamsStudent.getRosterStatus()).thenReturn(RosterStatus.ROSTER);
+    when(nullTeamsStudent.getTeams()).thenReturn(null);
+
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
-    doReturn(List.of(rosterStudent, manualStudent))
+    doReturn(List.of(rosterStudent, manualStudent, nullTeamsStudent))
         .when(rosterStudentRepository)
         .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
             eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
@@ -224,6 +232,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             first,last,email,id,team
             Chris,Gaucho,cgaucho@ucsb.edu,12345,Team Alpha
             Pat,Student,pstudent@ucsb.edu,23456,
+            Taylor,NoTeam,taylor@ucsb.edu,34567,
             """;
 
     MvcResult response =
