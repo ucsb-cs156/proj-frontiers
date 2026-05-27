@@ -311,6 +311,9 @@ describe("InstructorCourseShowPage tests", () => {
     expect(
       screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-DownloadsTabComponent"),
+    ).toBeInTheDocument();
   });
 
   test("header displays correct info when course is loaded without an installationId", async () => {
