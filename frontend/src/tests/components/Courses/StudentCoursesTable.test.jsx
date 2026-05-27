@@ -223,6 +223,30 @@ describe("StudentCoursesTable tests", () => {
       screen.getByTestId("CoursesTable-cell-row-6-col-studentStatus-button"),
     ).toHaveTextContent("Join Course");
   });
+  test("course name is a link to student course show page", async () => {
+    axiosMock
+      .onGet("/api/courses/list")
+      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <StudentCoursesTable testid={"CoursesTable"} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("CoursesTable-cell-row-0-col-courseName-link"),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByTestId("CoursesTable-cell-row-0-col-courseName-link"),
+    ).toHaveAttribute("href", "/student/courses/1");
+  });
+
   test("useBackend and useBackendMutation are called with correct cache query key", async () => {
     axiosMock
       .onGet("/api/courses/list")

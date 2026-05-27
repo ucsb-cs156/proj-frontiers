@@ -17,6 +17,23 @@ describe("CoursesTable tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  test("course name is plain text (not a link) when courseDetailRoute is not provided", () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    expect(
+      screen.queryByTestId("CoursesTable-cell-row-0-col-courseName-link"),
+    ).not.toBeInTheDocument();
+  });
+
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
