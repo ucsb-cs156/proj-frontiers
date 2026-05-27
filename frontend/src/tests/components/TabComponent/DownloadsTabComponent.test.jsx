@@ -1,11 +1,7 @@
-import { render, screen ,fireEvent} from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 import { expect, vi } from "vitest";
 
@@ -53,12 +49,17 @@ describe("DownloadsTabComponent Tests", () => {
     window.open = openMock;
 
     render(
-        <QueryClientProvider client={queryClient}>
-            <DownloadsTabComponent courseId={42} testIdPrefix={testId} />
-        </QueryClientProvider>,
+      <QueryClientProvider client={queryClient}>
+        <DownloadsTabComponent courseId={42} testIdPrefix={testId} />
+      </QueryClientProvider>,
     );
-    const downloadButton = screen.getByTestId(`${testId}-download-student-csv-button`);
+    const downloadButton = screen.getByTestId(
+      `${testId}-download-student-csv-button`,
+    );
     fireEvent.click(downloadButton);
-    expect(openMock).toHaveBeenCalledWith("/api/csv/rosterstudents?courseId=42", "_blank");
+    expect(openMock).toHaveBeenCalledWith(
+      "/api/csv/rosterstudents?courseId=42",
+      "_blank",
+    );
   });
 });
