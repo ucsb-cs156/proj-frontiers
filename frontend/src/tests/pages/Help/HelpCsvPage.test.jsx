@@ -36,6 +36,22 @@ describe("HelpCsvPage tests", () => {
     expect(scrollIntoViewMock).toHaveBeenCalled();
   });
 
+  test("scrolls to staff csv upload section when hash is present", async () => {
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/help/csv#staff-csv-upload"]}>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Staff CSV Upload");
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
   test("does not scroll when there is no hash", async () => {
     const scrollIntoViewMock = vi.fn();
     const getElementByIdSpy = vi.spyOn(document, "getElementById");
@@ -127,29 +143,50 @@ describe("HelpCsvPage tests", () => {
       "rosterDownloadCsvExample",
     );
     const teamsCsvExample = screen.getByTestId("teamsCsvExample");
+    const staffCsvExample = screen.getByTestId("staffCsvExample");
 
     expect(chicoStateCsvExample).toBeInTheDocument();
     expect(oregonStateCsvExample).toBeInTheDocument();
     expect(rosterDownloadCsvExample).toBeInTheDocument();
     expect(ucsbEgradesCsvExample).toBeInTheDocument();
     expect(teamsCsvExample).toBeInTheDocument();
+    expect(staffCsvExample).toBeInTheDocument();
     expect(chicoStateCsvExample).toHaveClass("csvExample");
     expect(oregonStateCsvExample).toHaveClass("csvExample");
     expect(rosterDownloadCsvExample).toHaveClass("csvExample");
     expect(ucsbEgradesCsvExample).toHaveClass("csvExample");
     expect(teamsCsvExample).toHaveClass("csvExample");
+    expect(staffCsvExample).toHaveClass("csvExample");
 
     // New header exists
     expect(screen.getByText("Team Information")).toBeInTheDocument();
+    expect(screen.getByText("Staff CSV Upload")).toBeInTheDocument();
+    expect(staffCsvExample).toHaveTextContent("firstName,lastName,email");
+    expect(staffCsvExample).toHaveTextContent("Ada,Lovelace,ada@ucsb.edu");
 
     // Check accordions separation
     const rosterUploadsAccordion = screen.getByTestId("rosterUploadsAccordion");
     const teamsAccordion = screen.getByTestId("teamsAccordion");
+    const staffCsvUploadAccordion = screen.getByTestId(
+      "staffCsvUploadAccordion",
+    );
 
     // Teams header is in the Team Information accordion
     expect(
       within(teamsAccordion).getByText("Teams (by Email)"),
     ).toBeInTheDocument();
+    expect(
+      within(staffCsvUploadAccordion).getByText("Staff (by Email)"),
+    ).toBeInTheDocument();
+    expect(
+      within(staffCsvUploadAccordion).getAllByText("firstName").length,
+    ).toBeGreaterThan(0);
+    expect(
+      within(staffCsvUploadAccordion).getAllByText("lastName").length,
+    ).toBeGreaterThan(0);
+    expect(
+      within(staffCsvUploadAccordion).getAllByText("email").length,
+    ).toBeGreaterThan(0);
 
     // Teams header is not in the Roster Uploads accordion
     expect(
