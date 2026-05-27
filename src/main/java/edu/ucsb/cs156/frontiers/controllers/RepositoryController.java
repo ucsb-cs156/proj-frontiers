@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
@@ -8,18 +9,22 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
 import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.DeleteRepoJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.JwtService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 @Tag(name = "Repository Controller")
 @RestController
@@ -33,6 +38,10 @@ public class RepositoryController extends ApiController {
   @Autowired CourseRepository courseRepository;
 
   @Autowired GithubTeamService githubTeamService;
+
+  @Autowired JwtService jwtService;
+
+  @Autowired ObjectMapper mapper;
 
   /**
    * Fires a job that creates a repo for every RosterStudent with a linked user with a GitHub
@@ -106,6 +115,37 @@ public class RepositoryController extends ApiController {
               .course(course)
               .permissions(permissions)
               .teamRegex(teamRegex.orElse(null))
+              .build();
+      return jobService.runAsJob(job);
+    }
+  }
+
+  /**
+   * Fires a job that bulk deletes empty repos matching a specific prefix in the course's attached
+   * organization.
+   *
+   * @param courseId ID of the course
+   * @param prefix the prefix of the repositories to delete
+   * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to delete the repos.
+   */
+  @DeleteMapping("")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public Job deleteRepos(@RequestParam Long courseId, @RequestParam String prefix) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    if (course.getOrgName() == null || course.getInstallationId() == null) {
+      throw new NoLinkedOrganizationException(course.getCourseName());
+    } else {
+      DeleteRepoJob job =
+          DeleteRepoJob.builder()
+              .course(course)
+              .prefix(prefix)
+              .jwtService(jwtService)
+              .mapper(mapper)
+              .restTemplate(new RestTemplate())
               .build();
       return jobService.runAsJob(job);
     }
