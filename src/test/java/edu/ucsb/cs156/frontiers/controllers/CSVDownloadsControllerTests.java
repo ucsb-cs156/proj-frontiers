@@ -39,7 +39,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
-@WebMvcTest(controllers = {CSVDownloadsController.class})
+@WebMvcTest(controllers = {CSVDownloadsController.class, CATMECSVDownloadsController.class})
 @Import(TestConfig.class)
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
@@ -213,18 +213,11 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
     when(manualStudent.getRosterStatus()).thenReturn(RosterStatus.MANUAL);
     when(manualStudent.getTeams()).thenReturn(Collections.emptyList());
 
-    RosterStudent droppedStudent = mock(RosterStudent.class);
-    when(droppedStudent.getFirstName()).thenReturn("Drop");
-    when(droppedStudent.getLastName()).thenReturn("Ped");
-    when(droppedStudent.getEmail()).thenReturn("dropped@ucsb.edu");
-    when(droppedStudent.getStudentId()).thenReturn("34567");
-    when(droppedStudent.getRosterStatus()).thenReturn(RosterStatus.DROPPED);
-    when(droppedStudent.getTeams()).thenReturn(List.of("Team Zeta"));
-
     doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
-    doReturn(List.of(rosterStudent, manualStudent, droppedStudent))
+    doReturn(List.of(rosterStudent, manualStudent))
         .when(rosterStudentRepository)
-        .findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(eq(1L));
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
 
     String expectedResponse =
         """
@@ -242,7 +235,9 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(rosterStudentRepository, times(1))
-        .findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(eq(1L));
-    assertEquals(expectedResponse, response.getResponse().getContentAsString());
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+    assertEquals(
+        expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
   }
 }

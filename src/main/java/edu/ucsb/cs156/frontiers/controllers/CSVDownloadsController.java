@@ -22,8 +22,9 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,14 +37,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Tag(name = "CSV Downloads")
-@RequestMapping("/api")
+@RequestMapping("/api/csv")
 @RestController
 @Slf4j
 public class CSVDownloadsController extends ApiController {
 
   @Autowired private CourseRepository courseRepository;
-
-  @Autowired private RosterStudentRepository rosterStudentRepository;
 
   @Autowired private RosterStudentDTOService rosterStudentDTOService;
 
@@ -60,7 +59,7 @@ public class CSVDownloadsController extends ApiController {
                     schema = @Schema(type = "string", format = "binary"))),
         @ApiResponse(responseCode = "500", description = "Internal Server Error")
       })
-  @GetMapping(value = "/csv/rosterstudents", produces = "text/csv")
+  @GetMapping(value = "/rosterstudents", produces = "text/csv")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   public ResponseEntity<StreamingResponseBody> csvForQuarter(
       @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
@@ -94,6 +93,16 @@ public class CSVDownloadsController extends ApiController {
         .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
         .body(stream);
   }
+}
+
+@Tag(name = "CSV Downloads")
+@RequestMapping("/api/downloads")
+@RestController
+@Slf4j
+class CATMECSVDownloadsController extends ApiController {
+  @Autowired private CourseRepository courseRepository;
+
+  @Autowired private RosterStudentRepository rosterStudentRepository;
 
   @Operation(
       summary = "Download CATME CSV File of Roster Students",
@@ -108,7 +117,7 @@ public class CSVDownloadsController extends ApiController {
                     schema = @Schema(type = "string", format = "binary"))),
         @ApiResponse(responseCode = "500", description = "Internal Server Error")
       })
-  @GetMapping(value = "/downloads/catme", produces = "text/csv")
+  @GetMapping(value = "/catme", produces = "text/csv")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   public ResponseEntity<StreamingResponseBody> catmeCsv(
       @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
@@ -120,29 +129,22 @@ public class CSVDownloadsController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     StreamingResponseBody stream =
         (outputStream) -> {
-          List<RosterStudent> list =
-              StreamSupport.stream(
-                      rosterStudentRepository
-                          .findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(courseId)
-                          .spliterator(),
-                      false)
-                  .filter(
-                      student ->
-                          student.getRosterStatus() == RosterStatus.ROSTER
-                              || student.getRosterStatus() == RosterStatus.MANUAL)
-                  .toList();
-          try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
-            writer.write("first,last,email,id,team\n");
-            for (RosterStudent student : list) {
-              String team = student.getTeams().isEmpty() ? "" : student.getTeams().get(0);
-              writer.write(
-                  String.format(
-                      "%s,%s,%s,%s,%s\n",
-                      student.getFirstName(),
-                      student.getLastName(),
-                      student.getEmail(),
-                      student.getStudentId(),
-                      team));
+          List<RosterStudent> rosterStudents =
+              rosterStudentRepository
+                  .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                      courseId, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL));
+          try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+              CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+            csvPrinter.printRecord("first", "last", "email", "id", "team");
+            for (RosterStudent student : rosterStudents) {
+              List<String> teams = student.getTeams();
+              String team = teams != null && !teams.isEmpty() ? teams.get(0) : "";
+              csvPrinter.printRecord(
+                  student.getFirstName(),
+                  student.getLastName(),
+                  student.getEmail(),
+                  student.getStudentId(),
+                  team);
             }
           }
         };

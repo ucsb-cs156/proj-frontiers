@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.repositories;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,6 +22,17 @@ public interface RosterStudentRepository extends JpaRepository<RosterStudent, Lo
           ORDER BY LOWER(r.firstName), LOWER(r.lastName)
       """)
   Iterable<RosterStudent> findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(Long courseId);
+
+  @Query(
+      """
+          SELECT r
+          FROM RosterStudent r
+          WHERE r.course.id = :courseId
+            AND r.rosterStatus in :statuses
+          ORDER BY LOWER(r.firstName), LOWER(r.lastName)
+      """)
+  List<RosterStudent> findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+      Long courseId, List<RosterStatus> statuses);
 
   public Optional<RosterStudent> findByCourseIdAndStudentId(Long courseId, String studentId);
 
