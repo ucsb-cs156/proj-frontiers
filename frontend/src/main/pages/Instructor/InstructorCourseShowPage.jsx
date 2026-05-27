@@ -10,6 +10,7 @@ import { Button, Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
 import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
 import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabComponent";
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
+import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
@@ -162,6 +163,9 @@ export default function InstructorCourseShowPage() {
             testIdPrefix={testId}
             currentUser={currentUser}
           />
+        </Tab>
+        <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
+          <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />

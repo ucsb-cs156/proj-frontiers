@@ -255,6 +255,10 @@ describe("InstructorCourseShowPage tests", () => {
       "aria-selected",
       "true",
     );
+    expect(screen.getByText("Downloads")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "downloads",
+    );
     expect(screen.getByText("Jobs")).toHaveAttribute(
       "data-rr-ui-event-key",
       "jobs",
