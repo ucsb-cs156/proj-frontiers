@@ -37,6 +37,24 @@ export default function InstructorCourseShowPage() {
 
   const getCourseFailed = courseBackendFailureCount > 0;
 
+  const { data: warnings } = useBackend(
+    // Stryker disable next-line ArrayDeclaration,StringLiteral : cache key
+    [`/api/courses/warnings/${courseId}`],
+    // Stryker disable next-line ObjectLiteral,StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: `/api/courses/warnings/${courseId}` },
+    undefined,
+    true,
+    // Stryker disable next-line ObjectLiteral : entire options block is perf hints
+    {
+      // Stryker disable next-line all : placeholder perf hint, not behavior
+      placeholderData: { defaultBasePermission: "null" },
+      // Stryker disable next-line all : staleTime perf hint, not behavior
+      staleTime: "static",
+    },
+  );
+  const basePermission = warnings?.defaultBasePermission;
+  const showBasePermissionBadge = basePermission && basePermission !== "null";
+
   const navigate = useNavigate();
   useEffect(() => {
     if (getCourseFailed) {
@@ -68,7 +86,7 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <CourseWarningBanner courseId={courseId} />
+      <CourseWarningBanner courseId={courseId} orgName={course?.orgName} />
       {!course ? (
         <div data-testid={`${testId}-loading`}>Course: Loading...</div>
       ) : (
@@ -129,6 +147,16 @@ export default function InstructorCourseShowPage() {
                       </a>
                     </OverlayTrigger>
                   )}
+                </div>
+              )}
+              {course.orgName && showBasePermissionBadge && (
+                <div
+                  className="text-muted small mt-1"
+                  data-testid={`${testId}-default-base-permission`}
+                >
+                  Default Base Permission:{" "}
+                  {basePermission.charAt(0).toUpperCase() +
+                    basePermission.slice(1)}
                 </div>
               )}
             </div>
