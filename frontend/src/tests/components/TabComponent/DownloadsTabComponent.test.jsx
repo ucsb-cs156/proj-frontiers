@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen ,fireEvent} from "@testing-library/react";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import {
@@ -27,14 +27,6 @@ vi.mock("react-router", async (importOriginal) => ({
   useNavigate: () => mockedNavigate,
 }));
 
-const ArbitraryTestQueryComponent = () => {
-  const _arbitraryQuery = useQuery({
-    queryKey: ["arbitraryQuery"],
-    queryFn: () => "banana",
-  });
-  return <></>;
-};
-
 describe("DownloadsTabComponent Tests", () => {
   beforeEach(() => {
     axiosMock.reset();
@@ -55,5 +47,18 @@ describe("DownloadsTabComponent Tests", () => {
     expect(
       screen.getByRole("button", { name: "Download Student CSV" }),
     ).toBeInTheDocument();
+  });
+  test("calls window.open with correct url", async () => {
+    const openMock = vi.fn();
+    window.open = openMock;
+
+    render(
+        <QueryClientProvider client={queryClient}>
+            <DownloadsTabComponent courseId={42} testIdPrefix={testId} />
+        </QueryClientProvider>,
+    );
+    const downloadButton = screen.getByTestId(`${testId}-download-student-csv-button`);
+    fireEvent.click(downloadButton);
+    expect(openMock).toHaveBeenCalledWith("/api/csv/rosterstudents?courseId=42", "_blank");
   });
 });
