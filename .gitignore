@@ -28,6 +28,7 @@ node_modules
 # Maven
 
 /target
+.m2-test/
 
 ### STS ###
 .apt_generated
@@ -62,4 +63,3 @@ build/
 secrets.yaml
 secrets.yaml.backup
 .DS_Store
-
