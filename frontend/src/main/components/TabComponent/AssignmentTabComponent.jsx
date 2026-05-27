@@ -1,5 +1,6 @@
 import IndividualAssignmentForm from "main/components/Assignments/IndividualAssignmentForm";
 import TeamRepositoryAssignmentForm from "main/components/Assignments/TeamRepositoryAssignmentForm";
+import DeleteRepoForm from "main/components/Assignments/DeleteRepoForm";
 import { Card, Row, Col } from "react-bootstrap";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
@@ -11,6 +12,10 @@ export default function AssignmentTabComponent({ courseId }) {
 
   const onSuccessTeamAssignment = () => {
     toast("Team repository creation successfully started.");
+  };
+
+  const onSuccessRepoDeletion = () => {
+    toast("Repo deletion successfully started.");
   };
 
   const objectToAxiosParamsIndividualAssignment = (assignment) => ({
@@ -55,6 +60,24 @@ export default function AssignmentTabComponent({ courseId }) {
     teamAssignmentMutation.mutate(teamAssignment);
   };
 
+  const objectToAxiosParamsRepoDeletion = (repoDeletion) => ({
+    url: `/api/repos`,
+    method: "DELETE",
+    params: {
+      courseId: courseId,
+      prefix: repoDeletion.repoPrefix,
+    },
+  });
+
+  const repoDeletionMutation = useBackendMutation(
+    objectToAxiosParamsRepoDeletion,
+    { onSuccess: onSuccessRepoDeletion },
+  );
+
+  const deleteRepo = (repoDeletion) => {
+    repoDeletionMutation.mutate(repoDeletion);
+  };
+
   return (
     <Row md={2} className="g-2 mb-2" data-testid={"AssignmentTabComponent"}>
       <Col md={6}>
@@ -70,6 +93,14 @@ export default function AssignmentTabComponent({ courseId }) {
           <Card.Header>Team Repository Assignment</Card.Header>
           <Card.Body>
             <TeamRepositoryAssignmentForm submitAction={postTeamAssignment} />
+          </Card.Body>
+        </Card>
+      </Col>
+      <Col md={6}>
+        <Card className="h-100">
+          <Card.Header>Delete Empty Repos</Card.Header>
+          <Card.Body>
+            <DeleteRepoForm submitAction={deleteRepo} />
           </Card.Body>
         </Card>
       </Col>

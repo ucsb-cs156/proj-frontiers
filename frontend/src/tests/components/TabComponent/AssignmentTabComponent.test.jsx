@@ -179,3 +179,33 @@ test("Sends non-default teamRegex option to backend", async () => {
     teamRegex: "team1",
   });
 });
+
+test("Calls repo deletion successfully", async () => {
+  axiosMock.onDelete("/api/repos").reply(200);
+  const client = new QueryClient();
+  render(
+    <QueryClientProvider client={client}>
+      <AssignmentTabComponent courseId={7} />
+    </QueryClientProvider>,
+  );
+
+  await screen.findByTestId("DeleteRepoForm-submit");
+  
+  fireEvent.change(
+    screen.getByTestId("DeleteRepoForm-repoPrefix"),
+    {
+      target: { value: "test-delete-prefix" },
+    },
+  );
+  
+  fireEvent.click(screen.getByTestId("DeleteRepoForm-submit"));
+  
+  await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  expect(mockToast).toBeCalledWith("Repo deletion successfully started.");
+  
+  expect(axiosMock.history.delete.length).toEqual(1);
+  expect(axiosMock.history.delete[0].params).toEqual({
+    courseId: 7,
+    prefix: "test-delete-prefix",
+  });
+});
