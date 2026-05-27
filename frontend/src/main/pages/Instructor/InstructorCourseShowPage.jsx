@@ -167,6 +167,7 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
           <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
+        </Tab>
         <Tab eventKey={"repos"} title={"Repos"} className="pt-2">
           {/* We drop the form directly in here, passing it the courseId */}
           <DeleteEmptyReposForm courseId={courseId} />
