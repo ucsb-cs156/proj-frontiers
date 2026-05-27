@@ -39,7 +39,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
-@WebMvcTest(controllers = {CSVDownloadsController.class, CATMECSVDownloadsController.class})
+@WebMvcTest(controllers = {CSVDownloadsController.class})
 @Import(TestConfig.class)
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
@@ -173,7 +173,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     // act
 
-    MvcResult response = mockMvc.perform(get("/api/downloads/catme?courseId=1")).andReturn();
+    MvcResult response = mockMvc.perform(get("/api/csv/catme?courseId=1")).andReturn();
 
     // assert
     String actualResponse = response.getResponse().getContentAsString();
@@ -228,7 +228,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     MvcResult response =
         mockMvc
-            .perform(get("/api/downloads/catme?courseId=1"))
+            .perform(get("/api/csv/catme?courseId=1"))
             .andExpect(request().asyncStarted())
             .andDo(MvcResult::getAsyncResult)
             .andExpect(status().isOk())

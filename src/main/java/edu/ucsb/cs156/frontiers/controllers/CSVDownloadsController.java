@@ -46,6 +46,8 @@ public class CSVDownloadsController extends ApiController {
 
   @Autowired private RosterStudentDTOService rosterStudentDTOService;
 
+  @Autowired private RosterStudentRepository rosterStudentRepository;
+
   @Operation(
       summary = "Download CSV File of Roster Students",
       description = "Returns a CSV file as a response",
@@ -93,16 +95,6 @@ public class CSVDownloadsController extends ApiController {
         .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
         .body(stream);
   }
-}
-
-@Tag(name = "CSV Downloads")
-@RequestMapping("/api/downloads")
-@RestController
-@Slf4j
-class CATMECSVDownloadsController extends ApiController {
-  @Autowired private CourseRepository courseRepository;
-
-  @Autowired private RosterStudentRepository rosterStudentRepository;
 
   @Operation(
       summary = "Download CATME CSV File of Roster Students",
