@@ -233,6 +233,51 @@ export default function HelpCsvPage() {
           </Accordion.Item>
         </Accordion>
 
+        <h2 id="staff-csv" className="mt-4">
+          Staff CSV Upload Format
+        </h2>
+        <p>Instructors can upload a list of course staff from a CSV file.</p>
+        <Accordion data-testid="staffCsvAccordion">
+          <Accordion.Item eventKey="0">
+            <Accordion.Header>Staff CSV Format</Accordion.Header>
+            <Accordion.Body>
+              <p>
+                You can upload staff using a simple CSV with the following
+                format:
+              </p>
+              <pre className={"csvExample"} data-testid="staffCsvExample">
+                {csvFixtures.staffCsv}
+              </pre>
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>CSV Field</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>firstName</td>
+                    <td>Staff member&apos;s first name</td>
+                  </tr>
+                  <tr>
+                    <td>lastName</td>
+                    <td>Staff member&apos;s last name</td>
+                  </tr>
+                  <tr>
+                    <td>email</td>
+                    <td>Staff member&apos;s email address</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p>
+                <b>Note:</b> the header row (
+                <code>firstName,lastName,email</code>) is required.
+              </p>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+
         <h2 className="mt-4">Roster Student CSV Download formats</h2>
         <p>
           Instructors can download a course roster as a CSV file. The download
