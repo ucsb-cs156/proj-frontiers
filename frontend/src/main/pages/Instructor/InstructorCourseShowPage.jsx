@@ -15,6 +15,7 @@ import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
+import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -196,6 +197,9 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
           <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
+        </Tab>
+        <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
+          <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
       </Tabs>
     </BasicLayout>
