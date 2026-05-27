@@ -12,7 +12,11 @@ import coursesFixtures from "fixtures/coursesFixtures";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { teamsFixtures } from "fixtures/TeamsFixtures";
-import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
+import {
+  showOrganizationAgeWarning,
+  readBasePermission,
+  bothWarnings,
+} from "fixtures/courseWarningFixtures";
 import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
 
 export default {
@@ -228,6 +232,60 @@ ExampleWithOrganizationAgeWarning.parameters = {
       }),
       http.get("/api/courses/warnings/7", () =>
         HttpResponse.json(showOrganizationAgeWarning),
+      ),
+      http.get("/api/jobs/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+    ],
+  },
+};
+
+export const ExampleWithBasePermissionWarning = Template.bind({});
+ExampleWithBasePermissionWarning.args = {
+  suppressMemoryRouter: true,
+};
+ExampleWithBasePermissionWarning.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, { status: 200 });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/teams/all", () => {
+        return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
+      }),
+      http.get("/api/courses/warnings/7", () =>
+        HttpResponse.json(readBasePermission),
+      ),
+      http.get("/api/jobs/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+    ],
+  },
+};
+
+export const ExampleWithBothWarnings = Template.bind({});
+ExampleWithBothWarnings.args = {
+  suppressMemoryRouter: true,
+};
+ExampleWithBothWarnings.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, { status: 200 });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/teams/all", () => {
+        return HttpResponse.json(teamsFixtures.threeTeams, { status: 200 });
+      }),
+      http.get("/api/courses/warnings/7", () =>
+        HttpResponse.json(bothWarnings),
       ),
       http.get("/api/jobs/course", () => {
         return HttpResponse.json([], { status: 200 });

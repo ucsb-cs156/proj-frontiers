@@ -6,7 +6,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
+import StaffCourseShowPage from "main/pages/Staff/StaffCourseShowPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
 import coursesFixtures from "fixtures/coursesFixtures";
@@ -15,7 +15,6 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
-import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { expect, vi } from "vitest";
 
 const mockedNavigate = vi.fn();
@@ -34,16 +33,11 @@ vi.mock("react-toastify", async (importOriginal) => {
   };
 });
 
-describe("InstructorCourseShowPage tests", () => {
+describe("StaffCourseShowPage tests", () => {
   beforeEach(() => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
-    axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
-      courseId: "",
-      canvasApiToken: "",
-      canvasCourseId: "",
-    });
     axiosMock.onGet("/api/jobs/course").reply(200, []);
   });
 
@@ -51,6 +45,15 @@ describe("InstructorCourseShowPage tests", () => {
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.instructorUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupUserOnly = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
@@ -64,41 +67,30 @@ describe("InstructorCourseShowPage tests", () => {
     setupInstructorUser();
     const theCourse = {
       ...coursesFixtures.oneCourseWithEachStatus[0],
-      id: 1,
-      createdByEmail: "phtcon@ucsb.edu",
+      id: 7,
     };
-    axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
-    const testId = "InstructorCourseShowPage";
+    const testId = "StaffCourseShowPage";
 
     await waitFor(() => {
       expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
         "CMPSC 156",
       );
     });
-
-    expect(screen.queryByText("ucsb-cs156-s25")).toBeInTheDocument();
-
-    const githubImage = screen.getByTestId(`${testId}-github-org-image`);
-    expect(githubImage).toHaveAttribute(
-      "src",
-      "https://github.com/ucsb-cs156-s25.png?size=64",
-    );
-    expect(githubImage).toHaveAttribute("alt", "ucsb-cs156-s25");
-    expect(githubImage).toHaveStyle("width: 48px; height: 48px;");
 
     expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
     vi.advanceTimersByTime(3000);
@@ -112,27 +104,26 @@ describe("InstructorCourseShowPage tests", () => {
       toFake: ["setTimeout", "clearTimeout"],
     });
     axiosMock.onGet("/api/courses/7").timeout();
-    axiosMock.onGet("/api/rosterstudents/course/7").timeout();
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    //Great time to also check initial values
+
     expect(queryClient.getQueryData(["/api/courses/7"])).toBe(null);
-    const testId = "InstructorCourseShowPage";
+    const testId = "StaffCourseShowPage";
 
     await screen.findByTestId(`${testId}-loading`);
 
-    const courseName = screen.getByTestId(`${testId}-loading`);
-    expect(courseName).toHaveTextContent("Course: Loading...");
+    const loadingDiv = screen.getByTestId(`${testId}-loading`);
+    expect(loadingDiv).toHaveTextContent("Course: Loading...");
 
     await screen.findByText(
       "Course not found. You will be returned to the course list in 3 seconds.",
@@ -160,7 +151,6 @@ describe("InstructorCourseShowPage tests", () => {
       toFake: ["setTimeout", "clearTimeout"],
     });
     axiosMock.onGet("/api/courses/7").timeout();
-    axiosMock.onGet("/api/rosterstudents/course/7").timeout();
     const specificQueryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -172,11 +162,11 @@ describe("InstructorCourseShowPage tests", () => {
     const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
     render(
       <QueryClientProvider client={specificQueryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -187,7 +177,7 @@ describe("InstructorCourseShowPage tests", () => {
       "Course not found. You will be returned to the course list in 3 seconds.",
     );
     expect(
-      screen.queryByTestId(`InstructorCourseShowPage-cell-row-0-col-id`),
+      screen.queryByTestId(`StaffCourseShowPage-cell-row-0-col-id`),
     ).not.toBeInTheDocument();
     fireEvent.keyPress(screen.getByText("Course Not Found"), {
       key: "Escape",
@@ -211,24 +201,18 @@ describe("InstructorCourseShowPage tests", () => {
 
     const theCourse = {
       ...coursesFixtures.oneCourseWithEachStatus[0],
-      id: 1,
-      createdByEmail: "phtcon@ucsb.edu",
+      id: 7,
     };
 
     axiosMock.onGet("/api/courses/7").reply(200, theCourse);
 
-    axiosMock
-      .onGet("/api/rosterstudents/course/7")
-      .reply(200, rosterStudentFixtures.threeStudents);
-
-    //here
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -259,54 +243,11 @@ describe("InstructorCourseShowPage tests", () => {
       "data-rr-ui-event-key",
       "jobs",
     );
-    expect(screen.getByText("Settings")).toHaveAttribute(
-      "data-rr-ui-event-key",
-      "settings",
-    );
-    expect(screen.getByText("Downloads")).toHaveAttribute(
-      "data-rr-ui-event-key",
-      "downloads",
-    );
-    const changeTabs = screen.getByText("Students");
-    fireEvent.click(changeTabs);
+
+    expect(screen.queryByText("Settings")).not.toBeInTheDocument();
   });
 
-  test("Tab Components are Present", async () => {
-    const queryClientSpecific = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          staleTime: Infinity,
-        },
-      },
-    });
-    setupInstructorUser();
-    const theCourse = {
-      ...coursesFixtures.oneCourseWithEachStatus[0],
-      id: 1,
-      createdByEmail: "phtcon@ucsb.edu",
-    };
-
-    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
-    render(
-      <QueryClientProvider client={queryClientSpecific}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
-          <Routes>
-            <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    await screen.findByTestId("AssignmentTabComponent");
-    expect(
-      screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
-    ).toBeInTheDocument();
-  });
-  test("header displays correct info when course is loaded without an installationId", async () => {
+  test("header displays correct info when course is loaded without an orgName", async () => {
     setupInstructorUser();
 
     axiosMock
@@ -315,11 +256,11 @@ describe("InstructorCourseShowPage tests", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -328,34 +269,32 @@ describe("InstructorCourseShowPage tests", () => {
 
     await screen.findByText("CMPSC 156");
 
+    expect(screen.getByTestId("StaffCourseShowPage-title")).toBeInTheDocument();
     expect(
-      screen.getByTestId("InstructorCourseShowPage-title"),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("InstructorCourseShowPage-github-org-link"),
+      screen.queryByTestId("StaffCourseShowPage-github-org-image"),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId("InstructorCourseShowPage-tooltip-github-settings"),
+      screen.queryByTestId("StaffCourseShowPage-github-org-link"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-github-settings-link"),
     ).not.toBeInTheDocument();
   });
-  test("header displays correct info when course is loaded (and displays warning)", async () => {
+
+  test("header displays correct info when course is loaded with orgName and installationId", async () => {
     setupInstructorUser();
 
     axiosMock
       .onGet("/api/courses/7")
       .reply(200, coursesFixtures.severalCourses[0]);
 
-    axiosMock
-      .onGet("/api/courses/warnings/7")
-      .reply(200, { showOrganizationAgeWarning: true });
-
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -365,17 +304,24 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText("CMPSC 156");
 
     expect(
-      screen.getByTestId("InstructorCourseShowPage-title"),
+      screen.getByTestId("StaffCourseShowPage-github-org-link"),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId("InstructorCourseShowPage-github-org-link"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId("InstructorCourseShowPage-github-org-link"),
+      screen.getByTestId("StaffCourseShowPage-github-org-link"),
     ).toHaveAttribute("href", "https://github.com/ucsb-cs156-s25");
     expect(screen.getByText("Spring 2025")).toBeInTheDocument();
-    expect(screen.getByText(/This GitHub Organization/i)).toBeInTheDocument();
+
+    const githubImage = screen.getByTestId(
+      "StaffCourseShowPage-github-org-image",
+    );
+    expect(githubImage).toHaveAttribute(
+      "src",
+      "https://github.com/ucsb-cs156-s25.png?size=64",
+    );
+    expect(githubImage).toHaveAttribute("alt", "ucsb-cs156-s25");
+    expect(githubImage).toHaveStyle("width: 48px; height: 48px;");
   });
+
   test("expect the correct URL to the organization for the course", async () => {
     setupInstructorUser();
 
@@ -385,11 +331,11 @@ describe("InstructorCourseShowPage tests", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -399,7 +345,7 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText("CMPSC 156");
 
     const githubLink = screen.getByTestId(
-      `InstructorCourseShowPage-github-settings-link`,
+      `StaffCourseShowPage-github-settings-link`,
     );
     expect(githubLink).toBeInTheDocument();
     expect(githubLink).toHaveAttribute(
@@ -407,7 +353,8 @@ describe("InstructorCourseShowPage tests", () => {
       "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
     );
   });
-  test("expect the correct tooltip ID and message for the github icon (that redirects to github installation settings)", async () => {
+
+  test("expect the correct tooltip ID and message for the github icon", async () => {
     setupInstructorUser();
 
     axiosMock
@@ -416,11 +363,11 @@ describe("InstructorCourseShowPage tests", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -430,22 +377,23 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText("CMPSC 156");
 
     expect(
-      screen.getByTestId("InstructorCourseShowPage-github-settings-icon"),
+      screen.getByTestId("StaffCourseShowPage-github-settings-icon"),
     ).toBeInTheDocument();
 
     fireEvent.mouseOver(
-      screen.getByTestId(`InstructorCourseShowPage-github-settings-icon`),
+      screen.getByTestId(`StaffCourseShowPage-github-settings-icon`),
     );
 
     const tooltip = await screen.findByRole("tooltip");
     expect(tooltip).toHaveAttribute(
       "id",
-      "InstructorCourseShowPage-tooltip-github-settings",
+      "StaffCourseShowPage-tooltip-github-settings",
     );
     expect(tooltip).toHaveTextContent(
       "Manage settings for association between your GitHub organization and this web application.",
     );
   });
+
   test("does not show error modal on initial render", async () => {
     setupInstructorUser();
 
@@ -455,11 +403,11 @@ describe("InstructorCourseShowPage tests", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -471,110 +419,46 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  test("renders Default Base Permission badge with value None", async () => {
+  test("Add Staff Member button is visible for instructor users", async () => {
     setupInstructorUser();
+
     axiosMock
       .onGet("/api/courses/7")
       .reply(200, coursesFixtures.severalCourses[0]);
-    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
-      showOrganizationAgeWarning: false,
-      defaultBasePermission: "none",
-    });
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
-    const badge = await screen.findByTestId(
-      "InstructorCourseShowPage-default-base-permission",
-    );
-    expect(badge).toHaveTextContent("Default Base Permission: None");
+    const postButton = await screen.findByRole("button", {
+      name: "Add Staff Member",
+    });
+    expect(postButton).toBeInTheDocument();
   });
 
-  test("renders Default Base Permission badge with value Read", async () => {
-    setupInstructorUser();
+  test("Add Staff Member button is not visible for non-instructor users", async () => {
+    setupUserOnly();
+
     axiosMock
       .onGet("/api/courses/7")
       .reply(200, coursesFixtures.severalCourses[0]);
-    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
-      showOrganizationAgeWarning: false,
-      defaultBasePermission: "read",
-    });
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+        <MemoryRouter initialEntries={["/staff/courses/7"]}>
           <Routes>
             <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    const badge = await screen.findByTestId(
-      "InstructorCourseShowPage-default-base-permission",
-    );
-    expect(badge).toHaveTextContent("Default Base Permission: Read");
-  });
-
-  test("renders Default Base Permission badge with value Write", async () => {
-    setupInstructorUser();
-    axiosMock
-      .onGet("/api/courses/7")
-      .reply(200, coursesFixtures.severalCourses[0]);
-    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
-      showOrganizationAgeWarning: false,
-      defaultBasePermission: "write",
-    });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
-          <Routes>
-            <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
-            />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    const badge = await screen.findByTestId(
-      "InstructorCourseShowPage-default-base-permission",
-    );
-    expect(badge).toHaveTextContent("Default Base Permission: Write");
-  });
-
-  test("does not render Default Base Permission badge when value is null", async () => {
-    setupInstructorUser();
-    axiosMock
-      .onGet("/api/courses/7")
-      .reply(200, coursesFixtures.severalCourses[0]);
-    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
-      showOrganizationAgeWarning: false,
-      defaultBasePermission: "null",
-    });
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
-          <Routes>
-            <Route
-              path="/instructor/courses/:id"
-              element={<InstructorCourseShowPage />}
+              path="/staff/courses/:id"
+              element={<StaffCourseShowPage />}
             />
           </Routes>
         </MemoryRouter>
@@ -582,8 +466,10 @@ describe("InstructorCourseShowPage tests", () => {
     );
 
     await screen.findByText("CMPSC 156");
-    expect(
-      screen.queryByTestId("InstructorCourseShowPage-default-base-permission"),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "Add Staff Member" }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

@@ -463,6 +463,39 @@ describe("StaffTabComponent Tests", () => {
     expect(openWindow).toBeCalledWith("/help/csv#staff-csv-download", "_blank");
   });
 
+  test("Upload CSV and Add Staff Member buttons are hidden when isInstructor is false", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+          isInstructor={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-StaffTabComponent`),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByTestId(`${testId}-csv-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-post-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-download-csv-button`),
+    ).toBeInTheDocument();
+  });
+
   test("Create Staff Member Modals closes on close button", async () => {
     const download = vi.fn();
     window.open = (a, b) => download(a, b);
