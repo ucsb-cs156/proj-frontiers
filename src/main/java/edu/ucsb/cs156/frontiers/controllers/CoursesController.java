@@ -353,7 +353,7 @@ public class CoursesController extends ApiController {
       OrgStatus studentStatus,
       Long staffId) {}
 
-  public enum emailTypes {
+  public enum EmailTypes {
     STUDENTS,
     STAFF,
     ALL
@@ -432,7 +432,7 @@ public class CoursesController extends ApiController {
   @GetMapping("/emails")
   public String getCourseEmails(
       @Parameter(name = "courseId") @RequestParam Long courseId,
-      @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") emailTypes type,
+      @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") EmailTypes type,
       @Parameter(name = "format") @RequestParam(defaultValue = "ONE_PER_LINE")
           EMAIL_FORMATS format) {
 
@@ -450,7 +450,7 @@ public class CoursesController extends ApiController {
             .sorted()
             .collect(Collectors.toList());
 
-    List<String> emails;
+    List<String> emails = studentEmails;
     switch (type) {
       case STAFF -> emails = staffEmails;
       case ALL -> {
@@ -458,7 +458,6 @@ public class CoursesController extends ApiController {
         emails.addAll(studentEmails);
       }
       case STUDENTS -> emails = studentEmails;
-      default -> throw new IllegalArgumentException("Unknown email type: " + type);
     }
 
     String separator = format == EMAIL_FORMATS.COMMA_SEPARATED ? "," : "\r\n";
