@@ -8,7 +8,7 @@ import {
 import coursesFixtures from "fixtures/coursesFixtures";
 import CoursesTable from "main/components/Courses/CoursesTable";
 import { BrowserRouter } from "react-router";
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 
 const joinCallback = vi.fn();
 const isLoading = vi.fn(() => false);
@@ -354,5 +354,32 @@ describe("CoursesTable tests", () => {
 
     const tooltip = await screen.findByRole("tooltip");
     expect(tooltip).toHaveAttribute("id", "member-tooltip");
+  });
+  test("renders course name as a link when courseShowRoutePrefix is provided", async () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+          courseShowRoutePrefix="/student/courses/"
+        />
+      </BrowserRouter>,
+    );
+
+    const courseLink = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-courseName-link",
+    );
+    expect(courseLink).toBeInTheDocument();
+    expect(courseLink).toHaveAttribute("href", "/student/courses/1");
+    expect(courseLink).toHaveTextContent("CMPSC 156");
+
+    fireEvent.mouseOver(courseLink);
+    await waitFor(() => {
+      const tooltip = screen.getByRole("tooltip");
+      expect(tooltip).toHaveTextContent("View course details");
+      expect(tooltip).toHaveAttribute("id", "tooltip-coursename-0");
+    });
   });
 });
