@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseStaffDTOService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">CourseStaffDTOService.java</span></div><h1>CourseStaffDTOService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.models.CourseStaffDTO;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+<span class="fc" id="L21">public class CourseStaffDTOService {</span>
+
+  @Autowired private CourseStaffRepository courseStaffRepository;
+
+<span class="fc" id="L25">  private static final List&lt;String&gt; CSV_COLUMN_ORDER =</span>
+<span class="fc" id="L26">      List.of(</span>
+          &quot;id&quot;,
+          &quot;courseId&quot;,
+          &quot;userId&quot;,
+          &quot;firstName&quot;,
+          &quot;lastName&quot;,
+          &quot;email&quot;,
+          &quot;orgStatus&quot;,
+          &quot;githubId&quot;,
+          &quot;githubLogin&quot;,
+          &quot;role&quot;);
+
+  /**
+   * This method gets a list of CourseStaffDTOs based on the courseId.
+   *
+   * @param courseId id of the course
+   * @return a list of CourseStaffDTOs
+   */
+  public List&lt;CourseStaffDTO&gt; getCourseStaffDTOs(Long courseId) {
+<span class="fc" id="L45">    Iterable&lt;CourseStaff&gt; matchedStaff = courseStaffRepository.findByCourseId(courseId);</span>
+
+<span class="fc" id="L47">    return StreamSupport.stream(matchedStaff.spliterator(), false)</span>
+<span class="fc" id="L48">        .map(CourseStaffDTO::new)</span>
+<span class="fc" id="L49">        .collect(Collectors.toList());</span>
+  }
+
+  public StatefulBeanToCsv&lt;CourseStaffDTO&gt; getStatefulBeanToCSV(Writer writer) throws IOException {
+<span class="fc" id="L53">    HeaderColumnNameMappingStrategy&lt;CourseStaffDTO&gt; strategy =</span>
+        new HeaderColumnNameMappingStrategy&lt;&gt;();
+<span class="fc" id="L55">    strategy.setType(CourseStaffDTO.class);</span>
+
+<span class="fc" id="L57">    Map&lt;String, Integer&gt; positionByColumn =</span>
+<span class="fc" id="L58">        StreamSupport.stream(CSV_COLUMN_ORDER.spliterator(), false)</span>
+<span class="fc" id="L59">            .collect(</span>
+<span class="fc" id="L60">                Collectors.toMap(</span>
+<span class="fc" id="L61">                    column -&gt; column.toUpperCase(Locale.US), CSV_COLUMN_ORDER::indexOf));</span>
+
+<span class="fc" id="L63">    Comparator&lt;String&gt; headerOrder =</span>
+<span class="fc" id="L64">        Comparator.comparingInt(</span>
+            column -&gt;
+<span class="fc" id="L66">                positionByColumn.getOrDefault(column.toUpperCase(Locale.US), Integer.MAX_VALUE));</span>
+<span class="fc" id="L67">    strategy.setColumnOrderOnWrite(headerOrder);</span>
+
+<span class="fc" id="L69">    return new StatefulBeanToCsvBuilder&lt;CourseStaffDTO&gt;(writer)</span>
+<span class="fc" id="L70">        .withMappingStrategy(strategy)</span>
+<span class="fc" id="L71">        .build();</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

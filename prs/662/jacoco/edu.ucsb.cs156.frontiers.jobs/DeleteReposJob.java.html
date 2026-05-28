@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DeleteReposJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">DeleteReposJob.java</span></div><h1>DeleteReposJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import java.util.List;
+import java.util.Optional;
+import lombok.Builder;
+
+@Builder
+public class DeleteReposJob implements JobContextConsumer {
+  Long courseId;
+  String prefix;
+  CourseRepository courseRepository;
+  RepositoryService repositoryService;
+
+  @Builder.Default long sleepMillis = 100L;
+
+  @Override
+  public Course getCourse() {
+<span class="fc bfc" id="L23" title="All 4 branches covered.">    if (courseId == null || courseRepository == null) {</span>
+<span class="fc" id="L24">      return null;</span>
+    }
+<span class="fc" id="L26">    return courseRepository.findById(courseId).orElse(null);</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L31">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(courseId);</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">    if (courseOpt.isEmpty()) {</span>
+<span class="fc" id="L33">      ctx.log(&quot;ERROR: Course with ID &quot; + courseId + &quot; not found&quot;);</span>
+<span class="fc" id="L34">      return;</span>
+    }
+
+<span class="fc" id="L37">    Course course = courseOpt.get();</span>
+<span class="fc bfc" id="L38" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L39">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
+<span class="fc" id="L40">      return;</span>
+    }
+
+<span class="fc" id="L43">    List&lt;String&gt; repos = repositoryService.getRepositoryNamesWithPrefix(course, prefix);</span>
+<span class="fc" id="L44">    ctx.log(repos.size() + &quot; repos found with prefix &quot; + prefix);</span>
+
+<span class="fc" id="L46">    int reposDeleted = 0;</span>
+<span class="fc" id="L47">    int reposRetained = 0;</span>
+<span class="fc" id="L48">    int repoErrors = 0;</span>
+
+<span class="fc bfc" id="L50" title="All 2 branches covered.">    for (String repoName : repos) {</span>
+      try {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (repositoryService.repositoryHasCommits(course, repoName)) {</span>
+<span class="fc" id="L53">          reposRetained++;</span>
+<span class="fc" id="L54">          ctx.log(&quot;Repo &quot; + repoName + &quot; not deleted; commits exist.&quot;);</span>
+        } else {
+<span class="fc" id="L56">          repositoryService.deleteRepository(course, repoName);</span>
+<span class="fc" id="L57">          reposDeleted++;</span>
+        }
+<span class="fc" id="L59">      } catch (Exception e) {</span>
+<span class="fc" id="L60">        repoErrors++;</span>
+<span class="fc" id="L61">        ctx.log(&quot;ERROR deleting repo &quot; + repoName + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L62">      }</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">      if (sleepMillis &gt;= 1) {</span>
+<span class="fc" id="L65">        Thread.sleep(sleepMillis);</span>
+      }
+<span class="fc" id="L67">    }</span>
+
+<span class="fc" id="L69">    ctx.log(reposDeleted + &quot; repos deleted&quot;);</span>
+<span class="fc" id="L70">    ctx.log(reposRetained + &quot; repos retained&quot;);</span>
+<span class="fc" id="L71">    ctx.log(repoErrors + &quot; errors&quot;);</span>
+<span class="fc" id="L72">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
