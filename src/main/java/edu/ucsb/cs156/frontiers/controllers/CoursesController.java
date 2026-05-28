@@ -26,8 +26,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -351,6 +353,17 @@ public class CoursesController extends ApiController {
       OrgStatus studentStatus,
       Long staffId) {}
 
+  public enum emailTypes {
+    STUDENTS,
+    STAFF,
+    ALL
+  }
+
+  public enum EMAIL_FORMATS {
+    COMMA_SEPARATED,
+    ONE_PER_LINE
+  }
+
   /**
    * student see what courses they appear as staff in
    *
@@ -412,6 +425,44 @@ public class CoursesController extends ApiController {
     Course savedCourse = courseRepository.save(course);
 
     return new InstructorCourseView(savedCourse);
+  }
+
+  @Operation(summary = "Get course emails")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("/emails")
+  public String getCourseEmails(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") emailTypes type,
+      @Parameter(name = "format") @RequestParam(defaultValue = "ONE_PER_LINE")
+          EMAIL_FORMATS format) {
+
+    List<String> staffEmails =
+        StreamSupport.stream(courseStaffRepository.findByCourseId(courseId).spliterator(), false)
+            .map(CourseStaff::getEmail)
+            .filter(Objects::nonNull)
+            .sorted()
+            .collect(Collectors.toList());
+
+    List<String> studentEmails =
+        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
+            .map(RosterStudent::getEmail)
+            .filter(Objects::nonNull)
+            .sorted()
+            .collect(Collectors.toList());
+
+    List<String> emails;
+    switch (type) {
+      case STAFF -> emails = staffEmails;
+      case ALL -> {
+        emails = new ArrayList<>(staffEmails);
+        emails.addAll(studentEmails);
+      }
+      case STUDENTS -> emails = studentEmails;
+      default -> throw new IllegalArgumentException("Unknown email type: " + type);
+    }
+
+    String separator = format == EMAIL_FORMATS.COMMA_SEPARATED ? "," : "\r\n";
+    return String.join(separator, emails);
   }
 
   @Operation(summary = "Delete a course")

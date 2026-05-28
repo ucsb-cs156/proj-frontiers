@@ -2000,4 +2000,74 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals("existingToken", originalCourse.getCanvasApiToken());
     assertEquals("existingCourseId", originalCourse.getCanvasCourseId());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_defaults_to_students_one_per_line() throws Exception {
+    RosterStudent studentA = RosterStudent.builder().email("anna@ucsb.edu").build();
+    RosterStudent studentB = RosterStudent.builder().email("zebra@ucsb.edu").build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(studentB, studentA));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/emails").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("anna@ucsb.edu\r\nzebra@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_staff_only_sorted_lexicographically() throws Exception {
+    CourseStaff staffA = CourseStaff.builder().email("aardvark@ucsb.edu").build();
+    CourseStaff staffB = CourseStaff.builder().email("zoe@ucsb.edu").build();
+
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staffB, staffA));
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/emails").param("courseId", "1").param("type", "STAFF"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("aardvark@ucsb.edu\r\nzoe@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_all_comma_separated_staff_first() throws Exception {
+    CourseStaff staffA = CourseStaff.builder().email("alpha-staff@ucsb.edu").build();
+    CourseStaff staffB = CourseStaff.builder().email("zeta-staff@ucsb.edu").build();
+    RosterStudent studentA = RosterStudent.builder().email("alpha-student@ucsb.edu").build();
+    RosterStudent studentB = RosterStudent.builder().email("zeta-student@ucsb.edu").build();
+
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staffB, staffA));
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(studentB, studentA));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "ALL")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        "alpha-staff@ucsb.edu,zeta-staff@ucsb.edu,alpha-student@ucsb.edu,zeta-student@ucsb.edu",
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void getCourseEmails_forbidden_without_course_manage_permissions() throws Exception {
+    mockMvc
+        .perform(get("/api/courses/emails").param("courseId", "1"))
+        .andExpect(status().isForbidden());
+  }
 }
