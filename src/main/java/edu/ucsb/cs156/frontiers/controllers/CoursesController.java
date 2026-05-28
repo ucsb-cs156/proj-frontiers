@@ -359,7 +359,7 @@ public class CoursesController extends ApiController {
     ALL
   }
 
-  public enum EMAIL_FORMATS {
+  public enum EmailFormats {
     COMMA_SEPARATED,
     ONE_PER_LINE
   }
@@ -434,7 +434,7 @@ public class CoursesController extends ApiController {
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") EmailTypes type,
       @Parameter(name = "format") @RequestParam(defaultValue = "ONE_PER_LINE")
-          EMAIL_FORMATS format) {
+          EmailFormats format) {
 
     List<String> staffEmails =
         StreamSupport.stream(courseStaffRepository.findByCourseId(courseId).spliterator(), false)
@@ -460,7 +460,7 @@ public class CoursesController extends ApiController {
       case STUDENTS -> emails = studentEmails;
     }
 
-    String separator = format == EMAIL_FORMATS.COMMA_SEPARATED ? "," : "\r\n";
+    String separator = format == EmailFormats.COMMA_SEPARATED ? "," : "\r\n";
     return String.join(separator, emails);
   }
 
