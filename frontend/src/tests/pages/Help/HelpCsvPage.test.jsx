@@ -155,5 +155,13 @@ describe("HelpCsvPage tests", () => {
     expect(
       within(rosterUploadsAccordion).queryByText("Teams (by Email)"),
     ).not.toBeInTheDocument();
+
+    const staffCsvExample = screen.getByTestId("staffCsvExample");
+    expect(staffCsvExample).toBeInTheDocument();
+    expect(staffCsvExample).toHaveClass("csvExample");
+
+    const staffCsvAccordion = screen.getByTestId("staffCsvAccordion");
+    expect(staffCsvAccordion).toBeInTheDocument();
+    expect(screen.getByText("Staff CSV Upload Format")).toBeInTheDocument();
   });
 });
