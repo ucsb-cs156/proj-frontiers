@@ -112,6 +112,7 @@ describe("InstructorCourseShowPage tests", () => {
       toFake: ["setTimeout", "clearTimeout"],
     });
     axiosMock.onGet("/api/courses/7").timeout();
+    axiosMock.onGet("/api/courses/warnings/7").timeout();
     axiosMock.onGet("/api/rosterstudents/course/7").timeout();
     render(
       <QueryClientProvider client={queryClient}>
@@ -160,6 +161,7 @@ describe("InstructorCourseShowPage tests", () => {
       toFake: ["setTimeout", "clearTimeout"],
     });
     axiosMock.onGet("/api/courses/7").timeout();
+    axiosMock.onGet("/api/courses/warnings/7").timeout();
     axiosMock.onGet("/api/rosterstudents/course/7").timeout();
     const specificQueryClient = new QueryClient({
       defaultOptions: {
