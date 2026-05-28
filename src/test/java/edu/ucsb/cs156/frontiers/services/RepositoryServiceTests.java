@@ -33,6 +33,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.HttpClientErrorException;
 
 @RestClientTest(RepositoryService.class)
 @Import(TestConfig.class)
@@ -657,5 +658,96 @@ public class RepositoryServiceTests {
 
     assertEquals("Cannot determine GitHub team slug for team 'Display Name'", e.getMessage());
     verify(teamRepository, never()).save(any());
+  }
+
+  // ---------------------------------------------------------
+  // Tests for getRepoNamesWithPrefix, repoHasCommits, deleteRepository
+  // ---------------------------------------------------------
+
+  @Test
+  public void getRepoNamesWithPrefix_returns_filtered_list() throws Exception {
+    String mockJsonResponse =
+        "[{\"name\": \"lab01-brian\"}, {\"name\": \"lab01-chris\"}, {\"name\": \"hw01-brian\"}]";
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156/repos?per_page=100"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess().body(mockJsonResponse));
+
+    List<String> result = repositoryService.getRepoNamesWithPrefix(course, "lab01");
+
+    mockRestServiceServer.verify();
+    assertEquals(2, result.size());
+    assertEquals("lab01-brian", result.get(0));
+    assertEquals("lab01-chris", result.get(1));
+  }
+
+  @Test
+  public void repoHasCommits_returns_true_when_200_OK() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess()); // 200 OK
+
+    boolean result = repositoryService.repoHasCommits(course, "lab01-brian");
+
+    mockRestServiceServer.verify();
+    assertEquals(true, result);
+  }
+
+  @Test
+  public void repoHasCommits_returns_false_when_409_Conflict() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withRawStatus(409)); // GitHub's empty repo error
+
+    boolean result = repositoryService.repoHasCommits(course, "lab01-brian");
+
+    mockRestServiceServer.verify();
+    assertEquals(false, result);
+  }
+
+  @Test
+  public void repoHasCommits_throws_exception_on_other_errors() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian/commits?per_page=1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withResourceNotFound()); // 404
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> {
+          repositoryService.repoHasCommits(course, "lab01-brian");
+        });
+
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void deleteRepository_successfully_sends_delete_request() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/lab01-brian"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andRespond(withNoContent());
+
+    repositoryService.deleteRepository(course, "lab01-brian");
+
+    mockRestServiceServer.verify();
   }
 }

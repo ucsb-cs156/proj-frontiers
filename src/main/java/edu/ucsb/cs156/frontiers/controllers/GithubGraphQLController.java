@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "GithubGraphQL")
@@ -94,7 +93,7 @@ public class GithubGraphQLController extends ApiController {
 
     log.info("Current user is authorized to access course: {}", course.getId());
 
-    String result = this.organizationLinkerService.getDefaultBasePermission(course);
+    String result = this.githubGraphQLService.getDefaultBasePermission(course, course.getOrgName());
 
     log.info("Result from getDefaultBasePermission: {}", result);
 
@@ -107,7 +106,10 @@ public class GithubGraphQLController extends ApiController {
    * @param courseId the id of the course whose installation is being used for credentails
    * @param owner the owner of the repository
    * @param repo the name of the repository
-   * @return the default branch name
+   * @param branch the branch name
+   * @param first the number of commits to fetch
+   * @param after pagination cursor
+   * @return commits as JSON
    */
   @Operation(summary = "Get commits")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
@@ -118,7 +120,7 @@ public class GithubGraphQLController extends ApiController {
       @Parameter String repo,
       @Parameter String branch,
       @Parameter Integer first,
-      @RequestParam(name = "after", required = false) @Parameter String after)
+      @Parameter String after)
       throws Exception {
     log.info(
         "getCommits called with courseId: {}, owner: {}, repo: {}, branch: {}, first: {}, after: {} ",

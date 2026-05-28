@@ -163,7 +163,8 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(organizationLinkerService.getDefaultBasePermission(eq(course))).thenReturn("READ");
+    when(githubGraphQLService.getDefaultBasePermission(eq(course), eq("ucsb-cs156-s26")))
+        .thenReturn("READ");
 
     // act
     MvcResult response =
