@@ -7,7 +7,7 @@ import {
   reactRouterParameters,
 } from "storybook-addon-remix-react-router";
 
-import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
+import StudentCourseShowPage from "main/pages/Student/StudentCourseShowPage";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
@@ -16,20 +16,20 @@ import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
 import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
 
 export default {
-  title: "pages/Instructor/InstructorCourseShowPage",
-  component: InstructorCourseShowPage,
+  title: "pages/Student/StudentCourseShowPage",
+  component: StudentCourseShowPage,
   decorators: [withRouter],
   parameters: {
     reactRouter: reactRouterParameters({
       location: {
         pathParams: { id: "7" },
       },
-      routing: { path: "/instructor/courses/:id" },
+      routing: { path: "/student/courses/:id" },
     }),
   },
 };
 
-const Template = () => <InstructorCourseShowPage />;
+const Template = () => <StudentCourseShowPage />;
 
 const exampleCourse = {
   ...coursesFixtures.oneCourseWithEachStatus[0],
@@ -108,14 +108,6 @@ const basicHandlers = [
     });
   }),
   http.delete("/api/coursestaff/delete", ({ request }) => {
-    window.alert(
-      `Would have made HTTP request: ${request.method} ${request.url}`,
-    );
-    return HttpResponse.json([], {
-      status: 200,
-    });
-  }),
-  http.delete("/api/repos", ({ request }) => {
     window.alert(
       `Would have made HTTP request: ${request.method} ${request.url}`,
     );

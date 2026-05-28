@@ -1,32 +1,53 @@
 import OurTable from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
-
-const columns = [
-  {
-    header: "id",
-    accessorKey: "id", // accessor is the "key" in the data
-  },
-  {
-    header: "Course Name",
-    accessorKey: "courseName",
-  },
-  {
-    header: "Term",
-    accessorKey: "term",
-  },
-  {
-    header: "School",
-    id: "school",
-    accessorKey: "school.displayName",
-  },
-];
+import { Link } from "react-router";
 
 export default function CoursesTable({
   courses,
   testId,
   joinCallback,
   isLoading,
+  courseShowRoutePrefix,
 }) {
+  const columns = [
+    {
+      header: "id",
+      accessorKey: "id", // accessor is the "key" in the data
+    },
+    {
+      header: "Course Name",
+      accessorKey: "courseName",
+      cell: ({ cell }) => {
+        return (
+          <OverlayTrigger
+            placement="right"
+            overlay={
+              <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
+                View course details
+              </Tooltip>
+            }
+          >
+            <Link
+              to={`${courseShowRoutePrefix}/${cell.row.original.id}`}
+              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+            >
+              {cell.row.original.courseName}
+            </Link>
+          </OverlayTrigger>
+        );
+      },
+    },
+    {
+      header: "Term",
+      accessorKey: "term",
+    },
+    {
+      header: "School",
+      id: "school",
+      accessorKey: "school.displayName",
+    },
+  ];
+
   const viewInviteCallback = (cell) => {
     const organizationName = cell.row.original.orgName;
     const gitInvite = `https://github.com/orgs/${organizationName}/invitation`;

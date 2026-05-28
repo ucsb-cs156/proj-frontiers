@@ -9,6 +9,7 @@ import edu.ucsb.cs156.frontiers.models.CourseWarning;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.ZonedDateTime;
+import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.data.auditing.DateTimeProvider;
@@ -88,7 +89,7 @@ public class OrganizationLinkerService {
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
     if (course.getOrgName() == null || course.getInstallationId() == null) {
-      return new CourseWarning(false);
+      return new CourseWarning(false, false);
     }
 
     String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
@@ -103,7 +104,40 @@ public class OrganizationLinkerService {
     JsonNode responseJson = response.getBody();
     ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get("created_at").asText());
     ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());
-    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)));
+    String defaultBasePermission = readDefaultBasePermission(responseJson);
+    boolean showDefaultBasePermissions =
+        !course.getHideBasePermissionWarning()
+            && defaultBasePermission != null
+            && !defaultBasePermission.equalsIgnoreCase("NONE");
+    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)), showDefaultBasePermissions);
+  }
+
+  /**
+   * Retrieves the default repository permission for the GitHub organization linked to a course.
+   *
+   * @param course The entity for the course whose GitHub org is being queried
+   * @return The default repository permission for the organization
+   */
+  public String getDefaultBasePermission(Course course)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
+    HttpHeaders headers = new HttpHeaders();
+    String token = jwtService.getInstallationToken(course);
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<JsonNode> response =
+        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);
+    return readDefaultBasePermission(response.getBody());
+  }
+
+  private String readDefaultBasePermission(JsonNode organizationJson) {
+    JsonNode permissionNode = organizationJson.path("default_repository_permission");
+    if (permissionNode.isMissingNode() || permissionNode.isNull()) {
+      return null;
+    }
+    return permissionNode.asText().toUpperCase(Locale.ROOT);
   }
 
   /**
