@@ -308,6 +308,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
         expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
   }
 
+  @Test
   @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
   @WithInstructorCoursePermissions
   public void mockMvcCourseStaffCsvTest() throws Exception {
