@@ -26,8 +26,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -351,6 +353,17 @@ public class CoursesController extends ApiController {
       OrgStatus studentStatus,
       Long staffId) {}
 
+  public enum EmailTypes {
+    STUDENTS,
+    STAFF,
+    ALL
+  }
+
+  public enum EmailFormats {
+    COMMA_SEPARATED,
+    ONE_PER_LINE
+  }
+
   /**
    * student see what courses they appear as staff in
    *
@@ -412,6 +425,41 @@ public class CoursesController extends ApiController {
     Course savedCourse = courseRepository.save(course);
 
     return new InstructorCourseView(savedCourse);
+  }
+
+  @Operation(summary = "Get course emails")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("/emails")
+  public String getCourseEmails(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") EmailTypes type,
+      @Parameter(name = "format") @RequestParam(defaultValue = "ONE_PER_LINE")
+          EmailFormats format) {
+
+    List<String> staffEmails =
+        StreamSupport.stream(courseStaffRepository.findByCourseId(courseId).spliterator(), false)
+            .map(CourseStaff::getEmail)
+            .filter(Objects::nonNull)
+            .sorted()
+            .collect(Collectors.toList());
+
+    List<String> studentEmails =
+        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
+            .map(RosterStudent::getEmail)
+            .filter(Objects::nonNull)
+            .sorted()
+            .collect(Collectors.toList());
+
+    List<String> emails = studentEmails;
+    if (type == EmailTypes.STAFF) {
+      emails = staffEmails;
+    } else if (type == EmailTypes.ALL) {
+      emails = new ArrayList<>(staffEmails);
+      emails.addAll(studentEmails);
+    }
+
+    String separator = format == EmailFormats.COMMA_SEPARATED ? "," : "\r\n";
+    return String.join(separator, emails);
   }
 
   @Operation(summary = "Delete a course")
