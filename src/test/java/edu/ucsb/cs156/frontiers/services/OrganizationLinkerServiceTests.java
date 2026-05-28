@@ -187,7 +187,7 @@ public class OrganizationLinkerServiceTests {
   }
 
   @Test
-  public void test_no_warning_when_old() throws Exception {
+  public void test_no_warning_when_old_and_none() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
@@ -195,7 +195,8 @@ public class OrganizationLinkerServiceTests {
     String apiResponse =
         """
             {
-              "created_at": "2024-10-11T04:33:35Z"
+              "created_at": "2024-10-11T04:33:35Z",
+              "default_repository_permission": "none"
             }
             """;
     mockRestServiceServer
@@ -208,10 +209,11 @@ public class OrganizationLinkerServiceTests {
 
     CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
     assertFalse(warning.showOrganizationAgeWarning());
+    assertEquals(warning.defaultBasePermission(), "none");
   }
 
   @Test
-  public void test_warning_when_new() throws Exception {
+  public void test_warning_when_new_and_none() throws Exception {
     Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
@@ -219,7 +221,8 @@ public class OrganizationLinkerServiceTests {
     String apiResponse =
         """
             {
-              "created_at": "2025-03-08T04:33:35Z"
+              "created_at": "2025-03-08T04:33:35Z",
+              "default_repository_permission": "none"
             }
             """;
     mockRestServiceServer
@@ -232,6 +235,7 @@ public class OrganizationLinkerServiceTests {
 
     CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
     assertTrue(warning.showOrganizationAgeWarning());
+    assertEquals(warning.defaultBasePermission(), "none");
   }
 
   @Test

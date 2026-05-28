@@ -17,6 +17,23 @@ describe("CoursesTable tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  test("course name is plain text (not a link) when courseDetailRoute is not provided", () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    expect(
+      screen.queryByTestId("CoursesTable-cell-row-0-col-courseName-link"),
+    ).not.toBeInTheDocument();
+  });
+
   test("Has the expected column headers and content", () => {
     render(
       <BrowserRouter>
@@ -338,6 +355,46 @@ describe("CoursesTable tests", () => {
       ).toBeInTheDocument();
     });
   });
+  test("renders course name as a link when courseDetailRoute is provided", () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+          courseDetailRoute="/staff/courses"
+        />
+      </BrowserRouter>,
+    );
+
+    const link = screen.getByTestId(
+      "CoursesTable-cell-row-0-col-courseName-link",
+    );
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute(
+      "href",
+      `/staff/courses/${coursesFixtures.oneCourseWithEachStatus[0].id}`,
+    );
+  });
+
+  test("does not render course name as a link when courseDetailRoute is not provided", () => {
+    render(
+      <BrowserRouter>
+        <CoursesTable
+          courses={coursesFixtures.oneCourseWithEachStatus}
+          testId={"CoursesTable"}
+          joinCallback={joinCallback}
+          isLoading={isLoading}
+        />
+      </BrowserRouter>,
+    );
+
+    expect(
+      screen.queryByTestId("CoursesTable-cell-row-0-col-courseName-link"),
+    ).not.toBeInTheDocument();
+  });
+
   test("expect the correct tooltip ID", async () => {
     render(
       <BrowserRouter>

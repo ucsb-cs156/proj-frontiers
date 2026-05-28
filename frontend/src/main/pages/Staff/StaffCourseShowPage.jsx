@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import { useCurrentUser } from "main/utils/currentUser";
+import { useCurrentUser, hasRole } from "main/utils/currentUser";
 import { useNavigate, useParams } from "react-router";
 
 import Modal from "react-bootstrap/Modal";
@@ -13,21 +13,14 @@ import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
-import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
-import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 
-export default function InstructorCourseShowPage() {
+export default function StaffCourseShowPage() {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
   const [showErrorModal, setShowErrorModal] = useState(false);
 
-  const {
-    data: course,
-    error: _errorCourse,
-    status: _statusCourse,
-    failureCount: courseBackendFailureCount,
-  } = useBackend(
+  const { data: course, failureCount: courseBackendFailureCount } = useBackend(
     [`/api/courses/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     { method: "GET", url: `/api/courses/${courseId}` },
@@ -36,24 +29,6 @@ export default function InstructorCourseShowPage() {
   );
 
   const getCourseFailed = courseBackendFailureCount > 0;
-
-  const { data: warnings } = useBackend(
-    // Stryker disable next-line ArrayDeclaration,StringLiteral : cache key
-    [`/api/courses/warnings/${courseId}`],
-    // Stryker disable next-line ObjectLiteral,StringLiteral : GET and empty string are equivalent
-    { method: "GET", url: `/api/courses/warnings/${courseId}` },
-    undefined,
-    true,
-    // Stryker disable next-line ObjectLiteral : entire options block is perf hints
-    {
-      // Stryker disable next-line all : placeholder perf hint, not behavior
-      placeholderData: { defaultBasePermission: "null" },
-      // Stryker disable next-line all : staleTime perf hint, not behavior
-      staleTime: "static",
-    },
-  );
-  const basePermission = warnings?.defaultBasePermission;
-  const showBasePermissionBadge = basePermission && basePermission !== "null";
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -69,7 +44,7 @@ export default function InstructorCourseShowPage() {
     }
   }, [getCourseFailed, navigate]);
 
-  const testId = "InstructorCourseShowPage";
+  const testId = "StaffCourseShowPage";
   return (
     <BasicLayout>
       <Modal show={showErrorModal}>
@@ -86,7 +61,7 @@ export default function InstructorCourseShowPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <CourseWarningBanner courseId={courseId} orgName={course?.orgName} />
+      <CourseWarningBanner courseId={courseId} />
       {!course ? (
         <div data-testid={`${testId}-loading`}>Course: Loading...</div>
       ) : (
@@ -149,16 +124,6 @@ export default function InstructorCourseShowPage() {
                   )}
                 </div>
               )}
-              {course.orgName && showBasePermissionBadge && (
-                <div
-                  className="text-muted small mt-1"
-                  data-testid={`${testId}-default-base-permission`}
-                >
-                  Default Base Permission:{" "}
-                  {basePermission.charAt(0).toUpperCase() +
-                    basePermission.slice(1)}
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -176,6 +141,7 @@ export default function InstructorCourseShowPage() {
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
+            isInstructor={Boolean(hasRole(currentUser, "ROLE_INSTRUCTOR"))}
           />
         </Tab>
         <Tab eventKey={"teams"} title={"Teams"} className="pt-2">
@@ -194,12 +160,6 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
-        </Tab>
-        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-          <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
-        </Tab>
-        <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
-          <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
       </Tabs>
     </BasicLayout>

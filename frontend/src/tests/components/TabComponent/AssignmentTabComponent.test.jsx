@@ -101,6 +101,7 @@ test("Calls team repository assignment successfully", async () => {
     repoPrefix: "test-team",
     isPrivate: false,
     permissions: "MAINTAIN",
+    teamRegex: "",
   });
 });
 
@@ -134,5 +135,74 @@ test("Sends non-default team creation option to backend", async () => {
     repoPrefix: "test-team-non-default",
     isPrivate: false,
     permissions: "ADMIN",
+    teamRegex: "",
+  });
+});
+
+test("Sends non-default teamRegex option to backend", async () => {
+  axiosMock.onPost("/api/repos/createTeamRepos").reply(200);
+  const client = new QueryClient();
+  render(
+    <QueryClientProvider client={client}>
+      <AssignmentTabComponent courseId={7} />
+    </QueryClientProvider>,
+  );
+
+  await screen.findByTestId("TeamRepositoryAssignmentForm-submit");
+
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-teamRegex"),
+    {
+      target: { value: "team1" },
+    },
+  );
+
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-repoPrefix"),
+    {
+      target: { value: "test-team" },
+    },
+  );
+
+  fireEvent.change(
+    screen.getByTestId("TeamRepositoryAssignmentForm-permissions"),
+    { target: { value: "ADMIN" } },
+  );
+  fireEvent.click(screen.getByTestId("TeamRepositoryAssignmentForm-submit"));
+  await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  expect(axiosMock.history.post.length).toEqual(1);
+  expect(axiosMock.history.post[0].params).toEqual({
+    courseId: 7,
+    repoPrefix: "test-team",
+    isPrivate: false,
+    permissions: "ADMIN",
+    teamRegex: "team1",
+  });
+});
+
+test("Calls repo deletion successfully", async () => {
+  axiosMock.onDelete("/api/repos").reply(200);
+  const client = new QueryClient();
+  render(
+    <QueryClientProvider client={client}>
+      <AssignmentTabComponent courseId={7} />
+    </QueryClientProvider>,
+  );
+
+  await screen.findByTestId("DeleteRepoForm-submit");
+
+  fireEvent.change(screen.getByTestId("DeleteRepoForm-repoPrefix"), {
+    target: { value: "test-delete-prefix" },
+  });
+
+  fireEvent.click(screen.getByTestId("DeleteRepoForm-submit"));
+
+  await waitFor(() => expect(mockToast).toHaveBeenCalled());
+  expect(mockToast).toBeCalledWith("Repo deletion successfully started.");
+
+  expect(axiosMock.history.delete.length).toEqual(1);
+  expect(axiosMock.history.delete[0].params).toEqual({
+    courseId: 7,
+    prefix: "test-delete-prefix",
   });
 });
