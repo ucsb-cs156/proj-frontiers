@@ -359,7 +359,7 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L359">    ALL</span>
   }
 
-<span class="fc" id="L362">  public enum EMAIL_FORMATS {</span>
+<span class="fc" id="L362">  public enum EmailFormats {</span>
 <span class="fc" id="L363">    COMMA_SEPARATED,</span>
 <span class="fc" id="L364">    ONE_PER_LINE</span>
   }
@@ -434,7 +434,7 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
       @Parameter(name = &quot;type&quot;) @RequestParam(defaultValue = &quot;STUDENTS&quot;) EmailTypes type,
       @Parameter(name = &quot;format&quot;) @RequestParam(defaultValue = &quot;ONE_PER_LINE&quot;)
-          EMAIL_FORMATS format) {
+          EmailFormats format) {
 
 <span class="fc" id="L439">    List&lt;String&gt; staffEmails =</span>
 <span class="fc" id="L440">        StreamSupport.stream(courseStaffRepository.findByCourseId(courseId).spliterator(), false)</span>
@@ -460,7 +460,7 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L460">      case STUDENTS -&gt; emails = studentEmails;</span>
     }
 
-<span class="fc bfc" id="L463" title="All 2 branches covered.">    String separator = format == EMAIL_FORMATS.COMMA_SEPARATED ? &quot;,&quot; : &quot;\r\n&quot;;</span>
+<span class="fc bfc" id="L463" title="All 2 branches covered.">    String separator = format == EmailFormats.COMMA_SEPARATED ? &quot;,&quot; : &quot;\r\n&quot;;</span>
 <span class="fc" id="L464">    return String.join(separator, emails);</span>
   }
 
