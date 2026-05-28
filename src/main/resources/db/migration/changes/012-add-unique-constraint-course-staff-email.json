@@ -1,0 +1,19 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "012-add-unique-constraint-course-staff-email",
+        "author": "Tien Minh Nguyen",
+        "changes": [
+          {
+            "addUniqueConstraint": {
+              "tableName": "COURSE_STAFF",
+              "columnNames": "EMAIL",
+              "constraintName": "COURSE_STAFF_EMAIL_UNIQUE"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
