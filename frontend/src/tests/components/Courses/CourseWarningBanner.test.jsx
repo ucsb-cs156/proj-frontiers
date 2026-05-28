@@ -76,7 +76,7 @@ describe("CourseWarningBanner tests", () => {
       screen.queryByText(/This GitHub Organization/i),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/default base permission for this organization/i),
+      screen.queryByText(/not the recommended value of None/i),
     ).not.toBeInTheDocument();
   });
 
@@ -95,7 +95,7 @@ describe("CourseWarningBanner tests", () => {
       screen.queryByText(/This GitHub Organization/i),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/default base permission for this organization/i),
+      screen.queryByText(/not the recommended value of None/i),
     ).not.toBeInTheDocument();
   });
 
@@ -109,10 +109,9 @@ describe("CourseWarningBanner tests", () => {
         <CourseWarningBanner courseId={1} orgName="ucsb-cs156-s25" />
       </QueryClientProvider>,
     );
-    await screen.findByText(/default base permission for this organization/i);
-    expect(screen.getByText(/"Read"/)).toBeInTheDocument();
+    await screen.findByText(/not the recommended value of None/i);
     const link = screen.getByRole("link", {
-      name: /change this in github settings/i,
+      name: /you can change that setting here/i,
     });
     expect(link).toHaveAttribute(
       "href",
@@ -132,7 +131,7 @@ describe("CourseWarningBanner tests", () => {
         <CourseWarningBanner courseId={1} orgName="ucsb-cs156-s25" />
       </QueryClientProvider>,
     );
-    await screen.findByText(/"Write"/);
+    await screen.findByText(/not the recommended value of None/i);
   });
 
   test("renders permission warning when value is admin", async () => {
@@ -145,7 +144,7 @@ describe("CourseWarningBanner tests", () => {
         <CourseWarningBanner courseId={1} orgName="ucsb-cs156-s25" />
       </QueryClientProvider>,
     );
-    await screen.findByText(/"Admin"/);
+    await screen.findByText(/not the recommended value of None/i);
   });
 
   test("does not render permission warning when value is none", async () => {
@@ -162,7 +161,7 @@ describe("CourseWarningBanner tests", () => {
       expect(screen.getByTestId("probe")).toHaveTextContent("none|false");
     });
     expect(
-      screen.queryByText(/default base permission for this organization/i),
+      screen.queryByText(/not the recommended value of None/i),
     ).not.toBeInTheDocument();
   });
 
@@ -180,7 +179,7 @@ describe("CourseWarningBanner tests", () => {
       expect(screen.getByTestId("probe")).toHaveTextContent("null|false");
     });
     expect(
-      screen.queryByText(/default base permission for this organization/i),
+      screen.queryByText(/not the recommended value of None/i),
     ).not.toBeInTheDocument();
   });
 
@@ -196,7 +195,7 @@ describe("CourseWarningBanner tests", () => {
     );
     await screen.findByText(/This GitHub Organization/i);
     expect(
-      screen.getByText(/default base permission for this organization/i),
+      screen.getByText(/not the recommended value of None/i),
     ).toBeInTheDocument();
   });
 
@@ -210,9 +209,11 @@ describe("CourseWarningBanner tests", () => {
         <CourseWarningBanner courseId={1} />
       </QueryClientProvider>,
     );
-    await screen.findByText(/default base permission for this organization/i);
+    await screen.findByText(/not the recommended value of None/i);
     expect(
-      screen.queryByRole("link", { name: /change this in github settings/i }),
+      screen.queryByRole("link", {
+        name: /you can change that setting here/i,
+      }),
     ).not.toBeInTheDocument();
   });
 });
