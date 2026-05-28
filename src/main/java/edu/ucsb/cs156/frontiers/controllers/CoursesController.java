@@ -37,7 +37,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Course")
-@RequestMapping("/api/courses")
+@RequestMapping({"/api/courses", "/api/course"})
 @RestController
 @Slf4j
 public class CoursesController extends ApiController {
@@ -513,5 +513,18 @@ public class CoursesController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     return linkerService.checkCourseWarnings(course);
+  }
+
+  @Operation(summary = "Hide base permission warning for a course")
+  @PostMapping("/warnings/hideBasePermissionWarning/{courseId}")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public Course hideBasePermissionWarning(@PathVariable Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    course.setHideBasePermissionWarning(true);
+    return courseRepository.save(course);
   }
 }
