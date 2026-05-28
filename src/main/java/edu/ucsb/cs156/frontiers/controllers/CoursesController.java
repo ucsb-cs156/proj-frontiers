@@ -514,4 +514,17 @@ public class CoursesController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     return linkerService.checkCourseWarnings(course);
   }
+
+  @Operation(summary = "Hide base permission warning for a course")
+  @PostMapping("/warnings/hideBasePermissionWarning/{courseId}")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public Course hideBasePermissionWarning(@PathVariable Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    course.setHideBasePermissionWarning(true);
+    return courseRepository.save(course);
+  }
 }
