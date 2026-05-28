@@ -29,8 +29,21 @@ public class DeleteRepoJobTests {
   @Captor ArgumentCaptor<String> logCaptor;
 
   @Test
+  void test_get_course() {
+    Course course = Course.builder().courseName("CS156").build();
+
+    DeleteRepoJob job =
+        DeleteRepoJob.builder()
+            .course(course)
+            .prefix("lab01")
+            .repositoryService(repositoryService)
+            .build();
+
+    assertEquals(course, job.getCourse());
+  }
+
+  @Test
   void test_delete_repo_job_success_mixed_repos() throws Exception {
-    // Setup
     Course course = Course.builder().courseName("CS156").build();
     DeleteRepoJob job =
         DeleteRepoJob.builder()
@@ -39,23 +52,18 @@ public class DeleteRepoJobTests {
             .repositoryService(repositoryService)
             .build();
 
-    // Mock returning 2 repos matching the prefix
     when(repositoryService.getRepoNamesWithPrefix(course, "lab01"))
         .thenReturn(List.of("lab01-brian", "lab01-empty"));
 
-    // First repo has commits, second repo is empty
     when(repositoryService.repoHasCommits(course, "lab01-brian")).thenReturn(true);
     when(repositoryService.repoHasCommits(course, "lab01-empty")).thenReturn(false);
 
-    // Run Job with a timer to catch the Thread.sleep Pitest mutation
     long startTime = System.currentTimeMillis();
     job.accept(ctx);
     long endTime = System.currentTimeMillis();
 
-    // We expect 2 repos to take ~2000ms. 1900ms allows for minor test environment variance
     assertTrue(endTime - startTime >= 1900, "Job should sleep for 1000ms per repo");
 
-    // Verify Logging (capturing all logs to verify stats at the end)
     verify(ctx, times(7)).log(logCaptor.capture());
     List<String> logs = logCaptor.getAllValues();
 
@@ -64,19 +72,16 @@ public class DeleteRepoJobTests {
     assertEquals("Repo lab01-brian not deleted; commits exist.", logs.get(2));
     assertEquals("Deleted repo lab01-empty", logs.get(3));
 
-    // Verify final stats logs
     assertEquals("1 repos deleted", logs.get(4));
     assertEquals("1 repos retained", logs.get(5));
     assertEquals("0 errors", logs.get(6));
 
-    // Verify RepositoryService interactions
     verify(repositoryService, never()).deleteRepository(course, "lab01-brian");
     verify(repositoryService, times(1)).deleteRepository(course, "lab01-empty");
   }
 
   @Test
   void test_delete_repo_job_handles_exceptions() throws Exception {
-    // Setup
     Course course = Course.builder().courseName("CS156").build();
     DeleteRepoJob job =
         DeleteRepoJob.builder()
@@ -88,19 +93,15 @@ public class DeleteRepoJobTests {
     when(repositoryService.getRepoNamesWithPrefix(course, "lab01"))
         .thenReturn(List.of("lab01-error"));
 
-    // Force an error when checking commits
     when(repositoryService.repoHasCommits(course, "lab01-error"))
         .thenThrow(new RuntimeException("GitHub API down"));
 
-    // Run Job with timer to catch Thread.sleep mutation
     long startTime = System.currentTimeMillis();
     job.accept(ctx);
     long endTime = System.currentTimeMillis();
 
-    // 1 repo should take ~1000ms. 900ms to avoid test flakiness
     assertTrue(endTime - startTime >= 900, "Job should sleep for 1000ms per repo");
 
-    // Verify Error Logging and Stats
     verify(ctx, times(6)).log(logCaptor.capture());
     List<String> logs = logCaptor.getAllValues();
 
@@ -114,7 +115,6 @@ public class DeleteRepoJobTests {
 
   @Test
   void test_delete_repo_job_no_repos_found() throws Exception {
-    // Setup
     Course course = Course.builder().courseName("CS156").build();
     DeleteRepoJob job =
         DeleteRepoJob.builder()
@@ -123,13 +123,10 @@ public class DeleteRepoJobTests {
             .repositoryService(repositoryService)
             .build();
 
-    // Return an empty list to skip the for-loop
     when(repositoryService.getRepoNamesWithPrefix(course, "lab01")).thenReturn(List.of());
 
-    // Run Job
     job.accept(ctx);
 
-    // Verify Logging bypassed the loop
     verify(ctx, times(5)).log(logCaptor.capture());
     List<String> logs = logCaptor.getAllValues();
 

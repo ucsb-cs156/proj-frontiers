@@ -4,6 +4,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,14 +23,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class GithubGraphQLController extends ApiController {
 
   private final GithubGraphQLService githubGraphQLService;
+  private final OrganizationLinkerService organizationLinkerService;
   private final CourseRepository courseRepository;
   private final JobService jobService;
 
   public GithubGraphQLController(
       @Autowired GithubGraphQLService gitHubGraphQLService,
+      @Autowired OrganizationLinkerService organizationLinkerService,
       @Autowired CourseRepository courseRepository,
       JobService jobService) {
     this.githubGraphQLService = gitHubGraphQLService;
+    this.organizationLinkerService = organizationLinkerService;
     this.courseRepository = courseRepository;
     this.jobService = jobService;
   }
