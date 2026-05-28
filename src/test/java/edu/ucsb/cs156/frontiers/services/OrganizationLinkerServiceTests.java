@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
@@ -340,6 +341,28 @@ public class OrganizationLinkerServiceTests {
 
     String permission = organizationLinkerService.getDefaultBasePermission(course);
     assertEquals("READ", permission);
+  }
+
+  @Test
+  public void testGetDefaultBasePermission_whenPermissionIsNull() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+            {
+              "default_repository_permission": null
+            }
+            """;
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer definitely.real.jwt"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
+
+    String permission = organizationLinkerService.getDefaultBasePermission(course);
+    assertNull(permission);
   }
 
   @Test
