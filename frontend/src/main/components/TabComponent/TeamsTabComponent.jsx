@@ -21,6 +21,8 @@ export default function TeamsTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
+  instructorView = true,
+  canManageTeams,
 }) {
   const [postTeamModal, setPostTeamModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
@@ -38,6 +40,31 @@ export default function TeamsTabComponent({
     true,
   );
   const [searchTeams, setSearchTeams] = useState("");
+
+  const currentUserDetails = currentUser.root?.user;
+  const rosterStudentMatchesCurrentUser = (rosterStudent) => {
+    if (!currentUserDetails || !rosterStudent) {
+      return false;
+    }
+
+    return (
+      rosterStudent.user?.id === currentUserDetails.id ||
+      rosterStudent.email === currentUserDetails.email
+    );
+  };
+
+  const teamsList = Array.isArray(teams) ? teams : [];
+  const visibleTeams = instructorView
+    ? teamsList.filter((team) =>
+        team.name.toLowerCase().includes(searchTeams.toLowerCase()),
+      )
+    : teamsList.filter(
+        (team) =>
+          Array.isArray(team.teamMembers) &&
+          team.teamMembers.some((member) =>
+            rosterStudentMatchesCurrentUser(member.rosterStudent),
+          ),
+      );
 
   const objectToAxiosParamsCSV = (formData) => {
     const file = new FormData();
@@ -261,99 +288,99 @@ export default function TeamsTabComponent({
         </ModalHeader>
         <ModalBody>{partialSuccessPostCSVTeamModal.message}</ModalBody>
       </Modal>
-      <Row sm={4} className="p-2 g-3">
-        <Col>
-          <div className="d-flex align-items-center position-relative">
-            <Button
-              onClick={() => setCsvModal(true)}
-              data-testid={`${testIdPrefix}-csv-button`}
-              className="w-100 pe-5"
-            >
-              Upload Teams by CSV
-            </Button>
-            <OverlayTrigger
-              placement="right"
-              overlay={
-                <Tooltip id="csv-help-tooltip">
-                  Team CSV Upload Format Help
-                </Tooltip>
-              }
-            >
-              <BsInfoCircle
-                onClick={openCsvHelp}
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  right: "0.75rem",
-                  transform: "translateY(-50%)",
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontSize: "0.9rem",
-                  userSelect: "none",
-                }}
-                data-testid={`${testIdPrefix}-csv-info-icon`}
-              />
-            </OverlayTrigger>
-          </div>
-        </Col>
-        <Col>
-          <Button
-            onClick={() => setPostTeamModal(true)}
-            data-testid={`${testIdPrefix}-post-button`}
-            className="w-100"
-          >
-            Add Individual Team
-          </Button>
-        </Col>
-        <Col>
-          <Button
-            onClick={handlePushTeamsToGithub}
-            className="w-100"
-            data-testid={`${testIdPrefix}-push-teams-button`}
-          >
-            Push Teams to Github
-          </Button>
-        </Col>
-        <Col>
-          <Button
-            onClick={handlePullTeamsFromGithub}
-            className="w-100"
-            data-testid={`${testIdPrefix}-pull-teams-button`}
-          >
-            Pull Teams From Github
-          </Button>
-        </Col>
-      </Row>
-      <Row className="mb-1 py-2">
-        <Form>
-          <Form.Group as={Row} controlId="searchFilter">
-            <Form.Label column sm={2}>
-              Search Teams:
-            </Form.Label>
-            <Col sm={10}>
-              <Form.Control
-                type="text"
-                placeholder="Search by Team Name."
-                value={searchTeams}
-                onChange={(e) => setSearchTeams(e.target.value)}
-                data-testid={`${testIdPrefix}-search`}
-              />
+      {instructorView && (
+        <>
+          <Row sm={4} className="p-2 g-3">
+            <Col>
+              <div className="d-flex align-items-center position-relative">
+                <Button
+                  onClick={() => setCsvModal(true)}
+                  data-testid={`${testIdPrefix}-csv-button`}
+                  className="w-100 pe-5"
+                >
+                  Upload Teams by CSV
+                </Button>
+                <OverlayTrigger
+                  placement="right"
+                  overlay={
+                    <Tooltip id="csv-help-tooltip">
+                      Team CSV Upload Format Help
+                    </Tooltip>
+                  }
+                >
+                  <BsInfoCircle
+                    onClick={openCsvHelp}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      right: "0.75rem",
+                      transform: "translateY(-50%)",
+                      color: "#fff",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                      userSelect: "none",
+                    }}
+                    data-testid={`${testIdPrefix}-csv-info-icon`}
+                  />
+                </OverlayTrigger>
+              </div>
             </Col>
-          </Form.Group>
-        </Form>
-      </Row>
+            <Col>
+              <Button
+                onClick={() => setPostTeamModal(true)}
+                data-testid={`${testIdPrefix}-post-button`}
+                className="w-100"
+              >
+                Add Individual Team
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                onClick={handlePushTeamsToGithub}
+                className="w-100"
+                data-testid={`${testIdPrefix}-push-teams-button`}
+              >
+                Push Teams to Github
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                onClick={handlePullTeamsFromGithub}
+                className="w-100"
+                data-testid={`${testIdPrefix}-pull-teams-button`}
+              >
+                Pull Teams From Github
+              </Button>
+            </Col>
+          </Row>
+          <Row className="mb-1 py-2">
+            <Form>
+              <Form.Group as={Row} controlId="searchFilter">
+                <Form.Label column sm={2}>
+                  Search Teams:
+                </Form.Label>
+                <Col sm={10}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by Team Name."
+                    value={searchTeams}
+                    onChange={(e) => setSearchTeams(e.target.value)}
+                    data-testid={`${testIdPrefix}-search`}
+                  />
+                </Col>
+              </Form.Group>
+            </Form>
+          </Row>
+        </>
+      )}
       <Row>
         <TeamsTable
-          teams={(teams || []).filter((team) => {
-            const searchTermLower = searchTeams.toLowerCase();
-            if (team.name.toLowerCase().includes(searchTermLower)) {
-              return true;
-            }
-            return false;
-          })}
+          teams={visibleTeams}
           currentUser={currentUser}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-teams-table`}
+          instructorView={instructorView}
+          canManageTeams={canManageTeams}
         />
       </Row>
     </div>

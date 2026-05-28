@@ -4,6 +4,7 @@ import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner
 import {
   showOrganizationAgeWarning,
   hideOrganizationAgeWarning,
+  showDefaultBasePermissionsWarning,
 } from "fixtures/courseWarningFixtures";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -24,6 +25,8 @@ const Template = (args) => {
 export const Default = Template.bind({});
 
 export const Empty = Template.bind({});
+
+export const DefaultBasePermissionWarning = Template.bind({});
 
 Default.args = {
   courseId: 1,
@@ -48,6 +51,21 @@ Empty.parameters = {
     handlers: [
       http.get("/api/courses/warnings/1", () =>
         HttpResponse.json(hideOrganizationAgeWarning),
+      ),
+    ],
+  },
+};
+
+DefaultBasePermissionWarning.args = {
+  courseId: 1,
+  orgName: "ucsb-cs156-s26",
+};
+
+DefaultBasePermissionWarning.parameters = {
+  msw: {
+    handlers: [
+      http.get("/api/courses/warnings/1", () =>
+        HttpResponse.json(showDefaultBasePermissionsWarning),
       ),
     ],
   },
