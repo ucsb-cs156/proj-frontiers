@@ -11,6 +11,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { BsInfoCircle } from "react-icons/bs";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import CourseStaffTable from "main/components/CourseStaff/CourseStaffTable";
 import Modal from "react-bootstrap/Modal";
@@ -19,6 +20,7 @@ export default function StaffTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
+  isInstructor = true,
 }) {
   const [postModal, showPostModal] = useState(false);
   const { data: courseStaff } = useBackend(
@@ -67,20 +69,22 @@ export default function StaffTabComponent({
 
   return (
     <div data-testid={`${testIdPrefix}-StaffTabComponent`}>
-      <Modal
-        show={postModal}
-        onHide={() => showPostModal(false)}
-        centered={true}
-        data-testid={`${testIdPrefix}-post-modal`}
-      >
-        <ModalHeader closeButton>Add Staff Member</ModalHeader>
-        <ModalBody>
-          <CourseStaffForm
-            submitAction={handlePostSubmit}
-            cancelDisabled={true}
-          />
-        </ModalBody>
-      </Modal>
+      {isInstructor && (
+        <Modal
+          show={postModal}
+          onHide={() => showPostModal(false)}
+          centered={true}
+          data-testid={`${testIdPrefix}-post-modal`}
+        >
+          <ModalHeader closeButton>Add Staff Member</ModalHeader>
+          <ModalBody>
+            <CourseStaffForm
+              submitAction={handlePostSubmit}
+              cancelDisabled={true}
+            />
+          </ModalBody>
+        </Modal>
+      )}
       <Row sm={3} className="p-2">
         <Col>
           <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
@@ -97,28 +101,59 @@ export default function StaffTabComponent({
             </span>
           </OverlayTrigger>
         </Col>
+        {isInstructor && (
+          <Col>
+            <Button
+              onClick={() => showPostModal(true)}
+              data-testid={`${testIdPrefix}-post-button`}
+              className="w-100"
+            >
+              Add Staff Member
+            </Button>
+          </Col>
+        )}
         <Col>
-          <Button
-            onClick={() => showPostModal(true)}
-            data-testid={`${testIdPrefix}-post-button`}
-            className="w-100"
-          >
-            Add Staff Member
-          </Button>
-        </Col>
-        <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
-              >
-                Download Staff CSV
-              </Button>
-            </span>
-          </OverlayTrigger>
+          <div className="d-flex align-items-center position-relative">
+            <Button
+              onClick={() =>
+                window.open(
+                  `/api/csv/coursestaff?courseId=${courseId}`,
+                  "_blank",
+                )
+              }
+              data-testid={`${testIdPrefix}-download-csv-button`}
+              className="w-100 button btn-secondary pe-5"
+            >
+              Download Staff CSV
+            </Button>
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="csv-help-tooltip">
+                  CSV Download Format Help
+                </Tooltip>
+              }
+            >
+              <BsInfoCircle
+                onClick={() =>
+                  window.open("/help/csv#staff-information", "_blank")
+                }
+                // Stryker disable all
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "0.75rem",
+                  transform: "translateY(-50%)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  userSelect: "none",
+                }}
+                // Stryker restore all
+                data-testid={`${testIdPrefix}-csv-info-icon`}
+              />
+            </OverlayTrigger>
+          </div>
         </Col>
       </Row>
       <Row className="mb-1">

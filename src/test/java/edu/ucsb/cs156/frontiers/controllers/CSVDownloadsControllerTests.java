@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -18,9 +19,11 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
+import edu.ucsb.cs156.frontiers.models.CourseStaffDTO;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CourseStaffDTOService;
 import edu.ucsb.cs156.frontiers.services.RosterStudentDTOService;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.Collections;
@@ -41,10 +44,14 @@ import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = {CSVDownloadsController.class})
 @Import(TestConfig.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
   RosterStudentDTOService rosterStudentDTOService;
+
+  @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
+  CourseStaffDTOService courseStaffDTOService;
 
   @MockitoBean(answers = Answers.RETURNS_MOCKS)
   CourseRepository courseRepository;
@@ -54,6 +61,9 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @Mock(answer = Answers.CALLS_REAL_METHODS)
   StatefulBeanToCsv<RosterStudentDTO> csvWriter;
+
+  @Mock(answer = Answers.CALLS_REAL_METHODS)
+  StatefulBeanToCsv<CourseStaffDTO> courseStaffCsvWriter;
 
   @Autowired ObjectMapper objectMapper;
 
@@ -74,6 +84,26 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
     objectMapper.readValue(
         response.getResponse().getContentAsString(), new TypeReference<Map<String, String>>() {});
+
+    Map<String, String> errorResponse =
+        objectMapper.readValue(actualResponse, new TypeReference<Map<String, String>>() {});
+    Map<String, String> expectedResponse =
+        Map.of("message", "Course with id 1 not found", "type", "EntityNotFoundException");
+    assertEquals(expectedResponse, errorResponse);
+    assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus());
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_no_such_course_staff_csv() throws Exception {
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response = mockMvc.perform(get("/api/csv/coursestaff?courseId=1")).andReturn();
+
+    String actualResponse = response.getResponse().getContentAsString();
+
+    objectMapper.readValue(actualResponse, new TypeReference<Map<String, String>>() {});
 
     Map<String, String> errorResponse =
         objectMapper.readValue(actualResponse, new TypeReference<Map<String, String>>() {});
@@ -107,6 +137,34 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    String actualResponse = response.getResponse().getContentAsString();
+    String expectedMessage = "";
+    assertEquals(expectedMessage, actualResponse);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_course_staff_csv_exception() throws Exception {
+
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s25").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(List.of()).when(courseStaffDTOService).getCourseStaffDTOs(eq(1L));
+    doReturn(courseStaffCsvWriter).when(courseStaffDTOService).getStatefulBeanToCSV(any());
+
+    doThrow(new CsvDataTypeMismatchException()).when(courseStaffCsvWriter).write(anyList());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/coursestaff?courseId=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andExpect(
+                header()
+                    .string("Content-Disposition", "attachment;filename=ucsb-cs156-s25_staff.csv"))
+            .andExpect(header().string("Content-Type", "text/csv; charset=UTF-8"))
+            .andReturn();
+
     String actualResponse = response.getResponse().getContentAsString();
     String expectedMessage = "";
     assertEquals(expectedMessage, actualResponse);
@@ -248,5 +306,52 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
     assertEquals(
         expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
+  }
+
+  @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+  @WithInstructorCoursePermissions
+  public void mockMvcCourseStaffCsvTest() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("ucsb-cs156-s25")
+            .term("S25")
+            .school(School.UCSB)
+            .build();
+
+    CourseStaffDTO courseStaffDTO =
+        new CourseStaffDTO(
+            42L,
+            course.getId(),
+            102L,
+            "Chris",
+            "Gaucho",
+            "cgaucho@ucsb.edu",
+            OrgStatus.PENDING,
+            12345,
+            "cgaucho",
+            "TA");
+
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(List.of(courseStaffDTO)).when(courseStaffDTOService).getCourseStaffDTOs(eq(1L));
+
+    String expectedResponse =
+        """
+            "ID","COURSEID","USERID","FIRSTNAME","LASTNAME","EMAIL","ORGSTATUS","GITHUBID","GITHUBLOGIN","ROLE"
+            "42","1","102","Chris","Gaucho","cgaucho@ucsb.edu","PENDING","12345","cgaucho","TA"
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/coursestaff?courseId=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseStaffDTOService, times(1)).getCourseStaffDTOs(eq(1L));
+    verify(courseStaffDTOService, times(1)).getStatefulBeanToCSV(any());
+
+    assertEquals(expectedResponse, response.getResponse().getContentAsString());
   }
 }

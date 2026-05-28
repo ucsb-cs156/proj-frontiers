@@ -13,11 +13,9 @@ import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
 import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
-import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
-import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 
-export default function InstructorCourseShowPage() {
+export default function StaffCourseShowPage() {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -28,10 +26,12 @@ export default function InstructorCourseShowPage() {
     status: _statusCourse,
     failureCount: courseBackendFailureCount,
   } = useBackend(
+    // Stryker disable next-line ArrayDeclaration,StringLiteral : query key only affects cache identity, not rendered behavior
     [`/api/courses/${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     { method: "GET", url: `/api/courses/${courseId}` },
     null,
+    // Stryker disable next-line BooleanLiteral : retry behavior is covered by useBackend tests
     true,
   );
 
@@ -51,7 +51,7 @@ export default function InstructorCourseShowPage() {
     }
   }, [getCourseFailed, navigate]);
 
-  const testId = "InstructorCourseShowPage";
+  const testId = "StaffCourseShowPage";
   return (
     <BasicLayout>
       <Modal show={showErrorModal}>
@@ -148,6 +148,7 @@ export default function InstructorCourseShowPage() {
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
+            isInstructor={false}
           />
         </Tab>
         <Tab eventKey={"teams"} title={"Teams"} className="pt-2">
@@ -166,12 +167,6 @@ export default function InstructorCourseShowPage() {
         </Tab>
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
-        </Tab>
-        <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
-          <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
-        </Tab>
-        <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-          <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
       </Tabs>
     </BasicLayout>

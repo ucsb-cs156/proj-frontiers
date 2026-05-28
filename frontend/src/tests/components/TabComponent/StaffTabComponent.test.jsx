@@ -89,6 +89,32 @@ describe("StaffTabComponent Tests", () => {
     expect(staffId0).toHaveTextContent(courseStaffFixtures.threeStaff[0].id);
   });
 
+  test("hides add staff member controls when user is not an instructor", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={"StaffCourseShowPage"}
+          currentUser={currentUserFixtures.userOnly}
+          isInstructor={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("StaffCourseShowPage-CourseStaffTable");
+
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-post-button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("StaffCourseShowPage-post-modal"),
+    ).not.toBeInTheDocument();
+  });
+
   test("Table Renders with no students", async () => {
     axiosMock.onGet("/api/coursestaff/course?courseId=7").reply(200, []);
 
@@ -408,7 +434,14 @@ describe("StaffTabComponent Tests", () => {
     });
   });
 
-  test("for coming soon tooltip on disabled download CSV button", async () => {
+  test("clicking download CSV button calls window.open with correct url", async () => {
+    const mockOpen = vi.fn();
+    window.open = mockOpen;
+
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
     render(
       <QueryClientProvider client={queryClient}>
         <StaffTabComponent
@@ -426,15 +459,16 @@ describe("StaffTabComponent Tests", () => {
       ).toBeInTheDocument();
     });
 
-    // Download CSV button (no testId, but can find by text)
-    const downloadCsvButton = screen.getByText("Download Staff CSV");
-    expect(downloadCsvButton).toBeDisabled();
-    expect(downloadCsvButton).toHaveStyle("pointerEvents: none");
-    fireEvent.mouseOver(downloadCsvButton);
+    const downloadCsvButton = screen.getByTestId(
+      `${testId}-download-csv-button`,
+    );
+    expect(downloadCsvButton).toBeEnabled();
+    fireEvent.click(downloadCsvButton);
 
-    await waitFor(() => {
-      expect(screen.getByText("Coming Soon")).toBeInTheDocument();
-    });
+    expect(mockOpen).toHaveBeenCalledWith(
+      "/api/csv/coursestaff?courseId=1",
+      "_blank",
+    );
   });
 
   test("Create Staff Member Modals closes on close button", async () => {
@@ -463,6 +497,47 @@ describe("StaffTabComponent Tests", () => {
       expect(
         screen.queryByTestId(`${testId}-post-modal`),
       ).not.toBeInTheDocument(),
+    );
+  });
+
+  test("clicking csv info icon opens help page", async () => {
+    const mockOpen = vi.fn();
+    window.open = mockOpen;
+
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    // Wait for table to render
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(`${testId}-CourseStaffTable`),
+      ).toBeInTheDocument();
+    });
+
+    const infoIcon = screen.getByTestId(`${testId}-csv-info-icon`);
+    expect(infoIcon).toBeInTheDocument();
+
+    // Simulate mouseOver to trigger tooltip
+    fireEvent.mouseOver(infoIcon);
+    await waitFor(() => {
+      expect(screen.getByText("CSV Download Format Help")).toBeInTheDocument();
+    });
+
+    fireEvent.click(infoIcon);
+    expect(mockOpen).toHaveBeenCalledWith(
+      "/help/csv#staff-information",
+      "_blank",
     );
   });
 });
