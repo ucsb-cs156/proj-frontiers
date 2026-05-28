@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -156,6 +157,36 @@ public class CoursesControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(course));
     assertEquals(expectedJson, responseString);
+  }
+
+  /** Test that new courses default hideBasePermissionWarning to false */
+  @Test
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  public void testPostCourse_defaultsHideBasePermissionWarningToFalse() throws Exception {
+
+    User user = currentUserService.getCurrentUser().getUser();
+
+    Course course =
+        Course.builder()
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail(user.getEmail())
+            .build();
+
+    when(courseRepository.save(any(Course.class))).thenReturn(course);
+
+    mockMvc
+        .perform(
+            post("/api/courses/post")
+                .with(csrf())
+                .param("courseName", "CS156")
+                .param("term", "S25")
+                .param("school", "UCSB"))
+        .andExpect(status().isOk());
+
+    verify(courseRepository)
+        .save(argThat(savedCourse -> !savedCourse.getHideBasePermissionWarning()));
   }
 
   /** Test the GET all endpoint for courses for admins */
