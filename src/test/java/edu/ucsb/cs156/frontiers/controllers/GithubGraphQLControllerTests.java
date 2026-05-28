@@ -17,6 +17,7 @@ import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,8 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
   @MockitoBean private CourseRepository courseRepository;
 
   @MockitoBean private GithubGraphQLService githubGraphQLService;
+
+  @MockitoBean private OrganizationLinkerService organizationLinkerService;
 
   @MockitoBean private JobService jobService;
 
@@ -138,6 +141,54 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
                 .param("courseId", "1")
                 .param("owner", "ucsb-cs156-f24")
                 .param("repo", "STARTER-jpa00"))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, times(1)).findById(eq(1L));
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_getDefaultBasePermission_happyPath_Admin() throws Exception {
+
+    User user = currentUserService.getCurrentUser().getUser();
+
+    // arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .orgName("ucsb-cs156-s26")
+            .instructorEmail(user.getEmail())
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(organizationLinkerService.getDefaultBasePermission(eq(course))).thenReturn("READ");
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/github/graphql/defaultbasepermission").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(courseRepository, times(1)).findById(eq(1L));
+
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals("READ", responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_getDefaultBasePermission_courseNotFound() throws Exception {
+
+    // arrange
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    // act & assert
+    mockMvc
+        .perform(get("/api/github/graphql/defaultbasepermission").param("courseId", "1"))
         .andExpect(status().isNotFound());
 
     verify(courseRepository, times(1)).findById(eq(1L));

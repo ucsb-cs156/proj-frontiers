@@ -44,8 +44,6 @@ public class OrganizationLinkerServiceTests {
 
   @MockitoBean DateTimeProvider provider;
 
-  @MockitoBean GithubGraphQLService githubGraphQLService;
-
   @Test
   public void testRedirectUrl()
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
@@ -194,11 +192,11 @@ public class OrganizationLinkerServiceTests {
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
     doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
-    doReturn("NONE").when(githubGraphQLService).getDefaultBasePermission(eq(course));
     String apiResponse =
         """
             {
-              "created_at": "2024-10-11T04:33:35Z"
+              "created_at": "2024-10-11T04:33:35Z",
+              "default_repository_permission": "none"
             }
             """;
     mockRestServiceServer
@@ -220,11 +218,11 @@ public class OrganizationLinkerServiceTests {
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
     doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
-    doReturn("NONE").when(githubGraphQLService).getDefaultBasePermission(eq(course));
     String apiResponse =
         """
             {
-              "created_at": "2025-03-08T04:33:35Z"
+              "created_at": "2025-03-08T04:33:35Z",
+              "default_repository_permission": "none"
             }
             """;
     mockRestServiceServer
@@ -246,11 +244,11 @@ public class OrganizationLinkerServiceTests {
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
     doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
-    doReturn("READ").when(githubGraphQLService).getDefaultBasePermission(eq(course));
     String apiResponse =
         """
             {
-              "created_at": "2024-10-11T04:33:35Z"
+              "created_at": "2024-10-11T04:33:35Z",
+              "default_repository_permission": "read"
             }
             """;
     mockRestServiceServer
@@ -277,11 +275,11 @@ public class OrganizationLinkerServiceTests {
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
     doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
-    doReturn("READ").when(githubGraphQLService).getDefaultBasePermission(eq(course));
     String apiResponse =
         """
             {
-              "created_at": "2024-10-11T04:33:35Z"
+              "created_at": "2024-10-11T04:33:35Z",
+              "default_repository_permission": "read"
             }
             """;
     mockRestServiceServer
@@ -303,7 +301,6 @@ public class OrganizationLinkerServiceTests {
     when(provider.getNow())
         .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
     doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
-    doReturn(null).when(githubGraphQLService).getDefaultBasePermission(eq(course));
     String apiResponse =
         """
             {
@@ -321,6 +318,28 @@ public class OrganizationLinkerServiceTests {
     CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
     assertFalse(warning.showOrganizationAgeWarning());
     assertFalse(warning.showDefaultBasePermissions());
+  }
+
+  @Test
+  public void testGetDefaultBasePermission() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+            {
+              "default_repository_permission": "read"
+            }
+            """;
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/orgs/ucsb-cs156"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer definitely.real.jwt"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andRespond(withSuccess(apiResponse, MediaType.APPLICATION_JSON));
+
+    String permission = organizationLinkerService.getDefaultBasePermission(course);
+    assertEquals("READ", permission);
   }
 
   @Test
