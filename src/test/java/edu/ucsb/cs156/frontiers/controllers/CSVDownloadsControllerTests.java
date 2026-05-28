@@ -108,6 +108,9 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    verify(rosterStudentDTOService, times(1)).getRosterStudentDTOs(eq(1L));
+    verify(rosterStudentDTOService, times(1)).getStatefulBeanToCSV(any());
+    verify(csvWriter, times(1)).write(anyList());
     String actualResponse = response.getResponse().getContentAsString();
     String expectedMessage = "";
     assertEquals(expectedMessage, actualResponse);
@@ -137,6 +140,9 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    verify(rosterStudentDTOService, times(1)).getRosterStudentDTOs(eq(1L));
+    verify(rosterStudentDTOService, times(1)).getStatefulBeanToCSV(any());
+    verify(csvWriter, times(1)).write(anyList());
     String actualResponse = response.getResponse().getContentAsString();
     String expectedMessage = "";
     assertEquals(expectedMessage, actualResponse);
