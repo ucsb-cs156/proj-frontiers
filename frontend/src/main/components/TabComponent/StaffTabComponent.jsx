@@ -11,7 +11,9 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { BsInfoCircle } from "react-icons/bs";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
+import CourseStaffCSVUploadForm from "main/components/CourseStaff/CourseStaffCSVUploadForm";
 import CourseStaffTable from "main/components/CourseStaff/CourseStaffTable";
 import Modal from "react-bootstrap/Modal";
 
@@ -21,6 +23,7 @@ export default function StaffTabComponent({
   currentUser,
 }) {
   const [postModal, showPostModal] = useState(false);
+  const [csvModal, showCsvModal] = useState(false);
   const { data: courseStaff } = useBackend(
     [`/api/coursestaff/course?courseId=${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -58,6 +61,40 @@ export default function StaffTabComponent({
     staffPostMutation.mutate(staff);
   };
 
+  const objectToAxiosParamsCSV = (formData) => {
+    const file = new FormData();
+    file.append("file", formData.upload[0]);
+    return {
+      url: `/api/coursestaff/upload/csv`,
+      data: file,
+      params: {
+        courseId: courseId,
+      },
+      method: "POST",
+    };
+  };
+
+  const staffCsvMutation = useBackendMutation(
+    objectToAxiosParamsCSV,
+    {
+      onSuccess: () => onSuccessStaff(showCsvModal),
+      onError: (error) => {
+        toast.error(
+          `Error uploading CSV: ${JSON.stringify(error.response.data, null, 2)}`,
+        );
+      },
+    },
+    [`/api/coursestaff/course?courseId=${courseId}`],
+  );
+
+  const handleCsvSubmit = (formData) => {
+    staffCsvMutation.mutate(formData);
+  };
+
+  const openCsvHelp = () => {
+    window.open("/help/csv", "_blank");
+  };
+
   // Render tooltip for disabled buttons
   const renderComingSoonTooltip = (props) => (
     <Tooltip id="coming-soon-tooltip" {...props}>
@@ -67,6 +104,17 @@ export default function StaffTabComponent({
 
   return (
     <div data-testid={`${testIdPrefix}-StaffTabComponent`}>
+      <Modal
+        show={csvModal}
+        onHide={() => showCsvModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-csv-modal`}
+      >
+        <ModalHeader closeButton>Upload Staff CSV</ModalHeader>
+        <ModalBody>
+          <CourseStaffCSVUploadForm submitAction={handleCsvSubmit} />
+        </ModalBody>
+      </Modal>
       <Modal
         show={postModal}
         onHide={() => showPostModal(false)}
@@ -83,19 +131,36 @@ export default function StaffTabComponent({
       </Modal>
       <Row sm={3} className="p-2">
         <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                data-testid={`${testIdPrefix}-csv-button`}
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
-              >
-                Upload CSV Roster
-              </Button>
-            </span>
-          </OverlayTrigger>
+          <div className="d-flex align-items-center position-relative">
+            <Button
+              onClick={() => showCsvModal(true)}
+              data-testid={`${testIdPrefix}-csv-button`}
+              className="w-100 pe-5"
+            >
+              Upload Staff CSV
+            </Button>
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="csv-help-tooltip">CSV Upload Format Help</Tooltip>
+              }
+            >
+              <BsInfoCircle
+                onClick={openCsvHelp}
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "0.75rem",
+                  transform: "translateY(-50%)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  userSelect: "none",
+                }}
+                data-testid={`${testIdPrefix}-csv-info-icon`}
+              />
+            </OverlayTrigger>
+          </div>
         </Col>
         <Col>
           <Button
