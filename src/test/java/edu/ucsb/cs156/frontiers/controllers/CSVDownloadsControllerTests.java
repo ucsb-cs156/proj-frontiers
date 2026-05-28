@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
@@ -95,6 +96,35 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
     doReturn(csvWriter).when(rosterStudentDTOService).getStatefulBeanToCSV(any());
 
     doThrow(new CsvDataTypeMismatchException()).when(csvWriter).write(anyList());
+
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/rosterstudents?courseId=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    String actualResponse = response.getResponse().getContentAsString();
+    String expectedMessage = "";
+    assertEquals(expectedMessage, actualResponse);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_csv_required_field_empty_exception() throws Exception {
+
+    // arrange
+
+    Course course = Course.builder().id(1L).build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(List.of()).when(rosterStudentDTOService).getRosterStudentDTOs(eq(1L));
+    doReturn(csvWriter).when(rosterStudentDTOService).getStatefulBeanToCSV(any());
+
+    doThrow(new CsvRequiredFieldEmptyException()).when(csvWriter).write(anyList());
 
     // act
 
