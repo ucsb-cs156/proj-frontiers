@@ -2039,6 +2039,29 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void getCourseEmails_students_explicit_type_comma_separated() throws Exception {
+    RosterStudent studentA = RosterStudent.builder().email("alpha@ucsb.edu").build();
+    RosterStudent studentB = RosterStudent.builder().email("zeta@ucsb.edu").build();
+    CourseStaff staff = CourseStaff.builder().email("staff@ucsb.edu").build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(studentB, studentA));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staff));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "STUDENTS")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("alpha@ucsb.edu,zeta@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void getCourseEmails_all_comma_separated_staff_first() throws Exception {
     CourseStaff staffA = CourseStaff.builder().email("alpha-staff@ucsb.edu").build();
     CourseStaff staffB = CourseStaff.builder().email("zeta-staff@ucsb.edu").build();

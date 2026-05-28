@@ -451,13 +451,11 @@ public class CoursesController extends ApiController {
             .collect(Collectors.toList());
 
     List<String> emails = studentEmails;
-    switch (type) {
-      case STAFF -> emails = staffEmails;
-      case ALL -> {
-        emails = new ArrayList<>(staffEmails);
-        emails.addAll(studentEmails);
-      }
-      case STUDENTS -> emails = studentEmails;
+    if (type == EmailTypes.STAFF) {
+      emails = staffEmails;
+    } else if (type == EmailTypes.ALL) {
+      emails = new ArrayList<>(staffEmails);
+      emails.addAll(studentEmails);
     }
 
     String separator = format == EmailFormats.COMMA_SEPARATED ? "," : "\r\n";
