@@ -17,6 +17,7 @@ import edu.ucsb.cs156.frontiers.fixtures.GithubGraphQLFixtures;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import edu.ucsb.cs156.frontiers.services.jobs.JobService;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,8 @@ public class GithubGraphQLControllerTests extends ControllerTestCase {
   @MockitoBean private CourseRepository courseRepository;
 
   @MockitoBean private GithubGraphQLService githubGraphQLService;
+
+  @MockitoBean private OrganizationLinkerService organizationLinkerService;
 
   @MockitoBean private JobService jobService;
 
