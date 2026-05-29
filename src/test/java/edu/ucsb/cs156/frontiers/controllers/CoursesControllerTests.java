@@ -17,6 +17,8 @@ import edu.ucsb.cs156.frontiers.controllers.CoursesController.StaffCoursesDTO;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
@@ -2062,6 +2064,68 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void getCourseEmails_students_filtered_by_team() throws Exception {
+    Team teamA = Team.builder().name("team-a").build();
+    Team teamB = Team.builder().name("team-b").build();
+
+    RosterStudent studentA =
+        RosterStudent.builder()
+            .email("alpha@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+    RosterStudent studentB =
+        RosterStudent.builder()
+            .email("beta@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamB).build()))
+            .build();
+    RosterStudent studentC =
+        RosterStudent.builder()
+            .email("zeta@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(studentB, studentC, studentA));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "STUDENTS")
+                    .param("team", "team-a")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("alpha@ucsb.edu,zeta@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_students_blank_team_is_unfiltered() throws Exception {
+    RosterStudent studentA = RosterStudent.builder().email("alpha@ucsb.edu").build();
+    RosterStudent studentB = RosterStudent.builder().email("zeta@ucsb.edu").build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(studentB, studentA));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("team", "")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("alpha@ucsb.edu,zeta@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void getCourseEmails_all_comma_separated_staff_first() throws Exception {
     CourseStaff staffA = CourseStaff.builder().email("alpha-staff@ucsb.edu").build();
     CourseStaff staffB = CourseStaff.builder().email("zeta-staff@ucsb.edu").build();
@@ -2084,6 +2148,72 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(
         "alpha-staff@ucsb.edu,zeta-staff@ucsb.edu,alpha-student@ucsb.edu,zeta-student@ucsb.edu",
         response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_all_filters_students_by_team_but_keeps_all_staff() throws Exception {
+    Team teamA = Team.builder().name("team-a").build();
+    Team teamB = Team.builder().name("team-b").build();
+
+    CourseStaff staffA = CourseStaff.builder().email("alpha-staff@ucsb.edu").build();
+    CourseStaff staffB = CourseStaff.builder().email("zeta-staff@ucsb.edu").build();
+    RosterStudent studentA =
+        RosterStudent.builder()
+            .email("alpha-student@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+    RosterStudent studentB =
+        RosterStudent.builder()
+            .email("zeta-student@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamB).build()))
+            .build();
+
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staffB, staffA));
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(studentB, studentA));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "ALL")
+                    .param("team", "team-a")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        "alpha-staff@ucsb.edu,zeta-staff@ucsb.edu,alpha-student@ucsb.edu",
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_staff_ignores_team_filter() throws Exception {
+    CourseStaff staffA = CourseStaff.builder().email("aardvark@ucsb.edu").build();
+    CourseStaff staffB = CourseStaff.builder().email("zoe@ucsb.edu").build();
+    Team teamA = Team.builder().name("team-a").build();
+    RosterStudent student =
+        RosterStudent.builder()
+            .email("student@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staffB, staffA));
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(student));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "STAFF")
+                    .param("team", "missing-team"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("aardvark@ucsb.edu\r\nzoe@ucsb.edu", response.getResponse().getContentAsString());
   }
 
   @Test
