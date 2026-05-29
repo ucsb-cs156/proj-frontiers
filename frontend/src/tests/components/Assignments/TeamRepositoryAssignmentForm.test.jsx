@@ -64,6 +64,8 @@ test("teamRegex field renders and is optional", async () => {
     screen.getByTestId("TeamRepositoryAssignmentForm-teamRegex"),
   ).toBeInTheDocument();
 
+  expect(screen.getByText("Team Regex")).toBeInTheDocument();
+
   fireEvent.change(screen.getByLabelText("Team Repository Prefix"), {
     target: { value: "testprefix" },
   });
