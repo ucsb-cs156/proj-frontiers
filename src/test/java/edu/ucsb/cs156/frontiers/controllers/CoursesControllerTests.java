@@ -27,6 +27,7 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -69,6 +70,8 @@ public class CoursesControllerTests extends ControllerTestCase {
   @MockitoBean private InstructorRepository instructorRepository;
 
   @MockitoBean private AdminRepository adminRepository;
+
+  @MockitoBean private JobsRepository jobsRepository;
 
   /** Test that ROLE_ADMIN can create a course */
   @Test
@@ -961,9 +964,11 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
     verify(linkerService).unenrollOrganization(eq(course));
+    verify(jobsRepository).deleteByCourse_Id(eq(1L));
     verify(courseRepository).findById(eq(1L));
     verify(courseRepository).delete(eq(course));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
     String expectedJson = mapper.writeValueAsString(Map.of("message", "Course with id 1 deleted"));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -988,7 +993,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1018,7 +1024,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1049,7 +1056,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1067,7 +1075,8 @@ public class CoursesControllerTests extends ControllerTestCase {
         .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
         .andExpect(status().isForbidden());
 
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
   }
 
   /**

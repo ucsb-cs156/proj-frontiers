@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
@@ -57,6 +58,8 @@ public class CoursesController extends ApiController {
   @Autowired private AdminRepository adminRepository;
 
   @Autowired private OrganizationLinkerService linkerService;
+
+  @Autowired private JobsRepository jobsRepository;
 
   /**
    * This method creates a new Course.
@@ -478,6 +481,7 @@ public class CoursesController extends ApiController {
     }
 
     linkerService.unenrollOrganization(course);
+    jobsRepository.deleteByCourse_Id(courseId);
     courseRepository.delete(course);
     return genericMessage("Course with id %s deleted".formatted(course.getId()));
   }
