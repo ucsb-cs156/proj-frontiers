@@ -310,6 +310,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
   @WithInstructorCoursePermissions
+  @Test
   public void mockMvcCourseStaffCsvTest() throws Exception {
     Course course =
         Course.builder()
