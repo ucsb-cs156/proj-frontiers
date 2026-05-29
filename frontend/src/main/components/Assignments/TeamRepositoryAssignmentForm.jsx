@@ -62,7 +62,8 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
               <Tooltip id="teamRegex-tooltip">
                 Optional. A Java regular expression matched against team names.
                 When provided, repos are created only for teams whose name
-                matches. Leave blank to create repos for all teams. Examples:{" "}
+                matches. Leave blank to create repos for all teams.
+                {" Examples: "}
                 <code>proj-courses-s26-0[1-4]</code>
                 or <code>proj-frontiers-s26.*</code>
               </Tooltip>
