@@ -14,6 +14,13 @@ public class TestCourseSecurity {
   }
 
   @PreAuthorize(
+      "((hasRole('ROLE_INSTRUCTOR') || hasRole('ROLE_USER')) && hasAuthority('COURSE_PERMISSIONS'))|| hasRole('ROLE_ADMIN')")
+  public Boolean hasManagePermissionsOrApiKeyAccess(
+      MethodSecurityExpressionOperations operations, Long courseId) {
+    return true;
+  }
+
+  @PreAuthorize(
       "(hasRole('ROLE_INSTRUCTOR') && hasAuthority('COURSE_PERMISSIONS'))|| hasRole('ROLE_ADMIN')")
   public Boolean hasInstructorPermissions(
       MethodSecurityExpressionOperations operations, Long courseId) {

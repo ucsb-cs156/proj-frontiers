@@ -14,6 +14,7 @@ import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.controllers.CoursesController.InstructorCourseView;
 import edu.ucsb.cs156.frontiers.controllers.CoursesController.StaffCoursesDTO;
+import edu.ucsb.cs156.frontiers.entities.ApiCourseKey;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
@@ -29,8 +30,10 @@ import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.ApiCourseKeyService;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,6 +72,8 @@ public class CoursesControllerTests extends ControllerTestCase {
   @MockitoBean private InstructorRepository instructorRepository;
 
   @MockitoBean private AdminRepository adminRepository;
+
+  @MockitoBean private ApiCourseKeyService apiCourseKeyService;
 
   /** Test that ROLE_ADMIN can create a course */
   @Test
@@ -2092,5 +2097,107 @@ public class CoursesControllerTests extends ControllerTestCase {
     mockMvc
         .perform(get("/api/courses/emails").param("courseId", "1"))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void createApiKey_defaults_to_90_days() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
+    Course course = Course.builder().id(1L).build();
+    ApiCourseKey key =
+        ApiCourseKey.builder()
+            .id(7L)
+            .course(course)
+            .createdBy(user)
+            .keySuffix("abc123")
+            .createdAt(ZonedDateTime.parse("2026-05-01T00:00:00Z"))
+            .expiresAt(ZonedDateTime.parse("2026-07-30T00:00:00Z"))
+            .usageCount(0)
+            .revoked(false)
+            .build();
+    when(apiCourseKeyService.createKey(
+            eq(1L), eq(user), eq(ApiCourseKeyService.ExpirationChoice.DAYS_90)))
+        .thenReturn(new ApiCourseKeyService.GeneratedApiCourseKey("frt_test_key", key));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/apiKeys").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, Object> responseJson = mapper.readValue(responseString, new TypeReference<>() {});
+    assertEquals("frt_test_key", responseJson.get("apiKey"));
+    Map<String, Object> metadata = (Map<String, Object>) responseJson.get("keyMetadata");
+    assertEquals(7, metadata.get("id"));
+    assertEquals("abc123", metadata.get("keySuffix"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void listApiKeys_returns_active_keys() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
+    Course course = Course.builder().id(1L).build();
+    ApiCourseKey key =
+        ApiCourseKey.builder()
+            .id(8L)
+            .course(course)
+            .createdBy(user)
+            .keySuffix("zz9999")
+            .createdAt(ZonedDateTime.parse("2026-05-01T00:00:00Z"))
+            .expiresAt(ZonedDateTime.parse("2026-11-01T00:00:00Z"))
+            .usageCount(3)
+            .lastUsedAt(ZonedDateTime.parse("2026-05-05T00:00:00Z"))
+            .revoked(false)
+            .build();
+
+    when(apiCourseKeyService.listActiveKeys(eq(1L))).thenReturn(List.of(key));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/apiKeys").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String responseString = response.getResponse().getContentAsString();
+    List<Map<String, Object>> responseJson =
+        mapper.readValue(responseString, new TypeReference<>() {});
+    assertEquals(1, responseJson.size());
+    assertEquals("zz9999", responseJson.get(0).get("keySuffix"));
+    assertEquals(3, responseJson.get(0).get("usageCount"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void revokeApiKey_returns_confirmation() throws Exception {
+    Course course = Course.builder().id(1L).build();
+    User user = currentUserService.getCurrentUser().getUser();
+    ApiCourseKey key =
+        ApiCourseKey.builder()
+            .id(9L)
+            .course(course)
+            .createdBy(user)
+            .keySuffix("123456")
+            .createdAt(ZonedDateTime.parse("2026-05-01T00:00:00Z"))
+            .expiresAt(ZonedDateTime.parse("2026-11-01T00:00:00Z"))
+            .usageCount(1)
+            .revoked(true)
+            .build();
+    when(apiCourseKeyService.revokeKey(eq(1L), eq(9L))).thenReturn(key);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/courses/apiKeys")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("apiKeyId", "9"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, Object> responseJson = mapper.readValue(responseString, new TypeReference<>() {});
+    assertEquals("API key revoked", responseJson.get("message"));
+    assertEquals(9, responseJson.get("apiKeyId"));
   }
 }
