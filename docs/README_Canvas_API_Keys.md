@@ -36,7 +36,7 @@ Implementation:
   - `CoursesController.updateCourseWithCanvasToken(...)`
   - both now encrypt prior to repository save.
 - Token use path:
-  - `CanvasService` decrypts tokens only at request construction time before setting the `Authorization: ****** header for Canvas GraphQL calls.
+  - `CanvasService` decrypts tokens only at request construction time before setting the Canvas `Authorization` header with a bearer token for GraphQL calls.
 - Token display path:
   - `CoursesController.getCourseCanvasInfo(...)` decrypts then returns a masked representation (not plaintext).
 
