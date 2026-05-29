@@ -56,7 +56,7 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
       </Form.Group>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="teamRegex">
-          Team Regex{" "}
+          {"Team Regex "}
           <OverlayTrigger
             placement="right"
             overlay={
