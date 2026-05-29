@@ -37,6 +37,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Course")
@@ -468,6 +469,7 @@ public class CoursesController extends ApiController {
   @Operation(summary = "Delete a course")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("")
+  @Transactional
   public Object deleteCourse(@RequestParam Long courseId)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
     Course course =
