@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CanvasApiTokenSecurityService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">CanvasApiTokenSecurityService.java</span></div><h1>CanvasApiTokenSecurityService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CanvasApiTokenSecurityService {
+
+  private static final String ENCRYPTION_PREFIX = &quot;enc:v1:&quot;;
+  private static final String CIPHER_ALGORITHM = &quot;AES/GCM/NoPadding&quot;;
+  private static final int GCM_TAG_LENGTH_BITS = 128;
+  private static final int GCM_IV_LENGTH_BYTES = 12;
+
+  private final String encodedEncryptionKey;
+<span class="fc" id="L23">  private final SecureRandom secureRandom = new SecureRandom();</span>
+
+  public CanvasApiTokenSecurityService(
+<span class="fc" id="L26">      @Value(&quot;${app.canvas.api-token-encryption-key:}&quot;) String encodedEncryptionKey) {</span>
+<span class="fc" id="L27">    this.encodedEncryptionKey = encodedEncryptionKey;</span>
+<span class="fc" id="L28">  }</span>
+
+  public String encrypt(String canvasApiToken) {
+<span class="pc bpc" id="L31" title="2 of 4 branches missed.">    if (canvasApiToken == null || canvasApiToken.isEmpty()) {</span>
+<span class="nc" id="L32">      return canvasApiToken;</span>
+    }
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">    if (canvasApiToken.startsWith(ENCRYPTION_PREFIX)) {</span>
+<span class="nc" id="L35">      return canvasApiToken;</span>
+    }
+
+    try {
+<span class="fc" id="L39">      Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);</span>
+<span class="fc" id="L40">      byte[] iv = new byte[GCM_IV_LENGTH_BYTES];</span>
+<span class="fc" id="L41">      secureRandom.nextBytes(iv);</span>
+<span class="fc" id="L42">      cipher.init(</span>
+<span class="fc" id="L43">          Cipher.ENCRYPT_MODE, getSecretKey(), new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));</span>
+
+<span class="fc" id="L45">      byte[] ciphertext = cipher.doFinal(canvasApiToken.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L46">      byte[] payload = new byte[iv.length + ciphertext.length];</span>
+<span class="fc" id="L47">      System.arraycopy(iv, 0, payload, 0, iv.length);</span>
+<span class="fc" id="L48">      System.arraycopy(ciphertext, 0, payload, iv.length, ciphertext.length);</span>
+<span class="fc" id="L49">      return ENCRYPTION_PREFIX + Base64.getEncoder().encodeToString(payload);</span>
+<span class="nc" id="L50">    } catch (GeneralSecurityException e) {</span>
+<span class="nc" id="L51">      throw new IllegalStateException(&quot;Failed to encrypt Canvas API token&quot;, e);</span>
+    }
+  }
+
+  public String decrypt(String storedCanvasApiToken) {
+<span class="pc bpc" id="L56" title="2 of 4 branches missed.">    if (storedCanvasApiToken == null || storedCanvasApiToken.isEmpty()) {</span>
+<span class="nc" id="L57">      return storedCanvasApiToken;</span>
+    }
+<span class="fc bfc" id="L59" title="All 2 branches covered.">    if (!storedCanvasApiToken.startsWith(ENCRYPTION_PREFIX)) {</span>
+<span class="fc" id="L60">      return storedCanvasApiToken;</span>
+    }
+
+    try {
+      byte[] payload =
+<span class="fc" id="L65">          Base64.getDecoder().decode(storedCanvasApiToken.substring(ENCRYPTION_PREFIX.length()));</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">      if (payload.length &lt;= GCM_IV_LENGTH_BYTES) {</span>
+<span class="nc" id="L67">        throw new IllegalStateException(&quot;Encrypted Canvas API token is malformed&quot;);</span>
+      }
+<span class="fc" id="L69">      byte[] iv = Arrays.copyOfRange(payload, 0, GCM_IV_LENGTH_BYTES);</span>
+<span class="fc" id="L70">      byte[] ciphertext = Arrays.copyOfRange(payload, GCM_IV_LENGTH_BYTES, payload.length);</span>
+
+<span class="fc" id="L72">      Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);</span>
+<span class="fc" id="L73">      cipher.init(</span>
+<span class="fc" id="L74">          Cipher.DECRYPT_MODE, getSecretKey(), new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));</span>
+<span class="fc" id="L75">      byte[] plaintext = cipher.doFinal(ciphertext);</span>
+<span class="fc" id="L76">      return new String(plaintext, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L77">    } catch (GeneralSecurityException | IllegalArgumentException e) {</span>
+<span class="nc" id="L78">      throw new IllegalStateException(&quot;Failed to decrypt Canvas API token&quot;, e);</span>
+    }
+  }
+
+  private SecretKeySpec getSecretKey() {
+<span class="pc bpc" id="L83" title="1 of 4 branches missed.">    if (encodedEncryptionKey == null || encodedEncryptionKey.isBlank()) {</span>
+<span class="fc" id="L84">      throw new IllegalStateException(&quot;Canvas API token encryption key is not configured&quot;);</span>
+    }
+    byte[] decodedKey;
+    try {
+<span class="fc" id="L88">      decodedKey = Base64.getDecoder().decode(encodedEncryptionKey);</span>
+<span class="nc" id="L89">    } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L90">      throw new IllegalStateException(&quot;Canvas API token encryption key must be Base64 encoded&quot;, e);</span>
+<span class="fc" id="L91">    }</span>
+<span class="pc bpc" id="L92" title="3 of 6 branches missed.">    if (decodedKey.length != 16 &amp;&amp; decodedKey.length != 24 &amp;&amp; decodedKey.length != 32) {</span>
+<span class="nc" id="L93">      throw new IllegalStateException(</span>
+          &quot;Canvas API token encryption key must decode to 16, 24, or 32 bytes&quot;);
+    }
+<span class="fc" id="L96">    return new SecretKeySpec(decodedKey, &quot;AES&quot;);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
