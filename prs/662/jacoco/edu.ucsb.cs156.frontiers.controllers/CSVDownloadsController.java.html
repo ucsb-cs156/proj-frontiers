@@ -185,13 +185,13 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
             try {
 <span class="fc" id="L186">              StatefulBeanToCsv&lt;CourseStaffDTO&gt; beanToCsvWriter =</span>
 <span class="fc" id="L187">                  courseStaffDTOService.getStatefulBeanToCSV(writer);</span>
-<span class="nc" id="L188">              beanToCsvWriter.write(list);</span>
+<span class="fc" id="L188">              beanToCsvWriter.write(list);</span>
 <span class="fc" id="L189">            } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {</span>
 <span class="fc" id="L190">              log.error(&quot;Error writing CSV file&quot;, e);</span>
 <span class="fc" id="L191">              throw new IOException(&quot;Error writing CSV file: &quot; + e.getMessage());</span>
-<span class="nc" id="L192">            }</span>
+<span class="fc" id="L192">            }</span>
           }
-<span class="nc" id="L194">        };</span>
+<span class="fc" id="L194">        };</span>
 
 <span class="fc" id="L196">    return ResponseEntity.ok()</span>
 <span class="fc" id="L197">        .contentType(MediaType.parseMediaType(&quot;text/csv; charset=UTF-8&quot;))</span>
