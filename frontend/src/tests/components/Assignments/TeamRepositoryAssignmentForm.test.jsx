@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import TeamRepositoryAssignmentForm from "main/components/Assignments/TeamRepositoryAssignmentForm";
 import { vi } from "vitest";
@@ -61,6 +62,10 @@ test("teamRegex field is present and optional", async () => {
   render(<TeamRepositoryAssignmentForm submitAction={mockSubmit} />);
 
   await screen.findByText("Create");
+
+  await userEvent.hover(screen.getByTestId("teamRegex-tooltip"));
+
+  expect(await screen.findByText(/Examples:/)).toBeInTheDocument();
 
   expect(
     screen.getByTestId("TeamRepositoryAssignmentForm-teamRegex"),

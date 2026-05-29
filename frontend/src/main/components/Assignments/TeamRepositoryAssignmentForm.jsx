@@ -69,7 +69,7 @@ export default function TeamRepositoryAssignmentForm({ submitAction }) {
               </Tooltip>
             }
           >
-            <span>
+            <span data-testid="teamRegex-tooltip">
               <FaQuestionCircle />
             </span>
           </OverlayTrigger>
