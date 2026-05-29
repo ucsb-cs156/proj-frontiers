@@ -101,7 +101,7 @@ public class ApiCourseKeyService {
 
     List<ApiCourseKey> activeKeys = listActiveKeys(courseId);
     for (ApiCourseKey key : activeKeys) {
-      if (hashWithSalt(rawKey, key.getSalt()).equals(key.getKeyHash())) {
+      if (hashMatches(rawKey, key)) {
         key.setUsageCount(key.getUsageCount() + 1);
         key.setLastUsedAt(ZonedDateTime.now());
         return Optional.of(apiCourseKeyRepository.save(key));
@@ -127,12 +127,25 @@ public class ApiCourseKeyService {
   }
 
   private String hashWithSalt(String rawKey, String salt) {
+    return Base64.getEncoder().encodeToString(hashBytes(rawKey, salt));
+  }
+
+  private byte[] hashBytes(String rawKey, String salt) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest((salt + rawKey).getBytes(StandardCharsets.UTF_8));
-      return Base64.getEncoder().encodeToString(hash);
+      return digest.digest((salt + rawKey).getBytes(StandardCharsets.UTF_8));
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException("SHA-256 unavailable", e);
+    }
+  }
+
+  private boolean hashMatches(String rawKey, ApiCourseKey key) {
+    byte[] candidate = hashBytes(rawKey, key.getSalt());
+    try {
+      byte[] expected = Base64.getDecoder().decode(key.getKeyHash());
+      return MessageDigest.isEqual(candidate, expected);
+    } catch (IllegalArgumentException e) {
+      return false;
     }
   }
 }
