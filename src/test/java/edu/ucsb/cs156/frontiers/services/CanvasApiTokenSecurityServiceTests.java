@@ -39,4 +39,62 @@ public class CanvasApiTokenSecurityServiceTests {
         assertThrows(IllegalStateException.class, () -> service.encrypt("test-api-token"));
     assertEquals("Canvas API token encryption key is not configured", exception.getMessage());
   }
+
+  @Test
+  public void encrypt_nullOrEmptyOrAlreadyEncrypted_returnsInputUnchanged() {
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(VALID_KEY);
+
+    assertEquals(null, service.encrypt(null));
+    assertEquals("", service.encrypt(""));
+    assertEquals("enc:v1:already-encrypted", service.encrypt("enc:v1:already-encrypted"));
+  }
+
+  @Test
+  public void decrypt_nullOrEmpty_returnsInputUnchanged() {
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(VALID_KEY);
+
+    assertEquals(null, service.decrypt(null));
+    assertEquals("", service.decrypt(""));
+  }
+
+  @Test
+  public void decrypt_ivOnlyPayload_throwsMalformedException() {
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(VALID_KEY);
+    String ivOnlyPayload = Base64.getEncoder().encodeToString(new byte[12]);
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.decrypt("enc:v1:" + ivOnlyPayload));
+    assertEquals("Encrypted Canvas API token is malformed", exception.getMessage());
+  }
+
+  @Test
+  public void encrypt_samePlaintextTwice_usesDifferentRandomIv() {
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(VALID_KEY);
+
+    String encrypted1 = service.encrypt("same-token");
+    String encrypted2 = service.encrypt("same-token");
+
+    assertNotEquals(encrypted1, encrypted2);
+  }
+
+  @Test
+  public void encrypt_withNonBase64Key_throwsIllegalStateException() {
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService("%%%");
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.encrypt("test-api-token"));
+    assertEquals("Canvas API token encryption key must be Base64 encoded", exception.getMessage());
+  }
+
+  @Test
+  public void encrypt_withInvalidDecodedKeyLength_throwsIllegalStateException() {
+    String invalidLengthKey = Base64.getEncoder().encodeToString("short-key-15chr".getBytes());
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(invalidLengthKey);
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.encrypt("test-api-token"));
+    assertEquals(
+        "Canvas API token encryption key must decode to 16, 24, or 32 bytes",
+        exception.getMessage());
+  }
 }
