@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiCourseKeyService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">ApiCourseKeyService.java</span></div><h1>ApiCourseKeyService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import edu.ucsb.cs156.frontiers.entities.ApiCourseKey;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.repositories.ApiCourseKeyRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.ZonedDateTime;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+@Service
+public class ApiCourseKeyService {
+<span class="fc" id="L25">  public enum ExpirationChoice {</span>
+<span class="fc" id="L26">    DAYS_90,</span>
+<span class="fc" id="L27">    MONTHS_6</span>
+  }
+
+  public static final String API_KEY_HEADER = &quot;X-API-KEY&quot;;
+
+<span class="fc" id="L32">  public record GeneratedApiCourseKey(String rawKey, ApiCourseKey apiCourseKey) {}</span>
+
+  private final ApiCourseKeyRepository apiCourseKeyRepository;
+  private final CourseRepository courseRepository;
+<span class="fc" id="L36">  private final SecureRandom secureRandom = new SecureRandom();</span>
+
+  public ApiCourseKeyService(
+<span class="fc" id="L39">      ApiCourseKeyRepository apiCourseKeyRepository, CourseRepository courseRepository) {</span>
+<span class="fc" id="L40">    this.apiCourseKeyRepository = apiCourseKeyRepository;</span>
+<span class="fc" id="L41">    this.courseRepository = courseRepository;</span>
+<span class="fc" id="L42">  }</span>
+
+  public GeneratedApiCourseKey createKey(
+      Long courseId, User creator, ExpirationChoice expirationChoice) {
+<span class="fc" id="L46">    Course course =</span>
+        courseRepository
+<span class="fc" id="L48">            .findById(courseId)</span>
+<span class="pc" id="L49">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L51">    String rawKey = generateRawKey();</span>
+<span class="fc" id="L52">    String salt = randomHex(16);</span>
+<span class="fc" id="L53">    ZonedDateTime now = ZonedDateTime.now();</span>
+    ZonedDateTime expiresAt =
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        expirationChoice == ExpirationChoice.MONTHS_6 ? now.plusMonths(6) : now.plusDays(90);</span>
+
+    ApiCourseKey apiCourseKey =
+<span class="fc" id="L58">        ApiCourseKey.builder()</span>
+<span class="fc" id="L59">            .course(course)</span>
+<span class="fc" id="L60">            .createdBy(creator)</span>
+<span class="fc" id="L61">            .keyHash(hashWithSalt(rawKey, salt))</span>
+<span class="fc" id="L62">            .salt(salt)</span>
+<span class="fc" id="L63">            .keySuffix(rawKey.substring(Math.max(0, rawKey.length() - 6)))</span>
+<span class="fc" id="L64">            .createdAt(now)</span>
+<span class="fc" id="L65">            .expiresAt(expiresAt)</span>
+<span class="fc" id="L66">            .build();</span>
+
+<span class="fc" id="L68">    ApiCourseKey saved = apiCourseKeyRepository.save(apiCourseKey);</span>
+<span class="fc" id="L69">    return new GeneratedApiCourseKey(rawKey, saved);</span>
+  }
+
+  public List&lt;ApiCourseKey&gt; listActiveKeys(Long courseId) {
+<span class="fc" id="L73">    return apiCourseKeyRepository</span>
+<span class="fc" id="L74">        .findByCourseIdAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(</span>
+<span class="fc" id="L75">            courseId, ZonedDateTime.now());</span>
+  }
+
+  public ApiCourseKey revokeKey(Long courseId, Long apiKeyId) {
+<span class="nc" id="L79">    ApiCourseKey key =</span>
+        apiCourseKeyRepository
+<span class="nc" id="L81">            .findByIdAndCourseId(apiKeyId, courseId)</span>
+<span class="nc" id="L82">            .orElseThrow(() -&gt; new EntityNotFoundException(ApiCourseKey.class, apiKeyId));</span>
+<span class="nc" id="L83">    key.setRevoked(true);</span>
+<span class="nc" id="L84">    return apiCourseKeyRepository.save(key);</span>
+  }
+
+  public boolean authenticateFromRequestForCourse(Long courseId) {
+<span class="nc" id="L88">    RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">    if (!(requestAttributes instanceof ServletRequestAttributes servletRequestAttributes)) {</span>
+<span class="nc" id="L90">      return false;</span>
+    }
+<span class="nc" id="L92">    HttpServletRequest request = servletRequestAttributes.getRequest();</span>
+<span class="nc" id="L93">    String rawKey = request.getHeader(API_KEY_HEADER);</span>
+<span class="nc" id="L94">    return authenticateRawKeyForCourse(rawKey, courseId).isPresent();</span>
+  }
+
+  public Optional&lt;ApiCourseKey&gt; authenticateRawKeyForCourse(String rawKey, Long courseId) {
+<span class="pc bpc" id="L98" title="2 of 4 branches missed.">    if (rawKey == null || rawKey.isBlank()) {</span>
+<span class="nc" id="L99">      return Optional.empty();</span>
+    }
+
+<span class="fc" id="L102">    List&lt;ApiCourseKey&gt; activeKeys = listActiveKeys(courseId);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">    for (ApiCourseKey key : activeKeys) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">      if (hashMatches(rawKey, key)) {</span>
+<span class="fc" id="L105">        key.setUsageCount(key.getUsageCount() + 1);</span>
+<span class="fc" id="L106">        key.setLastUsedAt(ZonedDateTime.now());</span>
+<span class="fc" id="L107">        return Optional.of(apiCourseKeyRepository.save(key));</span>
+      }
+<span class="fc" id="L109">    }</span>
+<span class="fc" id="L110">    return Optional.empty();</span>
+  }
+
+  private String generateRawKey() {
+<span class="fc" id="L114">    byte[] raw = new byte[32];</span>
+<span class="fc" id="L115">    secureRandom.nextBytes(raw);</span>
+<span class="fc" id="L116">    return &quot;frt_&quot; + Base64.getUrlEncoder().withoutPadding().encodeToString(raw);</span>
+  }
+
+  private String randomHex(int bytes) {
+<span class="fc" id="L120">    byte[] raw = new byte[bytes];</span>
+<span class="fc" id="L121">    secureRandom.nextBytes(raw);</span>
+<span class="fc" id="L122">    StringBuilder sb = new StringBuilder(bytes * 2);</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">    for (byte b : raw) {</span>
+<span class="fc" id="L124">      sb.append(String.format(&quot;%02x&quot;, b));</span>
+    }
+<span class="fc" id="L126">    return sb.toString();</span>
+  }
+
+  private String hashWithSalt(String rawKey, String salt) {
+<span class="fc" id="L130">    return Base64.getEncoder().encodeToString(hashBytes(rawKey, salt));</span>
+  }
+
+  private byte[] hashBytes(String rawKey, String salt) {
+    try {
+<span class="fc" id="L135">      MessageDigest digest = MessageDigest.getInstance(&quot;SHA-256&quot;);</span>
+<span class="fc" id="L136">      return digest.digest((salt + rawKey).getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L137">    } catch (NoSuchAlgorithmException e) {</span>
+<span class="nc" id="L138">      throw new IllegalStateException(&quot;SHA-256 unavailable&quot;, e);</span>
+    }
+  }
+
+  private boolean hashMatches(String rawKey, ApiCourseKey key) {
+<span class="fc" id="L143">    byte[] candidate = hashBytes(rawKey, key.getSalt());</span>
+    try {
+<span class="fc" id="L145">      byte[] expected = Base64.getDecoder().decode(key.getKeyHash());</span>
+<span class="fc" id="L146">      return MessageDigest.isEqual(candidate, expected);</span>
+<span class="fc" id="L147">    } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L148">      return false;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DownloadRequestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">DownloadRequestController.java</span></div><h1>DownloadRequestController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.DownloadRequest;
+import edu.ucsb.cs156.frontiers.entities.DownloadedCommit;
+import edu.ucsb.cs156.frontiers.entities.Job;
+import edu.ucsb.cs156.frontiers.enums.DownloadRequestType;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.CommitDownloadRequestJob;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.DownloadRequestRepository;
+import edu.ucsb.cs156.frontiers.repositories.DownloadedCommitRepository;
+import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
+import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.time.Instant;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;/api/downloads&quot;)
+@Tag(name = &quot;Download Management&quot;)
+<span class="fc" id="L42">@Slf4j</span>
+public class DownloadRequestController extends ApiController {
+
+  private final DownloadedCommitRepository downloadedCommitRepository;
+  private final DownloadRequestRepository downloadRequestRepository;
+  private final CourseRepository courseRepository;
+  private final JobService jobService;
+  private final GithubGraphQLService githubGraphQLService;
+
+  public DownloadRequestController(
+      DownloadedCommitRepository downloadedCommitRepository,
+      DownloadRequestRepository downloadRequestRepository,
+      CourseRepository courseRepository,
+      JobService jobService,
+<span class="fc" id="L56">      GithubGraphQLService githubGraphQLService) {</span>
+<span class="fc" id="L57">    this.downloadedCommitRepository = downloadedCommitRepository;</span>
+<span class="fc" id="L58">    this.downloadRequestRepository = downloadRequestRepository;</span>
+<span class="fc" id="L59">    this.courseRepository = courseRepository;</span>
+<span class="fc" id="L60">    this.jobService = jobService;</span>
+<span class="fc" id="L61">    this.githubGraphQLService = githubGraphQLService;</span>
+<span class="fc" id="L62">  }</span>
+
+  @PostMapping(&quot;/create&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  public ResponseEntity&lt;DownloadRequest&gt; createDownloadRequest(
+      @Parameter Long courseId,
+      @RequestParam String org,
+      @RequestParam String repo,
+      @RequestParam(required = false) String branch,
+      @RequestParam DownloadRequestType type,
+      @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) Instant startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) Instant endDate) {
+
+<span class="fc" id="L75">    Course course =</span>
+        courseRepository
+<span class="fc" id="L77">            .findById(courseId)</span>
+<span class="fc" id="L78">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+    DownloadRequest request =
+<span class="fc" id="L80">        DownloadRequest.builder()</span>
+<span class="fc" id="L81">            .course(course)</span>
+<span class="fc" id="L82">            .org(org)</span>
+<span class="fc" id="L83">            .repo(repo)</span>
+<span class="fc" id="L84">            .downloadType(type)</span>
+<span class="fc" id="L85">            .startDate(startDate)</span>
+<span class="fc" id="L86">            .endDate(endDate)</span>
+<span class="fc" id="L87">            .build();</span>
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    if (branch != null) {</span>
+<span class="fc" id="L90">      request.setBranch(branch);</span>
+    }
+
+<span class="fc" id="L93">    request = downloadRequestRepository.save(request);</span>
+
+    CommitDownloadRequestJob job =
+<span class="fc" id="L96">        CommitDownloadRequestJob.builder()</span>
+<span class="fc" id="L97">            .request(request)</span>
+<span class="fc" id="L98">            .githubService(githubGraphQLService)</span>
+<span class="fc" id="L99">            .build();</span>
+
+<span class="fc" id="L101">    Job startedJob = jobService.runAsJob(job);</span>
+
+<span class="fc" id="L103">    request.setJob(startedJob);</span>
+
+<span class="fc" id="L105">    return ResponseEntity.status(HttpStatus.ACCEPTED).body(downloadRequestRepository.save(request));</span>
+  }
+
+  @PostMapping(&quot;{downloadRequestId}&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasDownloadPermissions(#root, #downloadRequestId)&quot;)
+  public ResponseEntity&lt;Object&gt; getDownload(@PathVariable Long downloadRequestId) throws Exception {
+<span class="fc" id="L111">    DownloadRequest request =</span>
+        downloadRequestRepository
+<span class="fc" id="L113">            .findById(downloadRequestId)</span>
+<span class="fc" id="L114">            .orElseThrow(</span>
+<span class="fc" id="L115">                () -&gt; new EntityNotFoundException(DownloadRequest.class, downloadRequestId));</span>
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">    if (request.getJob().getStatus().equals(&quot;error&quot;)) {</span>
+<span class="fc" id="L118">      Map&lt;String, String&gt; errorResponse =</span>
+<span class="fc" id="L119">          Map.of(</span>
+              &quot;message&quot;,
+              &quot;Download request failed with error; please check the job log for more information.&quot;);
+<span class="fc" id="L122">      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);</span>
+    }
+
+<span class="fc bfc" id="L125" title="All 2 branches covered.">    if (!request.getJob().getStatus().equals(&quot;complete&quot;)) {</span>
+<span class="fc" id="L126">      return ResponseEntity.status(HttpStatus.ACCEPTED)</span>
+<span class="fc" id="L127">          .body(Map.of(&quot;message&quot;, &quot;Download request is not complete. Please try again later.&quot;));</span>
+    }
+
+<span class="fc" id="L130">    ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L131">    try (OutputStreamWriter writer = new OutputStreamWriter(baos)) {</span>
+<span class="fc" id="L132">      StatefulBeanToCsv&lt;DownloadedCommit&gt; csvWriter =</span>
+<span class="fc" id="L133">          new StatefulBeanToCsvBuilder&lt;DownloadedCommit&gt;(writer).build();</span>
+<span class="fc" id="L134">      csvWriter.write(downloadedCommitRepository.findByRequest(request).iterator());</span>
+    }
+
+<span class="fc" id="L137">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L138">    headers.setContentType(MediaType.parseMediaType(&quot;text/csv&quot;));</span>
+<span class="fc" id="L139">    headers.setContentDisposition(</span>
+<span class="fc" id="L140">        ContentDisposition.builder(&quot;attachment&quot;)</span>
+<span class="fc" id="L141">            .filename(request.getOrg() + &quot;_&quot; + request.getRepo() + &quot;.csv&quot;)</span>
+<span class="fc" id="L142">            .build());</span>
+
+<span class="fc" id="L144">    return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(baos.toByteArray()));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
