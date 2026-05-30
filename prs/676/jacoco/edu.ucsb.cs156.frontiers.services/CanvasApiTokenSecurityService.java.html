@@ -28,11 +28,11 @@ public class CanvasApiTokenSecurityService {
 <span class="fc" id="L28">  }</span>
 
   public String encrypt(String canvasApiToken) {
-<span class="pc bpc" id="L31" title="2 of 4 branches missed.">    if (canvasApiToken == null || canvasApiToken.isEmpty()) {</span>
-<span class="nc" id="L32">      return canvasApiToken;</span>
+<span class="fc bfc" id="L31" title="All 4 branches covered.">    if (canvasApiToken == null || canvasApiToken.isEmpty()) {</span>
+<span class="fc" id="L32">      return canvasApiToken;</span>
     }
-<span class="pc bpc" id="L34" title="1 of 2 branches missed.">    if (canvasApiToken.startsWith(ENCRYPTION_PREFIX)) {</span>
-<span class="nc" id="L35">      return canvasApiToken;</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">    if (canvasApiToken.startsWith(ENCRYPTION_PREFIX)) {</span>
+<span class="fc" id="L35">      return canvasApiToken;</span>
     }
 
     try {
@@ -53,8 +53,8 @@ public class CanvasApiTokenSecurityService {
   }
 
   public String decrypt(String storedCanvasApiToken) {
-<span class="pc bpc" id="L56" title="2 of 4 branches missed.">    if (storedCanvasApiToken == null || storedCanvasApiToken.isEmpty()) {</span>
-<span class="nc" id="L57">      return storedCanvasApiToken;</span>
+<span class="fc bfc" id="L56" title="All 4 branches covered.">    if (storedCanvasApiToken == null || storedCanvasApiToken.isEmpty()) {</span>
+<span class="fc" id="L57">      return storedCanvasApiToken;</span>
     }
 <span class="fc bfc" id="L59" title="All 2 branches covered.">    if (!storedCanvasApiToken.startsWith(ENCRYPTION_PREFIX)) {</span>
 <span class="fc" id="L60">      return storedCanvasApiToken;</span>
@@ -63,8 +63,8 @@ public class CanvasApiTokenSecurityService {
     try {
       byte[] payload =
 <span class="fc" id="L65">          Base64.getDecoder().decode(storedCanvasApiToken.substring(ENCRYPTION_PREFIX.length()));</span>
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">      if (payload.length &lt;= GCM_IV_LENGTH_BYTES) {</span>
-<span class="nc" id="L67">        throw new IllegalStateException(&quot;Encrypted Canvas API token is malformed&quot;);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">      if (payload.length &lt;= GCM_IV_LENGTH_BYTES) {</span>
+<span class="fc" id="L67">        throw new IllegalStateException(&quot;Encrypted Canvas API token is malformed&quot;);</span>
       }
 <span class="fc" id="L69">      byte[] iv = Arrays.copyOfRange(payload, 0, GCM_IV_LENGTH_BYTES);</span>
 <span class="fc" id="L70">      byte[] ciphertext = Arrays.copyOfRange(payload, GCM_IV_LENGTH_BYTES, payload.length);</span>
@@ -86,11 +86,11 @@ public class CanvasApiTokenSecurityService {
     byte[] decodedKey;
     try {
 <span class="fc" id="L88">      decodedKey = Base64.getDecoder().decode(encodedEncryptionKey);</span>
-<span class="nc" id="L89">    } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L90">      throw new IllegalStateException(&quot;Canvas API token encryption key must be Base64 encoded&quot;, e);</span>
+<span class="fc" id="L89">    } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L90">      throw new IllegalStateException(&quot;Canvas API token encryption key must be Base64 encoded&quot;, e);</span>
 <span class="fc" id="L91">    }</span>
-<span class="pc bpc" id="L92" title="3 of 6 branches missed.">    if (decodedKey.length != 16 &amp;&amp; decodedKey.length != 24 &amp;&amp; decodedKey.length != 32) {</span>
-<span class="nc" id="L93">      throw new IllegalStateException(</span>
+<span class="pc bpc" id="L92" title="2 of 6 branches missed.">    if (decodedKey.length != 16 &amp;&amp; decodedKey.length != 24 &amp;&amp; decodedKey.length != 32) {</span>
+<span class="fc" id="L93">      throw new IllegalStateException(</span>
           &quot;Canvas API token encryption key must decode to 16, 24, or 32 bytes&quot;);
     }
 <span class="fc" id="L96">    return new SecretKeySpec(decodedKey, &quot;AES&quot;);</span>
