@@ -126,7 +126,7 @@
             "addForeignKeyConstraint": {
               "baseTableName": "api_course_key",
               "baseColumnNames": "created_by_id",
-              "referencedTableName": "user",
+              "referencedTableName": "users",
               "referencedColumnNames": "id",
               "constraintName": "FK_API_COURSE_KEY_ON_CREATED_BY"
             }
