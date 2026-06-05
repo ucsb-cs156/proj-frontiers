@@ -31,7 +31,7 @@ public class CATMEController extends ApiController {
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "payload") @RequestBody(required = false) String payload) {
 
-    if (payload == null) {
+    if (payload == null || payload.isBlank()) {
       return "";
     }
 

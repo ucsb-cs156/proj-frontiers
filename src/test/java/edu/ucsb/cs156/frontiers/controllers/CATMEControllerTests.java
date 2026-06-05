@@ -71,8 +71,6 @@ public class CATMEControllerTests extends ControllerTestCase {
   @Test
   @WithInstructorCoursePermissions
   public void catmeEmails_blankPayload_returnsBlankResponse() throws Exception {
-    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of());
-
     MvcResult response =
         mockMvc
             .perform(
