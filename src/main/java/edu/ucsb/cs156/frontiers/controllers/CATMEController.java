@@ -48,6 +48,7 @@ public class CATMEController extends ApiController {
                     RosterStudent::getEmail,
                     (first, second) -> first));
 
+    // \\R handles all line endings and -1 preserves trailing blank lines.
     return Arrays.stream(payload.split("\\R", -1))
         .map(line -> formatEmailResultLine(extractName(line), emailByName))
         .collect(Collectors.joining("\n"));
@@ -58,7 +59,24 @@ public class CATMEController extends ApiController {
     if (trimmed.isBlank()) {
       return "";
     }
-    return normalizeSpaces(trimmed.replaceFirst("\\s+\\d+\\s+\\d{4}-\\d{2}-\\d{2}.*$", ""));
+
+    // CATME lines look like: "LAST, FIRST MIDDLE <score> <timestamp>".
+    int dateStart = findDateTokenStart(trimmed);
+    if (dateStart == -1) {
+      return trimmed;
+    }
+
+    String beforeDate = trimmed.substring(0, dateStart).trim();
+    int lastSpace = beforeDate.lastIndexOf(' ');
+    if (lastSpace == -1) {
+      return beforeDate;
+    }
+
+    String possibleScore = beforeDate.substring(lastSpace + 1);
+    if (possibleScore.chars().allMatch(Character::isDigit)) {
+      return beforeDate.substring(0, lastSpace).trim();
+    }
+    return beforeDate;
   }
 
   private static String formatEmailResultLine(String name, Map<String, String> emailByName) {
@@ -89,5 +107,31 @@ public class CATMEController extends ApiController {
 
   private static String normalizeSpaces(String value) {
     return value.replaceAll("\\s+", " ").trim();
+  }
+
+  private static int findDateTokenStart(String value) {
+    for (int i = 0; i + 10 <= value.length(); i++) {
+      if (isDateToken(value, i)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private static boolean isDateToken(String value, int start) {
+    if (start > 0 && value.charAt(start - 1) != ' ') {
+      return false;
+    }
+
+    return Character.isDigit(value.charAt(start))
+        && Character.isDigit(value.charAt(start + 1))
+        && Character.isDigit(value.charAt(start + 2))
+        && Character.isDigit(value.charAt(start + 3))
+        && value.charAt(start + 4) == '-'
+        && Character.isDigit(value.charAt(start + 5))
+        && Character.isDigit(value.charAt(start + 6))
+        && value.charAt(start + 7) == '-'
+        && Character.isDigit(value.charAt(start + 8))
+        && Character.isDigit(value.charAt(start + 9));
   }
 }
