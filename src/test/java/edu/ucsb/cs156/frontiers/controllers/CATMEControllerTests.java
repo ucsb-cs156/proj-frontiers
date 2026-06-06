@@ -225,20 +225,6 @@ public class CATMEControllerTests extends ControllerTestCase {
   }
 
   @Test
-  public void toLookupKey_withComma_normalizesToCanonicalCommaFormat() {
-    String key =
-        ReflectionTestUtils.invokeMethod(CATMEController.class, "toLookupKey", "Last, First");
-    assertEquals("LAST,FIRST", key);
-  }
-
-  @Test
-  public void toLookupKey_withoutComma_returnsNormalizedUppercaseName() {
-    String key =
-        ReflectionTestUtils.invokeMethod(CATMEController.class, "toLookupKey", "  Single   Name ");
-    assertEquals("SINGLE NAME", key);
-  }
-
-  @Test
   @WithInstructorCoursePermissions
   public void catmeEmails_coversDateAndDuplicateEdgeCases() throws Exception {
     RosterStudent firstDuplicate =

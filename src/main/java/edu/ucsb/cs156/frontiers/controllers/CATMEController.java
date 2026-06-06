@@ -31,10 +31,8 @@ public class CATMEController extends ApiController {
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "payload") @RequestBody(required = false) String payload) {
 
-    if (payload == null) {
-      return "";
-    }
-    if (payload.isBlank()) {
+    String normalizedPayload = payload == null ? "" : payload;
+    if (normalizedPayload.isBlank()) {
       return "";
     }
 
@@ -52,7 +50,7 @@ public class CATMEController extends ApiController {
                     (first, second) -> first));
 
     // \\R handles all line endings and -1 preserves trailing blank lines.
-    return Arrays.stream(payload.split("\\R", -1))
+    return Arrays.stream(normalizedPayload.split("\\R", -1))
         .map(line -> formatEmailResultLine(extractName(line), emailByName))
         .collect(Collectors.joining("\n"));
   }
@@ -98,14 +96,7 @@ public class CATMEController extends ApiController {
   }
 
   private static String toLookupKey(String name) {
-    String[] nameParts = name.split(",", 2);
-    if (nameParts.length < 2) {
-      return normalizeSpaces(name).toUpperCase();
-    }
-
-    return normalizeSpaces(nameParts[0]).toUpperCase()
-        + ","
-        + normalizeSpaces(nameParts[1]).toUpperCase();
+    return normalizeSpaces(name).toUpperCase().replaceFirst("\\s*,\\s*", ",");
   }
 
   private static String normalizeSpaces(String value) {
