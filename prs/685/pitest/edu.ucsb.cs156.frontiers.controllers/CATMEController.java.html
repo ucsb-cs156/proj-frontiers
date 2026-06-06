@@ -1,0 +1,2579 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>CATMEController.java</h1>
+
+<table class="src">
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package edu.ucsb.cs156.frontiers.controllers;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.entities.RosterStudent;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import io.swagger.v3.oas.annotations.Operation;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import io.swagger.v3.oas.annotations.Parameter;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import io.swagger.v3.oas.annotations.tags.Tag;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.Arrays;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.Map;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.stream.Collectors;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.stream.StreamSupport;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.beans.factory.annotation.Autowired;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.security.access.prepost.PreAuthorize;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.web.bind.annotation.PostMapping;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.web.bind.annotation.RequestBody;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_16'/>
+16
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_16'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.web.bind.annotation.RequestMapping;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_17'/>
+17
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_17'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.web.bind.annotation.RequestParam;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_18'/>
+18
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_18'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.web.bind.annotation.RestController;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@Tag(name = &#34;CATME&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_21'/>
+21
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_21'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@RequestMapping(&#34;/api/catme&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_22'/>
+22
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_22'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@RestController</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_23'/>
+23
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_23'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>public class CATMEController extends ApiController {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_24'/>
+24
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_24'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_25'/>
+25
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_25'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Autowired private RosterStudentRepository rosterStudentRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_26'/>
+26
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_26'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_27'/>
+27
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_27'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Operation(summary = &#34;Convert CATME roster names into course emails&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_28'/>
+28
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_28'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @PreAuthorize(&#34;@CourseSecurity.hasManagePermissions(#root, #courseId)&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_29'/>
+29
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_29'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @PostMapping(value = &#34;/emails&#34;, consumes = &#34;text/plain&#34;, produces = &#34;text/plain&#34;)</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_30'/>
+30
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_30'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public String getCourseEmailsFromCatme(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_31'/>
+31
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_31'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      @Parameter(name = &#34;courseId&#34;) @RequestParam Long courseId,</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_32'/>
+32
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_32'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      @Parameter(name = &#34;payload&#34;) @RequestBody(required = false) String payload) {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_33'/>
+33
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_33'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_34'/>
+34
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_34'>2</a>
+<span>
+1. getCourseEmailsFromCatme : negated conditional &rarr; KILLED<br/>
+2. getCourseEmailsFromCatme : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (payload == null || payload.isBlank()) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_35'/>
+35
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_35'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      return &#34;&#34;;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_36'/>
+36
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_36'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_37'/>
+37
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_37'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_38'/>
+38
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_38'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    Map&#60;String, String&#62; emailByName =</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_39'/>
+39
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_39'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_40'/>
+40
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_40'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            .filter(</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_41'/>
+41
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_41'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                student -&#62;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_42'/>
+42
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_42'>2</a>
+<span>
+1. lambda$getCourseEmailsFromCatme$0 : replaced boolean return with true for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$0 &rarr; SURVIVED<br/>
+2. lambda$getCourseEmailsFromCatme$0 : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='survived'>                    student.getFirstName() != null</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_43'/>
+43
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_43'>1</a>
+<span>
+1. lambda$getCourseEmailsFromCatme$0 : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>                        &#38;&#38; student.getLastName() != null</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_44'/>
+44
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_44'>1</a>
+<span>
+1. lambda$getCourseEmailsFromCatme$0 : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>                        &#38;&#38; student.getEmail() != null)</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_45'/>
+45
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_45'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>            .collect(</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_46'/>
+46
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_46'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>                Collectors.toMap(</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_47'/>
+47
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_47'>1</a>
+<span>
+1. lambda$getCourseEmailsFromCatme$1 : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$1 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>                    student -&#62; toLookupKey(student.getLastName(), student.getFirstName()),</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_48'/>
+48
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_48'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>                    RosterStudent::getEmail,</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_49'/>
+49
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_49'>1</a>
+<span>
+1. lambda$getCourseEmailsFromCatme$2 : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$2 &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>                    (first, second) -&#62; first));</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_50'/>
+50
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_50'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_51'/>
+51
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_51'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    // \\R handles all line endings and -1 preserves trailing blank lines.</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_52'/>
+52
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_52'>1</a>
+<span>
+1. getCourseEmailsFromCatme : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::getCourseEmailsFromCatme &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return Arrays.stream(payload.split(&#34;\\R&#34;, -1))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_53'/>
+53
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_53'>1</a>
+<span>
+1. lambda$getCourseEmailsFromCatme$3 : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$3 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        .map(line -&#62; formatEmailResultLine(extractName(line), emailByName))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_54'/>
+54
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_54'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        .collect(Collectors.joining(&#34;\n&#34;));</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_55'/>
+55
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_55'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_56'/>
+56
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_56'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_57'/>
+57
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_57'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static String extractName(String line) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_58'/>
+58
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_58'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    String trimmed = normalizeSpaces(line);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_59'/>
+59
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_59'>1</a>
+<span>
+1. extractName : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (trimmed.isBlank()) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_60'/>
+60
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_60'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class=''>      return &#34;&#34;;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_61'/>
+61
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_61'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_62'/>
+62
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_62'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_63'/>
+63
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_63'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    // CATME lines look like: &#34;LAST, FIRST MIDDLE &#60;score&#62; &#60;timestamp&#62;&#34;.</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_64'/>
+64
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_64'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    int dateStart = findDateTokenStart(trimmed);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_65'/>
+65
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_65'>1</a>
+<span>
+1. extractName : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (dateStart == -1) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_66'/>
+66
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_66'>1</a>
+<span>
+1. extractName : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>      return trimmed;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_67'/>
+67
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_67'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_68'/>
+68
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_68'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_69'/>
+69
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_69'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    String beforeDate = trimmed.substring(0, dateStart).trim();</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_70'/>
+70
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_70'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    int lastSpace = beforeDate.lastIndexOf(&#39; &#39;);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_71'/>
+71
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_71'>1</a>
+<span>
+1. extractName : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (lastSpace == -1) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_72'/>
+72
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_72'>1</a>
+<span>
+1. extractName : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>      return beforeDate;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_73'/>
+73
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_73'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_74'/>
+74
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_74'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_75'/>
+75
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_75'>1</a>
+<span>
+1. extractName : Replaced integer addition with subtraction &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    String possibleScore = beforeDate.substring(lastSpace + 1);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_76'/>
+76
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_76'>1</a>
+<span>
+1. extractName : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (possibleScore.chars().allMatch(Character::isDigit)) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_77'/>
+77
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_77'>1</a>
+<span>
+1. extractName : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return beforeDate.substring(0, lastSpace).trim();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_78'/>
+78
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_78'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_79'/>
+79
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_79'>1</a>
+<span>
+1. extractName : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>    return beforeDate;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_80'/>
+80
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_80'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_81'/>
+81
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_81'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_82'/>
+82
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_82'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static String formatEmailResultLine(String name, Map&#60;String, String&#62; emailByName) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_83'/>
+83
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_83'>1</a>
+<span>
+1. formatEmailResultLine : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (name.isBlank()) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_84'/>
+84
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_84'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class=''>      return &#34;&#34;;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_85'/>
+85
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_85'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_86'/>
+86
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_86'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    String email = emailByName.get(toLookupKey(name));</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_87'/>
+87
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_87'>1</a>
+<span>
+1. formatEmailResultLine : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (email != null) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_88'/>
+88
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_88'>1</a>
+<span>
+1. formatEmailResultLine : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::formatEmailResultLine &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return email;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_89'/>
+89
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_89'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_90'/>
+90
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_90'>1</a>
+<span>
+1. formatEmailResultLine : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::formatEmailResultLine &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return &#34;# NO EMAIL FOUND FOR &#34; + name;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_91'/>
+91
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_91'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_92'/>
+92
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_92'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_93'/>
+93
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_93'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static String toLookupKey(String lastName, String firstName) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_94'/>
+94
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_94'>1</a>
+<span>
+1. toLookupKey : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::toLookupKey &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return toLookupKey(lastName + &#34;, &#34; + firstName);</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_95'/>
+95
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_95'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_96'/>
+96
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_96'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_97'/>
+97
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_97'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static String toLookupKey(String name) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_98'/>
+98
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_98'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    String[] nameParts = name.split(&#34;,&#34;, 2);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_99'/>
+99
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_99'>2</a>
+<span>
+1. toLookupKey : changed conditional boundary &rarr; SURVIVED<br/>
+2. toLookupKey : negated conditional &rarr; SURVIVED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='survived'>    if (nameParts.length &#60; 2) {</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_100'/>
+100
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_100'>1</a>
+<span>
+1. toLookupKey : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::toLookupKey &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>      return normalizeSpaces(name).toUpperCase();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_101'/>
+101
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_101'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_102'/>
+102
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_102'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_103'/>
+103
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_103'>1</a>
+<span>
+1. toLookupKey : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::toLookupKey &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return normalizeSpaces(nameParts[0]).toUpperCase()</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_104'/>
+104
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_104'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>        + &#34;,&#34;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_105'/>
+105
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_105'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>        + normalizeSpaces(nameParts[1]).toUpperCase();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_106'/>
+106
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_106'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_107'/>
+107
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_107'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_108'/>
+108
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_108'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static String normalizeSpaces(String value) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_109'/>
+109
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_109'>1</a>
+<span>
+1. normalizeSpaces : replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::normalizeSpaces &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return value.replaceAll(&#34;\\s+&#34;, &#34; &#34;).trim();</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_110'/>
+110
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_110'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_111'/>
+111
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_111'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_112'/>
+112
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_112'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static int findDateTokenStart(String value) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_113'/>
+113
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_113'>3</a>
+<span>
+1. findDateTokenStart : changed conditional boundary &rarr; SURVIVED<br/>
+2. findDateTokenStart : Replaced integer addition with subtraction &rarr; SURVIVED<br/>
+3. findDateTokenStart : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='survived'>    for (int i = 0; i + 10 &#60;= value.length(); i++) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_114'/>
+114
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_114'>1</a>
+<span>
+1. findDateTokenStart : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      if (isDateToken(value, i)) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_115'/>
+115
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_115'>1</a>
+<span>
+1. findDateTokenStart : replaced int return with 0 for edu/ucsb/cs156/frontiers/controllers/CATMEController::findDateTokenStart &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        return i;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_116'/>
+116
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_116'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_117'/>
+117
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_117'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='uncovered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_118'/>
+118
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_118'>1</a>
+<span>
+1. findDateTokenStart : replaced int return with 0 for edu/ucsb/cs156/frontiers/controllers/CATMEController::findDateTokenStart &rarr; NO_COVERAGE<br/>
+
+</span>
+</span>
+</td>
+<td class='uncovered'><pre><span  class='survived'>    return -1;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_119'/>
+119
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_119'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_120'/>
+120
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_120'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_121'/>
+121
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_121'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private static boolean isDateToken(String value, int start) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_122'/>
+122
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_122'>4</a>
+<span>
+1. isDateToken : Replaced integer subtraction with addition &rarr; KILLED<br/>
+2. isDateToken : negated conditional &rarr; KILLED<br/>
+3. isDateToken : negated conditional &rarr; KILLED<br/>
+4. isDateToken : changed conditional boundary &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (start &#62; 0 &#38;&#38; value.charAt(start - 1) != &#39; &#39;) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_123'/>
+123
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_123'>1</a>
+<span>
+1. isDateToken : replaced boolean return with true for edu/ucsb/cs156/frontiers/controllers/CATMEController::isDateToken &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return false;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_124'/>
+124
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_124'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_125'/>
+125
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_125'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_126'/>
+126
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_126'>3</a>
+<span>
+1. isDateToken : negated conditional &rarr; KILLED<br/>
+2. isDateToken : replaced boolean return with true for edu/ucsb/cs156/frontiers/controllers/CATMEController::isDateToken &rarr; KILLED<br/>
+3. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return Character.isDigit(value.charAt(start))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_127'/>
+127
+</td>
+<td class='survived'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_127'>2</a>
+<span>
+1. isDateToken : Replaced integer addition with subtraction &rarr; SURVIVED<br/>
+2. isDateToken : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='survived'>        &#38;&#38; Character.isDigit(value.charAt(start + 1))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_128'/>
+128
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_128'>2</a>
+<span>
+1. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+2. isDateToken : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; Character.isDigit(value.charAt(start + 2))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_129'/>
+129
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_129'>2</a>
+<span>
+1. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+2. isDateToken : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; Character.isDigit(value.charAt(start + 3))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_130'/>
+130
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_130'>2</a>
+<span>
+1. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+2. isDateToken : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; value.charAt(start + 4) == &#39;-&#39;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_131'/>
+131
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_131'>2</a>
+<span>
+1. isDateToken : negated conditional &rarr; KILLED<br/>
+2. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; Character.isDigit(value.charAt(start + 5))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_132'/>
+132
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_132'>2</a>
+<span>
+1. isDateToken : negated conditional &rarr; KILLED<br/>
+2. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; Character.isDigit(value.charAt(start + 6))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_133'/>
+133
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_133'>2</a>
+<span>
+1. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+2. isDateToken : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; value.charAt(start + 7) == &#39;-&#39;</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_134'/>
+134
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_134'>2</a>
+<span>
+1. isDateToken : Replaced integer addition with subtraction &rarr; KILLED<br/>
+2. isDateToken : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; Character.isDigit(value.charAt(start + 8))</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_135'/>
+135
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_135'>1</a>
+<span>
+1. isDateToken : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>        &#38;&#38; Character.isDigit(value.charAt(start + 9));</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_136'/>
+136
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_136'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@547f1d52_137'/>
+137
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_137'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_34'>34</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_34'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>getCourseEmailsFromCatme<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>getCourseEmailsFromCatme<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_42'>42</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_42'/> 
+
+<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$getCourseEmailsFromCatme$0<br/><b>Killed by : </b>none</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$0 &rarr; SURVIVED</span>
+<a title="Click to view covering tests" class="view-covered-by-tests" onClick="document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=lambda$getCourseEmailsFromCatme$0,-methodDesc=(Ledu/ucsb/cs156/frontiers/entities/RosterStudent;)Z],-indexes=[24],-mutator=org.pitest.mutationtest.engine.gregor.mutators.returns.BooleanTrueReturnValsMutator]').style.display=(document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=lambda$getCourseEmailsFromCatme$0,-methodDesc=(Ledu/ucsb/cs156/frontiers/entities/RosterStudent;)Z],-indexes=[24],-mutator=org.pitest.mutationtest.engine.gregor.mutators.returns.BooleanTrueReturnValsMutator]').style.display == 'block')?'none':'block';">Covering tests</a>
+<div class="covered-tests" id="MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=lambda$getCourseEmailsFromCatme$0,-methodDesc=(Ledu/ucsb/cs156/frontiers/entities/RosterStudent;)Z],-indexes=[24],-mutator=org.pitest.mutationtest.engine.gregor.mutators.returns.BooleanTrueReturnValsMutator]" style="display:none;">Covered by tests:
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</li> 
+</ul>
+</div></div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$getCourseEmailsFromCatme$0<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_43'>43</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_43'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$getCourseEmailsFromCatme$0<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_44'>44</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_44'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$getCourseEmailsFromCatme$0<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_47'>47</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_47'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$getCourseEmailsFromCatme$1<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$1 &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_49'>49</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_49'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$getCourseEmailsFromCatme$2<br/><b>Killed by : </b>none</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$2 &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_52'>52</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_52'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>getCourseEmailsFromCatme<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::getCourseEmailsFromCatme &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_53'>53</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_53'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$getCourseEmailsFromCatme$3<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::lambda$getCourseEmailsFromCatme$3 &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_59'>59</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_59'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_65'>65</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_65'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_66'>66</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_66'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>none</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_71'>71</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_71'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_72'>72</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_72'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>none</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_75'>75</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_75'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_76'>76</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_76'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_77'>77</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_77'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_79'>79</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_79'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>extractName<br/><b>Killed by : </b>none</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::extractName &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_83'>83</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_83'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>formatEmailResultLine<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_87'>87</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_87'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>formatEmailResultLine<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_88'>88</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_88'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>formatEmailResultLine<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::formatEmailResultLine &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_90'>90</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_90'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>formatEmailResultLine<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::formatEmailResultLine &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_94'>94</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_94'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>toLookupKey<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::toLookupKey &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_99'>99</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_99'/> 
+
+<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>toLookupKey<br/><b>Killed by : </b>none</span></span> changed conditional boundary &rarr; SURVIVED</span>
+<a title="Click to view covering tests" class="view-covered-by-tests" onClick="document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=toLookupKey,-methodDesc=(Ljava/lang/String;)Ljava/lang/String;],-indexes=[13],-mutator=org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator]').style.display=(document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=toLookupKey,-methodDesc=(Ljava/lang/String;)Ljava/lang/String;],-indexes=[13],-mutator=org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator]').style.display == 'block')?'none':'block';">Covering tests</a>
+<div class="covered-tests" id="MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=toLookupKey,-methodDesc=(Ljava/lang/String;)Ljava/lang/String;],-indexes=[13],-mutator=org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator]" style="display:none;">Covered by tests:
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</li> 
+</ul>
+</div></div> <p class='SURVIVED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>toLookupKey<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; SURVIVED</span>
+<a title="Click to view covering tests" class="view-covered-by-tests" onClick="document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=toLookupKey,-methodDesc=(Ljava/lang/String;)Ljava/lang/String;],-indexes=[13],-mutator=org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator]').style.display=(document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=toLookupKey,-methodDesc=(Ljava/lang/String;)Ljava/lang/String;],-indexes=[13],-mutator=org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator]').style.display == 'block')?'none':'block';">Covering tests</a>
+<div class="covered-tests" id="MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=toLookupKey,-methodDesc=(Ljava/lang/String;)Ljava/lang/String;],-indexes=[13],-mutator=org.pitest.mutationtest.engine.gregor.mutators.NegateConditionalsMutator]" style="display:none;">Covered by tests:
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</li> 
+</ul>
+</div></div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_100'>100</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_100'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>toLookupKey<br/><b>Killed by : </b>none</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::toLookupKey &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_103'>103</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_103'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>toLookupKey<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::toLookupKey &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_109'>109</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_109'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>normalizeSpaces<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced return value with &#34;&#34; for edu/ucsb/cs156/frontiers/controllers/CATMEController::normalizeSpaces &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_113'>113</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_113'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>findDateTokenStart<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='SURVIVED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>findDateTokenStart<br/><b>Killed by : </b>none</span></span> changed conditional boundary &rarr; SURVIVED</span>
+<a title="Click to view covering tests" class="view-covered-by-tests" onClick="document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=findDateTokenStart,-methodDesc=(Ljava/lang/String;)I],-indexes=[12],-mutator=org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator]').style.display=(document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=findDateTokenStart,-methodDesc=(Ljava/lang/String;)I],-indexes=[12],-mutator=org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator]').style.display == 'block')?'none':'block';">Covering tests</a>
+<div class="covered-tests" id="MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=findDateTokenStart,-methodDesc=(Ljava/lang/String;)I],-indexes=[12],-mutator=org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator]" style="display:none;">Covered by tests:
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</li> 
+</ul>
+</div></div> <p class='SURVIVED'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>findDateTokenStart<br/><b>Killed by : </b>none</span></span> Replaced integer addition with subtraction &rarr; SURVIVED</span>
+<a title="Click to view covering tests" class="view-covered-by-tests" onClick="document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=findDateTokenStart,-methodDesc=(Ljava/lang/String;)I],-indexes=[9],-mutator=org.pitest.mutationtest.engine.gregor.mutators.MathMutator]').style.display=(document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=findDateTokenStart,-methodDesc=(Ljava/lang/String;)I],-indexes=[9],-mutator=org.pitest.mutationtest.engine.gregor.mutators.MathMutator]').style.display == 'block')?'none':'block';">Covering tests</a>
+<div class="covered-tests" id="MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=findDateTokenStart,-methodDesc=(Ljava/lang/String;)I],-indexes=[9],-mutator=org.pitest.mutationtest.engine.gregor.mutators.MathMutator]" style="display:none;">Covered by tests:
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</li> 
+</ul>
+</div></div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_114'>114</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_114'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>findDateTokenStart<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_115'>115</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_115'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>findDateTokenStart<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced int return with 0 for edu/ucsb/cs156/frontiers/controllers/CATMEController::findDateTokenStart &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_118'>118</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_118'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>findDateTokenStart<br/><b>Killed by : </b>none</span></span> replaced int return with 0 for edu/ucsb/cs156/frontiers/controllers/CATMEController::findDateTokenStart &rarr; NO_COVERAGE</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_122'>122</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_122'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer subtraction with addition &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>4.<span><b>4</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> changed conditional boundary &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_123'>123</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_123'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/controllers/CATMEController::isDateToken &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_126'>126</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_126'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> replaced boolean return with true for edu/ucsb/cs156/frontiers/controllers/CATMEController::isDateToken &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>3.<span><b>3</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_127'>127</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_127'/> 
+
+<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>none</span></span> Replaced integer addition with subtraction &rarr; SURVIVED</span>
+<a title="Click to view covering tests" class="view-covered-by-tests" onClick="document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=isDateToken,-methodDesc=(Ljava/lang/String;I)Z],-indexes=[36],-mutator=org.pitest.mutationtest.engine.gregor.mutators.MathMutator]').style.display=(document.getElementById('MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=isDateToken,-methodDesc=(Ljava/lang/String;I)Z],-indexes=[36],-mutator=org.pitest.mutationtest.engine.gregor.mutators.MathMutator]').style.display == 'block')?'none':'block';">Covering tests</a>
+<div class="covered-tests" id="MutationIdentifier-[location=Location-[clazz=edu.ucsb.cs156.frontiers.controllers.CATMEController,-method=isDateToken,-methodDesc=(Ljava/lang/String;I)Z],-indexes=[36],-mutator=org.pitest.mutationtest.engine.gregor.mutators.MathMutator]" style="display:none;">Covered by tests:
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</li> 
+</ul>
+</div></div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_128'>128</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_128'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_129'>129</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_129'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_130'>130</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_130'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_131'>131</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_131'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_132'>132</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_132'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_133'>133</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_133'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_134'>134</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_134'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> Replaced integer addition with subtraction &rarr; KILLED</span>
+</div> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@547f1d52_135'>135</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@547f1d52_135'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>isDateToken<br/><b>Killed by : </b>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_returnsMatchedEmailsAndNoEmailMessage()] (16 ms)</li><li>edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs156.frontiers.controllers.CATMEControllerTests]/[method:catmeEmails_blankPayload_returnsBlankResponse()] (15 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.17.0
+
+</body>
+</html>
