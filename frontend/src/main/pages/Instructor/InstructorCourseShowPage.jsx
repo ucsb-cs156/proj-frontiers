@@ -15,6 +15,7 @@ import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
+import { hasRole } from "main/utils/currentUser";
 
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
@@ -35,6 +36,9 @@ export default function InstructorCourseShowPage() {
   );
 
   const getCourseFailed = courseBackendFailureCount > 0;
+  const canEditCourseOptions =
+    hasRole(currentUser, "ROLE_ADMIN") ||
+    currentUser?.root?.user?.email === course?.instructorEmail;
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -167,7 +171,11 @@ export default function InstructorCourseShowPage() {
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
         <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-          <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
+          <SettingsTabComponent
+            courseId={courseId}
+            testIdPrefix={testId}
+            canEditCourseOptions={canEditCourseOptions}
+          />
         </Tab>
       </Tabs>
     </BasicLayout>
