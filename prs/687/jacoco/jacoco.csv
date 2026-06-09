@@ -37,7 +37,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,419,0,16,0,105,0
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,465,0,20,0,105,0,23,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.GithubTeamInfo,0,18,0,0,0,3,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,CourseOptionsController,0,154,2,8,0,34,2,9,0,6
+frontiers,edu.ucsb.cs156.frontiers.controllers,CourseOptionsController,0,154,0,10,0,34,0,11,0,6
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.RosterStudentCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CustomErrorController,0,129,0,14,0,29,0,10,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,67,0,2,0,15,0,6,0,5
@@ -46,6 +46,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,UserInfoController,0,6,0,0,0,2,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController,0,536,0,42,0,128,0,37,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,694,0,38,0,136,0,42,0,23
 frontiers,edu.ucsb.cs156.frontiers.controllers,DownloadRequestController,0,183,0,6,0,52,0,9,0,6
+frontiers,edu.ucsb.cs156.frontiers.controllers,CATMEController,0,256,0,50,0,56,0,38,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,CanvasController,0,275,0,12,0,66,0,17,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,676,0,46,0,178,0,54,0,31
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
