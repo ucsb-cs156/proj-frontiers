@@ -48,6 +48,9 @@ describe("SettingsTabComponent tests", () => {
     );
 
     await screen.findByTestId("CanvasApiForm-submit");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Enable Canvas")).toBeInTheDocument(),
+    );
 
     expect(screen.getByText("Connect Canvas")).toBeInTheDocument();
     expect(screen.getByLabelText("Canvas Course ID")).toBeInTheDocument();
