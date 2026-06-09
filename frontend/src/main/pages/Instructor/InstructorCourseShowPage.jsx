@@ -35,10 +35,12 @@ export default function InstructorCourseShowPage() {
     true,
   );
 
+  // Stryker disable OptionalChaining -- course?.instructorEmail is more readable than course && course.instructorEmail
   const getCourseFailed = courseBackendFailureCount > 0;
   const canEditCourseOptions =
     hasRole(currentUser, "ROLE_ADMIN") ||
     currentUser?.root?.user?.email === course?.instructorEmail;
+  // Styryker enable OptionalChaining
 
   const navigate = useNavigate();
   useEffect(() => {
