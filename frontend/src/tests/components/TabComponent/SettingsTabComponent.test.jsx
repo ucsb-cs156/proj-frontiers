@@ -43,6 +43,7 @@ describe("SettingsTabComponent tests", () => {
         <SettingsTabComponent
           courseId={coursesFixtures.severalCourses[0].id}
           testIdPrefix="CanvasApiForm"
+          canEditCourseOptions={true}
         />
       </QueryClientProvider>,
     );
@@ -67,7 +68,10 @@ describe("SettingsTabComponent tests", () => {
     const client = new QueryClient();
     render(
       <QueryClientProvider client={client}>
-        <SettingsTabComponent courseId={coursesFixtures.severalCourses[0].id} />
+        <SettingsTabComponent
+          courseId={coursesFixtures.severalCourses[0].id}
+          canEditCourseOptions={true}
+        />
       </QueryClientProvider>,
     );
 
@@ -94,7 +98,10 @@ describe("SettingsTabComponent tests", () => {
     const client = new QueryClient();
     render(
       <QueryClientProvider client={client}>
-        <SettingsTabComponent courseId={coursesFixtures.severalCourses[0].id} />
+        <SettingsTabComponent
+          courseId={coursesFixtures.severalCourses[0].id}
+          canEditCourseOptions={true}
+        />
       </QueryClientProvider>,
     );
 
@@ -135,7 +142,10 @@ describe("SettingsTabComponent tests", () => {
 
     render(
       <QueryClientProvider client={client}>
-        <SettingsTabComponent courseId={coursesFixtures.severalCourses[0].id} />
+        <SettingsTabComponent
+          courseId={coursesFixtures.severalCourses[0].id}
+          canEditCourseOptions={true}
+        />
       </QueryClientProvider>,
     );
 

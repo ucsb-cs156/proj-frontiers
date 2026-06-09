@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 export default function SettingsTabComponent({
   courseId,
   testIdPrefix,
-  canEditCourseOptions = true,
+  canEditCourseOptions,
 }) {
   const onSuccessCanvasCredentialsAdded = () => {
     toast("Canvas credentials successfully added.");
