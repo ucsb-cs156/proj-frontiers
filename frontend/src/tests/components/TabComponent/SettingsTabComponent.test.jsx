@@ -97,9 +97,13 @@ describe("SettingsTabComponent tests", () => {
 
     await screen.findByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS");
 
-    fireEvent.click(screen.getByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS"));
+    fireEvent.click(
+      screen.getByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS"),
+    );
 
-    await waitFor(() => expect(axiosMock.history.post.length).toBeGreaterThan(0));
+    await waitFor(() =>
+      expect(axiosMock.history.post.length).toBeGreaterThan(0),
+    );
     expect(axiosMock.history.post[0].params).toEqual({
       courseId: coursesFixtures.severalCourses[0].id,
       option: "ENABLE_CANVAS",
@@ -118,7 +122,9 @@ describe("SettingsTabComponent tests", () => {
       </QueryClientProvider>,
     );
 
-    const toggle = await screen.findByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS");
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
     expect(toggle).toBeDisabled();
   });
   test("useBackendMutation is called with correct cache query key", async () => {
