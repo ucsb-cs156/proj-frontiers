@@ -221,4 +221,47 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
 
     mockMvc.perform(get("/api/course/options").param("courseId", "1")).andExpect(status().isOk());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseOptions_withBlankOptionParam_returnsAllOptions() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseOptionRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/course/options").param("courseId", "1").param("option", "   "))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    LinkedHashMap<String, Boolean> expected = new LinkedHashMap<>();
+    expected.put("ENABLE_CANVAS", false);
+    expected.put("TRANSLATE_SECTIONS", false);
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseOptions_withUnknownOptionInDb_skipsUnknownOption() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseOptionRepository.findByCourseId(eq(1L)))
+        .thenReturn(
+            List.of(
+                CourseOption.builder()
+                    .courseId(1L)
+                    .option("OLD_REMOVED_OPTION")
+                    .enabled(true)
+                    .build()));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/course/options").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    LinkedHashMap<String, Boolean> expected = new LinkedHashMap<>();
+    expected.put("ENABLE_CANVAS", false);
+    expected.put("TRANSLATE_SECTIONS", false);
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
 }
