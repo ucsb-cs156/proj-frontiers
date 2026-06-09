@@ -13,7 +13,7 @@ function titleCaseFromOption(option) {
 
 export default function CourseOptionsForm({ courseId, canEdit = true }) {
   const { data: optionsMap } = useBackend(
-    ["/api/course/options", courseId],
+    [`/api/course/options/?courseId=${courseId}`],
     {
       method: "GET",
       url: "/api/course/options",
@@ -28,13 +28,17 @@ export default function CourseOptionsForm({ courseId, canEdit = true }) {
     params: { courseId, option, enabled },
   });
 
-  const onSuccessOptionUpdated = (_data, variables) => {
-    toast(`${titleCaseFromOption(variables.option)} updated.`);
+  const onSuccessOptionUpdated = (data, variables) => {
+    toast(
+      `${titleCaseFromOption(variables.option)} set to ${data[variables.option]}`,
+    );
   };
 
-  const courseOptionMutation = useBackendMutation(objectToAxiosParams, {
-    onSuccess: onSuccessOptionUpdated,
-  });
+  const courseOptionMutation = useBackendMutation(
+    objectToAxiosParams,
+    { onSuccess: onSuccessOptionUpdated },
+    [`/api/course/options/?courseId=${courseId}`],
+  );
 
   const entries = Object.entries(optionsMap);
 

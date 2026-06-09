@@ -40,7 +40,7 @@ export default function InstructorCourseShowPage() {
   const canEditCourseOptions =
     hasRole(currentUser, "ROLE_ADMIN") ||
     currentUser?.root?.user?.email === course?.instructorEmail;
-  // Styryker enable OptionalChaining
+  // Stryker enable OptionalChaining
 
   const navigate = useNavigate();
   useEffect(() => {

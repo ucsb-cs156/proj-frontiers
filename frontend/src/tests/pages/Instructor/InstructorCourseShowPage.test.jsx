@@ -70,7 +70,7 @@ describe("InstructorCourseShowPage tests", () => {
       const theCourse = {
         ...coursesFixtures.oneCourseWithEachStatus[0],
         id: 1,
-        createdByEmail: "phtcon@ucsb.edu",
+        instructorEmail: "phtcon@ucsb.edu",
       };
       axiosMock.onGet("/api/courses/1").reply(200, theCourse);
 
@@ -217,7 +217,7 @@ describe("InstructorCourseShowPage tests", () => {
       const theCourse = {
         ...coursesFixtures.oneCourseWithEachStatus[0],
         id: 1,
-        createdByEmail: "phtcon@ucsb.edu",
+        instructorEmail: "phtcon@ucsb.edu",
       };
 
       axiosMock.onGet("/api/courses/7").reply(200, theCourse);
@@ -285,7 +285,7 @@ describe("InstructorCourseShowPage tests", () => {
       const theCourse = {
         ...coursesFixtures.oneCourseWithEachStatus[0],
         id: 1,
-        createdByEmail: "phtcon@ucsb.edu",
+        instructorEmail: "phtcon@ucsb.edu",
       };
 
       axiosMock.onGet("/api/courses/7").reply(200, theCourse);
@@ -307,6 +307,7 @@ describe("InstructorCourseShowPage tests", () => {
         screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
       ).toBeInTheDocument();
     });
+
     test("header displays correct info when course is loaded without an installationId", async () => {
       setupInstructorUser();
 
@@ -341,6 +342,7 @@ describe("InstructorCourseShowPage tests", () => {
         ),
       ).not.toBeInTheDocument();
     });
+
     test("header displays correct info when course is loaded (and displays warning)", async () => {
       setupInstructorUser();
 
@@ -379,6 +381,7 @@ describe("InstructorCourseShowPage tests", () => {
       expect(screen.getByText("Spring 2025")).toBeInTheDocument();
       expect(screen.getByText(/This GitHub Organization/i)).toBeInTheDocument();
     });
+
     test("expect the correct URL to the organization for the course", async () => {
       setupInstructorUser();
 
@@ -410,6 +413,7 @@ describe("InstructorCourseShowPage tests", () => {
         "https://github.com/organizations/ucsb-cs156-s25/settings/installations/123456",
       );
     });
+
     test("expect the correct tooltip ID and message for the github icon (that redirects to github installation settings)", async () => {
       setupInstructorUser();
 
@@ -449,6 +453,7 @@ describe("InstructorCourseShowPage tests", () => {
         "Manage settings for association between your GitHub organization and this web application.",
       );
     });
+
     test("does not show error modal on initial render", async () => {
       setupInstructorUser();
 
@@ -472,6 +477,292 @@ describe("InstructorCourseShowPage tests", () => {
       await screen.findByText("CMPSC 156");
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    test("renders correctly for instructor user on course they did not create", async () => {
+      vi.useFakeTimers({
+        shouldAdvanceTime: true,
+        toFake: ["setTimeout", "clearTimeout"],
+      });
+      setupInstructorUser();
+      const theCourse = {
+        ...coursesFixtures.oneCourseWithEachStatus[0],
+        id: 1,
+        instructorEmail: "someOneThatIsNotPhtcon@ucsb.edu",
+      };
+      axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      const testId = "InstructorCourseShowPage";
+
+      await waitFor(() => {
+        expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
+          "CMPSC 156",
+        );
+      });
+
+      const toggle = await screen.findByTestId(
+        "CourseOptionsForm-toggle-ENABLE_CANVAS",
+      );
+      expect(toggle).toBeDisabled();
+    });
+
+    test("renders correctly for instructor user on course they did create", async () => {
+      setupInstructorUser();
+      const theCourse = {
+        ...coursesFixtures.oneCourseWithEachStatus[0],
+        id: 1,
+        instructorEmail: apiCurrentUserFixtures.instructorUser.user.email,
+      };
+      axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      const testId = "InstructorCourseShowPage";
+
+      await waitFor(() => {
+        expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
+          "CMPSC 156",
+        );
+      });
+
+      const toggle = await screen.findByTestId(
+        "CourseOptionsForm-toggle-ENABLE_CANVAS",
+      );
+      expect(toggle).toBeEnabled();
+    });
+  });
+
+  describe("InstructorCourseShowPage tests when user is not an instructor", () => {
+    beforeEach(() => {
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      queryClient.clear();
+      axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
+        courseId: "",
+        canvasApiToken: "",
+        canvasCourseId: "",
+      });
+      axiosMock.onGet("/api/jobs/course").reply(200, []);
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: false,
+      });
+    });
+
+    const setupNonInstructorUser = () => {
+      axiosMock
+        .onGet("/api/currentUser")
+        .reply(200, apiCurrentUserFixtures.userOnly);
+      axiosMock
+        .onGet("/api/systemInfo")
+        .reply(200, systemInfoFixtures.showingNeither);
+    };
+
+    test("renders correctly for non-admin user on course they didn't create", async () => {
+      vi.useFakeTimers({
+        shouldAdvanceTime: true,
+        toFake: ["setTimeout", "clearTimeout"],
+      });
+      setupNonInstructorUser();
+      const theCourse = {
+        ...coursesFixtures.oneCourseWithEachStatus[0],
+        id: 1,
+        instructorEmail: "phtcon@ucsb.edu",
+      };
+      axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      const testId = "InstructorCourseShowPage";
+
+      await waitFor(() => {
+        expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
+          "CMPSC 156",
+        );
+      });
+
+      expect(screen.queryByText("ucsb-cs156-s25")).toBeInTheDocument();
+
+      const githubImage = screen.getByTestId(`${testId}-github-org-image`);
+      expect(githubImage).toHaveAttribute(
+        "src",
+        "https://github.com/ucsb-cs156-s25.png?size=64",
+      );
+      expect(githubImage).toHaveAttribute("alt", "ucsb-cs156-s25");
+      expect(githubImage).toHaveStyle("width: 48px; height: 48px;");
+
+      expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
+
+      const toggle = await screen.findByTestId(
+        "CourseOptionsForm-toggle-ENABLE_CANVAS",
+      );
+      expect(toggle).toBeDisabled();
+    });
+  });
+
+  describe("InstructorCourseShowPage tests when user is an admin", () => {
+    beforeEach(() => {
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      queryClient.clear();
+      axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
+        courseId: "",
+        canvasApiToken: "",
+        canvasCourseId: "",
+      });
+      axiosMock.onGet("/api/jobs/course").reply(200, []);
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: false,
+      });
+    });
+
+    const setupAdminUser = () => {
+      axiosMock
+        .onGet("/api/currentUser")
+        .reply(200, apiCurrentUserFixtures.adminUser);
+      axiosMock
+        .onGet("/api/systemInfo")
+        .reply(200, systemInfoFixtures.showingNeither);
+    };
+
+    test("renders correctly for admin user on course they did create", async () => {
+      vi.useFakeTimers({
+        shouldAdvanceTime: true,
+        toFake: ["setTimeout", "clearTimeout"],
+      });
+      setupAdminUser();
+      const theCourse = {
+        ...coursesFixtures.oneCourseWithEachStatus[0],
+        id: 1,
+        instructorEmail: "phtcon@ucsb.edu",
+      };
+      axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      const testId = "InstructorCourseShowPage";
+
+      await waitFor(() => {
+        expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
+          "CMPSC 156",
+        );
+      });
+
+      expect(screen.queryByText("ucsb-cs156-s25")).toBeInTheDocument();
+
+      const githubImage = screen.getByTestId(`${testId}-github-org-image`);
+      expect(githubImage).toHaveAttribute(
+        "src",
+        "https://github.com/ucsb-cs156-s25.png?size=64",
+      );
+      expect(githubImage).toHaveAttribute("alt", "ucsb-cs156-s25");
+      expect(githubImage).toHaveStyle("width: 48px; height: 48px;");
+
+      expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
+
+      const toggle = await screen.findByTestId(
+        "CourseOptionsForm-toggle-ENABLE_CANVAS",
+      );
+      expect(toggle).toBeEnabled();
+    });
+
+    test("renders correctly for admin user on course they didn't create", async () => {
+      vi.useFakeTimers({
+        shouldAdvanceTime: true,
+        toFake: ["setTimeout", "clearTimeout"],
+      });
+      setupAdminUser();
+      const theCourse = {
+        ...coursesFixtures.oneCourseWithEachStatus[0],
+        id: 1,
+        instructorEmail: "notPhtcon@ucsb.edu",
+      };
+      axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      const testId = "InstructorCourseShowPage";
+
+      await waitFor(() => {
+        expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
+          "CMPSC 156",
+        );
+      });
+
+      expect(screen.queryByText("ucsb-cs156-s25")).toBeInTheDocument();
+
+      const githubImage = screen.getByTestId(`${testId}-github-org-image`);
+      expect(githubImage).toHaveAttribute(
+        "src",
+        "https://github.com/ucsb-cs156-s25.png?size=64",
+      );
+      expect(githubImage).toHaveAttribute("alt", "ucsb-cs156-s25");
+      expect(githubImage).toHaveStyle("width: 48px; height: 48px;");
+
+      expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
+
+      const toggle = await screen.findByTestId(
+        "CourseOptionsForm-toggle-ENABLE_CANVAS",
+      );
+      expect(toggle).toBeEnabled();
     });
   });
 });
