@@ -36,7 +36,7 @@ export default function CourseOptionsForm({ courseId, canEdit = true }) {
     onSuccess: onSuccessOptionUpdated,
   });
 
-  const entries = Object.entries(optionsMap ?? {});
+  const entries = Object.entries(optionsMap);
 
   return (
     <div data-testid="CourseOptionsForm">
