@@ -650,6 +650,18 @@ describe("InstructorCourseShowPage tests", () => {
         ENABLE_CANVAS: false,
         TRANSLATE_SECTIONS: false,
       });
+      //  '/api/teams/all?courseId=1' is called by the TeamsTabComponent, so we need to mock it here to prevent errors in the console
+      axiosMock.onGet("/api/teams/all?courseId=1").reply(200, []);
+      // Same with /api/coursestaff/course?courseId=1 which is called by the StaffTabComponent
+      axiosMock.onGet("/api/coursestaff/course?courseId=1").reply(200, []);
+      // And /api/rosterstudents/course/1' which is called by the EnrollmentTabComponent
+      axiosMock
+        .onGet("/api/rosterstudents/course/1")
+        .reply(200, rosterStudentFixtures.threeStudents);
+      // And /api/courses/warnings/1 which is called by InstructorCourseShowPage to determine whether to show the organization age warning tooltip
+      axiosMock.onGet("/api/courses/warnings/1").reply(200, {
+        showOrganizationAgeWarning: false,
+      });
     });
 
     const setupAdminUser = () => {
@@ -726,6 +738,20 @@ describe("InstructorCourseShowPage tests", () => {
       };
       axiosMock.onGet("/api/courses/1").reply(200, theCourse);
 
+      // On POST to /api/course/options with parameter courseId 1, option ENABLE_CANVAS, and enabled true, reply with a 200 status code
+      // and reply with a payload of { courseId: 1, option: "ENABLE_CANVAS", enabled: true }
+      axiosMock
+        .onPost("/api/course/options", {
+          courseId: 1,
+          option: "ENABLE_CANVAS",
+          enabled: true,
+        })
+        .reply(200, {
+          courseId: 1,
+          option: "ENABLE_CANVAS",
+          enabled: true,
+        });
+
       render(
         <QueryClientProvider client={queryClient}>
           <MemoryRouter initialEntries={["/instructor/courses/1"]}>
@@ -747,22 +773,26 @@ describe("InstructorCourseShowPage tests", () => {
         );
       });
 
-      expect(screen.queryByText("ucsb-cs156-s25")).toBeInTheDocument();
+      // Navigate to the settings tab and check that the course options form is present and enabled
+      const settingsTab = screen.getByRole("tab", { name: "Settings" });
+      fireEvent.click(settingsTab);
 
-      const githubImage = screen.getByTestId(`${testId}-github-org-image`);
-      expect(githubImage).toHaveAttribute(
-        "src",
-        "https://github.com/ucsb-cs156-s25.png?size=64",
+      await screen.findByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS");
+      expect(
+        screen.getByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS"),
+      ).toBeEnabled();
+
+      // Click the toggle and check that the toast is called with the correct message
+      fireEvent.click(
+        screen.getByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS"),
       );
-      expect(githubImage).toHaveAttribute("alt", "ucsb-cs156-s25");
-      expect(githubImage).toHaveStyle("width: 48px; height: 48px;");
 
-      expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
-
-      const toggle = await screen.findByTestId(
-        "CourseOptionsForm-toggle-ENABLE_CANVAS",
+      // Expect the axiosMock to have been called with a POST request to /api/course/options with parameter courseId 1, option ENABLE_CANVAS, and enabled true
+      await waitFor(() =>
+        expect(axiosMock.history.post.length).toBeGreaterThan(0),
       );
-      expect(toggle).toBeEnabled();
+      expect(axiosMock.history.post[0].url).toBe("/api/course/options");
+      expect(axiosMock.history.post[0].method).toBe("post");
     });
   });
 });

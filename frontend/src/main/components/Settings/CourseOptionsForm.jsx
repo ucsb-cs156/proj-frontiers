@@ -2,19 +2,13 @@ import React from "react";
 import { Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
-
-function titleCaseFromOption(option) {
-  return option
-    .toLowerCase()
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
+import { titleCaseFromOption } from "main/utils/courseOptionsUtils";
 
 function CourseOptionsForm({ courseId, canEdit }) {
   const { data: optionsMap } = useBackend(
     [`/api/course/options/?courseId=${courseId}`],
     {
+      // Stryker disable next-line StringLiteral : GET and "" are equivalent mutationss
       method: "GET",
       url: "/api/course/options",
       params: { courseId },
@@ -66,6 +60,4 @@ function CourseOptionsForm({ courseId, canEdit }) {
   );
 }
 
-// export the component as the default export, and also export the titleCaseFromOption function for testing
-export { titleCaseFromOption };
 export default CourseOptionsForm;
