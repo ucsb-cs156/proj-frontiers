@@ -11,7 +11,7 @@ function titleCaseFromOption(option) {
     .join(" ");
 }
 
-export default function CourseOptionsForm({ courseId, canEdit = true }) {
+function CourseOptionsForm({ courseId, canEdit }) {
   const { data: optionsMap } = useBackend(
     [`/api/course/options/?courseId=${courseId}`],
     {
@@ -65,3 +65,7 @@ export default function CourseOptionsForm({ courseId, canEdit = true }) {
     </div>
   );
 }
+
+// export the component as the default export, and also export the titleCaseFromOption function for testing
+export { titleCaseFromOption };
+export default CourseOptionsForm;
