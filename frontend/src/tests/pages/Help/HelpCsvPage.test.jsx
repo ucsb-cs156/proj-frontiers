@@ -109,6 +109,22 @@ describe("HelpCsvPage tests", () => {
     useLocationSpy.mockRestore();
   });
 
+  test("scrolls to staff section when hash is present", async () => {
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/help/csv#staff-information"]}>
+          <HelpCsvPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Staff Information");
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
   test("renders with separate Team Information section and examples", async () => {
     render(
       <QueryClientProvider client={queryClient}>
@@ -154,6 +170,25 @@ describe("HelpCsvPage tests", () => {
     // Teams header is not in the Roster Uploads accordion
     expect(
       within(rosterUploadsAccordion).queryByText("Teams (by Email)"),
+    ).not.toBeInTheDocument();
+
+    // Staff Information section
+    expect(screen.getByText("Staff Information")).toBeInTheDocument();
+    const staffAccordion = screen.getByTestId("staffAccordion");
+    expect(staffAccordion).toBeInTheDocument();
+    expect(
+      within(staffAccordion).getByText("Staff (by Email)"),
+    ).toBeInTheDocument();
+    const staffCsvExample = screen.getByTestId("staffCsvExample");
+    expect(staffCsvExample).toBeInTheDocument();
+    expect(staffCsvExample).toHaveClass("csvExample");
+
+    // Staff section is not in other accordions
+    expect(
+      within(rosterUploadsAccordion).queryByText("Staff (by Email)"),
+    ).not.toBeInTheDocument();
+    expect(
+      within(teamsAccordion).queryByText("Staff (by Email)"),
     ).not.toBeInTheDocument();
   });
 });

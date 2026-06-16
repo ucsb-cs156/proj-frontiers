@@ -137,16 +137,16 @@ export default function HomePageLoggedIn() {
         )}
         <h1>Your Student Courses</h1>
         <StudentCoursesTable testid={"CoursesTable"} />
+        <h1>Your Staff Courses</h1>
+        {staffCourses.length === 0 && <p>No staff courses yet.</p>}
         {staffCourses.length > 0 && (
-          <>
-            <h1>Your Staff Courses</h1>
-            <CoursesTable
-              courses={staffCourses}
-              testId={"StaffCoursesTable"}
-              joinCallback={joinStaffCourseCallback}
-              isLoading={isStaffJoining}
-            />
-          </>
+          <CoursesTable
+            courses={staffCourses}
+            testId={"StaffCoursesTable"}
+            joinCallback={joinStaffCourseCallback}
+            isLoading={isStaffJoining}
+            courseNameLinkPrefix="/staff/courses"
+          />
         )}
       </div>
     </BasicLayout>
