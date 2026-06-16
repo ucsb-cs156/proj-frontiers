@@ -75,7 +75,7 @@ public class WebhookController {
       return ResponseEntity.badRequest().body("Invalid JSON");
     }
 
-    log.info("Received GitHub webhook: {}", jsonBody.toString());
+    log.info("Received GitHub webhook payload");
 
     if (!jsonBody.has("action")) {
       return ResponseEntity.ok().body("success");

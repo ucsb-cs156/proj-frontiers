@@ -95,6 +95,7 @@ public class SecurityConfig {
    * ignoring requests to the "/h2-console/**" path.
    */
   @Bean
+  @Profile({"development", "integration", "wiremock"})
   public WebSecurityCustomizer webSecurityCustomizer() {
     return web -> web.ignoring().requestMatchers(antMatcher("/h2-console/**"));
   }
