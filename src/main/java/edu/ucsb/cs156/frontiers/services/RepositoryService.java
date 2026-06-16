@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
@@ -10,7 +11,9 @@ import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -27,6 +30,16 @@ public class RepositoryService {
   private final TeamRepository teamRepository;
   private final RestTemplate restTemplate;
   private final ObjectMapper mapper;
+
+  public record GithubRepository(String name, String fullName) {}
+
+  private HttpHeaders githubHeaders(String token) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Authorization", "Bearer " + token);
+    headers.add("Accept", "application/vnd.github+json");
+    headers.add("X-GitHub-Api-Version", "2022-11-28");
+    return headers;
+  }
 
   /**
    * Creates a GitHub repository for a user (student or staff), given only their GitHub login.
@@ -72,10 +85,7 @@ public class RepositoryService {
             + "/collaborators/"
             + githubLogin;
 
-    HttpHeaders existenceHeaders = new HttpHeaders();
-    existenceHeaders.add("Authorization", "Bearer " + token);
-    existenceHeaders.add("Accept", "application/vnd.github+json");
-    existenceHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpHeaders existenceHeaders = githubHeaders(token);
 
     HttpEntity<String> existenceEntity = new HttpEntity<>(existenceHeaders);
 
@@ -83,10 +93,7 @@ public class RepositoryService {
       restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-        HttpHeaders createHeaders = new HttpHeaders();
-        createHeaders.add("Authorization", "Bearer " + token);
-        createHeaders.add("Accept", "application/vnd.github+json");
-        createHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+        HttpHeaders createHeaders = githubHeaders(token);
 
         Map<String, Object> body = new HashMap<>();
         body.put("name", newRepoName);
@@ -174,6 +181,70 @@ public class RepositoryService {
   }
 
   /**
+   * Lists repositories in the course GitHub organization whose names start with the provided
+   * prefix.
+   */
+  public List<GithubRepository> getRepositoriesMatchingPrefix(Course course, String prefix)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    String endpoint = "https://api.github.com/orgs/" + course.getOrgName() + "/repos?per_page=100";
+
+    HttpEntity<String> entity = new HttpEntity<>(githubHeaders(token));
+    ResponseEntity<String> response =
+        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+
+    JsonNode repos = mapper.readTree(response.getBody());
+    List<GithubRepository> matchingRepos = new ArrayList<>();
+    for (JsonNode repo : repos) {
+      String name = repo.path("name").asText();
+      if (name.startsWith(prefix)) {
+        matchingRepos.add(new GithubRepository(name, repo.path("full_name").asText()));
+      }
+    }
+    return matchingRepos;
+  }
+
+  /** Returns true when the repository has no commits. */
+  public boolean isRepositoryEmpty(Course course, String repositoryName)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    String endpoint =
+        "https://api.github.com/repos/"
+            + course.getOrgName()
+            + "/"
+            + repositoryName
+            + "/commits?per_page=1";
+
+    HttpEntity<String> entity = new HttpEntity<>(githubHeaders(token));
+    try {
+      ResponseEntity<String> response =
+          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+      JsonNode commits = mapper.readTree(response.getBody());
+      return commits.isArray() && commits.isEmpty();
+    } catch (HttpClientErrorException e) {
+      if (e.getStatusCode().equals(HttpStatus.CONFLICT)) {
+        return true;
+      }
+      throw e;
+    }
+  }
+
+  /** Deletes a repository only when it is empty. Returns true when a delete request was sent. */
+  public boolean deleteRepositoryIfEmpty(Course course, String repositoryName)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    if (!isRepositoryEmpty(course, repositoryName)) {
+      return false;
+    }
+
+    String token = jwtService.getInstallationToken(course);
+    String endpoint = "https://api.github.com/repos/" + course.getOrgName() + "/" + repositoryName;
+
+    HttpEntity<String> entity = new HttpEntity<>(githubHeaders(token));
+    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);
+    return true;
+  }
+
+  /**
    * Creates a GitHub repository for a team (student or staff), given only their team name.
    *
    * <ul>
@@ -217,10 +288,7 @@ public class RepositoryService {
             + "/"
             + newRepoName;
 
-    HttpHeaders existenceHeaders = new HttpHeaders();
-    existenceHeaders.add("Authorization", "Bearer " + token);
-    existenceHeaders.add("Accept", "application/vnd.github+json");
-    existenceHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+    HttpHeaders existenceHeaders = githubHeaders(token);
 
     HttpEntity<String> existenceEntity = new HttpEntity<>(existenceHeaders);
 
@@ -228,10 +296,7 @@ public class RepositoryService {
       restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);
     } catch (HttpClientErrorException e) {
       if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-        HttpHeaders createHeaders = new HttpHeaders();
-        createHeaders.add("Authorization", "Bearer " + token);
-        createHeaders.add("Accept", "application/vnd.github+json");
-        createHeaders.add("X-GitHub-Api-Version", "2022-11-28");
+        HttpHeaders createHeaders = githubHeaders(token);
 
         Map<String, Object> body = new HashMap<>();
         body.put("name", newRepoName);

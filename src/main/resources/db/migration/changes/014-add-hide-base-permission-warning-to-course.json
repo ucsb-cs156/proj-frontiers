@@ -1,0 +1,40 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "014-add-hide-base-permission-warning-to-course",
+      "author": "arjunmalaviya",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "HIDE_BASE_PERMISSION_WARNING",
+                  "type": "BOOLEAN",
+                  "defaultValueBoolean": false,
+                  "constraints": {
+                    "nullable": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "update": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "HIDE_BASE_PERMISSION_WARNING",
+                  "valueBoolean": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

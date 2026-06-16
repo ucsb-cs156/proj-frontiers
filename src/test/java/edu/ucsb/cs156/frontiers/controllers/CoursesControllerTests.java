@@ -29,6 +29,7 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
@@ -71,6 +72,8 @@ public class CoursesControllerTests extends ControllerTestCase {
   @MockitoBean private InstructorRepository instructorRepository;
 
   @MockitoBean private AdminRepository adminRepository;
+
+  @MockitoBean private JobsRepository jobsRepository;
 
   /** Test that ROLE_ADMIN can create a course */
   @Test
@@ -963,9 +966,11 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
     verify(linkerService).unenrollOrganization(eq(course));
+    verify(jobsRepository).deleteByCourse_Id(eq(1L));
     verify(courseRepository).findById(eq(1L));
     verify(courseRepository).delete(eq(course));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
     String expectedJson = mapper.writeValueAsString(Map.of("message", "Course with id 1 deleted"));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -990,7 +995,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1020,7 +1026,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1051,7 +1058,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1069,7 +1077,8 @@ public class CoursesControllerTests extends ControllerTestCase {
         .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
         .andExpect(status().isForbidden());
 
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
   }
 
   /**
@@ -1883,14 +1892,14 @@ public class CoursesControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true));
+    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true, false));
 
     MvcResult response =
         mockMvc.perform(get("/api/courses/warnings/1")).andExpect(status().isOk()).andReturn();
 
     verify(linkerService).checkCourseWarnings(eq(course));
     String responseString = response.getResponse().getContentAsString();
-    String expectedJson = mapper.writeValueAsString(new CourseWarning(true));
+    String expectedJson = mapper.writeValueAsString(new CourseWarning(true, false));
     assertEquals(expectedJson, responseString);
   }
 
@@ -1912,6 +1921,68 @@ public class CoursesControllerTests extends ControllerTestCase {
             "message", "Course with id 1 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hideBasePermissionWarning_setsFieldTrue() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("test@example.com")
+            .hideBasePermissionWarning(false)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verify(courseRepository).save(eq(course));
+    assertEquals(true, course.getHideBasePermissionWarning());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(
+            Map.of("message", "hideBasePermissionWarning set to true for course with id 1"));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hideBasePermissionWarning_notFound() throws Exception {
+    doReturn(Optional.empty()).when(courseRepository).findById(eq(1L));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(
+            Map.of("type", "EntityNotFoundException", "message", "Course with id 1 not found"));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void hideBasePermissionWarning_forbidden_without_manage_permissions() throws Exception {
+    mockMvc
+        .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+        .andExpect(status().isForbidden());
+
+    verify(courseRepository, never()).save(any());
   }
 
   @Test

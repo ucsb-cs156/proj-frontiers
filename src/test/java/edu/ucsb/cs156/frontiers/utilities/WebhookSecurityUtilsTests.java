@@ -105,6 +105,23 @@ public class WebhookSecurityUtilsTests {
   }
 
   @Test
+  public void testValidateGitHubSignature_signatureWithInvalidLength() throws Exception {
+    String payload = "{\"action\":\"opened\"}";
+    String invalidLengthSig = "sha256=abc123";
+
+    assertFalse(
+        WebhookSecurityUtils.validateGitHubSignature(payload, invalidLengthSig, TEST_SECRET));
+  }
+
+  @Test
+  public void testValidateGitHubSignature_signatureWithNonHexCharacters() throws Exception {
+    String payload = "{\"action\":\"opened\"}";
+    String nonHexSig = "sha256=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
+
+    assertFalse(WebhookSecurityUtils.validateGitHubSignature(payload, nonHexSig, TEST_SECRET));
+  }
+
+  @Test
   public void test_thatConstructorIsPrivate() throws Exception {
     var constructor = WebhookSecurityUtils.class.getDeclaredConstructor();
     assertTrue(java.lang.reflect.Modifier.isPrivate(constructor.getModifiers()));
