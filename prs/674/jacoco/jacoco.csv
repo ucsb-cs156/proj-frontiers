@@ -30,8 +30,8 @@ frontiers,edu.ucsb.cs156.frontiers.services,UpdateUserService,0,139,0,12,0,36,0,
 frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,268,0,4,0,82,0,8,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,0,7,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,ApiCourseKeyService.GeneratedApiCourseKey,0,9,0,0,0,1,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
+frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,JwtService,0,152,0,4,0,37,0,7,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,ApiCourseKeyService.ExpirationChoice,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,ApiCourseKeyService,68,221,5,9,14,52,8,12,4,9
@@ -50,7 +50,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController,0,694,0,38,0,136,
 frontiers,edu.ucsb.cs156.frontiers.controllers,DownloadRequestController,0,183,0,6,0,52,0,9,0,6
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.GeneratedApiCourseKeyView,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CanvasController,0,275,0,12,0,66,0,17,0,11
-frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,703,0,40,0,187,0,53,0,33
+frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController,0,720,0,46,0,188,0,57,0,34
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.InstructorCourseView,0,63,0,4,0,12,0,4,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberMapping,0,49,0,0,0,9,0,2,0,2
