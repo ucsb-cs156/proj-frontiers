@@ -2,7 +2,9 @@ package edu.ucsb.cs156.frontiers.utilities;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.regex.Pattern;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,8 @@ public class WebhookSecurityUtils {
   }
 
   private static final String HMAC_SHA256 = "HmacSHA256";
+  private static final Pattern GITHUB_SIGNATURE_PATTERN =
+      Pattern.compile("^sha256=[a-fA-F0-9]{64}$");
 
   /**
    * Validates GitHub webhook signature using HMAC-SHA256
@@ -32,8 +36,8 @@ public class WebhookSecurityUtils {
       return false;
     }
 
-    if (!signature.startsWith("sha256=")) {
-      log.warn("Invalid signature format: {}", signature);
+    if (!GITHUB_SIGNATURE_PATTERN.matcher(signature).matches()) {
+      log.warn("Invalid signature format");
       return false;
     }
 
@@ -87,14 +91,7 @@ public class WebhookSecurityUtils {
    * @return true if strings are equal
    */
   private static boolean safeEquals(String a, String b) {
-    if (a.length() != b.length()) {
-      return false;
-    }
-
-    int result = 0;
-    for (int i = 0; i < a.length(); i++) {
-      result |= a.charAt(i) ^ b.charAt(i);
-    }
-    return result == 0;
+    return MessageDigest.isEqual(
+        a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8));
   }
 }

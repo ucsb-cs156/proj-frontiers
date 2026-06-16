@@ -22,6 +22,10 @@ team1,bob@ucsb.edu
 team2,ldelplaya@ucsb.edu
 team2,cgaucho@ucsb.edu
 team3,sabadotarde@ucsb.edu`,
+  staffByEmail: `firstName,lastName,email
+Chris,Gaucho,cgaucho@ucsb.edu
+Lauren,Del Playa,ldelplaya@ucsb.edu
+Sabado,Tarde,sabadotarde@ucsb.edu`,
 };
 
 export default csvFixtures;

@@ -17,6 +17,8 @@ import edu.ucsb.cs156.frontiers.controllers.CoursesController.StaffCoursesDTO;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
@@ -27,6 +29,7 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
@@ -81,6 +84,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     when(canvasApiTokenSecurityService.decrypt(any(String.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
   }
+  @MockitoBean private JobsRepository jobsRepository;
 
   /** Test that ROLE_ADMIN can create a course */
   @Test
@@ -973,9 +977,11 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
     verify(linkerService).unenrollOrganization(eq(course));
+    verify(jobsRepository).deleteByCourse_Id(eq(1L));
     verify(courseRepository).findById(eq(1L));
     verify(courseRepository).delete(eq(course));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
     String expectedJson = mapper.writeValueAsString(Map.of("message", "Course with id 1 deleted"));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
@@ -1000,7 +1006,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1030,7 +1037,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1061,7 +1069,8 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(courseRepository).findById(eq(1L));
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
 
     String responseString = response.getResponse().getContentAsString();
     Map<String, String> expectedMap =
@@ -1079,7 +1088,8 @@ public class CoursesControllerTests extends ControllerTestCase {
         .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
         .andExpect(status().isForbidden());
 
-    verifyNoMoreInteractions(courseRepository, linkerService, rosterStudentRepository);
+    verifyNoMoreInteractions(
+        courseRepository, linkerService, rosterStudentRepository, jobsRepository);
   }
 
   /**
@@ -1928,14 +1938,14 @@ public class CoursesControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true));
+    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true, false));
 
     MvcResult response =
         mockMvc.perform(get("/api/courses/warnings/1")).andExpect(status().isOk()).andReturn();
 
     verify(linkerService).checkCourseWarnings(eq(course));
     String responseString = response.getResponse().getContentAsString();
-    String expectedJson = mapper.writeValueAsString(new CourseWarning(true));
+    String expectedJson = mapper.writeValueAsString(new CourseWarning(true, false));
     assertEquals(expectedJson, responseString);
   }
 
@@ -1957,6 +1967,68 @@ public class CoursesControllerTests extends ControllerTestCase {
             "message", "Course with id 1 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hideBasePermissionWarning_setsFieldTrue() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("test@example.com")
+            .hideBasePermissionWarning(false)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verify(courseRepository).save(eq(course));
+    assertEquals(true, course.getHideBasePermissionWarning());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(
+            Map.of("message", "hideBasePermissionWarning set to true for course with id 1"));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hideBasePermissionWarning_notFound() throws Exception {
+    doReturn(Optional.empty()).when(courseRepository).findById(eq(1L));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(
+            Map.of("type", "EntityNotFoundException", "message", "Course with id 1 not found"));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void hideBasePermissionWarning_forbidden_without_manage_permissions() throws Exception {
+    mockMvc
+        .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+        .andExpect(status().isForbidden());
+
+    verify(courseRepository, never()).save(any());
   }
 
   @Test
@@ -2109,6 +2181,68 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void getCourseEmails_students_filtered_by_team() throws Exception {
+    Team teamA = Team.builder().name("team-a").build();
+    Team teamB = Team.builder().name("team-b").build();
+
+    RosterStudent studentA =
+        RosterStudent.builder()
+            .email("alpha@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+    RosterStudent studentB =
+        RosterStudent.builder()
+            .email("beta@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamB).build()))
+            .build();
+    RosterStudent studentC =
+        RosterStudent.builder()
+            .email("zeta@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(studentB, studentC, studentA));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "STUDENTS")
+                    .param("team", "team-a")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("alpha@ucsb.edu,zeta@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_students_blank_team_is_unfiltered() throws Exception {
+    RosterStudent studentA = RosterStudent.builder().email("alpha@ucsb.edu").build();
+    RosterStudent studentB = RosterStudent.builder().email("zeta@ucsb.edu").build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(studentB, studentA));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("team", "")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("alpha@ucsb.edu,zeta@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void getCourseEmails_all_comma_separated_staff_first() throws Exception {
     CourseStaff staffA = CourseStaff.builder().email("alpha-staff@ucsb.edu").build();
     CourseStaff staffB = CourseStaff.builder().email("zeta-staff@ucsb.edu").build();
@@ -2131,6 +2265,72 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(
         "alpha-staff@ucsb.edu,zeta-staff@ucsb.edu,alpha-student@ucsb.edu,zeta-student@ucsb.edu",
         response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_all_filters_students_by_team_but_keeps_all_staff() throws Exception {
+    Team teamA = Team.builder().name("team-a").build();
+    Team teamB = Team.builder().name("team-b").build();
+
+    CourseStaff staffA = CourseStaff.builder().email("alpha-staff@ucsb.edu").build();
+    CourseStaff staffB = CourseStaff.builder().email("zeta-staff@ucsb.edu").build();
+    RosterStudent studentA =
+        RosterStudent.builder()
+            .email("alpha-student@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+    RosterStudent studentB =
+        RosterStudent.builder()
+            .email("zeta-student@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamB).build()))
+            .build();
+
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staffB, staffA));
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(studentB, studentA));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "ALL")
+                    .param("team", "team-a")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        "alpha-staff@ucsb.edu,zeta-staff@ucsb.edu,alpha-student@ucsb.edu",
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_staff_ignores_team_filter() throws Exception {
+    CourseStaff staffA = CourseStaff.builder().email("aardvark@ucsb.edu").build();
+    CourseStaff staffB = CourseStaff.builder().email("zoe@ucsb.edu").build();
+    Team teamA = Team.builder().name("team-a").build();
+    RosterStudent student =
+        RosterStudent.builder()
+            .email("student@ucsb.edu")
+            .teamMembers(List.of(TeamMember.builder().team(teamA).build()))
+            .build();
+
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staffB, staffA));
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(student));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "STAFF")
+                    .param("team", "missing-team"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("aardvark@ucsb.edu\r\nzoe@ucsb.edu", response.getResponse().getContentAsString());
   }
 
   @Test

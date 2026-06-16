@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.jobs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -187,5 +188,79 @@ public class CreateTeamRepositoriesJobTest {
         "Failed to get organization ID for org: ucsb-cs156 - GitHub API error", e.getMessage());
     verify(githubTeamService).getOrgId("ucsb-cs156", course);
     verifyNoInteractions(service);
+  }
+
+  @Test
+  public void testCreateTeamRepository_withRegex_onlyMatchingTeams() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+
+    course.setTeams(List.of(team1, team2));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .teamRegex("test-team1")
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+        Creating team repositories...
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(1))
+        .createTeamRepository(
+            eq(course),
+            eq(team1),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1));
+    verify(service, never())
+        .createTeamRepository(eq(course), eq(team2), any(), any(), any(), any());
+  }
+
+  @Test
+  public void testCreateTeamRepository_withRegex_noMatches() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+
+    course.setTeams(List.of(team1, team2));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    var repoJob =
+        spy(
+            CreateTeamRepositoriesJob.builder()
+                .repositoryService(service)
+                .githubTeamService(githubTeamService)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .teamRegex("no_matches_regex")
+                .build());
+
+    repoJob.accept(ctx);
+    String expected = """
+        Creating team repositories...
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, never())
+        .createTeamRepository(eq(course), eq(team1), any(), any(), any(), any());
+    verify(service, never())
+        .createTeamRepository(eq(course), eq(team2), any(), any(), any(), any());
   }
 }

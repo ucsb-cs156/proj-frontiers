@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
@@ -37,6 +38,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Course")
@@ -60,6 +62,8 @@ public class CoursesController extends ApiController {
   @Autowired private CanvasApiTokenSecurityService canvasApiTokenSecurityService;
 
   @Autowired private OrganizationLinkerService linkerService;
+
+  @Autowired private JobsRepository jobsRepository;
 
   /**
    * This method creates a new Course.
@@ -104,6 +108,7 @@ public class CoursesController extends ApiController {
       String term,
       School school,
       String instructorEmail,
+      boolean hideBasePermissionWarning,
       int numStudents,
       int numStaff) {
 
@@ -117,6 +122,7 @@ public class CoursesController extends ApiController {
           c.getTerm(),
           c.getSchool(),
           c.getInstructorEmail(),
+          c.getHideBasePermissionWarning(),
           c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
           c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);
     }
@@ -436,6 +442,7 @@ public class CoursesController extends ApiController {
   public String getCourseEmails(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") EmailTypes type,
+      @Parameter(name = "team") @RequestParam(required = false) String team,
       @Parameter(name = "format") @RequestParam(defaultValue = "ONE_PER_LINE")
           EmailFormats format) {
 
@@ -448,6 +455,7 @@ public class CoursesController extends ApiController {
 
     List<String> studentEmails =
         StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
+            .filter(student -> team == null || team.isBlank() || student.getTeams().contains(team))
             .map(RosterStudent::getEmail)
             .filter(Objects::nonNull)
             .sorted()
@@ -468,6 +476,7 @@ public class CoursesController extends ApiController {
   @Operation(summary = "Delete a course")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("")
+  @Transactional
   public Object deleteCourse(@RequestParam Long courseId)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
     Course course =
@@ -481,6 +490,7 @@ public class CoursesController extends ApiController {
     }
 
     linkerService.unenrollOrganization(course);
+    jobsRepository.deleteByCourse_Id(courseId);
     courseRepository.delete(course);
     return genericMessage("Course with id %s deleted".formatted(course.getId()));
   }
@@ -557,13 +567,30 @@ public class CoursesController extends ApiController {
     return new InstructorCourseView(savedCourse);
   }
 
+  @Operation(summary = "Get course warnings")
   @GetMapping("/warnings/{courseId}")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  public CourseWarning warnings(@PathVariable Long courseId) throws Exception {
+  public CourseWarning warnings(@PathVariable @Parameter Long courseId) throws Exception {
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     return linkerService.checkCourseWarnings(course);
+  }
+
+  @Operation(summary = "Hide base permission warning for a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/warnings/hideBasePermissionWarning/{courseId}")
+  public Object hideBasePermissionWarning(@PathVariable @Parameter Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    course.setHideBasePermissionWarning(true);
+    courseRepository.save(course);
+
+    return genericMessage(
+        "hideBasePermissionWarning set to true for course with id %s".formatted(courseId));
   }
 }

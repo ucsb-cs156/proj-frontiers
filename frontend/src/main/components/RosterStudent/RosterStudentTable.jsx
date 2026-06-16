@@ -15,6 +15,7 @@ export default function RosterStudentTable({
   currentUser,
   courseId,
   testIdPrefix = "RosterStudentTable",
+  canEditStudents,
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStudent, setEditStudent] = React.useState(null);
@@ -216,7 +217,10 @@ export default function RosterStudentTable({
     },
   });
 
-  if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
+  const canEditRoster =
+    canEditStudents ?? hasRole(currentUser, "ROLE_INSTRUCTOR");
+
+  if (canEditRoster) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
       ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
