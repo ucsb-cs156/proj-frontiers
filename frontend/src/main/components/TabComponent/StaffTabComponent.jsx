@@ -11,7 +11,9 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { BsInfoCircle } from "react-icons/bs";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
+import CourseStaffCSVUploadForm from "main/components/CourseStaff/CourseStaffCSVUploadForm";
 import CourseStaffTable from "main/components/CourseStaff/CourseStaffTable";
 import Modal from "react-bootstrap/Modal";
 
@@ -19,8 +21,10 @@ export default function StaffTabComponent({
   courseId,
   testIdPrefix,
   currentUser,
+  isInstructor = true,
 }) {
   const [postModal, showPostModal] = useState(false);
+  const [csvModal, setCsvModal] = useState(false);
   const { data: courseStaff } = useBackend(
     [`/api/coursestaff/course?courseId=${courseId}`],
     // Stryker disable next-line StringLiteral : GET and empty string are equivalent
@@ -41,6 +45,19 @@ export default function StaffTabComponent({
     },
   });
 
+  const objectToAxiosParamsCSV = (formData) => {
+    const file = new FormData();
+    file.append("file", formData.upload[0]);
+    return {
+      url: `/api/coursestaff/upload/csv`,
+      data: file,
+      params: {
+        courseId: courseId,
+      },
+      method: "POST",
+    };
+  };
+
   const onSuccessStaff = (modalFn) => {
     toast("Staff roster successfully updated.");
     // Clear the search filter to show the updated roster
@@ -54,8 +71,30 @@ export default function StaffTabComponent({
     [`/api/coursestaff/course?courseId=${courseId}`],
   );
 
+  const staffCsvMutation = useBackendMutation(
+    objectToAxiosParamsCSV,
+    {
+      onSuccess: () => onSuccessStaff(setCsvModal),
+      onError: (error) => {
+        toast.error(
+          `Error uploading CSV: ${JSON.stringify(error.response.data, null, 2)}`,
+        );
+        setCsvModal(false);
+      },
+    },
+    [`/api/coursestaff/course?courseId=${courseId}`],
+  );
+
   const handlePostSubmit = (staff) => {
     staffPostMutation.mutate(staff);
+  };
+
+  const handleCsvSubmit = (formData) => {
+    staffCsvMutation.mutate(formData);
+  };
+
+  const openCsvHelp = () => {
+    window.open("/help/csv#staff-information", "_blank");
   };
 
   // Render tooltip for disabled buttons
@@ -81,46 +120,78 @@ export default function StaffTabComponent({
           />
         </ModalBody>
       </Modal>
-      <Row sm={3} className="p-2">
-        <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
+      <Modal
+        show={csvModal}
+        onHide={() => setCsvModal(false)}
+        centered={true}
+        data-testid={`${testIdPrefix}-csv-modal`}
+      >
+        <ModalHeader closeButton>Upload Staff CSV</ModalHeader>
+        <ModalBody>
+          <CourseStaffCSVUploadForm submitAction={handleCsvSubmit} />
+        </ModalBody>
+      </Modal>
+      {isInstructor && (
+        <Row sm={3} className="p-2">
+          <Col>
+            <div className="d-flex align-items-center position-relative">
               <Button
+                onClick={() => setCsvModal(true)}
                 data-testid={`${testIdPrefix}-csv-button`}
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
+                className="w-100 pe-5"
               >
-                Upload CSV Roster
+                Upload Staff CSV
               </Button>
-            </span>
-          </OverlayTrigger>
-        </Col>
-        <Col>
-          <Button
-            onClick={() => showPostModal(true)}
-            data-testid={`${testIdPrefix}-post-button`}
-            className="w-100"
-          >
-            Add Staff Member
-          </Button>
-        </Col>
-        <Col>
-          <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
-            <span className="d-inline-block w-100">
-              <Button
-                className="w-100 button btn-secondary disabled"
-                disabled
-                style={{ pointerEvents: "none" }}
-                aria-disabled="true"
+              <OverlayTrigger
+                placement="right"
+                overlay={
+                  <Tooltip id="csv-help-tooltip">
+                    Staff CSV Upload Format Help
+                  </Tooltip>
+                }
               >
-                Download Staff CSV
-              </Button>
-            </span>
-          </OverlayTrigger>
-        </Col>
-      </Row>
+                <BsInfoCircle
+                  onClick={openCsvHelp}
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: "0.75rem",
+                    transform: "translateY(-50%)",
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontSize: "0.9rem",
+                    userSelect: "none",
+                  }}
+                  data-testid={`${testIdPrefix}-csv-info-icon`}
+                />
+              </OverlayTrigger>
+            </div>
+          </Col>
+          <Col>
+            <Button
+              onClick={() => showPostModal(true)}
+              data-testid={`${testIdPrefix}-post-button`}
+              className="w-100"
+            >
+              Add Staff Member
+            </Button>
+          </Col>
+          <Col>
+            <OverlayTrigger placement="top" overlay={renderComingSoonTooltip}>
+              <span className="d-inline-block w-100">
+                <Button
+                  className="w-100 button btn-secondary disabled"
+                  disabled
+                  style={{ pointerEvents: "none" }}
+                  aria-disabled="true"
+                >
+                  Download Staff CSV
+                </Button>
+              </span>
+            </OverlayTrigger>
+          </Col>
+        </Row>
+      )}
       <Row className="mb-1">
         <Form>
           <Form.Group as={Row} controlId="searchFilter">
@@ -158,6 +229,7 @@ export default function StaffTabComponent({
           currentUser={currentUser}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-CourseStaffTable`}
+          isInstructor={isInstructor}
         />
       </Row>
     </div>

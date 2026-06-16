@@ -14,6 +14,7 @@ export default function CourseStaffTable({
   currentUser,
   courseId,
   testIdPrefix = "CourseStaffTable",
+  isInstructor = true,
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStaff, setEditStaff] = React.useState(null);
@@ -207,7 +208,7 @@ export default function CourseStaffTable({
     },
   });
 
-  if (hasRole(currentUser, "ROLE_INSTRUCTOR")) {
+  if (isInstructor && hasRole(currentUser, "ROLE_INSTRUCTOR")) {
     columns.push(ButtonColumn("Edit", "primary", editCallback, testIdPrefix));
     columns.push(
       ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),

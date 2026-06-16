@@ -28,7 +28,10 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-    ctx.log("Processing...");
+    ctx.log("repositoryPrefix=" + repositoryPrefix);
+    ctx.log("isPrivate=" + isPrivate);
+    ctx.log("permissions=" + permissions);
+    ctx.log("creationOption=" + creationOption);
 
     if (creationOption == RepositoryCreationOption.STUDENTS_ONLY
         || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
