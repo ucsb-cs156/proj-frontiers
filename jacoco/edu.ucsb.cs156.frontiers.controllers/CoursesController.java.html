@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
@@ -36,13 +37,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = &quot;Course&quot;)
 @RequestMapping(&quot;/api/courses&quot;)
 @RestController
-<span class="fc" id="L44">@Slf4j</span>
-<span class="fc" id="L45">public class CoursesController extends ApiController {</span>
+<span class="fc" id="L46">@Slf4j</span>
+<span class="fc" id="L47">public class CoursesController extends ApiController {</span>
 
   @Autowired private CourseRepository courseRepository;
 
@@ -57,6 +59,8 @@ import org.springframework.web.bind.annotation.*;
   @Autowired private AdminRepository adminRepository;
 
   @Autowired private OrganizationLinkerService linkerService;
+
+  @Autowired private JobsRepository jobsRepository;
 
   /**
    * This method creates a new Course.
@@ -77,23 +81,23 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;canvasApiToken&quot;) @RequestParam(required = false) String canvasApiToken,
       @Parameter(name = &quot;canvasCourseId&quot;) @RequestParam(required = false) String canvasCourseId) {
     // get current date right now and set status to pending
-<span class="fc" id="L80">    CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L84">    CurrentUser currentUser = getCurrentUser();</span>
     Course course =
-<span class="fc" id="L82">        Course.builder()</span>
-<span class="fc" id="L83">            .courseName(courseName)</span>
-<span class="fc" id="L84">            .term(term)</span>
-<span class="fc" id="L85">            .school(school)</span>
-<span class="fc" id="L86">            .instructorEmail(currentUser.getUser().getEmail().strip())</span>
-<span class="fc" id="L87">            .canvasApiToken(canvasApiToken)</span>
-<span class="fc" id="L88">            .canvasCourseId(canvasCourseId)</span>
-<span class="fc" id="L89">            .build();</span>
-<span class="fc" id="L90">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L86">        Course.builder()</span>
+<span class="fc" id="L87">            .courseName(courseName)</span>
+<span class="fc" id="L88">            .term(term)</span>
+<span class="fc" id="L89">            .school(school)</span>
+<span class="fc" id="L90">            .instructorEmail(currentUser.getUser().getEmail().strip())</span>
+<span class="fc" id="L91">            .canvasApiToken(canvasApiToken)</span>
+<span class="fc" id="L92">            .canvasCourseId(canvasCourseId)</span>
+<span class="fc" id="L93">            .build();</span>
+<span class="fc" id="L94">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L92">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L96">    return new InstructorCourseView(savedCourse);</span>
   }
 
   /** Projection of Course entity with fields that are relevant for instructors and admins */
-<span class="fc" id="L96">  public static record InstructorCourseView(</span>
+<span class="fc" id="L100">  public static record InstructorCourseView(</span>
       Long id,
       String installationId,
       String orgName,
@@ -107,18 +111,18 @@ import org.springframework.web.bind.annotation.*;
 
     // Creates view from Course entity
     public InstructorCourseView(Course c) {
-<span class="fc" id="L110">      this(</span>
-<span class="fc" id="L111">          c.getId(),</span>
-<span class="fc" id="L112">          c.getInstallationId(),</span>
-<span class="fc" id="L113">          c.getOrgName(),</span>
-<span class="fc" id="L114">          c.getCourseName(),</span>
-<span class="fc" id="L115">          c.getTerm(),</span>
-<span class="fc" id="L116">          c.getSchool(),</span>
-<span class="fc" id="L117">          c.getInstructorEmail(),</span>
-<span class="fc" id="L118">          c.getHideBasePermissionWarning(),</span>
-<span class="fc bfc" id="L119" title="All 2 branches covered.">          c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,</span>
-<span class="fc bfc" id="L120" title="All 2 branches covered.">          c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);</span>
-<span class="fc" id="L121">    }</span>
+<span class="fc" id="L114">      this(</span>
+<span class="fc" id="L115">          c.getId(),</span>
+<span class="fc" id="L116">          c.getInstallationId(),</span>
+<span class="fc" id="L117">          c.getOrgName(),</span>
+<span class="fc" id="L118">          c.getCourseName(),</span>
+<span class="fc" id="L119">          c.getTerm(),</span>
+<span class="fc" id="L120">          c.getSchool(),</span>
+<span class="fc" id="L121">          c.getInstructorEmail(),</span>
+<span class="fc" id="L122">          c.getHideBasePermissionWarning(),</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">          c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">          c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);</span>
+<span class="fc" id="L125">    }</span>
   }
 
   /**
@@ -130,13 +134,13 @@ import org.springframework.web.bind.annotation.*;
   @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
   @GetMapping(&quot;/allForInstructors&quot;)
   public Iterable&lt;InstructorCourseView&gt; allForInstructors() {
-<span class="fc" id="L133">    CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L134">    String instructorEmail = currentUser.getUser().getEmail();</span>
-<span class="fc" id="L135">    List&lt;Course&gt; courses = courseRepository.findByInstructorEmail(instructorEmail);</span>
+<span class="fc" id="L137">    CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L138">    String instructorEmail = currentUser.getUser().getEmail();</span>
+<span class="fc" id="L139">    List&lt;Course&gt; courses = courseRepository.findByInstructorEmail(instructorEmail);</span>
 
-<span class="fc" id="L137">    List&lt;InstructorCourseView&gt; courseViews =</span>
-<span class="fc" id="L138">        courses.stream().map(InstructorCourseView::new).collect(Collectors.toList());</span>
-<span class="fc" id="L139">    return courseViews;</span>
+<span class="fc" id="L141">    List&lt;InstructorCourseView&gt; courseViews =</span>
+<span class="fc" id="L142">        courses.stream().map(InstructorCourseView::new).collect(Collectors.toList());</span>
+<span class="fc" id="L143">    return courseViews;</span>
   }
 
   /**
@@ -148,11 +152,11 @@ import org.springframework.web.bind.annotation.*;
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;/allForAdmins&quot;)
   public Iterable&lt;InstructorCourseView&gt; allForAdmins() {
-<span class="fc" id="L151">    List&lt;Course&gt; courses = courseRepository.findAll();</span>
+<span class="fc" id="L155">    List&lt;Course&gt; courses = courseRepository.findAll();</span>
 
-<span class="fc" id="L153">    List&lt;InstructorCourseView&gt; courseViews =</span>
-<span class="fc" id="L154">        courses.stream().map(InstructorCourseView::new).collect(Collectors.toList());</span>
-<span class="fc" id="L155">    return courseViews;</span>
+<span class="fc" id="L157">    List&lt;InstructorCourseView&gt; courseViews =</span>
+<span class="fc" id="L158">        courses.stream().map(InstructorCourseView::new).collect(Collectors.toList());</span>
+<span class="fc" id="L159">    return courseViews;</span>
   }
 
   /**
@@ -164,13 +168,13 @@ import org.springframework.web.bind.annotation.*;
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
   @GetMapping(&quot;/{id}&quot;)
   public InstructorCourseView getCourseById(@Parameter(name = &quot;id&quot;) @PathVariable Long id) {
-<span class="fc" id="L167">    Course course =</span>
+<span class="fc" id="L171">    Course course =</span>
         courseRepository
-<span class="fc" id="L169">            .findById(id)</span>
-<span class="fc" id="L170">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, id));</span>
+<span class="fc" id="L173">            .findById(id)</span>
+<span class="fc" id="L174">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, id));</span>
     // Convert to InstructorCourseView
-<span class="fc" id="L172">    InstructorCourseView courseView = new InstructorCourseView(course);</span>
-<span class="fc" id="L173">    return courseView;</span>
+<span class="fc" id="L176">    InstructorCourseView courseView = new InstructorCourseView(course);</span>
+<span class="fc" id="L177">    return courseView;</span>
   }
 
   /**
@@ -187,26 +191,26 @@ import org.springframework.web.bind.annotation.*;
   @GetMapping(&quot;getCanvasInfo&quot;)
   public Map&lt;String, String&gt; getCourseCanvasInfo(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L190">    Course course =</span>
+<span class="fc" id="L194">    Course course =</span>
         courseRepository
-<span class="fc" id="L192">            .findById(courseId)</span>
-<span class="fc" id="L193">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L196">            .findById(courseId)</span>
+<span class="fc" id="L197">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L195">    String obscuredToken = null;</span>
+<span class="fc" id="L199">    String obscuredToken = null;</span>
 
-<span class="fc bfc" id="L197" title="All 2 branches covered.">    if (course.getCanvasApiToken() != null) {</span>
-<span class="fc" id="L198">      String token = course.getCanvasApiToken();</span>
-<span class="fc bfc" id="L199" title="All 2 branches covered.">      if (token.length() &lt; 4) {</span>
-<span class="fc" id="L200">        obscuredToken = token;</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">    if (course.getCanvasApiToken() != null) {</span>
+<span class="fc" id="L202">      String token = course.getCanvasApiToken();</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">      if (token.length() &lt; 4) {</span>
+<span class="fc" id="L204">        obscuredToken = token;</span>
       } else {
-<span class="fc" id="L202">        String lastThree = token.substring(token.length() - 3);</span>
-<span class="fc" id="L203">        obscuredToken = &quot;*&quot;.repeat(token.length() - 3) + lastThree;</span>
+<span class="fc" id="L206">        String lastThree = token.substring(token.length() - 3);</span>
+<span class="fc" id="L207">        obscuredToken = &quot;*&quot;.repeat(token.length() - 3) + lastThree;</span>
       }
     }
-<span class="fc" id="L206">    return Map.of(</span>
-<span class="fc" id="L207">        &quot;courseId&quot;, course.getId().toString(),</span>
-<span class="fc bfc" id="L208" title="All 2 branches covered.">        &quot;canvasCourseId&quot;, course.getCanvasCourseId() != null ? course.getCanvasCourseId() : &quot;&quot;,</span>
-<span class="fc bfc" id="L209" title="All 2 branches covered.">        &quot;canvasApiToken&quot;, obscuredToken != null ? obscuredToken : &quot;&quot;);</span>
+<span class="fc" id="L210">    return Map.of(</span>
+<span class="fc" id="L211">        &quot;courseId&quot;, course.getId().toString(),</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        &quot;canvasCourseId&quot;, course.getCanvasCourseId() != null ? course.getCanvasCourseId() : &quot;&quot;,</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        &quot;canvasApiToken&quot;, obscuredToken != null ? obscuredToken : &quot;&quot;);</span>
   }
 
   /**
@@ -224,13 +228,13 @@ import org.springframework.web.bind.annotation.*;
   @GetMapping(&quot;/redirect&quot;)
   public ResponseEntity&lt;Void&gt; linkCourse(@Parameter Long courseId)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc" id="L227">    String newUrl = linkerService.getRedirectUrl();</span>
-<span class="fc" id="L228">    newUrl += &quot;/installations/new?state=&quot; + courseId;</span>
+<span class="fc" id="L231">    String newUrl = linkerService.getRedirectUrl();</span>
+<span class="fc" id="L232">    newUrl += &quot;/installations/new?state=&quot; + courseId;</span>
     // found this convenient solution here:
     // https://stackoverflow.com/questions/29085295/spring-mvc-restcontroller-and-redirect
-<span class="fc" id="L231">    return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
-<span class="fc" id="L232">        .header(HttpHeaders.LOCATION, newUrl)</span>
-<span class="fc" id="L233">        .build();</span>
+<span class="fc" id="L235">    return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L236">        .header(HttpHeaders.LOCATION, newUrl)</span>
+<span class="fc" id="L237">        .build();</span>
   }
 
   /**
@@ -253,38 +257,38 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;code&quot;) @RequestParam String code,
       @Parameter(name = &quot;state&quot;) @RequestParam Long state)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-<span class="fc bfc" id="L256" title="All 2 branches covered.">    if (installation_id.isEmpty()) {</span>
-<span class="fc" id="L257">      return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
-<span class="fc" id="L258">          .header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;)</span>
-<span class="fc" id="L259">          .build();</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">    if (installation_id.isEmpty()) {</span>
+<span class="fc" id="L261">      return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L262">          .header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;)</span>
+<span class="fc" id="L263">          .build();</span>
     } else {
-<span class="fc" id="L261">      Course course =</span>
+<span class="fc" id="L265">      Course course =</span>
           courseRepository
-<span class="fc" id="L263">              .findById(state)</span>
-<span class="fc" id="L264">              .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
-<span class="fc bfc" id="L265" title="All 2 branches covered.">      if (!isCurrentUserAdmin()</span>
-<span class="fc bfc" id="L266" title="All 2 branches covered.">          &amp;&amp; !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {</span>
-<span class="fc" id="L267">        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
+<span class="fc" id="L267">              .findById(state)</span>
+<span class="fc" id="L268">              .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">      if (!isCurrentUserAdmin()</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">          &amp;&amp; !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {</span>
+<span class="fc" id="L271">        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
       } else {
-<span class="fc" id="L269">        String orgName = linkerService.getOrgName(installation_id.get());</span>
-<span class="fc" id="L270">        course.setInstallationId(installation_id.get());</span>
-<span class="fc" id="L271">        course.setOrgName(orgName);</span>
-<span class="fc" id="L272">        course</span>
-<span class="fc" id="L273">            .getRosterStudents()</span>
-<span class="fc" id="L274">            .forEach(</span>
+<span class="fc" id="L273">        String orgName = linkerService.getOrgName(installation_id.get());</span>
+<span class="fc" id="L274">        course.setInstallationId(installation_id.get());</span>
+<span class="fc" id="L275">        course.setOrgName(orgName);</span>
+<span class="fc" id="L276">        course</span>
+<span class="fc" id="L277">            .getRosterStudents()</span>
+<span class="fc" id="L278">            .forEach(</span>
                 rs -&gt; {
-<span class="fc" id="L276">                  rs.setOrgStatus(OrgStatus.JOINCOURSE);</span>
-<span class="fc" id="L277">                });</span>
-<span class="fc" id="L278">        course</span>
-<span class="fc" id="L279">            .getCourseStaff()</span>
-<span class="fc" id="L280">            .forEach(</span>
+<span class="fc" id="L280">                  rs.setOrgStatus(OrgStatus.JOINCOURSE);</span>
+<span class="fc" id="L281">                });</span>
+<span class="fc" id="L282">        course</span>
+<span class="fc" id="L283">            .getCourseStaff()</span>
+<span class="fc" id="L284">            .forEach(</span>
                 cs -&gt; {
-<span class="fc" id="L282">                  cs.setOrgStatus(OrgStatus.JOINCOURSE);</span>
-<span class="fc" id="L283">                });</span>
-<span class="fc" id="L284">        courseRepository.save(course);</span>
-<span class="fc" id="L285">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
-<span class="fc" id="L286">            .header(HttpHeaders.LOCATION, &quot;/login/success&quot;)</span>
-<span class="fc" id="L287">            .build();</span>
+<span class="fc" id="L286">                  cs.setOrgStatus(OrgStatus.JOINCOURSE);</span>
+<span class="fc" id="L287">                });</span>
+<span class="fc" id="L288">        courseRepository.save(course);</span>
+<span class="fc" id="L289">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L290">            .header(HttpHeaders.LOCATION, &quot;/login/success&quot;)</span>
+<span class="fc" id="L291">            .build();</span>
       }
     }
   }
@@ -298,12 +302,12 @@ import org.springframework.web.bind.annotation.*;
   @ExceptionHandler({InvalidInstallationTypeException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public Object handleInvalidInstallationType(Throwable e) {
-<span class="fc" id="L301">    return Map.of(</span>
-<span class="fc" id="L302">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
-<span class="fc" id="L303">        &quot;message&quot;, e.getMessage());</span>
+<span class="fc" id="L305">    return Map.of(</span>
+<span class="fc" id="L306">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L307">        &quot;message&quot;, e.getMessage());</span>
   }
 
-<span class="fc" id="L306">  public record RosterStudentCoursesDTO(</span>
+<span class="fc" id="L310">  public record RosterStudentCoursesDTO(</span>
       Long id,
       String installationId,
       String orgName,
@@ -322,30 +326,30 @@ import org.springframework.web.bind.annotation.*;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;/list&quot;)
   public List&lt;RosterStudentCoursesDTO&gt; listCoursesForCurrentUser() {
-<span class="fc" id="L325">    String email = getCurrentUser().getUser().getEmail();</span>
-<span class="fc" id="L326">    Iterable&lt;RosterStudent&gt; rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);</span>
-<span class="fc" id="L327">    List&lt;RosterStudent&gt; rosterStudents = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L328">    rosterStudentsIterable.forEach(rosterStudents::add);</span>
-<span class="fc" id="L329">    return rosterStudents.stream()</span>
-<span class="fc" id="L330">        .map(</span>
+<span class="fc" id="L329">    String email = getCurrentUser().getUser().getEmail();</span>
+<span class="fc" id="L330">    Iterable&lt;RosterStudent&gt; rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);</span>
+<span class="fc" id="L331">    List&lt;RosterStudent&gt; rosterStudents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L332">    rosterStudentsIterable.forEach(rosterStudents::add);</span>
+<span class="fc" id="L333">    return rosterStudents.stream()</span>
+<span class="fc" id="L334">        .map(</span>
             rs -&gt; {
-<span class="fc" id="L332">              Course course = rs.getCourse();</span>
-<span class="fc" id="L333">              RosterStudentCoursesDTO rsDto =</span>
+<span class="fc" id="L336">              Course course = rs.getCourse();</span>
+<span class="fc" id="L337">              RosterStudentCoursesDTO rsDto =</span>
                   new RosterStudentCoursesDTO(
-<span class="fc" id="L335">                      course.getId(),</span>
-<span class="fc" id="L336">                      course.getInstallationId(),</span>
-<span class="fc" id="L337">                      course.getOrgName(),</span>
-<span class="fc" id="L338">                      course.getCourseName(),</span>
-<span class="fc" id="L339">                      course.getTerm(),</span>
-<span class="fc" id="L340">                      course.getSchool().getDisplayName(),</span>
-<span class="fc" id="L341">                      rs.getOrgStatus(),</span>
-<span class="fc" id="L342">                      rs.getId());</span>
-<span class="fc" id="L343">              return rsDto;</span>
+<span class="fc" id="L339">                      course.getId(),</span>
+<span class="fc" id="L340">                      course.getInstallationId(),</span>
+<span class="fc" id="L341">                      course.getOrgName(),</span>
+<span class="fc" id="L342">                      course.getCourseName(),</span>
+<span class="fc" id="L343">                      course.getTerm(),</span>
+<span class="fc" id="L344">                      course.getSchool().getDisplayName(),</span>
+<span class="fc" id="L345">                      rs.getOrgStatus(),</span>
+<span class="fc" id="L346">                      rs.getId());</span>
+<span class="fc" id="L347">              return rsDto;</span>
             })
-<span class="fc" id="L345">        .collect(Collectors.toList());</span>
+<span class="fc" id="L349">        .collect(Collectors.toList());</span>
   }
 
-<span class="fc" id="L348">  public record StaffCoursesDTO(</span>
+<span class="fc" id="L352">  public record StaffCoursesDTO(</span>
       Long id,
       String installationId,
       String orgName,
@@ -355,15 +359,15 @@ import org.springframework.web.bind.annotation.*;
       OrgStatus studentStatus,
       Long staffId) {}
 
-<span class="fc" id="L358">  public enum EmailTypes {</span>
-<span class="fc" id="L359">    STUDENTS,</span>
-<span class="fc" id="L360">    STAFF,</span>
-<span class="fc" id="L361">    ALL</span>
+<span class="fc" id="L362">  public enum EmailTypes {</span>
+<span class="fc" id="L363">    STUDENTS,</span>
+<span class="fc" id="L364">    STAFF,</span>
+<span class="fc" id="L365">    ALL</span>
   }
 
-<span class="fc" id="L364">  public enum EmailFormats {</span>
-<span class="fc" id="L365">    COMMA_SEPARATED,</span>
-<span class="fc" id="L366">    ONE_PER_LINE</span>
+<span class="fc" id="L368">  public enum EmailFormats {</span>
+<span class="fc" id="L369">    COMMA_SEPARATED,</span>
+<span class="fc" id="L370">    ONE_PER_LINE</span>
   }
 
   /**
@@ -376,29 +380,29 @@ import org.springframework.web.bind.annotation.*;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;/staffCourses&quot;)
   public List&lt;StaffCoursesDTO&gt; staffCourses() {
-<span class="fc" id="L379">    CurrentUser currentUser = getCurrentUser();</span>
-<span class="fc" id="L380">    User user = currentUser.getUser();</span>
+<span class="fc" id="L383">    CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L384">    User user = currentUser.getUser();</span>
 
-<span class="fc" id="L382">    String email = user.getEmail();</span>
+<span class="fc" id="L386">    String email = user.getEmail();</span>
 
-<span class="fc" id="L384">    List&lt;CourseStaff&gt; staffMembers = courseStaffRepository.findAllByEmail(email);</span>
-<span class="fc" id="L385">    return staffMembers.stream()</span>
-<span class="fc" id="L386">        .map(</span>
+<span class="fc" id="L388">    List&lt;CourseStaff&gt; staffMembers = courseStaffRepository.findAllByEmail(email);</span>
+<span class="fc" id="L389">    return staffMembers.stream()</span>
+<span class="fc" id="L390">        .map(</span>
             s -&gt; {
-<span class="fc" id="L388">              Course course = s.getCourse();</span>
-<span class="fc" id="L389">              StaffCoursesDTO sDto =</span>
+<span class="fc" id="L392">              Course course = s.getCourse();</span>
+<span class="fc" id="L393">              StaffCoursesDTO sDto =</span>
                   new StaffCoursesDTO(
-<span class="fc" id="L391">                      course.getId(),</span>
-<span class="fc" id="L392">                      course.getInstallationId(),</span>
-<span class="fc" id="L393">                      course.getOrgName(),</span>
-<span class="fc" id="L394">                      course.getCourseName(),</span>
-<span class="fc" id="L395">                      course.getTerm(),</span>
-<span class="fc" id="L396">                      course.getSchool(),</span>
-<span class="fc" id="L397">                      s.getOrgStatus(),</span>
-<span class="fc" id="L398">                      s.getId());</span>
-<span class="fc" id="L399">              return sDto;</span>
+<span class="fc" id="L395">                      course.getId(),</span>
+<span class="fc" id="L396">                      course.getInstallationId(),</span>
+<span class="fc" id="L397">                      course.getOrgName(),</span>
+<span class="fc" id="L398">                      course.getCourseName(),</span>
+<span class="fc" id="L399">                      course.getTerm(),</span>
+<span class="fc" id="L400">                      course.getSchool(),</span>
+<span class="fc" id="L401">                      s.getOrgStatus(),</span>
+<span class="fc" id="L402">                      s.getId());</span>
+<span class="fc" id="L403">              return sDto;</span>
             })
-<span class="fc" id="L401">        .collect(Collectors.toList());</span>
+<span class="fc" id="L405">        .collect(Collectors.toList());</span>
   }
 
   @Operation(summary = &quot;Update instructor email for a course (admin only)&quot;)
@@ -408,25 +412,25 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
       @Parameter(name = &quot;instructorEmail&quot;) @RequestParam String instructorEmail) {
 
-<span class="fc" id="L411">    instructorEmail = instructorEmail.strip();</span>
+<span class="fc" id="L415">    instructorEmail = instructorEmail.strip();</span>
 
-<span class="fc" id="L413">    Course course =</span>
+<span class="fc" id="L417">    Course course =</span>
         courseRepository
-<span class="fc" id="L415">            .findById(courseId)</span>
-<span class="fc" id="L416">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L419">            .findById(courseId)</span>
+<span class="fc" id="L420">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
     // Validate that the email exists in either instructor or admin table
-<span class="fc" id="L419">    boolean isInstructor = instructorRepository.existsByEmail(instructorEmail);</span>
-<span class="fc" id="L420">    boolean isAdmin = adminRepository.existsByEmail(instructorEmail);</span>
+<span class="fc" id="L423">    boolean isInstructor = instructorRepository.existsByEmail(instructorEmail);</span>
+<span class="fc" id="L424">    boolean isAdmin = adminRepository.existsByEmail(instructorEmail);</span>
 
-<span class="fc bfc" id="L422" title="All 4 branches covered.">    if (!isInstructor &amp;&amp; !isAdmin) {</span>
-<span class="fc" id="L423">      throw new IllegalArgumentException(&quot;Email must belong to either an instructor or admin&quot;);</span>
+<span class="fc bfc" id="L426" title="All 4 branches covered.">    if (!isInstructor &amp;&amp; !isAdmin) {</span>
+<span class="fc" id="L427">      throw new IllegalArgumentException(&quot;Email must belong to either an instructor or admin&quot;);</span>
     }
 
-<span class="fc" id="L426">    course.setInstructorEmail(instructorEmail);</span>
-<span class="fc" id="L427">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L430">    course.setInstructorEmail(instructorEmail);</span>
+<span class="fc" id="L431">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L429">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L433">    return new InstructorCourseView(savedCourse);</span>
   }
 
   @Operation(summary = &quot;Get course emails&quot;)
@@ -439,51 +443,53 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;format&quot;) @RequestParam(defaultValue = &quot;ONE_PER_LINE&quot;)
           EmailFormats format) {
 
-<span class="fc" id="L442">    List&lt;String&gt; staffEmails =</span>
-<span class="fc" id="L443">        StreamSupport.stream(courseStaffRepository.findByCourseId(courseId).spliterator(), false)</span>
-<span class="fc" id="L444">            .map(CourseStaff::getEmail)</span>
-<span class="fc" id="L445">            .filter(Objects::nonNull)</span>
-<span class="fc" id="L446">            .sorted()</span>
-<span class="fc" id="L447">            .collect(Collectors.toList());</span>
+<span class="fc" id="L446">    List&lt;String&gt; staffEmails =</span>
+<span class="fc" id="L447">        StreamSupport.stream(courseStaffRepository.findByCourseId(courseId).spliterator(), false)</span>
+<span class="fc" id="L448">            .map(CourseStaff::getEmail)</span>
+<span class="fc" id="L449">            .filter(Objects::nonNull)</span>
+<span class="fc" id="L450">            .sorted()</span>
+<span class="fc" id="L451">            .collect(Collectors.toList());</span>
 
-<span class="fc" id="L449">    List&lt;String&gt; studentEmails =</span>
-<span class="fc" id="L450">        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)</span>
-<span class="fc bfc" id="L451" title="All 6 branches covered.">            .filter(student -&gt; team == null || team.isBlank() || student.getTeams().contains(team))</span>
-<span class="fc" id="L452">            .map(RosterStudent::getEmail)</span>
-<span class="fc" id="L453">            .filter(Objects::nonNull)</span>
-<span class="fc" id="L454">            .sorted()</span>
-<span class="fc" id="L455">            .collect(Collectors.toList());</span>
+<span class="fc" id="L453">    List&lt;String&gt; studentEmails =</span>
+<span class="fc" id="L454">        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)</span>
+<span class="fc bfc" id="L455" title="All 6 branches covered.">            .filter(student -&gt; team == null || team.isBlank() || student.getTeams().contains(team))</span>
+<span class="fc" id="L456">            .map(RosterStudent::getEmail)</span>
+<span class="fc" id="L457">            .filter(Objects::nonNull)</span>
+<span class="fc" id="L458">            .sorted()</span>
+<span class="fc" id="L459">            .collect(Collectors.toList());</span>
 
-<span class="fc" id="L457">    List&lt;String&gt; emails = studentEmails;</span>
-<span class="fc bfc" id="L458" title="All 2 branches covered.">    if (type == EmailTypes.STAFF) {</span>
-<span class="fc" id="L459">      emails = staffEmails;</span>
-<span class="fc bfc" id="L460" title="All 2 branches covered.">    } else if (type == EmailTypes.ALL) {</span>
-<span class="fc" id="L461">      emails = new ArrayList&lt;&gt;(staffEmails);</span>
-<span class="fc" id="L462">      emails.addAll(studentEmails);</span>
+<span class="fc" id="L461">    List&lt;String&gt; emails = studentEmails;</span>
+<span class="fc bfc" id="L462" title="All 2 branches covered.">    if (type == EmailTypes.STAFF) {</span>
+<span class="fc" id="L463">      emails = staffEmails;</span>
+<span class="fc bfc" id="L464" title="All 2 branches covered.">    } else if (type == EmailTypes.ALL) {</span>
+<span class="fc" id="L465">      emails = new ArrayList&lt;&gt;(staffEmails);</span>
+<span class="fc" id="L466">      emails.addAll(studentEmails);</span>
     }
 
-<span class="fc bfc" id="L465" title="All 2 branches covered.">    String separator = format == EmailFormats.COMMA_SEPARATED ? &quot;,&quot; : &quot;\r\n&quot;;</span>
-<span class="fc" id="L466">    return String.join(separator, emails);</span>
+<span class="fc bfc" id="L469" title="All 2 branches covered.">    String separator = format == EmailFormats.COMMA_SEPARATED ? &quot;,&quot; : &quot;\r\n&quot;;</span>
+<span class="fc" id="L470">    return String.join(separator, emails);</span>
   }
 
   @Operation(summary = &quot;Delete a course&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;&quot;)
+  @Transactional
   public Object deleteCourse(@RequestParam Long courseId)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc" id="L474">    Course course =</span>
+<span class="fc" id="L479">    Course course =</span>
         courseRepository
-<span class="fc" id="L476">            .findById(courseId)</span>
-<span class="fc" id="L477">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L481">            .findById(courseId)</span>
+<span class="fc" id="L482">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
     // Check if course has roster students or staff
-<span class="fc bfc" id="L480" title="All 4 branches covered.">    if (!course.getRosterStudents().isEmpty() || !course.getCourseStaff().isEmpty()) {</span>
-<span class="fc" id="L481">      throw new IllegalArgumentException(&quot;Cannot delete course with students or staff&quot;);</span>
+<span class="fc bfc" id="L485" title="All 4 branches covered.">    if (!course.getRosterStudents().isEmpty() || !course.getCourseStaff().isEmpty()) {</span>
+<span class="fc" id="L486">      throw new IllegalArgumentException(&quot;Cannot delete course with students or staff&quot;);</span>
     }
 
-<span class="fc" id="L484">    linkerService.unenrollOrganization(course);</span>
-<span class="fc" id="L485">    courseRepository.delete(course);</span>
-<span class="fc" id="L486">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
+<span class="fc" id="L489">    linkerService.unenrollOrganization(course);</span>
+<span class="fc" id="L490">    jobsRepository.deleteByCourse_Id(courseId);</span>
+<span class="fc" id="L491">    courseRepository.delete(course);</span>
+<span class="fc" id="L492">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
   }
 
   /**
@@ -503,18 +509,18 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
       @Parameter(name = &quot;term&quot;) @RequestParam String term,
       @Parameter(name = &quot;school&quot;) @RequestParam School school) {
-<span class="fc" id="L506">    Course course =</span>
+<span class="fc" id="L512">    Course course =</span>
         courseRepository
-<span class="fc" id="L508">            .findById(courseId)</span>
-<span class="fc" id="L509">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L514">            .findById(courseId)</span>
+<span class="fc" id="L515">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L511">    course.setCourseName(courseName);</span>
-<span class="fc" id="L512">    course.setTerm(term);</span>
-<span class="fc" id="L513">    course.setSchool(school);</span>
+<span class="fc" id="L517">    course.setCourseName(courseName);</span>
+<span class="fc" id="L518">    course.setTerm(term);</span>
+<span class="fc" id="L519">    course.setSchool(school);</span>
 
-<span class="fc" id="L515">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L521">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L517">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L523">    return new InstructorCourseView(savedCourse);</span>
   }
 
   /**
@@ -535,53 +541,53 @@ import org.springframework.web.bind.annotation.*;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
       @Parameter(name = &quot;canvasApiToken&quot;) @RequestParam(required = false) String canvasApiToken,
       @Parameter(name = &quot;canvasCourseId&quot;) @RequestParam(required = false) String canvasCourseId) {
-<span class="fc" id="L538">    Course course =</span>
+<span class="fc" id="L544">    Course course =</span>
         courseRepository
-<span class="fc" id="L540">            .findById(courseId)</span>
-<span class="fc" id="L541">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L546">            .findById(courseId)</span>
+<span class="fc" id="L547">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc bfc" id="L543" title="All 2 branches covered.">    if (canvasApiToken != null</span>
-<span class="fc bfc" id="L544" title="All 2 branches covered.">        &amp;&amp; !canvasApiToken.isEmpty()</span>
-<span class="fc bfc" id="L545" title="All 2 branches covered.">        &amp;&amp; !canvasApiToken.equals(course.getCanvasApiToken())) {</span>
-<span class="fc" id="L546">      course.setCanvasApiToken(canvasApiToken);</span>
+<span class="fc bfc" id="L549" title="All 2 branches covered.">    if (canvasApiToken != null</span>
+<span class="fc bfc" id="L550" title="All 2 branches covered.">        &amp;&amp; !canvasApiToken.isEmpty()</span>
+<span class="fc bfc" id="L551" title="All 2 branches covered.">        &amp;&amp; !canvasApiToken.equals(course.getCanvasApiToken())) {</span>
+<span class="fc" id="L552">      course.setCanvasApiToken(canvasApiToken);</span>
     }
 
-<span class="fc bfc" id="L549" title="All 2 branches covered.">    if (canvasCourseId != null</span>
-<span class="fc bfc" id="L550" title="All 2 branches covered.">        &amp;&amp; !canvasCourseId.isEmpty()</span>
-<span class="fc bfc" id="L551" title="All 2 branches covered.">        &amp;&amp; !canvasCourseId.equals(course.getCanvasCourseId())) {</span>
-<span class="fc" id="L552">      course.setCanvasCourseId(canvasCourseId);</span>
+<span class="fc bfc" id="L555" title="All 2 branches covered.">    if (canvasCourseId != null</span>
+<span class="fc bfc" id="L556" title="All 2 branches covered.">        &amp;&amp; !canvasCourseId.isEmpty()</span>
+<span class="fc bfc" id="L557" title="All 2 branches covered.">        &amp;&amp; !canvasCourseId.equals(course.getCanvasCourseId())) {</span>
+<span class="fc" id="L558">      course.setCanvasCourseId(canvasCourseId);</span>
     }
 
-<span class="fc" id="L555">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L561">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L557">    return new InstructorCourseView(savedCourse);</span>
+<span class="fc" id="L563">    return new InstructorCourseView(savedCourse);</span>
   }
 
   @Operation(summary = &quot;Get course warnings&quot;)
   @GetMapping(&quot;/warnings/{courseId}&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   public CourseWarning warnings(@PathVariable @Parameter Long courseId) throws Exception {
-<span class="fc" id="L564">    Course course =</span>
+<span class="fc" id="L570">    Course course =</span>
         courseRepository
-<span class="fc" id="L566">            .findById(courseId)</span>
-<span class="fc" id="L567">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L568">    return linkerService.checkCourseWarnings(course);</span>
+<span class="fc" id="L572">            .findById(courseId)</span>
+<span class="fc" id="L573">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L574">    return linkerService.checkCourseWarnings(course);</span>
   }
 
   @Operation(summary = &quot;Hide base permission warning for a course&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @PostMapping(&quot;/warnings/hideBasePermissionWarning/{courseId}&quot;)
   public Object hideBasePermissionWarning(@PathVariable @Parameter Long courseId) {
-<span class="fc" id="L575">    Course course =</span>
+<span class="fc" id="L581">    Course course =</span>
         courseRepository
-<span class="fc" id="L577">            .findById(courseId)</span>
-<span class="fc" id="L578">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L583">            .findById(courseId)</span>
+<span class="fc" id="L584">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L580">    course.setHideBasePermissionWarning(true);</span>
-<span class="fc" id="L581">    courseRepository.save(course);</span>
+<span class="fc" id="L586">    course.setHideBasePermissionWarning(true);</span>
+<span class="fc" id="L587">    courseRepository.save(course);</span>
 
-<span class="fc" id="L583">    return genericMessage(</span>
-<span class="fc" id="L584">        &quot;hideBasePermissionWarning set to true for course with id %s&quot;.formatted(courseId));</span>
+<span class="fc" id="L589">    return genericMessage(</span>
+<span class="fc" id="L590">        &quot;hideBasePermissionWarning set to true for course with id %s&quot;.formatted(courseId));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
