@@ -88,24 +88,26 @@ import org.springframework.web.bind.annotation.RestController;
       @RequestParam Long courseId,
       @RequestParam String repoPrefix,
       @RequestParam Optional&lt;Boolean&gt; isPrivate,
+      @RequestParam Optional&lt;String&gt; teamRegex,
       @RequestParam RepositoryPermissions permissions) {
-<span class="fc" id="L92">    Course course =</span>
+<span class="fc" id="L93">    Course course =</span>
         courseRepository
-<span class="fc" id="L94">            .findById(courseId)</span>
-<span class="fc" id="L95">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc bfc" id="L96" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L97">      throw new NoLinkedOrganizationException(course.getCourseName());</span>
+<span class="fc" id="L95">            .findById(courseId)</span>
+<span class="fc" id="L96">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L97" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L98">      throw new NoLinkedOrganizationException(course.getCourseName());</span>
     } else {
       CreateTeamRepositoriesJob job =
-<span class="fc" id="L100">          CreateTeamRepositoriesJob.builder()</span>
-<span class="fc" id="L101">              .repositoryPrefix(repoPrefix)</span>
-<span class="fc" id="L102">              .isPrivate(isPrivate.orElse(false))</span>
-<span class="fc" id="L103">              .repositoryService(repositoryService)</span>
-<span class="fc" id="L104">              .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L105">              .course(course)</span>
-<span class="fc" id="L106">              .permissions(permissions)</span>
-<span class="fc" id="L107">              .build();</span>
-<span class="fc" id="L108">      return jobService.runAsJob(job);</span>
+<span class="fc" id="L101">          CreateTeamRepositoriesJob.builder()</span>
+<span class="fc" id="L102">              .repositoryPrefix(repoPrefix)</span>
+<span class="fc" id="L103">              .isPrivate(isPrivate.orElse(false))</span>
+<span class="fc" id="L104">              .repositoryService(repositoryService)</span>
+<span class="fc" id="L105">              .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L106">              .course(course)</span>
+<span class="fc" id="L107">              .permissions(permissions)</span>
+<span class="fc" id="L108">              .teamRegex(teamRegex.orElse(null))</span>
+<span class="fc" id="L109">              .build();</span>
+<span class="fc" id="L110">      return jobService.runAsJob(job);</span>
     }
   }
 }
