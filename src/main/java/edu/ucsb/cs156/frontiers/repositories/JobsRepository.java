@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface JobsRepository extends JpaRepository<Job, Long> {
   Iterable<Job> findByCourse_Id(Long courseId, org.springframework.data.domain.Sort sort);
+
+  void deleteByCourse_Id(Long courseId);
 }
