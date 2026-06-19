@@ -17,30 +17,34 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
   String repositoryPrefix;
   Boolean isPrivate;
   RepositoryPermissions permissions;
+  String teamRegex;
 
   @Override
   public Course getCourse() {
-<span class="fc" id="L23">    return course;</span>
+<span class="fc" id="L24">    return course;</span>
   }
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L28">    ctx.log(&quot;Creating team repositories...&quot;);</span>
+<span class="fc" id="L29">    ctx.log(&quot;Creating team repositories...&quot;);</span>
 
     Integer orgId;
     try {
-<span class="fc" id="L32">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
-<span class="fc" id="L33">    } catch (Exception e) {</span>
-<span class="fc" id="L34">      throw new IllegalStateException(</span>
-<span class="fc" id="L35">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
+<span class="fc" id="L33">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
+<span class="fc" id="L34">    } catch (Exception e) {</span>
+<span class="fc" id="L35">      throw new IllegalStateException(</span>
+<span class="fc" id="L36">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
           e);
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L38">    }</span>
 
-<span class="fc bfc" id="L39" title="All 2 branches covered.">    for (Team team : course.getTeams()) {</span>
-<span class="fc" id="L40">      repositoryService.createTeamRepository(</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">    for (Team team : course.getTeams()) {</span>
+<span class="fc bfc" id="L41" title="All 4 branches covered.">      if (teamRegex != null &amp;&amp; !team.getName().matches(teamRegex)) {</span>
+<span class="fc" id="L42">        continue;</span>
+      }
+<span class="fc" id="L44">      repositoryService.createTeamRepository(</span>
           course, team, repositoryPrefix, isPrivate, permissions, orgId);
-<span class="fc" id="L42">    }</span>
-<span class="fc" id="L43">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L44">  }</span>
+<span class="fc" id="L46">    }</span>
+<span class="fc" id="L47">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L48">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
