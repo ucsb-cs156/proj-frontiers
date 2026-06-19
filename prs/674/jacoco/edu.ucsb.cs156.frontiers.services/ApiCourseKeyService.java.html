@@ -46,13 +46,13 @@ public class ApiCourseKeyService {
 <span class="fc" id="L46">    Course course =</span>
         courseRepository
 <span class="fc" id="L48">            .findById(courseId)</span>
-<span class="pc" id="L49">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L49">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
 <span class="fc" id="L51">    String rawKey = generateRawKey();</span>
 <span class="fc" id="L52">    String salt = randomHex(16);</span>
 <span class="fc" id="L53">    ZonedDateTime now = ZonedDateTime.now();</span>
     ZonedDateTime expiresAt =
-<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        expirationChoice == ExpirationChoice.MONTHS_6 ? now.plusMonths(6) : now.plusDays(90);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        expirationChoice == ExpirationChoice.MONTHS_6 ? now.plusMonths(6) : now.plusDays(90);</span>
 
     ApiCourseKey apiCourseKey =
 <span class="fc" id="L58">        ApiCourseKey.builder()</span>
@@ -76,27 +76,27 @@ public class ApiCourseKeyService {
   }
 
   public ApiCourseKey revokeKey(Long courseId, Long apiKeyId) {
-<span class="nc" id="L79">    ApiCourseKey key =</span>
+<span class="fc" id="L79">    ApiCourseKey key =</span>
         apiCourseKeyRepository
-<span class="nc" id="L81">            .findByIdAndCourseId(apiKeyId, courseId)</span>
-<span class="nc" id="L82">            .orElseThrow(() -&gt; new EntityNotFoundException(ApiCourseKey.class, apiKeyId));</span>
-<span class="nc" id="L83">    key.setRevoked(true);</span>
-<span class="nc" id="L84">    return apiCourseKeyRepository.save(key);</span>
+<span class="fc" id="L81">            .findByIdAndCourseId(apiKeyId, courseId)</span>
+<span class="fc" id="L82">            .orElseThrow(() -&gt; new EntityNotFoundException(ApiCourseKey.class, apiKeyId));</span>
+<span class="fc" id="L83">    key.setRevoked(true);</span>
+<span class="fc" id="L84">    return apiCourseKeyRepository.save(key);</span>
   }
 
   public boolean authenticateFromRequestForCourse(Long courseId) {
-<span class="nc" id="L88">    RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();</span>
-<span class="nc bnc" id="L89" title="All 2 branches missed.">    if (!(requestAttributes instanceof ServletRequestAttributes servletRequestAttributes)) {</span>
-<span class="nc" id="L90">      return false;</span>
+<span class="fc" id="L88">    RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    if (!(requestAttributes instanceof ServletRequestAttributes servletRequestAttributes)) {</span>
+<span class="fc" id="L90">      return false;</span>
     }
-<span class="nc" id="L92">    HttpServletRequest request = servletRequestAttributes.getRequest();</span>
-<span class="nc" id="L93">    String rawKey = request.getHeader(API_KEY_HEADER);</span>
-<span class="nc" id="L94">    return authenticateRawKeyForCourse(rawKey, courseId).isPresent();</span>
+<span class="fc" id="L92">    HttpServletRequest request = servletRequestAttributes.getRequest();</span>
+<span class="fc" id="L93">    String rawKey = request.getHeader(API_KEY_HEADER);</span>
+<span class="fc" id="L94">    return authenticateRawKeyForCourse(rawKey, courseId).isPresent();</span>
   }
 
   public Optional&lt;ApiCourseKey&gt; authenticateRawKeyForCourse(String rawKey, Long courseId) {
-<span class="pc bpc" id="L98" title="2 of 4 branches missed.">    if (rawKey == null || rawKey.isBlank()) {</span>
-<span class="nc" id="L99">      return Optional.empty();</span>
+<span class="fc bfc" id="L98" title="All 4 branches covered.">    if (rawKey == null || rawKey.isBlank()) {</span>
+<span class="fc" id="L99">      return Optional.empty();</span>
     }
 
 <span class="fc" id="L102">    List&lt;ApiCourseKey&gt; activeKeys = listActiveKeys(courseId);</span>
@@ -134,8 +134,8 @@ public class ApiCourseKeyService {
     try {
 <span class="fc" id="L135">      MessageDigest digest = MessageDigest.getInstance(&quot;SHA-256&quot;);</span>
 <span class="fc" id="L136">      return digest.digest((salt + rawKey).getBytes(StandardCharsets.UTF_8));</span>
-<span class="nc" id="L137">    } catch (NoSuchAlgorithmException e) {</span>
-<span class="nc" id="L138">      throw new IllegalStateException(&quot;SHA-256 unavailable&quot;, e);</span>
+<span class="fc" id="L137">    } catch (NoSuchAlgorithmException e) {</span>
+<span class="fc" id="L138">      throw new IllegalStateException(&quot;SHA-256 unavailable&quot;, e);</span>
     }
   }
 
