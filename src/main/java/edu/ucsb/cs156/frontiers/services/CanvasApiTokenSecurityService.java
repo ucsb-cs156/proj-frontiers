@@ -36,7 +36,7 @@ public class CanvasApiTokenSecurityService {
     }
 
     try {
-      Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+      Cipher cipher = getCipher();
       byte[] iv = new byte[GCM_IV_LENGTH_BYTES];
       secureRandom.nextBytes(iv);
       cipher.init(
@@ -69,7 +69,7 @@ public class CanvasApiTokenSecurityService {
       byte[] iv = Arrays.copyOfRange(payload, 0, GCM_IV_LENGTH_BYTES);
       byte[] ciphertext = Arrays.copyOfRange(payload, GCM_IV_LENGTH_BYTES, payload.length);
 
-      Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+      Cipher cipher = getCipher();
       cipher.init(
           Cipher.DECRYPT_MODE, getSecretKey(), new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
       byte[] plaintext = cipher.doFinal(ciphertext);
@@ -77,6 +77,10 @@ public class CanvasApiTokenSecurityService {
     } catch (GeneralSecurityException | IllegalArgumentException e) {
       throw new IllegalStateException("Failed to decrypt Canvas API token", e);
     }
+  }
+
+  protected Cipher getCipher() throws GeneralSecurityException {
+    return Cipher.getInstance(CIPHER_ALGORITHM);
   }
 
   private SecretKeySpec getSecretKey() {

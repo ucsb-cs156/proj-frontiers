@@ -84,6 +84,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     when(canvasApiTokenSecurityService.decrypt(any(String.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
   }
+
   @MockitoBean private JobsRepository jobsRepository;
 
   /** Test that ROLE_ADMIN can create a course */

@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.security.GeneralSecurityException;
 import java.util.Base64;
+import javax.crypto.Cipher;
 import org.junit.jupiter.api.Test;
 
 public class CanvasApiTokenSecurityServiceTests {
@@ -96,5 +98,37 @@ public class CanvasApiTokenSecurityServiceTests {
     assertEquals(
         "Canvas API token encryption key must decode to 16, 24, or 32 bytes",
         exception.getMessage());
+  }
+
+  @Test
+  public void encrypt_whenCipherCreationFails_throwsIllegalStateException() {
+    CanvasApiTokenSecurityService service =
+        new CanvasApiTokenSecurityService(VALID_KEY) {
+          @Override
+          protected Cipher getCipher() throws GeneralSecurityException {
+            throw new GeneralSecurityException("simulated cipher failure");
+          }
+        };
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.encrypt("test-api-token"));
+    assertEquals("Failed to encrypt Canvas API token", exception.getMessage());
+  }
+
+  @Test
+  public void decrypt_whenCipherCreationFails_throwsIllegalStateException() {
+    CanvasApiTokenSecurityService service =
+        new CanvasApiTokenSecurityService(VALID_KEY) {
+          @Override
+          protected Cipher getCipher() throws GeneralSecurityException {
+            throw new GeneralSecurityException("simulated cipher failure");
+          }
+        };
+    String encryptedLikePayload = Base64.getEncoder().encodeToString(new byte[13]);
+
+    IllegalStateException exception =
+        assertThrows(
+            IllegalStateException.class, () -> service.decrypt("enc:v1:" + encryptedLikePayload));
+    assertEquals("Failed to decrypt Canvas API token", exception.getMessage());
   }
 }
