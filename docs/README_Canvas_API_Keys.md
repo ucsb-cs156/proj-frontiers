@@ -25,6 +25,7 @@ Implementation:
 
 - Encryption key material is externalized through:
   - `CANVAS_API_TOKEN_ENCRYPTION_KEY` (Base64-encoded AES key, recommended 256-bit)
+  - Note: You can use `openssl rand -base64 32` to generate a suitable value.
   - mapped in Spring as `app.canvas.api-token-encryption-key`
 - No key is hardcoded in source control.
 - Encryption attempts fail closed when key configuration is missing or malformed.
