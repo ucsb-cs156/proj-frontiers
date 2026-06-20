@@ -84,7 +84,7 @@ public class CanvasApiTokenSecurityService {
   }
 
   private SecretKeySpec getSecretKey() {
-<span class="pc bpc" id="L87" title="1 of 4 branches missed.">    if (encodedEncryptionKey == null || encodedEncryptionKey.isBlank()) {</span>
+<span class="fc bfc" id="L87" title="All 4 branches covered.">    if (encodedEncryptionKey == null || encodedEncryptionKey.isBlank()) {</span>
 <span class="fc" id="L88">      throw new IllegalStateException(&quot;Canvas API token encryption key is not configured&quot;);</span>
     }
     byte[] decodedKey;
@@ -93,7 +93,7 @@ public class CanvasApiTokenSecurityService {
 <span class="fc" id="L93">    } catch (IllegalArgumentException e) {</span>
 <span class="fc" id="L94">      throw new IllegalStateException(&quot;Canvas API token encryption key must be Base64 encoded&quot;, e);</span>
 <span class="fc" id="L95">    }</span>
-<span class="pc bpc" id="L96" title="2 of 6 branches missed.">    if (decodedKey.length != 16 &amp;&amp; decodedKey.length != 24 &amp;&amp; decodedKey.length != 32) {</span>
+<span class="fc bfc" id="L96" title="All 6 branches covered.">    if (decodedKey.length != 16 &amp;&amp; decodedKey.length != 24 &amp;&amp; decodedKey.length != 32) {</span>
 <span class="fc" id="L97">      throw new IllegalStateException(</span>
           &quot;Canvas API token encryption key must decode to 16, 24, or 32 bytes&quot;);
     }
