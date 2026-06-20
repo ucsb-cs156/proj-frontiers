@@ -1,9 +1,14 @@
 import React from "react";
 import CanvasApiForm from "main/components/Settings/CanvasApiForm";
+import CourseOptionsForm from "main/components/Settings/CourseOptionsForm";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 
-export default function SettingsTabComponent({ courseId, testIdPrefix }) {
+export default function SettingsTabComponent({
+  courseId,
+  testIdPrefix,
+  canEditCourseOptions,
+}) {
   const onSuccessCanvasCredentialsAdded = () => {
     toast("Canvas credentials successfully added.");
   };
@@ -33,6 +38,7 @@ export default function SettingsTabComponent({ courseId, testIdPrefix }) {
   return (
     <div data-testid={`${testIdPrefix}-canvasForm`}>
       <CanvasApiForm submitAction={handleSubmit} courseId={courseId} />
+      <CourseOptionsForm courseId={courseId} canEdit={canEditCourseOptions} />
     </div>
   );
 }
