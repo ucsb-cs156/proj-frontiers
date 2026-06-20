@@ -201,3 +201,14 @@ To run full mutation test coverage, as usual, use:
 ```
 mvn pitest:mutationCoverage
 ```
+
+# Setting Node Version from package.json
+
+To switch your local Node version to the one specified in `frontend/package.json`, use:
+
+```bash
+cd frontend
+source ./nvm-pj.sh
+```
+
+You must **source** this script (instead of running it directly) so it can update your current shell's active Node version.

@@ -15,6 +15,7 @@ import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
+import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 
 export default function InstructorCourseShowPage({
@@ -41,7 +42,12 @@ export default function InstructorCourseShowPage({
     true,
   );
 
+  // Stryker disable OptionalChaining -- course?.instructorEmail is more readable than course && course.instructorEmail
   const getCourseFailed = courseBackendFailureCount > 0;
+  const canEditCourseOptions =
+    hasRole(currentUser, "ROLE_ADMIN") ||
+    currentUser?.root?.user?.email === course?.instructorEmail;
+  // Stryker enable OptionalChaining
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -184,7 +190,11 @@ export default function InstructorCourseShowPage({
         </Tab>
         {showSettingsTab && (
           <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-            <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
+            <SettingsTabComponent
+              courseId={courseId}
+              testIdPrefix={testId}
+              canEditCourseOptions={canEditCourseOptions}
+            />
           </Tab>
         )}
       </Tabs>
