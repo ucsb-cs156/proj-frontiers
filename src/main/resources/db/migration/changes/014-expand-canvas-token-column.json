@@ -1,0 +1,17 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "014-expand-canvas-api-token-column-length",
+      "author": "copilot",
+      "changes": [
+        {
+          "modifyDataType": {
+            "tableName": "COURSE",
+            "columnName": "CANVAS_API_TOKEN",
+            "newDataType": "VARCHAR(1024)"
+          }
+        }
+      ]
+    }
+  }
+]}
