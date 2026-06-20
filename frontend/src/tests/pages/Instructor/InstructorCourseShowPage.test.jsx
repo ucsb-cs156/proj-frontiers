@@ -61,6 +61,24 @@ describe("InstructorCourseShowPage tests", () => {
       .reply(200, systemInfoFixtures.showingNeither);
   };
 
+  const setupAdminUser = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.adminUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupUserOnly = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
   test("renders correctly for instructor user", async () => {
     vi.useFakeTimers({
       shouldAdvanceTime: true,
@@ -610,5 +628,89 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText("CMPSC 156");
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("instructor assigned to course can edit course option toggles", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "diba@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).not.toBeDisabled();
+  });
+
+  test("admin can edit course option toggles for non-owned course", async () => {
+    setupAdminUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "someoneelse@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).not.toBeDisabled();
+  });
+
+  test("non-admin non-instructor cannot edit course option toggles", async () => {
+    setupUserOnly();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "someoneelse@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).toBeDisabled();
   });
 });
