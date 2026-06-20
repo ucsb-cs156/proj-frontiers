@@ -14,6 +14,7 @@ frontiers,edu.ucsb.cs156.frontiers.enums,AssignmentType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,TeamStatus,0,27,0,0,0,5,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,OrgStatus,0,39,0,0,0,7,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,School,0,85,0,6,0,20,0,6,0,3
+frontiers,edu.ucsb.cs156.frontiers.enums,CourseOptions,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.interceptors,RoleUpdateInterceptor,0,100,0,12,0,26,0,9,0,3
 frontiers,edu.ucsb.cs156.frontiers.services,CanvasApiTokenSecurityService,0,205,0,24,0,46,0,17,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
@@ -38,6 +39,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,546,0,28,0,130,0
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,465,0,20,0,105,0,23,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.GithubTeamInfo,0,18,0,0,0,3,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
+frontiers,edu.ucsb.cs156.frontiers.controllers,CourseOptionsController,0,154,0,10,0,34,0,11,0,6
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.RosterStudentCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CustomErrorController,0,129,0,14,0,29,0,10,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,67,0,2,0,15,0,6,0,5
