@@ -175,6 +175,25 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void getCourseOptions_missingCourse_returnsNotFound() throws Exception {
+    when(courseRepository.findById(eq(99L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/course/options").param("courseId", "99"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    assertEquals(
+        mapper.writeValueAsString(
+            Map.of("type", "EntityNotFoundException", "message", "Course with id 99 not found")),
+        response.getResponse().getContentAsString());
+    verify(courseOptionRepository, never()).findByCourseId(any());
+    verify(courseOptionRepository, never()).findByCourseIdAndOption(any(), any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void setCourseOption_missingCourse_returnsNotFound() throws Exception {
     when(courseRepository.findById(eq(99L))).thenReturn(Optional.empty());
 
