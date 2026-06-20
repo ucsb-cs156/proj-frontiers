@@ -15,6 +15,7 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.DownloadRequestRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.ApiCourseKeyService;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +62,8 @@ public class CourseSecurityTests {
   @MockitoBean RosterStudentRepository rosterStudentRepository;
 
   @MockitoBean DownloadRequestRepository downloadRequestRepository;
+
+  @MockitoBean ApiCourseKeyService apiCourseKeyService;
 
   @Autowired DummyCourseSecurity DummyCourseSecurity;
 
@@ -190,6 +193,52 @@ public class CourseSecurityTests {
                   .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
                   .build());
       when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+    }
+
+    @Nested
+    public class ApiKeyAccess {
+      @BeforeEach
+      public void setup() {
+        Course testCourse =
+            Course.builder()
+                .id(1L)
+                .instructorEmail("instructor@example.com")
+                .courseStaff(List.of())
+                .build();
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(testCourse));
+        when(currentUserService.getCurrentUser())
+            .thenReturn(CurrentUser.builder().user(null).build());
+      }
+
+      @Test
+      public void api_key_allows_access_without_logged_in_user() {
+        when(apiCourseKeyService.authenticateFromRequestForCourse(1L)).thenReturn(true);
+        assertDoesNotThrow(() -> DummyCourseSecurity.loadCourseApiAccess(1L));
+      }
+
+      @Test
+      public void no_api_key_and_no_user_denies_access() {
+        when(apiCourseKeyService.authenticateFromRequestForCourse(1L)).thenReturn(false);
+        assertThrows(
+            AccessDeniedException.class, () -> DummyCourseSecurity.loadCourseApiAccess(1L));
+      }
+
+      @Test
+      @WithMockUser(
+          setupBefore = TestExecutionEvent.TEST_EXECUTION,
+          roles = {"INSTRUCTOR"})
+      public void no_api_key_but_instructor_permissions_allows_access() {
+        User instructor = User.builder().id(1L).email("instructor@example.com").build();
+        when(currentUserService.getCurrentUser())
+            .thenReturn(
+                CurrentUser.builder()
+                    .user(instructor)
+                    .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                    .build());
+        when(apiCourseKeyService.authenticateFromRequestForCourse(1L)).thenReturn(false);
+
+        assertDoesNotThrow(() -> DummyCourseSecurity.loadCourseApiAccess(1L));
+      }
     }
 
     @Test
