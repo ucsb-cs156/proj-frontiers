@@ -43,6 +43,15 @@ public class CanvasApiTokenSecurityServiceTests {
   }
 
   @Test
+  public void encrypt_withNullConfiguredKey_throwsIllegalStateException() {
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(null);
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.encrypt("test-api-token"));
+    assertEquals("Canvas API token encryption key is not configured", exception.getMessage());
+  }
+
+  @Test
   public void encrypt_nullOrEmptyOrAlreadyEncrypted_returnsInputUnchanged() {
     CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(VALID_KEY);
 
@@ -98,6 +107,26 @@ public class CanvasApiTokenSecurityServiceTests {
     assertEquals(
         "Canvas API token encryption key must decode to 16, 24, or 32 bytes",
         exception.getMessage());
+  }
+
+  @Test
+  public void encrypt_thenDecrypt_with16ByteKey_roundTripsToken() {
+    String key16 = Base64.getEncoder().encodeToString("0123456789abcdef".getBytes());
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(key16);
+
+    String encrypted = service.encrypt("test-api-token");
+
+    assertEquals("test-api-token", service.decrypt(encrypted));
+  }
+
+  @Test
+  public void encrypt_thenDecrypt_with24ByteKey_roundTripsToken() {
+    String key24 = Base64.getEncoder().encodeToString("0123456789abcdefghijklmn".getBytes());
+    CanvasApiTokenSecurityService service = new CanvasApiTokenSecurityService(key24);
+
+    String encrypted = service.encrypt("test-api-token");
+
+    assertEquals("test-api-token", service.decrypt(encrypted));
   }
 
   @Test
