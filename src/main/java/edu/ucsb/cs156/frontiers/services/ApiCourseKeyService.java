@@ -119,7 +119,7 @@ public class ApiCourseKeyService {
   private String randomHex(int bytes) {
     byte[] raw = new byte[bytes];
     secureRandom.nextBytes(raw);
-    StringBuilder sb = new StringBuilder(bytes * 2);
+    StringBuilder sb = new StringBuilder();
     for (byte b : raw) {
       sb.append(String.format("%02x", b));
     }

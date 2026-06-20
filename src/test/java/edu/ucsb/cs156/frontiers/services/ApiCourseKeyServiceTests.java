@@ -12,9 +12,11 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.ApiCourseKeyRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
@@ -78,6 +80,25 @@ public class ApiCourseKeyServiceTests {
     ZonedDateTime createdAt = generated.apiCourseKey().getCreatedAt();
     ZonedDateTime expiresAt = generated.apiCourseKey().getExpiresAt();
     assertEquals(createdAt.plusMonths(6).toLocalDate(), expiresAt.toLocalDate());
+  }
+
+  @Test
+  public void createKey_generates_unique_raw_key_and_salt() {
+    Course course = Course.builder().id(1L).build();
+    User creator = User.builder().id(2L).email("instructor@ucsb.edu").build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(apiCourseKeyRepository.save(any(ApiCourseKey.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    ApiCourseKeyService.GeneratedApiCourseKey first =
+        service.createKey(1L, creator, ApiCourseKeyService.ExpirationChoice.DAYS_90);
+    ApiCourseKeyService.GeneratedApiCourseKey second =
+        service.createKey(1L, creator, ApiCourseKeyService.ExpirationChoice.DAYS_90);
+
+    assertNotEquals(first.rawKey(), second.rawKey());
+    assertNotEquals(first.apiCourseKey().getSalt(), second.apiCourseKey().getSalt());
+    assertEquals(32, first.apiCourseKey().getSalt().length());
+    assertTrue(first.apiCourseKey().getSalt().matches("[0-9a-f]+"));
   }
 
   @Test
@@ -148,6 +169,24 @@ public class ApiCourseKeyServiceTests {
   }
 
   @Test
+  public void authenticateRawKeyForCourse_returns_empty_for_non_matching_decodable_hash() {
+    ApiCourseKey stored =
+        ApiCourseKey.builder()
+            .salt("abcd")
+            .keyHash(Base64.getEncoder().encodeToString("other".getBytes(StandardCharsets.UTF_8)))
+            .expiresAt(ZonedDateTime.now().plusDays(30))
+            .revoked(false)
+            .build();
+    when(apiCourseKeyRepository.findByCourseIdAndRevokedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+            eq(1L), any()))
+        .thenReturn(List.of(stored));
+
+    Optional<ApiCourseKey> result = service.authenticateRawKeyForCourse("frt_wrong", 1L);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
   public void authenticateRawKeyForCourse_returns_empty_for_blank_inputs() {
     assertTrue(service.authenticateRawKeyForCourse(null, 1L).isEmpty());
     assertTrue(service.authenticateRawKeyForCourse("   ", 1L).isEmpty());
@@ -196,6 +235,14 @@ public class ApiCourseKeyServiceTests {
     RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
     assertTrue(service.authenticateFromRequestForCourse(1L));
+  }
+
+  @Test
+  public void authenticateFromRequestForCourse_returns_false_when_header_missing() {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+    assertFalse(service.authenticateFromRequestForCourse(1L));
   }
 
   @Test

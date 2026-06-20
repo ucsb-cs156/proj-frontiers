@@ -222,6 +222,23 @@ public class CourseSecurityTests {
         assertThrows(
             AccessDeniedException.class, () -> DummyCourseSecurity.loadCourseApiAccess(1L));
       }
+
+      @Test
+      @WithMockUser(
+          setupBefore = TestExecutionEvent.TEST_EXECUTION,
+          roles = {"INSTRUCTOR"})
+      public void no_api_key_but_instructor_permissions_allows_access() {
+        User instructor = User.builder().id(1L).email("instructor@example.com").build();
+        when(currentUserService.getCurrentUser())
+            .thenReturn(
+                CurrentUser.builder()
+                    .user(instructor)
+                    .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                    .build());
+        when(apiCourseKeyService.authenticateFromRequestForCourse(1L)).thenReturn(false);
+
+        assertDoesNotThrow(() -> DummyCourseSecurity.loadCourseApiAccess(1L));
+      }
     }
 
     @Test
