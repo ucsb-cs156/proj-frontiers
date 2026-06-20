@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.config;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
@@ -59,5 +60,6 @@ public class CourseSecurityUnitTests {
             mock(MethodSecurityExpressionOperations.class), 1L);
 
     assertTrue(result);
+    verify(courseRepository).findById(1L);
   }
 }

@@ -12,7 +12,6 @@ import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.ApiCourseKeyRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
@@ -170,10 +169,12 @@ public class ApiCourseKeyServiceTests {
 
   @Test
   public void authenticateRawKeyForCourse_returns_empty_for_non_matching_decodable_hash() {
+    byte[] nonMatchingDigest = new byte[32];
+    nonMatchingDigest[0] = 1;
     ApiCourseKey stored =
         ApiCourseKey.builder()
             .salt("abcd")
-            .keyHash(Base64.getEncoder().encodeToString("other".getBytes(StandardCharsets.UTF_8)))
+            .keyHash(Base64.getEncoder().encodeToString(nonMatchingDigest))
             .expiresAt(ZonedDateTime.now().plusDays(30))
             .revoked(false)
             .build();
