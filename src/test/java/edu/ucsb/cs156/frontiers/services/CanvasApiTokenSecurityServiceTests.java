@@ -39,7 +39,9 @@ public class CanvasApiTokenSecurityServiceTests {
 
     IllegalStateException exception =
         assertThrows(IllegalStateException.class, () -> service.encrypt("test-api-token"));
-    assertEquals("Canvas API token encryption key is not configured", exception.getMessage());
+    assertEquals(
+        "Canvas API token encryption key is not configured; use 'openssl rand -base64 32' to generate one.",
+        exception.getMessage());
   }
 
   @Test
@@ -48,7 +50,9 @@ public class CanvasApiTokenSecurityServiceTests {
 
     IllegalStateException exception =
         assertThrows(IllegalStateException.class, () -> service.encrypt("test-api-token"));
-    assertEquals("Canvas API token encryption key is not configured", exception.getMessage());
+    assertEquals(
+        "Canvas API token encryption key is not configured; use 'openssl rand -base64 32' to generate one.",
+        exception.getMessage());
   }
 
   @Test
