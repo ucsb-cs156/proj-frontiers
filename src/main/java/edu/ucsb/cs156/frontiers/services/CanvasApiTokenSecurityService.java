@@ -85,7 +85,7 @@ public class CanvasApiTokenSecurityService {
 
   private SecretKeySpec getSecretKey() {
     if (encodedEncryptionKey == null || encodedEncryptionKey.isBlank()) {
-      throw new IllegalStateException("Canvas API token encryption key is not configured");
+      throw new IllegalStateException("Canvas API token encryption key is not configured; use 'openssl rand -base64 32' to generate one.");
     }
     byte[] decodedKey;
     try {
