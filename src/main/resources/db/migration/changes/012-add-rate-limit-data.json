@@ -1,0 +1,49 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "add-rate-limit-data-table",
+        "author": "Division7 / IntelliJ IDEA JPA Buddy",
+        "changes": [
+          {
+            "createTable": {
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_ratelimitdatapoint"
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "installation_id",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "remaining",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "logged_at",
+                    "type": "TIMESTAMP"
+                  }
+                }
+              ],
+              "tableName": "rate_limit_data_point"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
