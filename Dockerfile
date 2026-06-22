@@ -1,45 +1,31 @@
-FROM ubuntu:22.04
+FROM maven:3.9.16-eclipse-temurin-21-noble AS builder
 
-# Set environment variables to avoid interactive prompts during installation
-ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /home/app
 
-RUN apt-get update 
-RUN apt-get install -y openjdk-21-jdk  
-RUN apt-get install -y  curl  
-RUN apt-get install -y  bash  
-RUN apt-get install -y maven  
-RUN apt-get install -y  python3 
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/*
+# Copy of pom & package is a cheap hack to have npm and maven dependencies already loaded;
+# Most of the time, they're unlikely to change, so tying them to the file copies allows us not to
+# have to reload them constantly.
 
-# Set JAVA_HOME environment variable
-ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-ENV PATH="$JAVA_HOME/bin:$PATH"
+COPY pom.xml .
 
-# Verify installation
-RUN java -version
+RUN mvn --no-transfer-progress dependency:resolve
+
+COPY frontend/package-lock.json frontend/package.json frontend/
+
+RUN mvn --no-transfer-progress -Pproduction com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm com.github.eirslett:frontend-maven-plugin:npm@npm-install
+
+COPY . .
+
+RUN mvn --no-transfer-progress -B -Pproduction -DskipTests -Dcache.use=true package
+
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Verify installation
-RUN java -version
-RUN curl --version
+RUN apk add bash curl
 
-ENV NODE_VERSION=22.18.0
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-ENV NVM_DIR=/root/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+COPY --from=builder /home/app/target/frontiers-1.0.0.jar .
 
-RUN . "$NVM_DIR/nvm.sh" && nvm --version
-RUN node --version
-RUN npm --version
+COPY --from=builder /home/app/startup.sh .
 
-COPY . /home/app
-
-RUN mvn --no-transfer-progress -B -Pproduction -DskipTests -f /home/app/pom.xml clean package
-
-RUN ["chmod", "+x", "/home/app/startup.sh"]
-ENTRYPOINT ["/home/app/startup.sh","/home/app/target/frontiers-1.0.0.jar"]
+ENTRYPOINT ["./startup.sh", "frontiers-1.0.0.jar"]
