@@ -8,15 +8,15 @@ WORKDIR /home/app
 
 COPY pom.xml .
 
-RUN mvn --no-transfer-progress dependency:resolve
+RUN mvn dependency:go-offline -B
 
 COPY frontend/package-lock.json frontend/package.json frontend/
 
-RUN mvn --no-transfer-progress -Pproduction com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm com.github.eirslett:frontend-maven-plugin:npm@npm-install
+RUN mvn -Pproduction com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm com.github.eirslett:frontend-maven-plugin:npm@npm-install -B
 
 COPY . .
 
-RUN mvn --no-transfer-progress -B -Pproduction -DskipTests -Dcache.use=true package
+RUN mvn -Pproduction -DskipTests -Dcache.use=true package -B
 
 FROM eclipse-temurin:21-jre-alpine
 
@@ -24,8 +24,8 @@ WORKDIR /app
 
 RUN apk add bash curl
 
-COPY --from=builder /home/app/target/frontiers-1.0.0.jar .
-
 COPY --from=builder /home/app/startup.sh .
+
+COPY --from=builder /home/app/target/frontiers-1.0.0.jar .
 
 ENTRYPOINT ["./startup.sh", "frontiers-1.0.0.jar"]
