@@ -75,7 +75,7 @@ public class WebhookController {
 <span class="fc" id="L75">      return ResponseEntity.badRequest().body(&quot;Invalid JSON&quot;);</span>
 <span class="fc" id="L76">    }</span>
 
-<span class="fc" id="L78">    log.info(&quot;Received GitHub webhook: {}&quot;, jsonBody.toString());</span>
+<span class="fc" id="L78">    log.info(&quot;Received GitHub webhook payload&quot;);</span>
 
 <span class="fc bfc" id="L80" title="All 2 branches covered.">    if (!jsonBody.has(&quot;action&quot;)) {</span>
 <span class="fc" id="L81">      return ResponseEntity.ok().body(&quot;success&quot;);</span>
