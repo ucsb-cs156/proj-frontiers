@@ -1,6 +1,7 @@
 import React from "react";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
-import { Tooltip, OverlayTrigger } from "react-bootstrap";
+import { Tooltip, OverlayTrigger, Form } from "react-bootstrap";
+import OurPagination from "main/components/Common/OurPagination";
 
 import { useBackendMutation } from "main/utils/useBackend";
 import { cellToAxiosParamsDelete } from "main/utils/rosterStudentUtils";
@@ -9,6 +10,9 @@ import Modal from "react-bootstrap/Modal";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import { toast } from "react-toastify";
 import RosterStudentDeleteModal from "main/components/RosterStudent/RosterStudentDeleteModal";
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+const DEFAULT_PAGE_SIZE = 100;
 
 export default function RosterStudentTable({
   students,
@@ -21,6 +25,26 @@ export default function RosterStudentTable({
   const [editStudent, setEditStudent] = React.useState(null);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [deleteStudent, setDeleteStudent] = React.useState(null);
+  const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
+  const [currentPage, setCurrentPage] = React.useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
+
+  React.useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageSizeChange = (event) => {
+    setPageSize(Number(event.target.value));
+    setCurrentPage(1);
+  };
+
+  const paginatedStudents = students.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   const cellToAxiosParamsEdit = (formData) => ({
     url: `/api/rosterstudents/update`,
@@ -250,7 +274,42 @@ export default function RosterStudentTable({
         toggleShowModal={setShowDeleteModal}
         onSubmitAction={submitDeleteForm}
       />
-      <OurTable data={students} columns={columns} testid={testIdPrefix} />
+      <div className="d-flex justify-content-end align-items-center mb-2">
+        <Form.Label
+          htmlFor={`${testIdPrefix}-pageSizeSelect`}
+          className="me-2 mb-0"
+        >
+          Page Size:
+        </Form.Label>
+        <Form.Select
+          id={`${testIdPrefix}-pageSizeSelect`}
+          data-testid={`${testIdPrefix}-pageSizeSelect`}
+          style={{ width: "auto" }}
+          value={pageSize}
+          onChange={handlePageSizeChange}
+        >
+          {PAGE_SIZE_OPTIONS.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </Form.Select>
+      </div>
+      <OurTable
+        data={paginatedStudents}
+        columns={columns}
+        testid={testIdPrefix}
+      />
+      {totalPages > 1 && (
+        <div className="d-flex justify-content-center mb-2">
+          <OurPagination
+            currentActivePage={currentPage}
+            updateActivePage={setCurrentPage}
+            totalPages={totalPages}
+            testId={`${testIdPrefix}-pagination`}
+          />
+        </div>
+      )}
       <div
         style={{ display: "none" }}
         data-testid={`${testIdPrefix}-courseId`}
