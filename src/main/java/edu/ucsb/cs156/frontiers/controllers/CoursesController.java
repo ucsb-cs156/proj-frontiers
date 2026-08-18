@@ -1,6 +1,8 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.ucsb.cs156.frontiers.annotations.AllowApiKeyAccess;
+import edu.ucsb.cs156.frontiers.entities.ApiCourseKey;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
@@ -18,12 +20,14 @@ import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.ApiCourseKeyService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +64,7 @@ public class CoursesController extends ApiController {
 
   @Autowired private OrganizationLinkerService linkerService;
 
+  @Autowired private ApiCourseKeyService apiCourseKeyService;
   @Autowired private JobsRepository jobsRepository;
 
   /**
@@ -124,6 +129,30 @@ public class CoursesController extends ApiController {
           c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);
     }
   }
+
+  public static record ApiCourseKeyView(
+      Long id,
+      String keySuffix,
+      Long createdById,
+      ZonedDateTime createdAt,
+      ZonedDateTime expiresAt,
+      boolean revoked,
+      long usageCount,
+      ZonedDateTime lastUsedAt) {
+    public ApiCourseKeyView(ApiCourseKey key) {
+      this(
+          key.getId(),
+          key.getKeySuffix(),
+          key.getCreatedBy().getId(),
+          key.getCreatedAt(),
+          key.getExpiresAt(),
+          key.getRevoked(),
+          key.getUsageCount(),
+          key.getLastUsedAt());
+    }
+  }
+
+  public static record GeneratedApiCourseKeyView(String apiKey, ApiCourseKeyView keyMetadata) {}
 
   /**
    * This method returns a list of courses.
@@ -434,7 +463,7 @@ public class CoursesController extends ApiController {
   }
 
   @Operation(summary = "Get course emails")
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @AllowApiKeyAccess
   @GetMapping("/emails")
   public String getCourseEmails(
       @Parameter(name = "courseId") @RequestParam Long courseId,
@@ -468,6 +497,40 @@ public class CoursesController extends ApiController {
 
     String separator = format == EmailFormats.COMMA_SEPARATED ? "," : "\r\n";
     return String.join(separator, emails);
+  }
+
+  @Operation(summary = "Create an API key for a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/apiKeys")
+  public GeneratedApiCourseKeyView createApiKey(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "expirationChoice") @RequestParam(defaultValue = "DAYS_90")
+          ApiCourseKeyService.ExpirationChoice expirationChoice) {
+    User creator = getCurrentUser().getUser();
+    ApiCourseKeyService.GeneratedApiCourseKey generated =
+        apiCourseKeyService.createKey(courseId, creator, expirationChoice);
+    return new GeneratedApiCourseKeyView(
+        generated.rawKey(), new ApiCourseKeyView(generated.apiCourseKey()));
+  }
+
+  @Operation(summary = "List active API keys for a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("/apiKeys")
+  public List<ApiCourseKeyView> listApiKeys(
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
+    return apiCourseKeyService.listActiveKeys(courseId).stream()
+        .map(ApiCourseKeyView::new)
+        .toList();
+  }
+
+  @Operation(summary = "Revoke an API key for a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @DeleteMapping("/apiKeys")
+  public Object revokeApiKey(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "apiKeyId") @RequestParam Long apiKeyId) {
+    ApiCourseKey revokedKey = apiCourseKeyService.revokeKey(courseId, apiKeyId);
+    return Map.of("message", "API key revoked", "apiKeyId", revokedKey.getId());
   }
 
   @Operation(summary = "Delete a course")

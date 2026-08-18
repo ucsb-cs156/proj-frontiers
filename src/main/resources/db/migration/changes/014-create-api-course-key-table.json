@@ -1,0 +1,138 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "014-create-api-course-key-table",
+        "author": "copilot",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "api_course_key",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_api_course_key",
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "course_id",
+                    "type": "BIGINT",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "created_by_id",
+                    "type": "BIGINT",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "key_hash",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "salt",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "key_suffix",
+                    "type": "VARCHAR(32)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "created_at",
+                    "type": "TIMESTAMP",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "expires_at",
+                    "type": "TIMESTAMP",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "revoked",
+                    "type": "BOOLEAN",
+                    "defaultValueBoolean": false,
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "last_used_at",
+                    "type": "TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "usage_count",
+                    "type": "BIGINT",
+                    "defaultValueNumeric": "0",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "api_course_key",
+              "baseColumnNames": "course_id",
+              "referencedTableName": "course",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_API_COURSE_KEY_ON_COURSE"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "api_course_key",
+              "baseColumnNames": "created_by_id",
+              "referencedTableName": "users",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_API_COURSE_KEY_ON_CREATED_BY"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

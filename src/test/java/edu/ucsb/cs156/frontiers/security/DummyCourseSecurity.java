@@ -41,6 +41,13 @@ public class DummyCourseSecurity {
     }
   }
 
+  @PreAuthorize("@CourseSecurity.hasManagePermissionsOrApiKeyAccess(#root, #courseId)")
+  public Course loadCourseApiAccess(Long courseId) {
+    return courseRepository
+        .findById(courseId)
+        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+  }
+
   @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
   public Course loadCourseInstructor(Long courseId) {
     /*

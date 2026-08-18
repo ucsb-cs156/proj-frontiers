@@ -5,6 +5,7 @@ import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.DownloadRequestRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.ApiCourseKeyService;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import java.util.Collection;
 import java.util.Optional;
@@ -38,18 +39,21 @@ public class CourseSecurity {
   private final CourseRepository courseRepository;
   private final RosterStudentRepository rosterStudentRepository;
   private final DownloadRequestRepository downloadRequestRepository;
+  private final ApiCourseKeyService apiCourseKeyService;
 
   public CourseSecurity(
       CurrentUserService currentUserService,
       RoleHierarchy roleHierarchy,
       CourseRepository courseRepository,
       RosterStudentRepository rosterStudentRepository,
-      DownloadRequestRepository downloadRequestRepository) {
+      DownloadRequestRepository downloadRequestRepository,
+      ApiCourseKeyService apiCourseKeyService) {
     this.currentUserService = currentUserService;
     this.roleHierarchy = roleHierarchy;
     this.courseRepository = courseRepository;
     this.rosterStudentRepository = rosterStudentRepository;
     this.downloadRequestRepository = downloadRequestRepository;
+    this.apiCourseKeyService = apiCourseKeyService;
   }
 
   /**
@@ -62,6 +66,11 @@ public class CourseSecurity {
    */
   @PreAuthorize("hasRole('ROLE_USER')")
   public Boolean hasManagePermissions(
+      MethodSecurityExpressionOperations operations, Long courseId) {
+    return hasManagePermissionsWithoutRoleCheck(operations, courseId);
+  }
+
+  private Boolean hasManagePermissionsWithoutRoleCheck(
       MethodSecurityExpressionOperations operations, Long courseId) {
     Optional<Course> course = courseRepository.findById(courseId);
     if (course.isEmpty()) {
@@ -125,6 +134,9 @@ public class CourseSecurity {
   public Boolean baseHasManagePermissions(
       MethodSecurityExpressionOperations operations, Course course) {
     CurrentUser currentUser = currentUserService.getCurrentUser();
+    if (currentUser == null || currentUser.getUser() == null) {
+      return false;
+    }
     Collection<? extends GrantedAuthority> authorities =
         roleHierarchy.getReachableGrantedAuthorities(currentUser.getRoles());
     if (authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"))) {
@@ -136,6 +148,14 @@ public class CourseSecurity {
       }
       return currentUser.getUser().getEmail().equals(course.getInstructorEmail());
     }
+  }
+
+  public Boolean hasManagePermissionsOrApiKeyAccess(
+      MethodSecurityExpressionOperations operations, Long courseId) {
+    if (apiCourseKeyService.authenticateFromRequestForCourse(courseId)) {
+      return true;
+    }
+    return hasManagePermissionsWithoutRoleCheck(operations, courseId);
   }
 
   @PreAuthorize("hasRole('ROLE_USER')")
