@@ -34,6 +34,17 @@ const DeveloperPage = () => {
           </tr>
         </tbody>
       </Table>
+      <blockquote>
+        <p>
+          Note: to ensure that the links to the currently deployed commit work
+          properly, be sure to set the <code>SOURCE_REPO</code> property on your
+          dokku deployment. For example:
+        </p>
+        <pre>
+          {`dokku config:set my-deployment SOURCE_REPO=https://github.com/ucsb-cs156-s26/proj-frontiers-s26-17
+`}
+        </pre>
+      </blockquote>
       <h2>Backend Endpoints</h2>
       <ul>
         <li>
