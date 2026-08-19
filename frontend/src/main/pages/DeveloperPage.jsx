@@ -13,7 +13,7 @@ const DeveloperPage = () => {
       <Table striped bordered hover>
         <tbody>
           <tr>
-            <td>Github Repo:</td>
+            <td>GitHub Repo:</td>
             <td>
               <a href={systemInfo.sourceRepo}>{systemInfo.sourceRepo}</a>
             </td>
