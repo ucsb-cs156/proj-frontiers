@@ -8,7 +8,6 @@ import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
@@ -17,7 +16,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,10 +47,11 @@ public class MembershipAuditJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsNull() {
+  public void test_getScope_returnsUnscoped() {
     MembershipAuditJob job = MembershipAuditJob.builder().build();
 
-    assertNull(job.getCourse());
+    assertNull(job.getScopeType());
+    assertNull(job.getScopeId());
   }
 
   @Test

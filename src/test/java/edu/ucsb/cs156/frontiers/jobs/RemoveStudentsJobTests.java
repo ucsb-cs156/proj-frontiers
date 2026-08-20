@@ -16,7 +16,7 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,10 +40,11 @@ public class RemoveStudentsJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsNull() {
+  public void test_getScope_returnsUnscoped() {
     RemoveStudentsJob job = RemoveStudentsJob.builder().build();
 
-    assertNull(job.getCourse());
+    assertNull(job.getScopeType());
+    assertNull(job.getScopeId());
   }
 
   @Test
@@ -86,6 +87,8 @@ public class RemoveStudentsJobTests {
     verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
     verify(rosterStudentRepository, atLeastOnce()).save(student1Updated);
     verify(rosterStudentRepository, atLeastOnce()).save(student2Updated);
+    verify(jobContext).log("Removed student testLogin1 from Organization");
+    verify(jobContext).log("Removed student testLogin2 from Organization");
   }
 
   @Test
@@ -114,6 +117,7 @@ public class RemoveStudentsJobTests {
     removeStudentsJob.accept(jobContext);
     verify(organizationMemberService, times(1)).removeOrganizationMember(eq(student1));
     verify(rosterStudentRepository, times(1)).save(student1Updated);
+    verify(jobContext).log("Student testLogin1 not in Organization");
   }
 
   @Test

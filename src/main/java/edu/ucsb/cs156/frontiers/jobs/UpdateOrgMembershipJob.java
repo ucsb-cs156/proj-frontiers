@@ -6,8 +6,8 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.Optional;
 import lombok.Builder;
 
@@ -18,8 +18,13 @@ public class UpdateOrgMembershipJob implements JobContextConsumer {
   RosterStudentRepository rosterStudentRepository;
 
   @Override
-  public Course getCourse() {
-    return course;
+  public String getScopeType() {
+    return "course";
+  }
+
+  @Override
+  public Long getScopeId() {
+    return course.getId();
   }
 
   @Override

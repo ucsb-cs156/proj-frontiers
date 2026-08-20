@@ -29,11 +29,11 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
-import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -966,7 +966,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andExpect(status().isOk())
             .andReturn();
     verify(linkerService).unenrollOrganization(eq(course));
-    verify(jobsRepository).deleteByCourse_Id(eq(1L));
+    verify(jobsRepository).deleteByScopeTypeAndScopeId(eq("course"), eq(1L));
     verify(courseRepository).findById(eq(1L));
     verify(courseRepository).delete(eq(course));
     verifyNoMoreInteractions(

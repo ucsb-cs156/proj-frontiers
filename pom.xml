@@ -218,10 +218,23 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Shared async jobs system: https://github.com/ucsb-cs156/lib-jobs -->
+    <dependency>
+      <groupId>com.github.ucsb-cs156</groupId>
+      <artifactId>lib-jobs</artifactId>
+      <version>v0.2.0</version>
+    </dependency>
 
   </dependencies>
 
   <!-- (24) <repositories/> -->
+  <repositories>
+    <!-- JitPack builds lib-jobs straight from its git tags -->
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
   <!-- (25) <pluginRepositories/> -->
   <!-- (26) <build/> -->
 

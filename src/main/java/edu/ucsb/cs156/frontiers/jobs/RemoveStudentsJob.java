@@ -1,12 +1,11 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
-import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -20,10 +19,8 @@ public class RemoveStudentsJob implements JobContextConsumer {
   private List<RosterStudent> students;
   private RosterStudentRepository rosterStudentRepository;
 
-  @Override
-  public Course getCourse() {
-    return null;
-  }
+  // Unscoped: students may span multiple courses in one run.
+  // getScopeType()/getScopeId() default to null (unscoped), same as the old getCourse() did.
 
   @Override
   public void accept(JobContext c) throws Exception {

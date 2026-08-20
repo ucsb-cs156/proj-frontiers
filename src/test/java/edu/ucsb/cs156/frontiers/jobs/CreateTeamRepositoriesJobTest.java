@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
@@ -17,7 +16,8 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,12 +41,13 @@ public class CreateTeamRepositoriesJobTest {
   }
 
   @Test
-  public void test_getCourse_returnsCourse() {
+  public void test_getScope_returnsCourseScope() {
     Course course = Course.builder().id(1L).courseName("Test Course").build();
 
     CreateTeamRepositoriesJob job = CreateTeamRepositoriesJob.builder().course(course).build();
 
-    assertEquals(course, job.getCourse());
+    assertEquals("course", job.getScopeType());
+    assertEquals(course.getId(), job.getScopeId());
   }
 
   @Test

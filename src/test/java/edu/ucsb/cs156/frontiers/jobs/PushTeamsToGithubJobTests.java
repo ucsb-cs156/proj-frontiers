@@ -1,14 +1,12 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
@@ -18,7 +16,8 @@ import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.Arrays;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,11 +44,8 @@ public class PushTeamsToGithubJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsCourse_whenFound() {
+  public void test_getScope_returnsCourseScope() {
     Long courseId = 1L;
-    Course course = Course.builder().id(courseId).courseName("Test Course").build();
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
     PushTeamsToGithubJob job =
         PushTeamsToGithubJob.builder()
@@ -57,28 +53,8 @@ public class PushTeamsToGithubJobTests {
             .courseRepository(courseRepository)
             .build();
 
-    Course result = job.getCourse();
-
-    assertEquals(course, result);
-    verify(courseRepository, times(1)).findById(courseId);
-  }
-
-  @Test
-  public void test_getCourse_returnsNull_whenNotFound() {
-    Long courseId = 1L;
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
-
-    PushTeamsToGithubJob job =
-        PushTeamsToGithubJob.builder()
-            .courseId(courseId)
-            .courseRepository(courseRepository)
-            .build();
-
-    Course result = job.getCourse();
-
-    assertNull(result);
-    verify(courseRepository, times(1)).findById(courseId);
+    assertEquals("course", job.getScopeType());
+    assertEquals(courseId, job.getScopeId());
   }
 
   @Test
@@ -102,6 +78,7 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(courseRepository).findById(courseId);
     verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
+    assertTrue(jobStarted.getLog().contains("ERROR: Course with ID 1 not found"));
   }
 
   @Test
@@ -126,6 +103,7 @@ public class PushTeamsToGithubJobTests {
     // Assert
     verify(courseRepository).findById(courseId);
     verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
+    assertTrue(jobStarted.getLog().contains("ERROR: Course has no linked GitHub organization"));
   }
 
   @Test
@@ -246,6 +224,19 @@ public class PushTeamsToGithubJobTests {
                 tm ->
                     tm.getRosterStudent().equals(student2)
                         && tm.getTeamStatus().equals(TeamStatus.NO_GITHUB_ID)));
+    assertTrue(jobStarted.getLog().contains("Starting push teams to GitHub job for course ID: 1"));
+    assertTrue(jobStarted.getLog().contains("Processing course: Test Course (org: test-org)"));
+    assertTrue(jobStarted.getLog().contains("Processing team: team1"));
+    assertTrue(jobStarted.getLog().contains("Processing team: team2"));
+    assertTrue(jobStarted.getLog().contains("Updated team 'team1' with GitHub team ID: 123"));
+    assertTrue(jobStarted.getLog().contains("Processing members for team: team1"));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("Student student2@test.com has no GitHub login - marked as NO_GITHUB_ID"));
+    assertTrue(
+        jobStarted.getLog().contains("Added student student1 to team with status: TEAM_MEMBER"));
+    assertTrue(jobStarted.getLog().contains("Completed push teams to GitHub job for course ID: 1"));
   }
 
   @Test
@@ -303,6 +294,7 @@ public class PushTeamsToGithubJobTests {
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
     assertTrue(jobStarted.getLog().contains("already has correct GitHub team ID: 123"));
+    assertTrue(jobStarted.getLog().contains("Student student already has status: TEAM_MEMBER"));
   }
 
   @Test
@@ -493,6 +485,8 @@ public class PushTeamsToGithubJobTests {
     verify(githubTeamService).createOrGetTeamInfo(team, course);
     // Should not save team or process members when creation fails
     verify(teamRepository, never()).save(any());
+    assertTrue(
+        jobStarted.getLog().contains("ERROR: Failed to create/get team 'team1': GitHub API error"));
   }
 
   @Test
@@ -546,6 +540,8 @@ public class PushTeamsToGithubJobTests {
     verify(githubTeamService, never()).getTeamMembershipStatus(any(), any(), any(), any());
     verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
     verify(teamMemberRepository, never()).save(any());
+    assertTrue(
+        jobStarted.getLog().contains("Skipping team members for 'team1' - no GitHub team ID"));
   }
 
   @Test
@@ -601,6 +597,12 @@ public class PushTeamsToGithubJobTests {
     // Should set status to NOT_ORG_MEMBER when processing fails
     verify(teamMemberRepository)
         .save(argThat(tm -> tm.getTeamStatus().equals(TeamStatus.NOT_ORG_MEMBER)));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "ERROR: Failed to process team member student for team 'team1': GitHub API"
+                    + " error"));
   }
 
   @Test

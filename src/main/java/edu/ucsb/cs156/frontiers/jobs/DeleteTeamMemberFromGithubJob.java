@@ -2,8 +2,8 @@ package edu.ucsb.cs156.frontiers.jobs;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import lombok.Builder;
 
 @Builder
@@ -14,8 +14,13 @@ public class DeleteTeamMemberFromGithubJob implements JobContextConsumer {
   GithubTeamService githubTeamService;
 
   @Override
-  public Course getCourse() {
-    return course;
+  public String getScopeType() {
+    return "course";
+  }
+
+  @Override
+  public Long getScopeId() {
+    return course.getId();
   }
 
   @Override

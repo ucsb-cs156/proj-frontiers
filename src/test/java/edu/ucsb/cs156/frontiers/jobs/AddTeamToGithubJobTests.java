@@ -5,13 +5,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,12 +36,13 @@ public class AddTeamToGithubJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsCourse() {
+  public void test_getScope_returnsCourseScope() {
     Course course = Course.builder().id(1L).courseName("Test Course").build();
 
     AddTeamToGithubJob job = AddTeamToGithubJob.builder().course(course).build();
 
-    assertEquals(course, job.getCourse());
+    assertEquals("course", job.getScopeType());
+    assertEquals(course.getId(), job.getScopeId());
   }
 
   @Test
@@ -65,6 +66,12 @@ public class AddTeamToGithubJobTests {
     assertEquals(11, team.getGithubTeamId());
     assertEquals("test-team", team.getGithubTeamSlug());
     verify(teamRepository, times(1)).save(team);
+    assertTrue(jobStarted.getLog().contains("Starting add team to GitHub job for team: test-team"));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("Successfully added team 'test-team' to GitHub with GitHub team ID: 11"));
+    assertTrue(jobStarted.getLog().contains("Done"));
   }
 
   @Test

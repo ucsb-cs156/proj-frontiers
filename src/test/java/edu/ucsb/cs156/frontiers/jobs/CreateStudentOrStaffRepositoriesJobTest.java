@@ -8,13 +8,13 @@ import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,13 +47,14 @@ public class CreateStudentOrStaffRepositoriesJobTest {
   }
 
   @Test
-  public void test_getCourse_returnsCourse() {
+  public void test_getScope_returnsCourseScope() {
     Course course = Course.builder().id(1L).courseName("Test Course").build();
 
     CreateStudentOrStaffRepositoriesJob job =
         CreateStudentOrStaffRepositoriesJob.builder().course(course).build();
 
-    assertEquals(course, job.getCourse());
+    assertEquals("course", job.getScopeType());
+    assertEquals(course.getId(), job.getScopeId());
   }
 
   @Test
