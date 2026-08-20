@@ -58,5 +58,9 @@ describe("DeveloperPage tests", () => {
     );
 
     expect(await screen.findByText("System Info")).toBeInTheDocument();
+
+    expect(
+      await screen.findByText(/dokku config:set my-deployment SOURCE_REPO=/),
+    ).toBeInTheDocument();
   });
 });

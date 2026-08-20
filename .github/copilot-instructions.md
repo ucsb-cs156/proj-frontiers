@@ -37,6 +37,16 @@ Frontiers is a Spring Boot Java backend application with a React frontend that s
 * Any time workflow 36-frontend-eslint.yml fails, look at the messages and use those to make the necessary changes to the code so that the workflow will pass.
 * Any time workflow 32-frontend-coverage.yml files, it is because you created or edited code under the frontend directory in this project, and did not add tests for the new code.  When that happens, please check the coverage reports which can be found in `coverage/index.html` and follow up by writing tests to get to 100% coverage.
 
+## Definition of done for GitHub Actions workflows
+
+Work on a pull request in this repository is **NOT finished** until all GitHub Actions workflows on that PR are checked and passing (green). Before stopping and asking for a code review, an agent must:
+
+1. Monitor the status of all GitHub Actions workflows on the PR (for the latest pushed commit).
+2. Take steps to address any workflow failures.
+3. Either:
+   a. Iterate over steps 1 and 2 until all GitHub workflows pass, or
+   b. Determine that it is unable to continue for some reason, and state that reason in a comment on the PR.
+
 ### Running the Application
 
 #### Development Mode (Two Terminal Windows)
