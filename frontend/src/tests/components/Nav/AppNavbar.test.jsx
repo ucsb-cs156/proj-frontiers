@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import {
@@ -53,6 +59,11 @@ describe("AppNavbar tests", () => {
     await screen.findByText("Welcome, phtcon@ucsb.edu");
     const adminMenu = screen.getByTestId("appnavbar-admin-dropdown");
     expect(adminMenu).toBeInTheDocument();
+
+    fireEvent.click(within(adminMenu).getByText("Admin"));
+    const developerInfoLink = await screen.findByText("Developer Info");
+    expect(developerInfoLink).toBeInTheDocument();
+    expect(developerInfoLink).toHaveAttribute("href", "/developer");
   });
 
   test("renders correctly for instructor user", async () => {
