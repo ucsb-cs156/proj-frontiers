@@ -2,8 +2,9 @@ package edu.ucsb.cs156.frontiers.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -11,10 +12,12 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import com.fasterxml.jackson.core.JsonProcessingException;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.interceptors.RateLimitInterceptor;
 import edu.ucsb.cs156.frontiers.testconfig.DummyClock;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -26,13 +29,16 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -53,6 +59,21 @@ public class JwtServiceTests {
   @MockitoBean private DateTimeProvider dateTimeProvider;
 
   private Instant setInstant = Instant.parse("2024-05-23T08:00:00.00Z");
+
+  @MockitoBean private RateLimitInterceptor interceptor;
+
+  @BeforeEach
+  public void setup() throws IOException {
+    when(interceptor.intercept(any(), any(), any()))
+        .thenAnswer(
+            invocation -> {
+              ClientHttpRequestExecution clientResponse = invocation.getArgument(2);
+              HttpRequest outgoing = invocation.getArgument(0);
+              byte[] body = invocation.getArgument(1);
+
+              return clientResponse.execute(outgoing, body);
+            });
+  }
 
   @Test
   public void testGettingJwt() throws NoSuchAlgorithmException, InvalidKeySpecException {
