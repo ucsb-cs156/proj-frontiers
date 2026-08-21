@@ -11,14 +11,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 /** The FrontiersMain class is the main entry point for the application. */
 @SpringBootApplication
 @Slf4j
-@EnableAsync // for @Async annotation for JobsService
-@EnableScheduling // for @Scheduled annotation for JobsService
+// @EnableAsync and @EnableScheduling are provided by lib-jobs' JobsAutoConfiguration
 // enables automatic population of @CreatedDate and @LastModifiedDate
 @EnableSpringDataWebSupport(
     pageSerializationMode =

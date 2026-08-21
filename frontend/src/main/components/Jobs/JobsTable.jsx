@@ -14,13 +14,13 @@ export default function JobsTable({ jobs }) {
     },
     {
       header: "User Email",
-      accessorFn: (row) => row.createdBy?.email,
-      id: "createdByEmail",
+      accessorKey: "createdByEmail",
     },
     {
-      header: "Course Name",
-      accessorFn: (row) => row.course?.courseName ?? "",
-      id: "courseName",
+      header: "Course Id",
+      accessorFn: (row) =>
+        row.scopeType === "course" ? String(row.scopeId) : "",
+      id: "courseId",
     },
     {
       header: "Created",

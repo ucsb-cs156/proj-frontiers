@@ -10,8 +10,8 @@ import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
@@ -25,9 +25,13 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
   GithubTeamService githubTeamService;
 
   @Override
-  public Course getCourse() {
-    Optional<Course> courseOpt = courseRepository.findById(courseId);
-    return courseOpt.orElse(null);
+  public String getScopeType() {
+    return "course";
+  }
+
+  @Override
+  public Long getScopeId() {
+    return courseId;
   }
 
   @Override

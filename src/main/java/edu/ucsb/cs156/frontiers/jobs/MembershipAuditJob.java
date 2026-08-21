@@ -9,8 +9,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
@@ -23,10 +23,8 @@ public class MembershipAuditJob implements JobContextConsumer {
   RosterStudentRepository rosterStudentRepository;
   CourseStaffRepository courseStaffRepository;
 
-  @Override
-  public Course getCourse() {
-    return null;
-  }
+  // Unscoped: audits every course with a linked GitHub org in one run, not a single course.
+  // getScopeType()/getScopeId() default to null (unscoped), same as the old getCourse() did.
 
   @Override
   public void accept(JobContext ctx) throws Exception {

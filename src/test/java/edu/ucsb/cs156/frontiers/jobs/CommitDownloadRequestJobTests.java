@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.DownloadRequest;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -40,6 +40,7 @@ public class CommitDownloadRequestJobTests {
 
     verify(ctx, times(1)).log(contains("Starting download for course banana"));
     verify(ctx, times(1)).log(contains("Download completed successfully"));
-    assertEquals(course, job.getCourse());
+    assertEquals("course", job.getScopeType());
+    assertEquals(course.getId(), job.getScopeId());
   }
 }

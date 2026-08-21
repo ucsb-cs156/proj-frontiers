@@ -5,8 +5,8 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import lombok.Builder;
 
 @Builder
@@ -20,8 +20,13 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
   String teamRegex;
 
   @Override
-  public Course getCourse() {
-    return course;
+  public String getScopeType() {
+    return "course";
+  }
+
+  @Override
+  public Long getScopeId() {
+    return course.getId();
   }
 
   @Override

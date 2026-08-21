@@ -6,14 +6,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,12 +41,13 @@ public class UpdateOrgMembershipJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsCourse() {
+  public void test_getScope_returnsCourseScope() {
     Course course = Course.builder().id(1L).courseName("Test Course").build();
 
     UpdateOrgMembershipJob job = UpdateOrgMembershipJob.builder().course(course).build();
 
-    assertEquals(course, job.getCourse());
+    assertEquals("course", job.getScopeType());
+    assertEquals(course.getId(), job.getScopeId());
   }
 
   @Test

@@ -4,8 +4,8 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService.GithubRepository;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
@@ -18,9 +18,13 @@ public class DeleteRepoJob implements JobContextConsumer {
   RepositoryService repositoryService;
 
   @Override
-  public Course getCourse() {
-    Optional<Course> courseOpt = courseRepository.findById(courseId);
-    return courseOpt.orElse(null);
+  public String getScopeType() {
+    return "course";
+  }
+
+  @Override
+  public Long getScopeId() {
+    return courseId;
   }
 
   @Override

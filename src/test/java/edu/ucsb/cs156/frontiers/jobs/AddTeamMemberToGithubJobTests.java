@@ -5,14 +5,14 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.TeamStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,12 +38,13 @@ public class AddTeamMemberToGithubJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsCourse() {
+  public void test_getScope_returnsCourseScope() {
     Course course = Course.builder().id(1L).courseName("Test Course").build();
 
     AddTeamMemberToGithubJob job = AddTeamMemberToGithubJob.builder().course(course).build();
 
-    assertEquals(course, job.getCourse());
+    assertEquals("course", job.getScopeType());
+    assertEquals(course.getId(), job.getScopeId());
   }
 
   @Test
@@ -65,6 +66,13 @@ public class AddTeamMemberToGithubJobTests {
 
     verify(githubTeamService, times(1))
         .addMemberToGithubTeam(eq("testuser"), eq(456), eq("member"), eq(course), eq(1));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("Starting add team member to GitHub job for team ID 456 member testuser"));
+    assertTrue(
+        jobStarted.getLog().contains("ERROR: Could not find team member in database with ID: 123"));
+    assertTrue(jobStarted.getLog().contains("Done"));
   }
 
   @Test
@@ -94,6 +102,10 @@ public class AddTeamMemberToGithubJobTests {
     verify(teamMemberRepository, times(1)).findById(123L);
     verify(teamMemberRepository, times(1)).save(teamMember);
     assertEquals(TeamStatus.TEAM_MEMBER, teamMember.getTeamStatus());
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("Successfully added testuser to Github team with status: TEAM_MEMBER"));
     assertTrue(jobStarted.getLog().contains("Updated team member status in database"));
   }
 

@@ -1,7 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
@@ -11,7 +10,8 @@ import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public class RepositoryController extends ApiController {
    * @param repoPrefix each repo created will begin with this prefix, followed by a dash and the
    *     student's GitHub username
    * @param isPrivate determines whether the repository being created is private
-   * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
+   * @return the {@link edu.ucsb.cs156.jobs.entities.Job Job} started to create the repos.
    */
   @PostMapping("/createRepos")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
@@ -80,7 +80,7 @@ public class RepositoryController extends ApiController {
    * @param repoPrefix each team repo created will begin with this prefix, followed by a dash and
    *     the team's name
    * @param isPrivate determines whether the repository being created is private
-   * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
+   * @return the {@link edu.ucsb.cs156.jobs.entities.Job Job} started to create the repos.
    */
   @PostMapping("/createTeamRepos")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
