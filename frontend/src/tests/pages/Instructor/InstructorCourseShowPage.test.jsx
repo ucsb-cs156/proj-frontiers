@@ -653,6 +653,10 @@ describe("InstructorCourseShowPage tests", () => {
     );
 
     fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const enableCanvasToggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(enableCanvasToggle).not.toBeDisabled();
     const dokkuManagerToggle = await screen.findByTestId(
       "CourseOptionsForm-toggle-DOKKU_MANAGER",
     );
