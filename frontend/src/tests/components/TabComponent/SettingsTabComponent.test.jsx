@@ -25,6 +25,7 @@ describe("SettingsTabComponent tests", () => {
     axiosMock.onGet(/\/api\/course\/options.*/).reply(200, {
       ENABLE_CANVAS: false,
       TRANSLATE_SECTIONS: true,
+      DOKKU_MANAGER: false,
     });
     axiosMock.onPost("/api/course/options").reply(200, {
       ENABLE_CANVAS: true,
@@ -61,6 +62,7 @@ describe("SettingsTabComponent tests", () => {
     expect(screen.getByText("Course Options")).toBeInTheDocument();
     expect(screen.getByLabelText("Enable Canvas")).toBeInTheDocument();
     expect(screen.getByLabelText("Translate Sections")).toBeInTheDocument();
+    expect(screen.getByLabelText("Dokku Manager")).toBeInTheDocument();
   });
 
   test("Call PUT for Canvas credentials properly", async () => {

@@ -25,6 +25,7 @@ describe("CourseOptionsForm tests", () => {
       .reply(200, {
         ENABLE_CANVAS: false,
         TRANSLATE_SECTIONS: true,
+        DOKKU_MANAGER: false,
       });
     axiosMock.onPost("/api/course/options").reply(200, { ENABLE_CANVAS: true });
   });
@@ -41,6 +42,7 @@ describe("CourseOptionsForm tests", () => {
     await screen.findByLabelText("Enable Canvas");
     expect(screen.getByLabelText("Enable Canvas")).toBeInTheDocument();
     expect(screen.getByLabelText("Translate Sections")).toBeInTheDocument();
+    expect(screen.getByLabelText("Dokku Manager")).toBeInTheDocument();
 
     const toggle = screen.getByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS");
     fireEvent.click(toggle);

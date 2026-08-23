@@ -49,6 +49,7 @@ describe("InstructorCourseShowPage tests", () => {
     axiosMock.onGet("/api/course/options").reply(200, {
       ENABLE_CANVAS: false,
       TRANSLATE_SECTIONS: false,
+      DOKKU_MANAGER: false,
     });
   });
 
@@ -652,10 +653,10 @@ describe("InstructorCourseShowPage tests", () => {
     );
 
     fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
-    const toggle = await screen.findByTestId(
-      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    const dokkuManagerToggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-DOKKU_MANAGER",
     );
-    expect(toggle).not.toBeDisabled();
+    expect(dokkuManagerToggle).not.toBeDisabled();
   });
 
   test("admin can edit course option toggles for non-owned course", async () => {
