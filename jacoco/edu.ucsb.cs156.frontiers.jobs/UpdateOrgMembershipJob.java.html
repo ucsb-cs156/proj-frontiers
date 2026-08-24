@@ -6,8 +6,8 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.models.OrgMember;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.Optional;
 import lombok.Builder;
 
@@ -18,24 +18,29 @@ public class UpdateOrgMembershipJob implements JobContextConsumer {
   RosterStudentRepository rosterStudentRepository;
 
   @Override
-  public Course getCourse() {
-<span class="fc" id="L22">    return course;</span>
+  public String getScopeType() {
+<span class="fc" id="L22">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L27">    return course.getId();</span>
   }
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L27">    ctx.log(&quot;Processing...&quot;);</span>
-<span class="fc" id="L28">    Iterable&lt;OrgMember&gt; members = organizationMemberService.getOrganizationMembers(course);</span>
-<span class="fc bfc" id="L29" title="All 2 branches covered.">    for (OrgMember member : members) {</span>
-<span class="fc" id="L30">      Optional&lt;RosterStudent&gt; student =</span>
-<span class="fc" id="L31">          rosterStudentRepository.findByCourseAndGithubId(course, member.getGithubId());</span>
-<span class="fc bfc" id="L32" title="All 2 branches covered.">      if (student.isPresent()) {</span>
-<span class="fc" id="L33">        RosterStudent foundStudent = student.get();</span>
-<span class="fc" id="L34">        foundStudent.setOrgStatus(OrgStatus.MEMBER);</span>
-<span class="fc" id="L35">        rosterStudentRepository.save(foundStudent);</span>
+<span class="fc" id="L32">    ctx.log(&quot;Processing...&quot;);</span>
+<span class="fc" id="L33">    Iterable&lt;OrgMember&gt; members = organizationMemberService.getOrganizationMembers(course);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">    for (OrgMember member : members) {</span>
+<span class="fc" id="L35">      Optional&lt;RosterStudent&gt; student =</span>
+<span class="fc" id="L36">          rosterStudentRepository.findByCourseAndGithubId(course, member.getGithubId());</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">      if (student.isPresent()) {</span>
+<span class="fc" id="L38">        RosterStudent foundStudent = student.get();</span>
+<span class="fc" id="L39">        foundStudent.setOrgStatus(OrgStatus.MEMBER);</span>
+<span class="fc" id="L40">        rosterStudentRepository.save(foundStudent);</span>
       }
-<span class="fc" id="L37">    }</span>
-<span class="fc" id="L38">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L39">  }</span>
+<span class="fc" id="L42">    }</span>
+<span class="fc" id="L43">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L44">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

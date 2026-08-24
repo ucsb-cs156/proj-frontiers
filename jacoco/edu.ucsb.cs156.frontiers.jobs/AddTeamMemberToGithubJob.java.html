@@ -5,8 +5,8 @@ import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.TeamStatus;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import lombok.Builder;
 
 @Builder
@@ -19,62 +19,67 @@ public class AddTeamMemberToGithubJob implements JobContextConsumer {
   TeamMemberRepository teamMemberRepository;
 
   @Override
-  public Course getCourse() {
-<span class="fc" id="L23">    return course;</span>
+  public String getScopeType() {
+<span class="fc" id="L23">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L28">    return course.getId();</span>
   }
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L28">    ctx.log(</span>
+<span class="fc" id="L33">    ctx.log(</span>
         &quot;Starting add team member to GitHub job for team ID &quot;
             + githubTeamId
             + &quot; member &quot;
             + memberGithubLogin);
 
-<span class="fc bfc" id="L34" title="All 2 branches covered.">    if (githubTeamId == null) {</span>
-<span class="fc" id="L35">      ctx.log(&quot;ERROR: Team has no GitHub team ID&quot;);</span>
-<span class="fc" id="L36">      return;</span>
-    }
-
-<span class="fc bfc" id="L39" title="All 2 branches covered.">    if (memberGithubLogin == null) {</span>
-<span class="fc" id="L40">      ctx.log(&quot;ERROR: Team member has no GitHub login&quot;);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">    if (githubTeamId == null) {</span>
+<span class="fc" id="L40">      ctx.log(&quot;ERROR: Team has no GitHub team ID&quot;);</span>
 <span class="fc" id="L41">      return;</span>
     }
 
-<span class="fc bfc" id="L44" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L45">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">    if (memberGithubLogin == null) {</span>
+<span class="fc" id="L45">      ctx.log(&quot;ERROR: Team member has no GitHub login&quot;);</span>
 <span class="fc" id="L46">      return;</span>
     }
 
-<span class="fc" id="L49">    Integer orgId = null;</span>
+<span class="fc bfc" id="L49" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L50">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
+<span class="fc" id="L51">      return;</span>
+    }
+
+<span class="fc" id="L54">    Integer orgId = null;</span>
     try {
-<span class="fc" id="L51">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
-<span class="fc" id="L52">    } catch (Exception e) {</span>
-<span class="fc" id="L53">      throw new IllegalStateException(</span>
-<span class="fc" id="L54">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
+<span class="fc" id="L56">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
+<span class="fc" id="L57">    } catch (Exception e) {</span>
+<span class="fc" id="L58">      throw new IllegalStateException(</span>
+<span class="fc" id="L59">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
           e);
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L61">    }</span>
 
     try {
-<span class="fc" id="L59">      TeamStatus newStatus =</span>
-<span class="fc" id="L60">          githubTeamService.addMemberToGithubTeam(</span>
+<span class="fc" id="L64">      TeamStatus newStatus =</span>
+<span class="fc" id="L65">          githubTeamService.addMemberToGithubTeam(</span>
               memberGithubLogin, githubTeamId, &quot;member&quot;, course, orgId);
-<span class="fc" id="L62">      ctx.log(</span>
+<span class="fc" id="L67">      ctx.log(</span>
           &quot;Successfully added &quot; + memberGithubLogin + &quot; to Github team with status: &quot; + newStatus);
 
-<span class="fc" id="L65">      TeamMember teamMember = teamMemberRepository.findById(teamMemberId).orElse(null);</span>
-<span class="fc bfc" id="L66" title="All 2 branches covered.">      if (teamMember != null) {</span>
-<span class="fc" id="L67">        teamMember.setTeamStatus(newStatus);</span>
-<span class="fc" id="L68">        teamMemberRepository.save(teamMember);</span>
-<span class="fc" id="L69">        ctx.log(&quot;Updated team member status in database&quot;);</span>
+<span class="fc" id="L70">      TeamMember teamMember = teamMemberRepository.findById(teamMemberId).orElse(null);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">      if (teamMember != null) {</span>
+<span class="fc" id="L72">        teamMember.setTeamStatus(newStatus);</span>
+<span class="fc" id="L73">        teamMemberRepository.save(teamMember);</span>
+<span class="fc" id="L74">        ctx.log(&quot;Updated team member status in database&quot;);</span>
       } else {
-<span class="fc" id="L71">        ctx.log(&quot;ERROR: Could not find team member in database with ID: &quot; + teamMemberId);</span>
+<span class="fc" id="L76">        ctx.log(&quot;ERROR: Could not find team member in database with ID: &quot; + teamMemberId);</span>
       }
-<span class="fc" id="L73">    } catch (Exception e) {</span>
-<span class="fc" id="L74">      throw new IllegalStateException(&quot;Failed to add user to GitHub team: &quot; + e.getMessage(), e);</span>
-<span class="fc" id="L75">    }</span>
+<span class="fc" id="L78">    } catch (Exception e) {</span>
+<span class="fc" id="L79">      throw new IllegalStateException(&quot;Failed to add user to GitHub team: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L80">    }</span>
 
-<span class="fc" id="L77">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L78">  }</span>
+<span class="fc" id="L82">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L83">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
