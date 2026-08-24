@@ -68,6 +68,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     LinkedHashMap<String, Boolean> expected = new LinkedHashMap<>();
     expected.put("ENABLE_CANVAS", true);
     expected.put("TRANSLATE_SECTIONS", false);
+    expected.put("DOKKU_MANAGER", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -256,6 +257,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     LinkedHashMap<String, Boolean> expected = new LinkedHashMap<>();
     expected.put("ENABLE_CANVAS", false);
     expected.put("TRANSLATE_SECTIONS", false);
+    expected.put("DOKKU_MANAGER", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -281,6 +283,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     LinkedHashMap<String, Boolean> expected = new LinkedHashMap<>();
     expected.put("ENABLE_CANVAS", false);
     expected.put("TRANSLATE_SECTIONS", false);
+    expected.put("DOKKU_MANAGER", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 }

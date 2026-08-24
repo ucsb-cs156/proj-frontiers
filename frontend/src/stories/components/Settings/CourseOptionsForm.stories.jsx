@@ -5,6 +5,7 @@ import CourseOptionsForm from "main/components/Settings/CourseOptionsForm";
 const optionsState = {
   ENABLE_CANVAS: false,
   TRANSLATE_SECTIONS: true,
+  DOKKU_MANAGER: false,
 };
 
 export default {
