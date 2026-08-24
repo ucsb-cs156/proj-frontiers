@@ -31,10 +31,8 @@ export default function RosterStudentTable({
   const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
 
   React.useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+    setCurrentPage((prevPage) => Math.min(prevPage, totalPages));
+  }, [totalPages]);
 
   const handlePageSizeChange = (event) => {
     setPageSize(Number(event.target.value));

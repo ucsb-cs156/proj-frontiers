@@ -339,6 +339,9 @@ describe("RosterStudentTable tests", () => {
 
     const pageSizeSelect = screen.getByTestId(`${testId}-pageSizeSelect`);
     expect(pageSizeSelect).toHaveValue("100");
+    expect(pageSizeSelect).toHaveAttribute("id", `${testId}-pageSizeSelect`);
+    expect(pageSizeSelect).toHaveStyle({ width: "auto" });
+    expect(screen.getByLabelText("Page Size:")).toBe(pageSizeSelect);
     expect(
       screen.queryByTestId(`${testId}-pagination-prev`),
     ).not.toBeInTheDocument();
