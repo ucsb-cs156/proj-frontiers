@@ -6,6 +6,7 @@ const optionsState = {
   ENABLE_CANVAS: false,
   TRANSLATE_SECTIONS: true,
   DOKKU_MANAGER: false,
+  ENABLE_API_KEYS: false,
 };
 
 export default {
