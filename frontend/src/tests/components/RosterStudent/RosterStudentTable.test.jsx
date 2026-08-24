@@ -322,6 +322,130 @@ describe("RosterStudentTable tests", () => {
       queryClientSpecific.getQueryState(["mock queryData"]).isInvalidated,
     ).toBe(false);
   });
+
+  test("page size selector defaults to 100 and hides pagination when not needed", () => {
+    const currentUser = currentUserFixtures.adminUser;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const pageSizeSelect = screen.getByTestId(`${testId}-pageSizeSelect`);
+    expect(pageSizeSelect).toHaveValue("100");
+    expect(pageSizeSelect).toHaveAttribute("id", `${testId}-pageSizeSelect`);
+    expect(pageSizeSelect).toHaveStyle({ width: "auto" });
+    expect(screen.getByLabelText("Page Size:")).toBe(pageSizeSelect);
+    expect(
+      screen.queryByTestId(`${testId}-pagination-prev`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("pagination appears and lets user navigate when there are more students than the page size", () => {
+    const currentUser = currentUserFixtures.adminUser;
+    const manyStudents = Array.from({ length: 12 }, (_, index) => ({
+      id: index + 1,
+      studentId: `S${index + 1}`,
+      firstName: `First${index + 1}`,
+      lastName: `Last${index + 1}`,
+      email: `student${index + 1}@ucsb.edu`,
+    }));
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={manyStudents}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const pageSizeSelect = screen.getByTestId(`${testId}-pageSizeSelect`);
+    fireEvent.change(pageSizeSelect, { target: { value: "10" } });
+    expect(pageSizeSelect).toHaveValue("10");
+
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
+    ).toHaveTextContent("S1");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-9-col-studentId`),
+    ).toHaveTextContent("S10");
+    expect(
+      screen.queryByTestId(`${testId}-cell-row-10-col-studentId`),
+    ).not.toBeInTheDocument();
+
+    const nextButton = screen.getByTestId(`${testId}-pagination-next`);
+    fireEvent.click(nextButton);
+
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
+    ).toHaveTextContent("S11");
+
+    expect(pageSizeSelect).toHaveValue("10");
+    fireEvent.change(pageSizeSelect, { target: { value: "100" } });
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
+    ).toHaveTextContent("S1");
+    expect(
+      screen.queryByTestId(`${testId}-pagination-prev`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("resets to the last valid page if the student list shrinks below the current page", () => {
+    const currentUser = currentUserFixtures.adminUser;
+    const manyStudents = Array.from({ length: 25 }, (_, index) => ({
+      id: index + 1,
+      studentId: `S${index + 1}`,
+      firstName: `First${index + 1}`,
+      lastName: `Last${index + 1}`,
+      email: `student${index + 1}@ucsb.edu`,
+    }));
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={manyStudents}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const pageSizeSelect = screen.getByTestId(`${testId}-pageSizeSelect`);
+    fireEvent.change(pageSizeSelect, { target: { value: "10" } });
+
+    fireEvent.click(screen.getByTestId(`${testId}-pagination-3`));
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
+    ).toHaveTextContent("S21");
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-studentId`),
+    ).toHaveTextContent("A123456");
+    expect(
+      screen.queryByTestId(`${testId}-pagination-prev`),
+    ).not.toBeInTheDocument();
+  });
 });
 test("tooltips for Team column name", async () => {
   const currentUser = currentUserFixtures.adminUser;
