@@ -13,6 +13,7 @@ import edu.ucsb.cs156.frontiers.models.OrgMember;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +34,18 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class OrganizationMemberService {
 
+  /*
+   * A RestTemplate built with no timeout blocks its calling thread forever on a hung external
+   * call. That's a real incident lib-jobs' single-threaded jobsExecutor hit on another app
+   * (proj-scaffold): a job stuck this way permanently wedged the executor, with no way to recover
+   * short of restarting the app (see lib-jobs DESIGN.md 9 -- cooperative job cancellation only
+   * helps a job that reaches another checkpoint, which a truly hung thread never will). Generous
+   * but finite: long enough to never trip on legitimate slowness, short enough to guarantee a job
+   * can't hang forever.
+   */
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+  private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);
+
   private final JwtService jwtService;
   private final ObjectMapper objectMapper;
   private final RestTemplate restTemplate;
@@ -47,7 +60,7 @@ public class OrganizationMemberService {
     this.objectMapper = objectMapper;
     this.rosterStudentRepository = rosterStudentRepository;
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    this.restTemplate = builder.build();
+    this.restTemplate = builder.connectTimeout(CONNECT_TIMEOUT).readTimeout(READ_TIMEOUT).build();
   }
 
   /**

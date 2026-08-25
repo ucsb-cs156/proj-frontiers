@@ -17,8 +17,11 @@ import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.errors.JobCancelledException;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -263,5 +266,42 @@ public class CreateTeamRepositoriesJobTest {
         .createTeamRepository(eq(course), eq(team1), any(), any(), any(), any());
     verify(service, never())
         .createTeamRepository(eq(course), eq(team2), any(), any(), any(), any());
+  }
+
+  // ────────────────────── checkCancellation checkpoint ──────────────────────
+  // A team skipped by teamRegex never logs anything -- without its own ctx.checkCancellation()
+  // checkpoint, this loop would give cancellation no opportunity to fire no matter how many
+  // teams it skips. Exactly 1 real checkpoint precedes the loop's own check: accept()'s opening
+  // "Creating team repositories..." log line.
+
+  @Test
+  public void checkCancellation_stops_the_team_loop_before_calling_repositoryService()
+      throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    Team team = Team.builder().name("test-team1").build();
+    course.setTeams(List.of(team));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    Job runningJob = Job.builder().id(99L).status("running").build();
+    Job cancellingJob = Job.builder().id(99L).status("cancelling").build();
+    when(jobsRepository.findById(99L))
+        .thenReturn(Optional.of(runningJob), Optional.of(cancellingJob));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    var repoJob =
+        CreateTeamRepositoriesJob.builder()
+            .repositoryService(service)
+            .githubTeamService(githubTeamService)
+            .repositoryPrefix("repo-prefix")
+            .course(course)
+            .isPrivate(false)
+            .permissions(RepositoryPermissions.WRITE)
+            .build();
+
+    assertThrows(JobCancelledException.class, () -> repoJob.accept(cancellingCtx));
+
+    verify(service, never()).createTeamRepository(any(), any(), any(), any(), any(), any());
   }
 }

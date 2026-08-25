@@ -41,6 +41,10 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
     if (creationOption == RepositoryCreationOption.STUDENTS_ONLY
         || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
       for (RosterStudent student : course.getRosterStudents()) {
+        // A student not on GitHub or not yet an org member never calls repositoryService,
+        // and neither of those branches calls ctx.log() -- checkCancellation() gives this
+        // loop its own checkpoint independent of whether an iteration does anything at all.
+        ctx.checkCancellation();
         if (student.getGithubLogin() != null
             && (student.getOrgStatus() == OrgStatus.MEMBER
                 || student.getOrgStatus() == OrgStatus.OWNER)) {
@@ -53,6 +57,9 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
     if (creationOption == RepositoryCreationOption.STAFF_ONLY
         || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
       for (CourseStaff staff : course.getCourseStaff()) {
+        // Same reasoning as the student loop above: a staff member not on GitHub or not yet
+        // an org member never logs, so this loop needs its own cancellation checkpoint too.
+        ctx.checkCancellation();
         if (staff.getGithubLogin() != null
             && (staff.getOrgStatus() == OrgStatus.MEMBER
                 || staff.getOrgStatus() == OrgStatus.OWNER)) {
