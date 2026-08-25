@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -17,8 +18,11 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.errors.JobCancelledException;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -485,5 +489,118 @@ public class MembershipAuditJobTests {
         .saveAll(eq(List.of(studentUpdated, student2NotUpdated)));
     verify(courseStaffRepository).saveAll(eq(List.of(courseStaff1Updated, courseStaff2NotUpdated)));
     verifyNoMoreInteractions(courseStaffRepository, rosterStudentRepository);
+  }
+
+  // ────────────────────── checkCancellation checkpoints ──────────────────────
+  // Nothing in this method's whole body logs per course, per student, or per staff member --
+  // the only ctx.log() calls are the opening line and the closing "Done". Without their own
+  // checkCancellation() checkpoints, the course/student/staff loops would give cancellation no
+  // opportunity to fire no matter how many courses/students/staff they process. These tests
+  // mock a JobsRepository that reports "running" for exactly the calls known to precede the
+  // checkpoint under test, then "cancelling" from then on, and assert both that
+  // JobCancelledException is thrown AND that a downstream call the checkpoint should have
+  // pre-empted was never made.
+
+  private static Job runningJob() {
+    return Job.builder().id(99L).status("running").build();
+  }
+
+  private static Job cancellingJob() {
+    return Job.builder().id(99L).status("cancelling").build();
+  }
+
+  @Test
+  public void checkCancellation_stops_the_course_loop_before_fetching_org_members()
+      throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    doReturn(List.of(course)).when(courseRepository).findAll();
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    // 1 real checkpoint precedes the course loop's own check: accept()'s opening log line.
+    when(jobsRepository.findById(99L))
+        .thenReturn(Optional.of(runningJob()), Optional.of(cancellingJob()));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    var matchJob =
+        MembershipAuditJob.builder()
+            .rosterStudentRepository(rosterStudentRepository)
+            .organizationMemberService(organizationMemberService)
+            .courseRepository(courseRepository)
+            .courseStaffRepository(courseStaffRepository)
+            .build();
+
+    assertThrows(JobCancelledException.class, () -> matchJob.accept(cancellingCtx));
+
+    verify(organizationMemberService, never()).getOrganizationMembers(any());
+  }
+
+  @Test
+  public void checkCancellation_stops_the_student_loop_before_saving_the_roster() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    RosterStudent student =
+        RosterStudent.builder().studentId("banana").githubId(123456).course(course).build();
+    course.setRosterStudents(List.of(student));
+    course.setCourseStaff(List.of());
+    doReturn(List.of(course)).when(courseRepository).findAll();
+    doReturn(List.of()).when(organizationMemberService).getOrganizationMembers(eq(course));
+    doReturn(List.of()).when(organizationMemberService).getOrganizationAdmins(eq(course));
+    doReturn(List.of()).when(organizationMemberService).getOrganizationInvitees(eq(course));
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    // 2 real checkpoints precede the student loop's own check under this setup: accept()'s
+    // opening log line, and the course loop's own checkCancellation() (checked above).
+    when(jobsRepository.findById(99L))
+        .thenReturn(
+            Optional.of(runningJob()), Optional.of(runningJob()), Optional.of(cancellingJob()));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    var matchJob =
+        MembershipAuditJob.builder()
+            .rosterStudentRepository(rosterStudentRepository)
+            .organizationMemberService(organizationMemberService)
+            .courseRepository(courseRepository)
+            .courseStaffRepository(courseStaffRepository)
+            .build();
+
+    assertThrows(JobCancelledException.class, () -> matchJob.accept(cancellingCtx));
+
+    verify(rosterStudentRepository, never()).saveAll(any());
+  }
+
+  @Test
+  public void checkCancellation_stops_the_staff_loop_before_saving_the_staff_list()
+      throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    CourseStaff staff = CourseStaff.builder().githubId(781).course(course).build();
+    course.setRosterStudents(List.of());
+    course.setCourseStaff(List.of(staff));
+    doReturn(List.of(course)).when(courseRepository).findAll();
+    doReturn(List.of()).when(organizationMemberService).getOrganizationMembers(eq(course));
+    doReturn(List.of()).when(organizationMemberService).getOrganizationAdmins(eq(course));
+    doReturn(List.of()).when(organizationMemberService).getOrganizationInvitees(eq(course));
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    // 2 real checkpoints precede the staff loop's own check under this setup (an empty roster
+    // means the student loop never runs, and rosterStudentRepository.saveAll() doesn't consume
+    // a checkpoint): accept()'s opening log line, and the course loop's own checkCancellation().
+    when(jobsRepository.findById(99L))
+        .thenReturn(
+            Optional.of(runningJob()), Optional.of(runningJob()), Optional.of(cancellingJob()));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    var matchJob =
+        MembershipAuditJob.builder()
+            .rosterStudentRepository(rosterStudentRepository)
+            .organizationMemberService(organizationMemberService)
+            .courseRepository(courseRepository)
+            .courseStaffRepository(courseStaffRepository)
+            .build();
+
+    assertThrows(JobCancelledException.class, () -> matchJob.accept(cancellingCtx));
+
+    verify(courseStaffRepository, never()).saveAll(any());
   }
 }

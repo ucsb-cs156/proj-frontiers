@@ -32,6 +32,9 @@ public class UpdateOrgMembershipJob implements JobContextConsumer {
     ctx.log("Processing...");
     Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
     for (OrgMember member : members) {
+      // This loop never calls ctx.log() -- only the opening "Processing..." and closing "Done"
+      // lines do. checkCancellation() gives it its own checkpoint independent of member count.
+      ctx.checkCancellation();
       Optional<RosterStudent> student =
           rosterStudentRepository.findByCourseAndGithubId(course, member.getGithubId());
       if (student.isPresent()) {

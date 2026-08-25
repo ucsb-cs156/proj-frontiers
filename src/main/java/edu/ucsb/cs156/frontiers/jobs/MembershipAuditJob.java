@@ -31,6 +31,10 @@ public class MembershipAuditJob implements JobContextConsumer {
     ctx.log("Auditing membership for each course with an attached GitHub Organization...");
     Iterable<Course> courses = courseRepository.findAll();
     for (Course course : courses) {
+      // Nothing in this method's whole body logs per course -- the only ctx.log() calls are
+      // the opening line above and the closing "Done" below. checkCancellation() gives the
+      // course loop its own checkpoint independent of course count.
+      ctx.checkCancellation();
       if (course.getOrgName() != null && course.getInstallationId() != null) {
         Iterable<OrgMember> members = organizationMemberService.getOrganizationMembers(course);
         Iterable<OrgMember> admins = organizationMemberService.getOrganizationAdmins(course);
@@ -38,6 +42,9 @@ public class MembershipAuditJob implements JobContextConsumer {
         List<RosterStudent> rosterStudents = course.getRosterStudents();
         List<CourseStaff> courseStaff = course.getCourseStaff();
         for (int i = 0; i < rosterStudents.size(); i++) {
+          // Same reasoning as the course loop: this loop never logs per student, so a large
+          // roster gives cancellation no other opportunity to fire.
+          ctx.checkCancellation();
           Integer studentGithubId = rosterStudents.get(i).getGithubId();
           String studentGithubLogin = rosterStudents.get(i).getGithubLogin();
           if (studentGithubId != null && studentGithubLogin != null) {
@@ -69,6 +76,8 @@ public class MembershipAuditJob implements JobContextConsumer {
         rosterStudentRepository.saveAll(rosterStudents);
 
         for (int i = 0; i < courseStaff.size(); i++) {
+          // Same reasoning as the roster-students loop above.
+          ctx.checkCancellation();
           Integer staffGithubId = courseStaff.get(i).getGithubId();
           String staffGithubLogin = courseStaff.get(i).getGithubLogin();
           if (staffGithubId != null && staffGithubLogin != null) {

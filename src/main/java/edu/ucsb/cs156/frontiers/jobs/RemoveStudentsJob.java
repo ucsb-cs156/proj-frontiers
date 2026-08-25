@@ -25,6 +25,10 @@ public class RemoveStudentsJob implements JobContextConsumer {
   @Override
   public void accept(JobContext c) throws Exception {
     for (RosterStudent student : students) {
+      // A student whose course has no linked org, or who has no GitHub login/id, never calls
+      // c.log() -- checkCancellation() gives this loop its own checkpoint independent of
+      // whether an iteration does anything at all.
+      c.checkCancellation();
       if (student.getCourse().getOrgName() != null
           && student.getCourse().getInstallationId() != null) {
         if (student.getGithubLogin() != null && student.getGithubId() != null) {

@@ -86,6 +86,12 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
     int unchanged = 0;
 
     for (GithubTeamInfo githubTeam : githubTeams) {
+      // The common case on a re-sync is a team that's already up to date on every field and
+      // has no membership changes either -- that iteration never calls ctx.log() at all.
+      // checkCancellation() gives this loop its own checkpoint independent of how many teams
+      // in a row turn out to be unchanged (this is the same failure mode that drove lib-jobs
+      // v0.3.2: see SyncCourseWithPlRepoJob in proj-scaffold).
+      ctx.checkCancellation();
       Team localTeam = localByGithubId.get(githubTeam.id());
       if (localTeam == null) {
         localTeam = localByName.get(githubTeam.name());
@@ -150,6 +156,11 @@ public class PullTeamsFromGithubJob implements JobContextConsumer {
         Team currentTeam = localTeam;
         githubMemberships.forEach(
             (githubLogin, membershipStatus) -> {
+              // Same reasoning as the outer team loop: a member with no status change never
+              // logs. checkCancellation() throws JobCancelledException, which is unchecked --
+              // required here since BiConsumer's functional interface can't declare checked
+              // exceptions.
+              ctx.checkCancellation();
               RosterStudent student = localStudentsByGithubLogin.get(githubLogin);
               if (student == null) {
                 return;

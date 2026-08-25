@@ -43,6 +43,9 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
     }
 
     for (Team team : course.getTeams()) {
+      // A team skipped by teamRegex never logs anything -- checkCancellation() gives this
+      // loop its own checkpoint independent of whether an iteration does any work.
+      ctx.checkCancellation();
       if (teamRegex != null && !team.getName().matches(teamRegex)) {
         continue;
       }

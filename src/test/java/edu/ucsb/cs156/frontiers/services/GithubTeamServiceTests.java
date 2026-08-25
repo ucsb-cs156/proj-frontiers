@@ -37,6 +37,8 @@ public class GithubTeamServiceTests {
 
   @BeforeEach
   public void setup() {
+    when(restTemplateBuilder.connectTimeout(any())).thenReturn(restTemplateBuilder);
+    when(restTemplateBuilder.readTimeout(any())).thenReturn(restTemplateBuilder);
     when(restTemplateBuilder.build()).thenReturn(restTemplate);
     objectMapper = new ObjectMapper();
     githubTeamService = new GithubTeamService(jwtService, objectMapper, restTemplateBuilder);

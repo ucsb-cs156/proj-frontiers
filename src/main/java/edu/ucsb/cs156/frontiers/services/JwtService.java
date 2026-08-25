@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -35,6 +36,18 @@ public class JwtService {
   @Value("${app.client.id:no-client-id}")
   private String clientId;
 
+  /*
+   * A RestTemplate built with no timeout blocks its calling thread forever on a hung external
+   * call. That's a real incident lib-jobs' single-threaded jobsExecutor hit on another app
+   * (proj-scaffold): a job stuck this way permanently wedged the executor, with no way to recover
+   * short of restarting the app (see lib-jobs DESIGN.md 9 -- cooperative job cancellation only
+   * helps a job that reaches another checkpoint, which a truly hung thread never will). Generous
+   * but finite: long enough to never trip on legitimate slowness, short enough to guarantee a job
+   * can't hang forever.
+   */
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+  private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);
+
   private final RestTemplate restTemplate;
 
   private final ObjectMapper objectMapper;
@@ -45,7 +58,8 @@ public class JwtService {
       RestTemplateBuilder restTemplateBuilder,
       ObjectMapper objectMapper,
       DateTimeProvider dateTimeProvider) {
-    this.restTemplate = restTemplateBuilder.build();
+    this.restTemplate =
+        restTemplateBuilder.connectTimeout(CONNECT_TIMEOUT).readTimeout(READ_TIMEOUT).build();
     this.objectMapper = objectMapper;
     this.dateTimeProvider = dateTimeProvider;
   }

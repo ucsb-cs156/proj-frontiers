@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -13,6 +14,8 @@ import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.errors.JobCancelledException;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import java.util.Optional;
@@ -139,5 +142,37 @@ public class UpdateOrgMembershipJobTests {
     assertEquals(expected, jobStarted.getLog());
 
     verify(rosterStudentRepository, times(0)).save(any());
+  }
+
+  // This loop never calls ctx.log() -- only the opening "Processing..." and closing "Done"
+  // lines do. Without its own checkCancellation() checkpoint, it would give cancellation no
+  // opportunity to fire no matter how many members it processes. 1 real checkpoint precedes the
+  // loop's own check: accept()'s opening "Processing..." log line.
+  @Test
+  public void checkCancellation_stops_the_member_loop_before_calling_findByCourseAndGithubId()
+      throws Exception {
+    OrgMember orgMember1 = OrgMember.builder().githubId(123456).githubLogin("division7").build();
+    List<OrgMember> orgMembers = List.of(orgMember1);
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    doReturn(orgMembers).when(organizationMemberService).getOrganizationMembers(eq(course));
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    Job runningJob = Job.builder().id(99L).status("running").build();
+    Job cancellingJob = Job.builder().id(99L).status("cancelling").build();
+    when(jobsRepository.findById(99L))
+        .thenReturn(Optional.of(runningJob), Optional.of(cancellingJob));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    var matchJob =
+        UpdateOrgMembershipJob.builder()
+            .rosterStudentRepository(rosterStudentRepository)
+            .organizationMemberService(organizationMemberService)
+            .course(course)
+            .build();
+
+    assertThrows(JobCancelledException.class, () -> matchJob.accept(cancellingCtx));
+
+    verify(rosterStudentRepository, never()).findByCourseAndGithubId(any(), anyInt());
   }
 }

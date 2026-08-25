@@ -9,6 +9,7 @@ import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
 import edu.ucsb.cs156.frontiers.models.CourseWarning;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -23,6 +24,18 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class OrganizationLinkerService {
+  /*
+   * A RestTemplate built with no timeout blocks its calling thread forever on a hung external
+   * call. That's a real incident lib-jobs' single-threaded jobsExecutor hit on another app
+   * (proj-scaffold): a job stuck this way permanently wedged the executor, with no way to recover
+   * short of restarting the app (see lib-jobs DESIGN.md 9 -- cooperative job cancellation only
+   * helps a job that reaches another checkpoint, which a truly hung thread never will). Generous
+   * but finite: long enough to never trip on legitimate slowness, short enough to guarantee a job
+   * can't hang forever.
+   */
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+  private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);
+
   private RestTemplate restTemplate;
 
   @Autowired JwtService jwtService;
@@ -32,7 +45,8 @@ public class OrganizationLinkerService {
   @Autowired DateTimeProvider provider;
 
   public OrganizationLinkerService(RestTemplateBuilder restTemplateBuilder) {
-    restTemplate = restTemplateBuilder.build();
+    restTemplate =
+        restTemplateBuilder.connectTimeout(CONNECT_TIMEOUT).readTimeout(READ_TIMEOUT).build();
   }
 
   /**
