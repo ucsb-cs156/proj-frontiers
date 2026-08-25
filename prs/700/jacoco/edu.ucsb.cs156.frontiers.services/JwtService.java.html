@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">JwtService.java</span></div><h1>JwtService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import io.jsonwebtoken.Jwts;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Base64;
+import java.util.Date;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+<span class="fc" id="L31">@Slf4j</span>
+public class JwtService {
+  @Value(&quot;${app.private.key:no-key-present}&quot;)
+  private String privateKey;
+
+  @Value(&quot;${app.client.id:no-client-id}&quot;)
+  private String clientId;
+
+  /*
+   * A RestTemplate built with no timeout blocks its calling thread forever on a hung external
+   * call. That's a real incident lib-jobs' single-threaded jobsExecutor hit on another app
+   * (proj-scaffold): a job stuck this way permanently wedged the executor, with no way to recover
+   * short of restarting the app (see lib-jobs DESIGN.md 9 -- cooperative job cancellation only
+   * helps a job that reaches another checkpoint, which a truly hung thread never will). Generous
+   * but finite: long enough to never trip on legitimate slowness, short enough to guarantee a job
+   * can't hang forever.
+   */
+<span class="fc" id="L48">  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);</span>
+<span class="fc" id="L49">  private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);</span>
+
+  private final RestTemplate restTemplate;
+
+  private final ObjectMapper objectMapper;
+
+  private final DateTimeProvider dateTimeProvider;
+
+  public JwtService(
+      RestTemplateBuilder restTemplateBuilder,
+      ObjectMapper objectMapper,
+<span class="fc" id="L60">      DateTimeProvider dateTimeProvider) {</span>
+<span class="fc" id="L61">    this.restTemplate =</span>
+<span class="fc" id="L62">        restTemplateBuilder.connectTimeout(CONNECT_TIMEOUT).readTimeout(READ_TIMEOUT).build();</span>
+<span class="fc" id="L63">    this.objectMapper = objectMapper;</span>
+<span class="fc" id="L64">    this.dateTimeProvider = dateTimeProvider;</span>
+<span class="fc" id="L65">  }</span>
+
+  private RSAPrivateKey getPrivateKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L68">    String key = privateKey;</span>
+<span class="fc" id="L69">    key = key.replace(&quot;-----BEGIN PRIVATE KEY-----&quot;, &quot;&quot;);</span>
+<span class="fc" id="L70">    key = key.replace(&quot;-----END PRIVATE KEY-----&quot;, &quot;&quot;);</span>
+<span class="fc" id="L71">    key = key.replaceAll(&quot; &quot;, &quot;&quot;);</span>
+<span class="fc" id="L72">    key = key.replaceAll(System.lineSeparator(), &quot;&quot;);</span>
+<span class="fc" id="L73">    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(key.getBytes()));</span>
+<span class="fc" id="L74">    KeyFactory kf = KeyFactory.getInstance(&quot;RSA&quot;);</span>
+<span class="fc" id="L75">    return (RSAPrivateKey) kf.generatePrivate(spec);</span>
+  }
+
+  /**
+   * Method to retrieve a signed JWT that a service can use to authenticate with GitHub as an app
+   * installation without permissions to a specific organization.
+   *
+   * @return Signed JWT that expires in 5 minutes in the form of a String
+   * @throws InvalidKeySpecException if the key is invalid, the exception will be thrown.
+   */
+  public String getJwt() throws NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L86">    Instant currentTime = Instant.from(dateTimeProvider.getNow().get());</span>
+    String token =
+<span class="fc" id="L88">        Jwts.builder()</span>
+<span class="fc" id="L89">            .issuedAt(Date.from(currentTime.minus(30, ChronoUnit.SECONDS)))</span>
+<span class="fc" id="L90">            .expiration(Date.from(currentTime.plus(5, ChronoUnit.MINUTES)))</span>
+<span class="fc" id="L91">            .issuer(clientId)</span>
+<span class="fc" id="L92">            .signWith(getPrivateKey(), Jwts.SIG.RS256)</span>
+<span class="fc" id="L93">            .compact();</span>
+<span class="fc" id="L94">    return token;</span>
+  }
+
+  /**
+   * Method to retrieve a token to act as a particular app installation in a particular organization
+   *
+   * @param course ID of the particular app installation to act as
+   * @return Token accepted by GitHub to act as a particular installation.
+   */
+  public String getInstallationToken(Course course)
+      throws JsonProcessingException,
+          NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          NoLinkedOrganizationException {
+<span class="fc bfc" id="L108" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L109">      throw new NoLinkedOrganizationException(course.getCourseName());</span>
+    } else {
+<span class="fc" id="L111">      String token = getJwt();</span>
+<span class="fc" id="L112">      String ENDPOINT =</span>
+          &quot;https://api.github.com/app/installations/&quot;
+<span class="fc" id="L114">              + course.getInstallationId()</span>
+              + &quot;/access_tokens&quot;;
+<span class="fc" id="L116">      HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L117">      headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L118">      headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L119">      headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L120">      HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L121">      ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L122">          restTemplate.exchange(ENDPOINT, HttpMethod.POST, entity, String.class);</span>
+<span class="fc" id="L123">      JsonNode responseJson = objectMapper.readTree(response.getBody());</span>
+<span class="fc" id="L124">      String installationToken = responseJson.get(&quot;token&quot;).asText();</span>
+<span class="fc" id="L125">      return installationToken;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
