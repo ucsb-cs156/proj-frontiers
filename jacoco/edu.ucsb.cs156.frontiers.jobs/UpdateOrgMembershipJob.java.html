@@ -32,15 +32,18 @@ public class UpdateOrgMembershipJob implements JobContextConsumer {
 <span class="fc" id="L32">    ctx.log(&quot;Processing...&quot;);</span>
 <span class="fc" id="L33">    Iterable&lt;OrgMember&gt; members = organizationMemberService.getOrganizationMembers(course);</span>
 <span class="fc bfc" id="L34" title="All 2 branches covered.">    for (OrgMember member : members) {</span>
-<span class="fc" id="L35">      Optional&lt;RosterStudent&gt; student =</span>
-<span class="fc" id="L36">          rosterStudentRepository.findByCourseAndGithubId(course, member.getGithubId());</span>
-<span class="fc bfc" id="L37" title="All 2 branches covered.">      if (student.isPresent()) {</span>
-<span class="fc" id="L38">        RosterStudent foundStudent = student.get();</span>
-<span class="fc" id="L39">        foundStudent.setOrgStatus(OrgStatus.MEMBER);</span>
-<span class="fc" id="L40">        rosterStudentRepository.save(foundStudent);</span>
+      // This loop never calls ctx.log() -- only the opening &quot;Processing...&quot; and closing &quot;Done&quot;
+      // lines do. checkCancellation() gives it its own checkpoint independent of member count.
+<span class="fc" id="L37">      ctx.checkCancellation();</span>
+<span class="fc" id="L38">      Optional&lt;RosterStudent&gt; student =</span>
+<span class="fc" id="L39">          rosterStudentRepository.findByCourseAndGithubId(course, member.getGithubId());</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">      if (student.isPresent()) {</span>
+<span class="fc" id="L41">        RosterStudent foundStudent = student.get();</span>
+<span class="fc" id="L42">        foundStudent.setOrgStatus(OrgStatus.MEMBER);</span>
+<span class="fc" id="L43">        rosterStudentRepository.save(foundStudent);</span>
       }
-<span class="fc" id="L42">    }</span>
-<span class="fc" id="L43">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L44">  }</span>
+<span class="fc" id="L45">    }</span>
+<span class="fc" id="L46">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L47">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

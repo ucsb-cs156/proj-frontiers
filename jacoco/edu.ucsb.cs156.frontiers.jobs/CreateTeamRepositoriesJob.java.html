@@ -43,13 +43,16 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
 <span class="fc" id="L43">    }</span>
 
 <span class="fc bfc" id="L45" title="All 2 branches covered.">    for (Team team : course.getTeams()) {</span>
-<span class="fc bfc" id="L46" title="All 4 branches covered.">      if (teamRegex != null &amp;&amp; !team.getName().matches(teamRegex)) {</span>
-<span class="fc" id="L47">        continue;</span>
+      // A team skipped by teamRegex never logs anything -- checkCancellation() gives this
+      // loop its own checkpoint independent of whether an iteration does any work.
+<span class="fc" id="L48">      ctx.checkCancellation();</span>
+<span class="fc bfc" id="L49" title="All 4 branches covered.">      if (teamRegex != null &amp;&amp; !team.getName().matches(teamRegex)) {</span>
+<span class="fc" id="L50">        continue;</span>
       }
-<span class="fc" id="L49">      repositoryService.createTeamRepository(</span>
+<span class="fc" id="L52">      repositoryService.createTeamRepository(</span>
           course, team, repositoryPrefix, isPrivate, permissions, orgId);
-<span class="fc" id="L51">    }</span>
-<span class="fc" id="L52">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L53">  }</span>
+<span class="fc" id="L54">    }</span>
+<span class="fc" id="L55">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L56">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
