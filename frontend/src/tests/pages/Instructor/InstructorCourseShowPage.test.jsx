@@ -50,6 +50,7 @@ describe("InstructorCourseShowPage tests", () => {
       ENABLE_CANVAS: false,
       TRANSLATE_SECTIONS: false,
       DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
     });
   });
 
@@ -661,6 +662,10 @@ describe("InstructorCourseShowPage tests", () => {
       "CourseOptionsForm-toggle-DOKKU_MANAGER",
     );
     expect(dokkuManagerToggle).not.toBeDisabled();
+    const enableApiKeysToggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_API_KEYS",
+    );
+    expect(enableApiKeysToggle).not.toBeDisabled();
   });
 
   test("admin can edit course option toggles for non-owned course", async () => {
