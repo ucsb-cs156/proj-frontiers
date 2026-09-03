@@ -10,9 +10,9 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
 import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,8 +34,13 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
   CourseRepository courseRepository;
 
   @Override
-  public Course getCourse() {
-<span class="fc" id="L38">    return course;</span>
+  public String getScopeType() {
+<span class="fc" id="L38">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L43">    return course.getId();</span>
   }
 
   @Override
@@ -43,83 +48,83 @@ public class PullTeamsFromCanvasJob implements JobContextConsumer {
   public void accept(JobContext ctx) throws Exception {
     // Prior to attempting to optimize this code or modify any repository calls, please see here:
     // https://github.com/ucsb-cs156/ucsb-cs156.github.io/blob/main/topics/spring_boot/spring_boot_entity_relationships.md
-<span class="fc" id="L46">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(course.getId());</span>
-<span class="fc" id="L47">    course = courseOpt.get();</span>
-<span class="fc" id="L48">    ctx.log(&quot;Processing...&quot;);</span>
-<span class="fc" id="L49">    List&lt;CanvasGroup&gt; groups = canvasService.getCanvasGroups(course, groupsetId);</span>
-<span class="fc" id="L50">    HashMap&lt;String, RosterStudent&gt; mappedStudents = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L51">    HashMap&lt;String, Team&gt; teamsByName = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L52">    HashMap&lt;Integer, Team&gt; teamsByCanvasId = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L53">    course.getRosterStudents().forEach(student -&gt; mappedStudents.put(student.getEmail(), student));</span>
-<span class="fc" id="L54">    course</span>
-<span class="fc" id="L55">        .getTeams()</span>
-<span class="fc" id="L56">        .forEach(</span>
+<span class="fc" id="L51">    Optional&lt;Course&gt; courseOpt = courseRepository.findById(course.getId());</span>
+<span class="fc" id="L52">    course = courseOpt.get();</span>
+<span class="fc" id="L53">    ctx.log(&quot;Processing...&quot;);</span>
+<span class="fc" id="L54">    List&lt;CanvasGroup&gt; groups = canvasService.getCanvasGroups(course, groupsetId);</span>
+<span class="fc" id="L55">    HashMap&lt;String, RosterStudent&gt; mappedStudents = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L56">    HashMap&lt;String, Team&gt; teamsByName = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L57">    HashMap&lt;Integer, Team&gt; teamsByCanvasId = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L58">    course.getRosterStudents().forEach(student -&gt; mappedStudents.put(student.getEmail(), student));</span>
+<span class="fc" id="L59">    course</span>
+<span class="fc" id="L60">        .getTeams()</span>
+<span class="fc" id="L61">        .forEach(</span>
             team -&gt; {
-<span class="fc" id="L58">              teamsByName.put(team.getName(), team);</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">              if (team.getCanvasId() != null) {</span>
-<span class="fc" id="L60">                teamsByCanvasId.put(team.getCanvasId(), team);</span>
+<span class="fc" id="L63">              teamsByName.put(team.getName(), team);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">              if (team.getCanvasId() != null) {</span>
+<span class="fc" id="L65">                teamsByCanvasId.put(team.getCanvasId(), team);</span>
               }
-<span class="fc" id="L62">            });</span>
+<span class="fc" id="L67">            });</span>
 
-<span class="fc" id="L64">    List&lt;Team&gt; createdTeams = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L69">    List&lt;Team&gt; createdTeams = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L66" title="All 2 branches covered.">    for (CanvasGroup group : groups) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">    for (CanvasGroup group : groups) {</span>
       Team linked;
-<span class="fc bfc" id="L68" title="All 2 branches covered.">      if (teamsByCanvasId.containsKey(group.getId())) {</span>
-<span class="fc" id="L69">        linked = teamsByCanvasId.get(group.getId());</span>
-<span class="fc bfc" id="L70" title="All 2 branches covered.">      } else if (teamsByName.containsKey(group.getName().trim())) {</span>
-<span class="fc" id="L71">        linked = teamsByName.get(group.getName().trim());</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">      if (teamsByCanvasId.containsKey(group.getId())) {</span>
+<span class="fc" id="L74">        linked = teamsByCanvasId.get(group.getId());</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">      } else if (teamsByName.containsKey(group.getName().trim())) {</span>
+<span class="fc" id="L76">        linked = teamsByName.get(group.getName().trim());</span>
       } else {
         linked =
-<span class="fc" id="L74">            Team.builder()</span>
-<span class="fc" id="L75">                .name(group.getName())</span>
-<span class="fc" id="L76">                .teamMembers(new ArrayList&lt;&gt;())</span>
-<span class="fc" id="L77">                .course(course)</span>
-<span class="fc" id="L78">                .build();</span>
+<span class="fc" id="L79">            Team.builder()</span>
+<span class="fc" id="L80">                .name(group.getName())</span>
+<span class="fc" id="L81">                .teamMembers(new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L82">                .course(course)</span>
+<span class="fc" id="L83">                .build();</span>
       }
-<span class="fc bfc" id="L80" title="All 4 branches covered.">      if (linked.getCanvasId() != null &amp;&amp; !linked.getCanvasId().equals(group.getId())) {</span>
-<span class="fc" id="L81">        ctx.log(&quot;Duplicate group found: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
-<span class="fc" id="L82">        throw new DuplicateGroupException();</span>
+<span class="fc bfc" id="L85" title="All 4 branches covered.">      if (linked.getCanvasId() != null &amp;&amp; !linked.getCanvasId().equals(group.getId())) {</span>
+<span class="fc" id="L86">        ctx.log(&quot;Duplicate group found: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
+<span class="fc" id="L87">        throw new DuplicateGroupException();</span>
       }
 
-<span class="fc" id="L85">      HashSet&lt;String&gt; processedEmails = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L90">      HashSet&lt;String&gt; processedEmails = new HashSet&lt;&gt;();</span>
 
-<span class="fc" id="L87">      linked.setCanvasId(group.getId());</span>
-<span class="fc" id="L88">      ctx.log(&quot;Processing group: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
-<span class="fc" id="L89">      Team finalLinked = linked;</span>
-<span class="fc" id="L90">      group</span>
-<span class="fc" id="L91">          .getMembers()</span>
-<span class="fc" id="L92">          .forEach(</span>
+<span class="fc" id="L92">      linked.setCanvasId(group.getId());</span>
+<span class="fc" id="L93">      ctx.log(&quot;Processing group: &quot; + group.getName() + &quot; with canvasId: &quot; + group.getId());</span>
+<span class="fc" id="L94">      Team finalLinked = linked;</span>
+<span class="fc" id="L95">      group</span>
+<span class="fc" id="L96">          .getMembers()</span>
+<span class="fc" id="L97">          .forEach(</span>
               email -&gt; {
-<span class="fc" id="L94">                RosterStudent student =</span>
-<span class="fc" id="L95">                    mappedStudents.get(CanonicalFormConverter.convertToValidEmail(email));</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">                if (student != null) {</span>
-<span class="fc" id="L97">                  processedEmails.add(student.getEmail());</span>
-<span class="fc" id="L98">                  if (student.getTeamMembers().stream()</span>
-<span class="fc bfc" id="L99" title="All 2 branches covered.">                      .anyMatch(teamMember -&gt; teamMember.getTeam().equals(finalLinked))) {</span>
-<span class="fc" id="L100">                    return;</span>
+<span class="fc" id="L99">                RosterStudent student =</span>
+<span class="fc" id="L100">                    mappedStudents.get(CanonicalFormConverter.convertToValidEmail(email));</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                if (student != null) {</span>
+<span class="fc" id="L102">                  processedEmails.add(student.getEmail());</span>
+<span class="fc" id="L103">                  if (student.getTeamMembers().stream()</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                      .anyMatch(teamMember -&gt; teamMember.getTeam().equals(finalLinked))) {</span>
+<span class="fc" id="L105">                    return;</span>
                   } else {
-<span class="fc" id="L102">                    finalLinked</span>
-<span class="fc" id="L103">                        .getTeamMembers()</span>
-<span class="fc" id="L104">                        .add(TeamMember.builder().team(finalLinked).rosterStudent(student).build());</span>
+<span class="fc" id="L107">                    finalLinked</span>
+<span class="fc" id="L108">                        .getTeamMembers()</span>
+<span class="fc" id="L109">                        .add(TeamMember.builder().team(finalLinked).rosterStudent(student).build());</span>
                   }
                 }
-<span class="fc" id="L107">              });</span>
-<span class="fc" id="L108">      createdTeams.add(finalLinked);</span>
-<span class="fc" id="L109">      Set&lt;TeamMember&gt; removedMembers =</span>
-<span class="fc" id="L110">          finalLinked.getTeamMembers().stream()</span>
-<span class="fc" id="L111">              .filter(</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">                  teamMember -&gt; !processedEmails.contains(teamMember.getRosterStudent().getEmail()))</span>
-<span class="fc" id="L113">              .collect(Collectors.toSet());</span>
-<span class="fc" id="L114">      ctx.log(&quot;Group members to be removed:&quot; + removedMembers);</span>
-<span class="fc" id="L115">      removedMembers.forEach(</span>
+<span class="fc" id="L112">              });</span>
+<span class="fc" id="L113">      createdTeams.add(finalLinked);</span>
+<span class="fc" id="L114">      Set&lt;TeamMember&gt; removedMembers =</span>
+<span class="fc" id="L115">          finalLinked.getTeamMembers().stream()</span>
+<span class="fc" id="L116">              .filter(</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">                  teamMember -&gt; !processedEmails.contains(teamMember.getRosterStudent().getEmail()))</span>
+<span class="fc" id="L118">              .collect(Collectors.toSet());</span>
+<span class="fc" id="L119">      ctx.log(&quot;Group members to be removed:&quot; + removedMembers);</span>
+<span class="fc" id="L120">      removedMembers.forEach(</span>
           teamMember -&gt; {
-<span class="fc" id="L117">            teamMember.getTeam().getTeamMembers().remove(teamMember);</span>
-<span class="fc" id="L118">            teamMember.getRosterStudent().getTeamMembers().remove(teamMember);</span>
-<span class="fc" id="L119">          });</span>
-<span class="fc" id="L120">      teamMemberRepository.deleteAll(removedMembers);</span>
-<span class="fc" id="L121">    }</span>
-<span class="fc" id="L122">    teamRepository.saveAll(createdTeams);</span>
-<span class="fc" id="L123">  }</span>
+<span class="fc" id="L122">            teamMember.getTeam().getTeamMembers().remove(teamMember);</span>
+<span class="fc" id="L123">            teamMember.getRosterStudent().getTeamMembers().remove(teamMember);</span>
+<span class="fc" id="L124">          });</span>
+<span class="fc" id="L125">      teamMemberRepository.deleteAll(removedMembers);</span>
+<span class="fc" id="L126">    }</span>
+<span class="fc" id="L127">    teamRepository.saveAll(createdTeams);</span>
+<span class="fc" id="L128">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
