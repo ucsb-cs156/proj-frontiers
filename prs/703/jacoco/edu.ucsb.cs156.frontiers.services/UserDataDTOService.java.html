@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDataDTOService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">UserDataDTOService.java</span></div><h1>UserDataDTOService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.google.common.collect.Lists;
+import edu.ucsb.cs156.frontiers.entities.Admin;
+import edu.ucsb.cs156.frontiers.entities.Instructor;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.models.UserDataDTO;
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
+import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserDataDTOService {
+  private final UserRepository userRepository;
+  private final AdminRepository adminRepository;
+  private final InstructorRepository instructorRepository;
+
+  @Autowired
+  public UserDataDTOService(
+      UserRepository userRepository,
+      AdminRepository adminRepository,
+<span class="fc" id="L29">      InstructorRepository instructorRepository) {</span>
+<span class="fc" id="L30">    this.userRepository = userRepository;</span>
+<span class="fc" id="L31">    this.adminRepository = adminRepository;</span>
+<span class="fc" id="L32">    this.instructorRepository = instructorRepository;</span>
+<span class="fc" id="L33">  }</span>
+
+  public Page&lt;UserDataDTO&gt; getUserDataDTOs(Pageable pageable) {
+<span class="fc" id="L36">    Page&lt;User&gt; users = userRepository.findAll(pageable);</span>
+<span class="fc" id="L37">    List&lt;Admin&gt; admins = Lists.newArrayList(adminRepository.findAll());</span>
+<span class="fc" id="L38">    List&lt;Instructor&gt; instructors = Lists.newArrayList(instructorRepository.findAll());</span>
+
+<span class="fc" id="L40">    List&lt;UserDataDTO&gt; userDTOs = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">    for (User user : users) {</span>
+<span class="fc" id="L42">      boolean isAdmin = admins.stream().anyMatch(a -&gt; a.getEmail().equals(user.getEmail()));</span>
+<span class="fc" id="L43">      boolean isInstructor =</span>
+<span class="fc" id="L44">          instructors.stream().anyMatch(i -&gt; i.getEmail().equals(user.getEmail()));</span>
+<span class="fc" id="L45">      userDTOs.add(UserDataDTO.from(user, isAdmin, isInstructor));</span>
+<span class="fc" id="L46">    }</span>
+<span class="fc" id="L47">    return new PageImpl&lt;UserDataDTO&gt;(userDTOs, pageable, users.getTotalElements());</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
