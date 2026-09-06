@@ -2428,4 +2428,87 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     // Assert
     assertEquals("0101", saved.getSection());
   }
+
+  /**
+   * Regression test for a NullPointerException: when a not-yet-saved RosterStudent (id == null) is
+   * already in the course's roster list (as happens during a CSV upload), upserting a duplicate of
+   * that student must take the UPDATED path rather than throwing.
+   */
+  @Test
+  public void upsertStudent_matches_unsaved_student_by_identity_without_npe() {
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+
+    RosterStudent unsaved =
+        RosterStudent.builder()
+            .firstName("Ralph")
+            .lastName("Wiggum")
+            .studentId("013251642")
+            .email("rwiggum@csuchico.edu")
+            .section("")
+            .course(course)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+    assertNull(unsaved.getId());
+    course.setRosterStudents(new ArrayList<>(List.of(unsaved)));
+
+    RosterStudent duplicate =
+        RosterStudent.builder()
+            .firstName("Ralph")
+            .lastName("Wiggum")
+            .studentId("013251642")
+            .email("rwiggum@csuchico.edu")
+            .section("")
+            .build();
+
+    UpsertResponse response =
+        RosterStudentsController.upsertStudent(duplicate, course, RosterStatus.ROSTER);
+
+    assertEquals(InsertStatus.UPDATED, response.getInsertStatus());
+    assertEquals(unsaved, response.rosterStudent());
+  }
+
+  /**
+   * Two distinct unsaved students where one matches by studentId and the other by email must still
+   * be REJECTED (and must not throw).
+   */
+  @Test
+  public void upsertStudent_rejects_when_unsaved_id_match_and_email_match_differ() {
+    Course course = Course.builder().id(1L).courseName("CS156").build();
+
+    RosterStudent unsavedById =
+        RosterStudent.builder()
+            .firstName("Ralph")
+            .lastName("Wiggum")
+            .studentId("013251642")
+            .email("rwiggum@csuchico.edu")
+            .section("")
+            .course(course)
+            .build();
+    RosterStudent unsavedByEmail =
+        RosterStudent.builder()
+            .firstName("Lisa")
+            .lastName("Simpson")
+            .studentId("999999999")
+            .email("lsimpson@csuchico.edu")
+            .section("")
+            .course(course)
+            .build();
+    course.setRosterStudents(new ArrayList<>(List.of(unsavedById, unsavedByEmail)));
+
+    RosterStudent conflicting =
+        RosterStudent.builder()
+            .firstName("Ralph")
+            .lastName("Wiggum")
+            .studentId("013251642")
+            .email("lsimpson@csuchico.edu")
+            .section("")
+            .build();
+
+    UpsertResponse response =
+        RosterStudentsController.upsertStudent(conflicting, course, RosterStatus.ROSTER);
+
+    assertEquals(InsertStatus.REJECTED, response.getInsertStatus());
+    assertEquals(conflicting, response.rosterStudent());
+  }
 }
