@@ -82,6 +82,18 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
             """;
 
+  /**
+   * Canvas lists a student once per section they are enrolled in, so a cross-listed course produces
+   * duplicate rows for the same student.
+   */
+  private final String sampleCSVContentsChicoWithDuplicateRow =
+      """
+            Student Name,Student ID,Student SIS ID,Email,Section Name
+            Marge Simpson,88200,013228559,msimpson@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
+            Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 362 Computational Thinking Summer 2025
+            Ralph Wiggum,88003,013251642,rwiggum@csuchico.edu,CSED 500 - 363 Computational Thinking Summer 2025
+            """;
+
   private final String sampleCSVContentsOregonState =
       """
             Full name,Sortable name,Canvas user id,Overall course grade,Assignment on time percent,Last page view time,Last participation time,Last logged out,Email,SIS Id
@@ -479,6 +491,118 @@ public class RosterStudentsCSVControllerTests extends ControllerTestCase {
             "type", "EntityNotFoundException",
             "message", "Course with id 1 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  /**
+   * Regression test: a CSV containing the same new student twice (e.g. a Canvas export for a
+   * student enrolled in two sections) used to throw a NullPointerException in upsertStudent,
+   * because the first row's not-yet-saved RosterStudent (id == null) was added to the course's
+   * roster list and the second row compared ids with .equals().
+   */
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_upload_chico_roster_with_duplicate_row_for_new_student()
+      throws Exception {
+
+    // arrange
+
+    Course course1 =
+        Course.builder()
+            .id(1L)
+            .courseName("CSED 500")
+            .orgName("csed-500-s25")
+            .term("S25")
+            .school(School.CHICO_STATE)
+            .build();
+
+    RosterStudent rs1BeforeWithId =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("MARGE")
+            .lastName("SIMPSON")
+            .studentId("013228559")
+            .email("msimpson@csuchico.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.MANUAL)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    RosterStudent rs1AfterWithId =
+        RosterStudent.builder()
+            .id(1L)
+            .firstName("Marge")
+            .lastName("Simpson")
+            .studentId("013228559")
+            .email("msimpson@csuchico.edu")
+            .course(course1)
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    RosterStudent rs3NoId =
+        RosterStudent.builder()
+            .course(course1)
+            .firstName("Ralph")
+            .lastName("Wiggum")
+            .email("rwiggum@csuchico.edu")
+            .studentId("013251642")
+            .section("")
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    RosterStudent rs3WithId =
+        RosterStudent.builder()
+            .id(3L)
+            .course(course1)
+            .firstName("Ralph")
+            .lastName("Wiggum")
+            .email("rwiggum@csuchico.edu")
+            .studentId("013251642")
+            .section("")
+            .rosterStatus(RosterStatus.ROSTER)
+            .orgStatus(OrgStatus.PENDING)
+            .build();
+
+    course1.setRosterStudents(new ArrayList<>(List.of(rs1BeforeWithId)));
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "roster.csv",
+            MediaType.TEXT_PLAIN_VALUE,
+            sampleCSVContentsChicoWithDuplicateRow.getBytes());
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course1));
+
+    when(rosterStudentRepository.saveAll(List.of(rs1AfterWithId, rs3NoId)))
+        .thenReturn(List.of(rs1AfterWithId, rs3WithId));
+
+    // act
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/rosterstudents/upload/csv")
+                    .file(file)
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    // Ralph is saved exactly once, even though he was in the CSV twice
+    verify(rosterStudentRepository, times(1))
+        .saveAll(new ArrayList<>(List.of(rs1AfterWithId, rs3NoId)));
+    verify(updateUserService, times(1))
+        .attachUsersToRosterStudents(List.of(rs1AfterWithId, rs3NoId));
+
+    String responseString = response.getResponse().getContentAsString();
+    // 1 inserted (Ralph, first row), 2 updated (Marge, and Ralph's duplicate second row)
+    LoadResult expectedResult = new LoadResult(1, 2, 0, List.of());
+    String expectedJson = mapper.writeValueAsString(expectedResult);
     assertEquals(expectedJson, responseString);
   }
 

@@ -140,7 +140,10 @@ public class RosterStudentsController extends ApiController {
             .filter(filteringStudent -> convertedEmail.equals(filteringStudent.getEmail()))
             .findFirst();
     if (existingStudent.isPresent() && existingStudentByEmail.isPresent()) {
-      if (existingStudent.get().getId().equals(existingStudentByEmail.get().getId())) {
+      // Compare by identity rather than by id: during a CSV upload, a newly inserted student
+      // that has not yet been saved (id == null) is added to the course's roster list, and a
+      // duplicate row later in the same file must match it without throwing an NPE.
+      if (existingStudent.get() == existingStudentByEmail.get()) {
         RosterStudent existingStudentObj = existingStudent.get();
         existingStudentObj.setRosterStatus(rosterStatus);
         existingStudentObj.setFirstName(student.getFirstName());
