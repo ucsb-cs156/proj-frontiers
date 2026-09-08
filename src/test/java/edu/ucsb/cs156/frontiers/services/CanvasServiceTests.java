@@ -23,6 +23,7 @@ import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 @RestClientTest(CanvasService.class)
@@ -33,9 +34,14 @@ public class CanvasServiceTests {
 
   @Autowired private CanvasService canvasService;
 
+  @MockitoBean private CanvasApiTokenSecurityService canvasApiTokenSecurityService;
+
   @BeforeEach
   public void setup() {
     mockServer.reset();
+    org.mockito.Mockito.when(
+            canvasApiTokenSecurityService.decrypt(org.mockito.ArgumentMatchers.any(String.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
   }
 
   @Test
