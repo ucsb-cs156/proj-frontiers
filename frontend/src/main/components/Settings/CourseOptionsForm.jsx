@@ -1,20 +1,15 @@
 import React from "react";
 import { Form } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { useBackend, useBackendMutation } from "main/utils/useBackend";
-import { titleCaseFromOption } from "main/utils/courseOptionsUtils";
+import { useBackendMutation } from "main/utils/useBackend";
+import {
+  courseOptionsQueryKey,
+  titleCaseFromOption,
+  useCourseOptions,
+} from "main/utils/courseOptionsUtils";
 
 function CourseOptionsForm({ courseId, canEdit }) {
-  const { data: optionsMap } = useBackend(
-    [`/api/course/options/?courseId=${courseId}`],
-    {
-      // Stryker disable next-line StringLiteral : GET and "" are equivalent mutationss
-      method: "GET",
-      url: "/api/course/options",
-      params: { courseId },
-    },
-    {},
-  );
+  const { data: optionsMap } = useCourseOptions(courseId);
 
   const objectToAxiosParams = ({ option, enabled }) => ({
     url: "/api/course/options",
@@ -31,7 +26,7 @@ function CourseOptionsForm({ courseId, canEdit }) {
   const courseOptionMutation = useBackendMutation(
     objectToAxiosParams,
     { onSuccess: onSuccessOptionUpdated },
-    [`/api/course/options/?courseId=${courseId}`],
+    [courseOptionsQueryKey(courseId)],
   );
 
   const entries = Object.entries(optionsMap);

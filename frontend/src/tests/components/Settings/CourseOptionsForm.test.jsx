@@ -105,4 +105,25 @@ describe("CourseOptionsForm tests", () => {
       expect(axiosMock.history.get.length).toBeGreaterThan(initialGetCount),
     );
   });
+
+  test("Toast shows error when course options cannot be loaded", async () => {
+    axiosMock.reset();
+    axiosMock.onGet("/api/course/options").reply(500);
+
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <CourseOptionsForm courseId={1} canEdit={true} />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => expect(axiosMock.history.get.length).toBe(1));
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        "Error communicating with backend via GET on /api/course/options",
+      ),
+    );
+  });
 });

@@ -194,4 +194,40 @@ describe("StaffCourseShowPage tests", () => {
       screen.getByTestId("StaffCourseShowPage-teams-table-3-delete-button"),
     ).toBeInTheDocument();
   });
+  test("does not fetch course options and never shows the Sections tab", async () => {
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: true,
+      DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("StaffCourseShowPage-title")).toHaveTextContent(
+        "CMPSC 156",
+      );
+    });
+    await waitFor(() =>
+      expect(
+        axiosMock.history.get.some(
+          (request) => request.url === "/api/teams/all?courseId=7",
+        ),
+      ).toBe(true),
+    );
+
+    expect(
+      screen.queryByRole("tab", { name: "Sections" }),
+    ).not.toBeInTheDocument();
+    expect(
+      axiosMock.history.get.some(
+        (request) => request.url === "/api/course/options",
+      ),
+    ).toBe(false);
+  });
 });
