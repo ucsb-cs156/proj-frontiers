@@ -1,0 +1,17 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "018-add-sections-unique-constraint",
+      "author": "claude",
+      "changes": [
+        {
+          "addUniqueConstraint": {
+            "tableName": "SECTIONS",
+            "columnNames": "COURSE_ID, SECTION",
+            "constraintName": "UK_SECTIONS_COURSE_SECTION"
+          }
+        }
+      ]
+    }
+  }
+]}

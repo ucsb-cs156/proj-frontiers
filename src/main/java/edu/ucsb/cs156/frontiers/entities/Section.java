@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,7 +9,13 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "sections")
+@Table(
+    name = "sections",
+    uniqueConstraints = {
+      @UniqueConstraint(
+          name = "UK_SECTIONS_COURSE_SECTION",
+          columnNames = {"course_id", "section"})
+    })
 public class Section {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,6 +23,8 @@ public class Section {
 
   @ManyToOne
   @JoinColumn(name = "course_id", nullable = false)
+  @JsonIgnore
+  @ToString.Exclude
   private Course course;
 
   @Column(nullable = false)
