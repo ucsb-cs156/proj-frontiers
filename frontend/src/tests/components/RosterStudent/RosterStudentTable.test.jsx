@@ -24,6 +24,7 @@ describe("RosterStudentTable tests", () => {
     "First Name",
     "Last Name",
     "Email",
+    "Section",
     "Status",
     "GitHub Login",
     "Teams",
@@ -34,6 +35,7 @@ describe("RosterStudentTable tests", () => {
     "firstName",
     "lastName",
     "email",
+    "section",
     "orgStatus",
     "githubLogin",
     "teams",
@@ -251,6 +253,10 @@ describe("RosterStudentTable tests", () => {
     );
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     expect(screen.getByText("Update")).toBeInTheDocument();
+    expect(screen.getByTestId("RosterStudentForm-section")).toHaveValue("0100");
+    fireEvent.change(screen.getByTestId("RosterStudentForm-section"), {
+      target: { value: "0150" },
+    });
     fireEvent.click(screen.getByText("Update"));
     await waitFor(() => axiosMock.history.put.length === 1);
     expect(axiosMock.history.put[0].params).toEqual({
@@ -258,6 +264,7 @@ describe("RosterStudentTable tests", () => {
       id: 3,
       lastName: "Brown",
       studentId: "A123456",
+      section: "0150",
     });
     await waitFor(() =>
       expect(screen.queryByText("Edit Student")).not.toBeInTheDocument(),
