@@ -109,6 +109,9 @@ describe("SectionsTable tests", () => {
     expect(
       await screen.findByTestId(`${testId}-edit-modal-body`),
     ).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-edit-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
     expect(screen.getByText("Edit Section")).toBeInTheDocument();
     expect(screen.getByTestId("SectionsForm-section")).toHaveValue("0200");
     expect(screen.getByTestId("SectionsForm-label")).toHaveValue("Tue 10:00am");

@@ -87,6 +87,9 @@ describe("SectionsTabComponent tests", () => {
     expect(
       await screen.findByText("Create Section", { selector: ".modal-title" }),
     ).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-create-section-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
     expect(screen.getByTestId("SectionsForm-section")).toHaveValue("");
     expect(screen.getByTestId("SectionsForm-submit")).toHaveTextContent(
       "Create",
