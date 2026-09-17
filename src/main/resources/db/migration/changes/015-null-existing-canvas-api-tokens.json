@@ -1,0 +1,15 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "015-null-existing-canvas-api-tokens",
+      "author": "copilot",
+      "changes": [
+        {
+          "sql": {
+            "sql": "UPDATE COURSE SET CANVAS_API_TOKEN = NULL WHERE CANVAS_API_TOKEN IS NOT NULL;"
+          }
+        }
+      ]
+    }
+  }
+]}

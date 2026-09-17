@@ -37,11 +37,16 @@ public class CanvasService {
 
   private HttpSyncGraphQlClient graphQlClient;
   private ObjectMapper mapper;
+  private CanvasApiTokenSecurityService canvasApiTokenSecurityService;
 
-  public CanvasService(ObjectMapper mapper, RestClient.Builder builder) {
+  public CanvasService(
+      ObjectMapper mapper,
+      RestClient.Builder builder,
+      CanvasApiTokenSecurityService canvasApiTokenSecurityService) {
     this.graphQlClient = HttpSyncGraphQlClient.builder(builder.build()).build();
     this.mapper = mapper;
     this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    this.canvasApiTokenSecurityService = canvasApiTokenSecurityService;
   }
 
   public List<CanvasGroupSet> getCanvasGroupSets(@HasLinkedCanvasCourse Course course) {
@@ -62,7 +67,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .header(
+                "Authorization",
+                "Bearer " + canvasApiTokenSecurityService.decrypt(course.getCanvasApiToken()))
             .url(course.getSchool().getCanvasImplementation())
             .build();
 
@@ -106,7 +113,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .header(
+                "Authorization",
+                "Bearer " + canvasApiTokenSecurityService.decrypt(course.getCanvasApiToken()))
             .url(course.getSchool().getCanvasImplementation())
             .build();
 
@@ -163,7 +172,9 @@ public class CanvasService {
     HttpSyncGraphQlClient authedClient =
         graphQlClient
             .mutate()
-            .header("Authorization", "Bearer " + course.getCanvasApiToken())
+            .header(
+                "Authorization",
+                "Bearer " + canvasApiTokenSecurityService.decrypt(course.getCanvasApiToken()))
             .url(course.getSchool().getCanvasImplementation())
             .build();
 
