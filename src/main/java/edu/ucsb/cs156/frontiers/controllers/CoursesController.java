@@ -6,6 +6,7 @@ import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
@@ -450,8 +451,10 @@ public class CoursesController extends ApiController {
             .sorted()
             .collect(Collectors.toList());
 
+    // Dropped students are not part of the current roster, so they are never included
     List<String> studentEmails =
         StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
+            .filter(student -> student.getRosterStatus() != RosterStatus.DROPPED)
             .filter(student -> team == null || team.isBlank() || student.getTeams().contains(team))
             .map(RosterStudent::getEmail)
             .filter(Objects::nonNull)
