@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>School.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.enums</a> &gt; <span class="el_source">School.java</span></div><h1>School.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.enums;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
+import lombok.Getter;
+
+<span class="fc" id="L9">@Getter</span>
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+public enum School {
+<span class="fc" id="L12">  CHICO_STATE(</span>
+      &quot;Chico State&quot;,
+<span class="fc" id="L14">      List.of(&quot;Chico State University&quot;, &quot;Chico State&quot;, &quot;CSUCS&quot;),</span>
+      &quot;https://canvas.csuchico.edu/api/graphql&quot;),
+<span class="fc" id="L16">  OREGON_STATE(</span>
+      &quot;Oregon State University&quot;,
+<span class="fc" id="L18">      List.of(&quot;Oregon State University&quot;, &quot;Oregon State&quot;, &quot;OSU&quot;),</span>
+      &quot;https://canvas.oregonstate.edu/api/graphql&quot;),
+<span class="fc" id="L20">  UCSB(</span>
+      &quot;UCSB&quot;,
+<span class="fc" id="L22">      List.of(&quot;UC Santa Barbara&quot;, &quot;University of California, Santa Barbara&quot;, &quot;SB&quot;),</span>
+      &quot;https://ucsb.instructure.com/api/graphql&quot;);
+
+<span class="fc" id="L25">  private School(String displayName, List&lt;String&gt; alternateNames, String canvasImplementation) {</span>
+<span class="fc" id="L26">    this.displayName = displayName;</span>
+<span class="fc" id="L27">    this.alternateNames = alternateNames;</span>
+<span class="fc" id="L28">    this.canvasImplementation = canvasImplementation;</span>
+<span class="fc" id="L29">  }</span>
+
+  private final List&lt;String&gt; alternateNames;
+  private final String canvasImplementation;
+  private final String displayName;
+<span class="fc" id="L34">  private final String key = this.name();</span>
+
+  /*
+   * This is mostly to allow tests to serialize back in objects with school properties.
+   */
+  @JsonCreator
+  public static School fromKey(JsonNode node) {
+<span class="fc bfc" id="L41" title="All 2 branches covered.">    if (node == null) {</span>
+<span class="fc" id="L42">      return null;</span>
+    }
+<span class="fc bfc" id="L44" title="All 2 branches covered.">    if (node.isTextual()) {</span>
+<span class="fc" id="L45">      return School.valueOf(node.asText().toUpperCase());</span>
+    }
+<span class="fc bfc" id="L47" title="All 2 branches covered.">    if (node.has(&quot;key&quot;)) {</span>
+<span class="fc" id="L48">      return School.valueOf(node.get(&quot;key&quot;).asText().toUpperCase());</span>
+    }
+
+<span class="fc" id="L51">    throw new IllegalArgumentException(&quot;Invalid JSON node for School enum&quot;);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
