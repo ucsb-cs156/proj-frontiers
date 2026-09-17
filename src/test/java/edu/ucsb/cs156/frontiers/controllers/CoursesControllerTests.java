@@ -21,6 +21,7 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CourseWarning;
@@ -2090,6 +2091,61 @@ public class CoursesControllerTests extends ControllerTestCase {
             .andReturn();
 
     assertEquals("anna@ucsb.edu\r\nzebra@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_students_excludes_dropped_students() throws Exception {
+    RosterStudent manualStudent =
+        RosterStudent.builder().email("manual@ucsb.edu").rosterStatus(RosterStatus.MANUAL).build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().email("roster@ucsb.edu").rosterStatus(RosterStatus.ROSTER).build();
+    RosterStudent droppedStudent =
+        RosterStudent.builder()
+            .email("dropped@ucsb.edu")
+            .rosterStatus(RosterStatus.DROPPED)
+            .build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(droppedStudent, rosterStudent, manualStudent));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/emails").param("courseId", "1").param("type", "STUDENTS"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("manual@ucsb.edu\r\nroster@ucsb.edu", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseEmails_all_excludes_dropped_students_but_keeps_staff() throws Exception {
+    CourseStaff staff = CourseStaff.builder().email("staff@ucsb.edu").build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().email("roster@ucsb.edu").rosterStatus(RosterStatus.ROSTER).build();
+    RosterStudent droppedStudent =
+        RosterStudent.builder()
+            .email("dropped@ucsb.edu")
+            .rosterStatus(RosterStatus.DROPPED)
+            .build();
+
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(droppedStudent, rosterStudent));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staff));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/courses/emails")
+                    .param("courseId", "1")
+                    .param("type", "ALL")
+                    .param("format", "COMMA_SEPARATED"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("staff@ucsb.edu,roster@ucsb.edu", response.getResponse().getContentAsString());
   }
 
   @Test
