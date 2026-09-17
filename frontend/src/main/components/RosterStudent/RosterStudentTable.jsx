@@ -51,6 +51,7 @@ export default function RosterStudentTable({
       studentId: formData.studentId,
       firstName: formData.firstName,
       lastName: formData.lastName,
+      section: formData.section,
       id: formData.id,
     },
   });
@@ -129,6 +130,10 @@ export default function RosterStudentTable({
     {
       header: "Email",
       accessorKey: "email",
+    },
+    {
+      header: "Section",
+      accessorKey: "section",
     },
     {
       header: "GitHub Login",

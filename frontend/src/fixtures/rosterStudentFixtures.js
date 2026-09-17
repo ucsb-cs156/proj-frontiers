@@ -6,6 +6,7 @@ const rosterStudentFixtures = {
       firstName: "Bob",
       lastName: "Smith",
       email: "bobsmith@ucsb.edu",
+      section: "0100",
     },
   ],
 
@@ -16,6 +17,7 @@ const rosterStudentFixtures = {
       firstName: "Alice",
       lastName: "Brown",
       email: "alicebrown@ucsb.edu",
+      section: "0100",
     },
 
     {
@@ -24,6 +26,7 @@ const rosterStudentFixtures = {
       firstName: "Tom",
       lastName: "Hanks",
       email: "tomhanks@ucsb.edu",
+      section: "0200",
     },
 
     {
@@ -32,6 +35,7 @@ const rosterStudentFixtures = {
       firstName: "Emma",
       lastName: "Watson",
       email: "emmawatson@ucsb.edu",
+      section: "",
     },
   ],
   studentsWithEachStatus: [

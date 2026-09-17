@@ -148,6 +148,9 @@ describe("HelpCsvPage tests", () => {
     expect(oregonStateCsvExample).toBeInTheDocument();
     expect(rosterDownloadCsvExample).toBeInTheDocument();
     expect(ucsbEgradesCsvExample).toBeInTheDocument();
+    expect(screen.getByTestId("ucsbEgradesSectionNote")).toHaveTextContent(
+      "The enrollment code is stored as the student's section",
+    );
     expect(teamsCsvExample).toBeInTheDocument();
     expect(chicoStateCsvExample).toHaveClass("csvExample");
     expect(oregonStateCsvExample).toHaveClass("csvExample");

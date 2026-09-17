@@ -106,6 +106,17 @@ function RosterStudentForm({
         </Form.Group>
       )}
 
+      <Form.Group className="mb-3">
+        <Form.Label htmlFor="section">Section</Form.Label>
+        <Form.Control
+          data-testid={testIdPrefix + "-section"}
+          id="section"
+          type="text"
+          placeholder="Optional"
+          {...register("section")}
+        />
+      </Form.Group>
+
       <Button type="submit" data-testid={testIdPrefix + "-submit"}>
         {buttonLabel}
       </Button>

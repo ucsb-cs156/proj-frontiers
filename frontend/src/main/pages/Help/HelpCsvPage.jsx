@@ -77,12 +77,21 @@ export default function HelpCsvPage() {
                       to <code> @ucsb.edu</code>
                     </td>
                   </tr>
+                  <tr>
+                    <td>Enrl Cd</td>
+                    <td>Section</td>
+                    <td data-testid="ucsbEgradesSectionNote">
+                      The enrollment code is stored as the student&apos;s
+                      section, so that it can be used for section-based
+                      downloads such as CATME.
+                    </td>
+                  </tr>
                 </tbody>
               </table>
               <p>
-                <b>Ignored Fields:</b> Enrl Cd, Grade, Final Units, Middle,
-                Quarter, Course ID, Section, Meeting Time(s) / Location(s),
-                ClassLevel, Major1, Major2, Date/Time, Pronoun
+                <b>Ignored Fields:</b> Grade, Final Units, Middle, Quarter,
+                Course ID, Section, Meeting Time(s) / Location(s), ClassLevel,
+                Major1, Major2, Date/Time, Pronoun
               </p>
             </Accordion.Body>
           </Accordion.Item>
