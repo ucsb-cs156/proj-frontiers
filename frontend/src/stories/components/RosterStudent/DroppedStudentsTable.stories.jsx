@@ -51,6 +51,16 @@ ThreeItems.args = {
 
 ThreeItems.parameters = {
   msw: [
+    http.delete("/api/rosterstudents/delete", ({ request }) => {
+      const url = new URL(request.url);
+      window.alert(
+        "Invoked delete with URL: " +
+          url +
+          " and params: " +
+          JSON.stringify(Object.fromEntries(url.searchParams)),
+      );
+      return HttpResponse.json({}, { status: 200 });
+    }),
     http.put("/api/rosterstudents/restore", ({ request }) => {
       const url = new URL(request.url);
       window.alert(

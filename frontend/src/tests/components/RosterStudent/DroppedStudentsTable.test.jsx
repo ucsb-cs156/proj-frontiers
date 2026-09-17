@@ -33,6 +33,12 @@ describe("DroppedStudentsTable tests", () => {
     );
     const headers = ["id", "Student Id", "First Name", "Last Name", "Email"];
     const accessors = ["id", "studentId", "firstName", "lastName", "email"];
+    expect(
+      screen.getByTestId("DroppedStudentsTable-header-Restore"),
+    ).toHaveTextContent("Restore");
+    expect(
+      screen.getByTestId("DroppedStudentsTable-header-Delete"),
+    ).toHaveTextContent("Delete");
     headers.forEach((headerText) => {
       const header = screen.getByText(headerText);
       expect(header).toBeInTheDocument();
@@ -45,6 +51,14 @@ describe("DroppedStudentsTable tests", () => {
     expect(
       screen.getByTestId("DroppedStudentsTable-cell-row-0-col-id"),
     ).toHaveTextContent("3");
+    const deleteButton = screen.getByTestId(
+      "DeleteDroppedButton-cell-row-0-col-Delete-button",
+    );
+    expect(deleteButton).toHaveTextContent("Delete");
+    expect(deleteButton).toHaveClass("btn-danger");
+    expect(
+      screen.queryByTestId("RosterStudentDeleteModal"),
+    ).not.toBeInTheDocument();
   });
   test("restore works correctly", async () => {
     const queryClientSpecific = new QueryClient({
@@ -90,5 +104,88 @@ describe("DroppedStudentsTable tests", () => {
     expect(
       queryClientSpecific.getQueryState(["mock queryData"]).isInvalidated,
     ).toBe(false);
+  });
+
+  test("delete opens confirmation modal and sends DELETE with chosen org option", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    queryClientSpecific.setQueryData(
+      ["/api/rosterstudents/course/7"],
+      rosterStudentFixtures.threeStudents,
+    );
+    queryClientSpecific.setQueryData(["mock queryData"], null);
+    axiosMock.onDelete("/api/rosterstudents/delete").reply(200);
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <DroppedStudentsTable
+          students={rosterStudentFixtures.threeStudents}
+          courseId={7}
+        />
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(
+      screen.getByTestId("DeleteDroppedButton-cell-row-1-col-Delete-button"),
+    );
+    await screen.findByTestId("RosterStudentDeleteModal");
+    fireEvent.click(
+      screen.getByLabelText(
+        "Yes, I'd like to remove them from the GitHub Organization",
+      ),
+    );
+    fireEvent.click(screen.getByText("Delete Student"));
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toEqual(1));
+    expect(axiosMock.history.delete[0].url).toBe("/api/rosterstudents/delete");
+    expect(axiosMock.history.delete[0].params).toEqual({
+      id: 4,
+      removeFromOrg: "true",
+    });
+    await waitFor(() =>
+      expect(mockToast).toBeCalledWith("Student deleted successfully."),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("RosterStudentDeleteModal"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
+        .isInvalidated,
+    ).toBe(true);
+    expect(
+      queryClientSpecific.getQueryState(["mock queryData"]).isInvalidated,
+    ).toBe(false);
+    expect(axiosMock.history.put.length).toEqual(0);
+  });
+
+  test("delete modal can be closed without deleting", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DroppedStudentsTable
+          students={rosterStudentFixtures.threeStudents}
+          courseId={7}
+        />
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(
+      screen.getByTestId("DeleteDroppedButton-cell-row-0-col-Delete-button"),
+    );
+    await screen.findByTestId("RosterStudentDeleteModal");
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("RosterStudentDeleteModal"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(axiosMock.history.delete.length).toEqual(0);
+    expect(mockToast).not.toBeCalled();
   });
 });
