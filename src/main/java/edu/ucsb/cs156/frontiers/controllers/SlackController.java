@@ -211,8 +211,8 @@ public class SlackController extends ApiController {
   /**
    * Lists the people with active accounts in the course's Slack workspace (no bots, no deactivated
    * accounts, no invitations that have not been accepted yet). Each is matched by email against the
-   * course to determine whether they are the instructor, a staff member, a (non dropped) roster
-   * student, or none of these.
+   * course to determine whether they are the instructor, a staff member, a roster student (only
+   * those with status ROSTER or MANUAL; not dropped students), or none of these.
    *
    * @param courseId the id of the course
    * @return the active users of the workspace
@@ -229,8 +229,8 @@ public class SlackController extends ApiController {
     List<SlackUser> slackUsers = listSlackUsers(course);
 
     Map<String, String> roleByEmail = new HashMap<>();
-    for (RosterStudent student : rosterStudentRepository.findByCourseId(courseId)) {
-      if (student.getRosterStatus() != RosterStatus.DROPPED && student.getEmail() != null) {
+    for (RosterStudent student : enrolledStudents(courseId)) {
+      if (student.getEmail() != null) {
         roleByEmail.put(canonical(student.getEmail()), ROLE_STUDENT);
       }
     }
@@ -264,10 +264,10 @@ public class SlackController extends ApiController {
   }
 
   /**
-   * Lists the (non dropped) roster students and the staff of the course that do not have an active
-   * account in the course's Slack workspace, matching by email. For each, slackStatus indicates
-   * whether they have been invited but have not signed in yet, have a deactivated account, or are
-   * unknown to the workspace.
+   * Lists the roster students (only those with status ROSTER or MANUAL; not dropped students) and
+   * the staff of the course that do not have an active account in the course's Slack workspace,
+   * matching by email. For each, slackStatus indicates whether they have been invited but have not
+   * signed in yet, have a deactivated account, or are unknown to the workspace.
    *
    * @param courseId the id of the course
    * @return staff first, then students
@@ -302,9 +302,9 @@ public class SlackController extends ApiController {
                 ROLE_STAFF, staff.getFirstName(), staff.getLastName(), staff.getEmail(), status));
       }
     }
-    for (RosterStudent student : rosterStudentRepository.findByCourseId(courseId)) {
+    for (RosterStudent student : enrolledStudents(courseId)) {
       String status = missingStatus(statusByEmail, student.getEmail());
-      if (student.getRosterStatus() != RosterStatus.DROPPED && status != null) {
+      if (status != null) {
         result.add(
             new SlackMissingMemberView(
                 ROLE_STUDENT,
@@ -315,6 +315,16 @@ public class SlackController extends ApiController {
       }
     }
     return result;
+  }
+
+  /** Only these roster students are considered: in particular, not dropped students. */
+  public static final List<RosterStatus> ENROLLED_STATUSES =
+      List.of(RosterStatus.ROSTER, RosterStatus.MANUAL);
+
+  private List<RosterStudent> enrolledStudents(Long courseId) {
+    return rosterStudentRepository
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            courseId, ENROLLED_STATUSES);
   }
 
   private static String slackStatus(SlackUser user) {

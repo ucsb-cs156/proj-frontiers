@@ -319,16 +319,14 @@ public class SlackControllerTests extends ControllerTestCase {
                 deactivated,
                 invited));
 
-    when(rosterStudentRepository.findByCourseId(1L))
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
         .thenReturn(
             List.of(
                 RosterStudent.builder()
                     .email("student@ucsb.edu")
                     .rosterStatus(RosterStatus.ROSTER)
-                    .build(),
-                RosterStudent.builder()
-                    .email("dropped@ucsb.edu")
-                    .rosterStatus(RosterStatus.DROPPED)
                     .build(),
                 RosterStudent.builder()
                     .email("studentandstaff@ucsb.edu")
@@ -352,6 +350,10 @@ public class SlackControllerTests extends ControllerTestCase {
             .perform(get("/api/courses/slack/users").param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
+
+    // only students with status ROSTER or MANUAL are asked for; dropped@ucsb.edu is in Slack, but
+    // as a dropped student is not among them, and so has no course role
+    verify(rosterStudentRepository, never()).findByCourseId(any());
 
     List<SlackController.SlackUserView> expected =
         List.of(
@@ -385,7 +387,10 @@ public class SlackControllerTests extends ControllerTestCase {
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
     when(tokenSecurityService.decrypt("enc:v1:x")).thenReturn(TOKEN);
     when(slackService.listUsers(TOKEN)).thenReturn(List.of(slackUser("U01", "a@ucsb.edu")));
-    when(rosterStudentRepository.findByCourseId(1L)).thenReturn(List.of());
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
+        .thenReturn(List.of());
     when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
 
     MvcResult response =
@@ -554,12 +559,13 @@ public class SlackControllerTests extends ControllerTestCase {
                     .email("missingstaff@ucsb.edu")
                     .build(),
                 CourseStaff.builder().firstName("NoEmail").lastName("Staff").email(null).build()));
-    when(rosterStudentRepository.findByCourseId(1L))
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
         .thenReturn(
             List.of(
                 student("Active", "activestudent@ucsb.edu", RosterStatus.ROSTER),
                 student("Missing", "missingstudent@ucsb.edu", RosterStatus.ROSTER),
-                student("Dropped", "droppedstudent@ucsb.edu", RosterStatus.DROPPED),
                 student("BotOnly", "botonly@ucsb.edu", RosterStatus.MANUAL),
                 student("Invited", "invited@ucsb.edu", RosterStatus.ROSTER),
                 student("Deactivated", "deactivated@ucsb.edu", RosterStatus.ROSTER),
@@ -572,6 +578,9 @@ public class SlackControllerTests extends ControllerTestCase {
             .perform(get("/api/courses/slack/missing").param("courseId", "1"))
             .andExpect(status().isOk())
             .andReturn();
+
+    // only students with status ROSTER or MANUAL are asked for, so dropped students are not listed
+    verify(rosterStudentRepository, never()).findByCourseId(any());
 
     List<SlackController.SlackMissingMemberView> expected =
         List.of(

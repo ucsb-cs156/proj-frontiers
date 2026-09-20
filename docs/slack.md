@@ -65,14 +65,18 @@ is opened. The tab has:
   (bots, deactivated accounts, and people who have been invited but have not
   signed in yet are left out). The **Course Role** column shows whether the
   email of the Slack user matches the instructor, a staff member, or a student
-  on the roster of the course, or none of these; dropped students count as
-  none. Click the column header to sort by it, which is a quick way to find
+  on the roster of the course, or none of these. Click the column header to sort by it, which is a quick way to find
   people in the workspace who are not part of the course.
-* **Roster students and staff not active in Slack**: staff and (non dropped)
-  roster students whose email does not match an active Slack user. The
+* **Roster students and staff not active in Slack**: staff and roster students
+  whose email does not match an active Slack user. The
   **Slack Status** column shows whether they have been invited but have not
   signed in yet, have a deactivated account, or are not known to the workspace
   at all.
+
+In both tables, the only roster students considered are those whose roster
+status is `ROSTER` or `MANUAL`. Dropped students are ignored: a dropped student
+who is still in the Slack workspace shows up with Course Role "None", and a
+dropped student who is not in Slack is not listed as missing.
 
 Matching is by email, ignoring case, and treating `@umail.ucsb.edu` and
 `@ucsb.edu` as the same. This needs the `users:read` and `users:read.email`
