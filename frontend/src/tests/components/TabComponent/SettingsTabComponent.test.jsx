@@ -62,6 +62,10 @@ describe("SettingsTabComponent tests", () => {
       </QueryClientProvider>,
     );
 
+    expect(
+      screen.queryByTestId("CanvasApiForm-canvasForm"),
+    ).not.toBeInTheDocument();
+
     await screen.findByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS");
     await waitFor(() =>
       expect(screen.getByLabelText("Enable Canvas")).toBeInTheDocument(),
@@ -142,6 +146,29 @@ describe("SettingsTabComponent tests", () => {
     expect(screen.getByText("Connect Canvas")).toBeInTheDocument();
     expect(screen.getByLabelText("Canvas Course ID")).toBeInTheDocument();
     expect(screen.getByLabelText("Canvas API Token")).toBeInTheDocument();
+  });
+
+  test("toggling non-canvas option does not show canvas settings", async () => {
+    axiosMock.onPut("/api/courses/updateCourseCanvasToken").reply(200);
+    const client = new QueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <SettingsTabComponent
+          courseId={coursesFixtures.severalCourses[0].id}
+          canEditCourseOptions={true}
+          testIdPrefix="CanvasApiForm"
+        />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("CourseOptionsForm-toggle-DOKKU_MANAGER");
+    fireEvent.click(
+      screen.getByTestId("CourseOptionsForm-toggle-DOKKU_MANAGER"),
+    );
+
+    expect(
+      screen.queryByTestId("CanvasApiForm-canvasForm"),
+    ).not.toBeInTheDocument();
   });
 
   test("toggling an option sends POST with option payload", async () => {
