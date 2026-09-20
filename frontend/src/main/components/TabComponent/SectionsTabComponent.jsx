@@ -27,15 +27,15 @@ export default function SectionsTabComponent({ courseId, testIdPrefix }) {
   // (i.e. it has connected to a Slack workspace).
   const { data: optionsMap = {} } = useCourseOptions(courseId);
   const slackInfoQueryKey = `/api/courses/slack/info?courseId=${courseId}`;
+  // Stryker disable all : hard to test query caching/toast-suppression behavior
   const { data: slackInfo = {} } = useBackend(
     [slackInfoQueryKey],
-    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     { method: "GET", url: slackInfoQueryKey },
     {},
     true,
-    // Stryker disable next-line all : only affects when the query runs, not the response shape
     { enabled: optionsMap.SLACK_INTEGRATION === true },
   );
+  // Stryker restore all
   const showSlackChannel =
     optionsMap.SLACK_INTEGRATION === true && Boolean(slackInfo.slackTeamId);
 

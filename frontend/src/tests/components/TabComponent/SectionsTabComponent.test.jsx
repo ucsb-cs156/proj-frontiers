@@ -280,6 +280,28 @@ describe("SectionsTabComponent tests", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("does not show Slack Channel Name field/column when SLACK_INTEGRATION is disabled, even if stale cached Slack info has an active token", async () => {
+    axiosMock
+      .onGet("/api/courses/1/sections")
+      .reply(200, sectionsFixtures.threeSectionsWithSlackChannel);
+    // Simulate a stale cache entry (e.g. left over from when SLACK_INTEGRATION
+    // was previously enabled and connected) to make sure the SLACK_INTEGRATION
+    // check is not bypassed just because slackInfo happens to have a team id.
+    queryClient.setQueryData([`/api/courses/slack/info?courseId=1`], {
+      slackTeamId: "T12345",
+      slackTeamName: "CS156 Workspace",
+    });
+
+    renderTab();
+
+    await screen.findByTestId(
+      `${testId}-sections-table-cell-row-0-col-section`,
+    );
+    expect(
+      screen.queryByTestId(`${testId}-sections-table-header-slackChannelName`),
+    ).not.toBeInTheDocument();
+  });
+
   test("does not show Slack Channel Name field/column when SLACK_INTEGRATION is enabled but there is no active token", async () => {
     axiosMock.reset();
     axiosMock
