@@ -8,8 +8,11 @@ import {
   useCourseOptions,
 } from "main/utils/courseOptionsUtils";
 
-function CourseOptionsForm({ courseId, canEdit }) {
-  const { data: optionsMap } = useCourseOptions(courseId);
+function CourseOptionsForm({ courseId, canEdit, optionsMap: optionsMapProp }) {
+  const { data: fetchedOptionsMap = {} } = useCourseOptions(courseId, {
+    enabled: optionsMapProp === undefined,
+  });
+  const optionsMap = optionsMapProp ?? fetchedOptionsMap;
 
   const objectToAxiosParams = ({ option, enabled }) => ({
     url: "/api/course/options",

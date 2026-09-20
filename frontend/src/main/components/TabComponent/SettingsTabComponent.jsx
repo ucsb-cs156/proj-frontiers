@@ -41,7 +41,11 @@ export default function SettingsTabComponent({
 
   return (
     <div>
-      <CourseOptionsForm courseId={courseId} canEdit={canEditCourseOptions} />
+      <CourseOptionsForm
+        courseId={courseId}
+        canEdit={canEditCourseOptions}
+        optionsMap={optionsMap}
+      />
       {showCanvasSettings && (
         <CanvasCourseSettings
           courseId={courseId}
