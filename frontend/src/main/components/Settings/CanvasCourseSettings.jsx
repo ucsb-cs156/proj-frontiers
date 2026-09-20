@@ -10,7 +10,11 @@ export default function CanvasCourseSettings({
     <div className="card mt-4" data-testid={`${testIdPrefix}-canvasForm`}>
       <div className="card-body">
         <h5 className="card-title">Canvas Course Settings</h5>
-        <CanvasApiForm submitAction={submitAction} courseId={courseId} />
+        <CanvasApiForm
+          submitAction={submitAction}
+          courseId={courseId}
+          testIdPrefix={testIdPrefix}
+        />
       </div>
     </div>
   );
