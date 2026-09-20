@@ -24,7 +24,8 @@ Implementation:
 ### 2. Runtime key management via environment configuration
 
 - Encryption key material is externalized through:
-  - `CANVAS_API_TOKEN_ENCRYPTION_KEY` (Base64-encoded AES key, recommended 256-bit)
+  - `TOKEN_ENCRYPTION_KEY` (Base64-encoded AES key, recommended 256-bit)
+  - Note: this variable was formerly named `CANVAS_API_TOKEN_ENCRYPTION_KEY`. It was renamed because the same key now also encrypts Slack bot tokens (see [slack.md](slack.md)). The old name is still honored as a fallback when `TOKEN_ENCRYPTION_KEY` is not set, so existing deployments keep working, but it is deprecated. When renaming it on a deployment, keep the **same value**, or previously stored tokens can no longer be decrypted.
   - Note: You can use `openssl rand -base64 32` to generate a suitable value.
   - mapped in Spring as `app.canvas.api-token-encryption-key`
 - No key is hardcoded in source control.
@@ -61,7 +62,7 @@ Implementation:
 ## Operational Guidance
 
 1. Generate a strong AES key (32 bytes recommended) and Base64-encode it.
-2. Set `CANVAS_API_TOKEN_ENCRYPTION_KEY` in deployment secret management (not in repository files).
+2. Set `TOKEN_ENCRYPTION_KEY` in deployment secret management (not in repository files).
 3. Restrict access to this key to application runtime principals only.
 4. Rotate keys under institutional key management policy; if rotation with re-encryption is needed, perform via controlled migration.
 

@@ -1,5 +1,4 @@
 import React from "react";
-import { useEffect } from "react";
 import { Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useBackendMutation } from "main/utils/useBackend";
@@ -9,12 +8,7 @@ import {
   useCourseOptions,
 } from "main/utils/courseOptionsUtils";
 
-function CourseOptionsForm({
-  courseId,
-  canEdit,
-  onOptionsLoaded,
-  onOptionToggled,
-}) {
+function CourseOptionsForm({ courseId, canEdit }) {
   const { data: optionsMap = {} } = useCourseOptions(courseId);
 
   const objectToAxiosParams = ({ option, enabled }) => ({
@@ -35,10 +29,6 @@ function CourseOptionsForm({
     [courseOptionsQueryKey(courseId)],
   );
 
-  useEffect(() => {
-    onOptionsLoaded?.(optionsMap);
-  }, [optionsMap, onOptionsLoaded]);
-
   const entries = Object.entries(optionsMap);
 
   return (
@@ -54,9 +44,6 @@ function CourseOptionsForm({
           disabled={!canEdit}
           onChange={(event) => {
             const enabled = event.target.checked;
-            if (option === "ENABLE_CANVAS") {
-              onOptionToggled?.({ option, enabled });
-            }
             courseOptionMutation.mutate({
               option,
               enabled,

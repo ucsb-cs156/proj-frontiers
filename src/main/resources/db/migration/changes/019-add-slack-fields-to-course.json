@@ -1,0 +1,35 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "019-add-slack-fields-to-course",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "SLACK_BOT_TOKEN",
+                  "type": "VARCHAR(1024)"
+                }
+              },
+              {
+                "column": {
+                  "name": "SLACK_TEAM_ID",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "SLACK_TEAM_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

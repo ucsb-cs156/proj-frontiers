@@ -35,6 +35,12 @@ public class Course {
 
   private String canvasCourseId;
 
+  @JsonIgnore @ToString.Exclude private String slackBotToken;
+
+  private String slackTeamId;
+
+  private String slackTeamName;
+
   private boolean hideBasePermissionWarning;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
