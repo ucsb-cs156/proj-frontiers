@@ -11,15 +11,20 @@ API calls go.
 1. Create an app at <https://api.slack.com/apps> (choose "from scratch"), tied
    to the target workspace.
 2. Under **OAuth & Permissions → Bot Token Scopes**, add the scopes for the
-   capabilities Frontiers uses:
+   capabilities Frontiers uses (one scope per row):
 
-   | Capability | Scopes |
-   |------------|--------|
-   | List members + emails | `users:read`, `users:read.email` (emails are not included without the second one) |
-   | Create channels + invite users | `channels:manage` (public channels; also covers `conversations.create` and `conversations.invite`), plus `groups:write` if you ever need private channels |
-   | List channel memberships | `channels:read` (and `groups:read` for private channels) |
-   | Send messages | `chat:write`, and optionally `chat:write.public` so the bot can post to public channels it hasn't joined |
-   | Read public channel history | `channels:history`, plus `channels:join` so the bot can join channels programmatically (a bot must be a member of a channel to read its history; `chat:write.public` covers posting but not reading) |
+   | Capability | Scope |
+   |------------|-------|
+   | List members | `users:read` |
+   | List members' emails | `users:read.email` |
+   | Create public channels and invite users to them | `channels:manage` |
+   | Create private channels and invite users to them | `groups:write` |
+   | List public channel memberships | `channels:read` |
+   | List private channel memberships | `groups:read` |
+   | Send messages | `chat:write` |
+   | Send messages to public channels the bot has not joined | `chat:write.public` |
+   | Read public channel history | `channels:history` |
+   | Join public channels (the bot must be a member of a channel to read its history) | `channels:join` |
 
 3. Install the app to the workspace (the button is on the same page).
 4. Copy the **Bot User OAuth Token** (it starts with `xoxb-`). That is what goes

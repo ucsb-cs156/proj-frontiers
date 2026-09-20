@@ -3,6 +3,33 @@ import { Accordion, Table } from "react-bootstrap";
 
 // The content here should be kept in sync with the section
 // "Setting up the Slack app" in docs/slack.md
+
+// One scope per row
+const slackScopes = [
+  { capability: "List members", scope: "users:read" },
+  { capability: "List members' emails", scope: "users:read.email" },
+  {
+    capability: "Create public channels and invite users to them",
+    scope: "channels:manage",
+  },
+  {
+    capability: "Create private channels and invite users to them",
+    scope: "groups:write",
+  },
+  { capability: "List public channel memberships", scope: "channels:read" },
+  { capability: "List private channel memberships", scope: "groups:read" },
+  { capability: "Send messages", scope: "chat:write" },
+  {
+    capability: "Send messages to public channels the bot has not joined",
+    scope: "chat:write.public",
+  },
+  { capability: "Read public channel history", scope: "channels:history" },
+  {
+    capability:
+      "Join public channels (the bot must be a member of a channel to read its history)",
+    scope: "channels:join",
+  },
+];
 export default function SlackSetupInstructions({
   testIdPrefix = "SlackSetupInstructions",
 }) {
@@ -27,7 +54,8 @@ export default function SlackSetupInstructions({
             </li>
             <li>
               Under <strong>OAuth &amp; Permissions → Bot Token Scopes</strong>,
-              add the scopes for the capabilities Frontiers uses:
+              add the scopes for the capabilities Frontiers uses (one scope per
+              row):
               <Table
                 bordered
                 size="sm"
@@ -37,52 +65,18 @@ export default function SlackSetupInstructions({
                 <thead>
                   <tr>
                     <th>Capability</th>
-                    <th>Scopes</th>
+                    <th>Scope</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>List members + emails</td>
-                    <td>
-                      <code>users:read</code>, <code>users:read.email</code>{" "}
-                      (emails are not included without the second one)
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Create channels + invite users</td>
-                    <td>
-                      <code>channels:manage</code> (public channels; also covers{" "}
-                      <code>conversations.create</code> and{" "}
-                      <code>conversations.invite</code>), plus{" "}
-                      <code>groups:write</code> if you ever need private
-                      channels
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>List channel memberships</td>
-                    <td>
-                      <code>channels:read</code> (and <code>groups:read</code>{" "}
-                      for private channels)
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Send messages</td>
-                    <td>
-                      <code>chat:write</code>, and optionally{" "}
-                      <code>chat:write.public</code> so the bot can post to
-                      public channels it hasn&apos;t joined
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Read public channel history</td>
-                    <td>
-                      <code>channels:history</code>, plus{" "}
-                      <code>channels:join</code> so the bot can join channels
-                      programmatically (a bot must be a member of a channel to
-                      read its history; <code>chat:write.public</code> covers
-                      posting but not reading)
-                    </td>
-                  </tr>
+                  {slackScopes.map(({ capability, scope }) => (
+                    <tr key={scope}>
+                      <td>{capability}</td>
+                      <td>
+                        <code>{scope}</code>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </Table>
             </li>
