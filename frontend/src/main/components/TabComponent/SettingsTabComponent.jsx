@@ -10,7 +10,7 @@ export default function SettingsTabComponent({
   testIdPrefix,
   canEditCourseOptions,
 }) {
-  const { data: optionsMap } = useCourseOptions(courseId);
+  const { data: optionsMap = {} } = useCourseOptions(courseId);
   const showCanvasSettings = optionsMap.ENABLE_CANVAS === true;
 
   const onSuccessCanvasCredentialsAdded = () => {
