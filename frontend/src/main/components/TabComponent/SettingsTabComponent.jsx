@@ -1,6 +1,7 @@
 import React from "react";
-import CanvasApiForm from "main/components/Settings/CanvasApiForm";
+import CanvasCourseSettings from "main/components/Settings/CanvasCourseSettings";
 import CourseOptionsForm from "main/components/Settings/CourseOptionsForm";
+import { useCourseOptions } from "main/utils/courseOptionsUtils";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 
@@ -9,6 +10,9 @@ export default function SettingsTabComponent({
   testIdPrefix,
   canEditCourseOptions,
 }) {
+  const { data: optionsMap } = useCourseOptions(courseId);
+  const showCanvasSettings = optionsMap.ENABLE_CANVAS === true;
+
   const onSuccessCanvasCredentialsAdded = () => {
     toast("Canvas credentials successfully added.");
   };
@@ -36,9 +40,15 @@ export default function SettingsTabComponent({
   };
 
   return (
-    <div data-testid={`${testIdPrefix}-canvasForm`}>
-      <CanvasApiForm submitAction={handleSubmit} courseId={courseId} />
+    <div>
       <CourseOptionsForm courseId={courseId} canEdit={canEditCourseOptions} />
+      {showCanvasSettings && (
+        <CanvasCourseSettings
+          courseId={courseId}
+          submitAction={handleSubmit}
+          testIdPrefix={testIdPrefix}
+        />
+      )}
     </div>
   );
 }
