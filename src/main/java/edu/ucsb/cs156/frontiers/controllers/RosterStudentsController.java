@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -327,6 +329,13 @@ public class RosterStudentsController extends ApiController {
     return rosterStudentRepository.save(rosterStudent);
   }
 
+  /** Outcome of the optional GitHub organization removal step when deleting a roster student. */
+  public record OrgRemovalResult(boolean attempted, boolean successful, String errorMessage) {}
+
+  /** Summary returned when purging all dropped roster students from a course. */
+  public record PurgeDroppedResponse(
+      int deleted, int removedFromOrg, List<String> orgRemovalErrors) {}
+
   @Operation(summary = "Delete a roster student")
   @PreAuthorize("@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)")
   @DeleteMapping("/delete")
@@ -343,6 +352,72 @@ public class RosterStudentsController extends ApiController {
         rosterStudentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException(RosterStudent.class, id));
+
+    OrgRemovalResult result = deleteSingleRosterStudent(rosterStudent, removeFromOrg);
+
+    if (!result.attempted()) {
+      return ResponseEntity.ok(
+          "Successfully deleted roster student and removed him/her from the course list");
+    } else if (result.successful()) {
+      return ResponseEntity.ok(
+          "Successfully deleted roster student and removed him/her from the course list and organization");
+    } else {
+      return ResponseEntity.ok(
+          "Successfully deleted roster student but there was an error removing them from the course organization: "
+              + result.errorMessage());
+    }
+  }
+
+  @Operation(
+      summary = "Purge all dropped roster students from a course",
+      description =
+          "Deletes every roster student in the course whose roster status is DROPPED, optionally removing them from the GitHub organization")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @DeleteMapping("/purgeDropped")
+  @Transactional
+  public PurgeDroppedResponse purgeDroppedRosterStudents(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(
+              name = "removeFromOrg",
+              description = "Whether to remove the students from the GitHub organization")
+          @RequestParam(defaultValue = "true")
+          boolean removeFromOrg)
+      throws EntityNotFoundException {
+    courseRepository
+        .findById(courseId)
+        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    List<RosterStudent> droppedStudents =
+        new ArrayList<>(
+            rosterStudentRepository
+                .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                    courseId, List.of(RosterStatus.DROPPED)));
+
+    int deleted = 0;
+    int removedFromOrg = 0;
+    List<String> orgRemovalErrors = new ArrayList<>();
+    for (RosterStudent rosterStudent : droppedStudents) {
+      OrgRemovalResult result = deleteSingleRosterStudent(rosterStudent, removeFromOrg);
+      deleted++;
+      if (result.successful()) {
+        removedFromOrg++;
+      } else if (result.attempted()) {
+        orgRemovalErrors.add(rosterStudent.getEmail() + ": " + result.errorMessage());
+      }
+    }
+    return new PurgeDroppedResponse(deleted, removedFromOrg, orgRemovalErrors);
+  }
+
+  /**
+   * Deletes a single roster student: optionally removes them from the GitHub organization, detaches
+   * them from any teams and from the course, and deletes the row.
+   *
+   * @param rosterStudent the student to delete
+   * @param removeFromOrg whether to attempt removal from the GitHub organization
+   * @return the outcome of the organization removal step
+   */
+  private OrgRemovalResult deleteSingleRosterStudent(
+      RosterStudent rosterStudent, boolean removeFromOrg) {
     Course course = rosterStudent.getCourse();
 
     boolean orgRemovalAttempted = false;
@@ -376,20 +451,10 @@ public class RosterStudentsController extends ApiController {
               });
     }
 
-    rosterStudent.getCourse().getRosterStudents().remove(rosterStudent);
+    course.getRosterStudents().remove(rosterStudent);
     rosterStudent.setCourse(null);
     rosterStudentRepository.delete(rosterStudent);
 
-    if (!orgRemovalAttempted) {
-      return ResponseEntity.ok(
-          "Successfully deleted roster student and removed him/her from the course list");
-    } else if (orgRemovalSuccessful) {
-      return ResponseEntity.ok(
-          "Successfully deleted roster student and removed him/her from the course list and organization");
-    } else {
-      return ResponseEntity.ok(
-          "Successfully deleted roster student but there was an error removing them from the course organization: "
-              + orgRemovalErrorMessage);
-    }
+    return new OrgRemovalResult(orgRemovalAttempted, orgRemovalSuccessful, orgRemovalErrorMessage);
   }
 }

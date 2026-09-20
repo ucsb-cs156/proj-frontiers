@@ -17,6 +17,7 @@ import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import Modal from "react-bootstrap/Modal";
 import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsTable";
+import PurgeDroppedStudentsModal from "main/components/RosterStudent/PurgeDroppedStudentsModal";
 
 export default function EnrollmentTabComponent({
   courseId,
@@ -28,6 +29,7 @@ export default function EnrollmentTabComponent({
   const [csvModal, setCsvModal] = useState(false);
   const [csvErrorModal, setCsvErrorModal] = useState(false);
   const [csvErrorModalData, setCsvErrorModalData] = useState(null);
+  const [purgeModal, setPurgeModal] = useState(false);
 
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
@@ -101,6 +103,39 @@ export default function EnrollmentTabComponent({
       },
     },
     [`/api/rosterstudents/course/${courseId}`],
+  );
+
+  const objectToAxiosParamsPurge = (formData) => ({
+    url: `/api/rosterstudents/purgeDropped`,
+    method: "DELETE",
+    params: {
+      courseId: courseId,
+      removeFromOrg: formData.removeFromOrg,
+    },
+  });
+
+  const purgeMutation = useBackendMutation(
+    objectToAxiosParamsPurge,
+    {
+      onSuccess: (data) => {
+        toast(`Purged ${data.deleted} dropped student(s).`);
+        if (data.orgRemovalErrors.length > 0) {
+          toast.error(
+            `Some students could not be removed from the GitHub organization: ${data.orgRemovalErrors.join("; ")}`,
+          );
+        }
+        setPurgeModal(false);
+      },
+    },
+    [`/api/rosterstudents/course/${courseId}`],
+  );
+
+  const handlePurgeSubmit = (formData) => {
+    purgeMutation.mutate(formData);
+  };
+
+  const droppedStudents = rosterStudents.filter(
+    (student) => student.rosterStatus === "DROPPED",
   );
 
   const handleCsvSubmit = (formData) => {
@@ -261,12 +296,25 @@ export default function EnrollmentTabComponent({
       </Row>
       <Row>
         <h2>Dropped Students</h2>
-        <DroppedStudentsTable
-          students={rosterStudents.filter(
-            (student) => student.rosterStatus === "DROPPED",
-          )}
-          courseId={courseId}
-        />
+        <DroppedStudentsTable students={droppedStudents} courseId={courseId} />
+      </Row>
+      <PurgeDroppedStudentsModal
+        showModal={purgeModal}
+        toggleShowModal={setPurgeModal}
+        onSubmitAction={handlePurgeSubmit}
+        droppedCount={droppedStudents.length}
+      />
+      <Row className="p-2">
+        <Col>
+          <Button
+            variant="danger"
+            onClick={() => setPurgeModal(true)}
+            disabled={droppedStudents.length === 0}
+            data-testid={`${testIdPrefix}-purge-dropped-button`}
+          >
+            Purge All Dropped Students
+          </Button>
+        </Col>
       </Row>
     </div>
   );

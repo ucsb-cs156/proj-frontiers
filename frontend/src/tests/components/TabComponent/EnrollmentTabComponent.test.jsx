@@ -797,4 +797,159 @@ describe("EnrollmentTabComponent Tests", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  test("purge button is disabled when there are no dropped students", async () => {
+    axiosMock
+      .onGet("/api/rosterstudents/course/1")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId(`${testId}-RosterStudentTable-cell-row-0-col-id`);
+    const purgeButton = screen.getByTestId(`${testId}-purge-dropped-button`);
+    expect(purgeButton).toHaveTextContent("Purge All Dropped Students");
+    expect(purgeButton).toHaveClass("btn-danger");
+    expect(purgeButton).toBeDisabled();
+    expect(
+      screen.queryByTestId("PurgeDroppedStudentsModal"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("purge flow sends DELETE with chosen option, toasts, and refetches", async () => {
+    axiosMock
+      .onGet("/api/rosterstudents/course/1")
+      .reply(200, rosterStudentFixtures.fourStudentsOneDropped);
+    axiosMock.onDelete("/api/rosterstudents/purgeDropped").reply(200, {
+      deleted: 1,
+      removedFromOrg: 1,
+      orgRemovalErrors: [],
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const purgeButton = await screen.findByTestId(
+      `${testId}-purge-dropped-button`,
+    );
+    await waitFor(() => expect(purgeButton).not.toBeDisabled());
+    fireEvent.click(purgeButton);
+
+    await screen.findByTestId("PurgeDroppedStudentsModal");
+    expect(
+      screen.getByTestId("PurgeDroppedStudentsModal-message"),
+    ).toHaveTextContent("delete all 1 dropped student(s)");
+    fireEvent.click(
+      screen.getByLabelText(
+        "Yes, I'd like to remove them from the GitHub Organization",
+      ),
+    );
+    fireEvent.click(screen.getByTestId("PurgeDroppedStudentsModal-submit"));
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toEqual(1));
+    expect(axiosMock.history.delete[0].url).toBe(
+      "/api/rosterstudents/purgeDropped",
+    );
+    expect(axiosMock.history.delete[0].params).toEqual({
+      courseId: 1,
+      removeFromOrg: "true",
+    });
+    await waitFor(() =>
+      expect(toast).toBeCalledWith("Purged 1 dropped student(s)."),
+    );
+    expect(toast.error).not.toBeCalled();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("PurgeDroppedStudentsModal"),
+      ).not.toBeInTheDocument(),
+    );
+    // roster is refetched after the purge
+    await waitFor(() => expect(axiosMock.history.get.length).toEqual(2));
+    expect(axiosMock.history.get[1].url).toBe("/api/rosterstudents/course/1");
+  });
+
+  test("purge reports GitHub org removal errors", async () => {
+    axiosMock
+      .onGet("/api/rosterstudents/course/1")
+      .reply(200, rosterStudentFixtures.fourStudentsOneDropped);
+    axiosMock.onDelete("/api/rosterstudents/purgeDropped").reply(200, {
+      deleted: 2,
+      removedFromOrg: 0,
+      orgRemovalErrors: ["a@ucsb.edu: boom", "b@ucsb.edu: bang"],
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const purgeButton = await screen.findByTestId(
+      `${testId}-purge-dropped-button`,
+    );
+    await waitFor(() => expect(purgeButton).not.toBeDisabled());
+    fireEvent.click(purgeButton);
+    await screen.findByTestId("PurgeDroppedStudentsModal");
+    fireEvent.click(screen.getByTestId("PurgeDroppedStudentsModal-submit"));
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toEqual(1));
+    expect(axiosMock.history.delete[0].params).toEqual({
+      courseId: 1,
+      removeFromOrg: "false",
+    });
+    await waitFor(() =>
+      expect(toast).toBeCalledWith("Purged 2 dropped student(s)."),
+    );
+    expect(toast.error).toBeCalledWith(
+      "Some students could not be removed from the GitHub organization: a@ucsb.edu: boom; b@ucsb.edu: bang",
+    );
+  });
+
+  test("purge modal can be closed without purging", async () => {
+    axiosMock
+      .onGet("/api/rosterstudents/course/1")
+      .reply(200, rosterStudentFixtures.fourStudentsOneDropped);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const purgeButton = await screen.findByTestId(
+      `${testId}-purge-dropped-button`,
+    );
+    await waitFor(() => expect(purgeButton).not.toBeDisabled());
+    fireEvent.click(purgeButton);
+    await screen.findByTestId("PurgeDroppedStudentsModal");
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("PurgeDroppedStudentsModal"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(axiosMock.history.delete.length).toEqual(0);
+  });
 });
