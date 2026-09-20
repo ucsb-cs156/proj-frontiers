@@ -19,6 +19,8 @@ import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 import SectionsTabComponent from "main/components/TabComponent/SectionsTabComponent";
 import { useCourseOptions } from "main/utils/courseOptionsUtils";
+import SlackTabComponent from "main/components/TabComponent/SlackTabComponent";
+import { slackInfoQueryKey } from "main/utils/slackUtils";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -51,6 +53,21 @@ export default function InstructorCourseShowPage({
     enabled: showSettingsTab,
   });
   const showSectionsTab = courseOptions.TRANSLATE_SECTIONS === true;
+
+  // The Slack tab is only shown when the SLACK_INTEGRATION course option is
+  // enabled and a Slack token has been saved. The query key is shared with the
+  // Slack card on the Settings tab, so saving a token there shows the tab.
+  const slackIntegrationEnabled = courseOptions.SLACK_INTEGRATION === true;
+  const { data: slackInfo } = useBackend(
+    [slackInfoQueryKey(courseId)],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: slackInfoQueryKey(courseId) },
+    {},
+    true,
+    { enabled: slackIntegrationEnabled },
+  );
+  const showSlackTab =
+    slackIntegrationEnabled && Boolean(slackInfo.slackBotToken);
 
   // Stryker disable OptionalChaining -- course?.instructorEmail is more readable than course && course.instructorEmail
   const getCourseFailed = courseBackendFailureCount > 0;
@@ -203,6 +220,21 @@ export default function InstructorCourseShowPage({
         <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
           <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
+        {showSlackTab && (
+          <Tab
+            eventKey={"slack"}
+            title={"Slack"}
+            className="pt-2"
+            mountOnEnter={true}
+          >
+            <SlackTabComponent
+              courseId={courseId}
+              testIdPrefix={testId}
+              slackTeamName={slackInfo.slackTeamName}
+              slackTeamUrl={slackInfo.slackTeamUrl}
+            />
+          </Tab>
+        )}
         {showSettingsTab && (
           <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
             <SettingsTabComponent

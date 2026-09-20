@@ -13,12 +13,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
+import edu.ucsb.cs156.frontiers.errors.SlackApiException;
 import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
+import edu.ucsb.cs156.frontiers.models.SlackUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
 import edu.ucsb.cs156.frontiers.services.SlackService;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -32,6 +40,8 @@ import org.springframework.test.web.servlet.MvcResult;
 public class SlackControllerTests extends ControllerTestCase {
 
   @MockitoBean private CourseRepository courseRepository;
+  @MockitoBean private RosterStudentRepository rosterStudentRepository;
+  @MockitoBean private CourseStaffRepository courseStaffRepository;
   @MockitoBean private SlackService slackService;
   @MockitoBean private CanvasApiTokenSecurityService tokenSecurityService;
 
@@ -55,6 +65,7 @@ public class SlackControllerTests extends ControllerTestCase {
             .slackBotToken("enc:v1:ciphertext")
             .slackTeamId("T12345678")
             .slackTeamName("ucsb-cs156-f26")
+            .slackTeamUrl("https://ucsb-cs156-f26.slack.com/")
             .build();
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
     when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
@@ -70,6 +81,7 @@ public class SlackControllerTests extends ControllerTestCase {
     expected.put("slackBotToken", MASKED_TOKEN);
     expected.put("slackTeamId", "T12345678");
     expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://ucsb-cs156-f26.slack.com/");
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -90,6 +102,7 @@ public class SlackControllerTests extends ControllerTestCase {
     expected.put("slackBotToken", "");
     expected.put("slackTeamId", "");
     expected.put("slackTeamName", "");
+    expected.put("slackTeamUrl", "");
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -131,6 +144,7 @@ public class SlackControllerTests extends ControllerTestCase {
                 .ok(true)
                 .team("ucsb-cs156-f26")
                 .teamId("T12345678")
+                .url("https://ucsb-cs156-f26.slack.com/")
                 .build());
     when(tokenSecurityService.encrypt(TOKEN)).thenReturn("enc:v1:ciphertext");
     when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
@@ -150,6 +164,7 @@ public class SlackControllerTests extends ControllerTestCase {
     assertEquals("enc:v1:ciphertext", captor.getValue().getSlackBotToken());
     assertEquals("T12345678", captor.getValue().getSlackTeamId());
     assertEquals("ucsb-cs156-f26", captor.getValue().getSlackTeamName());
+    assertEquals("https://ucsb-cs156-f26.slack.com/", captor.getValue().getSlackTeamUrl());
 
     LinkedHashMap<String, Object> expected = new LinkedHashMap<>();
     expected.put("ok", true);
@@ -157,6 +172,7 @@ public class SlackControllerTests extends ControllerTestCase {
     expected.put("slackBotToken", MASKED_TOKEN);
     expected.put("slackTeamId", "T12345678");
     expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://ucsb-cs156-f26.slack.com/");
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -256,6 +272,370 @@ public class SlackControllerTests extends ControllerTestCase {
     assertEquals("Course with id 1 not found", json.get("message"));
   }
 
+  private static SlackUser slackUser(String id, String email) {
+    return SlackUser.builder()
+        .id(id)
+        .name("name-" + id)
+        .realName("Real " + id)
+        .profile(SlackUser.Profile.builder().email(email).displayName("display-" + id).build())
+        .build();
+  }
+
+  /** Course with a stored token, for which decrypt is mocked. */
+  private Course courseWithToken() {
+    Course course = courseBuilder().slackBotToken("enc:v1:ciphertext").build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    return course;
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackUsers_listsActivePeopleWithCourseRole() throws Exception {
+    courseWithToken();
+
+    SlackUser noProfile = SlackUser.builder().id("U08").name("noprofile").build();
+    SlackUser bot = slackUser("U09", "student@ucsb.edu");
+    bot.setBot(true);
+    SlackUser slackbot = slackUser("USLACKBOT", null);
+    SlackUser deactivated = slackUser("U10", "student@ucsb.edu");
+    deactivated.setDeleted(true);
+    SlackUser invited = slackUser("U11", "student@ucsb.edu");
+    invited.setInvitedUser(true);
+
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(
+            List.of(
+                slackUser("U01", "Instructor@UCSB.edu"),
+                slackUser("U02", "staff@ucsb.edu"),
+                slackUser("U03", " student@umail.ucsb.edu "),
+                slackUser("U04", "dropped@ucsb.edu"),
+                slackUser("U05", "stranger@example.org"),
+                slackUser("U06", "studentandstaff@ucsb.edu"),
+                slackUser("U07", null),
+                noProfile,
+                bot,
+                slackbot,
+                deactivated,
+                invited));
+
+    when(rosterStudentRepository.findByCourseId(1L))
+        .thenReturn(
+            List.of(
+                RosterStudent.builder()
+                    .email("student@ucsb.edu")
+                    .rosterStatus(RosterStatus.ROSTER)
+                    .build(),
+                RosterStudent.builder()
+                    .email("dropped@ucsb.edu")
+                    .rosterStatus(RosterStatus.DROPPED)
+                    .build(),
+                RosterStudent.builder()
+                    .email("studentandstaff@ucsb.edu")
+                    .rosterStatus(RosterStatus.MANUAL)
+                    .build(),
+                RosterStudent.builder()
+                    .email("instructor@ucsb.edu")
+                    .rosterStatus(RosterStatus.MANUAL)
+                    .build(),
+                RosterStudent.builder().email(null).rosterStatus(RosterStatus.ROSTER).build()));
+    when(courseStaffRepository.findByCourseId(1L))
+        .thenReturn(
+            List.of(
+                CourseStaff.builder().email("STAFF@ucsb.edu").build(),
+                CourseStaff.builder().email("studentandstaff@ucsb.edu").build(),
+                CourseStaff.builder().email("instructor@ucsb.edu").build(),
+                CourseStaff.builder().email(null).build()));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/users").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    List<SlackController.SlackUserView> expected =
+        List.of(
+            new SlackController.SlackUserView(
+                "U01", "name-U01", "Real U01", "display-U01", "Instructor@UCSB.edu", "INSTRUCTOR"),
+            new SlackController.SlackUserView(
+                "U02", "name-U02", "Real U02", "display-U02", "staff@ucsb.edu", "STAFF"),
+            new SlackController.SlackUserView(
+                "U03",
+                "name-U03",
+                "Real U03",
+                "display-U03",
+                " student@umail.ucsb.edu ",
+                "STUDENT"),
+            new SlackController.SlackUserView(
+                "U04", "name-U04", "Real U04", "display-U04", "dropped@ucsb.edu", "NONE"),
+            new SlackController.SlackUserView(
+                "U05", "name-U05", "Real U05", "display-U05", "stranger@example.org", "NONE"),
+            new SlackController.SlackUserView(
+                "U06", "name-U06", "Real U06", "display-U06", "studentandstaff@ucsb.edu", "STAFF"),
+            new SlackController.SlackUserView(
+                "U07", "name-U07", "Real U07", "display-U07", null, "NONE"),
+            new SlackController.SlackUserView("U08", "noprofile", null, null, null, "NONE"));
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackUsers_courseWithoutInstructorEmail() throws Exception {
+    Course course = courseBuilder().instructorEmail(null).slackBotToken("enc:v1:x").build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(tokenSecurityService.decrypt("enc:v1:x")).thenReturn(TOKEN);
+    when(slackService.listUsers(TOKEN)).thenReturn(List.of(slackUser("U01", "a@ucsb.edu")));
+    when(rosterStudentRepository.findByCourseId(1L)).thenReturn(List.of());
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/users").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    List<SlackController.SlackUserView> expected =
+        List.of(
+            new SlackController.SlackUserView(
+                "U01", "name-U01", "Real U01", "display-U01", "a@ucsb.edu", "NONE"));
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackUsers_noTokenStored_isBadRequest() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+    when(tokenSecurityService.decrypt(null)).thenReturn(null);
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/users").param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(slackService, never()).listUsers(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("IllegalArgumentException", json.get("type"));
+    assertEquals(
+        "No Slack token has been set for this course; enter one on the Settings tab.",
+        json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getMissingMembers_emptyTokenStored_isBadRequest() throws Exception {
+    when(courseRepository.findById(1L))
+        .thenReturn(Optional.of(courseBuilder().slackBotToken("").build()));
+    when(tokenSecurityService.decrypt("")).thenReturn("");
+
+    mockMvc
+        .perform(get("/api/courses/slack/missing").param("courseId", "1"))
+        .andExpect(status().isBadRequest());
+
+    verify(slackService, never()).listUsers(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackUsers_courseDoesNotExist() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/users").param("courseId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Course with id 1 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getMissingMembers_courseDoesNotExist() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/missing").param("courseId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Course with id 1 not found", json.get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void slackUsersAndMissing_forbiddenForRegularUser() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+
+    mockMvc
+        .perform(get("/api/courses/slack/users").param("courseId", "1"))
+        .andExpect(status().isForbidden());
+    mockMvc
+        .perform(get("/api/courses/slack/missing").param("courseId", "1"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackUsers_slackError_isBadGateway() throws Exception {
+    courseWithToken();
+    when(slackService.listUsers(TOKEN)).thenThrow(new SlackApiException("missing_scope"));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/users").param("courseId", "1"))
+            .andExpect(status().isBadGateway())
+            .andReturn();
+
+    LinkedHashMap<String, Object> expected = new LinkedHashMap<>();
+    expected.put("ok", false);
+    expected.put("error", "missing_scope");
+    expected.put(
+        "message",
+        "This Slack token is missing a required scope. Add the scope under OAuth & Permissions, reinstall the Slack app to the workspace, and enter the new token.");
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getMissingMembers_listsStaffThenStudentsNotActiveInSlack() throws Exception {
+    courseWithToken();
+
+    SlackUser bot = slackUser("U05", "botonly@ucsb.edu");
+    bot.setBot(true);
+    SlackUser invited = slackUser("U06", "Invited@ucsb.edu");
+    invited.setInvitedUser(true);
+    SlackUser deactivated = slackUser("U07", "deactivated@ucsb.edu");
+    deactivated.setDeleted(true);
+    // same person: an active account listed before a deactivated one
+    SlackUser oldAccount = slackUser("U08", "activestudent@ucsb.edu");
+    oldAccount.setDeleted(true);
+    // same person: an invitation listed before a deactivated account
+    SlackUser reinvited = slackUser("U09", "reinvited@ucsb.edu");
+    reinvited.setInvitedUser(true);
+    SlackUser reinvitedOldAccount = slackUser("U10", "reinvited@ucsb.edu");
+    reinvitedOldAccount.setDeleted(true);
+    // a deactivated account that was also never accepted counts as deactivated
+    SlackUser deletedInvitation = slackUser("U11", "deletedinvitation@ucsb.edu");
+    deletedInvitation.setDeleted(true);
+    deletedInvitation.setInvitedUser(true);
+
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(
+            List.of(
+                slackUser("U01", "activestaff@ucsb.edu"),
+                slackUser("U02", "ActiveStudent@umail.ucsb.edu"),
+                slackUser("U03", null),
+                SlackUser.builder().id("U04").build(),
+                bot,
+                invited,
+                deactivated,
+                oldAccount,
+                reinvited,
+                reinvitedOldAccount,
+                deletedInvitation));
+
+    when(courseStaffRepository.findByCourseId(1L))
+        .thenReturn(
+            List.of(
+                CourseStaff.builder()
+                    .firstName("Active")
+                    .lastName("Staff")
+                    .email("activestaff@ucsb.edu")
+                    .build(),
+                CourseStaff.builder()
+                    .firstName("Missing")
+                    .lastName("Staff")
+                    .email("missingstaff@ucsb.edu")
+                    .build(),
+                CourseStaff.builder().firstName("NoEmail").lastName("Staff").email(null).build()));
+    when(rosterStudentRepository.findByCourseId(1L))
+        .thenReturn(
+            List.of(
+                student("Active", "activestudent@ucsb.edu", RosterStatus.ROSTER),
+                student("Missing", "missingstudent@ucsb.edu", RosterStatus.ROSTER),
+                student("Dropped", "droppedstudent@ucsb.edu", RosterStatus.DROPPED),
+                student("BotOnly", "botonly@ucsb.edu", RosterStatus.MANUAL),
+                student("Invited", "invited@ucsb.edu", RosterStatus.ROSTER),
+                student("Deactivated", "deactivated@ucsb.edu", RosterStatus.ROSTER),
+                student("Reinvited", "reinvited@ucsb.edu", RosterStatus.ROSTER),
+                student("DeletedInvitation", "deletedinvitation@ucsb.edu", RosterStatus.ROSTER),
+                student("NoEmail", null, RosterStatus.ROSTER)));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/missing").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    List<SlackController.SlackMissingMemberView> expected =
+        List.of(
+            missing("STAFF", "Missing", "Staff", "missingstaff@ucsb.edu", "NOT_IN_SLACK"),
+            missing("STAFF", "NoEmail", "Staff", null, "NOT_IN_SLACK"),
+            missing("STUDENT", "Missing", "Student", "missingstudent@ucsb.edu", "NOT_IN_SLACK"),
+            missing("STUDENT", "BotOnly", "Student", "botonly@ucsb.edu", "NOT_IN_SLACK"),
+            missing("STUDENT", "Invited", "Student", "invited@ucsb.edu", "INVITED"),
+            missing("STUDENT", "Deactivated", "Student", "deactivated@ucsb.edu", "DEACTIVATED"),
+            missing("STUDENT", "Reinvited", "Student", "reinvited@ucsb.edu", "INVITED"),
+            missing(
+                "STUDENT",
+                "DeletedInvitation",
+                "Student",
+                "deletedinvitation@ucsb.edu",
+                "DEACTIVATED"),
+            missing("STUDENT", "NoEmail", "Student", null, "NOT_IN_SLACK"));
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  private static RosterStudent student(String firstName, String email, RosterStatus status) {
+    return RosterStudent.builder()
+        .firstName(firstName)
+        .lastName("Student")
+        .email(email)
+        .rosterStatus(status)
+        .build();
+  }
+
+  private static SlackController.SlackMissingMemberView missing(
+      String role, String firstName, String lastName, String email, String status) {
+    return new SlackController.SlackMissingMemberView(role, firstName, lastName, email, status);
+  }
+
+  @Test
+  public void slackTeamUrl_prefersStoredUrl_thenFallsBackToTeamId() {
+    assertEquals(
+        "https://ucsb-cs156-f26.slack.com/",
+        SlackController.slackTeamUrl(
+            Course.builder()
+                .slackTeamUrl("https://ucsb-cs156-f26.slack.com/")
+                .slackTeamId("T12345678")
+                .build()));
+    assertEquals(
+        "https://app.slack.com/client/T12345678",
+        SlackController.slackTeamUrl(Course.builder().slackTeamId("T12345678").build()));
+    assertEquals(
+        "https://app.slack.com/client/T12345678",
+        SlackController.slackTeamUrl(
+            Course.builder().slackTeamUrl("").slackTeamId("T12345678").build()));
+    assertEquals("", SlackController.slackTeamUrl(Course.builder().build()));
+    assertEquals("", SlackController.slackTeamUrl(Course.builder().slackTeamId("").build()));
+  }
+
+  @Test
+  public void describeError_hasNoTokenNotSavedSuffix() {
+    assertEquals(
+        "Could not reach Slack. Please try again later.",
+        SlackController.describeError("slack_unreachable"));
+    assertEquals(
+        "Slack is limiting requests from this app. Please try again in a minute.",
+        SlackController.describeError("ratelimited"));
+  }
+
   @Test
   public void maskToken_showsOnlyFirstFourAndLastFour() {
     assertEquals("", SlackController.maskToken(null));
@@ -281,13 +661,16 @@ public class SlackControllerTests extends ControllerTestCase {
         "This Slack token is missing a required scope. Add the scope under OAuth & Permissions, reinstall the Slack app to the workspace, and enter the new token. The token was not saved.",
         SlackController.errorMessage("missing_scope"));
     assertEquals(
-        "Could not reach Slack to verify the token. Please try again later. The token was not saved.",
+        "Could not reach Slack. Please try again later. The token was not saved.",
         SlackController.errorMessage("slack_unreachable"));
     assertEquals(
-        "Slack could not verify this token (ratelimited). The token was not saved.",
+        "Slack is limiting requests from this app. Please try again in a minute. The token was not saved.",
         SlackController.errorMessage("ratelimited"));
     assertEquals(
-        "Slack could not verify this token (null). The token was not saved.",
+        "Slack reported an error (fatal_error). The token was not saved.",
+        SlackController.errorMessage("fatal_error"));
+    assertEquals(
+        "Slack reported an error (null). The token was not saved.",
         SlackController.errorMessage(null));
   }
 }
