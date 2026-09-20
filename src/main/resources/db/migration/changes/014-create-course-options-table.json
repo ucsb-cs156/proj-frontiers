@@ -1,0 +1,54 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "014-create-course-options-table",
+      "author": "copilot",
+      "changes": [
+        {
+          "createTable": {
+            "tableName": "COURSE_OPTION",
+            "columns": [
+              {
+                "column": {
+                  "name": "COURSE",
+                  "type": "BIGINT",
+                  "constraints": {
+                    "nullable": false,
+                    "foreignKeyName": "FK_COURSE_OPTION_COURSE",
+                    "referencedTableName": "COURSE",
+                    "referencedColumnName": "ID"
+                  }
+                }
+              },
+              {
+                "column": {
+                  "name": "OPTION",
+                  "type": "VARCHAR(255)",
+                  "constraints": {
+                    "nullable": false
+                  }
+                }
+              },
+              {
+                "column": {
+                  "name": "ENABLED",
+                  "type": "BOOLEAN",
+                  "constraints": {
+                    "nullable": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "addPrimaryKey": {
+            "tableName": "COURSE_OPTION",
+            "columnNames": "COURSE, OPTION",
+            "constraintName": "COURSE_OPTION_PK"
+          }
+        }
+      ]
+    }
+  }
+]}

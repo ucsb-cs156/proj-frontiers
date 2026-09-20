@@ -17,6 +17,7 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
+import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { expect, vi } from "vitest";
 
 const mockedNavigate = vi.fn();
@@ -46,12 +47,36 @@ describe("InstructorCourseShowPage tests", () => {
       canvasCourseId: "",
     });
     axiosMock.onGet("/api/jobs/course").reply(200, []);
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: false,
+      DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
+    });
   });
 
   const setupInstructorUser = () => {
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.instructorUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupAdminUser = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.adminUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupUserOnly = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
@@ -606,5 +631,279 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText("CMPSC 156");
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("instructor assigned to course can edit course option toggles", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "diba@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const enableCanvasToggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(enableCanvasToggle).not.toBeDisabled();
+    const dokkuManagerToggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-DOKKU_MANAGER",
+    );
+    expect(dokkuManagerToggle).not.toBeDisabled();
+    const enableApiKeysToggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_API_KEYS",
+    );
+    expect(enableApiKeysToggle).not.toBeDisabled();
+  });
+
+  test("admin can edit course option toggles for non-owned course", async () => {
+    setupAdminUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "someoneelse@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).not.toBeDisabled();
+  });
+
+  test("non-admin non-instructor cannot edit course option toggles", async () => {
+    setupUserOnly();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "someoneelse@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).toBeDisabled();
+  });
+  test("shows the Sections tab when TRANSLATE_SECTIONS option is enabled", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: true,
+      DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
+    });
+    axiosMock
+      .onGet("/api/courses/7/sections")
+      .reply(200, sectionsFixtures.threeSections);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const sectionsTab = await screen.findByRole("tab", { name: "Sections" });
+    expect(sectionsTab).toHaveAttribute("data-rr-ui-event-key", "sections");
+
+    const optionsRequests = axiosMock.history.get.filter(
+      (request) => request.url === "/api/course/options",
+    );
+    expect(optionsRequests.length).toBeGreaterThan(0);
+    expect(optionsRequests[0].params).toEqual({ courseId: "7" });
+
+    fireEvent.click(sectionsTab);
+    expect(sectionsTab).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-sections-tab-component"),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByTestId(
+        "InstructorCourseShowPage-sections-table-cell-row-0-col-section",
+      ),
+    ).toHaveTextContent("0100");
+  });
+
+  test("hides the Sections tab when TRANSLATE_SECTIONS option is disabled", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("InstructorCourseShowPage-title");
+    await waitFor(() =>
+      expect(
+        axiosMock.history.get.some(
+          (request) => request.url === "/api/course/options",
+        ),
+      ).toBe(true),
+    );
+
+    expect(
+      screen.queryByRole("tab", { name: "Sections" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-sections-tab-component"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("hides the Sections tab when course options cannot be loaded", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(403);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("InstructorCourseShowPage-title");
+    await waitFor(() =>
+      expect(
+        axiosMock.history.get.some(
+          (request) => request.url === "/api/course/options",
+        ),
+      ).toBe(true),
+    );
+
+    expect(
+      screen.queryByRole("tab", { name: "Sections" }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("Sections tab appears after enabling TRANSLATE_SECTIONS on the Settings tab", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+      instructorEmail: "diba@ucsb.edu",
+    });
+    // Simulate backend state: the option flips to true once the POST arrives.
+    let translateSections = false;
+    axiosMock.onGet("/api/course/options").reply(() => [
+      200,
+      {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: translateSections,
+        DOKKU_MANAGER: false,
+        ENABLE_API_KEYS: false,
+      },
+    ]);
+    axiosMock.onPost("/api/course/options").reply(() => {
+      translateSections = true;
+      return [200, { TRANSLATE_SECTIONS: true }];
+    });
+    axiosMock.onGet("/api/courses/7/sections").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-TRANSLATE_SECTIONS",
+    );
+    await waitFor(() => expect(toggle).not.toBeDisabled());
+    expect(toggle).not.toBeChecked();
+    expect(
+      screen.queryByRole("tab", { name: "Sections" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: "7",
+      option: "TRANSLATE_SECTIONS",
+      enabled: true,
+    });
+
+    expect(
+      await screen.findByRole("tab", { name: "Sections" }),
+    ).toBeInTheDocument();
   });
 });

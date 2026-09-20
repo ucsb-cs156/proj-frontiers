@@ -1,20 +1,18 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService.GithubRepository;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,28 +37,14 @@ public class DeleteRepoJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsCourse_whenFound() {
+  public void test_getScope_returnsCourseScope() {
     Long courseId = 1L;
-    Course course = Course.builder().id(courseId).courseName("Test Course").build();
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
     DeleteRepoJob job =
         DeleteRepoJob.builder().courseId(courseId).courseRepository(courseRepository).build();
 
-    assertEquals(course, job.getCourse());
-    verify(courseRepository, times(1)).findById(courseId);
-  }
-
-  @Test
-  public void test_getCourse_returnsNull_whenNotFound() {
-    Long courseId = 1L;
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
-
-    DeleteRepoJob job =
-        DeleteRepoJob.builder().courseId(courseId).courseRepository(courseRepository).build();
-
-    assertNull(job.getCourse());
-    verify(courseRepository, times(1)).findById(courseId);
+    assertEquals("course", job.getScopeType());
+    assertEquals(courseId, job.getScopeId());
   }
 
   @Test
@@ -164,9 +148,13 @@ public class DeleteRepoJobTests {
     verify(repositoryService).getRepositoriesMatchingPrefix(course, "lab01");
     verify(repositoryService).deleteRepositoryIfEmpty(course, "lab01-student1");
     verify(repositoryService).deleteRepositoryIfEmpty(course, "lab01-student2");
+    assertTrue(
+        jobStarted.getLog().contains("Starting delete repository job for course ID: " + courseId));
+    assertTrue(jobStarted.getLog().contains("prefix=lab01"));
     assertTrue(jobStarted.getLog().contains("Deleted empty repository: lab01-student1"));
     assertTrue(jobStarted.getLog().contains("Deleted empty repository: lab01-student2"));
     assertTrue(jobStarted.getLog().contains("Summary: found=2, deleted=2, retained=0, errors=0"));
+    assertTrue(jobStarted.getLog().contains("Done"));
   }
 
   @Test

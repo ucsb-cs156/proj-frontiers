@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.entities;
 
 import edu.ucsb.cs156.frontiers.enums.DownloadRequestType;
+import edu.ucsb.cs156.jobs.entities.Job;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

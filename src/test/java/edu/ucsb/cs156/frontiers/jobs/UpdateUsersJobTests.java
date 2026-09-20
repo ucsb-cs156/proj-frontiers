@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -19,9 +19,10 @@ public class UpdateUsersJobTests {
   JobContext ctx = new JobContext(null, jobStarted);
 
   @Test
-  public void test_getCourse_returnsNull() {
+  public void test_getScope_returnsUnscoped() {
     UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();
-    assertNull(job.getCourse());
+    assertNull(job.getScopeType());
+    assertNull(job.getScopeId());
   }
 
   @Test

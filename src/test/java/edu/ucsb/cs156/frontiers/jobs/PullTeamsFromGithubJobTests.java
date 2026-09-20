@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
@@ -15,7 +14,10 @@ import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.errors.JobCancelledException;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -44,11 +46,8 @@ public class PullTeamsFromGithubJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsCourse_whenFound() {
+  public void test_getScope_returnsCourseScope() {
     Long courseId = 1L;
-    Course course = Course.builder().id(courseId).courseName("Test Course").build();
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
     PullTeamsFromGithubJob job =
         PullTeamsFromGithubJob.builder()
@@ -56,28 +55,8 @@ public class PullTeamsFromGithubJobTests {
             .courseRepository(courseRepository)
             .build();
 
-    Course result = job.getCourse();
-
-    assertEquals(course, result);
-    verify(courseRepository, times(1)).findById(courseId);
-  }
-
-  @Test
-  public void test_getCourse_returnsNull_whenNotFound() {
-    Long courseId = 1L;
-
-    when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
-
-    PullTeamsFromGithubJob job =
-        PullTeamsFromGithubJob.builder()
-            .courseId(courseId)
-            .courseRepository(courseRepository)
-            .build();
-
-    Course result = job.getCourse();
-
-    assertNull(result);
-    verify(courseRepository, times(1)).findById(courseId);
+    assertEquals("course", job.getScopeType());
+    assertEquals(courseId, job.getScopeId());
   }
 
   @Test
@@ -98,6 +77,7 @@ public class PullTeamsFromGithubJobTests {
 
     verify(courseRepository).findById(courseId);
     verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
+    assertTrue(jobStarted.getLog().contains("ERROR: Course with ID 1 not found"));
   }
 
   @Test
@@ -119,6 +99,7 @@ public class PullTeamsFromGithubJobTests {
 
     verify(courseRepository).findById(courseId);
     verifyNoInteractions(teamRepository, teamMemberRepository, githubTeamService);
+    assertTrue(jobStarted.getLog().contains("ERROR: Course has no linked GitHub organization"));
   }
 
   @Test
@@ -263,6 +244,13 @@ public class PullTeamsFromGithubJobTests {
     verify(teamRepository, never())
         .save(argThat(t -> t.getName().equals("same-team") && t.getGithubTeamId().equals(333)));
     verify(githubTeamService, never()).getTeamMemberships(any(), any());
+    assertTrue(
+        jobStarted.getLog().contains("Starting pull teams from GitHub job for course ID: 1"));
+    assertTrue(jobStarted.getLog().contains("Processing course: Test Course (org: test-org)"));
+    assertTrue(
+        jobStarted.getLog().contains("Created local team 'new-team' with GitHub team ID: 444"));
+    assertTrue(
+        jobStarted.getLog().contains("Updated local team 'team-by-name' with GitHub team ID: 111"));
     assertTrue(jobStarted.getLog().contains("created: 1, updated: 2, unchanged: 1"));
   }
 
@@ -591,6 +579,17 @@ public class PullTeamsFromGithubJobTests {
                         && tm.getRosterStudent().equals(existingStudent)
                         && tm.getTeamStatus().equals(TeamStatus.TEAM_MAINTAINER)));
     verify(teamMemberRepository, times(2)).save(any(TeamMember.class));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "Created team member 'member-login' in team 'team-a' with status TEAM_MEMBER"));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "Updated team member 'existing-login' in team 'team-a' with status"
+                    + " TEAM_MAINTAINER"));
     assertTrue(jobStarted.getLog().contains("created: 0, updated: 1, unchanged: 0"));
   }
 
@@ -814,5 +813,119 @@ public class PullTeamsFromGithubJobTests {
                         && tm.getRosterStudent().equals(memberStudent)
                         && tm.getTeamStatus().equals(TeamStatus.TEAM_MEMBER)));
     assertTrue(jobStarted.getLog().contains("created: 0, updated: 1, unchanged: 0"));
+  }
+
+  // ────────────────────── checkCancellation checkpoints ──────────────────────
+  // The common case on a re-sync is a team that's already up to date on every field with no
+  // membership changes either -- that iteration never calls ctx.log() at all. Without their own
+  // checkCancellation() checkpoints, neither the outer team loop nor the inner per-member
+  // forEach would give cancellation an opportunity to fire during such a silent stretch. These
+  // tests mock a JobsRepository that reports "running" for exactly the calls known to precede
+  // the checkpoint under test, then "cancelling" from then on, and assert both that
+  // JobCancelledException is thrown AND that a downstream call the checkpoint should have
+  // pre-empted was never made.
+
+  private static Job runningJob() {
+    return Job.builder().id(99L).status("running").build();
+  }
+
+  private static Job cancellingJob() {
+    return Job.builder().id(99L).status("cancelling").build();
+  }
+
+  @Test
+  public void checkCancellation_stops_the_team_loop_before_looking_up_the_local_team()
+      throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .build();
+    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "team-a", "team-a"));
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course)).thenReturn(githubTeams);
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList());
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    // 2 real checkpoints precede the team loop's own check: accept()'s opening "Starting..." and
+    // "Processing course..." log lines.
+    when(jobsRepository.findById(99L))
+        .thenReturn(
+            Optional.of(runningJob()), Optional.of(runningJob()), Optional.of(cancellingJob()));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    PullTeamsFromGithubJob job2 =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    assertThrows(JobCancelledException.class, () -> job2.accept(cancellingCtx));
+
+    verify(teamRepository, never()).save(any());
+  }
+
+  @Test
+  public void checkCancellation_stops_the_member_loop_before_looking_up_the_team_member()
+      throws Exception {
+    Long courseId = 1L;
+    RosterStudent existingStudent = RosterStudent.builder().githubLogin("existing-login").build();
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(Arrays.asList(existingStudent))
+            .build();
+    // Already up to date on every field -- teamCreated=false and teamUnchanged stays true, so
+    // this iteration of the outer loop reaches the member-processing block with no log call.
+    Team localTeam =
+        Team.builder()
+            .name("team-a")
+            .githubTeamId(111)
+            .githubTeamSlug("team-a")
+            .course(course)
+            .build();
+    List<GithubTeamInfo> githubTeams = Arrays.asList(new GithubTeamInfo(111, "team-a", "team-a"));
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course)).thenReturn(githubTeams);
+    when(teamRepository.findByCourseId(courseId)).thenReturn(Arrays.asList(localTeam));
+    when(githubTeamService.getTeamMemberships("team-a", course))
+        .thenReturn(Map.of("existing-login", TeamStatus.TEAM_MEMBER));
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    // 3 real checkpoints precede the member loop's own check under this setup: accept()'s two
+    // opening log lines, and the outer team loop's own checkCancellation() (checked above).
+    when(jobsRepository.findById(99L))
+        .thenReturn(
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(cancellingJob()));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    PullTeamsFromGithubJob job2 =
+        PullTeamsFromGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    assertThrows(JobCancelledException.class, () -> job2.accept(cancellingCtx));
+
+    verify(teamMemberRepository, never()).findByTeamAndRosterStudent(any(), any());
   }
 }

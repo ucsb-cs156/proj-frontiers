@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
@@ -15,7 +14,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,12 +45,13 @@ public class PullTeamsFromCanvasJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsCourse() {
+  public void test_getScope_returnsCourseScope() {
     Course course = Course.builder().id(1L).courseName("Test Course").build();
 
     PullTeamsFromCanvasJob job = PullTeamsFromCanvasJob.builder().course(course).build();
 
-    assertEquals(course, job.getCourse());
+    assertEquals("course", job.getScopeType());
+    assertEquals(course.getId(), job.getScopeId());
   }
 
   @Test
@@ -101,6 +102,8 @@ public class PullTeamsFromCanvasJobTests {
     assertEquals(course, savedTeam.getCourse());
     assertEquals(1, savedTeam.getTeamMembers().size());
     assertEquals(student1, savedTeam.getTeamMembers().get(0).getRosterStudent());
+    assertTrue(jobStarted.getLog().contains("Processing group: Team Alpha with canvasId: 101"));
+    assertTrue(jobStarted.getLog().contains("Group members to be removed:[]"));
   }
 
   @Test
@@ -257,6 +260,8 @@ public class PullTeamsFromCanvasJobTests {
     // Act & Assert
     assertThrows(DuplicateGroupException.class, () -> job.accept(ctx));
     verify(teamRepository, never()).saveAll(anyList());
+    assertTrue(
+        jobStarted.getLog().contains("Duplicate group found: Team Alpha with canvasId: 101"));
   }
 
   @Test

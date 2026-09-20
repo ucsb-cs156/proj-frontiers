@@ -14,6 +14,7 @@ import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { teamsFixtures } from "fixtures/TeamsFixtures";
 import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
 import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
+import { sectionsFixtures } from "fixtures/sectionsFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -269,6 +270,63 @@ ExampleCourseThreeStudentsThreeStaffsThreeJobs.parameters = {
           return HttpResponse.json(courseJobs, { status: 200 });
         }
         return HttpResponse.json([], { status: 200 });
+      }),
+    ],
+  },
+};
+
+export const ExampleCourseWithSectionsTab = Template.bind({});
+ExampleCourseWithSectionsTab.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseWithSectionsTab.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/jobs/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/course/options", () => {
+        return HttpResponse.json(
+          {
+            ENABLE_CANVAS: false,
+            TRANSLATE_SECTIONS: true,
+            DOKKU_MANAGER: false,
+            ENABLE_API_KEYS: false,
+          },
+          { status: 200 },
+        );
+      }),
+      http.get("/api/courses/7/sections", () => {
+        return HttpResponse.json(sectionsFixtures.threeSections, {
+          status: 200,
+        });
+      }),
+      http.post("/api/courses/7/sections", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json({}, { status: 200 });
+      }),
+      http.put("/api/courses/7/sections/:id", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json({}, { status: 200 });
+      }),
+      http.delete("/api/courses/7/sections/:id", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json({}, { status: 200 });
       }),
     ],
   },

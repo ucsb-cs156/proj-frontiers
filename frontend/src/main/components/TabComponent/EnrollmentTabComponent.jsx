@@ -60,6 +60,7 @@ export default function EnrollmentTabComponent({
       lastName: student.lastName,
       studentId: student.studentId,
       email: student.email,
+      section: student.section,
     },
   });
 

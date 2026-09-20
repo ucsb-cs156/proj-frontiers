@@ -15,7 +15,10 @@ import TeamsTabComponent from "main/components/TabComponent/TeamsTabComponent";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
+import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
+import SectionsTabComponent from "main/components/TabComponent/SectionsTabComponent";
+import { useCourseOptions } from "main/utils/courseOptionsUtils";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -41,7 +44,20 @@ export default function InstructorCourseShowPage({
     true,
   );
 
+  // The Sections tab is only shown when the TRANSLATE_SECTIONS course option
+  // is enabled. Course options are only readable by instructors/admins, so the
+  // query is skipped entirely for views that hide the Settings tab.
+  const { data: courseOptions } = useCourseOptions(courseId, {
+    enabled: showSettingsTab,
+  });
+  const showSectionsTab = courseOptions.TRANSLATE_SECTIONS === true;
+
+  // Stryker disable OptionalChaining -- course?.instructorEmail is more readable than course && course.instructorEmail
   const getCourseFailed = courseBackendFailureCount > 0;
+  const canEditCourseOptions =
+    hasRole(currentUser, "ROLE_ADMIN") ||
+    currentUser?.root?.user?.email === course?.instructorEmail;
+  // Stryker enable OptionalChaining
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -169,6 +185,11 @@ export default function InstructorCourseShowPage({
             canManageTeams={canManageTeams}
           />
         </Tab>
+        {showSectionsTab && (
+          <Tab eventKey={"sections"} title={"Sections"} className="pt-2">
+            <SectionsTabComponent courseId={courseId} testIdPrefix={testId} />
+          </Tab>
+        )}
         <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
           <AssignmentTabComponent
             courseId={courseId}
@@ -184,7 +205,11 @@ export default function InstructorCourseShowPage({
         </Tab>
         {showSettingsTab && (
           <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
-            <SettingsTabComponent courseId={courseId} testIdPrefix={testId} />
+            <SettingsTabComponent
+              courseId={courseId}
+              testIdPrefix={testId}
+              canEditCourseOptions={canEditCourseOptions}
+            />
           </Tab>
         )}
       </Tabs>

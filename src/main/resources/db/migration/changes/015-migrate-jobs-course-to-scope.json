@@ -1,0 +1,40 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "015-migrate-jobs-course-to-scope",
+        "author": "pc",
+        "comment": "lib-jobs adoption (1/3): generalize the JOBS.COURSE_ID foreign key into generic SCOPE_TYPE/SCOPE_ID columns (see lib-jobs DESIGN.md 3.4), and add CREATED_BY_EMAIL (denormalized; no backfill, UI tolerates null) for the library's JobUserProvider. Existing course associations are preserved as SCOPE_TYPE='course'/SCOPE_ID=COURSE_ID before COURSE_ID is dropped.",
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "JOBS",
+              "columns": [
+                { "column": { "name": "CREATED_BY_EMAIL", "type": "VARCHAR(255)" } },
+                { "column": { "name": "SCOPE_TYPE", "type": "VARCHAR(255)" } },
+                { "column": { "name": "SCOPE_ID", "type": "BIGINT" } }
+              ]
+            }
+          },
+          {
+            "sql": {
+              "sql": "UPDATE JOBS SET SCOPE_TYPE = 'course', SCOPE_ID = COURSE_ID WHERE COURSE_ID IS NOT NULL"
+            }
+          },
+          {
+            "dropForeignKeyConstraint": {
+              "baseTableName": "JOBS",
+              "constraintName": "FK_JOBS_COURSE_ID"
+            }
+          },
+          {
+            "dropColumn": {
+              "tableName": "JOBS",
+              "columnName": "COURSE_ID"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

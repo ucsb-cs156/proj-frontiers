@@ -1,10 +1,9 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
-import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.DownloadRequest;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 
@@ -16,8 +15,13 @@ public class CommitDownloadRequestJob implements JobContextConsumer {
   DownloadRequest request;
 
   @Override
-  public Course getCourse() {
-    return request.getCourse();
+  public String getScopeType() {
+    return "course";
+  }
+
+  @Override
+  public Long getScopeId() {
+    return request.getCourse().getId();
   }
 
   @Override

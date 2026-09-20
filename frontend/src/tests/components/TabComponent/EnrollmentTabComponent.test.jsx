@@ -434,6 +434,9 @@ describe("EnrollmentTabComponent Tests", () => {
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "cgaucho@ucsb.edu" },
     });
+    fireEvent.change(screen.getByLabelText("Section"), {
+      target: { value: "0100" },
+    });
     fireEvent.click(screen.getByTestId("RosterStudentForm-submit"));
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     expect(axiosMock.history.post[0].params).toEqual({
@@ -442,6 +445,7 @@ describe("EnrollmentTabComponent Tests", () => {
       firstName: "Chris",
       lastName: "Gaucho",
       email: "cgaucho@ucsb.edu",
+      section: "0100",
     });
     await waitFor(() => expect(toast).toBeCalled());
     expect(toast).toBeCalledWith("Roster successfully updated.");

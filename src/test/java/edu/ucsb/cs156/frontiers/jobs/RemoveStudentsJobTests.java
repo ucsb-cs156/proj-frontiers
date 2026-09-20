@@ -7,17 +7,23 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.errors.JobCancelledException;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -40,10 +46,11 @@ public class RemoveStudentsJobTests {
   }
 
   @Test
-  public void test_getCourse_returnsNull() {
+  public void test_getScope_returnsUnscoped() {
     RemoveStudentsJob job = RemoveStudentsJob.builder().build();
 
-    assertNull(job.getCourse());
+    assertNull(job.getScopeType());
+    assertNull(job.getScopeId());
   }
 
   @Test
@@ -86,6 +93,8 @@ public class RemoveStudentsJobTests {
     verify(rosterStudentRepository, times(2)).save(any(RosterStudent.class));
     verify(rosterStudentRepository, atLeastOnce()).save(student1Updated);
     verify(rosterStudentRepository, atLeastOnce()).save(student2Updated);
+    verify(jobContext).log("Removed student testLogin1 from Organization");
+    verify(jobContext).log("Removed student testLogin2 from Organization");
   }
 
   @Test
@@ -114,6 +123,7 @@ public class RemoveStudentsJobTests {
     removeStudentsJob.accept(jobContext);
     verify(organizationMemberService, times(1)).removeOrganizationMember(eq(student1));
     verify(rosterStudentRepository, times(1)).save(student1Updated);
+    verify(jobContext).log("Student testLogin1 not in Organization");
   }
 
   @Test
@@ -203,5 +213,41 @@ public class RemoveStudentsJobTests {
     // Assert
     verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
     verify(rosterStudentRepository, never()).save(any(RosterStudent.class));
+  }
+
+  // A student whose course has no linked org, or who has no GitHub login/id, never calls
+  // c.log() -- without its own checkCancellation() checkpoint, this loop would give
+  // cancellation no opportunity to fire no matter how many students it skips. This test uses a
+  // real JobContext (not the mocked jobContext field above, which can't observe the checkpoint)
+  // backed by a JobsRepository that reports "cancelling" immediately -- the loop's own check is
+  // the very first checkCancellation-consuming call, since accept() never logs before it.
+  @Test
+  public void checkCancellation_stops_the_student_loop_before_calling_removeOrganizationMember()
+      throws Exception {
+    Course course = Course.builder().orgName("testOrg").installationId("123456").build();
+    RosterStudent student1 =
+        RosterStudent.builder()
+            .course(course)
+            .githubLogin("testLogin1")
+            .githubId(123545)
+            .orgStatus(OrgStatus.MEMBER)
+            .build();
+
+    removeStudentsJob =
+        RemoveStudentsJob.builder()
+            .organizationMemberService(organizationMemberService)
+            .rosterStudentRepository(rosterStudentRepository)
+            .students(List.of(student1))
+            .build();
+
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    Job cancellingJob = Job.builder().id(99L).status("cancelling").build();
+    when(jobsRepository.findById(99L)).thenReturn(Optional.of(cancellingJob));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    assertThrows(JobCancelledException.class, () -> removeStudentsJob.accept(cancellingCtx));
+
+    verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
   }
 }

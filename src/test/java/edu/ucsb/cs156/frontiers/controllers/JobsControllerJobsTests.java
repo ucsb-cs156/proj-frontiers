@@ -2,10 +2,12 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
@@ -30,7 +31,10 @@ import edu.ucsb.cs156.frontiers.repositories.*;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
+import edu.ucsb.cs156.jobs.services.JobService;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -41,12 +45,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * This class tests the ability of the JobsController to launch jobs. By contrast,
- * JobsControllerDetailedTests tests the ability of the JobsController to get the status of jobs
- * that have already been launched.
+ * This class tests the ability of the JobsController to launch jobs, and to list jobs scoped to a
+ * course. The generic admin endpoints (list all / paginated / logs / delete) are provided and
+ * tested by the lib-jobs library itself.
  *
  * @see JobsController
- * @see JobsControllerDetailedTests
  */
 @Slf4j
 @WebMvcTest(controllers = JobsController.class)
@@ -89,7 +92,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -98,14 +102,18 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     when(jobService.runAsJob(any(UpdateAllJob.class))).thenReturn(jobStarted);
 
     // act
-    mockMvc
-        .perform(post("/api/jobs/launch/updateAll").with(csrf()))
-        .andExpect(status().isOk())
-        .andReturn();
+    MvcResult result =
+        mockMvc
+            .perform(post("/api/jobs/launch/updateAll").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
 
     // assert
 
+    String response = result.getResponse().getContentAsString();
+    String expectedResponse = objectMapper.writeValueAsString(jobStarted);
     verify(jobService, times(1)).runAsJob(any(UpdateAllJob.class));
+    assertEquals(expectedResponse, response);
   }
 
   @WithMockUser(roles = {"ADMIN"})
@@ -119,7 +127,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -154,7 +163,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -187,7 +197,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -226,7 +237,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -272,7 +284,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -317,7 +330,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -354,7 +368,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     Job jobStarted =
         Job.builder()
             .id(0L)
-            .createdBy(user)
+            .createdById(user.getId())
+            .createdByEmail(user.getEmail())
             .createdAt(null)
             .updatedAt(null)
             .status("started")
@@ -378,5 +393,52 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     String response = result.getResponse().getContentAsString();
     verify(jobService, times(1)).runAsJob(any(AddTeamToGithubJob.class));
     assertEquals(expectedResponse, response);
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_get_jobs_by_course() throws Exception {
+
+    // arrange
+    Long courseId = 5L;
+
+    Job job1 = Job.builder().id(1L).scopeType("course").scopeId(courseId).build();
+    Job job2 = Job.builder().id(2L).scopeType("course").scopeId(courseId).build();
+
+    when(jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc("course", courseId))
+        .thenReturn(List.of(job1, job2));
+    when(jobService.getJobLogPreview(1L)).thenReturn("job for course 5 - 1");
+    when(jobService.getJobLogPreview(2L)).thenReturn("job for course 5 - 2");
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course").param("courseId", courseId.toString()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(jobsRepository).findByScopeTypeAndScopeIdOrderByIdDesc(eq("course"), eq(courseId));
+    verify(jobService).getJobLogPreview(1L);
+    verify(jobService).getJobLogPreview(2L);
+
+    Job expectedJob1 =
+        Job.builder()
+            .id(1L)
+            .scopeType("course")
+            .scopeId(courseId)
+            .log("job for course 5 - 1")
+            .build();
+    Job expectedJob2 =
+        Job.builder()
+            .id(2L)
+            .scopeType("course")
+            .scopeId(courseId)
+            .log("job for course 5 - 2")
+            .build();
+
+    String expectedJson = objectMapper.writeValueAsString(List.of(expectedJob1, expectedJob2));
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
   }
 }

@@ -8,6 +8,7 @@ import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
@@ -17,11 +18,11 @@ import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
-import edu.ucsb.cs156.frontiers.repositories.JobsRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.ApiCourseKeyService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -479,8 +480,10 @@ public class CoursesController extends ApiController {
             .sorted()
             .collect(Collectors.toList());
 
+    // Dropped students are not part of the current roster, so they are never included
     List<String> studentEmails =
         StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
+            .filter(student -> student.getRosterStatus() != RosterStatus.DROPPED)
             .filter(student -> team == null || team.isBlank() || student.getTeams().contains(team))
             .map(RosterStudent::getEmail)
             .filter(Objects::nonNull)
@@ -550,7 +553,7 @@ public class CoursesController extends ApiController {
     }
 
     linkerService.unenrollOrganization(course);
-    jobsRepository.deleteByCourse_Id(courseId);
+    jobsRepository.deleteByScopeTypeAndScopeId("course", courseId);
     courseRepository.delete(course);
     return genericMessage("Course with id %s deleted".formatted(course.getId()));
   }

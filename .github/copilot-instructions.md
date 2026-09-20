@@ -4,6 +4,20 @@ Frontiers is a Spring Boot Java backend application with a React frontend that s
 
 **ALWAYS reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
+## Do not stop working on an issue until all Github Workflows are green
+
+Use the Github API to monitor the status of all Github Workflows.
+
+If any fail, take appropriate steps:
+
+* If frontend formatting fails, use `cd frontend; npm run format` to fix it.
+* If backend formatting fails, use `mvn git-code-format:format-code` to fix it.
+* If unit tests fail, fix the tests if they are wrong, or if they are correct, fix the code.
+* If test coverage fails, write more tests.  Refactor the code if that makes it easier to test.
+* If mutation coverage fails, write more tests.  Refactor the code if that makes it easier to test.
+* Only stop if you are truly unable to determine the root cause of a github workflow failure, and take steps to address it. In that case, make a comment on the PR indicating that you are unable to determine the cause of the github workflow failure, and need human assistance.
+
+
 ## Working Effectively
 
 ### Prerequisites and Setup
@@ -36,6 +50,16 @@ Frontiers is a Spring Boot Java backend application with a React frontend that s
 * Any time workflow 35-frontend-format.yml fails, please `cd` into `frontend` and use `npm run format` to fix this.
 * Any time workflow 36-frontend-eslint.yml fails, look at the messages and use those to make the necessary changes to the code so that the workflow will pass.
 * Any time workflow 32-frontend-coverage.yml files, it is because you created or edited code under the frontend directory in this project, and did not add tests for the new code.  When that happens, please check the coverage reports which can be found in `coverage/index.html` and follow up by writing tests to get to 100% coverage.
+
+## Definition of done for GitHub Actions workflows
+
+Work on a pull request in this repository is **NOT finished** until all GitHub Actions workflows on that PR are checked and passing (green). Before stopping and asking for a code review, an agent must:
+
+1. Monitor the status of all GitHub Actions workflows on the PR (for the latest pushed commit).
+2. Take steps to address any workflow failures.
+3. Either:
+   a. Iterate over steps 1 and 2 until all GitHub workflows pass, or
+   b. Determine that it is unable to continue for some reason, and state that reason in a comment on the PR.
 
 ### Running the Application
 
