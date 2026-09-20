@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlackController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">SlackController.java</span></div><h1>SlackController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
+import edu.ucsb.cs156.frontiers.services.SlackService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * Endpoints for the Slack integration of a course.
+ *
+ * &lt;p&gt;The Slack bot token is a secret: it is encrypted at rest (using the same infrastructure as
+ * Canvas API tokens), never logged, and only ever returned to the frontend in masked form.
+ */
+@RestController
+@RequestMapping(&quot;/api/courses/slack&quot;)
+@Tag(name = &quot;Slack&quot;)
+public class SlackController extends ApiController {
+
+  private static final int VISIBLE_TOKEN_CHARS = 4;
+
+  /** Error code used when a valid token could not be encrypted, and so was not stored. */
+  public static final String ENCRYPTION_FAILED = &quot;encryption_failed&quot;;
+
+  private final CourseRepository courseRepository;
+  private final SlackService slackService;
+  private final CanvasApiTokenSecurityService tokenSecurityService;
+
+  public SlackController(
+      CourseRepository courseRepository,
+      SlackService slackService,
+<span class="fc" id="L45">      CanvasApiTokenSecurityService tokenSecurityService) {</span>
+<span class="fc" id="L46">    this.courseRepository = courseRepository;</span>
+<span class="fc" id="L47">    this.slackService = slackService;</span>
+<span class="fc" id="L48">    this.tokenSecurityService = tokenSecurityService;</span>
+<span class="fc" id="L49">  }</span>
+
+  /**
+   * Returns the Slack workspace (team) associated with the course, along with a masked version of
+   * the Slack bot token.
+   *
+   * @param courseId the id of the course
+   * @return a map with courseId, slackBotToken (masked), slackTeamId and slackTeamName; values are
+   *     empty strings when no token has been stored
+   */
+  @Operation(summary = &quot;Get Slack workspace info and Slack bot token (masked) for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/info&quot;)
+  public Map&lt;String, String&gt; getSlackInfo(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L64">    Course course =</span>
+        courseRepository
+<span class="fc" id="L66">            .findById(courseId)</span>
+<span class="fc" id="L67">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L68">    return slackInfo(course);</span>
+  }
+
+  /**
+   * Validates a Slack bot token by calling the Slack &lt;code&gt;auth.test&lt;/code&gt; method. If the token is
+   * valid, it is encrypted and stored, along with the id and name of the workspace (team) it
+   * belongs to. If it is invalid, nothing is stored, and a 400 response describes the problem.
+   *
+   * &lt;p&gt;The token should be sent in the (form encoded) body of the request rather than in the query
+   * string, so that it does not end up in access logs.
+   *
+   * @param courseId the id of the course
+   * @param slackBotToken the Slack bot token (&lt;code&gt;xoxb-...&lt;/code&gt;)
+   * @return on success, a map with ok=true, courseId, slackBotToken (masked), slackTeamId and
+   *     slackTeamName; on failure, a map with ok=false, error (Slack error code) and message. If
+   *     the token is valid but cannot be encrypted (e.g. the encryption key is not configured), it
+   *     is not stored, and a 500 response with error {@link #ENCRYPTION_FAILED} is returned.
+   */
+  @Operation(summary = &quot;Validate (via Slack auth.test) and store the Slack bot token for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/token&quot;)
+  public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; updateSlackToken(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;slackBotToken&quot;) @RequestParam String slackBotToken) {
+<span class="fc" id="L92">    Course course =</span>
+        courseRepository
+<span class="fc" id="L94">            .findById(courseId)</span>
+<span class="fc" id="L95">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L97">    String token = slackBotToken.strip();</span>
+<span class="fc" id="L98">    SlackAuthTestResponse authTest = slackService.authTest(token);</span>
+
+<span class="fc bfc" id="L100" title="All 2 branches covered.">    if (!authTest.getOk()) {</span>
+<span class="fc" id="L101">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L102">      body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L103">      body.put(&quot;error&quot;, String.valueOf(authTest.getError()));</span>
+<span class="fc" id="L104">      body.put(&quot;message&quot;, errorMessage(authTest.getError()));</span>
+<span class="fc" id="L105">      return ResponseEntity.badRequest().body(body);</span>
+    }
+
+    String encryptedToken;
+    try {
+<span class="fc" id="L110">      encryptedToken = tokenSecurityService.encrypt(token);</span>
+<span class="fc" id="L111">    } catch (IllegalStateException e) {</span>
+      // Typically a missing or malformed encryption key. The exception message describes the key
+      // problem and never contains the token.
+<span class="fc" id="L114">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L115">      body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L116">      body.put(&quot;error&quot;, ENCRYPTION_FAILED);</span>
+<span class="fc" id="L117">      body.put(&quot;message&quot;, encryptionFailedMessage(e.getMessage()));</span>
+<span class="fc" id="L118">      return ResponseEntity.internalServerError().body(body);</span>
+<span class="fc" id="L119">    }</span>
+
+<span class="fc" id="L121">    course.setSlackBotToken(encryptedToken);</span>
+<span class="fc" id="L122">    course.setSlackTeamId(authTest.getTeamId());</span>
+<span class="fc" id="L123">    course.setSlackTeamName(authTest.getTeam());</span>
+<span class="fc" id="L124">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L126">    Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L127">    body.put(&quot;ok&quot;, true);</span>
+<span class="fc" id="L128">    body.putAll(slackInfo(savedCourse));</span>
+<span class="fc" id="L129">    return ResponseEntity.ok(body);</span>
+  }
+
+  private Map&lt;String, String&gt; slackInfo(Course course) {
+<span class="fc" id="L133">    Map&lt;String, String&gt; info = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L134">    info.put(&quot;courseId&quot;, course.getId().toString());</span>
+<span class="fc" id="L135">    info.put(&quot;slackBotToken&quot;, maskToken(tokenSecurityService.decrypt(course.getSlackBotToken())));</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">    info.put(&quot;slackTeamId&quot;, course.getSlackTeamId() != null ? course.getSlackTeamId() : &quot;&quot;);</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">    info.put(&quot;slackTeamName&quot;, course.getSlackTeamName() != null ? course.getSlackTeamName() : &quot;&quot;);</span>
+<span class="fc" id="L138">    return info;</span>
+  }
+
+  /**
+   * Masks a token so that only the first four and last four characters are visible. Tokens too
+   * short to mask meaningfully (eight characters or fewer) are masked entirely; Slack does not
+   * issue tokens that short.
+   *
+   * @param token the plaintext token
+   * @return the masked token, or an empty string if there is no token
+   */
+  public static String maskToken(String token) {
+<span class="fc bfc" id="L150" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L151">      return &quot;&quot;;</span>
+    }
+<span class="fc bfc" id="L153" title="All 2 branches covered.">    if (token.length() &lt;= 2 * VISIBLE_TOKEN_CHARS) {</span>
+<span class="fc" id="L154">      return &quot;*&quot;.repeat(token.length());</span>
+    }
+<span class="fc" id="L156">    return token.substring(0, VISIBLE_TOKEN_CHARS)</span>
+<span class="fc" id="L157">        + &quot;*&quot;.repeat(token.length() - 2 * VISIBLE_TOKEN_CHARS)</span>
+<span class="fc" id="L158">        + token.substring(token.length() - VISIBLE_TOKEN_CHARS);</span>
+  }
+
+  /**
+   * Message shown when a valid token could not be encrypted.
+   *
+   * @param details message from the encryption service, describing the problem with the key
+   * @return a human readable message
+   */
+  public static String encryptionFailedMessage(String details) {
+<span class="fc" id="L168">    return &quot;Slack accepted this token, but the server could not encrypt it, so the token was not saved. Ask an administrator to check the TOKEN_ENCRYPTION_KEY environment variable (see docs/slack.md). Details: %s&quot;</span>
+<span class="fc" id="L169">        .formatted(details);</span>
+  }
+
+  /**
+   * Translates a Slack error code into a message suitable for showing to an instructor.
+   *
+   * @param error error code from Slack, e.g. &lt;code&gt;invalid_auth&lt;/code&gt;
+   * @return a human readable message
+   */
+  public static String errorMessage(String error) {
+<span class="fc bfc" id="L179" title="All 5 branches covered.">    return switch (String.valueOf(error)) {</span>
+      case &quot;invalid_auth&quot;, &quot;not_authed&quot; -&gt;
+<span class="fc" id="L181">          &quot;Slack rejected this token as invalid. Copy the Bot User OAuth Token (xoxb-...) from your Slack app's OAuth &amp; Permissions page and try again. The token was not saved.&quot;;</span>
+      case &quot;token_revoked&quot;, &quot;token_expired&quot;, &quot;account_inactive&quot; -&gt;
+<span class="fc" id="L183">          &quot;This Slack token has been revoked or is no longer active. Reinstall the Slack app to the workspace to get a new token. The token was not saved.&quot;;</span>
+      case &quot;missing_scope&quot; -&gt;
+<span class="fc" id="L185">          &quot;This Slack token is missing a required scope. Add the scope under OAuth &amp; Permissions, reinstall the Slack app to the workspace, and enter the new token. The token was not saved.&quot;;</span>
+      case SlackService.SLACK_UNREACHABLE -&gt;
+<span class="fc" id="L187">          &quot;Could not reach Slack to verify the token. Please try again later. The token was not saved.&quot;;</span>
+      default -&gt;
+<span class="fc" id="L189">          &quot;Slack could not verify this token (%s). The token was not saved.&quot;.formatted(error);</span>
+    };
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
