@@ -54,7 +54,9 @@ function CourseOptionsForm({
           disabled={!canEdit}
           onChange={(event) => {
             const enabled = event.target.checked;
-            onOptionToggled?.({ option, enabled });
+            if (option === "ENABLE_CANVAS") {
+              onOptionToggled?.({ option, enabled });
+            }
             courseOptionMutation.mutate({
               option,
               enabled,

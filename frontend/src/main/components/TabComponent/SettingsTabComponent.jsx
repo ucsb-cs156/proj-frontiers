@@ -9,7 +9,7 @@ export default function SettingsTabComponent({
   testIdPrefix,
   canEditCourseOptions,
 }) {
-  const [showCanvasSettings, setShowCanvasSettings] = React.useState(false);
+  const [showCanvasSettings, setShowCanvasSettings] = React.useState();
 
   const onSuccessCanvasCredentialsAdded = () => {
     toast("Canvas credentials successfully added.");
@@ -45,11 +45,7 @@ export default function SettingsTabComponent({
         onOptionsLoaded={(optionsMap) =>
           setShowCanvasSettings(optionsMap.ENABLE_CANVAS === true)
         }
-        onOptionToggled={({ option, enabled }) => {
-          if (option === "ENABLE_CANVAS") {
-            setShowCanvasSettings(enabled);
-          }
-        }}
+        onOptionToggled={({ enabled }) => setShowCanvasSettings(enabled)}
       />
       {showCanvasSettings && (
         <CanvasCourseSettings
