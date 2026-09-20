@@ -7,6 +7,7 @@ function CanvasApiForm({
   submitAction,
   buttonLabel = "Connect Canvas",
   courseId,
+  testIdPrefix = "CanvasApiForm",
 }) {
   const {
     register,
@@ -23,8 +24,6 @@ function CanvasApiForm({
     // Stryker disable next-line all : don't test default value of empty list
     [],
   );
-
-  const testIdPrefix = "CanvasApiForm";
 
   return (
     <Form

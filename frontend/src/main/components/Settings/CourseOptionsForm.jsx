@@ -1,4 +1,5 @@
 import React from "react";
+import { useEffect } from "react";
 import { Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useBackendMutation } from "main/utils/useBackend";
@@ -8,8 +9,13 @@ import {
   useCourseOptions,
 } from "main/utils/courseOptionsUtils";
 
-function CourseOptionsForm({ courseId, canEdit }) {
-  const { data: optionsMap } = useCourseOptions(courseId);
+function CourseOptionsForm({
+  courseId,
+  canEdit,
+  onOptionsLoaded,
+  onOptionToggled,
+}) {
+  const { data: optionsMap = {} } = useCourseOptions(courseId);
 
   const objectToAxiosParams = ({ option, enabled }) => ({
     url: "/api/course/options",
@@ -29,6 +35,10 @@ function CourseOptionsForm({ courseId, canEdit }) {
     [courseOptionsQueryKey(courseId)],
   );
 
+  useEffect(() => {
+    onOptionsLoaded?.(optionsMap);
+  }, [optionsMap, onOptionsLoaded]);
+
   const entries = Object.entries(optionsMap);
 
   return (
@@ -42,12 +52,16 @@ function CourseOptionsForm({ courseId, canEdit }) {
           label={titleCaseFromOption(option)}
           checked={enabled}
           disabled={!canEdit}
-          onChange={(event) =>
+          onChange={(event) => {
+            const enabled = event.target.checked;
+            if (option === "ENABLE_CANVAS") {
+              onOptionToggled?.({ option, enabled });
+            }
             courseOptionMutation.mutate({
               option,
-              enabled: event.target.checked,
-            })
-          }
+              enabled,
+            });
+          }}
           data-testid={`CourseOptionsForm-toggle-${option}`}
         />
       ))}
