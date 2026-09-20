@@ -29,7 +29,12 @@ describe("CourseOptionsForm tests", () => {
         ENABLE_API_KEYS: false,
         SLACK_INTEGRATION: false,
       });
-    axiosMock.onPost("/api/course/options").reply(200, { ENABLE_CANVAS: true });
+    axiosMock.onPost("/api/course/options").reply((config) => [
+      200,
+      {
+        [config.params.option]: config.params.enabled,
+      },
+    ]);
   });
 
   test("Course options form renders correctly", async () => {
@@ -70,6 +75,28 @@ describe("CourseOptionsForm tests", () => {
     await screen.findByLabelText("Enable Canvas");
     expect(axiosMock.history.get.length).toBeGreaterThan(0);
     expect(axiosMock.history.get[0].params).toEqual({ courseId: 1 });
+  });
+
+  test("Slack Integration toggle sends the correct option payload", async () => {
+    const client = new QueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <CourseOptionsForm courseId={1} canEdit={true} />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByLabelText("Slack Integration");
+    const toggle = screen.getByTestId(
+      "CourseOptionsForm-toggle-SLACK_INTEGRATION",
+    );
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: 1,
+      option: "SLACK_INTEGRATION",
+      enabled: true,
+    });
   });
 
   test("Toast shows correct message after successful toggle", async () => {
