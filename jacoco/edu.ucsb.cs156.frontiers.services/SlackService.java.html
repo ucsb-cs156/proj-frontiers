@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlackService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">SlackService.java</span></div><h1>SlackService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
+import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * Service for interacting with the Slack Web API.
+ *
+ * &lt;p&gt;A Slack bot token (&lt;code&gt;xoxb-...&lt;/code&gt;) is already associated with a specific workspace, so
+ * the token alone is sufficient to identify where API calls go.
+ *
+ * &lt;p&gt;Note that the Slack Web API typically returns HTTP 200 even for failures; the &lt;code&gt;ok&lt;/code&gt;
+ * field of the response indicates success, and &lt;code&gt;error&lt;/code&gt; contains an error code (e.g.
+ * &lt;code&gt;invalid_auth&lt;/code&gt;, &lt;code&gt;missing_scope&lt;/code&gt;).
+ *
+ * &lt;p&gt;Tokens are secrets; they must never be logged.
+ */
+<span class="fc" id="L27">@Slf4j</span>
+@Service
+public class SlackService {
+
+  public static final String AUTH_TEST_ENDPOINT = &quot;https://slack.com/api/auth.test&quot;;
+
+  /** Error code used when Slack could not be reached or returned an unusable response. */
+  public static final String SLACK_UNREACHABLE = &quot;slack_unreachable&quot;;
+
+<span class="fc" id="L36">  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);</span>
+<span class="fc" id="L37">  private static final Duration READ_TIMEOUT = Duration.ofSeconds(30);</span>
+
+  private final RestTemplate restTemplate;
+
+<span class="fc" id="L41">  public SlackService(RestTemplateBuilder builder) {</span>
+<span class="fc" id="L42">    this.restTemplate = builder.connectTimeout(CONNECT_TIMEOUT).readTimeout(READ_TIMEOUT).build();</span>
+<span class="fc" id="L43">  }</span>
+
+  /**
+   * Calls the Slack &lt;code&gt;auth.test&lt;/code&gt; method to check whether a bot token is valid.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @return the response from Slack; if &lt;code&gt;ok&lt;/code&gt; is true, &lt;code&gt;team&lt;/code&gt; and &lt;code&gt;teamId
+   *     &lt;/code&gt; identify the workspace the token belongs to. If Slack cannot be reached, a response
+   *     with &lt;code&gt;ok&lt;/code&gt; false and error {@link #SLACK_UNREACHABLE} is returned.
+   */
+  public SlackAuthTestResponse authTest(String token) {
+<span class="fc" id="L54">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L55">    headers.setBearerAuth(token);</span>
+<span class="fc" id="L56">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+    try {
+<span class="fc" id="L58">      ResponseEntity&lt;SlackAuthTestResponse&gt; response =</span>
+<span class="fc" id="L59">          restTemplate.exchange(</span>
+              AUTH_TEST_ENDPOINT, HttpMethod.POST, entity, SlackAuthTestResponse.class);
+<span class="fc" id="L61">      SlackAuthTestResponse body = response.getBody();</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">      if (body == null) {</span>
+<span class="fc" id="L63">        return SlackAuthTestResponse.builder().ok(false).error(SLACK_UNREACHABLE).build();</span>
+      }
+<span class="fc" id="L65">      return body;</span>
+<span class="fc" id="L66">    } catch (RestClientException e) {</span>
+      // Deliberately log only the exception class: the message could echo request details.
+<span class="fc" id="L68">      log.warn(&quot;Error calling Slack auth.test: {}&quot;, e.getClass().getSimpleName());</span>
+<span class="fc" id="L69">      return SlackAuthTestResponse.builder().ok(false).error(SLACK_UNREACHABLE).build();</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

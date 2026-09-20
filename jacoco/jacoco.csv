@@ -14,7 +14,7 @@ frontiers,edu.ucsb.cs156.frontiers.enums,AssignmentType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,TeamStatus,0,27,0,0,0,5,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,OrgStatus,0,39,0,0,0,7,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,School,0,85,0,6,0,20,0,6,0,3
-frontiers,edu.ucsb.cs156.frontiers.enums,CourseOptions,0,27,0,0,0,5,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.enums,CourseOptions,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.interceptors,RoleUpdateInterceptor,0,100,0,12,0,26,0,9,0,3
 frontiers,edu.ucsb.cs156.frontiers.services,CanvasApiTokenSecurityService,0,205,0,24,0,46,0,17,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
@@ -35,6 +35,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,268,0,4,0,82,
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,0,7,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
+frontiers,edu.ucsb.cs156.frontiers.services,SlackService,0,72,0,2,0,18,0,4,0,3
 frontiers,edu.ucsb.cs156.frontiers.services,JwtService,0,162,0,4,0,40,0,7,0,5
 frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,556,0,28,0,133,0,25,0,11
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,475,0,20,0,107,0,23,0,13
@@ -66,7 +67,9 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0
 frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,117,0,0,0,29,0,9,0,9
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,631,0,78,0,164,0,61,0,22
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.OrgRemovalResult,0,12,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,717,0,84,0,185,0,67,0,25
+frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController,0,267,0,17,0,57,0,19,0,9
 frontiers,edu.ucsb.cs156.frontiers.controllers,SectionsController,0,216,0,8,0,39,0,16,0,12
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,331,0,12,0,64,0,16,0,10
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.EmailFormats,0,15,0,0,0,3,0,1,0,1
@@ -78,6 +81,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,UsersController,0,8,0,0,0,2,0,2,0
 frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,436,0,54,0,102,0,30,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberResult,0,24,0,0,0,5,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,10,0,0,0,3,0,3,0,3
+frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.PurgeDroppedResponse,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffCSVController,0,179,0,14,0,41,0,12,0,5
 frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToGithubJob,0,284,0,24,0,76,0,15,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,253,0,30,0,65,0,22,0,7
