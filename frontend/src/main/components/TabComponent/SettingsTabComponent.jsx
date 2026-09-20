@@ -1,7 +1,6 @@
 import React from "react";
 import CanvasCourseSettings from "main/components/Settings/CanvasCourseSettings";
 import CourseOptionsForm from "main/components/Settings/CourseOptionsForm";
-import { useCourseOptions } from "main/utils/courseOptionsUtils";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 
@@ -10,8 +9,7 @@ export default function SettingsTabComponent({
   testIdPrefix,
   canEditCourseOptions,
 }) {
-  const { data: optionsMap = {} } = useCourseOptions(courseId);
-  const showCanvasSettings = optionsMap.ENABLE_CANVAS === true;
+  const [showCanvasSettings, setShowCanvasSettings] = React.useState(false);
 
   const onSuccessCanvasCredentialsAdded = () => {
     toast("Canvas credentials successfully added.");
@@ -44,7 +42,14 @@ export default function SettingsTabComponent({
       <CourseOptionsForm
         courseId={courseId}
         canEdit={canEditCourseOptions}
-        optionsMap={optionsMap}
+        onOptionsLoaded={(optionsMap) =>
+          setShowCanvasSettings(optionsMap.ENABLE_CANVAS === true)
+        }
+        onOptionToggled={({ option, enabled }) => {
+          if (option === "ENABLE_CANVAS") {
+            setShowCanvasSettings(enabled);
+          }
+        }}
       />
       {showCanvasSettings && (
         <CanvasCourseSettings
