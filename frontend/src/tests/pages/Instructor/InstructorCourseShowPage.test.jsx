@@ -26,6 +26,9 @@ vi.mock("react-router", async (importOriginal) => ({
   ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
+import * as useBackendModule from "main/utils/useBackend";
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 
@@ -42,6 +45,7 @@ describe("InstructorCourseShowPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    useBackendSpy.mockClear();
     axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
       courseId: "",
       canvasApiToken: "",
@@ -954,6 +958,16 @@ describe("InstructorCourseShowPage tests", () => {
     expect(slackRequests("/slack/info")[0].url).toBe(
       "/api/courses/slack/info?courseId=7",
     );
+    // The Slack card on the Settings tab shares this query key (and so its
+    // cache), which means the page's own query has to be checked directly:
+    // toasts suppressed, and enabled once the option is known to be on.
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      ["/api/courses/slack/info?courseId=7"],
+      { method: "GET", url: "/api/courses/slack/info?courseId=7" },
+      {},
+      true,
+      { enabled: true },
+    );
 
     // The Slack API is only called (via the backend) once the tab is opened
     expect(
@@ -1020,6 +1034,20 @@ describe("InstructorCourseShowPage tests", () => {
       screen.queryByRole("tab", { name: "Slack" }),
     ).not.toBeInTheDocument();
     expect(slackRequests("/slack/info").length).toBe(0);
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      ["/api/courses/slack/info?courseId=7"],
+      { method: "GET", url: "/api/courses/slack/info?courseId=7" },
+      {},
+      true,
+      { enabled: false },
+    );
+    expect(useBackendSpy).not.toHaveBeenCalledWith(
+      ["/api/courses/slack/info?courseId=7"],
+      expect.anything(),
+      {},
+      true,
+      { enabled: true },
+    );
   });
 
   test("hides the Slack tab when SLACK_INTEGRATION is enabled but no token has been set", async () => {

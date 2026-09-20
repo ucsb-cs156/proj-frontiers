@@ -57,6 +57,11 @@ describe("SlackTabComponent tests", () => {
     expect(link).toHaveAttribute("href", "https://ucsb-cs156-f26.slack.com/");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    // there is a space between the label and the link
+    expect(link.parentElement).toHaveTextContent(
+      "Slack workspace: ucsb-cs156-f26",
+    );
+    expect(link.parentElement).toHaveClass("fs-5");
 
     // before the data arrives
     expect(screen.getByTestId("Test-slack-users-heading")).toHaveTextContent(
