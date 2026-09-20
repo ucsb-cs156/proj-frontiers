@@ -3,6 +3,7 @@ import { Alert } from "react-bootstrap";
 import { useBackend } from "main/utils/useBackend";
 import SlackUsersTable from "main/components/Slack/SlackUsersTable";
 import SlackMissingMembersTable from "main/components/Slack/SlackMissingMembersTable";
+import { slackAdminUrl } from "main/utils/slackUtils";
 
 // Each of these queries makes the backend call the Slack API, so they are not retried on
 // failure, and not repeated every time the browser window regains focus.
@@ -15,7 +16,6 @@ const slackQueryOptions = {
 function SlackQueryError({ error, testId }) {
   return (
     <Alert variant="danger" data-testid={testId}>
-      {/* Stryker disable next-line OptionalChaining : error.response is undefined for network errors; covered by test of fallback message */}
       {error.response?.data?.message ??
         `Error getting information from Slack: ${error}`}
     </Alert>
@@ -28,6 +28,7 @@ export default function SlackTabComponent({
   slackTeamName,
   slackTeamUrl,
 }) {
+  const adminUrl = slackAdminUrl(slackTeamUrl);
   const usersUrl = `/api/courses/slack/users?courseId=${courseId}`;
   const missingUrl = `/api/courses/slack/missing?courseId=${courseId}`;
 
@@ -61,6 +62,17 @@ export default function SlackTabComponent({
         >
           {slackTeamName}
         </a>
+        {adminUrl && (
+          <a
+            href={adminUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ms-3"
+            data-testid={`${testIdPrefix}-slack-admin-link`}
+          >
+            Admin
+          </a>
+        )}
       </p>
 
       <h5 data-testid={`${testIdPrefix}-slack-users-heading`}>

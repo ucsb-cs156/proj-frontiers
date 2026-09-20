@@ -1,5 +1,6 @@
 import {
   courseRoleLabel,
+  slackAdminUrl,
   slackInfoQueryKey,
   slackStatusLabel,
 } from "main/utils/slackUtils";
@@ -22,5 +23,26 @@ describe("slackUtils tests", () => {
 
   test("slackInfoQueryKey", () => {
     expect(slackInfoQueryKey(7)).toBe("/api/courses/slack/info?courseId=7");
+  });
+
+  test("slackAdminUrl adds /admin to the workspace URL", () => {
+    expect(slackAdminUrl("https://ucsb-cs156-f26.slack.com/")).toBe(
+      "https://ucsb-cs156-f26.slack.com/admin",
+    );
+    expect(slackAdminUrl("https://ucsb-cs156-f26.slack.com")).toBe(
+      "https://ucsb-cs156-f26.slack.com/admin",
+    );
+  });
+
+  test("slackAdminUrl is null when the workspace's own URL is not known", () => {
+    expect(slackAdminUrl("https://app.slack.com/client/T12345678")).toBeNull();
+    expect(slackAdminUrl("")).toBeNull();
+    expect(slackAdminUrl(undefined)).toBeNull();
+  });
+
+  test("slackAdminUrl only treats a URL that starts with the Slack client URL as unknown", () => {
+    expect(
+      slackAdminUrl("https://example.slack.com/?next=https://app.slack.com/"),
+    ).toBe("https://example.slack.com/?next=https://app.slack.com/admin");
   });
 });

@@ -60,7 +60,11 @@ tab appears on the course page. (Turn the option off, or never save a token, and
 the tab is not shown.) The information on it is fetched from Slack when the tab
 is opened. The tab has:
 
-* A link to the Slack workspace that the token belongs to.
+* A link to the Slack workspace that the token belongs to, and an **Admin**
+  link to the workspace's administration pages (the workspace URL followed by
+  `/admin`), where members can be invited, deactivated, and so on. The Admin
+  link is not shown for a token that was saved before Frontiers started
+  recording the workspace URL; saving the token again makes it appear.
 * **Active Slack users**: every person with an active account in the workspace
   (bots, deactivated accounts, and people who have been invited but have not
   signed in yet are left out). The **Course Role** column shows whether the

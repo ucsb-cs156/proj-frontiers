@@ -18,7 +18,7 @@ vi.mock("react-toastify", async (importOriginal) => {
   };
 });
 
-function renderTab() {
+function renderTab(slackTeamUrl = "https://ucsb-cs156-f26.slack.com/") {
   const client = new QueryClient();
   return render(
     <QueryClientProvider client={client}>
@@ -26,7 +26,7 @@ function renderTab() {
         courseId={7}
         testIdPrefix="Test"
         slackTeamName="ucsb-cs156-f26"
-        slackTeamUrl="https://ucsb-cs156-f26.slack.com/"
+        slackTeamUrl={slackTeamUrl}
       />
     </QueryClientProvider>,
   );
@@ -62,6 +62,17 @@ describe("SlackTabComponent tests", () => {
       "Slack workspace: ucsb-cs156-f26",
     );
     expect(link.parentElement).toHaveClass("fs-5");
+
+    const adminLink = screen.getByTestId("Test-slack-admin-link");
+    expect(adminLink).toHaveTextContent("Admin");
+    expect(adminLink).toHaveAttribute(
+      "href",
+      "https://ucsb-cs156-f26.slack.com/admin",
+    );
+    expect(adminLink).toHaveAttribute("target", "_blank");
+    expect(adminLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(adminLink).toHaveClass("ms-3");
+    expect(adminLink.parentElement).toBe(link.parentElement);
 
     // before the data arrives
     expect(screen.getByTestId("Test-slack-users-heading")).toHaveTextContent(
@@ -179,5 +190,21 @@ describe("SlackTabComponent tests", () => {
     expect(error).toHaveTextContent(
       "Error getting information from Slack: Error: Request failed with status code 500",
     );
+  });
+
+  test("has no Admin link when the workspace's own URL is not known", async () => {
+    axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+
+    renderTab("https://app.slack.com/client/T12345678");
+
+    expect(screen.getByTestId("Test-slack-workspace-link")).toHaveAttribute(
+      "href",
+      "https://app.slack.com/client/T12345678",
+    );
+    expect(
+      screen.queryByTestId("Test-slack-admin-link"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Admin")).not.toBeInTheDocument();
   });
 });
