@@ -20,6 +20,10 @@ const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 const testId = "InstructorCourseShowPage";
 
+const sectionsUrl = "/api/courses/1/sections";
+const sectionsGetHistory = () =>
+  axiosMock.history.get.filter((request) => request.url === sectionsUrl);
+
 const renderTab = () =>
   render(
     <QueryClientProvider client={queryClient}>
@@ -33,6 +37,17 @@ describe("SectionsTabComponent tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
     vi.resetAllMocks();
+    // By default, Slack integration is disabled, so the Slack Channel Name
+    // field/column should not appear. Individual tests can override this.
+    axiosMock
+      .onGet(/\/api\/course\/options.*/)
+      .reply(200, { SLACK_INTEGRATION: false });
+    axiosMock.onGet(/\/api\/courses\/slack\/info.*/).reply(200, {
+      courseId: "1",
+      slackBotToken: "",
+      slackTeamId: "",
+      slackTeamName: "",
+    });
   });
 
   test("renders sections from the backend along with create button", async () => {
@@ -67,8 +82,8 @@ describe("SectionsTabComponent tests", () => {
       ),
     ).toBeInTheDocument();
 
-    expect(axiosMock.history.get.length).toBe(1);
-    expect(axiosMock.history.get[0].url).toBe("/api/courses/1/sections");
+    expect(sectionsGetHistory().length).toBe(1);
+    expect(sectionsGetHistory()[0].url).toBe("/api/courses/1/sections");
     expect(
       screen.queryByText("Create Section", { selector: ".modal-title" }),
     ).not.toBeInTheDocument();
@@ -119,8 +134,8 @@ describe("SectionsTabComponent tests", () => {
       ).not.toBeInTheDocument(),
     );
     // the sections list is refetched after a successful create
-    await waitFor(() => expect(axiosMock.history.get.length).toBe(2));
-    expect(axiosMock.history.get[1].url).toBe("/api/courses/1/sections");
+    await waitFor(() => expect(sectionsGetHistory().length).toBe(2));
+    expect(sectionsGetHistory()[1].url).toBe("/api/courses/1/sections");
   });
 
   test("editing a section through the table refetches the sections list", async () => {
@@ -151,8 +166,8 @@ describe("SectionsTabComponent tests", () => {
       section: "0100",
       label: "Tue 9:30am",
     });
-    await waitFor(() => expect(axiosMock.history.get.length).toBe(2));
-    expect(axiosMock.history.get[1].url).toBe("/api/courses/1/sections");
+    await waitFor(() => expect(sectionsGetHistory().length).toBe(2));
+    expect(sectionsGetHistory()[1].url).toBe("/api/courses/1/sections");
   });
 
   test("deleting a section through the table refetches the sections list", async () => {
@@ -177,8 +192,8 @@ describe("SectionsTabComponent tests", () => {
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
     expect(axiosMock.history.delete[0].url).toBe("/api/courses/1/sections/2");
-    await waitFor(() => expect(axiosMock.history.get.length).toBe(2));
-    expect(axiosMock.history.get[1].url).toBe("/api/courses/1/sections");
+    await waitFor(() => expect(sectionsGetHistory().length).toBe(2));
+    expect(sectionsGetHistory()[1].url).toBe("/api/courses/1/sections");
   });
 
   test("create modal can be closed without submitting", async () => {
@@ -239,8 +254,110 @@ describe("SectionsTabComponent tests", () => {
 
     renderTab();
 
-    await waitFor(() => expect(axiosMock.history.get.length).toBe(1));
+    await waitFor(() => expect(sectionsGetHistory().length).toBe(1));
     expect(toast).not.toHaveBeenCalled();
     expect(screen.getByTestId(`${testId}-sections-table`)).toBeInTheDocument();
+  });
+
+  test("does not show Slack Channel Name field/column when SLACK_INTEGRATION is disabled", async () => {
+    axiosMock
+      .onGet("/api/courses/1/sections")
+      .reply(200, sectionsFixtures.threeSectionsWithSlackChannel);
+
+    renderTab();
+
+    await screen.findByTestId(
+      `${testId}-sections-table-cell-row-0-col-section`,
+    );
+    expect(
+      screen.queryByTestId(`${testId}-sections-table-header-slackChannelName`),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId(`${testId}-create-section-button`));
+    await screen.findByText("Create Section", { selector: ".modal-title" });
+    expect(
+      screen.queryByTestId("SectionsForm-slackChannelName"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not show Slack Channel Name field/column when SLACK_INTEGRATION is enabled but there is no active token", async () => {
+    axiosMock.reset();
+    axiosMock
+      .onGet(/\/api\/course\/options.*/)
+      .reply(200, { SLACK_INTEGRATION: true });
+    axiosMock.onGet(/\/api\/courses\/slack\/info.*/).reply(200, {
+      courseId: "1",
+      slackBotToken: "",
+      slackTeamId: "",
+      slackTeamName: "",
+    });
+    axiosMock
+      .onGet("/api/courses/1/sections")
+      .reply(200, sectionsFixtures.threeSectionsWithSlackChannel);
+
+    renderTab();
+
+    await screen.findByTestId(
+      `${testId}-sections-table-cell-row-0-col-section`,
+    );
+    expect(
+      screen.queryByTestId(`${testId}-sections-table-header-slackChannelName`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows Slack Channel Name field/column when SLACK_INTEGRATION is enabled and there is an active token", async () => {
+    axiosMock.reset();
+    axiosMock
+      .onGet(/\/api\/course\/options.*/)
+      .reply(200, { SLACK_INTEGRATION: true });
+    axiosMock.onGet(/\/api\/courses\/slack\/info.*/).reply(200, {
+      courseId: "1",
+      slackBotToken: "xoxb****xxxx",
+      slackTeamId: "T12345",
+      slackTeamName: "CS156 Workspace",
+    });
+    axiosMock
+      .onGet("/api/courses/1/sections")
+      .reply(200, sectionsFixtures.threeSectionsWithSlackChannel);
+    axiosMock
+      .onPost("/api/courses/1/sections")
+      .reply(200, { id: 5, section: "0500", label: "Fri 3:00pm" });
+
+    renderTab();
+
+    expect(
+      await screen.findByTestId(
+        `${testId}-sections-table-header-slackChannelName`,
+      ),
+    ).toHaveTextContent("Slack Channel Name");
+    expect(
+      screen.getByTestId(
+        `${testId}-sections-table-cell-row-0-col-slackChannelName`,
+      ),
+    ).toHaveTextContent("#cs156-0100");
+
+    fireEvent.click(screen.getByTestId(`${testId}-create-section-button`));
+    await screen.findByText("Create Section", { selector: ".modal-title" });
+    expect(
+      screen.getByTestId("SectionsForm-slackChannelName"),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId("SectionsForm-section"), {
+      target: { value: "0500" },
+    });
+    fireEvent.change(screen.getByTestId("SectionsForm-label"), {
+      target: { value: "Fri 3:00pm" },
+    });
+    fireEvent.change(screen.getByTestId("SectionsForm-slackChannelName"), {
+      target: { value: "#cs156-0500" },
+    });
+    fireEvent.click(screen.getByTestId("SectionsForm-submit"));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params).toEqual({
+      section: "0500",
+      label: "Fri 3:00pm",
+      slackChannelName: "#cs156-0500",
+    });
   });
 });
