@@ -70,6 +70,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     expected.put("TRANSLATE_SECTIONS", false);
     expected.put("DOKKU_MANAGER", false);
     expected.put("ENABLE_API_KEYS", false);
+    expected.put("SLACK_INTEGRATION", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -260,6 +261,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     expected.put("TRANSLATE_SECTIONS", false);
     expected.put("DOKKU_MANAGER", false);
     expected.put("ENABLE_API_KEYS", false);
+    expected.put("SLACK_INTEGRATION", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -287,6 +289,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     expected.put("TRANSLATE_SECTIONS", false);
     expected.put("DOKKU_MANAGER", false);
     expected.put("ENABLE_API_KEYS", false);
+    expected.put("SLACK_INTEGRATION", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 }
