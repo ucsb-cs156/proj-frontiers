@@ -1,0 +1,23 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "020-add-slack-channel-name-to-sections",
+      "author": "copilot",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "SECTIONS",
+            "columns": [
+              {
+                "column": {
+                  "name": "SLACK_CHANNEL_NAME",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}
