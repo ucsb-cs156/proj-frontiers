@@ -29,7 +29,9 @@ API calls go.
 
 1. Go to the course page and open the **Settings** tab.
 2. Under **Course Options**, turn on **Slack Integration**. A
-   **Slack Integration Settings** card appears.
+   **Slack Integration Settings** card appears. (The card has a collapsible
+   **Instructions: Setting up the Slack app** section that repeats the steps
+   above.)
 3. Paste the bot token into the **Slack Bot Token** field and click
    **Verify and Save Token**.
 
@@ -86,4 +88,5 @@ API tokens (see [README_Canvas_API_Keys.md](README_Canvas_API_Keys.md)):
 | `GET /api/courses/slack/info?courseId=...` (masked token, workspace id and name) | `SlackController` |
 | `POST /api/courses/slack/token` (verify via `auth.test`, then encrypt and store) | `SlackController` |
 | Call to Slack `auth.test` | `SlackService.authTest(...)` |
+| In-app copy of "Setting up the Slack app" (keep in sync with this file) | `SlackSetupInstructions.jsx` |
 | Settings card | `SlackCourseSettings.jsx`, `SlackTokenForm.jsx`, shown by `SettingsTabComponent.jsx` when the `SLACK_INTEGRATION` course option is enabled |

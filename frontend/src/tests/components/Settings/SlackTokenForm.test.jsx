@@ -191,6 +191,14 @@ describe("SlackCourseSettings tests", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Slack Integration Settings")).toBeInTheDocument();
     expect(
+      screen.getByTestId("SlackCourseSettings-slack-instructions"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Instructions: Setting up the Slack app",
+      }),
+    ).toHaveAttribute("aria-expanded", "false");
+    expect(
       screen.getByTestId("SlackCourseSettings-slack-error"),
     ).toHaveTextContent("Some error");
     await waitFor(() => expect(axiosMock.history.get.length).toBe(1));
@@ -217,5 +225,6 @@ describe("SlackCourseSettings tests", () => {
     );
     expect(screen.getByTestId("Custom-slackForm")).toBeInTheDocument();
     expect(screen.getByTestId("Custom-slack-submit")).toBeInTheDocument();
+    expect(screen.getByTestId("Custom-slack-instructions")).toBeInTheDocument();
   });
 });
