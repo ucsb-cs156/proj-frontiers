@@ -27,6 +27,7 @@ describe("SettingsTabComponent tests", () => {
       TRANSLATE_SECTIONS: true,
       DOKKU_MANAGER: false,
       ENABLE_API_KEYS: false,
+      SLACK_INTEGRATION: false,
     });
     axiosMock.onPost("/api/course/options").reply(200, {
       ENABLE_CANVAS: true,
@@ -65,6 +66,7 @@ describe("SettingsTabComponent tests", () => {
     expect(screen.getByLabelText("Translate Sections")).toBeInTheDocument();
     expect(screen.getByLabelText("Dokku Manager")).toBeInTheDocument();
     expect(screen.getByLabelText("Enable Api Keys")).toBeInTheDocument();
+    expect(screen.getByLabelText("Slack Integration")).toBeInTheDocument();
   });
 
   test("Call PUT for Canvas credentials properly", async () => {
