@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepositoryController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">RepositoryController.java</span></div><h1>RepositoryController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
-import edu.ucsb.cs156.frontiers.entities.Job;
 import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
@@ -11,7 +10,8 @@ import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
    * @param repoPrefix each repo created will begin with this prefix, followed by a dash and the
    *     student's GitHub username
    * @param isPrivate determines whether the repository being created is private
-   * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
+   * @return the {@link edu.ucsb.cs156.jobs.entities.Job Job} started to create the repos.
    */
   @PostMapping(&quot;/createRepos&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
@@ -80,7 +80,7 @@ import org.springframework.web.bind.annotation.RestController;
    * @param repoPrefix each team repo created will begin with this prefix, followed by a dash and
    *     the team's name
    * @param isPrivate determines whether the repository being created is private
-   * @return the {@link edu.ucsb.cs156.frontiers.entities.Job Job} started to create the repos.
+   * @return the {@link edu.ucsb.cs156.jobs.entities.Job Job} started to create the repos.
    */
   @PostMapping(&quot;/createTeamRepos&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)

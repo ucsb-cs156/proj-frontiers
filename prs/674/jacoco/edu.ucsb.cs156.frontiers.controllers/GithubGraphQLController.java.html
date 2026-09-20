@@ -5,7 +5,7 @@ import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.GithubGraphQLService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

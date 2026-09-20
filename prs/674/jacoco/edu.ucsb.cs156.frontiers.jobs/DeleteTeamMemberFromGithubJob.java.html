@@ -2,8 +2,8 @@
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContext;
-import edu.ucsb.cs156.frontiers.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import lombok.Builder;
 
 @Builder
@@ -14,51 +14,56 @@ public class DeleteTeamMemberFromGithubJob implements JobContextConsumer {
   GithubTeamService githubTeamService;
 
   @Override
-  public Course getCourse() {
-<span class="fc" id="L18">    return course;</span>
+  public String getScopeType() {
+<span class="fc" id="L18">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L23">    return course.getId();</span>
   }
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L23">    ctx.log(</span>
+<span class="fc" id="L28">    ctx.log(</span>
         &quot;Starting delete team member from GitHub job for team ID &quot;
             + githubTeamId
             + &quot; member &quot;
             + memberGithubLogin);
 
-<span class="fc bfc" id="L29" title="All 2 branches covered.">    if (githubTeamId == null) {</span>
-<span class="fc" id="L30">      ctx.log(&quot;ERROR: Team has no GitHub team ID&quot;);</span>
-<span class="fc" id="L31">      return;</span>
-    }
-
-<span class="fc bfc" id="L34" title="All 2 branches covered.">    if (memberGithubLogin == null) {</span>
-<span class="fc" id="L35">      ctx.log(&quot;ERROR: Team member has no GitHub login&quot;);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">    if (githubTeamId == null) {</span>
+<span class="fc" id="L35">      ctx.log(&quot;ERROR: Team has no GitHub team ID&quot;);</span>
 <span class="fc" id="L36">      return;</span>
     }
 
-<span class="fc bfc" id="L39" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L40">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">    if (memberGithubLogin == null) {</span>
+<span class="fc" id="L40">      ctx.log(&quot;ERROR: Team member has no GitHub login&quot;);</span>
 <span class="fc" id="L41">      return;</span>
     }
+
+<span class="fc bfc" id="L44" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L45">      ctx.log(&quot;ERROR: Course has no linked GitHub organization&quot;);</span>
+<span class="fc" id="L46">      return;</span>
+    }
     // Get the organization id
-<span class="fc" id="L44">    Integer orgId = null;</span>
+<span class="fc" id="L49">    Integer orgId = null;</span>
     try {
-<span class="fc" id="L46">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
-<span class="fc" id="L47">    } catch (Exception e) {</span>
-<span class="fc" id="L48">      throw new IllegalStateException(</span>
-<span class="fc" id="L49">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
+<span class="fc" id="L51">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
+<span class="fc" id="L52">    } catch (Exception e) {</span>
+<span class="fc" id="L53">      throw new IllegalStateException(</span>
+<span class="fc" id="L54">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
           e);
-<span class="fc" id="L51">    }</span>
+<span class="fc" id="L56">    }</span>
 
     try {
-<span class="fc" id="L54">      githubTeamService.removeMemberFromGithubTeam(orgId, memberGithubLogin, githubTeamId, course);</span>
-<span class="fc" id="L55">      ctx.log(&quot;Successfully removed user from GitHub team&quot;);</span>
-<span class="fc" id="L56">    } catch (Exception e) {</span>
-<span class="fc" id="L57">      throw new IllegalStateException(</span>
-<span class="fc" id="L58">          &quot;Failed to remove user from GitHub team: &quot; + e.getMessage(), e);</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L59">      githubTeamService.removeMemberFromGithubTeam(orgId, memberGithubLogin, githubTeamId, course);</span>
+<span class="fc" id="L60">      ctx.log(&quot;Successfully removed user from GitHub team&quot;);</span>
+<span class="fc" id="L61">    } catch (Exception e) {</span>
+<span class="fc" id="L62">      throw new IllegalStateException(</span>
+<span class="fc" id="L63">          &quot;Failed to remove user from GitHub team: &quot; + e.getMessage(), e);</span>
+<span class="fc" id="L64">    }</span>
 
-<span class="fc" id="L61">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L62">  }</span>
+<span class="fc" id="L66">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L67">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
