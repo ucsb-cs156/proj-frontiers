@@ -45,7 +45,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.RosterStudentCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,67,0,2,0,15,0,6,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,CATMEController,0,611,0,90,0,137,0,65,0,20
+frontiers,edu.ucsb.cs156.frontiers.controllers,CATMEController,0,639,0,98,0,144,0,70,0,21
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,ApiController,0,98,0,0,0,26,0,13,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamCreationResponse,0,15,0,0,0,1,0,1,0,1
