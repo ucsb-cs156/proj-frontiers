@@ -51,7 +51,7 @@ describe("SlackSetupInstructions tests", () => {
       'Create an app at https://api.slack.com/apps (choose "from scratch"), tied to the target workspace.',
     );
     expect(normalize(steps[1].textContent)).toMatch(
-      /^Under OAuth & Permissions → Bot Token Scopes, add the scopes for the capabilities Frontiers uses:/,
+      /^Under OAuth & Permissions → Bot Token Scopes, add the scopes for the capabilities Frontiers uses \(one scope per row\):/,
     );
     expect(normalize(steps[2].textContent)).toBe(
       "Install the app to the workspace (the button is on the same page).",
@@ -79,46 +79,32 @@ describe("SlackSetupInstructions tests", () => {
       Array.from(row.children).map((cell) => normalize(cell.textContent)),
     );
     expect(rows).toEqual([
-      ["Capability", "Scopes"],
+      ["Capability", "Scope"],
+      ["List members", "users:read"],
+      ["List members' emails", "users:read.email"],
+      ["Create public channels and invite users to them", "channels:manage"],
+      ["Create private channels and invite users to them", "groups:write"],
+      ["List public channel memberships", "channels:read"],
+      ["List private channel memberships", "groups:read"],
+      ["Send messages", "chat:write"],
       [
-        "List members + emails",
-        "users:read, users:read.email (emails are not included without the second one)",
+        "Send messages to public channels the bot has not joined",
+        "chat:write.public",
       ],
+      ["Read public channel history", "channels:history"],
       [
-        "Create channels + invite users",
-        "channels:manage (public channels; also covers conversations.create and conversations.invite), plus groups:write if you ever need private channels",
-      ],
-      [
-        "List channel memberships",
-        "channels:read (and groups:read for private channels)",
-      ],
-      [
-        "Send messages",
-        "chat:write, and optionally chat:write.public so the bot can post to public channels it hasn't joined",
-      ],
-      [
-        "Read public channel history",
-        "channels:history, plus channels:join so the bot can join channels programmatically (a bot must be a member of a channel to read its history; chat:write.public covers posting but not reading)",
+        "Join public channels (the bot must be a member of a channel to read its history)",
+        "channels:join",
       ],
     ]);
 
-    const scopes = Array.from(table.querySelectorAll("code")).map(
-      (code) => code.textContent,
-    );
-    expect(scopes).toEqual([
-      "users:read",
-      "users:read.email",
-      "channels:manage",
-      "conversations.create",
-      "conversations.invite",
-      "groups:write",
-      "channels:read",
-      "groups:read",
-      "chat:write",
-      "chat:write.public",
-      "channels:history",
-      "channels:join",
-      "chat:write.public",
-    ]);
+    // exactly one scope per row, each formatted as code
+    const bodyRows = Array.from(table.querySelectorAll("tbody tr"));
+    expect(bodyRows.length).toBe(10);
+    bodyRows.forEach((row) => {
+      const codes = row.querySelectorAll("code");
+      expect(codes.length).toBe(1);
+      expect(row.children[1].textContent).toBe(codes[0].textContent);
+    });
   });
 });

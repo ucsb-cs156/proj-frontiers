@@ -41,6 +41,8 @@ public class Course {
 
   private String slackTeamName;
 
+  private String slackTeamUrl;
+
   private boolean hideBasePermissionWarning;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")

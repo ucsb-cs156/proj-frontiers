@@ -18,6 +18,7 @@ import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
+import slackFixtures from "fixtures/slackFixtures";
 import { expect, vi } from "vitest";
 
 const mockedNavigate = vi.fn();
@@ -25,6 +26,9 @@ vi.mock("react-router", async (importOriginal) => ({
   ...(await importOriginal()),
   useNavigate: () => mockedNavigate,
 }));
+import * as useBackendModule from "main/utils/useBackend";
+
+const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 
@@ -41,6 +45,7 @@ describe("InstructorCourseShowPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    useBackendSpy.mockClear();
     axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
       courseId: "",
       canvasApiToken: "",
@@ -905,5 +910,204 @@ describe("InstructorCourseShowPage tests", () => {
     expect(
       await screen.findByRole("tab", { name: "Sections" }),
     ).toBeInTheDocument();
+  });
+  const renderCourse7 = () =>
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+  const slackRequests = (path) =>
+    axiosMock.history.get.filter((request) => request.url.includes(path));
+
+  test("shows the Slack tab when SLACK_INTEGRATION is enabled and a token is set; loads Slack data only when the tab is opened", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: false,
+      DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
+      SLACK_INTEGRATION: true,
+    });
+    axiosMock
+      .onGet("/api/courses/slack/info?courseId=7")
+      .reply(200, slackFixtures.connectedInfo);
+    axiosMock
+      .onGet("/api/courses/slack/users?courseId=7")
+      .reply(200, slackFixtures.fourUsers);
+    axiosMock
+      .onGet("/api/courses/slack/missing?courseId=7")
+      .reply(200, slackFixtures.threeMissingMembers);
+
+    renderCourse7();
+
+    const slackTab = await screen.findByRole("tab", { name: "Slack" });
+    expect(slackTab).toHaveAttribute("data-rr-ui-event-key", "slack");
+    expect(slackRequests("/slack/info")[0].url).toBe(
+      "/api/courses/slack/info?courseId=7",
+    );
+    // The Slack card on the Settings tab shares this query key (and so its
+    // cache), which means the page's own query has to be checked directly:
+    // toasts suppressed, and enabled once the option is known to be on.
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      ["/api/courses/slack/info?courseId=7"],
+      { method: "GET", url: "/api/courses/slack/info?courseId=7" },
+      {},
+      true,
+      { enabled: true },
+    );
+
+    // The Slack API is only called (via the backend) once the tab is opened
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-slack-tab-component"),
+    ).not.toBeInTheDocument();
+    expect(slackRequests("/slack/users").length).toBe(0);
+    expect(slackRequests("/slack/missing").length).toBe(0);
+
+    fireEvent.click(slackTab);
+    expect(slackTab).toHaveAttribute("aria-selected", "true");
+
+    const tab = screen.getByTestId(
+      "InstructorCourseShowPage-slack-tab-component",
+    );
+    expect(tab.parentElement).toHaveClass("pt-2");
+    const link = screen.getByTestId(
+      "InstructorCourseShowPage-slack-workspace-link",
+    );
+    expect(link).toHaveTextContent("ucsb-cs156-f26");
+    expect(link).toHaveAttribute("href", "https://ucsb-cs156-f26.slack.com/");
+
+    expect(
+      await screen.findByTestId(
+        "InstructorCourseShowPage-slack-users-table-cell-row-0-col-courseRole",
+      ),
+    ).toHaveTextContent("Instructor");
+    expect(
+      await screen.findByTestId(
+        "InstructorCourseShowPage-slack-missing-table-cell-row-0-col-slackStatus",
+      ),
+    ).toHaveTextContent("Not in Slack");
+  });
+
+  test("hides the Slack tab, and does not ask for Slack info, when SLACK_INTEGRATION is disabled", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: false,
+      DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
+      SLACK_INTEGRATION: false,
+    });
+    axiosMock
+      .onGet("/api/courses/slack/info?courseId=7")
+      .reply(200, slackFixtures.connectedInfo);
+
+    renderCourse7();
+
+    await screen.findByText(coursesFixtures.severalCourses[0].courseName);
+    await waitFor(() =>
+      expect(
+        axiosMock.history.get.filter(
+          (request) => request.url === "/api/course/options",
+        ).length,
+      ).toBeGreaterThan(0),
+    );
+    await screen.findByRole("tab", { name: "Settings" });
+
+    expect(
+      screen.queryByRole("tab", { name: "Slack" }),
+    ).not.toBeInTheDocument();
+    expect(slackRequests("/slack/info").length).toBe(0);
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      ["/api/courses/slack/info?courseId=7"],
+      { method: "GET", url: "/api/courses/slack/info?courseId=7" },
+      {},
+      true,
+      { enabled: false },
+    );
+    expect(useBackendSpy).not.toHaveBeenCalledWith(
+      ["/api/courses/slack/info?courseId=7"],
+      expect.anything(),
+      {},
+      true,
+      { enabled: true },
+    );
+  });
+
+  test("hides the Slack tab when SLACK_INTEGRATION is enabled but no token has been set", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: false,
+      DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
+      SLACK_INTEGRATION: true,
+    });
+    axiosMock
+      .onGet("/api/courses/slack/info?courseId=7")
+      .reply(200, slackFixtures.notConnectedInfo);
+
+    renderCourse7();
+
+    await waitFor(() => expect(slackRequests("/slack/info").length).toBe(1));
+    await screen.findByRole("tab", { name: "Settings" });
+    // wait until the (not connected) info has arrived
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData(["/api/courses/slack/info?courseId=7"]),
+      ).toEqual(slackFixtures.notConnectedInfo),
+    );
+
+    expect(
+      screen.queryByRole("tab", { name: "Slack" }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("hides the Slack tab when a token is set but the SLACK_INTEGRATION option is not strictly true", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(200, {
+      SLACK_INTEGRATION: "unexpected",
+    });
+    axiosMock
+      .onGet("/api/courses/slack/info?courseId=7")
+      .reply(200, slackFixtures.connectedInfo);
+
+    renderCourse7();
+
+    await screen.findByRole("tab", { name: "Settings" });
+    // wait until the course options have arrived
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+      ).toEqual({ SLACK_INTEGRATION: "unexpected" }),
+    );
+
+    expect(
+      screen.queryByRole("tab", { name: "Slack" }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -11,15 +11,20 @@ API calls go.
 1. Create an app at <https://api.slack.com/apps> (choose "from scratch"), tied
    to the target workspace.
 2. Under **OAuth & Permissions → Bot Token Scopes**, add the scopes for the
-   capabilities Frontiers uses:
+   capabilities Frontiers uses (one scope per row):
 
-   | Capability | Scopes |
-   |------------|--------|
-   | List members + emails | `users:read`, `users:read.email` (emails are not included without the second one) |
-   | Create channels + invite users | `channels:manage` (public channels; also covers `conversations.create` and `conversations.invite`), plus `groups:write` if you ever need private channels |
-   | List channel memberships | `channels:read` (and `groups:read` for private channels) |
-   | Send messages | `chat:write`, and optionally `chat:write.public` so the bot can post to public channels it hasn't joined |
-   | Read public channel history | `channels:history`, plus `channels:join` so the bot can join channels programmatically (a bot must be a member of a channel to read its history; `chat:write.public` covers posting but not reading) |
+   | Capability | Scope |
+   |------------|-------|
+   | List members | `users:read` |
+   | List members' emails | `users:read.email` |
+   | Create public channels and invite users to them | `channels:manage` |
+   | Create private channels and invite users to them | `groups:write` |
+   | List public channel memberships | `channels:read` |
+   | List private channel memberships | `groups:read` |
+   | Send messages | `chat:write` |
+   | Send messages to public channels the bot has not joined | `chat:write.public` |
+   | Read public channel history | `channels:history` |
+   | Join public channels (the bot must be a member of a channel to read its history) | `channels:join` |
 
 3. Install the app to the workspace (the button is on the same page).
 4. Copy the **Bot User OAuth Token** (it starts with `xoxb-`). That is what goes
@@ -47,6 +52,47 @@ the token before saving it:
 
 Once a token has been saved, only its first four and last four characters are
 ever shown; the rest is masked.
+
+## The Slack tab
+
+Once **Slack Integration** is turned on *and* a token has been saved, a **Slack**
+tab appears on the course page. (Turn the option off, or never save a token, and
+the tab is not shown.) The information on it is fetched from Slack when the tab
+is opened. The tab has:
+
+* A link to the Slack workspace that the token belongs to, and an **Admin**
+  link to the workspace's administration pages (the workspace URL followed by
+  `/admin`), where members can be invited, deactivated, and so on. The Admin
+  link is not shown for a token that was saved before Frontiers started
+  recording the workspace URL; saving the token again makes it appear.
+* **Active Slack users**: every person with an active account in the workspace
+  (bots, deactivated accounts, and people who have been invited but have not
+  signed in yet are left out). The **Course Role** column shows whether the
+  email of the Slack user matches the instructor, a staff member, or a student
+  on the roster of the course, or none of these. Click the column header to sort by it, which is a quick way to find
+  people in the workspace who are not part of the course.
+* **Roster students and staff not active in Slack**: staff and roster students
+  whose email does not match an active Slack user. The
+  **Slack Status** column shows whether they have been invited but have not
+  signed in yet, have a deactivated account, or are not known to the workspace
+  at all.
+
+In both tables, the only roster students considered are those whose roster
+status is `ROSTER` or `MANUAL`. Dropped students are ignored: a dropped student
+who is still in the Slack workspace shows up with Course Role "None", and a
+dropped student who is not in Slack is not listed as missing.
+
+Matching is by email, ignoring case, and treating `@umail.ucsb.edu` and
+`@ucsb.edu` as the same. This needs the `users:read` and `users:read.email`
+scopes; without the second one Slack provides no emails, so nobody will match.
+Someone who signed up for Slack with a different email than the one on the
+roster shows up in both tables: as "None" in the first, and as "Not in Slack"
+in the second.
+
+Whether someone has a pending invitation is determined from the
+`is_invited_user` flag that Slack puts on members returned by
+[`users.list`](https://docs.slack.dev/reference/methods/users.list). Slack's
+dedicated APIs for managing invitations are only available on Enterprise Grid.
 
 ## Operational gotcha: adding scopes means a new token
 
@@ -85,8 +131,12 @@ API tokens (see [README_Canvas_API_Keys.md](README_Canvas_API_Keys.md)):
 
 | Piece | Where |
 |-------|-------|
-| `GET /api/courses/slack/info?courseId=...` (masked token, workspace id and name) | `SlackController` |
+| `GET /api/courses/slack/info?courseId=...` (masked token, workspace id, name and URL) | `SlackController` |
 | `POST /api/courses/slack/token` (verify via `auth.test`, then encrypt and store) | `SlackController` |
+| `GET /api/courses/slack/users?courseId=...` (active Slack users, with course role) | `SlackController` |
+| `GET /api/courses/slack/missing?courseId=...` (staff and students not active in Slack) | `SlackController` |
 | Call to Slack `auth.test` | `SlackService.authTest(...)` |
+| Calls to Slack `users.list` (follows pagination) | `SlackService.listUsers(...)` |
+| Slack tab | `SlackTabComponent.jsx`, `SlackUsersTable.jsx`, `SlackMissingMembersTable.jsx`, shown by `InstructorCourseShowPage.jsx` |
 | In-app copy of "Setting up the Slack app" (keep in sync with this file) | `SlackSetupInstructions.jsx` |
 | Settings card | `SlackCourseSettings.jsx`, `SlackTokenForm.jsx`, shown by `SettingsTabComponent.jsx` when the `SLACK_INTEGRATION` course option is enabled |

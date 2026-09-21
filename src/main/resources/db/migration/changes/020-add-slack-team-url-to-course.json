@@ -1,0 +1,23 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "020-add-slack-team-url-to-course",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "SLACK_TEAM_URL",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}
