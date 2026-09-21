@@ -349,10 +349,7 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
   }
 
   private static String describeChannelNames(List<String> channelNames) {
-    if (channelNames.size() == 1) {
-      return "#" + channelNames.get(0);
-    }
-    return channelNames.stream().map(name -> "#" + name).toList().toString();
+    return "#" + String.join(", #", channelNames);
   }
 
   private static String canonical(String email) {
