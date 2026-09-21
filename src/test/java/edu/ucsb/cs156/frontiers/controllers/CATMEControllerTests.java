@@ -52,7 +52,7 @@ public class CATMEControllerTests extends ControllerTestCase {
       "Activity,Class,Term,Format,Instr,School\n"
           + "CMPSC 156,001,F25,In Person,Instructor,UCSB\n"
           + "\n"
-          + "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Platform\",\"Sex\",\"Java"
+          + "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Team Name\",\"Platform\",\"Sex\",\"Java"
           + " Knowledge\",\"React Experience\",\n";
 
   @Test
@@ -130,6 +130,77 @@ public class CATMEControllerTests extends ControllerTestCase {
 
     String content =
         CATME_AUDIT_HEADER + "\"Gaucho, Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\"\n";
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
+
+    MvcResult response =
+        mockMvc
+            .perform(multipart("/api/catme/audit").file(file).with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    CATMEAuditResult result =
+        objectMapper.readValue(response.getResponse().getContentAsString(), CATMEAuditResult.class);
+    assertEquals(0, result.studentsToUpdate().size());
+    assertEquals(0, result.studentsToDrop().size());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void catmeAudit_headerWithDifferentTrailingColumns_isValid() throws Exception {
+    RosterStudent student =
+        RosterStudent.builder()
+            .studentId("1234567")
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .email("cgaucho@ucsb.edu")
+            .section("0100")
+            .rosterStatus(RosterStatus.MANUAL)
+            .build();
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(student));
+
+    String content =
+        "Activity,Class,Term,Format,Instr,School\n"
+            + "CMPSC 156,001,F25,In Person,Instructor,UCSB\n"
+            + "\n"
+            + "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Team Name\",\"Platform\",\"Sex\",\"Java"
+            + " Knowledge\",\"React Experience\",\"Tot (Max 14)\",\n"
+            + "\"Gaucho, Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\"\n";
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
+
+    MvcResult response =
+        mockMvc
+            .perform(multipart("/api/catme/audit").file(file).with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    CATMEAuditResult result =
+        objectMapper.readValue(response.getResponse().getContentAsString(), CATMEAuditResult.class);
+    assertEquals(0, result.studentsToUpdate().size());
+    assertEquals(0, result.studentsToDrop().size());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void catmeAudit_scoresLineIsIgnored() throws Exception {
+    RosterStudent student =
+        RosterStudent.builder()
+            .studentId("1234567")
+            .firstName("Chris")
+            .lastName("Gaucho")
+            .email("cgaucho@ucsb.edu")
+            .section("0100")
+            .rosterStatus(RosterStatus.MANUAL)
+            .build();
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(student));
+
+    String content =
+        CATME_AUDIT_HEADER
+            + "\"Gaucho, Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\"\n"
+            + "\"Scores:\",,,,,0.78,3.16,1.33,0.00\n";
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
