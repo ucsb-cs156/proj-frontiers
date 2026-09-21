@@ -1,3 +1,5 @@
+CANVAS_TOKEN
+
 ## Don't store .pem files, or pkcs8.key
 
 *.pem
