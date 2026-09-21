@@ -26,6 +26,7 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
 import edu.ucsb.cs156.frontiers.services.RosterStudentDTOService;
+import edu.ucsb.cs156.frontiers.services.SectionTranslationService;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = {CSVDownloadsController.class})
-@Import(TestConfig.class)
+@Import({TestConfig.class, SectionTranslationService.class})
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
@@ -372,10 +373,10 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
   @Test
   public void translateSection_handles_null_blank_missing_and_present() {
     Map<String, String> translations = Map.of("0100", "Tue 9am", "", "Unassigned");
-    assertEquals("Tue 9am", CSVDownloadsController.translateSection("0100", translations));
-    assertEquals("0999", CSVDownloadsController.translateSection("0999", translations));
-    assertEquals("Unassigned", CSVDownloadsController.translateSection("", translations));
-    assertEquals("Unassigned", CSVDownloadsController.translateSection(null, translations));
-    assertEquals("", CSVDownloadsController.translateSection(null, Map.of()));
+    assertEquals("Tue 9am", SectionTranslationService.translateSection("0100", translations));
+    assertEquals("0999", SectionTranslationService.translateSection("0999", translations));
+    assertEquals("Unassigned", SectionTranslationService.translateSection("", translations));
+    assertEquals("Unassigned", SectionTranslationService.translateSection(null, translations));
+    assertEquals("", SectionTranslationService.translateSection(null, Map.of()));
   }
 }

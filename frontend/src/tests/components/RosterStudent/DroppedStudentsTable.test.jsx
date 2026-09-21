@@ -4,6 +4,7 @@ import { expect, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsTable";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const axiosMock = new AxiosMockAdapter(axios);
@@ -31,8 +32,22 @@ describe("DroppedStudentsTable tests", () => {
         ,
       </QueryClientProvider>,
     );
-    const headers = ["id", "Student Id", "First Name", "Last Name", "Email"];
-    const accessors = ["id", "studentId", "firstName", "lastName", "email"];
+    const headers = [
+      "id",
+      "Student Id",
+      "First Name",
+      "Last Name",
+      "Email",
+      "Section",
+    ];
+    const accessors = [
+      "id",
+      "studentId",
+      "firstName",
+      "lastName",
+      "email",
+      "section",
+    ];
     expect(
       screen.getByTestId("DroppedStudentsTable-header-Restore"),
     ).toHaveTextContent("Restore");
@@ -187,5 +202,74 @@ describe("DroppedStudentsTable tests", () => {
     );
     expect(axiosMock.history.delete.length).toEqual(0);
     expect(mockToast).not.toBeCalled();
+  });
+
+  test("shows the raw section value when translateSections is not enabled", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DroppedStudentsTable
+          students={rosterStudentFixtures.threeStudents}
+          courseId={7}
+          translateSections={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("DroppedStudentsTable-cell-row-0-col-section"),
+      ).toHaveTextContent("0100"),
+    );
+    expect(
+      screen.getByTestId("DroppedStudentsTable-cell-row-0-col-section"),
+    ).not.toHaveTextContent("Tue 9:00am");
+  });
+
+  test("shows the translated section label when translateSections is enabled", async () => {
+    axiosMock
+      .onGet("/api/courses/7/sections")
+      .reply(200, sectionsFixtures.threeSections);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DroppedStudentsTable
+          students={rosterStudentFixtures.threeStudents}
+          courseId={7}
+          translateSections={true}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("DroppedStudentsTable-cell-row-0-col-section"),
+      ).toHaveTextContent("Tue 9:00am"),
+    );
+    expect(
+      screen.getByTestId("DroppedStudentsTable-cell-row-1-col-section"),
+    ).toHaveTextContent("Tue 10:00am");
+    expect(
+      screen.getByTestId("DroppedStudentsTable-cell-row-2-col-section"),
+    ).toHaveTextContent("");
+  });
+
+  test("shows the raw section value when there is no matching translation", async () => {
+    axiosMock.onGet("/api/courses/7/sections").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DroppedStudentsTable
+          students={rosterStudentFixtures.threeStudents}
+          courseId={7}
+          translateSections={true}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("DroppedStudentsTable-cell-row-0-col-section"),
+      ).toHaveTextContent("0100"),
+    );
   });
 });
