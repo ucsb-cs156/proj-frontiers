@@ -103,6 +103,11 @@ public class CanvasService {
                       sisId
                       email
                       integrationId
+                      enrollments(courseId: $courseId) {
+                        section {
+                          name
+                        }
+                      }
                     }
                   }
                 }
@@ -126,7 +131,7 @@ public class CanvasService {
             .retrieveSync("course.usersConnection.edges")
             .toEntityList(JsonNode.class)
             .stream()
-            .map(node -> mapper.convertValue(node.get("node"), CanvasStudent.class))
+            .map(edge -> toCanvasStudent(edge.get("node")))
             .toList();
 
     return students.stream()
@@ -137,8 +142,21 @@ public class CanvasService {
                     .lastName(student.getLastName())
                     .studentId(student.getStudentId())
                     .email(student.getEmail())
+                    .section(student.getSection() != null ? student.getSection() : "")
                     .build())
         .toList();
+  }
+
+  private CanvasStudent toCanvasStudent(JsonNode userNode) {
+    CanvasStudent canvasStudent = mapper.convertValue(userNode, CanvasStudent.class);
+    JsonNode enrollments = userNode.path("enrollments");
+    if (enrollments.isArray() && !enrollments.isEmpty()) {
+      JsonNode sectionName = enrollments.get(0).path("section").path("name");
+      if (sectionName.isTextual()) {
+        canvasStudent.setSection(sectionName.asText());
+      }
+    }
+    return canvasStudent;
   }
 
   public List<CanvasGroup> getCanvasGroups(

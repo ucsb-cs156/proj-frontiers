@@ -64,8 +64,8 @@ public class CanvasServiceTests {
             "course": {
               "usersConnection": {
                 "edges": [
-                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A111111", "email": "alice@ucsb.edu", "integrationId": null}},
-                  {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "A222222", "email": "bob@ucsb.edu", "integrationId": "B222222"}}
+                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A111111", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "Section 1"}}]}},
+                  {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "A222222", "email": "bob@ucsb.edu", "integrationId": "B222222", "enrollments": [{"section": {"name": "Section 2"}}]}}
                 ]
               }
             }
@@ -93,12 +93,58 @@ public class CanvasServiceTests {
     assertEquals("Smith", student1.getLastName());
     assertEquals("A111111", student1.getStudentId());
     assertEquals("alice@ucsb.edu", student1.getEmail());
+    assertEquals("Section 1", student1.getSection());
 
     RosterStudent student2 = result.get(1);
     assertEquals("Bob", student2.getFirstName());
     assertEquals("Jones", student2.getLastName());
     assertEquals("B222222", student2.getStudentId()); // integrationId takes precedence
     assertEquals("bob@ucsb.edu", student2.getEmail());
+    assertEquals("Section 2", student2.getSection());
+  }
+
+  @Test
+  public void testGetCanvasRoster_setsEmptySectionWhenNoEnrollments() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .school(School.UCSB)
+            .build();
+
+    // Student with no enrollments/section info returned by Canvas
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "usersConnection": {
+                "edges": [
+                  {"node": {"firstName": "Eve", "lastName": "Adams", "sisId": "E111111", "email": "eve@ucsb.edu", "integrationId": null, "enrollments": []}}
+                ]
+              }
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals("", result.get(0).getSection());
   }
 
   @Test
