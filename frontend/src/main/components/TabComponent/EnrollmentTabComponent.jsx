@@ -232,7 +232,7 @@ export default function EnrollmentTabComponent({
           />
         </ModalBody>
       </Modal>
-      <Row sm={3} className="p-2">
+      <Row sm={canvasEnabled ? 4 : 3} className="p-2">
         <Col>
           <div className="d-flex align-items-center position-relative">
             <Button
@@ -265,6 +265,17 @@ export default function EnrollmentTabComponent({
             </OverlayTrigger>
           </div>
         </Col>
+        {canvasEnabled && (
+          <Col>
+            <Button
+              onClick={handleCanvasSync}
+              data-testid={`${testIdPrefix}-canvas-sync-button`}
+              className="w-100"
+            >
+              Load Students from Canvas
+            </Button>
+          </Col>
+        )}
         <Col>
           <Button
             onClick={() => setPostModal(true)}

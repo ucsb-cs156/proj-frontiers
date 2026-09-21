@@ -1150,4 +1150,79 @@ describe("InstructorCourseShowPage tests", () => {
       screen.getByRole("button", { name: "Slack Section Channels" }),
     ).toBeInTheDocument();
   });
+
+  describe("Load Students from Canvas button on the Students tab", () => {
+    const setupCourse7WithCanvasOption = (enableCanvas) => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/7").reply(200, {
+        ...coursesFixtures.severalCourses[0],
+        id: 7,
+      });
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: enableCanvas,
+        TRANSLATE_SECTIONS: false,
+        DOKKU_MANAGER: false,
+        ENABLE_API_KEYS: false,
+        SLACK_INTEGRATION: false,
+      });
+      axiosMock
+        .onGet("/api/rosterstudents/course/7")
+        .reply(200, rosterStudentFixtures.threeStudents);
+    };
+
+    // wait until the course options have arrived, so that their effect can be seen
+    const courseOptionsLoaded = (expected) =>
+      waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ ENABLE_CANVAS: expected })),
+      );
+
+    test("is shown when the ENABLE_CANVAS course option is enabled, and loads students for this course", async () => {
+      setupCourse7WithCanvasOption(true);
+      axiosMock
+        .onPost("/api/courses/canvas/sync/students")
+        .reply(200, { created: 1, updated: 2, dropped: 0, rejected: [] });
+
+      renderCourse7();
+
+      const button = await screen.findByTestId(
+        "InstructorCourseShowPage-canvas-sync-button",
+      );
+      expect(button).toHaveTextContent("Load Students from Canvas");
+
+      fireEvent.click(button);
+      await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+      expect(axiosMock.history.post[0].url).toBe(
+        "/api/courses/canvas/sync/students",
+      );
+      expect(axiosMock.history.post[0].params).toEqual({ courseId: "7" });
+    });
+
+    test("is not shown when the ENABLE_CANVAS course option is disabled", async () => {
+      setupCourse7WithCanvasOption(false);
+
+      renderCourse7();
+
+      // (the Staff tab has a csv-button too, so look for a button only the Students tab has)
+      await screen.findByText("Add Individual Student");
+      await courseOptionsLoaded(false);
+      expect(
+        screen.queryByTestId("InstructorCourseShowPage-canvas-sync-button"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("is not shown when the ENABLE_CANVAS course option is not strictly true", async () => {
+      setupCourse7WithCanvasOption("unexpected");
+
+      renderCourse7();
+
+      // (the Staff tab has a csv-button too, so look for a button only the Students tab has)
+      await screen.findByText("Add Individual Student");
+      await courseOptionsLoaded("unexpected");
+      expect(
+        screen.queryByTestId("InstructorCourseShowPage-canvas-sync-button"),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

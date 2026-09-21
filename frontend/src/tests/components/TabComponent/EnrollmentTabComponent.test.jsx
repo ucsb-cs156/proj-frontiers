@@ -953,3 +953,140 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(axiosMock.history.delete.length).toEqual(0);
   });
 });
+
+describe("EnrollmentTabComponent Load Students from Canvas button", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    queryClient.clear();
+    vi.resetAllMocks();
+    axiosMock
+      .onGet("/api/rosterstudents/course/1")
+      .reply(200, rosterStudentFixtures.threeStudents);
+  });
+
+  const renderTab = (props) =>
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EnrollmentTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+          {...props}
+        />
+      </QueryClientProvider>,
+    );
+
+  // The text of the buttons in the row of buttons at the top, from left to right
+  const buttonRow = () =>
+    screen.getByTestId(`${testId}-csv-button`).closest(".row");
+  const buttonTexts = () =>
+    within(buttonRow())
+      .getAllByRole("button")
+      .map((button) => button.textContent);
+
+  const rosterRequests = () =>
+    axiosMock.history.get.filter(
+      (request) => request.url === "/api/rosterstudents/course/1",
+    );
+
+  test("is not shown by default, or when Canvas is not enabled", async () => {
+    const { unmount } = renderTab({});
+    await screen.findByTestId(`${testId}-csv-button`);
+
+    expect(
+      screen.queryByTestId(`${testId}-canvas-sync-button`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Load Students from Canvas"),
+    ).not.toBeInTheDocument();
+    expect(buttonTexts()).toEqual([
+      "Upload CSV Roster",
+      "Add Individual Student",
+      "Download Student CSV",
+    ]);
+    expect(buttonRow()).toHaveClass("row-cols-sm-3");
+    expect(buttonRow()).not.toHaveClass("row-cols-sm-4");
+    unmount();
+
+    renderTab({ canvasEnabled: false });
+    await screen.findByTestId(`${testId}-csv-button`);
+    expect(
+      screen.queryByTestId(`${testId}-canvas-sync-button`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("is shown second from the left, between Upload CSV Roster and Add Individual Student, when Canvas is enabled", async () => {
+    renderTab({ canvasEnabled: true });
+
+    const button = await screen.findByTestId(`${testId}-canvas-sync-button`);
+    expect(button).toHaveTextContent("Load Students from Canvas");
+    expect(button).toHaveClass("w-100");
+    expect(buttonTexts()).toEqual([
+      "Upload CSV Roster",
+      "Load Students from Canvas",
+      "Add Individual Student",
+      "Download Student CSV",
+    ]);
+    expect(buttonRow()).toHaveClass("row-cols-sm-4");
+    expect(buttonRow()).not.toHaveClass("row-cols-sm-3");
+    expect(axiosMock.history.post.length).toBe(0);
+  });
+
+  test("POSTs to the Canvas sync endpoint for the current course, then refreshes the roster and clears the search", async () => {
+    axiosMock
+      .onPost("/api/courses/canvas/sync/students")
+      .reply(200, loadResultFixtures.successful);
+
+    renderTab({ canvasEnabled: true });
+
+    const search = await screen.findByTestId(`${testId}-search`);
+    fireEvent.change(search, { target: { value: "no such student" } });
+    expect(search).toHaveValue("no such student");
+    await waitFor(() => expect(rosterRequests().length).toBe(1));
+
+    fireEvent.click(screen.getByTestId(`${testId}-canvas-sync-button`));
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith("Roster successfully updated."),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(axiosMock.history.post.length).toBe(1);
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/courses/canvas/sync/students",
+    );
+    expect(axiosMock.history.post[0].params).toEqual({ courseId: 1 });
+    expect(search).toHaveValue("");
+    // the roster is fetched again, to show the students that were loaded
+    await waitFor(() => expect(rosterRequests().length).toBe(2));
+  });
+
+  test("shows the error from the backend if loading from Canvas fails", async () => {
+    axiosMock.onPost("/api/courses/canvas/sync/students").reply(400, {
+      type: "IllegalArgumentException",
+      message: "Course is not linked to a Canvas course",
+    });
+
+    renderTab({ canvasEnabled: true });
+    const search = await screen.findByTestId(`${testId}-search`);
+    fireEvent.change(search, { target: { value: "Chris" } });
+
+    fireEvent.click(screen.getByTestId(`${testId}-canvas-sync-button`));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledTimes(1));
+    expect(toast.error).toHaveBeenCalledWith(
+      `Error loading students from Canvas: ${JSON.stringify(
+        {
+          type: "IllegalArgumentException",
+          message: "Course is not linked to a Canvas course",
+        },
+        null,
+        2,
+      )}`,
+    );
+    expect(toast).not.toHaveBeenCalled();
+    // the search is only cleared when the roster was updated
+    expect(search).toHaveValue("Chris");
+  });
+});
