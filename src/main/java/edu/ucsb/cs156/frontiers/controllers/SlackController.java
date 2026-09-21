@@ -132,7 +132,34 @@ public class SlackController extends ApiController {
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    course = backfillSlackTeamUrl(course);
     return slackInfo(course);
+  }
+
+  /**
+   * Tokens saved before the workspace URL was recorded (see {@link Course#getSlackTeamUrl()}) have
+   * no way to show a real "Admin" link; this calls Slack's <code>auth.test</code> again, using the
+   * already-stored (and validated) token, to fetch and save the workspace's own URL. Any failure to
+   * reach Slack is ignored here: the rest of the page still works from the cached data, and the
+   * <code>app.slack.com</code> fallback URL is used instead.
+   *
+   * @param course the course
+   * @return the course, with slackTeamUrl backfilled and saved if it was missing and could be
+   *     determined
+   */
+  private Course backfillSlackTeamUrl(Course course) {
+    boolean hasUrl = course.getSlackTeamUrl() != null && !course.getSlackTeamUrl().isEmpty();
+    boolean hasToken = course.getSlackBotToken() != null && !course.getSlackBotToken().isEmpty();
+    if (hasUrl || !hasToken) {
+      return course;
+    }
+    String token = tokenSecurityService.decrypt(course.getSlackBotToken());
+    SlackAuthTestResponse authTest = slackService.authTest(token);
+    if (!authTest.getOk() || authTest.getUrl() == null || authTest.getUrl().isEmpty()) {
+      return course;
+    }
+    course.setSlackTeamUrl(authTest.getUrl());
+    return courseRepository.save(course);
   }
 
   /**
