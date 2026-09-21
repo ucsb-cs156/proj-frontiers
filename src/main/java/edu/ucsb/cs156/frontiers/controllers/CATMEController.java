@@ -122,7 +122,7 @@ public class CATMEController extends ApiController {
       if (row == null) {
         continue;
       }
-      String expectedName = student.getLastName() + ", " + student.getFirstName();
+      String expectedName = formatStudentName(student.getLastName(), student.getFirstName());
       if (!expectedName.equals(row.name())) {
         studentsToUpdate.add(
             new CATMEStudentUpdate(
@@ -280,11 +280,23 @@ public class CATMEController extends ApiController {
   }
 
   private static String toLookupKey(String lastName, String firstName) {
-    return toLookupKey(lastName + ", " + firstName);
+    return toLookupKey(formatStudentName(lastName, firstName));
   }
 
   private static String toLookupKey(String name) {
     return normalizeSpaces(name).toUpperCase().replaceFirst("\\s*,\\s*", ",");
+  }
+
+  private static String formatStudentName(String lastName, String firstName) {
+    String normalizedLastName = normalizeSpaces(lastName == null ? "" : lastName);
+    String normalizedFirstName = normalizeSpaces(firstName == null ? "" : firstName);
+    if (normalizedLastName.isBlank()) {
+      return normalizedFirstName;
+    }
+    if (normalizedFirstName.isBlank()) {
+      return normalizedLastName;
+    }
+    return normalizedLastName + ", " + normalizedFirstName;
   }
 
   private static String normalizeSpaces(String value) {

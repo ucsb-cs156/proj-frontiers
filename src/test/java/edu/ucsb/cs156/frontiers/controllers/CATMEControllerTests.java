@@ -339,6 +339,55 @@ public class CATMEControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void catmeAudit_missingFirstOrLastName_producesNullSafeNameUpdates() throws Exception {
+    RosterStudent missingFirstName =
+        RosterStudent.builder()
+            .studentId("1234567")
+            .firstName(null)
+            .lastName("Gaucho")
+            .email("gaucho@ucsb.edu")
+            .section("0100")
+            .rosterStatus(RosterStatus.MANUAL)
+            .build();
+    RosterStudent missingLastName =
+        RosterStudent.builder()
+            .studentId("2345678")
+            .firstName("Chris")
+            .lastName(null)
+            .email("chris@ucsb.edu")
+            .section("0200")
+            .rosterStatus(RosterStatus.MANUAL)
+            .build();
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(missingFirstName, missingLastName));
+
+    String content =
+        CATME_AUDIT_HEADER
+            + "\"Wrong One\",\"1234567\",\"gaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n"
+            + "\"Wrong Two\",\"2345678\",\"chris@ucsb.edu\",\"0200\",\"Web\",\"M\",\"None\",\"None\",\n";
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
+
+    MvcResult response =
+        mockMvc
+            .perform(multipart("/api/catme/audit").file(file).with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    CATMEAuditResult result =
+        objectMapper.readValue(response.getResponse().getContentAsString(), CATMEAuditResult.class);
+    assertEquals(2, result.studentsToUpdate().size());
+    assertEquals("Name", result.studentsToUpdate().get(0).field());
+    assertEquals("Wrong One", result.studentsToUpdate().get(0).oldValue());
+    assertEquals("Gaucho", result.studentsToUpdate().get(0).newValue());
+    assertEquals("Name", result.studentsToUpdate().get(1).field());
+    assertEquals("Wrong Two", result.studentsToUpdate().get(1).oldValue());
+    assertEquals("Chris", result.studentsToUpdate().get(1).newValue());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void catmeAudit_translateSectionsEnabled_matchingTranslatedSection_producesNoUpdate()
       throws Exception {
     RosterStudent student =
