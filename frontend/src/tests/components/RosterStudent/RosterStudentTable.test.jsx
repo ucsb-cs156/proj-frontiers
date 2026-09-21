@@ -503,11 +503,11 @@ describe("RosterStudentTable tests", () => {
     await waitFor(() =>
       expect(
         screen.getByTestId(`${testId}-cell-row-0-col-section`),
-      ).toHaveTextContent("0100 - Tue 9:00am"),
+      ).toHaveTextContent("Tue 9:00am"),
     );
     expect(
       screen.getByTestId(`${testId}-cell-row-1-col-section`),
-    ).toHaveTextContent("0200 - Tue 10:00am");
+    ).toHaveTextContent("Tue 10:00am");
   });
 
   test("shows a blank section when translateSections is enabled but section is unset", async () => {
@@ -532,7 +532,7 @@ describe("RosterStudentTable tests", () => {
     await waitFor(() =>
       expect(
         screen.getByTestId(`${testId}-cell-row-1-col-section`),
-      ).toHaveTextContent("0200 - Tue 10:00am"),
+      ).toHaveTextContent("Tue 10:00am"),
     );
     expect(
       screen.getByTestId(`${testId}-cell-row-2-col-section`),

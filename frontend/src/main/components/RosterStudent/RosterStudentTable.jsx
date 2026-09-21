@@ -156,7 +156,7 @@ export default function RosterStudentTable({
           return section;
         }
         const label = sectionLabelsBySection.get(section);
-        return label ? `${section} - ${label}` : section;
+        return label ? label : section;
       },
     },
     {
