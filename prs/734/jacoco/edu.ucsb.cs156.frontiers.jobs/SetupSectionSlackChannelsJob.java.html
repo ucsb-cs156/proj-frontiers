@@ -345,7 +345,7 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
   }
 
   private static String describeSection(String section) {
-<span class="pc bpc" id="L348" title="1 of 4 branches missed.">    return section == null || section.isBlank() ? &quot;(blank)&quot; : section;</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">    return section == null ? &quot;(blank)&quot; : section;</span>
   }
 
   private static String describeChannelNames(List&lt;String&gt; channelNames) {
