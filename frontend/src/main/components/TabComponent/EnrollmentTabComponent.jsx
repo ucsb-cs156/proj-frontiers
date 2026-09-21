@@ -300,7 +300,11 @@ export default function EnrollmentTabComponent({
       </Row>
       <Row>
         <h2>Dropped Students</h2>
-        <DroppedStudentsTable students={droppedStudents} courseId={courseId} />
+        <DroppedStudentsTable
+          students={droppedStudents}
+          courseId={courseId}
+          translateSections={translateSections}
+        />
       </Row>
       <PurgeDroppedStudentsModal
         showModal={purgeModal}

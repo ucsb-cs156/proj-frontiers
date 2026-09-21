@@ -4,10 +4,17 @@ import { toast } from "react-toastify";
 import OurTable, { ButtonColumn } from "main/components/OurTable";
 import RosterStudentDeleteModal from "main/components/RosterStudent/RosterStudentDeleteModal";
 import { cellToAxiosParamsDelete } from "main/utils/rosterStudentUtils";
+import { useSectionLabels } from "main/utils/sectionsUtils";
 
-export default function DroppedStudentsTable({ students, courseId }) {
+export default function DroppedStudentsTable({
+  students,
+  courseId,
+  translateSections = false,
+}) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStudent, setDeleteStudent] = useState(null);
+
+  const translateSection = useSectionLabels(courseId, translateSections);
 
   const columns = [
     {
@@ -36,6 +43,7 @@ export default function DroppedStudentsTable({ students, courseId }) {
     {
       header: "Section",
       accessorKey: "section",
+      cell: ({ cell }) => translateSection(cell.row.original.section),
     },
   ];
 

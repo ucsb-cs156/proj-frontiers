@@ -3,8 +3,9 @@ import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Form } from "react-bootstrap";
 import OurPagination from "main/components/Common/OurPagination";
 
-import { useBackend, useBackendMutation } from "main/utils/useBackend";
+import { useBackendMutation } from "main/utils/useBackend";
 import { cellToAxiosParamsDelete } from "main/utils/rosterStudentUtils";
+import { useSectionLabels } from "main/utils/sectionsUtils";
 import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
@@ -29,20 +30,7 @@ export default function RosterStudentTable({
   const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  const sectionsQueryKey = `/api/courses/${courseId}/sections`;
-  const { data: sections = [] } = useBackend(
-    [sectionsQueryKey],
-    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
-    { method: "GET", url: sectionsQueryKey },
-    [],
-    true,
-    { enabled: translateSections },
-  );
-
-  const sectionLabelsBySection = React.useMemo(
-    () => new Map(sections.map((s) => [s.section, s.label])),
-    [sections],
-  );
+  const translateSection = useSectionLabels(courseId, translateSections);
 
   const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
 
@@ -150,14 +138,7 @@ export default function RosterStudentTable({
     {
       header: "Section",
       accessorKey: "section",
-      cell: ({ cell }) => {
-        const section = cell.row.original.section;
-        if (!translateSections || !section) {
-          return section;
-        }
-        const label = sectionLabelsBySection.get(section);
-        return label ? label : section;
-      },
+      cell: ({ cell }) => translateSection(cell.row.original.section),
     },
     {
       header: "GitHub Login",
