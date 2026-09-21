@@ -481,6 +481,34 @@ describe("RosterStudentTable tests", () => {
     ).not.toHaveTextContent("Tue 9:00am");
   });
 
+  test("defaults translateSections to false when the prop is not provided", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    axiosMock
+      .onGet("/api/courses/7/sections")
+      .reply(200, sectionsFixtures.threeSections);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+            courseId={7}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-section`),
+      ).toHaveTextContent("0100"),
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-section`),
+    ).not.toHaveTextContent("Tue 9:00am");
+  });
+
   test("shows the translated section label when translateSections is enabled", async () => {
     const currentUser = currentUserFixtures.adminUser;
     axiosMock
