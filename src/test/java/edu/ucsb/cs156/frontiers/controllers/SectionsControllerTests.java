@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -540,6 +541,7 @@ public class SectionsControllerTests extends ControllerTestCase {
 
     verify(sectionRepository).delete(eq(section1));
     assertEquals(List.of(), course.getSections());
+    assertNull(section1.getCourse());
     assertEquals(
         mapper.writeValueAsString(Map.of("message", "Section with id 10 deleted")),
         response.getResponse().getContentAsString());
