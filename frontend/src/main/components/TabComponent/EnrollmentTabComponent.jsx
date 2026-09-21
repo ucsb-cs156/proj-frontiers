@@ -25,6 +25,7 @@ export default function EnrollmentTabComponent({
   currentUser,
   canEditStudents,
   translateSections = false,
+  canvasEnabled = false,
 }) {
   const [postModal, setPostModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
@@ -86,6 +87,34 @@ export default function EnrollmentTabComponent({
     },
     [`/api/rosterstudents/course/${courseId}`],
   );
+
+  const objectToAxiosParamsCanvasSync = () => ({
+    url: `/api/courses/canvas/sync/students`,
+    method: "POST",
+    params: {
+      courseId: courseId,
+    },
+  });
+
+  const canvasSyncMutation = useBackendMutation(
+    objectToAxiosParamsCanvasSync,
+    {
+      onSuccess: () => {
+        toast("Roster successfully updated.");
+        setSearchTerm("");
+      },
+      onError: (error) => {
+        toast.error(
+          `Error loading students from Canvas: ${JSON.stringify(error.response.data, null, 2)}`,
+        );
+      },
+    },
+    [`/api/rosterstudents/course/${courseId}`],
+  );
+
+  const handleCanvasSync = () => {
+    canvasSyncMutation.mutate();
+  };
 
   const rosterCsvMutation = useBackendMutation(
     objectToAxiosParamsCSV,
