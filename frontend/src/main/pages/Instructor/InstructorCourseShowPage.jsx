@@ -185,6 +185,7 @@ export default function InstructorCourseShowPage({
             currentUser={currentUser}
             canEditStudents={canEditStudents}
             translateSections={showSectionsTab}
+            canvasEnabled={courseOptions.ENABLE_CANVAS === true}
           />
         </Tab>
         <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
