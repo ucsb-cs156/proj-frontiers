@@ -41,7 +41,8 @@ public class CATMEControllerTests extends ControllerTestCase {
       "Activity,Class,Term,Format,Instr,School\n"
           + "CMPSC 156,001,F25,In Person,Instructor,UCSB\n"
           + "\n"
-          + "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Platform\",\"Sex\",\"Java Knowledge\",\"React Experience\",\n";
+          + "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Platform\",\"Sex\",\"Java"
+          + " Knowledge\",\"React Experience\",\n";
 
   @Test
   @WithInstructorCoursePermissions
@@ -88,7 +89,8 @@ public class CATMEControllerTests extends ControllerTestCase {
         "Activity,Class,Term,Format,Instr,School\n"
             + "CMPSC 156,001,F25,In Person,Instructor,UCSB\n"
             + "NOT BLANK\n"
-            + "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Platform\",\"Sex\",\"Java Knowledge\",\"React Experience\",\n";
+            + "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Platform\",\"Sex\",\"Java"
+            + " Knowledge\",\"React Experience\",\n";
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
@@ -127,7 +129,8 @@ public class CATMEControllerTests extends ControllerTestCase {
 
     String content =
         CATME_AUDIT_HEADER
-            + "\"Gaucho, Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n";
+            + "\"Gaucho,"
+            + " Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n";
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
@@ -160,7 +163,8 @@ public class CATMEControllerTests extends ControllerTestCase {
 
     String content =
         CATME_AUDIT_HEADER
-            + "\"Wrong Name\",\"1234567\",\"cgaucho@ucsb.edu\",\"0200\",\"Web\",\"M\",\"None\",\"None\",\n";
+            + "\"Wrong"
+            + " Name\",\"1234567\",\"cgaucho@ucsb.edu\",\"0200\",\"Web\",\"M\",\"None\",\"None\",\n";
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
@@ -190,7 +194,8 @@ public class CATMEControllerTests extends ControllerTestCase {
 
     String content =
         CATME_AUDIT_HEADER
-            + "\"Gaucho, Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n";
+            + "\"Gaucho,"
+            + " Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n";
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
@@ -224,7 +229,8 @@ public class CATMEControllerTests extends ControllerTestCase {
 
     String content =
         CATME_AUDIT_HEADER
-            + "\"Gaucho, Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n";
+            + "\"Gaucho,"
+            + " Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n";
     MockMultipartFile file =
         new MockMultipartFile(
             "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
@@ -257,7 +263,8 @@ public class CATMEControllerTests extends ControllerTestCase {
 
     String content =
         CATME_AUDIT_HEADER
-            + "\"Gaucho, Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n"
+            + "\"Gaucho,"
+            + " Chris\",\"1234567\",\"cgaucho@ucsb.edu\",\"0100\",\"Web\",\"M\",\"None\",\"None\",\n"
             + "\n"
             + "some trailing footer text that should be ignored\n";
     MockMultipartFile file =

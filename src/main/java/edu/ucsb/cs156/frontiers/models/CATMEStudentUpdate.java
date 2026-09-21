@@ -1,8 +1,8 @@
 package edu.ucsb.cs156.frontiers.models;
 
 /**
- * Represents a single field that differs between the roster and the uploaded CATME CSV file for
- * a given student, so that the field can be updated in CATME.
+ * Represents a single field that differs between the roster and the uploaded CATME CSV file for a
+ * given student, so that the field can be updated in CATME.
  *
  * @param studentId the student's id
  * @param name the student's name (as recorded in Frontiers)

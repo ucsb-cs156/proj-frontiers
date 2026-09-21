@@ -40,15 +40,16 @@ public class CATMEController extends ApiController {
 
   public static final String CATME_AUDIT_HEADER_LINE_1 = "Activity,Class,Term,Format,Instr,School";
   public static final String CATME_AUDIT_HEADER_LINE_4 =
-      "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Platform\",\"Sex\",\"Java Knowledge\",\"React Experience\",";
+      "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Platform\",\"Sex\",\"Java"
+          + " Knowledge\",\"React Experience\",";
   public static final String CATME_AUDIT_FORMAT_ERROR_MESSAGE =
       "The uploaded file was not in a recognized CATME TeamMaker CSV format.";
 
   /**
    * Audit the roster for a course against a CATME TeamMaker CSV export, producing a list of
    * students whose name and/or section should be updated in CATME, and a list of students who
-   * should be dropped from CATME because they are no longer enrolled (MANUAL or ROSTER status)
-   * in Frontiers.
+   * should be dropped from CATME because they are no longer enrolled (MANUAL or ROSTER status) in
+   * Frontiers.
    *
    * @param courseId the id of the course
    * @param file the uploaded CATME TeamMaker CSV file
@@ -62,12 +63,12 @@ public class CATMEController extends ApiController {
       consumes = {"multipart/form-data"})
   public ResponseEntity<Object> auditCatmeCSV(
       @Parameter(name = "courseId") @RequestParam Long courseId,
-      @Parameter(name = "file") @RequestParam("file") MultipartFile file) throws IOException {
+      @Parameter(name = "file") @RequestParam("file") MultipartFile file)
+      throws IOException {
 
     List<String> lines;
     try (BufferedReader reader =
-        new BufferedReader(
-            new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
       lines = reader.lines().collect(Collectors.toList());
     }
 
@@ -89,8 +90,7 @@ public class CATMEController extends ApiController {
     Map<String, CATMEStudentRow> csvRowsByStudentId =
         csvRows.stream()
             .collect(
-                Collectors.toMap(
-                    CATMEStudentRow::studentId, row -> row, (first, second) -> first));
+                Collectors.toMap(CATMEStudentRow::studentId, row -> row, (first, second) -> first));
 
     List<CATMEStudentUpdate> studentsToUpdate = new ArrayList<>();
     for (RosterStudent student : enrolledStudents) {
@@ -109,11 +109,7 @@ public class CATMEController extends ApiController {
       if (!expectedSection.equals(actualSection)) {
         studentsToUpdate.add(
             new CATMEStudentUpdate(
-                student.getStudentId(),
-                expectedName,
-                "Section",
-                actualSection,
-                expectedSection));
+                student.getStudentId(), expectedName, "Section", actualSection, expectedSection));
       }
     }
 
