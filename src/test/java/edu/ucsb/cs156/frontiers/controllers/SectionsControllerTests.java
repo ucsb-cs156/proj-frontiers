@@ -21,6 +21,7 @@ import edu.ucsb.cs156.frontiers.entities.Section;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -524,6 +525,10 @@ public class SectionsControllerTests extends ControllerTestCase {
   @Test
   @WithInstructorCoursePermissions
   public void delete_section_deletes_section() throws Exception {
+    List<Section> sectionsList = new ArrayList<>();
+    sectionsList.add(section1);
+    course.setSections(sectionsList);
+
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(sectionRepository.findById(eq(10L))).thenReturn(Optional.of(section1));
 
@@ -534,6 +539,7 @@ public class SectionsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(sectionRepository).delete(eq(section1));
+    assertEquals(List.of(), course.getSections());
     assertEquals(
         mapper.writeValueAsString(Map.of("message", "Section with id 10 deleted")),
         response.getResponse().getContentAsString());
