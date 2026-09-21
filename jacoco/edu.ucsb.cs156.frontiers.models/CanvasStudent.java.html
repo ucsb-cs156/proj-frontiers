@@ -17,11 +17,12 @@ public class CanvasStudent {
   private String lastName;
   private String email;
   private String studentId;
+  private String section;
 
   @JsonCreator
   public CanvasStudent(
-<span class="fc" id="L23">      @JsonProperty(&quot;sisId&quot;) String sisId, @JsonProperty(&quot;integrationId&quot;) String integrationId) {</span>
-<span class="fc bfc" id="L24" title="All 2 branches covered.">    this.studentId = integrationId != null ? integrationId : sisId;</span>
-<span class="fc" id="L25">  }</span>
+<span class="fc" id="L24">      @JsonProperty(&quot;sisId&quot;) String sisId, @JsonProperty(&quot;integrationId&quot;) String integrationId) {</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">    this.studentId = integrationId != null ? integrationId : sisId;</span>
+<span class="fc" id="L26">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
