@@ -105,7 +105,7 @@ public class CATMEController extends ApiController {
                 student.getStudentId(), expectedName, "Name", row.name(), expectedName));
       }
       String expectedSection = student.getSection() == null ? "" : student.getSection();
-      String actualSection = row.section() == null ? "" : row.section();
+      String actualSection = row.section();
       if (!expectedSection.equals(actualSection)) {
         studentsToUpdate.add(
             new CATMEStudentUpdate(
