@@ -18,6 +18,7 @@ import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable
 import Modal from "react-bootstrap/Modal";
 import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsTable";
 import PurgeDroppedStudentsModal from "main/components/RosterStudent/PurgeDroppedStudentsModal";
+import ConfirmationModal from "main/components/Common/ConfirmationModal";
 
 export default function EnrollmentTabComponent({
   courseId,
@@ -32,6 +33,7 @@ export default function EnrollmentTabComponent({
   const [csvErrorModal, setCsvErrorModal] = useState(false);
   const [csvErrorModalData, setCsvErrorModalData] = useState(null);
   const [purgeModal, setPurgeModal] = useState(false);
+  const [canvasSyncModal, setCanvasSyncModal] = useState(false);
 
   const { data: rosterStudents } = useBackend(
     [`/api/rosterstudents/course/${courseId}`],
@@ -232,6 +234,31 @@ export default function EnrollmentTabComponent({
           />
         </ModalBody>
       </Modal>
+      <ConfirmationModal
+        showModal={canvasSyncModal}
+        setShowModal={setCanvasSyncModal}
+        onYes={handleCanvasSync}
+      >
+        <div data-testid={`${testIdPrefix}-canvas-sync-confirmation-message`}>
+          <p>
+            This adds the students enrolled in the Canvas course to the roster,
+            and updates the ones that are already on it, including their
+            section.
+          </p>
+          <p>
+            <strong>
+              Students who are not in the Canvas course will be marked as
+              dropped, and removed from the GitHub organization of this course.
+            </strong>{" "}
+            This applies to students who were loaded from a CSV file or from
+            Canvas; students who were added individually are not affected.
+          </p>
+          <p className="mb-0">
+            Before going ahead, make sure that the Canvas course ID on the
+            Settings tab is the right one.
+          </p>
+        </div>
+      </ConfirmationModal>
       <Row sm={canvasEnabled ? 4 : 3} className="p-2">
         <Col>
           <div className="d-flex align-items-center position-relative">
@@ -268,7 +295,7 @@ export default function EnrollmentTabComponent({
         {canvasEnabled && (
           <Col>
             <Button
-              onClick={handleCanvasSync}
+              onClick={() => setCanvasSyncModal(true)}
               data-testid={`${testIdPrefix}-canvas-sync-button`}
               className="w-100"
             >

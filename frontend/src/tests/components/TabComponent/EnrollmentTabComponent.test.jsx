@@ -1046,6 +1046,7 @@ describe("EnrollmentTabComponent Load Students from Canvas button", () => {
     await waitFor(() => expect(rosterRequests().length).toBe(1));
 
     fireEvent.click(screen.getByTestId(`${testId}-canvas-sync-button`));
+    fireEvent.click(await screen.findByText("Yes, I'd like to do this"));
 
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith("Roster successfully updated."),
@@ -1062,6 +1063,75 @@ describe("EnrollmentTabComponent Load Students from Canvas button", () => {
     await waitFor(() => expect(rosterRequests().length).toBe(2));
   });
 
+  test("asks for confirmation, explaining the consequences, before calling the backend", async () => {
+    axiosMock
+      .onPost("/api/courses/canvas/sync/students")
+      .reply(200, loadResultFixtures.successful);
+
+    renderTab({ canvasEnabled: true });
+    const button = await screen.findByTestId(`${testId}-canvas-sync-button`);
+
+    // no dialog until the button is clicked
+    expect(
+      screen.queryByTestId(`${testId}-canvas-sync-confirmation-message`),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Are You Sure?")).not.toBeInTheDocument();
+
+    fireEvent.click(button);
+
+    const message = await screen.findByTestId(
+      `${testId}-canvas-sync-confirmation-message`,
+    );
+    expect(screen.getByText("Are You Sure?")).toBeInTheDocument();
+    expect(message.textContent).toBe(
+      "This adds the students enrolled in the Canvas course to the roster, and updates the ones that are already on it, including their section." +
+        "Students who are not in the Canvas course will be marked as dropped, and removed from the GitHub organization of this course. This applies to students who were loaded from a CSV file or from Canvas; students who were added individually are not affected." +
+        "Before going ahead, make sure that the Canvas course ID on the Settings tab is the right one.",
+    );
+    expect(message.querySelector("strong")).toHaveTextContent(
+      "Students who are not in the Canvas course will be marked as dropped, and removed from the GitHub organization of this course.",
+    );
+    expect(message.lastElementChild).toHaveClass("mb-0");
+    // nothing has been sent yet
+    expect(axiosMock.history.post.length).toBe(0);
+
+    fireEvent.click(screen.getByText("Yes, I'd like to do this"));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-canvas-sync-confirmation-message`),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  test("does not call the backend if the confirmation is declined or dismissed", async () => {
+    renderTab({ canvasEnabled: true });
+    const button = await screen.findByTestId(`${testId}-canvas-sync-button`);
+
+    fireEvent.click(button);
+    await screen.findByTestId(`${testId}-canvas-sync-confirmation-message`);
+    fireEvent.click(screen.getByText("No, take me back"));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-canvas-sync-confirmation-message`),
+      ).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(button);
+    await screen.findByTestId(`${testId}-canvas-sync-confirmation-message`);
+    fireEvent.click(screen.getByTestId("ConfirmationModal-closeButton"));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-canvas-sync-confirmation-message`),
+      ).not.toBeInTheDocument(),
+    );
+
+    expect(axiosMock.history.post.length).toBe(0);
+    expect(toast).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
   test("shows the error from the backend if loading from Canvas fails", async () => {
     axiosMock.onPost("/api/courses/canvas/sync/students").reply(400, {
       type: "IllegalArgumentException",
@@ -1073,6 +1143,7 @@ describe("EnrollmentTabComponent Load Students from Canvas button", () => {
     fireEvent.change(search, { target: { value: "Chris" } });
 
     fireEvent.click(screen.getByTestId(`${testId}-canvas-sync-button`));
+    fireEvent.click(await screen.findByText("Yes, I'd like to do this"));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledTimes(1));
     expect(toast.error).toHaveBeenCalledWith(
