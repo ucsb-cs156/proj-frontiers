@@ -117,6 +117,212 @@ public class SlackControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void getSlackInfo_missingUrl_backfillsFromAuthTest() throws Exception {
+    Course course =
+        courseBuilder()
+            .slackBotToken("enc:v1:ciphertext")
+            .slackTeamId("T12345678")
+            .slackTeamName("ucsb-cs156-f26")
+            .build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    when(slackService.authTest(TOKEN))
+        .thenReturn(
+            SlackAuthTestResponse.builder()
+                .ok(true)
+                .team("ucsb-cs156-f26")
+                .teamId("T12345678")
+                .url("https://ucsb-cs156-f26.slack.com/")
+                .build());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/info").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<Course> captor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository).save(captor.capture());
+    assertEquals("https://ucsb-cs156-f26.slack.com/", captor.getValue().getSlackTeamUrl());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("courseId", "1");
+    expected.put("slackBotToken", MASKED_TOKEN);
+    expected.put("slackTeamId", "T12345678");
+    expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://ucsb-cs156-f26.slack.com/");
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackInfo_missingUrl_authTestFails_fallsBackToClientUrl() throws Exception {
+    Course course =
+        courseBuilder()
+            .slackBotToken("enc:v1:ciphertext")
+            .slackTeamId("T12345678")
+            .slackTeamName("ucsb-cs156-f26")
+            .build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    when(slackService.authTest(TOKEN))
+        .thenReturn(SlackAuthTestResponse.builder().ok(false).error("invalid_auth").build());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/info").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("courseId", "1");
+    expected.put("slackBotToken", MASKED_TOKEN);
+    expected.put("slackTeamId", "T12345678");
+    expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://app.slack.com/client/T12345678");
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackInfo_missingUrl_authTestOkWithNoUrl_fallsBackToClientUrl() throws Exception {
+    Course course =
+        courseBuilder()
+            .slackBotToken("enc:v1:ciphertext")
+            .slackTeamId("T12345678")
+            .slackTeamName("ucsb-cs156-f26")
+            .build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    when(slackService.authTest(TOKEN))
+        .thenReturn(
+            SlackAuthTestResponse.builder().ok(true).team("ucsb-cs156-f26").url(null).build());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/info").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("courseId", "1");
+    expected.put("slackBotToken", MASKED_TOKEN);
+    expected.put("slackTeamId", "T12345678");
+    expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://app.slack.com/client/T12345678");
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackInfo_missingUrl_authTestOkWithBlankUrl_fallsBackToClientUrl()
+      throws Exception {
+    Course course =
+        courseBuilder()
+            .slackBotToken("enc:v1:ciphertext")
+            .slackTeamId("T12345678")
+            .slackTeamName("ucsb-cs156-f26")
+            .build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    when(slackService.authTest(TOKEN))
+        .thenReturn(
+            SlackAuthTestResponse.builder().ok(true).team("ucsb-cs156-f26").url("").build());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/info").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("courseId", "1");
+    expected.put("slackBotToken", MASKED_TOKEN);
+    expected.put("slackTeamId", "T12345678");
+    expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://app.slack.com/client/T12345678");
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackInfo_blankUrl_backfillsFromAuthTest() throws Exception {
+    Course course =
+        courseBuilder()
+            .slackBotToken("enc:v1:ciphertext")
+            .slackTeamId("T12345678")
+            .slackTeamName("ucsb-cs156-f26")
+            .slackTeamUrl("")
+            .build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    when(slackService.authTest(TOKEN))
+        .thenReturn(
+            SlackAuthTestResponse.builder()
+                .ok(true)
+                .team("ucsb-cs156-f26")
+                .url("https://ucsb-cs156-f26.slack.com/")
+                .build());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/info").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<Course> captor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository).save(captor.capture());
+    assertEquals("https://ucsb-cs156-f26.slack.com/", captor.getValue().getSlackTeamUrl());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("courseId", "1");
+    expected.put("slackBotToken", MASKED_TOKEN);
+    expected.put("slackTeamId", "T12345678");
+    expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://ucsb-cs156-f26.slack.com/");
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getSlackInfo_blankToken_doesNotCallAuthTest() throws Exception {
+    Course course =
+        courseBuilder()
+            .slackBotToken("")
+            .slackTeamId("T12345678")
+            .slackTeamName("ucsb-cs156-f26")
+            .build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(tokenSecurityService.decrypt("")).thenReturn("");
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/courses/slack/info").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+    verify(slackService, never()).authTest(any());
+
+    LinkedHashMap<String, String> expected = new LinkedHashMap<>();
+    expected.put("courseId", "1");
+    expected.put("slackBotToken", "");
+    expected.put("slackTeamId", "T12345678");
+    expected.put("slackTeamName", "ucsb-cs156-f26");
+    expected.put("slackTeamUrl", "https://app.slack.com/client/T12345678");
+    assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void getSlackInfo_courseDoesNotExist() throws Exception {
     when(courseRepository.findById(1L)).thenReturn(Optional.empty());
 
