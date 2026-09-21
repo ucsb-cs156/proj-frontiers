@@ -1192,6 +1192,7 @@ describe("InstructorCourseShowPage tests", () => {
       expect(button).toHaveTextContent("Load Students from Canvas");
 
       fireEvent.click(button);
+      fireEvent.click(await screen.findByText("Yes, I'd like to do this"));
       await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
       expect(axiosMock.history.post[0].url).toBe(
         "/api/courses/canvas/sync/students",
