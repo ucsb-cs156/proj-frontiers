@@ -3,7 +3,7 @@ import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { useCurrentUser } from "main/utils/currentUser";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 
 import Modal from "react-bootstrap/Modal";
 import { Button, Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -21,6 +21,12 @@ import SectionsTabComponent from "main/components/TabComponent/SectionsTabCompon
 import { useCourseOptions } from "main/utils/courseOptionsUtils";
 import SlackTabComponent from "main/components/TabComponent/SlackTabComponent";
 import { slackInfoQueryKey } from "main/utils/slackUtils";
+import {
+  COURSE_TABS,
+  chooseCourseTab,
+  getStoredCourseTab,
+  storeCourseTab,
+} from "main/utils/courseTabUtils";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -68,6 +74,28 @@ export default function InstructorCourseShowPage({
   );
   const showSlackTab =
     slackIntegrationEnabled && Boolean(slackInfo.slackBotToken);
+
+  // Which tab is showing is kept in the URL as ?tab=<name>, so that a tab can be
+  // linked to and survives a refresh; see main/utils/courseTabUtils
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const visibleTabs = COURSE_TABS.filter(
+    (tab) =>
+      (tab !== "sections" || showSectionsTab) &&
+      (tab !== "slack" || showSlackTab) &&
+      (tab !== "settings" || showSettingsTab),
+  );
+  const activeTab = chooseCourseTab({
+    requestedTab,
+    storedTab: getStoredCourseTab(courseId),
+    visibleTabs,
+  });
+  // Remember the tab for the next time this course is opened without ?tab=
+  useEffect(() => {
+    if (COURSE_TABS.includes(requestedTab)) {
+      storeCourseTab(courseId, requestedTab);
+    }
+  }, [courseId, requestedTab]);
 
   // Stryker disable OptionalChaining -- course?.instructorEmail is more readable than course && course.instructorEmail
   const getCourseFailed = courseBackendFailureCount > 0;
@@ -177,7 +205,10 @@ export default function InstructorCourseShowPage({
           </div>
         </div>
       )}
-      <Tabs defaultActiveKey={"default"}>
+      <Tabs
+        activeKey={activeTab}
+        onSelect={(tab) => setSearchParams({ tab }, { replace: true })}
+      >
         <Tab eventKey={"students"} title={"Students"} className="pt-2">
           <EnrollmentTabComponent
             courseId={courseId}
@@ -209,7 +240,7 @@ export default function InstructorCourseShowPage({
             <SectionsTabComponent courseId={courseId} testIdPrefix={testId} />
           </Tab>
         )}
-        <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
+        <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
           <AssignmentTabComponent
             courseId={courseId}
             testIdPrefix={testId}
