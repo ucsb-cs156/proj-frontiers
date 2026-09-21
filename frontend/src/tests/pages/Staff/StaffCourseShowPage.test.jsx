@@ -27,6 +27,7 @@ describe("StaffCourseShowPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    window.localStorage.clear();
     mockedNavigate.mockClear();
     axiosMock
       .onGet("/api/currentUser")
@@ -93,7 +94,7 @@ describe("StaffCourseShowPage tests", () => {
     );
     expect(screen.getByRole("tab", { name: "Assignments" })).toHaveAttribute(
       "data-rr-ui-event-key",
-      "default",
+      "assignments",
     );
     expect(screen.getByRole("tab", { name: "Jobs" })).toHaveAttribute(
       "data-rr-ui-event-key",

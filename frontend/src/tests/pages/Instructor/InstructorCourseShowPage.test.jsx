@@ -8,7 +8,13 @@ import {
 } from "@testing-library/react";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes } from "react-router";
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigationType,
+} from "react-router";
 import coursesFixtures from "fixtures/coursesFixtures";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
@@ -45,6 +51,7 @@ describe("InstructorCourseShowPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    window.localStorage.clear();
     useBackendSpy.mockClear();
     axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
       courseId: "",
@@ -280,7 +287,7 @@ describe("InstructorCourseShowPage tests", () => {
     );
     expect(screen.getByText("Assignments")).toHaveAttribute(
       "data-rr-ui-event-key",
-      "default",
+      "assignments",
     );
     expect(screen.getByText("Assignments")).toHaveAttribute(
       "aria-selected",
@@ -1223,6 +1230,236 @@ describe("InstructorCourseShowPage tests", () => {
       expect(
         screen.queryByTestId("InstructorCourseShowPage-canvas-sync-button"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("?tab= in the URL", () => {
+    // Shows the current URL, so that tests can see changes to ?tab=
+    const LocationProbe = () => {
+      const location = useLocation();
+      const navigationType = useNavigationType();
+      return (
+        <>
+          <div data-testid="location-probe">
+            {location.pathname}
+            {location.search}
+          </div>
+          <div data-testid="navigation-type-probe">{navigationType}</div>
+        </>
+      );
+    };
+
+    const renderAt = (url, props = {}) =>
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[url]}>
+            <LocationProbe />
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage {...props} />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+    const setupCourse7 = (options = {}) => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/7").reply(200, {
+        ...coursesFixtures.severalCourses[0],
+        id: 7,
+      });
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: false,
+        DOKKU_MANAGER: false,
+        ENABLE_API_KEYS: false,
+        SLACK_INTEGRATION: false,
+        ...options,
+      });
+      axiosMock.onGet("/api/courses/7/sections").reply(200, []);
+      axiosMock
+        .onGet("/api/courses/slack/info?courseId=7")
+        .reply(200, slackFixtures.connectedInfo);
+      axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+      axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+    };
+
+    const selectedTab = () =>
+      screen
+        .getAllByRole("tab")
+        .filter((tab) => tab.getAttribute("aria-selected") === "true")
+        .map((tab) => tab.textContent);
+
+    test("with no ?tab=, and nothing remembered, the Assignments tab is shown and the URL is left alone", async () => {
+      setupCourse7();
+      renderAt("/instructor/courses/7");
+
+      await screen.findByRole("tab", { name: "Assignments" });
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(screen.getByTestId("location-probe")).toHaveTextContent(
+        "/instructor/courses/7",
+      );
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7",
+      );
+      expect(window.localStorage.getItem("frontiers.courseTab.7")).toBeNull();
+    });
+
+    test.each([
+      ["students", "Students"],
+      ["staff", "Staff"],
+      ["teams", "Teams"],
+      ["sections", "Sections"],
+      ["assignments", "Assignments"],
+      ["jobs", "Jobs"],
+      ["downloads", "Downloads"],
+      ["slack", "Slack"],
+      ["settings", "Settings"],
+    ])("?tab=%s opens the %s tab, and remembers it", async (tab, title) => {
+      setupCourse7({ TRANSLATE_SECTIONS: true, SLACK_INTEGRATION: true });
+      renderAt(`/instructor/courses/7?tab=${tab}`);
+
+      await waitFor(() => expect(selectedTab()).toEqual([title]));
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        `/instructor/courses/7?tab=${tab}`,
+      );
+      expect(window.localStorage.getItem("frontiers.courseTab.7")).toBe(tab);
+    });
+
+    test("clicking a tab puts it in the URL, so that a refresh shows the same tab", async () => {
+      setupCourse7();
+      const { unmount } = renderAt("/instructor/courses/7");
+
+      fireEvent.click(await screen.findByRole("tab", { name: "Jobs" }));
+
+      await waitFor(() => expect(selectedTab()).toEqual(["Jobs"]));
+      const url = screen.getByTestId("location-probe").textContent;
+      expect(url).toBe("/instructor/courses/7?tab=jobs");
+      expect(window.localStorage.getItem("frontiers.courseTab.7")).toBe("jobs");
+
+      fireEvent.click(screen.getByRole("tab", { name: "Staff" }));
+      await waitFor(() => expect(selectedTab()).toEqual(["Staff"]));
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7?tab=staff",
+      );
+
+      // "refresh": open the page again at the URL it now has
+      unmount();
+      window.localStorage.clear();
+      renderAt("/instructor/courses/7?tab=staff");
+      await waitFor(() => expect(selectedTab()).toEqual(["Staff"]));
+    });
+
+    test("clicking a tab replaces the history entry instead of adding one", async () => {
+      setupCourse7();
+      renderAt("/instructor/courses/7");
+      // the page was opened, not navigated to
+      expect(screen.getByTestId("navigation-type-probe")).toHaveTextContent(
+        "POP",
+      );
+
+      fireEvent.click(await screen.findByRole("tab", { name: "Jobs" }));
+      await waitFor(() => expect(selectedTab()).toEqual(["Jobs"]));
+
+      // so that the Back button leaves the course page, rather than stepping
+      // back through every tab that was clicked
+      expect(screen.getByTestId("navigation-type-probe")).toHaveTextContent(
+        "REPLACE",
+      );
+    });
+
+    test("an unknown ?tab= shows the Assignments tab, and is not remembered", async () => {
+      setupCourse7();
+      window.localStorage.setItem("frontiers.courseTab.7", "jobs");
+      renderAt("/instructor/courses/7?tab=bogus");
+
+      await screen.findByRole("tab", { name: "Assignments" });
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(window.localStorage.getItem("frontiers.courseTab.7")).toBe("jobs");
+    });
+
+    test("?tab= for a tab the course does not have shows the Assignments tab", async () => {
+      setupCourse7({ TRANSLATE_SECTIONS: false, SLACK_INTEGRATION: false });
+      const { unmount } = renderAt("/instructor/courses/7?tab=sections");
+      await screen.findByRole("tab", { name: "Settings" });
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ TRANSLATE_SECTIONS: false })),
+      );
+      expect(selectedTab()).toEqual(["Assignments"]);
+      unmount();
+
+      renderAt("/instructor/courses/7?tab=slack");
+      await screen.findByRole("tab", { name: "Settings" });
+      expect(selectedTab()).toEqual(["Assignments"]);
+    });
+
+    test("?tab=settings shows the Assignments tab when there is no Settings tab", async () => {
+      setupCourse7();
+      renderAt("/instructor/courses/7?tab=settings", {
+        showSettingsTab: false,
+      });
+
+      await screen.findByRole("tab", { name: "Assignments" });
+      expect(
+        screen.queryByRole("tab", { name: "Settings" }),
+      ).not.toBeInTheDocument();
+      expect(selectedTab()).toEqual(["Assignments"]);
+    });
+
+    test("the other tabs can still be opened with ?tab= when there is no Settings tab (as for staff)", async () => {
+      setupCourse7();
+      renderAt("/instructor/courses/7?tab=jobs", { showSettingsTab: false });
+
+      await waitFor(() => expect(selectedTab()).toEqual(["Jobs"]));
+      expect(
+        screen.queryByRole("tab", { name: "Settings" }),
+      ).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("tab", { name: "Students" }));
+      await waitFor(() => expect(selectedTab()).toEqual(["Students"]));
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7?tab=students",
+      );
+    });
+
+    test("with no ?tab=, the tab remembered for this course is shown, without changing the URL", async () => {
+      setupCourse7();
+      window.localStorage.setItem("frontiers.courseTab.7", "downloads");
+      window.localStorage.setItem("frontiers.courseTab.8", "staff");
+      renderAt("/instructor/courses/7");
+
+      await waitFor(() => expect(selectedTab()).toEqual(["Downloads"]));
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7",
+      );
+    });
+
+    test("?tab= wins over the remembered tab", async () => {
+      setupCourse7();
+      window.localStorage.setItem("frontiers.courseTab.7", "downloads");
+      renderAt("/instructor/courses/7?tab=teams");
+
+      await waitFor(() => expect(selectedTab()).toEqual(["Teams"]));
+      expect(window.localStorage.getItem("frontiers.courseTab.7")).toBe(
+        "teams",
+      );
+    });
+
+    test("a remembered tab that the course no longer has gives the Assignments tab", async () => {
+      setupCourse7({ SLACK_INTEGRATION: false });
+      window.localStorage.setItem("frontiers.courseTab.7", "slack");
+      renderAt("/instructor/courses/7");
+
+      await screen.findByRole("tab", { name: "Settings" });
+      expect(selectedTab()).toEqual(["Assignments"]);
+      // and it is still remembered, in case the tab comes back
+      expect(window.localStorage.getItem("frontiers.courseTab.7")).toBe(
+        "slack",
+      );
     });
   });
 });
