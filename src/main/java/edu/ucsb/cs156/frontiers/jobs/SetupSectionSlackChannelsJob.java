@@ -36,7 +36,8 @@ import lombok.Builder;
  *       with that name, unless it already exists. (Several sections may share a channel.)
  *   <li>Adds each roster student (status ROSTER or MANUAL) to the channel of their section, unless
  *       they are already in it. Students are matched to Slack users by email; students without an
- *       active Slack account cannot be added, and are only counted.
+ *       active Slack account cannot be added, and are only counted, by reason (invited but not
+ *       accepted yet, account deactivated, or not in the workspace).
  *   <li>Removes from each of those channels every person who is neither a roster student of one of
  *       the channel's sections, nor a member of the course staff, nor the instructor. Bots
  *       (including the bot this job acts as) and members that are not users of the workspace are
@@ -82,10 +83,16 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
     List<SlackUser> slackUsers = slackService.listUsers(token);
     Map<String, SlackUser> slackUsersById = new HashMap<>();
     Map<String, String> activeSlackIdByEmail = new HashMap<>();
+    // For people whose account is not active: true if they have been invited but have not accepted
+    // yet, false if their account has been deactivated. As on the Slack tab, an invitation wins
+    // over a deactivated account with the same email.
+    Map<String, Boolean> invitedByEmail = new HashMap<>();
     for (SlackUser user : slackUsers) {
       slackUsersById.put(user.getId(), user);
       if (user.isActivePerson() && user.email() != null) {
         activeSlackIdByEmail.put(canonical(user.email()), user.getId());
+      } else if (user.isPerson() && user.email() != null) {
+        invitedByEmail.merge(canonical(user.email()), !user.getDeleted(), Boolean::logicalOr);
       }
     }
     if (activeSlackIdByEmail.isEmpty()) {
@@ -109,7 +116,9 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
     Map<String, Set<String>> studentSlackIdsByChannelName = new HashMap<>();
 
     ctx.log("Adding Students to Channel");
-    int studentsNotInSlack = 0;
+    int studentsInvited = 0;
+    int studentsDeactivated = 0;
+    int studentsNotInWorkspace = 0;
     for (RosterStudent student : students) {
       List<String> matchingChannels =
           channelNamesBySection.getOrDefault(student.getSection(), List.of());
@@ -150,7 +159,17 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
                   ? null
                   : activeSlackIdByEmail.get(canonical(student.getEmail()));
           if (slackId == null) {
-            studentsNotInSlack++;
+            Boolean invited =
+                student.getEmail() == null
+                    ? null
+                    : invitedByEmail.get(canonical(student.getEmail()));
+            if (invited == null) {
+              studentsNotInWorkspace++;
+            } else if (invited) {
+              studentsInvited++;
+            } else {
+              studentsDeactivated++;
+            }
           } else {
             studentSlackIds.add(slackId);
             if (!members.contains(slackId)) {
@@ -162,10 +181,25 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
       studentSlackIdsByChannelName.put(channelName, studentSlackIds);
       addStudents(ctx, token, channelName, channelId, toAdd, activeSlackIdByEmail);
     }
-    if (studentsNotInSlack > 0) {
+    // Students who cannot be added are not logged one by one (the Slack tab lists them), but the
+    // log does say why: most often, they have not accepted their invitation yet.
+    List<String> reasons = new ArrayList<>();
+    if (studentsInvited > 0) {
+      reasons.add(
+          "%d invited to the Slack workspace but not accepted yet".formatted(studentsInvited));
+    }
+    if (studentsDeactivated > 0) {
+      reasons.add("%d with a deactivated Slack account".formatted(studentsDeactivated));
+    }
+    if (studentsNotInWorkspace > 0) {
+      reasons.add("%d not in the Slack workspace".formatted(studentsNotInWorkspace));
+    }
+    if (!reasons.isEmpty()) {
       ctx.log(
-          "%d student(s) in these sections could not be added, because they do not have an active account in the Slack workspace; see the Slack tab."
-              .formatted(studentsNotInSlack));
+          "%d student(s) in these sections could not be added: %s. See the Slack tab. Run this job again once they have joined."
+              .formatted(
+                  studentsInvited + studentsDeactivated + studentsNotInWorkspace,
+                  String.join(", ", reasons)));
     }
 
     ctx.log("Removing Channel Members Who Are Not In The Section");

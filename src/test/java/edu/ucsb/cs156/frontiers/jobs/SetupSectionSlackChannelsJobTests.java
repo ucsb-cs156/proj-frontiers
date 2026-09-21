@@ -134,6 +134,22 @@ public class SetupSectionSlackChannelsJobTests {
     bot.setBot(true);
     SlackUser invited = slackUser("U_EVE", "Eve Student", "eve@ucsb.edu");
     invited.setInvitedUser(true);
+    SlackUser deactivated = slackUser("U_FRANK", "Frank Student", "frank@ucsb.edu");
+    deactivated.setDeleted(true);
+    // same person: an invitation, listed before a deactivated account, counts as invited
+    SlackUser reinvited = slackUser("U_GRACE", "Grace Student", "Grace@ucsb.edu");
+    reinvited.setInvitedUser(true);
+    SlackUser reinvitedOldAccount = slackUser("U_GRACE_OLD", "Grace Student", "grace@ucsb.edu");
+    reinvitedOldAccount.setDeleted(true);
+    // a deactivated account whose invitation was never accepted counts as deactivated
+    SlackUser deletedInvitation = slackUser("U_HEIDI", "Heidi Student", "heidi@ucsb.edu");
+    deletedInvitation.setDeleted(true);
+    deletedInvitation.setInvitedUser(true);
+    // same person: a deactivated account, listed before another deactivated account
+    SlackUser twiceDeactivated1 = slackUser("U_JUDY1", "Judy Student", "judy@ucsb.edu");
+    twiceDeactivated1.setDeleted(true);
+    SlackUser twiceDeactivated2 = slackUser("U_JUDY2", "Judy Student", "judy@ucsb.edu");
+    twiceDeactivated2.setDeleted(true);
     when(slackService.listUsers(TOKEN))
         .thenReturn(
             List.of(
@@ -147,7 +163,13 @@ public class SetupSectionSlackChannelsJobTests {
                 slackUser("U_STRANGER", "Some Stranger", "stranger@example.org"),
                 slackUser("U_NOEMAIL", "No Email", null),
                 bot,
-                invited));
+                invited,
+                deactivated,
+                reinvited,
+                reinvitedOldAccount,
+                deletedInvitation,
+                twiceDeactivated1,
+                twiceDeactivated2));
 
     when(sectionRepository.findByCourseIdOrderBySectionAsc(1L))
         .thenReturn(
@@ -176,6 +198,10 @@ public class SetupSectionSlackChannelsJobTests {
         student("Carol", "carol@ucsb.edu", "0200"),
         student("Dave", "dave@ucsb.edu", "0150"),
         student("Eve", "eve@ucsb.edu", "0100"),
+        student("Frank", "frank@ucsb.edu", "0100"),
+        student("Grace", "grace@ucsb.edu", "0100"),
+        student("Heidi", "heidi@ucsb.edu", "0200"),
+        student("Judy", "judy@ucsb.edu", "0100"),
         student("NoEmail", null, "0100"),
         student("Other", "other@ucsb.edu", "0300"),
         student("NoSection", "nosection@ucsb.edu", null),
@@ -222,6 +248,10 @@ public class SetupSectionSlackChannelsJobTests {
             "Student Carol Student (carol@ucsb.edu) is in untranslated roster section 0200 and maps to #sec-0200",
             "Student Dave Student (dave@ucsb.edu) is in untranslated roster section 0150 and maps to #sec-0100",
             "Student Eve Student (eve@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
+            "Student Frank Student (frank@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
+            "Student Grace Student (grace@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
+            "Student Heidi Student (heidi@ucsb.edu) is in untranslated roster section 0200 and maps to #sec-0200",
+            "Student Judy Student (judy@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
             "Student NoEmail Student (null) is in untranslated roster section 0100 and maps to #sec-0100",
             "Student Other Student (other@ucsb.edu) is in untranslated roster section 0300",
             "Could not add Other Student (other@ucsb.edu) to a section Slack channel because no configured channel matches untranslated roster section 0300.",
@@ -230,7 +260,7 @@ public class SetupSectionSlackChannelsJobTests {
             "Added Bob Student (bob@ucsb.edu) to #sec-0100",
             "Added Dave Student (dave@ucsb.edu) to #sec-0100",
             "Added Carol Student (carol@ucsb.edu) to #sec-0200",
-            "2 student(s) in these sections could not be added, because they do not have an active account in the Slack workspace; see the Slack tab.",
+            "6 student(s) in these sections could not be added: 2 invited to the Slack workspace but not accepted yet, 3 with a deactivated Slack account, 1 not in the Slack workspace. See the Slack tab. Run this job again once they have joined.",
             "Removing Channel Members Who Are Not In The Section",
             "Removed Carol Student (carol@ucsb.edu) from #sec-0100",
             "Removed Some Stranger (stranger@example.org) from #sec-0100",
@@ -397,5 +427,68 @@ public class SetupSectionSlackChannelsJobTests {
     verify(slackService).listUsers(TOKEN);
     verifyNoMoreInteractions(slackService);
     assertEquals(null, jobStarted.getLog());
+  }
+
+  /**
+   * Runs the job for a course with one section channel and one student (zed@ucsb.edu) who is not
+   * active in Slack.
+   *
+   * @param otherSlackUsers the Slack users other than the (active) instructor
+   * @return the line of the log about students who could not be added
+   */
+  private String couldNotBeAddedLine(SlackUser... otherSlackUsers) throws Exception {
+    courseHasToken();
+    List<SlackUser> slackUsers = new java.util.ArrayList<>();
+    slackUsers.add(slackUser("U_PROF", "Prof Essor", "prof@ucsb.edu"));
+    slackUsers.addAll(List.of(otherSlackUsers));
+    when(slackService.listUsers(TOKEN)).thenReturn(slackUsers);
+    when(sectionRepository.findByCourseIdOrderBySectionAsc(1L))
+        .thenReturn(List.of(section("0100", "sec-0100")));
+    when(slackService.listPublicChannels(TOKEN)).thenReturn(List.of());
+    when(slackService.createPublicChannel(TOKEN, "sec-0100"))
+        .thenReturn(SlackChannel.builder().id("C100").name("sec-0100").build());
+    students(student("Zed", "zed@ucsb.edu", "0100"));
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+    when(slackService.listChannelMembers(TOKEN, "C100")).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(slackService, never()).inviteToChannel(any(), any(), any());
+    List<String> lines =
+        jobStarted.getLog().lines().filter(line -> line.contains("could not be added")).toList();
+    assertEquals(1, lines.size());
+    return lines.get(0);
+  }
+
+  @Test
+  public void says_when_the_only_reason_is_an_invitation_not_accepted_yet() throws Exception {
+    SlackUser invited = slackUser("U_ZED", "Zed Student", "zed@ucsb.edu");
+    invited.setInvitedUser(true);
+    assertEquals(
+        "1 student(s) in these sections could not be added: 1 invited to the Slack workspace but not accepted yet. See the Slack tab. Run this job again once they have joined.",
+        couldNotBeAddedLine(invited));
+  }
+
+  @Test
+  public void says_when_the_only_reason_is_a_deactivated_account() throws Exception {
+    SlackUser deactivated = slackUser("U_ZED", "Zed Student", "zed@ucsb.edu");
+    deactivated.setDeleted(true);
+    assertEquals(
+        "1 student(s) in these sections could not be added: 1 with a deactivated Slack account. See the Slack tab. Run this job again once they have joined.",
+        couldNotBeAddedLine(deactivated));
+  }
+
+  @Test
+  public void says_when_the_only_reason_is_not_being_in_the_workspace() throws Exception {
+    // a bot is not a person, so its invitation does not make the student "invited"
+    SlackUser botWithTheStudentsEmail = slackUser("U_ZEDBOT", "Zed Bot", "zed@ucsb.edu");
+    botWithTheStudentsEmail.setBot(true);
+    botWithTheStudentsEmail.setInvitedUser(true);
+    // nor does an invitation without an email
+    SlackUser invitedWithoutEmail = slackUser("U_NOEMAIL", "No Email", null);
+    invitedWithoutEmail.setInvitedUser(true);
+    assertEquals(
+        "1 student(s) in these sections could not be added: 1 not in the Slack workspace. See the Slack tab. Run this job again once they have joined.",
+        couldNotBeAddedLine(botWithTheStudentsEmail, invitedWithoutEmail));
   }
 }

@@ -113,8 +113,14 @@ and can be read on the **Jobs** tab:
    or `MANUAL`) whose section has a channel is added to it, unless they are in
    it already. Only students who are added are logged. Students are matched to
    Slack users by email, so a student who does not have an active account in
-   the workspace cannot be added; the log says how many there were, and the
-   second table on the Slack tab says who they are. Run the job again once they
+   the workspace cannot be added. The log says how many there were, and why,
+   for example: "5 student(s) in these sections could not be added: 4 invited
+   to the Slack workspace but not accepted yet, 1 not in the Slack workspace."
+   The possible reasons are the same as in the **Slack Status** column of the
+   second table on the Slack tab, which says who the students are: invited but
+   not accepted yet (by far the most common; a student cannot be added to a
+   channel until they have accepted the invitation to the workspace), account
+   deactivated, or not in the workspace at all. Run the job again once they
    have joined.
 3. **Removing Channel Members Who Are Not In The Section**: everyone else is
    removed from each of those channels, and logged, except for the staff of the
