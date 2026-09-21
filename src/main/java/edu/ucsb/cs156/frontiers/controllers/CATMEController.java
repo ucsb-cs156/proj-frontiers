@@ -51,6 +51,7 @@ public class CATMEController extends ApiController {
   public static final String CATME_AUDIT_HEADER_LINE_1 = "Activity,Class,Term,Format,Instr,School";
   public static final String CATME_AUDIT_HEADER_LINE_4 =
       "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Team Name\",";
+  public static final String CATME_AUDIT_SCORES_LINE_PREFIX = "\"Scores";
   public static final String CATME_AUDIT_FORMAT_ERROR_MESSAGE =
       "The uploaded file was not in a recognized CATME TeamMaker CSV format.";
 
@@ -197,6 +198,9 @@ public class CATMEController extends ApiController {
       String line = lines.get(i);
       if (line.trim().isEmpty()) {
         break;
+      }
+      if (line.trim().startsWith(CATME_AUDIT_SCORES_LINE_PREFIX)) {
+        continue;
       }
       try {
         String[] fields = csvParser.parseLine(line);
