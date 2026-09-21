@@ -54,8 +54,8 @@ public class SectionTranslationService {
   }
 
   /**
-   * Translates a raw roster student section value using the given map. A null section is treated
-   * as blank; a section with no translation is returned unchanged.
+   * Translates a raw roster student section value using the given map. A null section is treated as
+   * blank; a section with no translation is returned unchanged.
    *
    * @param rawSection the section value from the roster student row (may be null)
    * @param translations map of raw section value to label
