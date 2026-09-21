@@ -7,6 +7,7 @@ import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import SectionsForm from "main/components/Sections/SectionsForm";
 import SectionsTable from "main/components/Sections/SectionsTable";
 import { onSectionMutationError } from "main/utils/sectionsUtils";
+import { useCourseOptions } from "main/utils/courseOptionsUtils";
 
 export default function SectionsTabComponent({ courseId, testIdPrefix }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -21,12 +22,32 @@ export default function SectionsTabComponent({ courseId, testIdPrefix }) {
     true,
   );
 
+  // The Slack Channel Name field is only shown when the SLACK_INTEGRATION
+  // course option is enabled and the course has an active Slack token
+  // (i.e. it has connected to a Slack workspace).
+  const { data: optionsMap = {} } = useCourseOptions(courseId);
+  const slackInfoQueryKey = `/api/courses/slack/info?courseId=${courseId}`;
+  // Stryker disable all : hard to test query caching/toast-suppression behavior
+  const { data: slackInfo = {} } = useBackend(
+    [slackInfoQueryKey],
+    { method: "GET", url: slackInfoQueryKey },
+    {},
+    true,
+    { enabled: optionsMap.SLACK_INTEGRATION === true },
+  );
+  // Stryker restore all
+  const showSlackChannel =
+    optionsMap.SLACK_INTEGRATION === true && Boolean(slackInfo.slackTeamId);
+
   const objectToAxiosParamsPost = (section) => ({
     url: sectionsQueryKey,
     method: "POST",
     params: {
       section: section.section,
       label: section.label,
+      ...(showSlackChannel && {
+        slackChannelName: section.slackChannelName,
+      }),
     },
   });
 
@@ -57,7 +78,10 @@ export default function SectionsTabComponent({ courseId, testIdPrefix }) {
           <Modal.Title>Create Section</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <SectionsForm submitAction={handleCreateSubmit} />
+          <SectionsForm
+            submitAction={handleCreateSubmit}
+            showSlackChannel={showSlackChannel}
+          />
         </Modal.Body>
       </Modal>
       <Row sm={4} className="p-2 g-3">
@@ -76,6 +100,7 @@ export default function SectionsTabComponent({ courseId, testIdPrefix }) {
           sections={sections}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-sections-table`}
+          showSlackChannel={showSlackChannel}
         />
       </Row>
     </div>

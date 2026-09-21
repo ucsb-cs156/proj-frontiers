@@ -32,4 +32,7 @@ public class Section {
 
   @Column(nullable = false)
   private String label;
+
+  @Column(nullable = true)
+  private String slackChannelName;
 }

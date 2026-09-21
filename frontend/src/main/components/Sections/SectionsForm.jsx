@@ -5,6 +5,7 @@ function SectionsForm({
   initialContents,
   submitAction,
   buttonLabel = "Create",
+  showSlackChannel = false,
 }) {
   // Stryker disable all
   const {
@@ -49,6 +50,18 @@ function SectionsForm({
           {errors.label?.message}
         </Form.Control.Feedback>
       </Form.Group>
+
+      {showSlackChannel && (
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="slackChannelName">Slack Channel Name</Form.Label>
+          <Form.Control
+            data-testid={testIdPrefix + "-slackChannelName"}
+            id="slackChannelName"
+            type="text"
+            {...register("slackChannelName")}
+          />
+        </Form.Group>
+      )}
 
       <Button type="submit" data-testid={testIdPrefix + "-submit"}>
         {buttonLabel}

@@ -23,6 +23,26 @@ const sectionsFixtures = {
       label: "Tue 11:00am",
     },
   ],
+  threeSectionsWithSlackChannel: [
+    {
+      id: 1,
+      section: "0100",
+      label: "Tue 9:00am",
+      slackChannelName: "#cs156-0100",
+    },
+    {
+      id: 2,
+      section: "0200",
+      label: "Tue 10:00am",
+      slackChannelName: "#cs156-0200",
+    },
+    {
+      id: 3,
+      section: "0300",
+      label: "Tue 11:00am",
+      slackChannelName: "#cs156-0300",
+    },
+  ],
 };
 
 export { sectionsFixtures };
