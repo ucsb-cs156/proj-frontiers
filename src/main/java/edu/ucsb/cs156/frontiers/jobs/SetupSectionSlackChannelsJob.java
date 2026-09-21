@@ -95,8 +95,7 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
 
     ctx.log("Creating Section Channels");
     Map<String, Set<String>> sectionsByChannelName = sectionsByChannelName(currentCourse.getId());
-    Map<String, List<String>> channelNamesBySection =
-        channelNamesBySection(sectionsByChannelName);
+    Map<String, List<String>> channelNamesBySection = channelNamesBySection(sectionsByChannelName);
     Map<String, String> channelIdByName =
         createChannels(ctx, token, sectionsByChannelName.keySet());
 
