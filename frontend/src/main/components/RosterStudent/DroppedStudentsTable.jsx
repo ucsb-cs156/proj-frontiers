@@ -33,6 +33,10 @@ export default function DroppedStudentsTable({ students, courseId }) {
       header: "Email",
       accessorKey: "email",
     },
+    {
+      header: "Section",
+      accessorKey: "section",
+    },
   ];
 
   const cellToAxiosParamsRestore = (cell) => ({

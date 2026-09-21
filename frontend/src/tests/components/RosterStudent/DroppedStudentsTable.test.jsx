@@ -31,8 +31,22 @@ describe("DroppedStudentsTable tests", () => {
         ,
       </QueryClientProvider>,
     );
-    const headers = ["id", "Student Id", "First Name", "Last Name", "Email"];
-    const accessors = ["id", "studentId", "firstName", "lastName", "email"];
+    const headers = [
+      "id",
+      "Student Id",
+      "First Name",
+      "Last Name",
+      "Email",
+      "Section",
+    ];
+    const accessors = [
+      "id",
+      "studentId",
+      "firstName",
+      "lastName",
+      "email",
+      "section",
+    ];
     expect(
       screen.getByTestId("DroppedStudentsTable-header-Restore"),
     ).toHaveTextContent("Restore");
