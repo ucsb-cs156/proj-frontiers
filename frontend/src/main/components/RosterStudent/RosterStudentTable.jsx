@@ -269,6 +269,7 @@ export default function RosterStudentTable({
             submitAction={submitEditForm}
             buttonLabel={"Update"}
             cancelDisabled={true}
+            courseId={courseId}
           />
         </Modal.Body>
       </Modal>

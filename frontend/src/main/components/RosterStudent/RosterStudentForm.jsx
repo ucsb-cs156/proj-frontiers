@@ -2,20 +2,31 @@ import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import regexUtils from "main/utils/regexUtils";
+import { useCourseOptions } from "main/utils/courseOptionsUtils";
+import SectionTranslator from "main/components/Sections/SectionTranslator";
 
 function RosterStudentForm({
   initialContents,
   submitAction,
   buttonLabel = "Create",
   cancelDisabled = false,
+  courseId,
 }) {
   // Stryker disable all
   const {
     register,
     formState: { errors },
     handleSubmit,
+    watch,
+    setValue,
   } = useForm({ defaultValues: initialContents || {} });
   // Stryker restore all
+
+  const { data: optionsMap = {} } = useCourseOptions(courseId, {
+    enabled: Boolean(courseId),
+  });
+  const translateSections = optionsMap.TRANSLATE_SECTIONS === true;
+  const sectionValue = watch("section");
 
   const navigate = useNavigate();
 
@@ -116,6 +127,15 @@ function RosterStudentForm({
           {...register("section")}
         />
       </Form.Group>
+
+      {translateSections && (
+        <SectionTranslator
+          courseId={courseId}
+          section={sectionValue}
+          onChange={(value) => setValue("section", value)}
+          testIdPrefix={testIdPrefix + "-SectionTranslator"}
+        />
+      )}
 
       <Button type="submit" data-testid={testIdPrefix + "-submit"}>
         {buttonLabel}

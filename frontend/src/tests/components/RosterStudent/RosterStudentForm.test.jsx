@@ -3,9 +3,14 @@ import { BrowserRouter as Router } from "react-router";
 
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { sectionsFixtures } from "fixtures/sectionsFixtures";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
+import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
+
+const axiosMock = new AxiosMockAdapter(axios);
 
 const mockedNavigate = vi.fn();
 vi.mock("react-router", async (importOriginal) => ({
@@ -15,6 +20,10 @@ vi.mock("react-router", async (importOriginal) => ({
 
 describe("RosterStudentForm tests", () => {
   const queryClient = new QueryClient();
+
+  beforeEach(() => {
+    axiosMock.reset();
+  });
 
   const expectedHeaders = [
     "Student Id",
@@ -182,5 +191,51 @@ describe("RosterStudentForm tests", () => {
 
     fireEvent.click(submitButton);
     await screen.findByText(/Please enter a valid email/);
+  });
+
+  test("does not render SectionTranslator when courseId is not provided", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <RosterStudentForm />
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText(/Create/)).toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-SectionTranslator-select`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders SectionTranslator when TRANSLATE_SECTIONS is enabled, and selecting a section updates the section field", async () => {
+    axiosMock
+      .onGet("/api/course/options", { params: { courseId: 7 } })
+      .reply(200, { TRANSLATE_SECTIONS: true });
+    axiosMock
+      .onGet("/api/courses/7/sections")
+      .reply(200, sectionsFixtures.threeSections);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <RosterStudentForm courseId={7} />
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    const select = await screen.findByTestId(
+      `${testId}-SectionTranslator-select`,
+    );
+    await screen.findByRole("option", { name: "0200 - Tue 10:00am" });
+
+    fireEvent.change(select, { target: { value: "0200" } });
+
+    await waitFor(() =>
+      expect(screen.getByTestId(`${testId}-section`)).toHaveValue("0200"),
+    );
+    expect(
+      screen.getByTestId(`${testId}-SectionTranslator-translation`),
+    ).toHaveValue("Tue 10:00am");
   });
 });

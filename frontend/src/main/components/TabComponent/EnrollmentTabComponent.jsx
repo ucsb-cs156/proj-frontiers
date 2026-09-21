@@ -197,6 +197,7 @@ export default function EnrollmentTabComponent({
           <RosterStudentForm
             submitAction={handlePostSubmit}
             cancelDisabled={true}
+            courseId={courseId}
           />
         </ModalBody>
       </Modal>
