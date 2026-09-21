@@ -692,9 +692,7 @@ public class SlackControllerTests extends ControllerTestCase {
         .thenReturn(List.of(slackUser("U01", "instructor@ucsb.edu")));
     when(slackService.listPublicChannels(TOKEN)).thenReturn(List.of());
     when(sectionRepository.findByCourseIdOrderBySectionAsc(1L)).thenReturn(List.of());
-    when(rosterStudentRepository
-            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
-                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
+    when(rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(1L))
         .thenReturn(List.of());
     when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
     Job record = Job.builder().build();
@@ -703,6 +701,8 @@ public class SlackControllerTests extends ControllerTestCase {
     verify(slackService).listPublicChannels(TOKEN);
     verify(sectionRepository).findByCourseIdOrderBySectionAsc(1L);
     verify(courseStaffRepository).findByCourseId(1L);
+    // in particular, the job was given the roster student repository, and used it
+    verify(rosterStudentRepository).findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(1L);
     assertEquals(true, record.getLog().endsWith("Done"));
     assertEquals(course.getId(), job.getScopeId());
   }

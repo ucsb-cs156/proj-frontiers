@@ -18,6 +18,7 @@ import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -33,9 +34,9 @@ import lombok.Builder;
  * <ol>
  *   <li>For each row of the sections table that has a Slack channel name, creates a public channel
  *       with that name, unless it already exists. (Several sections may share a channel.)
- *   <li>Adds each roster student (status ROSTER or MANUAL) to the channel of their section, unless
- *       they are already in it. Students are matched to Slack users by email; students without an
- *       active Slack account cannot be added, and are only counted.
+ *   <li>Adds each roster student (other than dropped students) to the channel of their section,
+ *       unless they are already in it. Students are matched to Slack users by email; students
+ *       without an active Slack account cannot be added, and are only counted.
  *   <li>Removes from each of those channels every person who is neither a roster student of one of
  *       the channel's sections, nor a member of the course staff, nor the instructor. Bots
  *       (including the bot this job acts as) and members that are not users of the workspace are
@@ -46,10 +47,6 @@ import lombok.Builder;
  */
 @Builder
 public class SetupSectionSlackChannelsJob implements JobContextConsumer {
-
-  /** Only these roster students are considered: in particular, not dropped students. */
-  public static final List<RosterStatus> ENROLLED_STATUSES =
-      List.of(RosterStatus.ROSTER, RosterStatus.MANUAL);
 
   Course course;
   CourseRepository courseRepository;
@@ -99,10 +96,6 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
     Map<String, String> channelIdByName =
         createChannels(ctx, token, sectionsByChannelName.keySet());
 
-    List<RosterStudent> students =
-        rosterStudentRepository
-            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
-                currentCourse.getId(), ENROLLED_STATUSES);
     Set<String> staffSlackIds = staffSlackIds(currentCourse, activeSlackIdByEmail);
 
     // Members of each channel before this job changes anything; null if they could not be listed
@@ -111,6 +104,7 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
     Map<String, Set<String>> studentSlackIdsByChannelName = new HashMap<>();
 
     ctx.log("Adding Students to Channel");
+    List<RosterStudent> students = studentsNotDropped(ctx, currentCourse.getId());
     int studentsNotInSlack = 0;
     for (RosterStudent student : students) {
       List<String> matchingChannels =
@@ -196,6 +190,44 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
       }
     }
     ctx.log("Done");
+  }
+
+  /**
+   * The roster students of the course, other than dropped students: the same students that the main
+   * table of the Students tab shows. In particular a student whose roster status is not set (the
+   * column is nullable) counts, as on that tab; asking the database only for the statuses ROSTER
+   * and MANUAL would silently leave such students out.
+   *
+   * <p>Logs how many students there are with each status, so that the log shows why students were,
+   * or were not, considered.
+   */
+  private List<RosterStudent> studentsNotDropped(JobContext ctx, Long courseId) throws Exception {
+    List<RosterStudent> result = new ArrayList<>();
+    int total = 0;
+    int withoutStatus = 0;
+    Map<RosterStatus, Integer> countByStatus = new EnumMap<>(RosterStatus.class);
+    for (RosterStudent student :
+        rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(courseId)) {
+      total++;
+      if (student.getRosterStatus() == null) {
+        withoutStatus++;
+      } else {
+        countByStatus.merge(student.getRosterStatus(), 1, Integer::sum);
+      }
+      if (student.getRosterStatus() != RosterStatus.DROPPED) {
+        result.add(student);
+      }
+    }
+    ctx.log(
+        "This course has %d roster student(s): %d ROSTER, %d MANUAL, %d DROPPED, %d with no roster status. All but the DROPPED students are considered: %d student(s)."
+            .formatted(
+                total,
+                countByStatus.getOrDefault(RosterStatus.ROSTER, 0),
+                countByStatus.getOrDefault(RosterStatus.MANUAL, 0),
+                countByStatus.getOrDefault(RosterStatus.DROPPED, 0),
+                withoutStatus,
+                result.size()));
+    return result;
   }
 
   /**

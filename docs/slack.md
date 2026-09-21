@@ -109,9 +109,12 @@ and can be read on the **Jobs** tab:
    exists but has been archived is skipped (unarchive it in Slack first), as is
    a channel that Slack refuses to create, for example because the name has
    characters that Slack does not allow; the log says why.
-2. **Adding Students to Channel**: each roster student (roster status `ROSTER`
-   or `MANUAL`) whose section has a channel is added to it, unless they are in
-   it already. Only students who are added are logged. Students are matched to
+2. **Adding Students to Channel**: each roster student whose section has a
+   channel is added to it, unless they are in it already. Dropped students are
+   not considered; all other students are, exactly as in the main table of the
+   **Students** tab (so a student whose roster status was never set counts
+   too). The log starts this step with how many roster students the course
+   has, by roster status, and how many of them are being considered. Only students who are added are logged. Students are matched to
    Slack users by email, so a student who does not have an active account in
    the workspace cannot be added; the log says how many there were, and the
    second table on the Slack tab says who they are. Run the job again once they

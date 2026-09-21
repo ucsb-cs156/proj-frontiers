@@ -85,12 +85,17 @@ public class SetupSectionSlackChannelsJobTests {
   }
 
   private static RosterStudent student(String firstName, String email, String section) {
+    return student(firstName, email, section, RosterStatus.ROSTER);
+  }
+
+  private static RosterStudent student(
+      String firstName, String email, String section, RosterStatus rosterStatus) {
     return RosterStudent.builder()
         .firstName(firstName)
         .lastName("Student")
         .email(email)
         .section(section)
-        .rosterStatus(RosterStatus.ROSTER)
+        .rosterStatus(rosterStatus)
         .build();
   }
 
@@ -100,9 +105,8 @@ public class SetupSectionSlackChannelsJobTests {
   }
 
   private void students(RosterStudent... students) {
-    when(rosterStudentRepository
-            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
-                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
+    // the same query that the Students tab uses: all the students of the course
+    when(rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(1L))
         .thenReturn(List.of(students));
   }
 
@@ -175,8 +179,9 @@ public class SetupSectionSlackChannelsJobTests {
     students(
         student("Alice", "alice@ucsb.edu", "0100"),
         student("Bob", "bob@ucsb.edu", "0100"),
-        student("Carol", "carol@ucsb.edu", "0200"),
-        student("Dave", "dave@ucsb.edu", "0150"),
+        student("Carol", "carol@ucsb.edu", "0200", null),
+        student("Dave", "dave@ucsb.edu", "0150", RosterStatus.MANUAL),
+        student("Dropped", "dropped@ucsb.edu", "0100", RosterStatus.DROPPED),
         student("Eve", "eve@ucsb.edu", "0100"),
         student("NoEmail", null, "0100"),
         student("Other", "other@ucsb.edu", "0300"),
@@ -212,6 +217,7 @@ public class SetupSectionSlackChannelsJobTests {
             "Channel #old-archived already exists, but is archived; unarchive it in Slack, then run this job again. Skipping it.",
             "Error setting up channel #bad name: invalid_name_specials. Skipping it.",
             "Adding Students to Channel",
+            "This course has 9 roster student(s): 6 ROSTER, 1 MANUAL, 1 DROPPED, 1 with no roster status. All but the DROPPED students are considered: 8 student(s).",
             "Student Alice Student (alice@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
             "Student Bob Student (bob@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
             "Student Carol Student (carol@ucsb.edu) is in untranslated roster section 0200 and maps to #sec-0200",
@@ -284,6 +290,7 @@ public class SetupSectionSlackChannelsJobTests {
             "Creating Section Channels",
             "Created channel #sec-0100",
             "Adding Students to Channel",
+            "This course has 2 roster student(s): 2 ROSTER, 0 MANUAL, 0 DROPPED, 0 with no roster status. All but the DROPPED students are considered: 2 student(s).",
             "Student Alice Student (alice@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
             "Student Bob Student (bob@ucsb.edu) is in untranslated roster section 0100 and maps to #sec-0100",
             "Could not add 2 student(s) to #sec-0100 in one step (user_is_restricted); adding them one at a time.",
@@ -344,6 +351,7 @@ public class SetupSectionSlackChannelsJobTests {
             "Channel #cannot-list already exists",
             "Channel #sec-0300 already exists",
             "Adding Students to Channel",
+            "This course has 1 roster student(s): 1 ROSTER, 0 MANUAL, 0 DROPPED, 0 with no roster status. All but the DROPPED students are considered: 1 student(s).",
             "Student Alice Student (alice@ucsb.edu) is in untranslated roster section 0300 and maps to #sec-0300",
             "Error listing members of #cannot-list: channel_not_found",
             "Removing Channel Members Who Are Not In The Section",
