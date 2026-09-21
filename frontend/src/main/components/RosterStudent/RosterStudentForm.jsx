@@ -2,7 +2,6 @@ import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import regexUtils from "main/utils/regexUtils";
-import { useCourseOptions } from "main/utils/courseOptionsUtils";
 import SectionTranslator from "main/components/Sections/SectionTranslator";
 
 function RosterStudentForm({
@@ -11,6 +10,7 @@ function RosterStudentForm({
   buttonLabel = "Create",
   cancelDisabled = false,
   courseId,
+  translateSections = false,
 }) {
   // Stryker disable all
   const {
@@ -22,10 +22,6 @@ function RosterStudentForm({
   } = useForm({ defaultValues: initialContents || {} });
   // Stryker restore all
 
-  const { data: optionsMap = {} } = useCourseOptions(courseId, {
-    enabled: Boolean(courseId),
-  });
-  const translateSections = optionsMap.TRANSLATE_SECTIONS === true;
   const sectionValue = watch("section");
 
   const navigate = useNavigate();

@@ -193,11 +193,11 @@ describe("RosterStudentForm tests", () => {
     await screen.findByText(/Please enter a valid email/);
   });
 
-  test("does not render SectionTranslator when courseId is not provided", async () => {
+  test("does not render SectionTranslator when translateSections is false", async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RosterStudentForm />
+          <RosterStudentForm courseId={7} translateSections={false} />
         </Router>
       </QueryClientProvider>,
     );
@@ -208,10 +208,7 @@ describe("RosterStudentForm tests", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("renders SectionTranslator when TRANSLATE_SECTIONS is enabled, and selecting a section updates the section field", async () => {
-    axiosMock
-      .onGet("/api/course/options", { params: { courseId: 7 } })
-      .reply(200, { TRANSLATE_SECTIONS: true });
+  test("renders SectionTranslator when translateSections is true, and selecting a section updates the section field", async () => {
     axiosMock
       .onGet("/api/courses/7/sections")
       .reply(200, sectionsFixtures.threeSections);
@@ -219,7 +216,7 @@ describe("RosterStudentForm tests", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Router>
-          <RosterStudentForm courseId={7} />
+          <RosterStudentForm courseId={7} translateSections={true} />
         </Router>
       </QueryClientProvider>,
     );

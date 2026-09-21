@@ -24,6 +24,7 @@ export default function EnrollmentTabComponent({
   testIdPrefix,
   currentUser,
   canEditStudents,
+  translateSections = false,
 }) {
   const [postModal, setPostModal] = useState(false);
   const [csvModal, setCsvModal] = useState(false);
@@ -198,6 +199,7 @@ export default function EnrollmentTabComponent({
             submitAction={handlePostSubmit}
             cancelDisabled={true}
             courseId={courseId}
+            translateSections={translateSections}
           />
         </ModalBody>
       </Modal>
@@ -293,6 +295,7 @@ export default function EnrollmentTabComponent({
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-RosterStudentTable`}
           canEditStudents={canEditStudents}
+          translateSections={translateSections}
         />
       </Row>
       <Row>

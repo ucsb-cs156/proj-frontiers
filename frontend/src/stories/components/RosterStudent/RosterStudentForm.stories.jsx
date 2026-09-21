@@ -38,6 +38,7 @@ export const UpdateWithTranslatedSections = Template.bind({});
 
 UpdateWithTranslatedSections.args = {
   courseId: 7,
+  translateSections: true,
   initialContents: rosterStudentFixtures.oneStudent[0],
   buttonLabel: "Update",
   submitAction: (data) => {
@@ -47,9 +48,6 @@ UpdateWithTranslatedSections.args = {
 };
 UpdateWithTranslatedSections.parameters = {
   msw: [
-    http.get("/api/course/options", () => {
-      return HttpResponse.json({ TRANSLATE_SECTIONS: true }, { status: 200 });
-    }),
     http.get("/api/courses/7/sections", () => {
       return HttpResponse.json(sectionsFixtures.threeSections, {
         status: 200,
