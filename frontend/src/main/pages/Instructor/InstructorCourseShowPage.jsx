@@ -233,6 +233,7 @@ export default function InstructorCourseShowPage({
               testIdPrefix={testId}
               slackTeamName={slackInfo.slackTeamName}
               slackTeamUrl={slackInfo.slackTeamUrl}
+              showSectionChannels={showSectionsTab}
             />
           </Tab>
         )}

@@ -13,18 +13,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.SlackApiException;
+import edu.ucsb.cs156.frontiers.jobs.SetupSectionSlackChannelsJob;
 import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
 import edu.ucsb.cs156.frontiers.models.SlackUser;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
 import edu.ucsb.cs156.frontiers.services.SlackService;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +48,9 @@ public class SlackControllerTests extends ControllerTestCase {
   @MockitoBean private CourseRepository courseRepository;
   @MockitoBean private RosterStudentRepository rosterStudentRepository;
   @MockitoBean private CourseStaffRepository courseStaffRepository;
+  @MockitoBean private SectionRepository sectionRepository;
+  @MockitoBean private CourseOptionRepository courseOptionRepository;
+  @MockitoBean private JobService jobService;
   @MockitoBean private SlackService slackService;
   @MockitoBean private CanvasApiTokenSecurityService tokenSecurityService;
 
@@ -643,6 +652,160 @@ public class SlackControllerTests extends ControllerTestCase {
     assertEquals(
         "Slack is limiting requests from this app. Please try again in a minute.",
         SlackController.describeError("ratelimited"));
+  }
+
+  private void courseOption(String option, Boolean enabled) {
+    when(courseOptionRepository.findByCourseIdAndOption(1L, option))
+        .thenReturn(
+            enabled == null
+                ? Optional.empty()
+                : Optional.of(
+                    CourseOption.builder().courseId(1L).option(option).enabled(enabled).build()));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupSectionChannels_launchesJobScopedToTheCourse() throws Exception {
+    Course course = courseWithToken();
+    courseOption("SLACK_INTEGRATION", true);
+    courseOption("TRANSLATE_SECTIONS", true);
+    Job launched = Job.builder().id(17L).status("running").build();
+    when(jobService.runAsJob(any(SetupSectionSlackChannelsJob.class))).thenReturn(launched);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(mapper.writeValueAsString(launched), response.getResponse().getContentAsString());
+
+    ArgumentCaptor<SetupSectionSlackChannelsJob> captor =
+        ArgumentCaptor.forClass(SetupSectionSlackChannelsJob.class);
+    verify(jobService).runAsJob(captor.capture());
+    SetupSectionSlackChannelsJob job = captor.getValue();
+    assertEquals("course", job.getScopeType());
+    assertEquals(1L, job.getScopeId());
+
+    // the job was given everything it needs: running it reaches Slack with the decrypted token
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(List.of(slackUser("U01", "instructor@ucsb.edu")));
+    when(slackService.listPublicChannels(TOKEN)).thenReturn(List.of());
+    when(sectionRepository.findByCourseIdOrderBySectionAsc(1L)).thenReturn(List.of());
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
+        .thenReturn(List.of());
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+    Job record = Job.builder().build();
+    job.accept(new edu.ucsb.cs156.jobs.services.JobContext(null, record));
+    verify(slackService).listUsers(TOKEN);
+    verify(slackService).listPublicChannels(TOKEN);
+    verify(sectionRepository).findByCourseIdOrderBySectionAsc(1L);
+    verify(courseStaffRepository).findByCourseId(1L);
+    assertEquals(true, record.getLog().endsWith("Done"));
+    assertEquals(course.getId(), job.getScopeId());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupSectionChannels_requiresSlackIntegrationOption() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", false);
+    courseOption("TRANSLATE_SECTIONS", true);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals(
+        "The course option SLACK_INTEGRATION must be enabled to set up section Slack channels.",
+        responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupSectionChannels_requiresTranslateSectionsOption() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", true);
+    courseOption("TRANSLATE_SECTIONS", null);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals(
+        "The course option TRANSLATE_SECTIONS must be enabled to set up section Slack channels.",
+        responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupSectionChannels_requiresToken() throws Exception {
+    when(courseRepository.findById(1L))
+        .thenReturn(Optional.of(courseBuilder().slackBotToken("").build()));
+    when(tokenSecurityService.decrypt("")).thenReturn("");
+    courseOption("SLACK_INTEGRATION", true);
+    courseOption("TRANSLATE_SECTIONS", true);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals(
+        "No Slack token has been set for this course; enter one on the Settings tab.",
+        responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupSectionChannels_requiresToken_nullToken() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+    when(tokenSecurityService.decrypt(null)).thenReturn(null);
+    courseOption("SLACK_INTEGRATION", true);
+    courseOption("TRANSLATE_SECTIONS", true);
+
+    mockMvc
+        .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isBadRequest());
+
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupSectionChannels_courseDoesNotExist() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals("Course with id 1 not found", responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void setupSectionChannels_forbiddenForRegularUser() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+
+    mockMvc
+        .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isForbidden());
+
+    verify(jobService, never()).runAsJob(any());
   }
 
   @Test

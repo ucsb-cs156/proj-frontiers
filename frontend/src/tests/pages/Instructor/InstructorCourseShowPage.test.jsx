@@ -983,6 +983,12 @@ describe("InstructorCourseShowPage tests", () => {
       "InstructorCourseShowPage-slack-tab-component",
     );
     expect(tab.parentElement).toHaveClass("pt-2");
+    // TRANSLATE_SECTIONS is off, so there is no Slack Section Channels card
+    expect(
+      screen.queryByTestId(
+        "InstructorCourseShowPage-slack-section-channels-card",
+      ),
+    ).not.toBeInTheDocument();
     const link = screen.getByTestId(
       "InstructorCourseShowPage-slack-workspace-link",
     );
@@ -1109,5 +1115,39 @@ describe("InstructorCourseShowPage tests", () => {
     expect(
       screen.queryByRole("tab", { name: "Slack" }),
     ).not.toBeInTheDocument();
+  });
+
+  test("Slack tab has the Slack Section Channels card when TRANSLATE_SECTIONS is also enabled", async () => {
+    setupInstructorUser();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      id: 7,
+    });
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: true,
+      DOKKU_MANAGER: false,
+      ENABLE_API_KEYS: false,
+      SLACK_INTEGRATION: true,
+    });
+    axiosMock.onGet("/api/courses/7/sections").reply(200, []);
+    axiosMock
+      .onGet("/api/courses/slack/info?courseId=7")
+      .reply(200, slackFixtures.connectedInfo);
+    axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+
+    renderCourse7();
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Slack" }));
+
+    expect(
+      screen.getByTestId(
+        "InstructorCourseShowPage-slack-section-channels-card",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Slack Section Channels" }),
+    ).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@ import { Alert } from "react-bootstrap";
 import { useBackend } from "main/utils/useBackend";
 import SlackUsersTable from "main/components/Slack/SlackUsersTable";
 import SlackMissingMembersTable from "main/components/Slack/SlackMissingMembersTable";
+import SlackSectionChannelsCard from "main/components/Slack/SlackSectionChannelsCard";
 import { slackAdminUrl } from "main/utils/slackUtils";
 
 // Each of these queries makes the backend call the Slack API, so they are not retried on
@@ -27,6 +28,7 @@ export default function SlackTabComponent({
   testIdPrefix,
   slackTeamName,
   slackTeamUrl,
+  showSectionChannels,
 }) {
   const adminUrl = slackAdminUrl(slackTeamUrl);
   const usersUrl = `/api/courses/slack/users?courseId=${courseId}`;
@@ -115,6 +117,13 @@ export default function SlackTabComponent({
         <SlackMissingMembersTable
           members={missing}
           testIdPrefix={`${testIdPrefix}-slack-missing-table`}
+        />
+      )}
+
+      {showSectionChannels && (
+        <SlackSectionChannelsCard
+          courseId={courseId}
+          testIdPrefix={`${testIdPrefix}-slack`}
         />
       )}
     </div>
