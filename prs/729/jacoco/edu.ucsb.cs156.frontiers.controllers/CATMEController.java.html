@@ -82,7 +82,7 @@ import org.springframework.web.multipart.MultipartFile;
 <span class="fc" id="L82">        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)</span>
 <span class="fc" id="L83">            .filter(</span>
                 student -&gt;
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">                    student.getStudentId() != null</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">                    student.getStudentId() != null</span>
 <span class="fc bfc" id="L86" title="All 2 branches covered.">                        &amp;&amp; (student.getRosterStatus() == RosterStatus.MANUAL</span>
 <span class="fc bfc" id="L87" title="All 2 branches covered.">                            || student.getRosterStatus() == RosterStatus.ROSTER))</span>
 <span class="fc" id="L88">            .toList();</span>
@@ -90,13 +90,13 @@ import org.springframework.web.multipart.MultipartFile;
 <span class="fc" id="L90">    Map&lt;String, CATMEStudentRow&gt; csvRowsByStudentId =</span>
 <span class="fc" id="L91">        csvRows.stream()</span>
 <span class="fc" id="L92">            .collect(</span>
-<span class="pc" id="L93">                Collectors.toMap(CATMEStudentRow::studentId, row -&gt; row, (first, second) -&gt; first));</span>
+<span class="fc" id="L93">                Collectors.toMap(CATMEStudentRow::studentId, row -&gt; row, (first, second) -&gt; first));</span>
 
 <span class="fc" id="L95">    List&lt;CATMEStudentUpdate&gt; studentsToUpdate = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L96" title="All 2 branches covered.">    for (RosterStudent student : enrolledStudents) {</span>
 <span class="fc" id="L97">      CATMEStudentRow row = csvRowsByStudentId.get(student.getStudentId());</span>
-<span class="pc bpc" id="L98" title="1 of 2 branches missed.">      if (row == null) {</span>
-<span class="nc" id="L99">        continue;</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">      if (row == null) {</span>
+<span class="fc" id="L99">        continue;</span>
       }
 <span class="fc" id="L101">      String expectedName = student.getLastName() + &quot;, &quot; + student.getFirstName();</span>
 <span class="fc bfc" id="L102" title="All 2 branches covered.">      if (!expectedName.equals(row.name())) {</span>
@@ -104,8 +104,8 @@ import org.springframework.web.multipart.MultipartFile;
             new CATMEStudentUpdate(
 <span class="fc" id="L105">                student.getStudentId(), expectedName, &quot;Name&quot;, row.name(), expectedName));</span>
       }
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">      String expectedSection = student.getSection() == null ? &quot;&quot; : student.getSection();</span>
-<span class="pc bpc" id="L108" title="1 of 2 branches missed.">      String actualSection = row.section() == null ? &quot;&quot; : row.section();</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">      String expectedSection = student.getSection() == null ? &quot;&quot; : student.getSection();</span>
+<span class="fc" id="L108">      String actualSection = row.section();</span>
 <span class="fc bfc" id="L109" title="All 2 branches covered.">      if (!expectedSection.equals(actualSection)) {</span>
 <span class="fc" id="L110">        studentsToUpdate.add(</span>
             new CATMEStudentUpdate(
@@ -117,7 +117,7 @@ import org.springframework.web.multipart.MultipartFile;
 <span class="fc" id="L117">        enrolledStudents.stream()</span>
 <span class="fc" id="L118">            .collect(</span>
 <span class="fc" id="L119">                Collectors.toMap(</span>
-<span class="pc" id="L120">                    RosterStudent::getStudentId, student -&gt; student, (first, second) -&gt; first));</span>
+<span class="fc" id="L120">                    RosterStudent::getStudentId, student -&gt; student, (first, second) -&gt; first));</span>
 
 <span class="fc" id="L122">    List&lt;CATMEStudentDrop&gt; studentsToDrop = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L123" title="All 2 branches covered.">    for (CATMEStudentRow row : csvRows) {</span>
@@ -150,15 +150,15 @@ import org.springframework.web.multipart.MultipartFile;
 <span class="fc bfc" id="L150" title="All 2 branches covered.">    if (lines.size() &lt; 4) {</span>
 <span class="fc" id="L151">      return null;</span>
     }
-<span class="pc bpc" id="L153" title="1 of 2 branches missed.">    if (!lines.get(0).trim().equals(CATME_AUDIT_HEADER_LINE_1)) {</span>
-<span class="nc" id="L154">      return null;</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">    if (!lines.get(0).trim().equals(CATME_AUDIT_HEADER_LINE_1)) {</span>
+<span class="fc" id="L154">      return null;</span>
     }
     // line 1 (index 1) is intentionally ignored
 <span class="fc bfc" id="L157" title="All 2 branches covered.">    if (!lines.get(2).trim().isEmpty()) {</span>
 <span class="fc" id="L158">      return null;</span>
     }
-<span class="pc bpc" id="L160" title="1 of 2 branches missed.">    if (!lines.get(3).trim().equals(CATME_AUDIT_HEADER_LINE_4)) {</span>
-<span class="nc" id="L161">      return null;</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">    if (!lines.get(3).trim().equals(CATME_AUDIT_HEADER_LINE_4)) {</span>
+<span class="fc" id="L161">      return null;</span>
     }
 
 <span class="fc" id="L164">    CSVParser csvParser = new CSVParser();</span>
@@ -174,8 +174,8 @@ import org.springframework.web.multipart.MultipartFile;
 <span class="fc" id="L174">          return null;</span>
         }
 <span class="fc" id="L176">        rows.add(new CATMEStudentRow(fields[0], fields[1], fields[2], fields[3]));</span>
-<span class="nc" id="L177">      } catch (IOException e) {</span>
-<span class="nc" id="L178">        return null;</span>
+<span class="fc" id="L177">      } catch (IOException e) {</span>
+<span class="fc" id="L178">        return null;</span>
 <span class="fc" id="L179">      }</span>
     }
 <span class="fc" id="L181">    return rows;</span>
