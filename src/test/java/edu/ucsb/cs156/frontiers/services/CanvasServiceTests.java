@@ -148,6 +148,50 @@ public class CanvasServiceTests {
   }
 
   @Test
+  public void testGetCanvasRoster_setsEmptySectionWhenSectionNameMissing() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .school(School.UCSB)
+            .build();
+
+    // Student with an enrollment entry that has no section name info returned by Canvas
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "usersConnection": {
+                "edges": [
+                  {"node": {"firstName": "Frank", "lastName": "Ng", "sisId": "F111111", "email": "frank@ucsb.edu", "integrationId": null, "enrollments": [{"section": {}}]}}
+                ]
+              }
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals("", result.get(0).getSection());
+  }
+
+  @Test
   public void testGetCanvasRoster_returnsEmptyList() throws Exception {
     // Arrange
     Course course =
