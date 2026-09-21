@@ -2,6 +2,7 @@ import React from "react";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
+import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { http, HttpResponse } from "msw";
 
 export default {
@@ -78,6 +79,24 @@ ItemWithEachStatusAdminUser.parameters = {
           status: 200,
         },
       );
+    }),
+  ],
+};
+
+export const ThreeItemsWithTranslatedSections = Template.bind({});
+ThreeItemsWithTranslatedSections.args = {
+  students: rosterStudentFixtures.threeStudents,
+  currentUser: currentUserFixtures.adminUser,
+  courseId: 7,
+  translateSections: true,
+};
+
+ThreeItemsWithTranslatedSections.parameters = {
+  msw: [
+    http.get("/api/courses/7/sections", () => {
+      return HttpResponse.json(sectionsFixtures.threeSections, {
+        status: 200,
+      });
     }),
   ],
 };

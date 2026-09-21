@@ -1,5 +1,6 @@
 import { fireEvent, render, waitFor, screen } from "@testing-library/react";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import RosterStudentTable from "main/components/RosterStudent/RosterStudentTable";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
@@ -452,6 +453,114 @@ describe("RosterStudentTable tests", () => {
     expect(
       screen.queryByTestId(`${testId}-pagination-prev`),
     ).not.toBeInTheDocument();
+  });
+
+  test("shows the raw section value when translateSections is not enabled", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+            courseId={7}
+            translateSections={false}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-section`),
+      ).toHaveTextContent("0100"),
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-section`),
+    ).not.toHaveTextContent("Tue 9:00am");
+  });
+
+  test("shows the translated section label when translateSections is enabled", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    axiosMock
+      .onGet("/api/courses/7/sections")
+      .reply(200, sectionsFixtures.threeSections);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+            courseId={7}
+            translateSections={true}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-section`),
+      ).toHaveTextContent("Tue 9:00am"),
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-1-col-section`),
+    ).toHaveTextContent("Tue 10:00am");
+  });
+
+  test("shows a blank section when translateSections is enabled but section is unset", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    axiosMock
+      .onGet("/api/courses/7/sections")
+      .reply(200, sectionsFixtures.threeSections);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+            courseId={7}
+            translateSections={true}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${testId}-cell-row-1-col-section`),
+      ).toHaveTextContent("Tue 10:00am"),
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-2-col-section`),
+    ).toHaveTextContent("");
+  });
+
+  test("shows the raw section value when there is no matching translation", async () => {
+    const currentUser = currentUserFixtures.adminUser;
+    axiosMock.onGet("/api/courses/7/sections").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+            courseId={7}
+            translateSections={true}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-section`),
+      ).toHaveTextContent("0100"),
+    );
   });
 });
 test("tooltips for Team column name", async () => {

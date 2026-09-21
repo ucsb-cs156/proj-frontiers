@@ -3,7 +3,7 @@ import OurTable, { ButtonColumn } from "main/components/OurTable";
 import { Tooltip, OverlayTrigger, Form } from "react-bootstrap";
 import OurPagination from "main/components/Common/OurPagination";
 
-import { useBackendMutation } from "main/utils/useBackend";
+import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import { cellToAxiosParamsDelete } from "main/utils/rosterStudentUtils";
 import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
@@ -20,6 +20,7 @@ export default function RosterStudentTable({
   courseId,
   testIdPrefix = "RosterStudentTable",
   canEditStudents,
+  translateSections = false,
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStudent, setEditStudent] = React.useState(null);
@@ -27,6 +28,21 @@ export default function RosterStudentTable({
   const [deleteStudent, setDeleteStudent] = React.useState(null);
   const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
   const [currentPage, setCurrentPage] = React.useState(1);
+
+  const sectionsQueryKey = `/api/courses/${courseId}/sections`;
+  const { data: sections = [] } = useBackend(
+    [sectionsQueryKey],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: sectionsQueryKey },
+    [],
+    true,
+    { enabled: translateSections },
+  );
+
+  const sectionLabelsBySection = React.useMemo(
+    () => new Map(sections.map((s) => [s.section, s.label])),
+    [sections],
+  );
 
   const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
 
@@ -134,6 +150,14 @@ export default function RosterStudentTable({
     {
       header: "Section",
       accessorKey: "section",
+      cell: ({ cell }) => {
+        const section = cell.row.original.section;
+        if (!translateSections || !section) {
+          return section;
+        }
+        const label = sectionLabelsBySection.get(section);
+        return label ? label : section;
+      },
     },
     {
       header: "GitHub Login",
@@ -269,6 +293,8 @@ export default function RosterStudentTable({
             submitAction={submitEditForm}
             buttonLabel={"Update"}
             cancelDisabled={true}
+            courseId={courseId}
+            translateSections={translateSections}
           />
         </Modal.Body>
       </Modal>

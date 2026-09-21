@@ -184,6 +184,7 @@ export default function InstructorCourseShowPage({
             testIdPrefix={testId}
             currentUser={currentUser}
             canEditStudents={canEditStudents}
+            translateSections={showSectionsTab}
           />
         </Tab>
         <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
