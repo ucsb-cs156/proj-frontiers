@@ -100,9 +100,7 @@ public class SetupSectionSlackChannelsJobTests {
   }
 
   private void students(RosterStudent... students) {
-    when(rosterStudentRepository
-            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
-                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
+    when(rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(1L))
         .thenReturn(List.of(students));
   }
 
@@ -180,7 +178,14 @@ public class SetupSectionSlackChannelsJobTests {
         student("Eve", "eve@ucsb.edu", "0100"),
         student("NoEmail", null, "0100"),
         student("Other", "other@ucsb.edu", "0300"),
-        student("NoSection", "nosection@ucsb.edu", null));
+        student("NoSection", "nosection@ucsb.edu", null),
+        RosterStudent.builder()
+            .firstName("Dropped")
+            .lastName("Student")
+            .email("dropped2@ucsb.edu")
+            .section("0100")
+            .rosterStatus(RosterStatus.DROPPED)
+            .build());
     when(courseStaffRepository.findByCourseId(1L))
         .thenReturn(
             List.of(

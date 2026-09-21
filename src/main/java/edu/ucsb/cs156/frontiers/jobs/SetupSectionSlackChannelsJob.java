@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 import lombok.Builder;
 
 /**
@@ -99,10 +100,7 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
     Map<String, String> channelIdByName =
         createChannels(ctx, token, sectionsByChannelName.keySet());
 
-    List<RosterStudent> students =
-        rosterStudentRepository
-            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
-                currentCourse.getId(), ENROLLED_STATUSES);
+    List<RosterStudent> students = enrolledStudents(currentCourse.getId());
     Set<String> staffSlackIds = staffSlackIds(currentCourse, activeSlackIdByEmail);
 
     // Members of each channel before this job changes anything; null if they could not be listed
@@ -221,6 +219,16 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
       }
     }
     return result;
+  }
+
+  private List<RosterStudent> enrolledStudents(Long courseId) {
+    return StreamSupport.stream(
+            rosterStudentRepository
+                .findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(courseId)
+                .spliterator(),
+            false)
+        .filter(student -> ENROLLED_STATUSES.contains(student.getRosterStatus()))
+        .toList();
   }
 
   /**
