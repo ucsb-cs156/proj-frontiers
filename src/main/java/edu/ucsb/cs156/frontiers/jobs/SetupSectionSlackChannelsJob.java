@@ -95,6 +95,8 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
 
     ctx.log("Creating Section Channels");
     Map<String, Set<String>> sectionsByChannelName = sectionsByChannelName(currentCourse.getId());
+    Map<String, List<String>> channelNamesBySection =
+        channelNamesBySection(sectionsByChannelName);
     Map<String, String> channelIdByName =
         createChannels(ctx, token, sectionsByChannelName.keySet());
 
@@ -111,6 +113,25 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
 
     ctx.log("Adding Students to Channel");
     int studentsNotInSlack = 0;
+    for (RosterStudent student : students) {
+      List<String> matchingChannels =
+          channelNamesBySection.getOrDefault(student.getSection(), List.of());
+      if (matchingChannels.isEmpty()) {
+        ctx.log(
+            "Student %s is in untranslated roster section %s"
+                .formatted(describe(student), describeSection(student.getSection())));
+        ctx.log(
+            "Could not add %s to a section Slack channel because no configured channel matches untranslated roster section %s."
+                .formatted(describe(student), describeSection(student.getSection())));
+      } else {
+        ctx.log(
+            "Student %s is in untranslated roster section %s and maps to %s"
+                .formatted(
+                    describe(student),
+                    describeSection(student.getSection()),
+                    describeChannelNames(matchingChannels)));
+      }
+    }
     for (Map.Entry<String, String> channel : channelIdByName.entrySet()) {
       String channelName = channel.getKey();
       String channelId = channel.getValue();
@@ -187,6 +208,17 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
       String channelName = normalizeChannelName(section.getSlackChannelName());
       if (!channelName.isEmpty()) {
         result.computeIfAbsent(channelName, name -> new HashSet<>()).add(section.getSection());
+      }
+    }
+    return result;
+  }
+
+  private Map<String, List<String>> channelNamesBySection(
+      Map<String, Set<String>> sectionsByChannelName) {
+    Map<String, List<String>> result = new HashMap<>();
+    for (Map.Entry<String, Set<String>> entry : sectionsByChannelName.entrySet()) {
+      for (String section : entry.getValue()) {
+        result.computeIfAbsent(section, unused -> new ArrayList<>()).add(entry.getKey());
       }
     }
     return result;
@@ -311,6 +343,17 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
 
   private static String describe(SlackUser user) {
     return "%s (%s)".formatted(user.getRealName(), user.email());
+  }
+
+  private static String describeSection(String section) {
+    return section == null || section.isBlank() ? "(blank)" : section;
+  }
+
+  private static String describeChannelNames(List<String> channelNames) {
+    if (channelNames.size() == 1) {
+      return "#" + channelNames.get(0);
+    }
+    return channelNames.stream().map(name -> "#" + name).toList().toString();
   }
 
   private static String canonical(String email) {
