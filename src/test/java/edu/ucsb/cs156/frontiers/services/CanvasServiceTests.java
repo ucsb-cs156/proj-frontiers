@@ -64,8 +64,8 @@ public class CanvasServiceTests {
             "course": {
               "usersConnection": {
                 "edges": [
-                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A111111", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "Section 1"}}]}},
-                  {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "A222222", "email": "bob@ucsb.edu", "integrationId": "B222222", "enrollments": [{"section": {"name": "Section 2"}}]}}
+                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A111111", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "52027 [TA] F 02:00PM PHELP2524"}}]}},
+                  {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "A222222", "email": "bob@ucsb.edu", "integrationId": "B222222", "enrollments": [{"section": {"name": "12345 [LEC] MW 10:00AM PHELP1401"}}]}}
                 ]
               }
             }
@@ -93,14 +93,14 @@ public class CanvasServiceTests {
     assertEquals("Smith", student1.getLastName());
     assertEquals("A111111", student1.getStudentId());
     assertEquals("alice@ucsb.edu", student1.getEmail());
-    assertEquals("Section 1", student1.getSection());
+    assertEquals("52027", student1.getSection());
 
     RosterStudent student2 = result.get(1);
     assertEquals("Bob", student2.getFirstName());
     assertEquals("Jones", student2.getLastName());
     assertEquals("B222222", student2.getStudentId()); // integrationId takes precedence
     assertEquals("bob@ucsb.edu", student2.getEmail());
-    assertEquals("Section 2", student2.getSection());
+    assertEquals("12345", student2.getSection());
   }
 
   @Test
@@ -189,6 +189,53 @@ public class CanvasServiceTests {
     assertNotNull(result);
     assertEquals(1, result.size());
     assertEquals("", result.get(0).getSection());
+  }
+
+  @Test
+  public void testGetCanvasRoster_truncatesSectionNameToFirstFiveCharacters() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .school(School.UCSB)
+            .build();
+
+    // Canvas returns section names like "52027 [TA] F 02:00PM PHELP2524"; only the first
+    // five characters (the section number) should be stored.
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "usersConnection": {
+                "edges": [
+                  {"node": {"firstName": "Grace", "lastName": "Lee", "sisId": "G111111", "email": "grace@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "52027 [TA] F 02:00PM PHELP2524"}}]}},
+                  {"node": {"firstName": "Hank", "lastName": "Kim", "sisId": "H111111", "email": "hank@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "AB"}}]}}
+                ]
+              }
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertEquals("52027", result.get(0).getSection());
+    assertEquals("AB", result.get(1).getSection());
   }
 
   @Test

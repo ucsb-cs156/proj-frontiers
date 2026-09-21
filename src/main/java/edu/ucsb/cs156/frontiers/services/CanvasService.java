@@ -153,7 +153,8 @@ public class CanvasService {
     if (enrollments.isArray() && !enrollments.isEmpty()) {
       JsonNode sectionName = enrollments.get(0).path("section").path("name");
       if (sectionName.isTextual()) {
-        canvasStudent.setSection(sectionName.asText());
+        String name = sectionName.asText();
+        canvasStudent.setSection(name.substring(0, Math.min(5, name.length())));
       }
     }
     return canvasStudent;
