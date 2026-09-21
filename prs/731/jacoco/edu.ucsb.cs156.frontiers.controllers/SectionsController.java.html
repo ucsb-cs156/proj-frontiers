@@ -60,6 +60,7 @@ import org.springframework.web.server.ResponseStatusException;
    * @param courseId the id of the course
    * @param section the section identifier (must be unique within the course)
    * @param label the human readable label for the section
+   * @param slackChannelName the Slack channel associated with the section, if any
    * @return the created section
    */
   @Operation(summary = &quot;Create a new section for a course&quot;)
@@ -68,20 +69,28 @@ import org.springframework.web.server.ResponseStatusException;
   public Section postSection(
       @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId,
       @Parameter(name = &quot;section&quot;) @RequestParam String section,
-      @Parameter(name = &quot;label&quot;) @RequestParam String label) {
-<span class="fc" id="L72">    Course course = ensureCourseExists(courseId);</span>
-<span class="fc" id="L73">    String normalizedSection = normalizeRequired(&quot;section&quot;, section);</span>
-<span class="fc" id="L74">    String normalizedLabel = normalizeRequired(&quot;label&quot;, label);</span>
+      @Parameter(name = &quot;label&quot;) @RequestParam String label,
+      @Parameter(name = &quot;slackChannelName&quot;) @RequestParam(required = false)
+          String slackChannelName) {
+<span class="fc" id="L75">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L76">    String normalizedSection = normalizeRequired(&quot;section&quot;, section);</span>
+<span class="fc" id="L77">    String normalizedLabel = normalizeRequired(&quot;label&quot;, label);</span>
+<span class="fc" id="L78">    String normalizedSlackChannelName = normalizeOptional(slackChannelName);</span>
 
-<span class="fc bfc" id="L76" title="All 2 branches covered.">    if (sectionRepository.findByCourseIdAndSection(courseId, normalizedSection).isPresent()) {</span>
-<span class="fc" id="L77">      throw new ResponseStatusException(</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">    if (sectionRepository.findByCourseIdAndSection(courseId, normalizedSection).isPresent()) {</span>
+<span class="fc" id="L81">      throw new ResponseStatusException(</span>
           HttpStatus.CONFLICT,
-<span class="fc" id="L79">          &quot;Section %s already exists for course %d&quot;.formatted(normalizedSection, courseId));</span>
+<span class="fc" id="L83">          &quot;Section %s already exists for course %d&quot;.formatted(normalizedSection, courseId));</span>
     }
 
     Section newSection =
-<span class="fc" id="L83">        Section.builder().course(course).section(normalizedSection).label(normalizedLabel).build();</span>
-<span class="fc" id="L84">    return sectionRepository.save(newSection);</span>
+<span class="fc" id="L87">        Section.builder()</span>
+<span class="fc" id="L88">            .course(course)</span>
+<span class="fc" id="L89">            .section(normalizedSection)</span>
+<span class="fc" id="L90">            .label(normalizedLabel)</span>
+<span class="fc" id="L91">            .slackChannelName(normalizedSlackChannelName)</span>
+<span class="fc" id="L92">            .build();</span>
+<span class="fc" id="L93">    return sectionRepository.save(newSection);</span>
   }
 
   /**
@@ -91,6 +100,7 @@ import org.springframework.web.server.ResponseStatusException;
    * @param id the id of the section to update
    * @param section the new section identifier (must be unique within the course)
    * @param label the new human readable label for the section
+   * @param slackChannelName the Slack channel associated with the section, if any
    * @return the updated section
    */
   @Operation(summary = &quot;Update a section for a course&quot;)
@@ -100,23 +110,27 @@ import org.springframework.web.server.ResponseStatusException;
       @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId,
       @Parameter(name = &quot;id&quot;) @PathVariable Long id,
       @Parameter(name = &quot;section&quot;) @RequestParam String section,
-      @Parameter(name = &quot;label&quot;) @RequestParam String label) {
-<span class="fc" id="L104">    ensureCourseExists(courseId);</span>
-<span class="fc" id="L105">    Section existing = findSectionInCourse(courseId, id);</span>
-<span class="fc" id="L106">    String normalizedSection = normalizeRequired(&quot;section&quot;, section);</span>
-<span class="fc" id="L107">    String normalizedLabel = normalizeRequired(&quot;label&quot;, label);</span>
+      @Parameter(name = &quot;label&quot;) @RequestParam String label,
+      @Parameter(name = &quot;slackChannelName&quot;) @RequestParam(required = false)
+          String slackChannelName) {
+<span class="fc" id="L116">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L117">    Section existing = findSectionInCourse(courseId, id);</span>
+<span class="fc" id="L118">    String normalizedSection = normalizeRequired(&quot;section&quot;, section);</span>
+<span class="fc" id="L119">    String normalizedLabel = normalizeRequired(&quot;label&quot;, label);</span>
+<span class="fc" id="L120">    String normalizedSlackChannelName = normalizeOptional(slackChannelName);</span>
 
-<span class="fc" id="L109">    Optional&lt;Section&gt; duplicate =</span>
-<span class="fc" id="L110">        sectionRepository.findByCourseIdAndSection(courseId, normalizedSection);</span>
-<span class="fc bfc" id="L111" title="All 4 branches covered.">    if (duplicate.isPresent() &amp;&amp; !duplicate.get().getId().equals(id)) {</span>
-<span class="fc" id="L112">      throw new ResponseStatusException(</span>
+<span class="fc" id="L122">    Optional&lt;Section&gt; duplicate =</span>
+<span class="fc" id="L123">        sectionRepository.findByCourseIdAndSection(courseId, normalizedSection);</span>
+<span class="fc bfc" id="L124" title="All 4 branches covered.">    if (duplicate.isPresent() &amp;&amp; !duplicate.get().getId().equals(id)) {</span>
+<span class="fc" id="L125">      throw new ResponseStatusException(</span>
           HttpStatus.CONFLICT,
-<span class="fc" id="L114">          &quot;Section %s already exists for course %d&quot;.formatted(normalizedSection, courseId));</span>
+<span class="fc" id="L127">          &quot;Section %s already exists for course %d&quot;.formatted(normalizedSection, courseId));</span>
     }
 
-<span class="fc" id="L117">    existing.setSection(normalizedSection);</span>
-<span class="fc" id="L118">    existing.setLabel(normalizedLabel);</span>
-<span class="fc" id="L119">    return sectionRepository.save(existing);</span>
+<span class="fc" id="L130">    existing.setSection(normalizedSection);</span>
+<span class="fc" id="L131">    existing.setLabel(normalizedLabel);</span>
+<span class="fc" id="L132">    existing.setSlackChannelName(normalizedSlackChannelName);</span>
+<span class="fc" id="L133">    return sectionRepository.save(existing);</span>
   }
 
   /**
@@ -133,22 +147,22 @@ import org.springframework.web.server.ResponseStatusException;
   public Object deleteSection(
       @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId,
       @Parameter(name = &quot;id&quot;) @PathVariable Long id) {
-<span class="fc" id="L136">    Course course = ensureCourseExists(courseId);</span>
-<span class="fc" id="L137">    Section existing = findSectionInCourse(courseId, id);</span>
+<span class="fc" id="L150">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L151">    Section existing = findSectionInCourse(courseId, id);</span>
 
     // Disconnect from course so that the cascade=ALL relationship on Course.sections
     // does not cause Hibernate to re-persist the section when the course is flushed.
-<span class="fc" id="L141">    course.getSections().remove(existing);</span>
-<span class="fc" id="L142">    existing.setCourse(null);</span>
+<span class="fc" id="L155">    course.getSections().remove(existing);</span>
+<span class="fc" id="L156">    existing.setCourse(null);</span>
 
-<span class="fc" id="L144">    sectionRepository.delete(existing);</span>
-<span class="fc" id="L145">    return genericMessage(&quot;Section with id %d deleted&quot;.formatted(id));</span>
+<span class="fc" id="L158">    sectionRepository.delete(existing);</span>
+<span class="fc" id="L159">    return genericMessage(&quot;Section with id %d deleted&quot;.formatted(id));</span>
   }
 
   private Course ensureCourseExists(Long courseId) {
-<span class="fc" id="L149">    return courseRepository</span>
-<span class="fc" id="L150">        .findById(courseId)</span>
-<span class="fc" id="L151">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L163">    return courseRepository</span>
+<span class="fc" id="L164">        .findById(courseId)</span>
+<span class="fc" id="L165">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
   }
 
   /**
@@ -157,18 +171,30 @@ import org.springframework.web.server.ResponseStatusException;
    * modify sections of courses they do not have access to.
    */
   private Section findSectionInCourse(Long courseId, Long id) {
-<span class="fc" id="L160">    return sectionRepository</span>
-<span class="fc" id="L161">        .findById(id)</span>
-<span class="fc" id="L162">        .filter(s -&gt; s.getCourse().getId().equals(courseId))</span>
-<span class="fc" id="L163">        .orElseThrow(() -&gt; new EntityNotFoundException(Section.class, id));</span>
+<span class="fc" id="L174">    return sectionRepository</span>
+<span class="fc" id="L175">        .findById(id)</span>
+<span class="fc" id="L176">        .filter(s -&gt; s.getCourse().getId().equals(courseId))</span>
+<span class="fc" id="L177">        .orElseThrow(() -&gt; new EntityNotFoundException(Section.class, id));</span>
   }
 
   private String normalizeRequired(String fieldName, String value) {
-<span class="fc" id="L167">    String normalized = value.strip();</span>
-<span class="fc bfc" id="L168" title="All 2 branches covered.">    if (normalized.isEmpty()) {</span>
-<span class="fc" id="L169">      throw new IllegalArgumentException(&quot;%s must not be blank&quot;.formatted(fieldName));</span>
+<span class="fc" id="L181">    String normalized = value.strip();</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">    if (normalized.isEmpty()) {</span>
+<span class="fc" id="L183">      throw new IllegalArgumentException(&quot;%s must not be blank&quot;.formatted(fieldName));</span>
     }
-<span class="fc" id="L171">    return normalized;</span>
+<span class="fc" id="L185">    return normalized;</span>
+  }
+
+  /**
+   * Normalizes an optional field: {@code null} or blank values are treated as &quot;not set&quot; and
+   * normalized to {@code null}; otherwise the trimmed value is returned.
+   */
+  private String normalizeOptional(String value) {
+<span class="fc bfc" id="L193" title="All 2 branches covered.">    if (value == null) {</span>
+<span class="fc" id="L194">      return null;</span>
+    }
+<span class="fc" id="L196">    String normalized = value.strip();</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">    return normalized.isEmpty() ? null : normalized;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -54,7 +54,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.OrgRemovalResult,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController,0,678,0,72,0,145,0,60,0,22
-frontiers,edu.ucsb.cs156.frontiers.controllers,SectionsController,0,224,0,8,0,41,0,16,0,12
+frontiers,edu.ucsb.cs156.frontiers.controllers,SectionsController,0,251,0,12,0,53,0,19,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,UsersController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,436,0,54,0,102,0,30,0,3
