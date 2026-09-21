@@ -1,19 +1,26 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.CourseOptions;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.SlackApiException;
+import edu.ucsb.cs156.frontiers.jobs.SetupSectionSlackChannelsJob;
 import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
 import edu.ucsb.cs156.frontiers.models.SlackUser;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
 import edu.ucsb.cs156.frontiers.services.SlackService;
 import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,20 +61,29 @@ public class SlackController extends ApiController {
   private final CourseRepository courseRepository;
   private final RosterStudentRepository rosterStudentRepository;
   private final CourseStaffRepository courseStaffRepository;
+  private final SectionRepository sectionRepository;
+  private final CourseOptionRepository courseOptionRepository;
   private final SlackService slackService;
   private final CanvasApiTokenSecurityService tokenSecurityService;
+  private final JobService jobService;
 
   public SlackController(
       CourseRepository courseRepository,
       RosterStudentRepository rosterStudentRepository,
       CourseStaffRepository courseStaffRepository,
+      SectionRepository sectionRepository,
+      CourseOptionRepository courseOptionRepository,
       SlackService slackService,
-      CanvasApiTokenSecurityService tokenSecurityService) {
+      CanvasApiTokenSecurityService tokenSecurityService,
+      JobService jobService) {
     this.courseRepository = courseRepository;
     this.rosterStudentRepository = rosterStudentRepository;
     this.courseStaffRepository = courseStaffRepository;
+    this.sectionRepository = sectionRepository;
+    this.courseOptionRepository = courseOptionRepository;
     this.slackService = slackService;
     this.tokenSecurityService = tokenSecurityService;
+    this.jobService = jobService;
   }
 
   /** A person with an active account in the Slack workspace, and their role in the course. */
@@ -317,6 +333,57 @@ public class SlackController extends ApiController {
     return result;
   }
 
+  /**
+   * Launches a job that creates the public Slack channels named in the sections table of the
+   * course, adds the roster students of each section to its channel, and removes from those
+   * channels anybody who is neither a student of the section, nor staff, nor the instructor. See
+   * {@link SetupSectionSlackChannelsJob}.
+   *
+   * @param courseId the id of the course
+   * @return the job that was launched; its log can be seen on the Jobs tab of the course
+   */
+  @Operation(summary = "Launch job that sets up the Slack channels of the sections of a course")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  @PostMapping("/sectionChannels")
+  public Job setupSectionChannels(@Parameter(name = "courseId") @RequestParam Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    for (CourseOptions option :
+        List.of(CourseOptions.SLACK_INTEGRATION, CourseOptions.TRANSLATE_SECTIONS)) {
+      boolean enabled =
+          courseOptionRepository
+              .findByCourseIdAndOption(courseId, option.name())
+              .map(CourseOption::getEnabled)
+              .orElse(false);
+      if (!enabled) {
+        throw new IllegalArgumentException(
+            "The course option %s must be enabled to set up section Slack channels."
+                .formatted(option.name()));
+      }
+    }
+    String token = tokenSecurityService.decrypt(course.getSlackBotToken());
+    if (token == null || token.isEmpty()) {
+      throw new IllegalArgumentException(NO_TOKEN_MESSAGE);
+    }
+
+    SetupSectionSlackChannelsJob job =
+        SetupSectionSlackChannelsJob.builder()
+            .course(course)
+            .courseRepository(courseRepository)
+            .sectionRepository(sectionRepository)
+            .rosterStudentRepository(rosterStudentRepository)
+            .courseStaffRepository(courseStaffRepository)
+            .slackService(slackService)
+            .tokenSecurityService(tokenSecurityService)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  public static final String NO_TOKEN_MESSAGE =
+      "No Slack token has been set for this course; enter one on the Settings tab.";
+
   /** Only these roster students are considered: in particular, not dropped students. */
   public static final List<RosterStatus> ENROLLED_STATUSES =
       List.of(RosterStatus.ROSTER, RosterStatus.MANUAL);
@@ -352,8 +419,7 @@ public class SlackController extends ApiController {
   private List<SlackUser> listSlackUsers(Course course) {
     String token = tokenSecurityService.decrypt(course.getSlackBotToken());
     if (token == null || token.isEmpty()) {
-      throw new IllegalArgumentException(
-          "No Slack token has been set for this course; enter one on the Settings tab.");
+      throw new IllegalArgumentException(NO_TOKEN_MESSAGE);
     }
     return slackService.listUsers(token);
   }

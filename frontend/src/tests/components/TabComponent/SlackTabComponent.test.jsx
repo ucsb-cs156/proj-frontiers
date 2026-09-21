@@ -1,5 +1,5 @@
 import axios from "axios";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, vi } from "vitest";
@@ -18,7 +18,10 @@ vi.mock("react-toastify", async (importOriginal) => {
   };
 });
 
-function renderTab(slackTeamUrl = "https://ucsb-cs156-f26.slack.com/") {
+function renderTab(
+  slackTeamUrl = "https://ucsb-cs156-f26.slack.com/",
+  showSectionChannels = undefined,
+) {
   const client = new QueryClient();
   return render(
     <QueryClientProvider client={client}>
@@ -27,6 +30,7 @@ function renderTab(slackTeamUrl = "https://ucsb-cs156-f26.slack.com/") {
         testIdPrefix="Test"
         slackTeamName="ucsb-cs156-f26"
         slackTeamUrl={slackTeamUrl}
+        showSectionChannels={showSectionChannels}
       />
     </QueryClientProvider>,
   );
@@ -206,5 +210,37 @@ describe("SlackTabComponent tests", () => {
       screen.queryByTestId("Test-slack-admin-link"),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
+  });
+
+  test("has no Slack Section Channels card unless asked for", async () => {
+    axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+
+    renderTab();
+
+    expect(
+      screen.queryByTestId("Test-slack-section-channels-card"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Slack Section Channels"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("has the Slack Section Channels card at the bottom when asked for, which launches the job for this course", async () => {
+    axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+    axiosMock
+      .onPost("/api/courses/slack/sectionChannels")
+      .reply(200, { id: 17 });
+
+    renderTab("https://ucsb-cs156-f26.slack.com/", true);
+
+    const card = screen.getByTestId("Test-slack-section-channels-card");
+    const tab = screen.getByTestId("Test-slack-tab-component");
+    expect(tab.lastElementChild).toBe(card);
+
+    fireEvent.click(screen.getByTestId("Test-slack-section-channels-submit"));
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
   });
 });

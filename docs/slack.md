@@ -94,6 +94,52 @@ Whether someone has a pending invitation is determined from the
 [`users.list`](https://docs.slack.dev/reference/methods/users.list). Slack's
 dedicated APIs for managing invitations are only available on Enterprise Grid.
 
+## Slack channels for sections
+
+When **Translate Sections** is enabled as well as **Slack Integration**, the
+bottom of the Slack tab has a **Slack Section Channels** card. Open it and
+click **Set Up Section Slack Channels** to launch the
+`SetupSectionSlackChannels` job for the course. What the job does is logged,
+and can be read on the **Jobs** tab:
+
+1. **Creating Section Channels**: for each row on the **Sections** tab that has
+   a **Slack Channel** name, a public channel with that name is created, unless
+   it already exists. The name is lowercased, and a leading `#` is dropped.
+   Several sections can share a channel by using the same name. A channel that
+   exists but has been archived is skipped (unarchive it in Slack first), as is
+   a channel that Slack refuses to create, for example because the name has
+   characters that Slack does not allow; the log says why.
+2. **Adding Students to Channel**: each roster student (roster status `ROSTER`
+   or `MANUAL`) whose section has a channel is added to it, unless they are in
+   it already. Only students who are added are logged. Students are matched to
+   Slack users by email, so a student who does not have an active account in
+   the workspace cannot be added; the log says how many there were, and the
+   second table on the Slack tab says who they are. Run the job again once they
+   have joined.
+3. **Removing Channel Members Who Are Not In The Section**: everyone else is
+   removed from each of those channels, and logged, except for the staff of the
+   course, the instructor, bots (including the Frontiers bot itself), and
+   members that are not users of the workspace. That includes students who have
+   dropped, or moved to another section.
+
+The job can be run as often as you like; it only makes the changes that are
+still needed. A problem with one channel or one person is logged, and the job
+carries on with the rest. As a safety measure, the job stops before changing
+anything if Slack does not provide any emails (that is, if the
+`users:read.email` scope is missing), since it would otherwise remove everybody
+from the channels.
+
+The job needs these scopes: `users:read`, `users:read.email`, `channels:read`,
+`channels:manage` and `channels:join`. Whether the bot is *allowed* to remove
+people from public channels also depends on the workspace's settings
+(**Settings & permissions → Permissions → Channel Management** in the Slack
+admin pages); if it is not, the log shows `restricted_action` for each person
+it could not remove.
+
+Slack limits how fast an app may make these calls. When Slack says to slow
+down, the job waits for as long as Slack asks (at most a minute at a time) and
+tries again, so with a large class the job can take a few minutes.
+
 ## Operational gotcha: adding scopes means a new token
 
 If you add scopes to the Slack app later, you must **reinstall the app to the
@@ -137,6 +183,10 @@ API tokens (see [README_Canvas_API_Keys.md](README_Canvas_API_Keys.md)):
 | `GET /api/courses/slack/missing?courseId=...` (staff and students not active in Slack) | `SlackController` |
 | Call to Slack `auth.test` | `SlackService.authTest(...)` |
 | Calls to Slack `users.list` (follows pagination) | `SlackService.listUsers(...)` |
+| `POST /api/courses/slack/sectionChannels?courseId=...` (launches the job) | `SlackController` |
+| Job that sets up the section channels | `SetupSectionSlackChannelsJob` |
+| Calls to Slack `conversations.list`, `.create`, `.join`, `.members`, `.invite`, `.kick` (with retry when rate limited) | `SlackService` |
+| Slack Section Channels card | `SlackSectionChannelsCard.jsx`, shown by `SlackTabComponent.jsx` |
 | Slack tab | `SlackTabComponent.jsx`, `SlackUsersTable.jsx`, `SlackMissingMembersTable.jsx`, shown by `InstructorCourseShowPage.jsx` |
 | In-app copy of "Setting up the Slack app" (keep in sync with this file) | `SlackSetupInstructions.jsx` |
 | Settings card | `SlackCourseSettings.jsx`, `SlackTokenForm.jsx`, shown by `SettingsTabComponent.jsx` when the `SLACK_INTEGRATION` course option is enabled |

@@ -32,6 +32,17 @@ Default.parameters = {
   ],
 };
 
+export const WithSectionChannels = Template.bind({});
+WithSectionChannels.args = { ...args, showSectionChannels: true };
+WithSectionChannels.parameters = {
+  msw: [
+    ...Default.parameters.msw,
+    http.post("/api/courses/slack/sectionChannels", () => {
+      return HttpResponse.json({ id: 17, status: "running" });
+    }),
+  ],
+};
+
 export const MissingScope = Template.bind({});
 MissingScope.args = args;
 MissingScope.parameters = {
