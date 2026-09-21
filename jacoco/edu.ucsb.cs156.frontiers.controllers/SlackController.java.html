@@ -132,7 +132,34 @@ public class SlackController extends ApiController {
         courseRepository
 <span class="fc" id="L133">            .findById(courseId)</span>
 <span class="fc" id="L134">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L135">    return slackInfo(course);</span>
+<span class="fc" id="L135">    course = backfillSlackTeamUrl(course);</span>
+<span class="fc" id="L136">    return slackInfo(course);</span>
+  }
+
+  /**
+   * Tokens saved before the workspace URL was recorded (see {@link Course#getSlackTeamUrl()}) have
+   * no way to show a real &quot;Admin&quot; link; this calls Slack's &lt;code&gt;auth.test&lt;/code&gt; again, using the
+   * already-stored (and validated) token, to fetch and save the workspace's own URL. Any failure to
+   * reach Slack is ignored here: the rest of the page still works from the cached data, and the
+   * &lt;code&gt;app.slack.com&lt;/code&gt; fallback URL is used instead.
+   *
+   * @param course the course
+   * @return the course, with slackTeamUrl backfilled and saved if it was missing and could be
+   *     determined
+   */
+  private Course backfillSlackTeamUrl(Course course) {
+<span class="fc bfc" id="L151" title="All 4 branches covered.">    boolean hasUrl = course.getSlackTeamUrl() != null &amp;&amp; !course.getSlackTeamUrl().isEmpty();</span>
+<span class="fc bfc" id="L152" title="All 4 branches covered.">    boolean hasToken = course.getSlackBotToken() != null &amp;&amp; !course.getSlackBotToken().isEmpty();</span>
+<span class="fc bfc" id="L153" title="All 4 branches covered.">    if (hasUrl || !hasToken) {</span>
+<span class="fc" id="L154">      return course;</span>
+    }
+<span class="fc" id="L156">    String token = tokenSecurityService.decrypt(course.getSlackBotToken());</span>
+<span class="fc" id="L157">    SlackAuthTestResponse authTest = slackService.authTest(token);</span>
+<span class="fc bfc" id="L158" title="All 6 branches covered.">    if (!authTest.getOk() || authTest.getUrl() == null || authTest.getUrl().isEmpty()) {</span>
+<span class="fc" id="L159">      return course;</span>
+    }
+<span class="fc" id="L161">    course.setSlackTeamUrl(authTest.getUrl());</span>
+<span class="fc" id="L162">    return courseRepository.save(course);</span>
   }
 
   /**
@@ -156,55 +183,55 @@ public class SlackController extends ApiController {
   public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; updateSlackToken(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
       @Parameter(name = &quot;slackBotToken&quot;) @RequestParam String slackBotToken) {
-<span class="fc" id="L159">    Course course =</span>
+<span class="fc" id="L186">    Course course =</span>
         courseRepository
-<span class="fc" id="L161">            .findById(courseId)</span>
-<span class="fc" id="L162">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L188">            .findById(courseId)</span>
+<span class="fc" id="L189">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L164">    String token = slackBotToken.strip();</span>
-<span class="fc" id="L165">    SlackAuthTestResponse authTest = slackService.authTest(token);</span>
+<span class="fc" id="L191">    String token = slackBotToken.strip();</span>
+<span class="fc" id="L192">    SlackAuthTestResponse authTest = slackService.authTest(token);</span>
 
-<span class="fc bfc" id="L167" title="All 2 branches covered.">    if (!authTest.getOk()) {</span>
-<span class="fc" id="L168">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L169">      body.put(&quot;ok&quot;, false);</span>
-<span class="fc" id="L170">      body.put(&quot;error&quot;, String.valueOf(authTest.getError()));</span>
-<span class="fc" id="L171">      body.put(&quot;message&quot;, errorMessage(authTest.getError()));</span>
-<span class="fc" id="L172">      return ResponseEntity.badRequest().body(body);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">    if (!authTest.getOk()) {</span>
+<span class="fc" id="L195">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L196">      body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L197">      body.put(&quot;error&quot;, String.valueOf(authTest.getError()));</span>
+<span class="fc" id="L198">      body.put(&quot;message&quot;, errorMessage(authTest.getError()));</span>
+<span class="fc" id="L199">      return ResponseEntity.badRequest().body(body);</span>
     }
 
     String encryptedToken;
     try {
-<span class="fc" id="L177">      encryptedToken = tokenSecurityService.encrypt(token);</span>
-<span class="fc" id="L178">    } catch (IllegalStateException e) {</span>
+<span class="fc" id="L204">      encryptedToken = tokenSecurityService.encrypt(token);</span>
+<span class="fc" id="L205">    } catch (IllegalStateException e) {</span>
       // Typically a missing or malformed encryption key. The exception message describes the key
       // problem and never contains the token.
-<span class="fc" id="L181">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L182">      body.put(&quot;ok&quot;, false);</span>
-<span class="fc" id="L183">      body.put(&quot;error&quot;, ENCRYPTION_FAILED);</span>
-<span class="fc" id="L184">      body.put(&quot;message&quot;, encryptionFailedMessage(e.getMessage()));</span>
-<span class="fc" id="L185">      return ResponseEntity.internalServerError().body(body);</span>
-<span class="fc" id="L186">    }</span>
+<span class="fc" id="L208">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L209">      body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L210">      body.put(&quot;error&quot;, ENCRYPTION_FAILED);</span>
+<span class="fc" id="L211">      body.put(&quot;message&quot;, encryptionFailedMessage(e.getMessage()));</span>
+<span class="fc" id="L212">      return ResponseEntity.internalServerError().body(body);</span>
+<span class="fc" id="L213">    }</span>
 
-<span class="fc" id="L188">    course.setSlackBotToken(encryptedToken);</span>
-<span class="fc" id="L189">    course.setSlackTeamId(authTest.getTeamId());</span>
-<span class="fc" id="L190">    course.setSlackTeamName(authTest.getTeam());</span>
-<span class="fc" id="L191">    course.setSlackTeamUrl(authTest.getUrl());</span>
-<span class="fc" id="L192">    Course savedCourse = courseRepository.save(course);</span>
+<span class="fc" id="L215">    course.setSlackBotToken(encryptedToken);</span>
+<span class="fc" id="L216">    course.setSlackTeamId(authTest.getTeamId());</span>
+<span class="fc" id="L217">    course.setSlackTeamName(authTest.getTeam());</span>
+<span class="fc" id="L218">    course.setSlackTeamUrl(authTest.getUrl());</span>
+<span class="fc" id="L219">    Course savedCourse = courseRepository.save(course);</span>
 
-<span class="fc" id="L194">    Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L195">    body.put(&quot;ok&quot;, true);</span>
-<span class="fc" id="L196">    body.putAll(slackInfo(savedCourse));</span>
-<span class="fc" id="L197">    return ResponseEntity.ok(body);</span>
+<span class="fc" id="L221">    Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L222">    body.put(&quot;ok&quot;, true);</span>
+<span class="fc" id="L223">    body.putAll(slackInfo(savedCourse));</span>
+<span class="fc" id="L224">    return ResponseEntity.ok(body);</span>
   }
 
   private Map&lt;String, String&gt; slackInfo(Course course) {
-<span class="fc" id="L201">    Map&lt;String, String&gt; info = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L202">    info.put(&quot;courseId&quot;, course.getId().toString());</span>
-<span class="fc" id="L203">    info.put(&quot;slackBotToken&quot;, maskToken(tokenSecurityService.decrypt(course.getSlackBotToken())));</span>
-<span class="fc bfc" id="L204" title="All 2 branches covered.">    info.put(&quot;slackTeamId&quot;, course.getSlackTeamId() != null ? course.getSlackTeamId() : &quot;&quot;);</span>
-<span class="fc bfc" id="L205" title="All 2 branches covered.">    info.put(&quot;slackTeamName&quot;, course.getSlackTeamName() != null ? course.getSlackTeamName() : &quot;&quot;);</span>
-<span class="fc" id="L206">    info.put(&quot;slackTeamUrl&quot;, slackTeamUrl(course));</span>
-<span class="fc" id="L207">    return info;</span>
+<span class="fc" id="L228">    Map&lt;String, String&gt; info = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L229">    info.put(&quot;courseId&quot;, course.getId().toString());</span>
+<span class="fc" id="L230">    info.put(&quot;slackBotToken&quot;, maskToken(tokenSecurityService.decrypt(course.getSlackBotToken())));</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">    info.put(&quot;slackTeamId&quot;, course.getSlackTeamId() != null ? course.getSlackTeamId() : &quot;&quot;);</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">    info.put(&quot;slackTeamName&quot;, course.getSlackTeamName() != null ? course.getSlackTeamName() : &quot;&quot;);</span>
+<span class="fc" id="L233">    info.put(&quot;slackTeamUrl&quot;, slackTeamUrl(course));</span>
+<span class="fc" id="L234">    return info;</span>
   }
 
   /**
@@ -215,13 +242,13 @@ public class SlackController extends ApiController {
    * @return the URL, or an empty string if the course is not connected to a workspace
    */
   public static String slackTeamUrl(Course course) {
-<span class="fc bfc" id="L218" title="All 4 branches covered.">    if (course.getSlackTeamUrl() != null &amp;&amp; !course.getSlackTeamUrl().isEmpty()) {</span>
-<span class="fc" id="L219">      return course.getSlackTeamUrl();</span>
+<span class="fc bfc" id="L245" title="All 4 branches covered.">    if (course.getSlackTeamUrl() != null &amp;&amp; !course.getSlackTeamUrl().isEmpty()) {</span>
+<span class="fc" id="L246">      return course.getSlackTeamUrl();</span>
     }
-<span class="fc bfc" id="L221" title="All 4 branches covered.">    if (course.getSlackTeamId() != null &amp;&amp; !course.getSlackTeamId().isEmpty()) {</span>
-<span class="fc" id="L222">      return SLACK_CLIENT_URL + course.getSlackTeamId();</span>
+<span class="fc bfc" id="L248" title="All 4 branches covered.">    if (course.getSlackTeamId() != null &amp;&amp; !course.getSlackTeamId().isEmpty()) {</span>
+<span class="fc" id="L249">      return SLACK_CLIENT_URL + course.getSlackTeamId();</span>
     }
-<span class="fc" id="L224">    return &quot;&quot;;</span>
+<span class="fc" id="L251">    return &quot;&quot;;</span>
   }
 
   /**
@@ -238,45 +265,45 @@ public class SlackController extends ApiController {
   @GetMapping(&quot;/users&quot;)
   public List&lt;SlackUserView&gt; getSlackUsers(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L241">    Course course =</span>
+<span class="fc" id="L268">    Course course =</span>
         courseRepository
-<span class="fc" id="L243">            .findById(courseId)</span>
-<span class="fc" id="L244">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L245">    List&lt;SlackUser&gt; slackUsers = listSlackUsers(course);</span>
+<span class="fc" id="L270">            .findById(courseId)</span>
+<span class="fc" id="L271">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L272">    List&lt;SlackUser&gt; slackUsers = listSlackUsers(course);</span>
 
-<span class="fc" id="L247">    Map&lt;String, String&gt; roleByEmail = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L248" title="All 2 branches covered.">    for (RosterStudent student : enrolledStudents(courseId)) {</span>
-<span class="fc bfc" id="L249" title="All 2 branches covered.">      if (student.getEmail() != null) {</span>
-<span class="fc" id="L250">        roleByEmail.put(canonical(student.getEmail()), ROLE_STUDENT);</span>
+<span class="fc" id="L274">    Map&lt;String, String&gt; roleByEmail = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">    for (RosterStudent student : enrolledStudents(courseId)) {</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">      if (student.getEmail() != null) {</span>
+<span class="fc" id="L277">        roleByEmail.put(canonical(student.getEmail()), ROLE_STUDENT);</span>
       }
-<span class="fc" id="L252">    }</span>
-<span class="fc bfc" id="L253" title="All 2 branches covered.">    for (CourseStaff staff : courseStaffRepository.findByCourseId(courseId)) {</span>
-<span class="fc bfc" id="L254" title="All 2 branches covered.">      if (staff.getEmail() != null) {</span>
-<span class="fc" id="L255">        roleByEmail.put(canonical(staff.getEmail()), ROLE_STAFF);</span>
+<span class="fc" id="L279">    }</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">    for (CourseStaff staff : courseStaffRepository.findByCourseId(courseId)) {</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">      if (staff.getEmail() != null) {</span>
+<span class="fc" id="L282">        roleByEmail.put(canonical(staff.getEmail()), ROLE_STAFF);</span>
       }
-<span class="fc" id="L257">    }</span>
-<span class="fc bfc" id="L258" title="All 2 branches covered.">    if (course.getInstructorEmail() != null) {</span>
-<span class="fc" id="L259">      roleByEmail.put(canonical(course.getInstructorEmail()), ROLE_INSTRUCTOR);</span>
+<span class="fc" id="L284">    }</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">    if (course.getInstructorEmail() != null) {</span>
+<span class="fc" id="L286">      roleByEmail.put(canonical(course.getInstructorEmail()), ROLE_INSTRUCTOR);</span>
     }
 
-<span class="fc" id="L262">    List&lt;SlackUserView&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L263" title="All 2 branches covered.">    for (SlackUser user : slackUsers) {</span>
-<span class="fc bfc" id="L264" title="All 2 branches covered.">      if (user.isActivePerson()) {</span>
+<span class="fc" id="L289">    List&lt;SlackUserView&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">    for (SlackUser user : slackUsers) {</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">      if (user.isActivePerson()) {</span>
         String role =
-<span class="fc bfc" id="L266" title="All 2 branches covered.">            user.email() == null</span>
-<span class="fc" id="L267">                ? ROLE_NONE</span>
-<span class="fc" id="L268">                : roleByEmail.getOrDefault(canonical(user.email()), ROLE_NONE);</span>
-<span class="fc" id="L269">        result.add(</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">            user.email() == null</span>
+<span class="fc" id="L294">                ? ROLE_NONE</span>
+<span class="fc" id="L295">                : roleByEmail.getOrDefault(canonical(user.email()), ROLE_NONE);</span>
+<span class="fc" id="L296">        result.add(</span>
             new SlackUserView(
-<span class="fc" id="L271">                user.getId(),</span>
-<span class="fc" id="L272">                user.getName(),</span>
-<span class="fc" id="L273">                user.getRealName(),</span>
-<span class="fc" id="L274">                user.displayName(),</span>
-<span class="fc" id="L275">                user.email(),</span>
+<span class="fc" id="L298">                user.getId(),</span>
+<span class="fc" id="L299">                user.getName(),</span>
+<span class="fc" id="L300">                user.getRealName(),</span>
+<span class="fc" id="L301">                user.displayName(),</span>
+<span class="fc" id="L302">                user.email(),</span>
                 role));
       }
-<span class="fc" id="L278">    }</span>
-<span class="fc" id="L279">    return result;</span>
+<span class="fc" id="L305">    }</span>
+<span class="fc" id="L306">    return result;</span>
   }
 
   /**
@@ -293,44 +320,44 @@ public class SlackController extends ApiController {
   @GetMapping(&quot;/missing&quot;)
   public List&lt;SlackMissingMemberView&gt; getMissingMembers(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L296">    Course course =</span>
+<span class="fc" id="L323">    Course course =</span>
         courseRepository
-<span class="fc" id="L298">            .findById(courseId)</span>
-<span class="fc" id="L299">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L300">    List&lt;SlackUser&gt; slackUsers = listSlackUsers(course);</span>
+<span class="fc" id="L325">            .findById(courseId)</span>
+<span class="fc" id="L326">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L327">    List&lt;SlackUser&gt; slackUsers = listSlackUsers(course);</span>
 
     // An active account wins over an invitation, which wins over a deactivated account
-<span class="fc" id="L303">    Map&lt;String, String&gt; statusByEmail = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L304" title="All 2 branches covered.">    for (String status : List.of(STATUS_DEACTIVATED, STATUS_INVITED, STATUS_ACTIVE)) {</span>
-<span class="fc bfc" id="L305" title="All 2 branches covered.">      for (SlackUser user : slackUsers) {</span>
-<span class="fc bfc" id="L306" title="All 6 branches covered.">        if (user.isPerson() &amp;&amp; user.email() != null &amp;&amp; status.equals(slackStatus(user))) {</span>
-<span class="fc" id="L307">          statusByEmail.put(canonical(user.email()), status);</span>
+<span class="fc" id="L330">    Map&lt;String, String&gt; statusByEmail = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">    for (String status : List.of(STATUS_DEACTIVATED, STATUS_INVITED, STATUS_ACTIVE)) {</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">      for (SlackUser user : slackUsers) {</span>
+<span class="fc bfc" id="L333" title="All 6 branches covered.">        if (user.isPerson() &amp;&amp; user.email() != null &amp;&amp; status.equals(slackStatus(user))) {</span>
+<span class="fc" id="L334">          statusByEmail.put(canonical(user.email()), status);</span>
         }
-<span class="fc" id="L309">      }</span>
-<span class="fc" id="L310">    }</span>
+<span class="fc" id="L336">      }</span>
+<span class="fc" id="L337">    }</span>
 
-<span class="fc" id="L312">    List&lt;SlackMissingMemberView&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L313" title="All 2 branches covered.">    for (CourseStaff staff : courseStaffRepository.findByCourseId(courseId)) {</span>
-<span class="fc" id="L314">      String status = missingStatus(statusByEmail, staff.getEmail());</span>
-<span class="fc bfc" id="L315" title="All 2 branches covered.">      if (status != null) {</span>
-<span class="fc" id="L316">        result.add(</span>
+<span class="fc" id="L339">    List&lt;SlackMissingMemberView&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">    for (CourseStaff staff : courseStaffRepository.findByCourseId(courseId)) {</span>
+<span class="fc" id="L341">      String status = missingStatus(statusByEmail, staff.getEmail());</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">      if (status != null) {</span>
+<span class="fc" id="L343">        result.add(</span>
             new SlackMissingMemberView(
-<span class="fc" id="L318">                ROLE_STAFF, staff.getFirstName(), staff.getLastName(), staff.getEmail(), status));</span>
+<span class="fc" id="L345">                ROLE_STAFF, staff.getFirstName(), staff.getLastName(), staff.getEmail(), status));</span>
       }
-<span class="fc" id="L320">    }</span>
-<span class="fc bfc" id="L321" title="All 2 branches covered.">    for (RosterStudent student : enrolledStudents(courseId)) {</span>
-<span class="fc" id="L322">      String status = missingStatus(statusByEmail, student.getEmail());</span>
-<span class="fc bfc" id="L323" title="All 2 branches covered.">      if (status != null) {</span>
-<span class="fc" id="L324">        result.add(</span>
+<span class="fc" id="L347">    }</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">    for (RosterStudent student : enrolledStudents(courseId)) {</span>
+<span class="fc" id="L349">      String status = missingStatus(statusByEmail, student.getEmail());</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">      if (status != null) {</span>
+<span class="fc" id="L351">        result.add(</span>
             new SlackMissingMemberView(
                 ROLE_STUDENT,
-<span class="fc" id="L327">                student.getFirstName(),</span>
-<span class="fc" id="L328">                student.getLastName(),</span>
-<span class="fc" id="L329">                student.getEmail(),</span>
+<span class="fc" id="L354">                student.getFirstName(),</span>
+<span class="fc" id="L355">                student.getLastName(),</span>
+<span class="fc" id="L356">                student.getEmail(),</span>
                 status));
       }
-<span class="fc" id="L332">    }</span>
-<span class="fc" id="L333">    return result;</span>
+<span class="fc" id="L359">    }</span>
+<span class="fc" id="L360">    return result;</span>
   }
 
   /**
@@ -346,82 +373,82 @@ public class SlackController extends ApiController {
   @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
   @PostMapping(&quot;/sectionChannels&quot;)
   public Job setupSectionChannels(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L349">    Course course =</span>
+<span class="fc" id="L376">    Course course =</span>
         courseRepository
-<span class="fc" id="L351">            .findById(courseId)</span>
-<span class="fc" id="L352">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L378">            .findById(courseId)</span>
+<span class="fc" id="L379">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
     for (CourseOptions option :
-<span class="fc bfc" id="L354" title="All 2 branches covered.">        List.of(CourseOptions.SLACK_INTEGRATION, CourseOptions.TRANSLATE_SECTIONS)) {</span>
-<span class="fc" id="L355">      boolean enabled =</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">        List.of(CourseOptions.SLACK_INTEGRATION, CourseOptions.TRANSLATE_SECTIONS)) {</span>
+<span class="fc" id="L382">      boolean enabled =</span>
           courseOptionRepository
-<span class="fc" id="L357">              .findByCourseIdAndOption(courseId, option.name())</span>
-<span class="fc" id="L358">              .map(CourseOption::getEnabled)</span>
-<span class="fc" id="L359">              .orElse(false);</span>
-<span class="fc bfc" id="L360" title="All 2 branches covered.">      if (!enabled) {</span>
-<span class="fc" id="L361">        throw new IllegalArgumentException(</span>
+<span class="fc" id="L384">              .findByCourseIdAndOption(courseId, option.name())</span>
+<span class="fc" id="L385">              .map(CourseOption::getEnabled)</span>
+<span class="fc" id="L386">              .orElse(false);</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">      if (!enabled) {</span>
+<span class="fc" id="L388">        throw new IllegalArgumentException(</span>
             &quot;The course option %s must be enabled to set up section Slack channels.&quot;
-<span class="fc" id="L363">                .formatted(option.name()));</span>
+<span class="fc" id="L390">                .formatted(option.name()));</span>
       }
-<span class="fc" id="L365">    }</span>
-<span class="fc" id="L366">    String token = tokenSecurityService.decrypt(course.getSlackBotToken());</span>
-<span class="fc bfc" id="L367" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
-<span class="fc" id="L368">      throw new IllegalArgumentException(NO_TOKEN_MESSAGE);</span>
+<span class="fc" id="L392">    }</span>
+<span class="fc" id="L393">    String token = tokenSecurityService.decrypt(course.getSlackBotToken());</span>
+<span class="fc bfc" id="L394" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L395">      throw new IllegalArgumentException(NO_TOKEN_MESSAGE);</span>
     }
 
     SetupSectionSlackChannelsJob job =
-<span class="fc" id="L372">        SetupSectionSlackChannelsJob.builder()</span>
-<span class="fc" id="L373">            .course(course)</span>
-<span class="fc" id="L374">            .courseRepository(courseRepository)</span>
-<span class="fc" id="L375">            .sectionRepository(sectionRepository)</span>
-<span class="fc" id="L376">            .rosterStudentRepository(rosterStudentRepository)</span>
-<span class="fc" id="L377">            .courseStaffRepository(courseStaffRepository)</span>
-<span class="fc" id="L378">            .slackService(slackService)</span>
-<span class="fc" id="L379">            .tokenSecurityService(tokenSecurityService)</span>
-<span class="fc" id="L380">            .build();</span>
-<span class="fc" id="L381">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L399">        SetupSectionSlackChannelsJob.builder()</span>
+<span class="fc" id="L400">            .course(course)</span>
+<span class="fc" id="L401">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L402">            .sectionRepository(sectionRepository)</span>
+<span class="fc" id="L403">            .rosterStudentRepository(rosterStudentRepository)</span>
+<span class="fc" id="L404">            .courseStaffRepository(courseStaffRepository)</span>
+<span class="fc" id="L405">            .slackService(slackService)</span>
+<span class="fc" id="L406">            .tokenSecurityService(tokenSecurityService)</span>
+<span class="fc" id="L407">            .build();</span>
+<span class="fc" id="L408">    return jobService.runAsJob(job);</span>
   }
 
   public static final String NO_TOKEN_MESSAGE =
       &quot;No Slack token has been set for this course; enter one on the Settings tab.&quot;;
 
   /** Only these roster students are considered: in particular, not dropped students. */
-<span class="fc" id="L388">  public static final List&lt;RosterStatus&gt; ENROLLED_STATUSES =</span>
-<span class="fc" id="L389">      List.of(RosterStatus.ROSTER, RosterStatus.MANUAL);</span>
+<span class="fc" id="L415">  public static final List&lt;RosterStatus&gt; ENROLLED_STATUSES =</span>
+<span class="fc" id="L416">      List.of(RosterStatus.ROSTER, RosterStatus.MANUAL);</span>
 
   private List&lt;RosterStudent&gt; enrolledStudents(Long courseId) {
-<span class="fc" id="L392">    return rosterStudentRepository</span>
-<span class="fc" id="L393">        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(</span>
+<span class="fc" id="L419">    return rosterStudentRepository</span>
+<span class="fc" id="L420">        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(</span>
             courseId, ENROLLED_STATUSES);
   }
 
   private static String slackStatus(SlackUser user) {
-<span class="fc bfc" id="L398" title="All 2 branches covered.">    if (user.isActivePerson()) {</span>
-<span class="fc" id="L399">      return STATUS_ACTIVE;</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">    if (user.isActivePerson()) {</span>
+<span class="fc" id="L426">      return STATUS_ACTIVE;</span>
     }
-<span class="fc bfc" id="L401" title="All 2 branches covered.">    return user.getDeleted() ? STATUS_DEACTIVATED : STATUS_INVITED;</span>
+<span class="fc bfc" id="L428" title="All 2 branches covered.">    return user.getDeleted() ? STATUS_DEACTIVATED : STATUS_INVITED;</span>
   }
 
   /**
    * @return null if the email belongs to an active Slack user; otherwise the status to report
    */
   private static String missingStatus(Map&lt;String, String&gt; statusByEmail, String email) {
-<span class="fc bfc" id="L408" title="All 2 branches covered.">    if (email == null) {</span>
-<span class="fc" id="L409">      return STATUS_NOT_IN_SLACK;</span>
+<span class="fc bfc" id="L435" title="All 2 branches covered.">    if (email == null) {</span>
+<span class="fc" id="L436">      return STATUS_NOT_IN_SLACK;</span>
     }
-<span class="fc" id="L411">    String status = statusByEmail.getOrDefault(canonical(email), STATUS_NOT_IN_SLACK);</span>
-<span class="fc bfc" id="L412" title="All 2 branches covered.">    return status.equals(STATUS_ACTIVE) ? null : status;</span>
+<span class="fc" id="L438">    String status = statusByEmail.getOrDefault(canonical(email), STATUS_NOT_IN_SLACK);</span>
+<span class="fc bfc" id="L439" title="All 2 branches covered.">    return status.equals(STATUS_ACTIVE) ? null : status;</span>
   }
 
   private static String canonical(String email) {
-<span class="fc" id="L416">    return CanonicalFormConverter.convertToValidEmail(email.strip());</span>
+<span class="fc" id="L443">    return CanonicalFormConverter.convertToValidEmail(email.strip());</span>
   }
 
   private List&lt;SlackUser&gt; listSlackUsers(Course course) {
-<span class="fc" id="L420">    String token = tokenSecurityService.decrypt(course.getSlackBotToken());</span>
-<span class="fc bfc" id="L421" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
-<span class="fc" id="L422">      throw new IllegalArgumentException(NO_TOKEN_MESSAGE);</span>
+<span class="fc" id="L447">    String token = tokenSecurityService.decrypt(course.getSlackBotToken());</span>
+<span class="fc bfc" id="L448" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L449">      throw new IllegalArgumentException(NO_TOKEN_MESSAGE);</span>
     }
-<span class="fc" id="L424">    return slackService.listUsers(token);</span>
+<span class="fc" id="L451">    return slackService.listUsers(token);</span>
   }
 
   /**
@@ -432,11 +459,11 @@ public class SlackController extends ApiController {
    */
   @ExceptionHandler({SlackApiException.class})
   public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; handleSlackApiException(SlackApiException e) {
-<span class="fc" id="L435">    Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L436">    body.put(&quot;ok&quot;, false);</span>
-<span class="fc" id="L437">    body.put(&quot;error&quot;, e.getMessage());</span>
-<span class="fc" id="L438">    body.put(&quot;message&quot;, describeError(e.getMessage()));</span>
-<span class="fc" id="L439">    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);</span>
+<span class="fc" id="L462">    Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L463">    body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L464">    body.put(&quot;error&quot;, e.getMessage());</span>
+<span class="fc" id="L465">    body.put(&quot;message&quot;, describeError(e.getMessage()));</span>
+<span class="fc" id="L466">    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);</span>
   }
 
   /**
@@ -448,15 +475,15 @@ public class SlackController extends ApiController {
    * @return the masked token, or an empty string if there is no token
    */
   public static String maskToken(String token) {
-<span class="fc bfc" id="L451" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
-<span class="fc" id="L452">      return &quot;&quot;;</span>
+<span class="fc bfc" id="L478" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L479">      return &quot;&quot;;</span>
     }
-<span class="fc bfc" id="L454" title="All 2 branches covered.">    if (token.length() &lt;= 2 * VISIBLE_TOKEN_CHARS) {</span>
-<span class="fc" id="L455">      return &quot;*&quot;.repeat(token.length());</span>
+<span class="fc bfc" id="L481" title="All 2 branches covered.">    if (token.length() &lt;= 2 * VISIBLE_TOKEN_CHARS) {</span>
+<span class="fc" id="L482">      return &quot;*&quot;.repeat(token.length());</span>
     }
-<span class="fc" id="L457">    return token.substring(0, VISIBLE_TOKEN_CHARS)</span>
-<span class="fc" id="L458">        + &quot;*&quot;.repeat(token.length() - 2 * VISIBLE_TOKEN_CHARS)</span>
-<span class="fc" id="L459">        + token.substring(token.length() - VISIBLE_TOKEN_CHARS);</span>
+<span class="fc" id="L484">    return token.substring(0, VISIBLE_TOKEN_CHARS)</span>
+<span class="fc" id="L485">        + &quot;*&quot;.repeat(token.length() - 2 * VISIBLE_TOKEN_CHARS)</span>
+<span class="fc" id="L486">        + token.substring(token.length() - VISIBLE_TOKEN_CHARS);</span>
   }
 
   /**
@@ -466,8 +493,8 @@ public class SlackController extends ApiController {
    * @return a human readable message
    */
   public static String encryptionFailedMessage(String details) {
-<span class="fc" id="L469">    return &quot;Slack accepted this token, but the server could not encrypt it, so the token was not saved. Ask an administrator to check the TOKEN_ENCRYPTION_KEY environment variable (see docs/slack.md). Details: %s&quot;</span>
-<span class="fc" id="L470">        .formatted(details);</span>
+<span class="fc" id="L496">    return &quot;Slack accepted this token, but the server could not encrypt it, so the token was not saved. Ask an administrator to check the TOKEN_ENCRYPTION_KEY environment variable (see docs/slack.md). Details: %s&quot;</span>
+<span class="fc" id="L497">        .formatted(details);</span>
   }
 
   /**
@@ -478,7 +505,7 @@ public class SlackController extends ApiController {
    * @return a human readable message
    */
   public static String errorMessage(String error) {
-<span class="fc" id="L481">    return describeError(error) + &quot; The token was not saved.&quot;;</span>
+<span class="fc" id="L508">    return describeError(error) + &quot; The token was not saved.&quot;;</span>
   }
 
   /**
@@ -488,17 +515,17 @@ public class SlackController extends ApiController {
    * @return a human readable message
    */
   public static String describeError(String error) {
-<span class="fc bfc" id="L491" title="All 6 branches covered.">    return switch (String.valueOf(error)) {</span>
+<span class="fc bfc" id="L518" title="All 6 branches covered.">    return switch (String.valueOf(error)) {</span>
       case &quot;invalid_auth&quot;, &quot;not_authed&quot; -&gt;
-<span class="fc" id="L493">          &quot;Slack rejected this token as invalid. Copy the Bot User OAuth Token (xoxb-...) from your Slack app's OAuth &amp; Permissions page and try again.&quot;;</span>
+<span class="fc" id="L520">          &quot;Slack rejected this token as invalid. Copy the Bot User OAuth Token (xoxb-...) from your Slack app's OAuth &amp; Permissions page and try again.&quot;;</span>
       case &quot;token_revoked&quot;, &quot;token_expired&quot;, &quot;account_inactive&quot; -&gt;
-<span class="fc" id="L495">          &quot;This Slack token has been revoked or is no longer active. Reinstall the Slack app to the workspace to get a new token.&quot;;</span>
+<span class="fc" id="L522">          &quot;This Slack token has been revoked or is no longer active. Reinstall the Slack app to the workspace to get a new token.&quot;;</span>
       case &quot;missing_scope&quot; -&gt;
-<span class="fc" id="L497">          &quot;This Slack token is missing a required scope. Add the scope under OAuth &amp; Permissions, reinstall the Slack app to the workspace, and enter the new token.&quot;;</span>
+<span class="fc" id="L524">          &quot;This Slack token is missing a required scope. Add the scope under OAuth &amp; Permissions, reinstall the Slack app to the workspace, and enter the new token.&quot;;</span>
       case &quot;ratelimited&quot; -&gt;
-<span class="fc" id="L499">          &quot;Slack is limiting requests from this app. Please try again in a minute.&quot;;</span>
-<span class="fc" id="L500">      case SlackService.SLACK_UNREACHABLE -&gt; &quot;Could not reach Slack. Please try again later.&quot;;</span>
-<span class="fc" id="L501">      default -&gt; &quot;Slack reported an error (%s).&quot;.formatted(error);</span>
+<span class="fc" id="L526">          &quot;Slack is limiting requests from this app. Please try again in a minute.&quot;;</span>
+<span class="fc" id="L527">      case SlackService.SLACK_UNREACHABLE -&gt; &quot;Could not reach Slack. Please try again later.&quot;;</span>
+<span class="fc" id="L528">      default -&gt; &quot;Slack reported an error (%s).&quot;.formatted(error);</span>
     };
   }
 }
