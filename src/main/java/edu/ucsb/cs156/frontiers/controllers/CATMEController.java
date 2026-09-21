@@ -1,12 +1,17 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.opencsv.CSVParser;
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Section;
+import edu.ucsb.cs156.frontiers.enums.CourseOptions;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.models.CATMEAuditResult;
 import edu.ucsb.cs156.frontiers.models.CATMEStudentDrop;
 import edu.ucsb.cs156.frontiers.models.CATMEStudentUpdate;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +21,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,6 +43,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class CATMEController extends ApiController {
 
   @Autowired private RosterStudentRepository rosterStudentRepository;
+
+  @Autowired private CourseOptionRepository courseOptionRepository;
+
+  @Autowired private SectionRepository sectionRepository;
 
   public static final String CATME_AUDIT_HEADER_LINE_1 = "Activity,Class,Term,Format,Instr,School";
   public static final String CATME_AUDIT_HEADER_LINE_4 =
@@ -92,6 +102,20 @@ public class CATMEController extends ApiController {
             .collect(
                 Collectors.toMap(CATMEStudentRow::studentId, row -> row, (first, second) -> first));
 
+    Map<String, String> sectionToLabel = new HashMap<>();
+    Map<String, String> labelToSection = new HashMap<>();
+    boolean translateSections =
+        courseOptionRepository
+            .findByCourseIdAndOption(courseId, CourseOptions.TRANSLATE_SECTIONS.name())
+            .map(CourseOption::getEnabled)
+            .orElse(false);
+    if (translateSections) {
+      for (Section section : sectionRepository.findByCourseId(courseId)) {
+        sectionToLabel.put(section.getSection(), section.getLabel());
+        labelToSection.put(section.getLabel(), section.getSection());
+      }
+    }
+
     List<CATMEStudentUpdate> studentsToUpdate = new ArrayList<>();
     for (RosterStudent student : enrolledStudents) {
       CATMEStudentRow row = csvRowsByStudentId.get(student.getStudentId());
@@ -104,12 +128,19 @@ public class CATMEController extends ApiController {
             new CATMEStudentUpdate(
                 student.getStudentId(), expectedName, "Name", row.name(), expectedName));
       }
-      String expectedSection = student.getSection() == null ? "" : student.getSection();
-      String actualSection = row.section();
-      if (!expectedSection.equals(actualSection)) {
+      String rosterSection = student.getSection() == null ? "" : student.getSection();
+      String catmeSection = row.section();
+      String reverseTranslatedCatmeSection =
+          labelToSection.getOrDefault(catmeSection, catmeSection);
+      if (!rosterSection.equals(reverseTranslatedCatmeSection)) {
+        String expectedCatmeSection = sectionToLabel.getOrDefault(rosterSection, rosterSection);
         studentsToUpdate.add(
             new CATMEStudentUpdate(
-                student.getStudentId(), expectedName, "Section", actualSection, expectedSection));
+                student.getStudentId(),
+                expectedName,
+                "Section",
+                catmeSection,
+                expectedCatmeSection));
       }
     }
 
