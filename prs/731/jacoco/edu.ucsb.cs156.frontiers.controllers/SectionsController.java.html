@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SectionsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">SectionsController.java</span></div><h1>SectionsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Section;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+/**
+ * CRUD endpoints for the Sections table, scoped by course. Sections map a raw section identifier
+ * (e.g. the value that appears in a roster CSV) to a human readable label; they are used when the
+ * TRANSLATE_SECTIONS course option is enabled.
+ */
+@Tag(name = &quot;Sections&quot;)
+@RequestMapping(&quot;/api/courses/{courseId}/sections&quot;)
+@RestController
+<span class="fc" id="L36">@Slf4j</span>
+<span class="fc" id="L37">public class SectionsController extends ApiController {</span>
+
+  @Autowired private SectionRepository sectionRepository;
+
+  @Autowired private CourseRepository courseRepository;
+
+  /**
+   * List all sections for a course, ordered by section.
+   *
+   * @param courseId the id of the course
+   * @return the sections for the course
+   */
+  @Operation(summary = &quot;List all sections for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;&quot;)
+  public List&lt;Section&gt; getSections(@Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId) {
+<span class="fc" id="L53">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L54">    return sectionRepository.findByCourseIdOrderBySectionAsc(courseId);</span>
+  }
+
+  /**
+   * Create a new section for a course.
+   *
+   * @param courseId the id of the course
+   * @param section the section identifier (must be unique within the course)
+   * @param label the human readable label for the section
+   * @return the created section
+   */
+  @Operation(summary = &quot;Create a new section for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;&quot;)
+  public Section postSection(
+      @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId,
+      @Parameter(name = &quot;section&quot;) @RequestParam String section,
+      @Parameter(name = &quot;label&quot;) @RequestParam String label) {
+<span class="fc" id="L72">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L73">    String normalizedSection = normalizeRequired(&quot;section&quot;, section);</span>
+<span class="fc" id="L74">    String normalizedLabel = normalizeRequired(&quot;label&quot;, label);</span>
+
+<span class="fc bfc" id="L76" title="All 2 branches covered.">    if (sectionRepository.findByCourseIdAndSection(courseId, normalizedSection).isPresent()) {</span>
+<span class="fc" id="L77">      throw new ResponseStatusException(</span>
+          HttpStatus.CONFLICT,
+<span class="fc" id="L79">          &quot;Section %s already exists for course %d&quot;.formatted(normalizedSection, courseId));</span>
+    }
+
+    Section newSection =
+<span class="fc" id="L83">        Section.builder().course(course).section(normalizedSection).label(normalizedLabel).build();</span>
+<span class="fc" id="L84">    return sectionRepository.save(newSection);</span>
+  }
+
+  /**
+   * Update an existing section for a course.
+   *
+   * @param courseId the id of the course
+   * @param id the id of the section to update
+   * @param section the new section identifier (must be unique within the course)
+   * @param label the new human readable label for the section
+   * @return the updated section
+   */
+  @Operation(summary = &quot;Update a section for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PutMapping(&quot;/{id}&quot;)
+  public Section putSection(
+      @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId,
+      @Parameter(name = &quot;id&quot;) @PathVariable Long id,
+      @Parameter(name = &quot;section&quot;) @RequestParam String section,
+      @Parameter(name = &quot;label&quot;) @RequestParam String label) {
+<span class="fc" id="L104">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L105">    Section existing = findSectionInCourse(courseId, id);</span>
+<span class="fc" id="L106">    String normalizedSection = normalizeRequired(&quot;section&quot;, section);</span>
+<span class="fc" id="L107">    String normalizedLabel = normalizeRequired(&quot;label&quot;, label);</span>
+
+<span class="fc" id="L109">    Optional&lt;Section&gt; duplicate =</span>
+<span class="fc" id="L110">        sectionRepository.findByCourseIdAndSection(courseId, normalizedSection);</span>
+<span class="fc bfc" id="L111" title="All 4 branches covered.">    if (duplicate.isPresent() &amp;&amp; !duplicate.get().getId().equals(id)) {</span>
+<span class="fc" id="L112">      throw new ResponseStatusException(</span>
+          HttpStatus.CONFLICT,
+<span class="fc" id="L114">          &quot;Section %s already exists for course %d&quot;.formatted(normalizedSection, courseId));</span>
+    }
+
+<span class="fc" id="L117">    existing.setSection(normalizedSection);</span>
+<span class="fc" id="L118">    existing.setLabel(normalizedLabel);</span>
+<span class="fc" id="L119">    return sectionRepository.save(existing);</span>
+  }
+
+  /**
+   * Delete a section from a course.
+   *
+   * @param courseId the id of the course
+   * @param id the id of the section to delete
+   * @return a message indicating the section was deleted
+   */
+  @Operation(summary = &quot;Delete a section from a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @DeleteMapping(&quot;/{id}&quot;)
+  @Transactional
+  public Object deleteSection(
+      @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId,
+      @Parameter(name = &quot;id&quot;) @PathVariable Long id) {
+<span class="fc" id="L136">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L137">    Section existing = findSectionInCourse(courseId, id);</span>
+
+    // Disconnect from course so that the cascade=ALL relationship on Course.sections
+    // does not cause Hibernate to re-persist the section when the course is flushed.
+<span class="fc" id="L141">    course.getSections().remove(existing);</span>
+<span class="fc" id="L142">    existing.setCourse(null);</span>
+
+<span class="fc" id="L144">    sectionRepository.delete(existing);</span>
+<span class="fc" id="L145">    return genericMessage(&quot;Section with id %d deleted&quot;.formatted(id));</span>
+  }
+
+  private Course ensureCourseExists(Long courseId) {
+<span class="fc" id="L149">    return courseRepository</span>
+<span class="fc" id="L150">        .findById(courseId)</span>
+<span class="fc" id="L151">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+  }
+
+  /**
+   * Look up a section by id and verify that it belongs to the given course. A section that exists
+   * but belongs to a different course is treated as not found, so that callers cannot read or
+   * modify sections of courses they do not have access to.
+   */
+  private Section findSectionInCourse(Long courseId, Long id) {
+<span class="fc" id="L160">    return sectionRepository</span>
+<span class="fc" id="L161">        .findById(id)</span>
+<span class="fc" id="L162">        .filter(s -&gt; s.getCourse().getId().equals(courseId))</span>
+<span class="fc" id="L163">        .orElseThrow(() -&gt; new EntityNotFoundException(Section.class, id));</span>
+  }
+
+  private String normalizeRequired(String fieldName, String value) {
+<span class="fc" id="L167">    String normalized = value.strip();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">    if (normalized.isEmpty()) {</span>
+<span class="fc" id="L169">      throw new IllegalArgumentException(&quot;%s must not be blank&quot;.formatted(fieldName));</span>
+    }
+<span class="fc" id="L171">    return normalized;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

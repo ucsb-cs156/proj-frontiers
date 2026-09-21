@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlackController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">SlackController.java</span></div><h1>SlackController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.SlackApiException;
+import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
+import edu.ucsb.cs156.frontiers.models.SlackUser;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
+import edu.ucsb.cs156.frontiers.services.SlackService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * Endpoints for the Slack integration of a course.
+ *
+ * &lt;p&gt;The Slack bot token is a secret: it is encrypted at rest (using the same infrastructure as
+ * Canvas API tokens), never logged, and only ever returned to the frontend in masked form.
+ */
+@RestController
+@RequestMapping(&quot;/api/courses/slack&quot;)
+@Tag(name = &quot;Slack&quot;)
+public class SlackController extends ApiController {
+
+  private static final int VISIBLE_TOKEN_CHARS = 4;
+
+  /** Error code used when a valid token could not be encrypted, and so was not stored. */
+  public static final String ENCRYPTION_FAILED = &quot;encryption_failed&quot;;
+
+  /** Where a workspace can be opened when its own URL is not known. */
+  public static final String SLACK_CLIENT_URL = &quot;https://app.slack.com/client/&quot;;
+
+  private final CourseRepository courseRepository;
+  private final RosterStudentRepository rosterStudentRepository;
+  private final CourseStaffRepository courseStaffRepository;
+  private final SlackService slackService;
+  private final CanvasApiTokenSecurityService tokenSecurityService;
+
+  public SlackController(
+      CourseRepository courseRepository,
+      RosterStudentRepository rosterStudentRepository,
+      CourseStaffRepository courseStaffRepository,
+      SlackService slackService,
+<span class="fc" id="L65">      CanvasApiTokenSecurityService tokenSecurityService) {</span>
+<span class="fc" id="L66">    this.courseRepository = courseRepository;</span>
+<span class="fc" id="L67">    this.rosterStudentRepository = rosterStudentRepository;</span>
+<span class="fc" id="L68">    this.courseStaffRepository = courseStaffRepository;</span>
+<span class="fc" id="L69">    this.slackService = slackService;</span>
+<span class="fc" id="L70">    this.tokenSecurityService = tokenSecurityService;</span>
+<span class="fc" id="L71">  }</span>
+
+  /** A person with an active account in the Slack workspace, and their role in the course. */
+<span class="fc" id="L74">  public static record SlackUserView(</span>
+      String slackUserId,
+      String name,
+      String realName,
+      String displayName,
+      String email,
+      String courseRole) {}
+
+  /** A roster student or staff member who does not have an active account in the workspace. */
+<span class="fc" id="L83">  public static record SlackMissingMemberView(</span>
+      String courseRole, String firstName, String lastName, String email, String slackStatus) {}
+
+  public static final String ROLE_INSTRUCTOR = &quot;INSTRUCTOR&quot;;
+  public static final String ROLE_STAFF = &quot;STAFF&quot;;
+  public static final String ROLE_STUDENT = &quot;STUDENT&quot;;
+  public static final String ROLE_NONE = &quot;NONE&quot;;
+
+  /** Invited to the workspace, but has not yet signed in. */
+  public static final String STATUS_INVITED = &quot;INVITED&quot;;
+
+  /** Has an account in the workspace, but it has been deactivated. */
+  public static final String STATUS_DEACTIVATED = &quot;DEACTIVATED&quot;;
+
+  /** Slack has no record of this email address in the workspace. */
+  public static final String STATUS_NOT_IN_SLACK = &quot;NOT_IN_SLACK&quot;;
+
+  private static final String STATUS_ACTIVE = &quot;ACTIVE&quot;;
+
+  /**
+   * Returns the Slack workspace (team) associated with the course, along with a masked version of
+   * the Slack bot token.
+   *
+   * @param courseId the id of the course
+   * @return a map with courseId, slackBotToken (masked), slackTeamId, slackTeamName and
+   *     slackTeamUrl; values are empty strings when no token has been stored
+   */
+  @Operation(summary = &quot;Get Slack workspace info and Slack bot token (masked) for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/info&quot;)
+  public Map&lt;String, String&gt; getSlackInfo(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L115">    Course course =</span>
+        courseRepository
+<span class="fc" id="L117">            .findById(courseId)</span>
+<span class="fc" id="L118">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L119">    return slackInfo(course);</span>
+  }
+
+  /**
+   * Validates a Slack bot token by calling the Slack &lt;code&gt;auth.test&lt;/code&gt; method. If the token is
+   * valid, it is encrypted and stored, along with the id and name of the workspace (team) it
+   * belongs to. If it is invalid, nothing is stored, and a 400 response describes the problem.
+   *
+   * &lt;p&gt;The token should be sent in the (form encoded) body of the request rather than in the query
+   * string, so that it does not end up in access logs.
+   *
+   * @param courseId the id of the course
+   * @param slackBotToken the Slack bot token (&lt;code&gt;xoxb-...&lt;/code&gt;)
+   * @return on success, a map with ok=true, courseId, slackBotToken (masked), slackTeamId and
+   *     slackTeamName; on failure, a map with ok=false, error (Slack error code) and message. If
+   *     the token is valid but cannot be encrypted (e.g. the encryption key is not configured), it
+   *     is not stored, and a 500 response with error {@link #ENCRYPTION_FAILED} is returned.
+   */
+  @Operation(summary = &quot;Validate (via Slack auth.test) and store the Slack bot token for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/token&quot;)
+  public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; updateSlackToken(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;slackBotToken&quot;) @RequestParam String slackBotToken) {
+<span class="fc" id="L143">    Course course =</span>
+        courseRepository
+<span class="fc" id="L145">            .findById(courseId)</span>
+<span class="fc" id="L146">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L148">    String token = slackBotToken.strip();</span>
+<span class="fc" id="L149">    SlackAuthTestResponse authTest = slackService.authTest(token);</span>
+
+<span class="fc bfc" id="L151" title="All 2 branches covered.">    if (!authTest.getOk()) {</span>
+<span class="fc" id="L152">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L153">      body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L154">      body.put(&quot;error&quot;, String.valueOf(authTest.getError()));</span>
+<span class="fc" id="L155">      body.put(&quot;message&quot;, errorMessage(authTest.getError()));</span>
+<span class="fc" id="L156">      return ResponseEntity.badRequest().body(body);</span>
+    }
+
+    String encryptedToken;
+    try {
+<span class="fc" id="L161">      encryptedToken = tokenSecurityService.encrypt(token);</span>
+<span class="fc" id="L162">    } catch (IllegalStateException e) {</span>
+      // Typically a missing or malformed encryption key. The exception message describes the key
+      // problem and never contains the token.
+<span class="fc" id="L165">      Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L166">      body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L167">      body.put(&quot;error&quot;, ENCRYPTION_FAILED);</span>
+<span class="fc" id="L168">      body.put(&quot;message&quot;, encryptionFailedMessage(e.getMessage()));</span>
+<span class="fc" id="L169">      return ResponseEntity.internalServerError().body(body);</span>
+<span class="fc" id="L170">    }</span>
+
+<span class="fc" id="L172">    course.setSlackBotToken(encryptedToken);</span>
+<span class="fc" id="L173">    course.setSlackTeamId(authTest.getTeamId());</span>
+<span class="fc" id="L174">    course.setSlackTeamName(authTest.getTeam());</span>
+<span class="fc" id="L175">    course.setSlackTeamUrl(authTest.getUrl());</span>
+<span class="fc" id="L176">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L178">    Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L179">    body.put(&quot;ok&quot;, true);</span>
+<span class="fc" id="L180">    body.putAll(slackInfo(savedCourse));</span>
+<span class="fc" id="L181">    return ResponseEntity.ok(body);</span>
+  }
+
+  private Map&lt;String, String&gt; slackInfo(Course course) {
+<span class="fc" id="L185">    Map&lt;String, String&gt; info = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L186">    info.put(&quot;courseId&quot;, course.getId().toString());</span>
+<span class="fc" id="L187">    info.put(&quot;slackBotToken&quot;, maskToken(tokenSecurityService.decrypt(course.getSlackBotToken())));</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">    info.put(&quot;slackTeamId&quot;, course.getSlackTeamId() != null ? course.getSlackTeamId() : &quot;&quot;);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">    info.put(&quot;slackTeamName&quot;, course.getSlackTeamName() != null ? course.getSlackTeamName() : &quot;&quot;);</span>
+<span class="fc" id="L190">    info.put(&quot;slackTeamUrl&quot;, slackTeamUrl(course));</span>
+<span class="fc" id="L191">    return info;</span>
+  }
+
+  /**
+   * The URL of the course's Slack workspace, e.g. &lt;code&gt;https://ucsb-cs156-f26.slack.com/&lt;/code&gt;.
+   * Tokens stored before the URL was being recorded fall back to a URL based on the team id.
+   *
+   * @param course the course
+   * @return the URL, or an empty string if the course is not connected to a workspace
+   */
+  public static String slackTeamUrl(Course course) {
+<span class="fc bfc" id="L202" title="All 4 branches covered.">    if (course.getSlackTeamUrl() != null &amp;&amp; !course.getSlackTeamUrl().isEmpty()) {</span>
+<span class="fc" id="L203">      return course.getSlackTeamUrl();</span>
+    }
+<span class="fc bfc" id="L205" title="All 4 branches covered.">    if (course.getSlackTeamId() != null &amp;&amp; !course.getSlackTeamId().isEmpty()) {</span>
+<span class="fc" id="L206">      return SLACK_CLIENT_URL + course.getSlackTeamId();</span>
+    }
+<span class="fc" id="L208">    return &quot;&quot;;</span>
+  }
+
+  /**
+   * Lists the people with active accounts in the course's Slack workspace (no bots, no deactivated
+   * accounts, no invitations that have not been accepted yet). Each is matched by email against the
+   * course to determine whether they are the instructor, a staff member, a roster student (only
+   * those with status ROSTER or MANUAL; not dropped students), or none of these.
+   *
+   * @param courseId the id of the course
+   * @return the active users of the workspace
+   */
+  @Operation(summary = &quot;List active users of the course's Slack workspace, with their course role&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/users&quot;)
+  public List&lt;SlackUserView&gt; getSlackUsers(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L225">    Course course =</span>
+        courseRepository
+<span class="fc" id="L227">            .findById(courseId)</span>
+<span class="fc" id="L228">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L229">    List&lt;SlackUser&gt; slackUsers = listSlackUsers(course);</span>
+
+<span class="fc" id="L231">    Map&lt;String, String&gt; roleByEmail = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">    for (RosterStudent student : enrolledStudents(courseId)) {</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">      if (student.getEmail() != null) {</span>
+<span class="fc" id="L234">        roleByEmail.put(canonical(student.getEmail()), ROLE_STUDENT);</span>
+      }
+<span class="fc" id="L236">    }</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">    for (CourseStaff staff : courseStaffRepository.findByCourseId(courseId)) {</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">      if (staff.getEmail() != null) {</span>
+<span class="fc" id="L239">        roleByEmail.put(canonical(staff.getEmail()), ROLE_STAFF);</span>
+      }
+<span class="fc" id="L241">    }</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">    if (course.getInstructorEmail() != null) {</span>
+<span class="fc" id="L243">      roleByEmail.put(canonical(course.getInstructorEmail()), ROLE_INSTRUCTOR);</span>
+    }
+
+<span class="fc" id="L246">    List&lt;SlackUserView&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">    for (SlackUser user : slackUsers) {</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">      if (user.isActivePerson()) {</span>
+        String role =
+<span class="fc bfc" id="L250" title="All 2 branches covered.">            user.email() == null</span>
+<span class="fc" id="L251">                ? ROLE_NONE</span>
+<span class="fc" id="L252">                : roleByEmail.getOrDefault(canonical(user.email()), ROLE_NONE);</span>
+<span class="fc" id="L253">        result.add(</span>
+            new SlackUserView(
+<span class="fc" id="L255">                user.getId(),</span>
+<span class="fc" id="L256">                user.getName(),</span>
+<span class="fc" id="L257">                user.getRealName(),</span>
+<span class="fc" id="L258">                user.displayName(),</span>
+<span class="fc" id="L259">                user.email(),</span>
+                role));
+      }
+<span class="fc" id="L262">    }</span>
+<span class="fc" id="L263">    return result;</span>
+  }
+
+  /**
+   * Lists the roster students (only those with status ROSTER or MANUAL; not dropped students) and
+   * the staff of the course that do not have an active account in the course's Slack workspace,
+   * matching by email. For each, slackStatus indicates whether they have been invited but have not
+   * signed in yet, have a deactivated account, or are unknown to the workspace.
+   *
+   * @param courseId the id of the course
+   * @return staff first, then students
+   */
+  @Operation(summary = &quot;List roster students and staff that are not active in the Slack workspace&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/missing&quot;)
+  public List&lt;SlackMissingMemberView&gt; getMissingMembers(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L280">    Course course =</span>
+        courseRepository
+<span class="fc" id="L282">            .findById(courseId)</span>
+<span class="fc" id="L283">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L284">    List&lt;SlackUser&gt; slackUsers = listSlackUsers(course);</span>
+
+    // An active account wins over an invitation, which wins over a deactivated account
+<span class="fc" id="L287">    Map&lt;String, String&gt; statusByEmail = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">    for (String status : List.of(STATUS_DEACTIVATED, STATUS_INVITED, STATUS_ACTIVE)) {</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">      for (SlackUser user : slackUsers) {</span>
+<span class="fc bfc" id="L290" title="All 6 branches covered.">        if (user.isPerson() &amp;&amp; user.email() != null &amp;&amp; status.equals(slackStatus(user))) {</span>
+<span class="fc" id="L291">          statusByEmail.put(canonical(user.email()), status);</span>
+        }
+<span class="fc" id="L293">      }</span>
+<span class="fc" id="L294">    }</span>
+
+<span class="fc" id="L296">    List&lt;SlackMissingMemberView&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">    for (CourseStaff staff : courseStaffRepository.findByCourseId(courseId)) {</span>
+<span class="fc" id="L298">      String status = missingStatus(statusByEmail, staff.getEmail());</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">      if (status != null) {</span>
+<span class="fc" id="L300">        result.add(</span>
+            new SlackMissingMemberView(
+<span class="fc" id="L302">                ROLE_STAFF, staff.getFirstName(), staff.getLastName(), staff.getEmail(), status));</span>
+      }
+<span class="fc" id="L304">    }</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">    for (RosterStudent student : enrolledStudents(courseId)) {</span>
+<span class="fc" id="L306">      String status = missingStatus(statusByEmail, student.getEmail());</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">      if (status != null) {</span>
+<span class="fc" id="L308">        result.add(</span>
+            new SlackMissingMemberView(
+                ROLE_STUDENT,
+<span class="fc" id="L311">                student.getFirstName(),</span>
+<span class="fc" id="L312">                student.getLastName(),</span>
+<span class="fc" id="L313">                student.getEmail(),</span>
+                status));
+      }
+<span class="fc" id="L316">    }</span>
+<span class="fc" id="L317">    return result;</span>
+  }
+
+  /** Only these roster students are considered: in particular, not dropped students. */
+<span class="fc" id="L321">  public static final List&lt;RosterStatus&gt; ENROLLED_STATUSES =</span>
+<span class="fc" id="L322">      List.of(RosterStatus.ROSTER, RosterStatus.MANUAL);</span>
+
+  private List&lt;RosterStudent&gt; enrolledStudents(Long courseId) {
+<span class="fc" id="L325">    return rosterStudentRepository</span>
+<span class="fc" id="L326">        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(</span>
+            courseId, ENROLLED_STATUSES);
+  }
+
+  private static String slackStatus(SlackUser user) {
+<span class="fc bfc" id="L331" title="All 2 branches covered.">    if (user.isActivePerson()) {</span>
+<span class="fc" id="L332">      return STATUS_ACTIVE;</span>
+    }
+<span class="fc bfc" id="L334" title="All 2 branches covered.">    return user.getDeleted() ? STATUS_DEACTIVATED : STATUS_INVITED;</span>
+  }
+
+  /**
+   * @return null if the email belongs to an active Slack user; otherwise the status to report
+   */
+  private static String missingStatus(Map&lt;String, String&gt; statusByEmail, String email) {
+<span class="fc bfc" id="L341" title="All 2 branches covered.">    if (email == null) {</span>
+<span class="fc" id="L342">      return STATUS_NOT_IN_SLACK;</span>
+    }
+<span class="fc" id="L344">    String status = statusByEmail.getOrDefault(canonical(email), STATUS_NOT_IN_SLACK);</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">    return status.equals(STATUS_ACTIVE) ? null : status;</span>
+  }
+
+  private static String canonical(String email) {
+<span class="fc" id="L349">    return CanonicalFormConverter.convertToValidEmail(email.strip());</span>
+  }
+
+  private List&lt;SlackUser&gt; listSlackUsers(Course course) {
+<span class="fc" id="L353">    String token = tokenSecurityService.decrypt(course.getSlackBotToken());</span>
+<span class="fc bfc" id="L354" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L355">      throw new IllegalArgumentException(</span>
+          &quot;No Slack token has been set for this course; enter one on the Settings tab.&quot;);
+    }
+<span class="fc" id="L358">    return slackService.listUsers(token);</span>
+  }
+
+  /**
+   * A failed call to Slack maps to a 502/Bad Gateway, with the Slack error code and a message.
+   *
+   * @param e the exception; its message is the Slack error code
+   * @return a map with ok=false, error (Slack error code) and message
+   */
+  @ExceptionHandler({SlackApiException.class})
+  public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; handleSlackApiException(SlackApiException e) {
+<span class="fc" id="L369">    Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L370">    body.put(&quot;ok&quot;, false);</span>
+<span class="fc" id="L371">    body.put(&quot;error&quot;, e.getMessage());</span>
+<span class="fc" id="L372">    body.put(&quot;message&quot;, describeError(e.getMessage()));</span>
+<span class="fc" id="L373">    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);</span>
+  }
+
+  /**
+   * Masks a token so that only the first four and last four characters are visible. Tokens too
+   * short to mask meaningfully (eight characters or fewer) are masked entirely; Slack does not
+   * issue tokens that short.
+   *
+   * @param token the plaintext token
+   * @return the masked token, or an empty string if there is no token
+   */
+  public static String maskToken(String token) {
+<span class="fc bfc" id="L385" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L386">      return &quot;&quot;;</span>
+    }
+<span class="fc bfc" id="L388" title="All 2 branches covered.">    if (token.length() &lt;= 2 * VISIBLE_TOKEN_CHARS) {</span>
+<span class="fc" id="L389">      return &quot;*&quot;.repeat(token.length());</span>
+    }
+<span class="fc" id="L391">    return token.substring(0, VISIBLE_TOKEN_CHARS)</span>
+<span class="fc" id="L392">        + &quot;*&quot;.repeat(token.length() - 2 * VISIBLE_TOKEN_CHARS)</span>
+<span class="fc" id="L393">        + token.substring(token.length() - VISIBLE_TOKEN_CHARS);</span>
+  }
+
+  /**
+   * Message shown when a valid token could not be encrypted.
+   *
+   * @param details message from the encryption service, describing the problem with the key
+   * @return a human readable message
+   */
+  public static String encryptionFailedMessage(String details) {
+<span class="fc" id="L403">    return &quot;Slack accepted this token, but the server could not encrypt it, so the token was not saved. Ask an administrator to check the TOKEN_ENCRYPTION_KEY environment variable (see docs/slack.md). Details: %s&quot;</span>
+<span class="fc" id="L404">        .formatted(details);</span>
+  }
+
+  /**
+   * Translates a Slack error code into a message suitable for showing to an instructor who has just
+   * tried to save a token.
+   *
+   * @param error error code from Slack, e.g. &lt;code&gt;invalid_auth&lt;/code&gt;
+   * @return a human readable message
+   */
+  public static String errorMessage(String error) {
+<span class="fc" id="L415">    return describeError(error) + &quot; The token was not saved.&quot;;</span>
+  }
+
+  /**
+   * Translates a Slack error code into a message suitable for showing to an instructor.
+   *
+   * @param error error code from Slack, e.g. &lt;code&gt;invalid_auth&lt;/code&gt;
+   * @return a human readable message
+   */
+  public static String describeError(String error) {
+<span class="fc bfc" id="L425" title="All 6 branches covered.">    return switch (String.valueOf(error)) {</span>
+      case &quot;invalid_auth&quot;, &quot;not_authed&quot; -&gt;
+<span class="fc" id="L427">          &quot;Slack rejected this token as invalid. Copy the Bot User OAuth Token (xoxb-...) from your Slack app's OAuth &amp; Permissions page and try again.&quot;;</span>
+      case &quot;token_revoked&quot;, &quot;token_expired&quot;, &quot;account_inactive&quot; -&gt;
+<span class="fc" id="L429">          &quot;This Slack token has been revoked or is no longer active. Reinstall the Slack app to the workspace to get a new token.&quot;;</span>
+      case &quot;missing_scope&quot; -&gt;
+<span class="fc" id="L431">          &quot;This Slack token is missing a required scope. Add the scope under OAuth &amp; Permissions, reinstall the Slack app to the workspace, and enter the new token.&quot;;</span>
+      case &quot;ratelimited&quot; -&gt;
+<span class="fc" id="L433">          &quot;Slack is limiting requests from this app. Please try again in a minute.&quot;;</span>
+<span class="fc" id="L434">      case SlackService.SLACK_UNREACHABLE -&gt; &quot;Could not reach Slack. Please try again later.&quot;;</span>
+<span class="fc" id="L435">      default -&gt; &quot;Slack reported an error (%s).&quot;.formatted(error);</span>
+    };
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
