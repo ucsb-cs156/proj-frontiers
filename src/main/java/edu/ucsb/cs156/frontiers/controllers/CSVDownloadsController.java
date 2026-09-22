@@ -7,11 +7,13 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.models.NameAndTeam;
 import edu.ucsb.cs156.frontiers.models.RosterStudentDTO;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.RosterStudentDTOService;
 import edu.ucsb.cs156.frontiers.services.SectionTranslationService;
+import edu.ucsb.cs156.frontiers.services.TeamCsvService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -51,6 +53,8 @@ public class CSVDownloadsController extends ApiController {
   @Autowired private RosterStudentRepository rosterStudentRepository;
 
   @Autowired private SectionTranslationService sectionTranslationService;
+
+  @Autowired private TeamCsvService teamCsvService;
 
   @Operation(
       summary = "Download CSV File of Roster Students",
@@ -154,6 +158,66 @@ public class CSVDownloadsController extends ApiController {
         .header(
             HttpHeaders.CONTENT_DISPOSITION,
             String.format("attachment;filename=%s_catme.csv", course.getCourseName()))
+        .header(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
+        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+        .body(stream);
+  }
+
+  @Operation(
+      summary = "Download compact Name to Team CSV File",
+      description =
+          "Returns a CSV file with the roster laid out in several side-by-side Name,Team column"
+              + " pairs. Names are sorted by first name and abbreviated as far as possible while"
+              + " remaining unique (first name; first name plus last initial; first name plus last"
+              + " name). Exact duplicate names are marked with an asterisk.",
+      responses = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "CSV file",
+            content =
+                @Content(
+                    mediaType = "text/csv",
+                    schema = @Schema(type = "string", format = "binary"))),
+        @ApiResponse(responseCode = "400", description = "columns is less than 1"),
+        @ApiResponse(responseCode = "404", description = "Course not found"),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error")
+      })
+  @GetMapping(value = "/name2team", produces = "text/csv")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public ResponseEntity<StreamingResponseBody> name2TeamCsv(
+      @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
+          Long courseId,
+      @Parameter(
+              name = "columns",
+              description = "number of Name,Team column pairs (default 4)",
+              example = "4")
+          @RequestParam(defaultValue = "4")
+          int columns)
+      throws EntityNotFoundException {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    if (columns < 1) {
+      throw new IllegalArgumentException("columns must be at least 1");
+    }
+    StreamingResponseBody stream =
+        (outputStream) -> {
+          List<RosterStudent> rosterStudents =
+              rosterStudentRepository
+                  .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                      courseId, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL));
+          List<NameAndTeam> entries = teamCsvService.nameAndTeams(rosterStudents);
+          try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+            teamCsvService.writeName2TeamCsv(writer, entries, columns);
+          }
+        };
+
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            String.format("attachment;filename=%s_name2team.csv", course.getCourseName()))
         .header(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
         .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
         .body(stream);
