@@ -96,7 +96,7 @@ public class TeamCsvService {
         name = fulls.get(i) + "*";
       }
       List<String> teams = students.get(i).getTeams();
-      String team = teams != null && !teams.isEmpty() ? teams.get(0) : "";
+      String team = teams.isEmpty() ? "" : teams.get(0);
       result.add(new NameAndTeam(name, team));
     }
     return result;
