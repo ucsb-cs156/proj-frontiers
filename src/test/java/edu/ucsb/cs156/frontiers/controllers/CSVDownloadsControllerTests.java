@@ -440,7 +440,7 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
         name2TeamStudent("DAVID", "CHEN", "s26-02"),
         name2TeamStudent("PAT", "SMITH", "s26-01"),
         name2TeamStudent("PAT", "SMITH", "s26-04"),
-        name2TeamStudent("RITAM", "SINGH", "s26-09"),
+        name2TeamStudent("RITAM KUMAR", "SINGH", "s26-09"),
         name2TeamStudent("ZOE", "NOTEAM", null));
   }
 

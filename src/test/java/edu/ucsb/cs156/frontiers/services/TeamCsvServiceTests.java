@@ -49,7 +49,45 @@ public class TeamCsvServiceTests {
     assertEquals("X Æ A-12", service.titleCase("x æ a-12"));
   }
 
+  // firstWord
+
+  @Test
+  public void firstWord_handles_null_and_blank() {
+    assertEquals("", service.firstWord(null));
+    assertEquals("", service.firstWord(""));
+    assertEquals("", service.firstWord("   "));
+  }
+
+  @Test
+  public void firstWord_returns_text_before_the_first_space() {
+    assertEquals("Chris", service.firstWord("Chris"));
+    assertEquals("Chris", service.firstWord("Chris Edward"));
+    assertEquals("Chris", service.firstWord("  Chris   Edward Lee "));
+    assertEquals("Mary-Jane", service.firstWord("Mary-Jane Ann"));
+    assertEquals("CHRIS", service.firstWord("CHRIS\tEDWARD"));
+  }
+
   // nameAndTeams
+
+  @Test
+  public void nameAndTeams_ignores_middle_names_in_the_first_name_field() {
+    List<NameAndTeam> result =
+        service.nameAndTeams(
+            List.of(
+                student("CHRIS EDWARD", "GAUCHO", "s26-01"),
+                student("Chris", "Garcia", "s26-02"),
+                student("Mary Ann", "Lee", "s26-03"),
+                student("Pat Lee", "Smith", "s26-04"),
+                student("Pat", "Smith", "s26-05")));
+    assertEquals(
+        List.of(
+            nt("Chris Gaucho", "s26-01"),
+            nt("Chris Garcia", "s26-02"),
+            nt("Mary", "s26-03"),
+            nt("Pat Smith*", "s26-04"),
+            nt("Pat Smith*", "s26-05")),
+        result);
+  }
 
   @Test
   public void nameAndTeams_uses_first_name_only_when_unique() {

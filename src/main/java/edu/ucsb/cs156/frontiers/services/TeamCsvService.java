@@ -51,8 +51,26 @@ public class TeamCsvService {
   }
 
   /**
+   * Returns the first word of the given name: everything before the first whitespace, once leading
+   * and trailing whitespace has been removed. The roster's first name field often holds a first and
+   * a middle name ("Chris Edward"); we assume the first space marks the end of the first name. Null
+   * becomes "".
+   *
+   * @param name the raw name (may be null)
+   * @return the first word of the name
+   */
+  public String firstWord(String name) {
+    if (name == null) {
+      return "";
+    }
+    return name.trim().split("\\s+", 2)[0];
+  }
+
+  /**
    * Computes the abbreviated name and team for each student, preserving the order of the input
-   * list. Each name is abbreviated as far as possible while remaining unique among all students:
+   * list. The first name is the first word of the roster's first name field (see {@link
+   * #firstWord}), so a middle name in that field is ignored. Each name is abbreviated as far as
+   * possible while remaining unique among all students:
    *
    * <ul>
    *   <li>first name only, where no other student shares that first name;
@@ -72,7 +90,7 @@ public class TeamCsvService {
     List<String> withInitials = new ArrayList<>();
     List<String> fulls = new ArrayList<>();
     for (RosterStudent student : students) {
-      String first = titleCase(student.getFirstName());
+      String first = titleCase(firstWord(student.getFirstName()));
       String last = titleCase(student.getLastName());
       firsts.add(first);
       withInitials.add(join(first, last.isEmpty() ? "" : last.substring(0, 1)));
