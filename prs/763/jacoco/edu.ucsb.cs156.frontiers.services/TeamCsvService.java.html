@@ -96,7 +96,7 @@ import org.springframework.stereotype.Service;
 <span class="fc" id="L96">        name = fulls.get(i) + &quot;*&quot;;</span>
       }
 <span class="fc" id="L98">      List&lt;String&gt; teams = students.get(i).getTeams();</span>
-<span class="pc bpc" id="L99" title="1 of 4 branches missed.">      String team = teams != null &amp;&amp; !teams.isEmpty() ? teams.get(0) : &quot;&quot;;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">      String team = teams.isEmpty() ? &quot;&quot; : teams.get(0);</span>
 <span class="fc" id="L100">      result.add(new NameAndTeam(name, team));</span>
     }
 <span class="fc" id="L102">    return result;</span>
