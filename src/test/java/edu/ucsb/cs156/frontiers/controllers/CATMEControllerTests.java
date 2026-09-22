@@ -16,23 +16,37 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Section;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.jobs.CreateTeamsFromCATMEJob;
 import edu.ucsb.cs156.frontiers.models.CATMEAuditResult;
+import edu.ucsb.cs156.frontiers.models.CATMEStudentDrop;
+import edu.ucsb.cs156.frontiers.models.CATMEStudentUpdate;
+import edu.ucsb.cs156.frontiers.models.CATMETeamAssignment;
 import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
@@ -45,6 +59,14 @@ public class CATMEControllerTests extends ControllerTestCase {
   @MockitoBean private CourseOptionRepository courseOptionRepository;
 
   @MockitoBean private SectionRepository sectionRepository;
+
+  @MockitoBean private CourseRepository courseRepository;
+
+  @MockitoBean private TeamRepository teamRepository;
+
+  @MockitoBean private TeamMemberRepository teamMemberRepository;
+
+  @MockitoBean private JobService jobService;
 
   @Autowired private ObjectMapper objectMapper;
 
@@ -1142,5 +1164,230 @@ public class CATMEControllerTests extends ControllerTestCase {
             "# NO EMAIL FOUND FOR BADDATE5, EXAMPLE 0 2026-06-A2",
             "# NO EMAIL FOUND FOR BADDATE6, EXAMPLE 0 2026-06-2A"),
         response.getResponse().getContentAsString());
+  }
+
+  // ---- POST /api/catme/createteams ----
+
+  private static RosterStudent enrolled(
+      String studentId, String first, String last, String section) {
+    return RosterStudent.builder()
+        .studentId(studentId)
+        .firstName(first)
+        .lastName(last)
+        .email(first.toLowerCase() + "@ucsb.edu")
+        .section(section)
+        .rosterStatus(RosterStatus.ROSTER)
+        .build();
+  }
+
+  private static MockMultipartFile catmeFile(String content) {
+    return new MockMultipartFile(
+        "file", "catme.csv", "text/csv", content.getBytes(StandardCharsets.UTF_8));
+  }
+
+  private final Course course = Course.builder().id(1L).courseName("CS156").build();
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void createTeams_cleanAudit_launchesJobWithTeamAssignments() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(
+            List.of(
+                enrolled("1111111", "Chris", "Gaucho", "0100"),
+                enrolled("2222222", "Lauren", "Del Playa", "0100"),
+                enrolled("3333333", "Sam", "Sabado", "0200")));
+    when(jobService.runAsJob(any(CreateTeamsFromCATMEJob.class)))
+        .thenReturn(Job.builder().id(42L).build());
+
+    String content =
+        CATME_AUDIT_HEADER
+            + "\"Gaucho, Chris\",\"1111111\",\"chris@ucsb.edu\",\"0100\",\"team-01\",\"Mac\"\n"
+            + "\"Del Playa, Lauren\",\"2222222\",\"lauren@ucsb.edu\",\"0100\",\"team-01\",\"Windows\"\n"
+            + "\"Sabado, Sam\",\"3333333\",\"sam@ucsb.edu\",\"0200\",\"team-02\"\n"
+            + "\n"
+            + "\"Scores\",\"\",\"\",\"\",\"\"\n";
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/catme/createteams")
+                    .file(catmeFile(content))
+                    .with(csrf())
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    Map<String, Object> body =
+        objectMapper.readValue(response.getResponse().getContentAsString(), Map.class);
+    assertEquals(Map.of("message", "Job Launched: 42"), body);
+
+    ArgumentCaptor<CreateTeamsFromCATMEJob> captor =
+        ArgumentCaptor.forClass(CreateTeamsFromCATMEJob.class);
+    verify(jobService).runAsJob(captor.capture());
+    CreateTeamsFromCATMEJob job = captor.getValue();
+    assertEquals("course", job.getScopeType());
+    assertEquals(1L, job.getScopeId());
+    assertEquals(
+        List.of(
+            new CATMETeamAssignment("1111111", "Gaucho, Chris", "team-01"),
+            new CATMETeamAssignment("2222222", "Del Playa, Lauren", "team-01"),
+            new CATMETeamAssignment("3333333", "Sabado, Sam", "team-02")),
+        job.getAssignments());
+
+    // the job was given everything it needs: running it reaches the repositories
+    when(teamRepository.findByCourseIdAndName(eq(1L), any())).thenReturn(Optional.empty());
+    when(teamRepository.save(any(Team.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(teamMemberRepository.findByTeamAndRosterStudent(any(), any()))
+        .thenReturn(Optional.empty());
+    Job record = Job.builder().build();
+    job.accept(new edu.ucsb.cs156.jobs.services.JobContext(null, record));
+    verify(courseRepository, times(2)).findById(1L);
+    verify(teamRepository, times(2)).save(any(Team.class));
+    verify(teamMemberRepository, times(3)).save(any(TeamMember.class));
+    assertEquals(true, record.getLog().contains("NOT been pushed to GitHub"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void createTeams_rowWithoutTeamNameField_getsEmptyTeamName() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(enrolled("1111111", "Chris", "Gaucho", "0100")));
+    when(jobService.runAsJob(any(CreateTeamsFromCATMEJob.class)))
+        .thenReturn(Job.builder().id(7L).build());
+
+    String content =
+        CATME_AUDIT_HEADER + "\"Gaucho, Chris\",\"1111111\",\"chris@ucsb.edu\",\"0100\"\n";
+    mockMvc
+        .perform(
+            multipart("/api/catme/createteams")
+                .file(catmeFile(content))
+                .with(csrf())
+                .param("courseId", "1"))
+        .andExpect(status().isOk());
+
+    ArgumentCaptor<CreateTeamsFromCATMEJob> captor =
+        ArgumentCaptor.forClass(CreateTeamsFromCATMEJob.class);
+    verify(jobService).runAsJob(captor.capture());
+    assertEquals(
+        List.of(new CATMETeamAssignment("1111111", "Gaucho, Chris", "")),
+        captor.getValue().getAssignments());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void createTeams_auditFindsNameMismatch_reportsItAndDoesNotLaunch() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(enrolled("1111111", "Chris", "Gaucho", "0100")));
+
+    String content =
+        CATME_AUDIT_HEADER
+            + "\"Gaucho, Christopher\",\"1111111\",\"chris@ucsb.edu\",\"0100\",\"team-01\"\n";
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/catme/createteams")
+                    .file(catmeFile(content))
+                    .with(csrf())
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    CATMEAuditResult result =
+        objectMapper.readValue(response.getResponse().getContentAsString(), CATMEAuditResult.class);
+    assertEquals(
+        List.of(
+            new CATMEStudentUpdate(
+                "1111111", "Gaucho, Chris", "Name", "Gaucho, Christopher", "Gaucho, Chris")),
+        result.studentsToUpdate());
+    assertEquals(List.of(), result.studentsToDrop());
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void createTeams_auditFindsStudentToDrop_reportsItAndDoesNotLaunch() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(enrolled("1111111", "Chris", "Gaucho", "0100")));
+
+    String content =
+        CATME_AUDIT_HEADER
+            + "\"Gaucho, Chris\",\"1111111\",\"chris@ucsb.edu\",\"0100\",\"team-01\"\n"
+            + "\"Gone, Someone\",\"9999999\",\"gone@ucsb.edu\",\"0100\",\"team-01\"\n";
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/catme/createteams")
+                    .file(catmeFile(content))
+                    .with(csrf())
+                    .param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    CATMEAuditResult result =
+        objectMapper.readValue(response.getResponse().getContentAsString(), CATMEAuditResult.class);
+    assertEquals(List.of(), result.studentsToUpdate());
+    assertEquals(
+        List.of(new CATMEStudentDrop("9999999", "Gone, Someone", "gone@ucsb.edu", "0100")),
+        result.studentsToDrop());
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void createTeams_unrecognizedFormat_returns422AndDoesNotLaunch() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/catme/createteams")
+                    .file(catmeFile("Not,The,Right,Header\n"))
+                    .with(csrf())
+                    .param("courseId", "1"))
+            .andExpect(status().isUnprocessableEntity())
+            .andReturn();
+
+    Map<String, Object> body =
+        objectMapper.readValue(response.getResponse().getContentAsString(), Map.class);
+    assertEquals(Map.of("message", CATMEController.CATME_AUDIT_FORMAT_ERROR_MESSAGE), body);
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void createTeams_courseDoesNotExist_returns404() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/catme/createteams")
+                    .file(catmeFile(CATME_AUDIT_HEADER))
+                    .with(csrf())
+                    .param("courseId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> body =
+        objectMapper.readValue(response.getResponse().getContentAsString(), Map.class);
+    assertEquals("Course with id 1 not found", body.get("message"));
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void createTeams_forbiddenForRegularUser() throws Exception {
+    mockMvc
+        .perform(
+            multipart("/api/catme/createteams")
+                .file(catmeFile(CATME_AUDIT_HEADER))
+                .with(csrf())
+                .param("courseId", "1"))
+        .andExpect(status().isForbidden());
+    verify(jobService, never()).runAsJob(any());
   }
 }
