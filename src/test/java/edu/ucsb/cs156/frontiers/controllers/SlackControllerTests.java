@@ -20,6 +20,7 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.SlackApiException;
 import edu.ucsb.cs156.frontiers.jobs.SetupSectionSlackChannelsJob;
+import edu.ucsb.cs156.frontiers.jobs.SetupTeamSlackChannelsJob;
 import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
 import edu.ucsb.cs156.frontiers.models.SlackUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
@@ -27,6 +28,7 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
 import edu.ucsb.cs156.frontiers.services.SlackService;
 import edu.ucsb.cs156.jobs.entities.Job;
@@ -49,6 +51,7 @@ public class SlackControllerTests extends ControllerTestCase {
   @MockitoBean private RosterStudentRepository rosterStudentRepository;
   @MockitoBean private CourseStaffRepository courseStaffRepository;
   @MockitoBean private SectionRepository sectionRepository;
+  @MockitoBean private TeamRepository teamRepository;
   @MockitoBean private CourseOptionRepository courseOptionRepository;
   @MockitoBean private JobService jobService;
   @MockitoBean private SlackService slackService;
@@ -1011,6 +1014,127 @@ public class SlackControllerTests extends ControllerTestCase {
         .perform(post("/api/courses/slack/sectionChannels").with(csrf()).param("courseId", "1"))
         .andExpect(status().isForbidden());
 
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupTeamChannels_launchesJobScopedToTheCourse() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", true);
+    Job launched = Job.builder().id(19L).status("running").build();
+    when(jobService.runAsJob(any(SetupTeamSlackChannelsJob.class))).thenReturn(launched);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(mapper.writeValueAsString(launched), response.getResponse().getContentAsString());
+
+    ArgumentCaptor<SetupTeamSlackChannelsJob> captor =
+        ArgumentCaptor.forClass(SetupTeamSlackChannelsJob.class);
+    verify(jobService).runAsJob(captor.capture());
+    SetupTeamSlackChannelsJob job = captor.getValue();
+    assertEquals("course", job.getScopeType());
+    assertEquals(1L, job.getScopeId());
+
+    // the job was given everything it needs: running it reaches Slack with the decrypted token
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(List.of(slackUser("U01", "instructor@ucsb.edu")));
+    when(slackService.listPublicChannels(TOKEN)).thenReturn(List.of());
+    when(teamRepository.findByCourseIdOrderByNameAsc(1L)).thenReturn(List.of());
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+    Job record = Job.builder().build();
+    job.accept(new edu.ucsb.cs156.jobs.services.JobContext(null, record));
+    verify(slackService).listUsers(TOKEN);
+    verify(slackService).listPublicChannels(TOKEN);
+    verify(teamRepository).findByCourseIdOrderByNameAsc(1L);
+    verify(courseStaffRepository).findByCourseId(1L);
+    assertEquals(true, record.getLog().startsWith("Creating Team Channels"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupTeamChannels_requiresSlackIntegrationOption() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", false);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals(
+        "The course option SLACK_INTEGRATION must be enabled to set up team Slack channels.",
+        responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupTeamChannels_requiresSlackIntegrationOption_absent() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", null);
+
+    mockMvc
+        .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isBadRequest());
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupTeamChannels_requiresToken() throws Exception {
+    when(courseRepository.findById(1L))
+        .thenReturn(Optional.of(courseBuilder().slackBotToken("").build()));
+    when(tokenSecurityService.decrypt("")).thenReturn("");
+    courseOption("SLACK_INTEGRATION", true);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals(
+        "No Slack token has been set for this course; enter one on the Settings tab.",
+        responseToJson(response).get("message"));
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+    when(tokenSecurityService.decrypt(null)).thenReturn(null);
+    mockMvc
+        .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isBadRequest());
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupTeamChannels_courseDoesNotExist() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals("Course with id 1 not found", responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void setupTeamChannels_forbiddenForRegularUser() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+
+    mockMvc
+        .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isForbidden());
     verify(jobService, never()).runAsJob(any());
   }
 

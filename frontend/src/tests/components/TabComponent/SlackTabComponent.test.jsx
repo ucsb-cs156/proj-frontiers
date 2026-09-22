@@ -236,11 +236,46 @@ describe("SlackTabComponent tests", () => {
     renderTab("https://ucsb-cs156-f26.slack.com/", true);
 
     const card = screen.getByTestId("Test-slack-section-channels-card");
-    const tab = screen.getByTestId("Test-slack-tab-component");
-    expect(tab.lastElementChild).toBe(card);
+    expect(card).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("Test-slack-section-channels-submit"));
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
     expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
+  });
+
+  test("always has the Slack Team Channels card, which launches the job for this course", async () => {
+    axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+    axiosMock.onPost("/api/courses/slack/teamChannels").reply(200, { id: 18 });
+
+    renderTab();
+
+    const card = screen.getByTestId("Test-slack-team-channels-card");
+    expect(
+      screen.getByTestId("Test-slack-tab-component").lastElementChild,
+    ).toBe(card);
+    expect(
+      screen.queryByTestId("Test-slack-section-channels-card"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("Test-slack-team-channels-submit"));
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/courses/slack/teamChannels",
+    );
+    expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
+  });
+
+  test("the Slack Team Channels card comes after the Slack Section Channels card", async () => {
+    axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+
+    renderTab("https://ucsb-cs156-f26.slack.com/", true);
+
+    const tab = screen.getByTestId("Test-slack-tab-component");
+    const section = screen.getByTestId("Test-slack-section-channels-card");
+    const team = screen.getByTestId("Test-slack-team-channels-card");
+    expect(section.nextElementSibling).toBe(team);
+    expect(tab.lastElementChild).toBe(team);
   });
 });

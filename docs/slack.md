@@ -146,6 +146,39 @@ Slack limits how fast an app may make these calls. When Slack says to slow
 down, the job waits for as long as Slack asks (at most a minute at a time) and
 tries again, so with a large class the job can take a few minutes.
 
+## Slack channels for teams
+
+The Slack tab also has a **Slack Team Channels** card (it only needs **Slack
+Integration**, not Translate Sections). Open it and click **Set Up Team Slack
+Channels** to launch the `SetupTeamSlackChannels` job for the course. Its log
+is on the **Jobs** tab:
+
+1. **Creating Team Channels**: each team on the **Teams** tab gets a public
+   channel named `team-` followed by the team name in the form Slack requires:
+   all lowercase, spaces replaced by hyphens, and every character other than
+   letters, numbers, hyphens and underscores replaced by a hyphen (so the team
+   "The A Team" gets `#team-the-a-team`). If two teams would get the same
+   channel name (for example "Team 1" and "team-1"), the job stops with an
+   error naming them, before anything is changed in Slack; rename one of the
+   teams and run the job again. Channels are created unless they already
+   exist; archived channels and channels Slack refuses to create are skipped,
+   and the log says why.
+2. **Adding Team Members to Channels**: the members of each team, and the
+   instructor of the course, are added to the team's channel unless they are
+   in it already. As for section channels, people are matched by email, and
+   those without an active account in the Slack workspace cannot be added;
+   the log says how many there were.
+3. **Removing Channel Members Who Are Not On The Team**: everyone else is
+   removed from each channel, and logged, except for the instructor, the
+   course staff, bots (including the Frontiers bot), and members that are not
+   users of the workspace.
+
+The last line of the log is a summary: how many channels were created and
+already existed, and how many members were added, were already present, and
+were removed. The job can be run as often as you like; it only makes the
+changes that are still needed, and needs the same scopes as the section
+channels job.
+
 ## Operational gotcha: adding scopes means a new token
 
 If you add scopes to the Slack app later, you must **reinstall the app to the
@@ -191,6 +224,9 @@ API tokens (see [README_Canvas_API_Keys.md](README_Canvas_API_Keys.md)):
 | Calls to Slack `users.list` (follows pagination) | `SlackService.listUsers(...)` |
 | `POST /api/courses/slack/sectionChannels?courseId=...` (launches the job) | `SlackController` |
 | Job that sets up the section channels | `SetupSectionSlackChannelsJob` |
+| `POST /api/courses/slack/teamChannels?courseId=...` (launches the job) | `SlackController` |
+| Job that sets up the team channels | `SetupTeamSlackChannelsJob` |
+| Slack Team Channels card | `SlackTeamChannelsCard.jsx`, shown by `SlackTabComponent.jsx` |
 | Calls to Slack `conversations.list`, `.create`, `.join`, `.members`, `.invite`, `.kick` (with retry when rate limited) | `SlackService` |
 | Slack Section Channels card | `SlackSectionChannelsCard.jsx`, shown by `SlackTabComponent.jsx` |
 | Slack tab | `SlackTabComponent.jsx`, `SlackUsersTable.jsx`, `SlackMissingMembersTable.jsx`, shown by `InstructorCourseShowPage.jsx` |
