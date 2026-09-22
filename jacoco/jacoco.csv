@@ -46,7 +46,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,CurrentUserService,0,10,0,2,0,2,0,3,
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.RosterStudentCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,InstructorsController,0,67,0,2,0,15,0,6,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSRFController,0,5,0,0,0,2,0,2,0,2
-frontiers,edu.ucsb.cs156.frontiers.controllers,CATMEController,0,645,0,100,0,146,0,71,0,21
+frontiers,edu.ucsb.cs156.frontiers.controllers,CATMEController,0,767,0,108,0,175,0,79,0,25
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubController,0,61,0,2,0,18,0,4,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,ApiController,0,98,0,0,0,26,0,13,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamCreationResponse,0,15,0,0,0,1,0,1,0,1
@@ -59,7 +59,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,SectionsController,0,251,0,12,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,UsersController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,WebhookController,0,436,0,54,0,102,0,30,0,3
-frontiers,edu.ucsb.cs156.frontiers.controllers,CATMEController.CATMEStudentRow,0,15,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.controllers,CATMEController.CATMEStudentRow,0,18,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.PurgeDroppedResponse,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffCSVController,0,179,0,14,0,41,0,12,0,5
 frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController.SlackUserView,0,21,0,0,0,1,0,1,0,1
@@ -95,6 +95,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,PullTeamsFromCanvasJob,0,267,0,18,0,64,0
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamFromGithubJob,0,79,0,6,0,22,0,6,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,124,0,24,0,24,0,15,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamMemberFromGithubJob,0,90,0,8,0,26,0,7,0,3
+frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamsFromCATMEJob,0,297,0,26,0,59,0,18,0,5
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamRepositoriesJob,0,73,0,6,0,16,0,6,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToGithubJob,0,284,0,24,0,76,0,15,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,253,0,30,0,65,0,22,0,7
@@ -117,6 +118,7 @@ frontiers,edu.ucsb.cs156.frontiers.models,CATMEAuditResult,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,CATMEStudentDrop,0,15,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,SlackUsersListResponse,0,13,0,4,0,3,0,3,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,CourseWarning,0,9,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.models,CATMETeamAssignment,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,78,0,2,0,16,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,LoadResult,0,15,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,UserDataDTO,0,30,0,0,0,12,0,1,0,1
