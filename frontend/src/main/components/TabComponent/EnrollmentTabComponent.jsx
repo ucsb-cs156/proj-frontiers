@@ -19,6 +19,15 @@ import Modal from "react-bootstrap/Modal";
 import DroppedStudentsTable from "main/components/RosterStudent/DroppedStudentsTable";
 import PurgeDroppedStudentsModal from "main/components/RosterStudent/PurgeDroppedStudentsModal";
 import ConfirmationModal from "main/components/Common/ConfirmationModal";
+import { useSectionLabels } from "main/utils/sectionsUtils";
+
+// Value of the "All sections" / "All teams" option of the filter dropdowns.
+// The empty string is taken: it is the value of "(no section)" and "(no team)".
+export const ALL = "__all__";
+
+const sectionOf = (student) => student.section || "";
+const teamsOf = (student) =>
+  Array.isArray(student.teams) ? student.teams : [];
 
 export default function EnrollmentTabComponent({
   courseId,
@@ -43,6 +52,9 @@ export default function EnrollmentTabComponent({
     true,
   );
   const [searchTerm, setSearchTerm] = useState("");
+  const [sectionFilter, setSectionFilter] = useState(ALL);
+  const [teamFilter, setTeamFilter] = useState(ALL);
+  const translateSection = useSectionLabels(courseId, translateSections);
 
   const objectToAxiosParamsCSV = (formData) => {
     const file = new FormData();
@@ -169,6 +181,41 @@ export default function EnrollmentTabComponent({
   const droppedStudents = rosterStudents.filter(
     (student) => student.rosterStatus === "DROPPED",
   );
+  const activeStudents = rosterStudents.filter(
+    (student) => student.rosterStatus !== "DROPPED",
+  );
+  // The choices offered by the dropdowns: every section / team that some
+  // active student has, sorted; "" stands for students with none.
+  const sectionOptions = [...new Set(activeStudents.map(sectionOf))].sort();
+  const teamOptions = [
+    ...new Set(
+      activeStudents.flatMap((student) =>
+        teamsOf(student).length === 0 ? [""] : teamsOf(student),
+      ),
+    ),
+  ].sort();
+
+  const matchesSearch = (student) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    const fullName = `${student.firstName} ${student.lastName}`;
+    if (student.studentId.toLowerCase().includes(searchTermLower)) {
+      return true;
+    } else if (student.email.toLowerCase().includes(searchTermLower)) {
+      return true;
+    } else if (student.githubLogin?.toLowerCase().includes(searchTermLower)) {
+      return true;
+    } else if (fullName.toLowerCase().includes(searchTermLower)) {
+      return true;
+    }
+    return false;
+  };
+  const matchesSection = (student) =>
+    sectionFilter === ALL || sectionOf(student) === sectionFilter;
+  const matchesTeam = (student) =>
+    teamFilter === ALL ||
+    (teamFilter === ""
+      ? teamsOf(student).length === 0
+      : teamsOf(student).includes(teamFilter));
 
   const handleCsvSubmit = (formData) => {
     rosterCsvMutation.mutate(formData);
@@ -318,13 +365,11 @@ export default function EnrollmentTabComponent({
           </Button>
         </Col>
       </Row>
-      <Row className="mb-1">
-        <Form>
-          <Form.Group as={Row} controlId="searchFilter">
-            <Form.Label column sm={2}>
-              Search Students:
-            </Form.Label>
-            <Col sm={10}>
+      <Form className="mb-1">
+        <Row className="align-items-end">
+          <Col sm={6}>
+            <Form.Group controlId="searchFilter">
+              <Form.Label>Search Students:</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Search by name, email, student ID, or Github Login"
@@ -332,32 +377,54 @@ export default function EnrollmentTabComponent({
                 onChange={(e) => setSearchTerm(e.target.value)}
                 data-testid={`${testIdPrefix}-search`}
               />
-            </Col>
-          </Form.Group>
-        </Form>
-      </Row>
+            </Form.Group>
+          </Col>
+          <Col sm={3}>
+            <Form.Group controlId="sectionFilter">
+              <Form.Label>Section:</Form.Label>
+              <Form.Select
+                value={sectionFilter}
+                onChange={(e) => setSectionFilter(e.target.value)}
+                data-testid={`${testIdPrefix}-section-filter`}
+              >
+                <option value={ALL}>All sections</option>
+                {sectionOptions.map((section) => (
+                  <option key={section} value={section}>
+                    {section === ""
+                      ? "(no section)"
+                      : translateSection(section)}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col sm={3}>
+            <Form.Group controlId="teamFilter">
+              <Form.Label>Team:</Form.Label>
+              <Form.Select
+                value={teamFilter}
+                onChange={(e) => setTeamFilter(e.target.value)}
+                data-testid={`${testIdPrefix}-team-filter`}
+              >
+                <option value={ALL}>All teams</option>
+                {teamOptions.map((team) => (
+                  <option key={team} value={team}>
+                    {team === "" ? "(no team)" : team}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+      </Form>
       <Row>
         <RosterStudentTable
-          students={rosterStudents
-            .filter((student) => {
-              const searchTermLower = searchTerm.toLowerCase();
-              const fullName = `${student.firstName} ${student.lastName}`;
-              if (student.studentId.toLowerCase().includes(searchTermLower)) {
-                return true;
-              } else if (
-                student.email.toLowerCase().includes(searchTermLower)
-              ) {
-                return true;
-              } else if (
-                student.githubLogin?.toLowerCase().includes(searchTermLower)
-              ) {
-                return true;
-              } else if (fullName.toLowerCase().includes(searchTermLower)) {
-                return true;
-              }
-              return false;
-            })
-            .filter((student) => student.rosterStatus !== "DROPPED")}
+          students={activeStudents.filter(
+            (student) =>
+              matchesSearch(student) &&
+              matchesSection(student) &&
+              matchesTeam(student),
+          )}
           currentUser={currentUser}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-RosterStudentTable`}
