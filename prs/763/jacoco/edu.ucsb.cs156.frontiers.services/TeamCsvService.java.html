@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TeamCsvService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">TeamCsvService.java</span></div><h1>TeamCsvService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.models.NameAndTeam;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.springframework.stereotype.Service;
+
+/**
+ * Builds the compact team tables that instructors traditionally produce by hand: every student's
+ * name abbreviated as far as it can be while staying unique, laid out in several side-by-side
+ * column pairs (e.g. &quot;Name,Team,,Name,Team&quot;). The name abbreviation, the column balancing and the
+ * CSV writing are separate steps so that different tables (name to team, team to names) can share
+ * them.
+ */
+@Service
+<span class="fc" id="L23">public class TeamCsvService {</span>
+
+  /**
+   * Converts a name to Title Case: the first letter of each word is upper case and the rest lower
+   * case. A new word starts after any non-letter character, so hyphenated names and names with
+   * apostrophes are handled (e.g. &quot;MARY-JANE O'BRIEN&quot; becomes &quot;Mary-Jane O'Brien&quot;). Leading and
+   * trailing whitespace is removed; null becomes &quot;&quot;.
+   *
+   * @param name the raw name (may be null)
+   * @return the name in Title Case
+   */
+  public String titleCase(String name) {
+<span class="fc bfc" id="L35" title="All 2 branches covered.">    if (name == null) {</span>
+<span class="fc" id="L36">      return &quot;&quot;;</span>
+    }
+<span class="fc" id="L38">    String trimmed = name.trim();</span>
+<span class="fc" id="L39">    StringBuilder result = new StringBuilder(trimmed.length());</span>
+<span class="fc" id="L40">    boolean startOfWord = true;</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">    for (char c : trimmed.toCharArray()) {</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">      if (Character.isLetter(c)) {</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        result.append(startOfWord ? Character.toUpperCase(c) : Character.toLowerCase(c));</span>
+<span class="fc" id="L44">        startOfWord = false;</span>
+      } else {
+<span class="fc" id="L46">        result.append(c);</span>
+<span class="fc" id="L47">        startOfWord = true;</span>
+      }
+    }
+<span class="fc" id="L50">    return result.toString();</span>
+  }
+
+  /**
+   * Computes the abbreviated name and team for each student, preserving the order of the input
+   * list. Each name is abbreviated as far as possible while remaining unique among all students:
+   *
+   * &lt;ul&gt;
+   *   &lt;li&gt;first name only, where no other student shares that first name;
+   *   &lt;li&gt;first name plus last initial, where that is enough to be unambiguous;
+   *   &lt;li&gt;first name plus full last name, otherwise;
+   *   &lt;li&gt;first name plus full last name followed by an asterisk, when another student has exactly
+   *       the same first and last name (the instructor can then disambiguate by hand).
+   * &lt;/ul&gt;
+   *
+   * The team is the first of the student's teams, or &quot;&quot; if the student has no team.
+   *
+   * @param students the roster students, already in the desired order
+   * @return one NameAndTeam per student, in the same order
+   */
+  public List&lt;NameAndTeam&gt; nameAndTeams(List&lt;RosterStudent&gt; students) {
+<span class="fc" id="L71">    List&lt;String&gt; firsts = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L72">    List&lt;String&gt; withInitials = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L73">    List&lt;String&gt; fulls = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">    for (RosterStudent student : students) {</span>
+<span class="fc" id="L75">      String first = titleCase(student.getFirstName());</span>
+<span class="fc" id="L76">      String last = titleCase(student.getLastName());</span>
+<span class="fc" id="L77">      firsts.add(first);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">      withInitials.add(join(first, last.isEmpty() ? &quot;&quot; : last.substring(0, 1)));</span>
+<span class="fc" id="L79">      fulls.add(join(first, last));</span>
+<span class="fc" id="L80">    }</span>
+
+<span class="fc" id="L82">    Map&lt;String, Integer&gt; firstCounts = counts(firsts);</span>
+<span class="fc" id="L83">    Map&lt;String, Integer&gt; withInitialCounts = counts(withInitials);</span>
+<span class="fc" id="L84">    Map&lt;String, Integer&gt; fullCounts = counts(fulls);</span>
+
+<span class="fc" id="L86">    List&lt;NameAndTeam&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">    for (int i = 0; i &lt; students.size(); i++) {</span>
+      String name;
+<span class="fc bfc" id="L89" title="All 2 branches covered.">      if (firstCounts.get(firsts.get(i)) == 1) {</span>
+<span class="fc" id="L90">        name = firsts.get(i);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">      } else if (withInitialCounts.get(withInitials.get(i)) == 1) {</span>
+<span class="fc" id="L92">        name = withInitials.get(i);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">      } else if (fullCounts.get(fulls.get(i)) == 1) {</span>
+<span class="fc" id="L94">        name = fulls.get(i);</span>
+      } else {
+<span class="fc" id="L96">        name = fulls.get(i) + &quot;*&quot;;</span>
+      }
+<span class="fc" id="L98">      List&lt;String&gt; teams = students.get(i).getTeams();</span>
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">      String team = teams != null &amp;&amp; !teams.isEmpty() ? teams.get(0) : &quot;&quot;;</span>
+<span class="fc" id="L100">      result.add(new NameAndTeam(name, team));</span>
+    }
+<span class="fc" id="L102">    return result;</span>
+  }
+
+  /**
+   * Splits the items into the given number of columns, filling column by column, with the column
+   * lengths as balanced as possible: every column gets items.size() / columns items, and the first
+   * items.size() % columns columns get one extra.
+   *
+   * @param &lt;T&gt; the type of item being laid out (e.g. a student, or a whole team)
+   * @param items the items, in order
+   * @param columns the number of columns, at least 1
+   * @return a list of exactly {@code columns} lists, the first of which is never shorter than any
+   *     other
+   * @throws IllegalArgumentException if columns is less than 1
+   */
+  public &lt;T&gt; List&lt;List&lt;T&gt;&gt; layoutColumns(List&lt;T&gt; items, int columns) {
+<span class="fc bfc" id="L118" title="All 2 branches covered.">    if (columns &lt; 1) {</span>
+<span class="fc" id="L119">      throw new IllegalArgumentException(&quot;columns must be at least 1&quot;);</span>
+    }
+<span class="fc" id="L121">    int base = items.size() / columns;</span>
+<span class="fc" id="L122">    int extra = items.size() % columns;</span>
+<span class="fc" id="L123">    List&lt;List&lt;T&gt;&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L124">    int start = 0;</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">    for (int c = 0; c &lt; columns; c++) {</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">      int size = base + (c &lt; extra ? 1 : 0);</span>
+<span class="fc" id="L127">      result.add(items.subList(start, start + size));</span>
+<span class="fc" id="L128">      start += size;</span>
+    }
+<span class="fc" id="L130">    return result;</span>
+  }
+
+  /**
+   * Writes a CSV made of several side-by-side columns separated by a blank cell. The header line
+   * repeats {@code headerCells} once per column; then there is one line per row of the longest
+   * column. Each column is a list of rows, and each row a list of cells with the same length as
+   * {@code headerCells}. Rows missing from shorter columns are written as blank cells.
+   *
+   * @param writer where to write the CSV
+   * @param headerCells the cells of one column's header, e.g. [&quot;Name&quot;, &quot;Team&quot;]
+   * @param columns the columns, each a list of rows of cells
+   * @throws IOException if writing fails
+   */
+  public void writeColumnsCsv(
+      Writer writer, List&lt;String&gt; headerCells, List&lt;List&lt;List&lt;String&gt;&gt;&gt; columns)
+      throws IOException {
+<span class="fc" id="L147">    int width = headerCells.size();</span>
+<span class="fc" id="L148">    List&lt;String&gt; blanks = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">    for (int i = 0; i &lt; width; i++) {</span>
+<span class="fc" id="L150">      blanks.add(&quot;&quot;);</span>
+    }
+<span class="fc" id="L152">    int rows = columns.stream().mapToInt(List::size).max().orElse(0);</span>
+
+<span class="fc" id="L154">    try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {</span>
+<span class="fc" id="L155">      List&lt;String&gt; header = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">      for (int c = 0; c &lt; columns.size(); c++) {</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (c &gt; 0) {</span>
+<span class="fc" id="L158">          header.add(&quot;&quot;);</span>
+        }
+<span class="fc" id="L160">        header.addAll(headerCells);</span>
+      }
+<span class="fc" id="L162">      csvPrinter.printRecord(header);</span>
+
+<span class="fc bfc" id="L164" title="All 2 branches covered.">      for (int r = 0; r &lt; rows; r++) {</span>
+<span class="fc" id="L165">        List&lt;String&gt; row = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        for (int c = 0; c &lt; columns.size(); c++) {</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">          if (c &gt; 0) {</span>
+<span class="fc" id="L168">            row.add(&quot;&quot;);</span>
+          }
+<span class="fc" id="L170">          List&lt;List&lt;String&gt;&gt; column = columns.get(c);</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">          row.addAll(r &lt; column.size() ? column.get(r) : blanks);</span>
+        }
+<span class="fc" id="L173">        csvPrinter.printRecord(row);</span>
+      }
+    }
+<span class="fc" id="L176">  }</span>
+
+  /**
+   * Writes the &quot;Name,Team&quot; table: the entries balanced across the given number of column pairs,
+   * filling column by column.
+   *
+   * @param writer where to write the CSV
+   * @param entries the entries, in order
+   * @param columns the number of &quot;Name,Team&quot; column pairs, at least 1
+   * @throws IOException if writing fails
+   * @throws IllegalArgumentException if columns is less than 1
+   */
+  public void writeName2TeamCsv(Writer writer, List&lt;NameAndTeam&gt; entries, int columns)
+      throws IOException {
+<span class="fc" id="L190">    List&lt;List&lt;List&lt;String&gt;&gt;&gt; layout = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">    for (List&lt;NameAndTeam&gt; column : layoutColumns(entries, columns)) {</span>
+<span class="fc" id="L192">      layout.add(column.stream().map(e -&gt; List.of(e.name(), e.team())).toList());</span>
+<span class="fc" id="L193">    }</span>
+<span class="fc" id="L194">    writeColumnsCsv(writer, List.of(&quot;Name&quot;, &quot;Team&quot;), layout);</span>
+<span class="fc" id="L195">  }</span>
+
+  private static String join(String first, String lastPart) {
+<span class="fc bfc" id="L198" title="All 2 branches covered.">    if (first.isEmpty()) {</span>
+<span class="fc" id="L199">      return lastPart;</span>
+    }
+<span class="fc bfc" id="L201" title="All 2 branches covered.">    if (lastPart.isEmpty()) {</span>
+<span class="fc" id="L202">      return first;</span>
+    }
+<span class="fc" id="L204">    return first + &quot; &quot; + lastPart;</span>
+  }
+
+  private static Map&lt;String, Integer&gt; counts(List&lt;String&gt; values) {
+<span class="fc" id="L208">    Map&lt;String, Integer&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">    for (String value : values) {</span>
+<span class="fc" id="L210">      result.merge(value, 1, Integer::sum);</span>
+<span class="fc" id="L211">    }</span>
+<span class="fc" id="L212">    return result;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
