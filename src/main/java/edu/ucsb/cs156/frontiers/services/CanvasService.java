@@ -156,11 +156,11 @@ public class CanvasService {
 
   public List<CanvasGroup> getCanvasGroups(
       @HasLinkedCanvasCourse Course course, String groupSetId) {
-    // language=GraphQL
     String query =
-        """
-            query GetTeams($groupId: ID!) {
-              node(id: $groupId) {
+        "query GetTeams($groupId: ID!) { groupSet: "
+            + groupSetSelector(groupSetId)
+            + """
+                 {
                 ... on GroupSet {
                   id
                   name
@@ -188,7 +188,7 @@ public class CanvasService {
         authedClient
             .document(query)
             .variable("groupId", groupSetId)
-            .retrieveSync("node.groups")
+            .retrieveSync("groupSet.groups")
             .toEntityList(JsonNode.class);
 
     List<CanvasGroup> parsedGroups =
@@ -225,16 +225,17 @@ public class CanvasService {
    * id.
    *
    * @param course the course, which must be linked to Canvas
-   * @param groupSetId the GraphQL id of the group set (as returned by getCanvasGroupSets)
+   * @param groupSetId the group set's GraphQL relay id (as returned by getCanvasGroupSets) or its
+   *     numeric Canvas id (as shown in Canvas URLs)
    * @return the group set detail
    */
   public CanvasGroupSetDetail getCanvasGroupSetDetail(
       @HasLinkedCanvasCourse Course course, String groupSetId) {
-    // language=GraphQL
     String query =
-        """
-            query GetGroupSetDetail($groupId: ID!) {
-              node(id: $groupId) {
+        "query GetGroupSetDetail($groupId: ID!) { groupSet: "
+            + groupSetSelector(groupSetId)
+            + """
+                 {
                 ... on GroupSet {
                   _id
                   name
@@ -261,7 +262,7 @@ public class CanvasService {
         authedClient(course)
             .document(query)
             .variable("groupId", groupSetId)
-            .retrieveSync("node")
+            .retrieveSync("groupSet")
             .toEntity(JsonNode.class);
 
     List<CanvasGroupDetail> groups = new ArrayList<>();
@@ -419,6 +420,22 @@ public class CanvasService {
         .header("Authorization", bearer(course))
         .retrieve()
         .toBodilessEntity();
+  }
+
+  /**
+   * The GraphQL field that looks up a group set by the given id. Canvas's {@code node(id:)} takes
+   * only the GraphQL relay id (e.g. "R3JvdXBTZXQtMTAx"); a plain numeric id, as shown in Canvas
+   * URLs and by the Canvas REST API, must go through {@code legacyNode}. Both forms are accepted so
+   * that instructors can paste either.
+   *
+   * @param groupSetId a relay id or a numeric id
+   * @return the field selector, without its selection set
+   */
+  static String groupSetSelector(String groupSetId) {
+    if (groupSetId.matches("\\d+")) {
+      return "legacyNode(_id: $groupId, type: GroupSet)";
+    }
+    return "node(id: $groupId)";
   }
 
   private HttpSyncGraphQlClient authedClient(Course course) {

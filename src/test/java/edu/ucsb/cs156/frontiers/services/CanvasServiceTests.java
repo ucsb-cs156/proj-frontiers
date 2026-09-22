@@ -476,7 +476,7 @@ public class CanvasServiceTests {
         """
         {
           "data": {
-            "node": {
+            "groupSet": {
               "id": "R3JvdXBTZXQtMTAx",
               "name": "Project Teams",
               "groups": [
@@ -551,7 +551,7 @@ public class CanvasServiceTests {
         """
         {
           "data": {
-            "node": {
+            "groupSet": {
               "id": "R3JvdXBTZXQtMTAx",
               "name": "Project Teams",
               "groups": []
@@ -591,7 +591,7 @@ public class CanvasServiceTests {
         """
         {
           "data": {
-            "node": {
+            "groupSet": {
               "id": "R3JvdXBTZXQtMTAx",
               "name": "Project Teams",
               "groups": [
@@ -647,7 +647,7 @@ public class CanvasServiceTests {
         """
         {
           "data": {
-            "node": {
+            "groupSet": {
               "_id": "101",
               "name": "Project Teams",
               "groups": [
@@ -703,7 +703,7 @@ public class CanvasServiceTests {
     Course course = linkedCourse();
     String graphqlResponse =
         """
-        {"data": {"node": {"_id": "101", "name": "Project Teams", "groups": []}}}
+        {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": []}}}
         """;
     mockServer
         .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
@@ -891,6 +891,111 @@ public class CanvasServiceTests {
 
     canvasService.removeCanvasGroupMember(course, 5, 6);
 
+    mockServer.verify();
+  }
+
+  @Test
+  public void groupSetSelector_usesNodeForRelayIdsAndLegacyNodeForNumericIds() {
+    assertEquals("node(id: $groupId)", CanvasService.groupSetSelector("R3JvdXBTZXQtMTAx"));
+    assertEquals(
+        "legacyNode(_id: $groupId, type: GroupSet)", CanvasService.groupSetSelector("31516"));
+    assertEquals("node(id: $groupId)", CanvasService.groupSetSelector("31516x"));
+    assertEquals("node(id: $groupId)", CanvasService.groupSetSelector(""));
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_acceptsNumericGroupSetId() throws Exception {
+    Course course = linkedCourse();
+    String graphqlResponse =
+        """
+        {"data": {"groupSet": {"_id": "31516", "name": "Project Teams", "groups": []}}}
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content()
+                .string(
+                    org.hamcrest.Matchers.containsString(
+                        "groupSet: legacyNode(_id: $groupId, type: GroupSet)")))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("\"groupId\":\"31516\"")))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    CanvasGroupSetDetail result = canvasService.getCanvasGroupSetDetail(course, "31516");
+
+    mockServer.verify();
+    assertEquals(31516, result.getId());
+    assertEquals("Project Teams", result.getName());
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_usesNodeForRelayId() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content().string(org.hamcrest.Matchers.containsString("groupSet: node(id: $groupId)")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": []}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(101, canvasService.getCanvasGroupSetDetail(course, "R3JvdXBTZXQtMTAx").getId());
+    mockServer.verify();
+  }
+
+  @Test
+  public void getCanvasGroups_acceptsNumericGroupSetId() throws Exception {
+    Course course = linkedCourse();
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "groupSet": {
+              "id": "R3JvdXBTZXQtMzE1MTY=",
+              "name": "Project Teams",
+              "groups": [
+                {"name": "Team Alpha", "_id": 201, "membersConnection": {"edges": [
+                  {"node": {"user": {"email": "alice@ucsb.edu"}}}
+                ]}}
+              ]
+            }
+          }
+        }
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content()
+                .string(
+                    org.hamcrest.Matchers.containsString(
+                        "groupSet: legacyNode(_id: $groupId, type: GroupSet)")))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    List<CanvasGroup> result = canvasService.getCanvasGroups(course, "31516");
+
+    mockServer.verify();
+    assertEquals(1, result.size());
+    assertEquals("Team Alpha", result.get(0).getName());
+    assertEquals(List.of("alice@ucsb.edu"), result.get(0).getMembers());
+  }
+
+  @Test
+  public void getCanvasGroups_usesNodeForRelayId() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content().string(org.hamcrest.Matchers.containsString("groupSet: node(id: $groupId)")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"groupSet": {"id": "R3JvdXBTZXQtMTAx", "name": "Project Teams", "groups": []}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(List.of(), canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx"));
     mockServer.verify();
   }
 }
