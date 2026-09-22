@@ -9,6 +9,7 @@ import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.errors.SlackApiException;
 import edu.ucsb.cs156.frontiers.jobs.SetupSectionSlackChannelsJob;
+import edu.ucsb.cs156.frontiers.jobs.SetupTeamSlackChannelsJob;
 import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
 import edu.ucsb.cs156.frontiers.models.SlackUser;
 import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
@@ -16,6 +17,7 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
 import edu.ucsb.cs156.frontiers.services.SlackService;
 import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
@@ -62,6 +64,7 @@ public class SlackController extends ApiController {
   private final RosterStudentRepository rosterStudentRepository;
   private final CourseStaffRepository courseStaffRepository;
   private final SectionRepository sectionRepository;
+  private final TeamRepository teamRepository;
   private final CourseOptionRepository courseOptionRepository;
   private final SlackService slackService;
   private final CanvasApiTokenSecurityService tokenSecurityService;
@@ -72,6 +75,7 @@ public class SlackController extends ApiController {
       RosterStudentRepository rosterStudentRepository,
       CourseStaffRepository courseStaffRepository,
       SectionRepository sectionRepository,
+      TeamRepository teamRepository,
       CourseOptionRepository courseOptionRepository,
       SlackService slackService,
       CanvasApiTokenSecurityService tokenSecurityService,
@@ -80,6 +84,7 @@ public class SlackController extends ApiController {
     this.rosterStudentRepository = rosterStudentRepository;
     this.courseStaffRepository = courseStaffRepository;
     this.sectionRepository = sectionRepository;
+    this.teamRepository = teamRepository;
     this.courseOptionRepository = courseOptionRepository;
     this.slackService = slackService;
     this.tokenSecurityService = tokenSecurityService;
@@ -401,6 +406,49 @@ public class SlackController extends ApiController {
             .courseRepository(courseRepository)
             .sectionRepository(sectionRepository)
             .rosterStudentRepository(rosterStudentRepository)
+            .courseStaffRepository(courseStaffRepository)
+            .slackService(slackService)
+            .tokenSecurityService(tokenSecurityService)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  /**
+   * Launches a job that creates a public Slack channel for each team of the course (named "team-"
+   * followed by the team name in Slack's form), adds the members of each team and the instructor to
+   * the team's channel, and removes from those channels anybody who is neither on the team, nor the
+   * instructor, nor staff. See {@link SetupTeamSlackChannelsJob}.
+   *
+   * @param courseId the id of the course
+   * @return the job that was launched; its log can be seen on the Jobs tab of the course
+   */
+  @Operation(summary = "Launch job that sets up the Slack channels of the teams of a course")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  @PostMapping("/teamChannels")
+  public Job setupTeamChannels(@Parameter(name = "courseId") @RequestParam Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    boolean enabled =
+        courseOptionRepository
+            .findByCourseIdAndOption(courseId, CourseOptions.SLACK_INTEGRATION.name())
+            .map(CourseOption::getEnabled)
+            .orElse(false);
+    if (!enabled) {
+      throw new IllegalArgumentException(
+          "The course option SLACK_INTEGRATION must be enabled to set up team Slack channels.");
+    }
+    String token = tokenSecurityService.decrypt(course.getSlackBotToken());
+    if (token == null || token.isEmpty()) {
+      throw new IllegalArgumentException(NO_TOKEN_MESSAGE);
+    }
+
+    SetupTeamSlackChannelsJob job =
+        SetupTeamSlackChannelsJob.builder()
+            .course(course)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
             .courseStaffRepository(courseStaffRepository)
             .slackService(slackService)
             .tokenSecurityService(tokenSecurityService)
