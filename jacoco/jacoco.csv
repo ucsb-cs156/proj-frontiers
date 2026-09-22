@@ -54,7 +54,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController.AdminDTO,0,18,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.OrgRemovalResult,0,12,0,0,0,1,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController,0,853,0,98,0,184,0,76,0,25
+frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController,0,933,0,104,0,206,0,81,0,27
 frontiers,edu.ucsb.cs156.frontiers.controllers,SectionsController,0,251,0,12,0,53,0,19,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,UsersController,0,8,0,0,0,2,0,2,0,2
@@ -105,6 +105,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,SetupSectionSlackChannelsJob,0,1044,0,10
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateOrgMembershipJob,0,55,0,4,0,15,0,5,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,PullTeamsFromGithubJob,0,495,0,48,0,120,0,28,0,4
 frontiers,edu.ucsb.cs156.frontiers.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.jobs,SetupTeamSlackChannelsJob,0,963,0,82,0,173,0,52,0,11
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersApplicationRunner,0,14,0,0,0,5,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.startup,FrontiersStartup,0,72,0,6,0,20,0,8,0,5
 frontiers,edu.ucsb.cs156.frontiers.startup,WiremockApplicationRunner,0,17,0,0,0,6,0,3,0,3
