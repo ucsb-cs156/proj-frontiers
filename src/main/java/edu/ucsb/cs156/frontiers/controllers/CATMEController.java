@@ -1,17 +1,26 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.opencsv.CSVParser;
+import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Section;
 import edu.ucsb.cs156.frontiers.enums.CourseOptions;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.CreateTeamsFromCATMEJob;
 import edu.ucsb.cs156.frontiers.models.CATMEAuditResult;
 import edu.ucsb.cs156.frontiers.models.CATMEStudentDrop;
 import edu.ucsb.cs156.frontiers.models.CATMEStudentUpdate;
+import edu.ucsb.cs156.frontiers.models.CATMETeamAssignment;
 import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,6 +56,14 @@ public class CATMEController extends ApiController {
   @Autowired private CourseOptionRepository courseOptionRepository;
 
   @Autowired private SectionRepository sectionRepository;
+
+  @Autowired private CourseRepository courseRepository;
+
+  @Autowired private TeamRepository teamRepository;
+
+  @Autowired private TeamMemberRepository teamMemberRepository;
+
+  @Autowired private JobService jobService;
 
   public static final String CATME_AUDIT_HEADER_LINE_1 = "Activity,Class,Term,Format,Instr,School";
   public static final String CATME_AUDIT_HEADER_LINE_4 =
@@ -88,6 +105,80 @@ public class CATMEController extends ApiController {
           .body(genericMessage(CATME_AUDIT_FORMAT_ERROR_MESSAGE));
     }
 
+    return ResponseEntity.ok(audit(courseId, csvRows));
+  }
+
+  /**
+   * Audit a course's roster against an uploaded CATME TeamMaker CSV file, exactly as {@link
+   * #auditCatmeCSV}; if the audit finds any issue, report it and stop. If the audit is clean,
+   * launch a job that creates the teams named in the file (in Frontiers only; nothing is pushed to
+   * GitHub) and adds each student to their team.
+   *
+   * @param courseId the id of the course
+   * @param file the uploaded CATME TeamMaker CSV file
+   * @return if the audit found issues, the {@link CATMEAuditResult}; otherwise a message "Job
+   *     Launched: N" where N is the id of the job; or a 422 error if the file is not in the
+   *     expected format
+   * @throws IOException if the file cannot be read
+   */
+  @Operation(
+      summary =
+          "Audit a course's roster against a CATME TeamMaker CSV file and, if clean, launch a job that creates the teams in it")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping(
+      value = "/createteams",
+      consumes = {"multipart/form-data"})
+  public ResponseEntity<Object> createTeamsFromCatmeCSV(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "file") @RequestParam("file") MultipartFile file)
+      throws IOException {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    List<String> lines;
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+      lines = reader.lines().collect(Collectors.toList());
+    }
+
+    List<CATMEStudentRow> csvRows = parseCatmeAuditCSV(lines);
+    if (csvRows == null) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+          .body(genericMessage(CATME_AUDIT_FORMAT_ERROR_MESSAGE));
+    }
+
+    CATMEAuditResult auditResult = audit(courseId, csvRows);
+    if (!auditResult.studentsToUpdate().isEmpty() || !auditResult.studentsToDrop().isEmpty()) {
+      return ResponseEntity.ok(auditResult);
+    }
+
+    List<CATMETeamAssignment> assignments =
+        csvRows.stream()
+            .map(row -> new CATMETeamAssignment(row.studentId(), row.name(), row.teamName()))
+            .toList();
+    CreateTeamsFromCATMEJob job =
+        CreateTeamsFromCATMEJob.builder()
+            .course(course)
+            .assignments(assignments)
+            .courseRepository(courseRepository)
+            .rosterStudentRepository(rosterStudentRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .build();
+    Job launched = jobService.runAsJob(job);
+    return ResponseEntity.ok(genericMessage("Job Launched: " + launched.getId()));
+  }
+
+  /**
+   * Compares the enrolled students of a course with the rows of a CATME file.
+   *
+   * @param courseId the id of the course
+   * @param csvRows the rows of the file
+   * @return the students to update in CATME, and the students to drop from CATME
+   */
+  private CATMEAuditResult audit(Long courseId, List<CATMEStudentRow> csvRows) {
     List<RosterStudent> enrolledStudents =
         StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
             .filter(
@@ -158,7 +249,7 @@ public class CATMEController extends ApiController {
       }
     }
 
-    return ResponseEntity.ok(new CATMEAuditResult(studentsToUpdate, studentsToDrop));
+    return new CATMEAuditResult(studentsToUpdate, studentsToDrop);
   }
 
   /**
@@ -168,8 +259,11 @@ public class CATMEController extends ApiController {
    * @param studentId the student's id
    * @param email the student's email
    * @param section the student's section
+   * @param teamName the student's team name (position 5 of the row), or an empty string if the row
+   *     has no such field
    */
-  private record CATMEStudentRow(String name, String studentId, String email, String section) {}
+  private record CATMEStudentRow(
+      String name, String studentId, String email, String section, String teamName) {}
 
   /**
    * Parses the lines of an uploaded CATME TeamMaker CSV file, validating the expected format.
@@ -207,7 +301,8 @@ public class CATMEController extends ApiController {
         if (fields.length < 4) {
           return null;
         }
-        rows.add(new CATMEStudentRow(fields[0], fields[1], fields[2], fields[3]));
+        String teamName = fields.length > 4 ? fields[4] : "";
+        rows.add(new CATMEStudentRow(fields[0], fields[1], fields[2], fields[3], teamName));
       } catch (IOException e) {
         return null;
       }
