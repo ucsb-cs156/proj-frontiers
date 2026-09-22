@@ -37,6 +37,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService.GithubRepository,0
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.GithubTeamMemberInfo,0,6,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationLinkerService,0,336,0,12,0,75,0,13,0,7
 frontiers,edu.ucsb.cs156.frontiers.services,CanvasService,0,262,0,8,0,85,0,13,0,9
+frontiers,edu.ucsb.cs156.frontiers.services,TeamCsvService,0,466,0,52,0,90,0,36,0,10
 frontiers,edu.ucsb.cs156.frontiers.services,UpdateUserService,0,139,0,12,0,36,0,13,0,7
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoServiceImpl,0,58,0,6,0,16,0,7,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,UserDataDTOService,0,81,0,2,0,16,0,5,0,4
@@ -81,7 +82,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO
 frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,117,0,0,0,29,0,9,0,9
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,717,0,84,0,185,0,67,0,25
-frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,277,0,6,0,54,0,11,0,8
+frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,373,0,8,0,74,0,15,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.EmailFormats,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,GithubGraphQLController,0,177,0,0,0,33,0,8,0,8
 frontiers,edu.ucsb.cs156.frontiers.controllers,RepositoryController,0,113,0,8,0,30,0,9,0,5
@@ -118,6 +119,7 @@ frontiers,edu.ucsb.cs156.frontiers.models,SlackUser,0,43,0,14,0,4,0,11,0,4
 frontiers,edu.ucsb.cs156.frontiers.models,CATMEAuditResult,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,CATMEStudentDrop,0,15,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,SlackUsersListResponse,0,13,0,4,0,3,0,3,0,1
+frontiers,edu.ucsb.cs156.frontiers.models,NameAndTeam,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,CourseWarning,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,CATMETeamAssignment,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,78,0,2,0,16,0,3,0,2
