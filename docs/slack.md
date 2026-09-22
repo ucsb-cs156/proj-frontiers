@@ -29,6 +29,12 @@ API calls go.
 3. Install the app to the workspace (the button is on the same page).
 4. Copy the **Bot User OAuth Token** (it starts with `xoxb-`). That is what goes
    into the Frontiers course settings.
+5. Allow the app to remove people from public channels. By default only
+   Workspace Owners and Admins may, and then the section and team channel jobs
+   cannot remove anyone (their log shows `restricted_action`). A Workspace
+   Owner opens **Workspace settings → Roles & permissions** (on older
+   workspaces, **Permissions → Channel Management**) and sets **People who can
+   remove members from public channels** to **Everyone, except guests**.
 
 ## Entering the token in Frontiers
 
@@ -137,10 +143,12 @@ from the channels.
 
 The job needs these scopes: `users:read`, `users:read.email`, `channels:read`,
 `channels:manage` and `channels:join`. Whether the bot is *allowed* to remove
-people from public channels also depends on the workspace's settings
-(**Settings & permissions → Permissions → Channel Management** in the Slack
-admin pages); if it is not, the log shows `restricted_action` for each person
-it could not remove.
+people from public channels also depends on the workspace's settings (step 5 of
+"Setting up the Slack app" above): by default only Workspace Owners and Admins
+may. If the bot may not, Slack answers `restricted_action` to the first
+removal; the job logs that, explains the setting to change, and attempts no
+further removals in that run, since they would all fail the same way. Run the
+job again after the setting has been changed.
 
 Slack limits how fast an app may make these calls. When Slack says to slow
 down, the job waits for as long as Slack asks (at most a minute at a time) and

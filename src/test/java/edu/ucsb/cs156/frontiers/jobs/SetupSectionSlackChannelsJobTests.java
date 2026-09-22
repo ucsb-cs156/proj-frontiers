@@ -363,7 +363,7 @@ public class SetupSectionSlackChannelsJobTests {
     when(slackService.listChannelMembers(TOKEN, "C2"))
         .thenThrow(new SlackApiException("channel_not_found"));
     when(slackService.listChannelMembers(TOKEN, "C3")).thenReturn(List.of("U_ALICE", "U_X", "U_Y"));
-    Mockito.doThrow(new SlackApiException("restricted_action"))
+    Mockito.doThrow(new SlackApiException("user_not_found"))
         .when(slackService)
         .removeFromChannel(TOKEN, "C3", "U_X");
 
@@ -382,7 +382,7 @@ public class SetupSectionSlackChannelsJobTests {
             "Student Alice Student (alice@ucsb.edu) is in untranslated roster section 0300 and maps to #sec-0300",
             "Error listing members of #cannot-list: channel_not_found",
             "Removing Channel Members Who Are Not In The Section",
-            "Error removing Some Stranger (stranger@example.org) from #sec-0300: restricted_action",
+            "Error removing Some Stranger (stranger@example.org) from #sec-0300: user_not_found",
             "Removed Other Stranger (other@example.org) from #sec-0300",
             "Done"),
         jobStarted.getLog());
@@ -490,5 +490,54 @@ public class SetupSectionSlackChannelsJobTests {
     assertEquals(
         "1 student(s) in these sections could not be added: 1 not in the Slack workspace. See the Slack tab. Run this job again once they have joined.",
         couldNotBeAddedLine(botWithTheStudentsEmail, invitedWithoutEmail));
+  }
+
+  @Test
+  public void stops_removing_and_explains_when_the_workspace_forbids_removals() throws Exception {
+    Course courseWithoutInstructor =
+        Course.builder().id(1L).slackBotToken("enc:v1:ciphertext").build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseWithoutInstructor));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(
+            List.of(
+                slackUser("U_ALICE", "Alice Student", "alice@ucsb.edu"),
+                slackUser("U_X", "Some Stranger", "stranger@example.org"),
+                slackUser("U_Y", "Other Stranger", "other@example.org"),
+                slackUser("U_Z", "Third Stranger", "third@example.org")));
+    when(sectionRepository.findByCourseIdOrderBySectionAsc(1L))
+        .thenReturn(List.of(section("0100", "sec-0100"), section("0300", "sec-0300")));
+    when(slackService.listPublicChannels(TOKEN))
+        .thenReturn(
+            List.of(
+                SlackChannel.builder().id("C1").name("sec-0100").build(),
+                SlackChannel.builder().id("C3").name("sec-0300").build()));
+    when(slackService.listChannelMembers(TOKEN, "C1")).thenReturn(List.of("U_X", "U_Y"));
+    when(slackService.listChannelMembers(TOKEN, "C3")).thenReturn(List.of("U_ALICE", "U_Z"));
+    Mockito.doThrow(new SlackApiException("restricted_action"))
+        .when(slackService)
+        .removeFromChannel(TOKEN, "C1", "U_X");
+    students(student("Alice", "alice@ucsb.edu", "0300"));
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    assertEquals(
+        log(
+            "Creating Section Channels",
+            "Channel #sec-0100 already exists",
+            "Channel #sec-0300 already exists",
+            "Adding Students to Channel",
+            "Student Alice Student (alice@ucsb.edu) is in untranslated roster section 0300 and maps to #sec-0300",
+            "Removing Channel Members Who Are Not In The Section",
+            "Error removing Some Stranger (stranger@example.org) from #sec-0100: restricted_action",
+            SlackService.REMOVAL_RESTRICTED_ADVICE,
+            "Done"),
+        jobStarted.getLog());
+    // Once Slack has refused, nobody else is tried: not in the same channel, nor in later ones
+    verify(slackService).removeFromChannel(TOKEN, "C1", "U_X");
+    verify(slackService, never()).removeFromChannel(TOKEN, "C1", "U_Y");
+    verify(slackService, never()).removeFromChannel(TOKEN, "C3", "U_Z");
+    verify(slackService, never()).removeFromChannel(TOKEN, "C3", "U_ALICE");
   }
 }

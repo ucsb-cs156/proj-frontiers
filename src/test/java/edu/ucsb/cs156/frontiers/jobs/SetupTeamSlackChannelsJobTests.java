@@ -291,7 +291,7 @@ public class SetupTeamSlackChannelsJobTests {
     Mockito.doThrow(new SlackApiException("user_is_restricted"))
         .when(slackService)
         .inviteToChannel(TOKEN, "C3", List.of("U_ALICE"));
-    Mockito.doThrow(new SlackApiException("restricted_action"))
+    Mockito.doThrow(new SlackApiException("user_not_found"))
         .when(slackService)
         .removeFromChannel(TOKEN, "C3", "U_X");
 
@@ -309,7 +309,7 @@ public class SetupTeamSlackChannelsJobTests {
             "Error adding Alice Student (alice@ucsb.edu) to #team-t: user_is_restricted",
             "Added Bob Student (bob@ucsb.edu) to #team-t",
             "Removing Channel Members Who Are Not On The Team",
-            "Error removing Some Stranger (stranger@example.org) from #team-t: restricted_action",
+            "Error removing Some Stranger (stranger@example.org) from #team-t: user_not_found",
             "Done. Channels created: 0, already existed: 2. Members added: 1, already present: 0, removed: 0."),
         jobStarted.getLog());
     verify(slackService).inviteToChannel(TOKEN, "C3", List.of("U_BOB"));
@@ -361,5 +361,52 @@ public class SetupTeamSlackChannelsJobTests {
         e.getMessage());
     verify(slackService).listUsers(TOKEN);
     verifyNoMoreInteractions(slackService);
+  }
+
+  @Test
+  public void stops_removing_and_explains_when_the_workspace_forbids_removals() throws Exception {
+    Course noInstructor = Course.builder().id(1L).slackBotToken("enc:v1:ciphertext").build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(noInstructor));
+    when(tokenSecurityService.decrypt("enc:v1:ciphertext")).thenReturn(TOKEN);
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(
+            List.of(
+                slackUser("U_ALICE", "Alice Student", "alice@ucsb.edu"),
+                slackUser("U_X", "Some Stranger", "stranger@example.org"),
+                slackUser("U_Y", "Other Stranger", "other@example.org"),
+                slackUser("U_Z", "Third Stranger", "third@example.org")));
+    RosterStudent alice = student("Alice", "alice@ucsb.edu");
+    when(teamRepository.findByCourseIdOrderByNameAsc(1L))
+        .thenReturn(List.of(team("a"), team("b", alice)));
+    when(slackService.listPublicChannels(TOKEN))
+        .thenReturn(
+            List.of(
+                SlackChannel.builder().id("C1").name("team-a").build(),
+                SlackChannel.builder().id("C2").name("team-b").build()));
+    when(slackService.listChannelMembers(TOKEN, "C1")).thenReturn(List.of("U_X", "U_Y"));
+    when(slackService.listChannelMembers(TOKEN, "C2")).thenReturn(List.of("U_ALICE", "U_Z"));
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+    Mockito.doThrow(new SlackApiException("restricted_action"))
+        .when(slackService)
+        .removeFromChannel(TOKEN, "C1", "U_X");
+
+    job().accept(ctx);
+
+    assertEquals(
+        log(
+            "Creating Team Channels (2 team(s), channel names start with team-)",
+            "Channel #team-a for team a already exists",
+            "Channel #team-b for team b already exists",
+            "Adding Team Members to Channels",
+            "Removing Channel Members Who Are Not On The Team",
+            "Error removing Some Stranger (stranger@example.org) from #team-a: restricted_action",
+            SlackService.REMOVAL_RESTRICTED_ADVICE,
+            "Done. Channels created: 0, already existed: 2. Members added: 0, already present: 1, removed: 0."),
+        jobStarted.getLog());
+    // Once Slack has refused, nobody else is tried: not in the same channel, nor in later ones
+    verify(slackService).removeFromChannel(TOKEN, "C1", "U_X");
+    verify(slackService, never()).removeFromChannel(TOKEN, "C1", "U_Y");
+    verify(slackService, never()).removeFromChannel(TOKEN, "C2", "U_Z");
+    verify(slackService, never()).removeFromChannel(TOKEN, "C2", "U_ALICE");
   }
 }

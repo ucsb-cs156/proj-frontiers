@@ -41,7 +41,9 @@ import lombok.Builder;
  *   <li>Removes from each of those channels every person who is neither a roster student of one of
  *       the channel's sections, nor a member of the course staff, nor the instructor. Bots
  *       (including the bot this job acts as) and members that are not users of the workspace are
- *       never removed.
+ *       never removed. Whether the bot may remove members from public channels is a workspace
+ *       setting; if Slack refuses (restricted_action), the log says how to change the setting and
+ *       no further removals are attempted in that run.
  * </ol>
  *
  * A problem with one channel or one person is logged, and the job carries on with the rest.
@@ -203,6 +205,7 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
     }
 
     ctx.log("Removing Channel Members Who Are Not In The Section");
+    channels:
     for (Map.Entry<String, String> channel : channelIdByName.entrySet()) {
       String channelName = channel.getKey();
       List<String> members = membersByChannelName.get(channelName);
@@ -223,6 +226,11 @@ public class SetupSectionSlackChannelsJob implements JobContextConsumer {
             ctx.log(
                 "Error removing %s from #%s: %s"
                     .formatted(describe(member), channelName, e.getMessage()));
+            if (SlackService.RESTRICTED_ACTION.equals(e.getMessage())) {
+              // A workspace setting forbids it, so every other removal would fail the same way
+              ctx.log(SlackService.REMOVAL_RESTRICTED_ADVICE);
+              break channels;
+            }
           }
         }
       }

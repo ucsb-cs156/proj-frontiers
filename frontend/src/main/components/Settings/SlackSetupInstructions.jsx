@@ -88,6 +88,19 @@ export default function SlackSetupInstructions({
               <code>xoxb-</code>). That is what goes into the Frontiers course
               settings.
             </li>
+            <li>
+              Allow the app to remove people from public channels. By default
+              only Workspace Owners and Admins may, and then the section and
+              team channel jobs cannot remove anyone (their log shows{" "}
+              <code>restricted_action</code>). A Workspace Owner opens{" "}
+              <strong>Workspace settings → Roles &amp; permissions</strong> (on
+              older workspaces,{" "}
+              <strong>Permissions → Channel Management</strong>) and sets{" "}
+              <strong>
+                People who can remove members from public channels
+              </strong>{" "}
+              to <strong>Everyone, except guests</strong>.
+            </li>
           </ol>
         </Accordion.Body>
       </Accordion.Item>
