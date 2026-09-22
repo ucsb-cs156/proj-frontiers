@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SectionTranslationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">SectionTranslationService.java</span></div><h1>SectionTranslationService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
+import edu.ucsb.cs156.frontiers.entities.Section;
+import edu.ucsb.cs156.frontiers.enums.CourseOptions;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
+import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * Centralizes the logic for checking whether the TRANSLATE_SECTIONS course option is enabled, and
+ * for translating a raw roster student section value into its human readable label. This is the
+ * single place where this logic lives, so that it behaves consistently everywhere a section value
+ * is displayed or exported (e.g. the CATME CSV export, the roster student tables).
+ */
+@Service
+<span class="fc" id="L20">public class SectionTranslationService {</span>
+
+  @Autowired private CourseOptionRepository courseOptionRepository;
+
+  @Autowired private SectionRepository sectionRepository;
+
+  /**
+   * Returns the map from raw section value to label for the course, if the TRANSLATE_SECTIONS
+   * course option is enabled; otherwise an empty map (raw values are used as-is).
+   *
+   * @param courseId the id of the course
+   * @return map of raw section value to translated label
+   */
+  public Map&lt;String, String&gt; getSectionTranslations(Long courseId) {
+<span class="fc" id="L34">    Map&lt;String, String&gt; translations = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">    if (isTranslateSectionsEnabled(courseId)) {</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">      for (Section section : sectionRepository.findByCourseId(courseId)) {</span>
+<span class="fc" id="L37">        translations.put(section.getSection(), section.getLabel());</span>
+<span class="fc" id="L38">      }</span>
+    }
+<span class="fc" id="L40">    return translations;</span>
+  }
+
+  /**
+   * Returns whether the TRANSLATE_SECTIONS course option is enabled for the given course.
+   *
+   * @param courseId the id of the course
+   * @return true if the TRANSLATE_SECTIONS course option is enabled, false otherwise
+   */
+  public boolean isTranslateSectionsEnabled(Long courseId) {
+<span class="fc" id="L50">    return courseOptionRepository</span>
+<span class="fc" id="L51">        .findByCourseIdAndOption(courseId, CourseOptions.TRANSLATE_SECTIONS.name())</span>
+<span class="fc" id="L52">        .map(CourseOption::getEnabled)</span>
+<span class="fc" id="L53">        .orElse(false);</span>
+  }
+
+  /**
+   * Translates a raw roster student section value using the given map. A null section is treated as
+   * blank; a section with no translation is returned unchanged.
+   *
+   * @param rawSection the section value from the roster student row (may be null)
+   * @param translations map of raw section value to label
+   * @return the translated section value
+   */
+  public static String translateSection(String rawSection, Map&lt;String, String&gt; translations) {
+<span class="fc bfc" id="L65" title="All 2 branches covered.">    String section = rawSection == null ? &quot;&quot; : rawSection;</span>
+<span class="fc" id="L66">    return translations.getOrDefault(section, section);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
