@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.graphql.client.ClientGraphQlResponse;
+import org.springframework.graphql.client.GraphQlClient;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -36,10 +37,18 @@ import org.springframework.web.client.RestClient;
  * /graphiql to the URL of the Canvas instance.
  *
  * <p>For example, for UCSB Canvas, use: <a href="https://ucsb.instructure.com/graphiql">...</a>
+ *
+ * <p>Every Canvas GraphQL connection is paginated: without a {@code first} argument Canvas returns
+ * only the first page (20 items by default), and it never returns more than {@link #PAGE_SIZE} per
+ * request. Every connection read here therefore asks for {@link #PAGE_SIZE} items and follows
+ * {@code pageInfo.endCursor} until {@code hasNextPage} is false.
  */
 @Service
 @Validated
 public class CanvasService {
+
+  /** The largest page Canvas allows (its default_max_page_size). */
+  static final int PAGE_SIZE = 100;
 
   private HttpSyncGraphQlClient graphQlClient;
   private RestClient restClient;
@@ -84,47 +93,29 @@ public class CanvasService {
   }
 
   /**
-   * Fetches the roster of students from Canvas for the given course.
+   * Fetches the roster of students from Canvas for the given course, following pagination so that
+   * every enrolled student is returned.
    *
    * @param course the Course entity containing canvasApiToken and canvasCourseId
    * @return list of RosterStudent objects from Canvas
    */
   public List<RosterStudent> getCanvasRoster(@HasLinkedCanvasCourse Course course) {
-
-    // language=GraphQL
-    String query =
+    String nodeFields =
         """
-              query GetRoster($courseId: ID!) {
-              course(id: $courseId) {
-                usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
-                  edges {
-                    node {
-                      firstName
-                      lastName
-                      sisId
-                      email
-                      integrationId
-                      enrollments(courseId: $courseId) {
-                        section {
-                          name
-                        }
-                      }
-                    }
-                  }
-                }
+            firstName
+            lastName
+            sisId
+            email
+            integrationId
+            enrollments(courseId: $courseId) {
+              section {
+                name
               }
             }
             """;
 
-    HttpSyncGraphQlClient authedClient = authedClient(course);
-
     List<CanvasStudent> students =
-        authedClient
-            .document(query)
-            .variable("courseId", course.getCanvasCourseId())
-            .retrieveSync("course.usersConnection.edges")
-            .toEntityList(JsonNode.class)
-            .stream()
+        studentEdges(course, nodeFields).stream()
             .map(edge -> toCanvasStudent(edge.get("node")))
             .toList();
 
@@ -154,75 +145,33 @@ public class CanvasService {
     return canvasStudent;
   }
 
+  /**
+   * Fetches the groups in a Canvas group set with their members' emails, as used by the pull-teams
+   * job. This is a view of {@link #getCanvasGroupSetDetail}.
+   *
+   * @param course the course, which must be linked to Canvas
+   * @param groupSetId the group set's GraphQL relay id or numeric Canvas id
+   * @return the groups, each with its members' canonical emails
+   */
   public List<CanvasGroup> getCanvasGroups(
       @HasLinkedCanvasCourse Course course, String groupSetId) {
-    String query =
-        "query GetTeams($groupId: ID!) { groupSet: "
-            + groupSetSelector(groupSetId)
-            + """
-                 {
-                ... on GroupSet {
-                  id
-                  name
-                  groups {
-                    name
-                    _id
-                    membersConnection {
-                      edges {
-                        node {
-                          user {
-                            email
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            """;
-
-    HttpSyncGraphQlClient authedClient = authedClient(course);
-
-    List<JsonNode> groups =
-        authedClient
-            .document(query)
-            .variable("groupId", groupSetId)
-            .retrieveSync("groupSet.groups")
-            .toEntityList(JsonNode.class);
-
-    List<CanvasGroup> parsedGroups =
-        groups.stream()
-            .map(
-                group -> {
-                  CanvasGroup canvasGroup =
-                      CanvasGroup.builder()
-                          .name(group.get("name").asText())
-                          .id(group.get("_id").asInt())
-                          .members(new ArrayList<>())
-                          .build();
-                  group
-                      .get("membersConnection")
-                      .get("edges")
-                      .forEach(
-                          edge -> {
-                            canvasGroup
-                                .getMembers()
-                                .add(
-                                    CanonicalFormConverter.convertToValidEmail(
-                                        edge.path("node").path("user").get("email").asText()));
-                          });
-                  return canvasGroup;
-                })
-            .toList();
-
-    return parsedGroups;
+    List<CanvasGroup> groups = new ArrayList<>();
+    for (CanvasGroupDetail group : getCanvasGroupSetDetail(course, groupSetId).getGroups()) {
+      groups.add(
+          CanvasGroup.builder()
+              .name(group.getName())
+              .id(group.getId())
+              .members(new ArrayList<>(group.getMemberUserIdsByEmail().keySet()))
+              .build());
+    }
+    return groups;
   }
 
   /**
    * Fetches a Canvas group set with everything the push-to-Canvas job needs: the numeric ids of the
    * group set and its groups, and each group's members as canonical email to numeric Canvas user
-   * id.
+   * id. Group membership is paginated, so groups with more than {@link #PAGE_SIZE} members are
+   * completed with follow-up queries.
    *
    * @param course the course, which must be linked to Canvas
    * @param groupSetId the group set's GraphQL relay id (as returned by getCanvasGroupSets) or its
@@ -232,7 +181,7 @@ public class CanvasService {
   public CanvasGroupSetDetail getCanvasGroupSetDetail(
       @HasLinkedCanvasCourse Course course, String groupSetId) {
     String query =
-        "query GetGroupSetDetail($groupId: ID!) { groupSet: "
+        "query GetGroupSetDetail($groupId: ID!, $first: Int!) { groupSet: "
             + groupSetSelector(groupSetId)
             + """
                  {
@@ -242,7 +191,7 @@ public class CanvasService {
                   groups {
                     _id
                     name
-                    membersConnection {
+                    membersConnection(first: $first) {
                       edges {
                         node {
                           user {
@@ -251,6 +200,10 @@ public class CanvasService {
                           }
                         }
                       }
+                      pageInfo {
+                        hasNextPage
+                        endCursor
+                      }
                     }
                   }
                 }
@@ -258,17 +211,27 @@ public class CanvasService {
             }
             """;
 
+    HttpSyncGraphQlClient client = authedClient(course);
     JsonNode node =
-        authedClient(course)
+        client
             .document(query)
             .variable("groupId", groupSetId)
+            .variable("first", PAGE_SIZE)
             .retrieveSync("groupSet")
             .toEntity(JsonNode.class);
 
     List<CanvasGroupDetail> groups = new ArrayList<>();
     for (JsonNode group : node.path("groups")) {
+      Integer groupId = group.path("_id").asInt();
+      List<JsonNode> edges = new ArrayList<>();
+      group.path("membersConnection").path("edges").forEach(edges::add);
+      JsonNode pageInfo = group.path("membersConnection").path("pageInfo");
+      if (pageInfo.path("hasNextPage").asBoolean()) {
+        edges.addAll(
+            remainingGroupMemberEdges(client, groupId, pageInfo.path("endCursor").asText()));
+      }
       Map<String, Integer> members = new LinkedHashMap<>();
-      for (JsonNode edge : group.path("membersConnection").path("edges")) {
+      for (JsonNode edge : edges) {
         JsonNode user = edge.path("node").path("user");
         members.put(
             CanonicalFormConverter.convertToValidEmail(user.path("email").asText()),
@@ -276,7 +239,7 @@ public class CanvasService {
       }
       groups.add(
           CanvasGroupDetail.builder()
-              .id(group.path("_id").asInt())
+              .id(groupId)
               .name(group.path("name").asText())
               .memberUserIdsByEmail(members)
               .build());
@@ -290,38 +253,14 @@ public class CanvasService {
 
   /**
    * Fetches the numeric Canvas user id of every student enrolled in the Canvas course, keyed by
-   * canonical email.
+   * canonical email, following pagination so that every enrolled student is included.
    *
    * @param course the course, which must be linked to Canvas
    * @return map from canonical email to Canvas user id
    */
   public Map<String, Integer> getCanvasUserIdsByEmail(@HasLinkedCanvasCourse Course course) {
-    // language=GraphQL
-    String query =
-        """
-            query GetUserIds($courseId: ID!) {
-              course(id: $courseId) {
-                usersConnection(filter: {enrollmentTypes: StudentEnrollment}) {
-                  edges {
-                    node {
-                      _id
-                      email
-                    }
-                  }
-                }
-              }
-            }
-            """;
-
-    List<JsonNode> edges =
-        authedClient(course)
-            .document(query)
-            .variable("courseId", course.getCanvasCourseId())
-            .retrieveSync("course.usersConnection.edges")
-            .toEntityList(JsonNode.class);
-
     Map<String, Integer> userIds = new LinkedHashMap<>();
-    for (JsonNode edge : edges) {
+    for (JsonNode edge : studentEdges(course, "_id\nemail\n")) {
       JsonNode user = edge.path("node");
       userIds.put(
           CanonicalFormConverter.convertToValidEmail(user.path("email").asText()),
@@ -420,6 +359,106 @@ public class CanvasService {
         .header("Authorization", bearer(course))
         .retrieve()
         .toBodilessEntity();
+  }
+
+  /**
+   * Fetches every edge of the course's student enrollment connection, following pagination.
+   *
+   * @param course the course
+   * @param nodeFields the GraphQL fields to select on each user node
+   * @return all edges, in Canvas order
+   */
+  private List<JsonNode> studentEdges(Course course, String nodeFields) {
+    String query =
+        "query GetStudents($courseId: ID!, $first: Int!, $after: String) {"
+            + " course(id: $courseId) {"
+            + " usersConnection(filter: {enrollmentTypes: StudentEnrollment}, first: $first,"
+            + " after: $after) { edges { node { "
+            + nodeFields
+            + " } } pageInfo { hasNextPage endCursor } } } }";
+    return allEdges(
+        authedClient(course),
+        query,
+        Map.of("courseId", course.getCanvasCourseId()),
+        "course.usersConnection",
+        null);
+  }
+
+  /**
+   * Fetches the members of one group that did not fit in the first page of the group set query.
+   *
+   * @param client the authenticated client
+   * @param groupId the numeric Canvas id of the group
+   * @param after the end cursor of the page already read
+   * @return the remaining edges
+   */
+  private List<JsonNode> remainingGroupMemberEdges(
+      HttpSyncGraphQlClient client, Integer groupId, String after) {
+    // language=GraphQL
+    String query =
+        """
+            query GetGroupMembers($groupId: ID!, $first: Int!, $after: String) {
+              legacyNode(_id: $groupId, type: Group) {
+                ... on Group {
+                  membersConnection(first: $first, after: $after) {
+                    edges {
+                      node {
+                        user {
+                          _id
+                          email
+                        }
+                      }
+                    }
+                    pageInfo {
+                      hasNextPage
+                      endCursor
+                    }
+                  }
+                }
+              }
+            }
+            """;
+    return allEdges(
+        client,
+        query,
+        Map.of("groupId", groupId.toString()),
+        "legacyNode.membersConnection",
+        after);
+  }
+
+  /**
+   * Reads a paginated connection to the end. The query must declare {@code $first: Int!} and {@code
+   * $after: String}, pass them to the connection, and select {@code pageInfo { hasNextPage
+   * endCursor }} on it.
+   *
+   * @param client the authenticated client
+   * @param query the query
+   * @param variables the query's other variables
+   * @param connectionPath the path of the connection in the response
+   * @param after the cursor to start after, or null to start at the beginning
+   * @return every edge from {@code after} to the end, in order
+   */
+  private static List<JsonNode> allEdges(
+      HttpSyncGraphQlClient client,
+      String query,
+      Map<String, Object> variables,
+      String connectionPath,
+      String after) {
+    List<JsonNode> edges = new ArrayList<>();
+    while (true) {
+      GraphQlClient.RequestSpec request =
+          client.document(query).variables(variables).variable("first", PAGE_SIZE);
+      if (after != null) {
+        request = request.variable("after", after);
+      }
+      JsonNode connection = request.retrieveSync(connectionPath).toEntity(JsonNode.class);
+      connection.path("edges").forEach(edges::add);
+      JsonNode pageInfo = connection.path("pageInfo");
+      if (!pageInfo.path("hasNextPage").asBoolean()) {
+        return edges;
+      }
+      after = pageInfo.path("endCursor").asText();
+    }
   }
 
   /**

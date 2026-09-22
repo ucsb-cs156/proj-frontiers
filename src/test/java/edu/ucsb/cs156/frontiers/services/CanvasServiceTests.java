@@ -998,4 +998,231 @@ public class CanvasServiceTests {
     assertEquals(List.of(), canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx"));
     mockServer.verify();
   }
+
+  // ---- pagination ----
+
+  private static org.hamcrest.Matcher<String> has(String text) {
+    return org.hamcrest.Matchers.containsString(text);
+  }
+
+  private static org.hamcrest.Matcher<String> lacks(String text) {
+    return org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(text));
+  }
+
+  @Test
+  public void pageSize_isCanvasMaximum() {
+    assertEquals(100, CanvasService.PAGE_SIZE);
+  }
+
+  @Test
+  public void getCanvasRoster_followsPagination() throws Exception {
+    Course course = linkedCourse();
+    String page1 =
+        """
+        {"data": {"course": {"usersConnection": {
+          "edges": [
+            {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A1", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": []}}
+          ],
+          "pageInfo": {"hasNextPage": true, "endCursor": "cursor1"}
+        }}}}
+        """;
+    String page2 =
+        """
+        {"data": {"course": {"usersConnection": {
+          "edges": [
+            {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "B2", "email": "bob@ucsb.edu", "integrationId": null, "enrollments": []}}
+          ],
+          "pageInfo": {"hasNextPage": false, "endCursor": "cursor2"}
+        }}}}
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(has("first: $first")))
+        .andExpect(content().string(has("after: $after")))
+        .andExpect(content().string(has("pageInfo")))
+        .andExpect(content().string(lacks("\"after\"")))
+        .andRespond(withSuccess(page1, MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(has("\"after\":\"cursor1\"")))
+        .andRespond(withSuccess(page2, MediaType.APPLICATION_JSON));
+
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    mockServer.verify();
+    assertEquals(2, result.size());
+    assertEquals("Alice", result.get(0).getFirstName());
+    assertEquals("Bob", result.get(1).getFirstName());
+  }
+
+  @Test
+  public void getCanvasRoster_stopsWhenPageInfoIsMissing() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {"edges": [
+                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A1", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": []}}
+                ]}}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(1, canvasService.getCanvasRoster(course).size());
+    mockServer.verify();
+  }
+
+  @Test
+  public void getCanvasUserIdsByEmail_followsPagination() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(lacks("\"after\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {
+                  "edges": [{"node": {"_id": "11", "email": "alice@ucsb.edu"}}],
+                  "pageInfo": {"hasNextPage": true, "endCursor": "c1"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"after\":\"c1\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {
+                  "edges": [{"node": {"_id": "12", "email": "bob@ucsb.edu"}}],
+                  "pageInfo": {"hasNextPage": true, "endCursor": "c2"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"after\":\"c2\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {
+                  "edges": [{"node": {"_id": "13", "email": "carol@ucsb.edu"}}],
+                  "pageInfo": {"hasNextPage": false, "endCursor": "c3"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    Map<String, Integer> result = canvasService.getCanvasUserIdsByEmail(course);
+
+    mockServer.verify();
+    assertEquals(
+        List.of("alice@ucsb.edu", "bob@ucsb.edu", "carol@ucsb.edu"), List.copyOf(result.keySet()));
+    assertEquals(Map.of("alice@ucsb.edu", 11, "bob@ucsb.edu", 12, "carol@ucsb.edu", 13), result);
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_followsMemberPagination_perGroup() throws Exception {
+    Course course = linkedCourse();
+    String groupSetPage =
+        """
+        {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": [
+          {"_id": "201", "name": "Big Team", "membersConnection": {
+            "edges": [{"node": {"user": {"_id": "11", "email": "alice@ucsb.edu"}}}],
+            "pageInfo": {"hasNextPage": true, "endCursor": "m1"}
+          }},
+          {"_id": "202", "name": "Small Team", "membersConnection": {
+            "edges": [{"node": {"user": {"_id": "14", "email": "dave@ucsb.edu"}}}],
+            "pageInfo": {"hasNextPage": false, "endCursor": "x"}
+          }}
+        ]}}}
+        """;
+    String membersPage2 =
+        """
+        {"data": {"legacyNode": {"membersConnection": {
+          "edges": [{"node": {"user": {"_id": "12", "email": "bob@ucsb.edu"}}}],
+          "pageInfo": {"hasNextPage": true, "endCursor": "m2"}
+        }}}}
+        """;
+    String membersPage3 =
+        """
+        {"data": {"legacyNode": {"membersConnection": {
+          "edges": [{"node": {"user": {"_id": "13", "email": "Carol@umail.ucsb.edu"}}}],
+          "pageInfo": {"hasNextPage": false, "endCursor": "m3"}
+        }}}}
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("membersConnection(first: $first)")))
+        .andExpect(content().string(has("\"first\":100")))
+        .andRespond(withSuccess(groupSetPage, MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("legacyNode(_id: $groupId, type: Group)")))
+        .andExpect(content().string(has("\"groupId\":\"201\"")))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(has("\"after\":\"m1\"")))
+        .andRespond(withSuccess(membersPage2, MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"groupId\":\"201\"")))
+        .andExpect(content().string(has("\"after\":\"m2\"")))
+        .andRespond(withSuccess(membersPage3, MediaType.APPLICATION_JSON));
+
+    CanvasGroupSetDetail result = canvasService.getCanvasGroupSetDetail(course, "R3JvdXBTZXQtMTAx");
+
+    mockServer.verify();
+    assertEquals(2, result.getGroups().size());
+    CanvasGroupDetail big = result.getGroups().get(0);
+    assertEquals(201, big.getId());
+    assertEquals(
+        List.of("alice@ucsb.edu", "bob@ucsb.edu", "carol@ucsb.edu"),
+        List.copyOf(big.getMemberUserIdsByEmail().keySet()));
+    assertEquals(
+        Map.of("alice@ucsb.edu", 11, "bob@ucsb.edu", 12, "carol@ucsb.edu", 13),
+        big.getMemberUserIdsByEmail());
+    CanvasGroupDetail small = result.getGroups().get(1);
+    assertEquals(Map.of("dave@ucsb.edu", 14), small.getMemberUserIdsByEmail());
+  }
+
+  @Test
+  public void getCanvasGroups_includesMembersFromLaterPages() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": [
+                  {"_id": "201", "name": "Big Team", "membersConnection": {
+                    "edges": [{"node": {"user": {"_id": "11", "email": "alice@ucsb.edu"}}}],
+                    "pageInfo": {"hasNextPage": true, "endCursor": "m1"}
+                  }}
+                ]}}}
+                """,
+                MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"after\":\"m1\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"legacyNode": {"membersConnection": {
+                  "edges": [{"node": {"user": {"_id": "12", "email": "bob@ucsb.edu"}}}],
+                  "pageInfo": {"hasNextPage": false, "endCursor": "m2"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    List<CanvasGroup> result = canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx");
+
+    mockServer.verify();
+    assertEquals(1, result.size());
+    assertEquals(201, result.get(0).getId());
+    assertEquals("Big Team", result.get(0).getName());
+    assertEquals(List.of("alice@ucsb.edu", "bob@ucsb.edu"), result.get(0).getMembers());
+  }
 }
