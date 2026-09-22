@@ -214,6 +214,7 @@ public class SetupTeamSlackChannelsJob implements JobContextConsumer {
     }
 
     ctx.log("Removing Channel Members Who Are Not On The Team");
+    channels:
     for (Map.Entry<String, String> channel : channelIdByName.entrySet()) {
       String channelName = channel.getKey();
       List<String> members = membersByChannelName.get(channelName);
@@ -235,6 +236,11 @@ public class SetupTeamSlackChannelsJob implements JobContextConsumer {
             ctx.log(
                 "Error removing %s from #%s: %s"
                     .formatted(describe(member), channelName, e.getMessage()));
+            if (SlackService.RESTRICTED_ACTION.equals(e.getMessage())) {
+              // A workspace setting forbids it, so every other removal would fail the same way
+              ctx.log(SlackService.REMOVAL_RESTRICTED_ADVICE);
+              break channels;
+            }
           }
         }
       }

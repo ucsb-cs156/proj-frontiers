@@ -45,7 +45,7 @@ describe("SlackSetupInstructions tests", () => {
 
     const accordion = screen.getByTestId("SlackSetupInstructions-instructions");
     const steps = accordion.querySelectorAll("ol > li");
-    expect(steps.length).toBe(4);
+    expect(steps.length).toBe(5);
 
     expect(normalize(steps[0].textContent)).toBe(
       'Create an app at https://api.slack.com/apps (choose "from scratch"), tied to the target workspace.',
@@ -58,6 +58,9 @@ describe("SlackSetupInstructions tests", () => {
     );
     expect(normalize(steps[3].textContent)).toBe(
       "Copy the Bot User OAuth Token (it starts with xoxb-). That is what goes into the Frontiers course settings.",
+    );
+    expect(normalize(steps[4].textContent)).toBe(
+      "Allow the app to remove people from public channels. By default only Workspace Owners and Admins may, and then the section and team channel jobs cannot remove anyone (their log shows restricted_action). A Workspace Owner opens Workspace settings → Roles & permissions (on older workspaces, Permissions → Channel Management) and sets People who can remove members from public channels to Everyone, except guests.",
     );
 
     const link = within(steps[0]).getByRole("link", {

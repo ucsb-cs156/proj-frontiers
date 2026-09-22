@@ -67,6 +67,17 @@ public class SlackService {
   /** Error code used when Slack kept rate limiting a call, even after waiting as it asked. */
   public static final String RATE_LIMITED = "ratelimited";
 
+  /**
+   * Slack's error code when a workspace preference forbids the action: for <code>
+   * conversations.kick</code>, when the workspace does not let this bot remove members from public
+   * channels (by default only Workspace Owners and Admins may).
+   */
+  public static final String RESTRICTED_ACTION = "restricted_action";
+
+  /** What to tell the instructor when removing a member fails with {@link #RESTRICTED_ACTION}. */
+  public static final String REMOVAL_RESTRICTED_ADVICE =
+      "Slack does not allow this bot to remove members from public channels, so no more members will be removed in this run. By default only Workspace Owners and Admins may remove members. A Workspace Owner can change this in Slack under Workspace settings, Roles & permissions (on older workspaces: Permissions, Channel Management): set \"People who can remove members from public channels\" to \"Everyone, except guests\". Then run this job again.";
+
   /** How many times a rate limited (HTTP 429) call is tried again, after waiting. */
   public static final int MAX_RATE_LIMIT_RETRIES = 3;
 
@@ -273,7 +284,9 @@ public class SlackService {
 
   /**
    * Calls the Slack <code>conversations.kick</code> method to remove a user from a channel that the
-   * bot is a member of. Requires the <code>channels:manage</code> scope.
+   * bot is a member of. Requires the <code>channels:manage</code> scope. Whether the bot is allowed
+   * to remove members from public channels is also a workspace setting; if it is not, Slack answers
+   * {@link #RESTRICTED_ACTION}, and {@link #REMOVAL_RESTRICTED_ADVICE} says how to fix that.
    *
    * @param token the (plaintext) Slack bot token
    * @param channelId id of the channel
