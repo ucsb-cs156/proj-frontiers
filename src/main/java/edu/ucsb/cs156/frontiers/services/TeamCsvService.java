@@ -5,9 +5,11 @@ import edu.ucsb.cs156.frontiers.models.NameAndTeam;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
@@ -210,6 +212,60 @@ public class TeamCsvService {
       layout.add(column.stream().map(e -> List.of(e.name(), e.team())).toList());
     }
     writeColumnsCsv(writer, List.of("Name", "Team"), layout);
+  }
+
+  /**
+   * Groups the entries by team, one list per team, with the teams in case-insensitive alphabetical
+   * order by name and the entries within each team in their original order. Entries with no team (a
+   * blank team name) are collected into one extra group placed last, so that unassigned students
+   * are still visible.
+   *
+   * @param entries the entries, in order
+   * @return one list per team, teams sorted by name, unassigned students last
+   */
+  public List<List<NameAndTeam>> groupByTeam(List<NameAndTeam> entries) {
+    Map<String, List<NameAndTeam>> byTeam =
+        new TreeMap<>(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
+    List<NameAndTeam> noTeam = new ArrayList<>();
+    for (NameAndTeam entry : entries) {
+      if (entry.team().isEmpty()) {
+        noTeam.add(entry);
+      } else {
+        byTeam.computeIfAbsent(entry.team(), k -> new ArrayList<>()).add(entry);
+      }
+    }
+    List<List<NameAndTeam>> result = new ArrayList<>(byTeam.values());
+    if (!noTeam.isEmpty()) {
+      result.add(noTeam);
+    }
+    return result;
+  }
+
+  /**
+   * Writes the "Team,Name" table: the teams (see {@link #groupByTeam}) balanced across the given
+   * number of column pairs, filling column by column, with one row per student. Columns are
+   * balanced by number of teams, not number of students, so that a team is never split across two
+   * columns.
+   *
+   * @param writer where to write the CSV
+   * @param entries the entries, in order
+   * @param columns the number of "Team,Name" column pairs, at least 1
+   * @throws IOException if writing fails
+   * @throws IllegalArgumentException if columns is less than 1
+   */
+  public void writeTeamTableCsv(Writer writer, List<NameAndTeam> entries, int columns)
+      throws IOException {
+    List<List<List<String>>> layout = new ArrayList<>();
+    for (List<List<NameAndTeam>> column : layoutColumns(groupByTeam(entries), columns)) {
+      List<List<String>> rows = new ArrayList<>();
+      for (List<NameAndTeam> team : column) {
+        for (NameAndTeam entry : team) {
+          rows.add(List.of(entry.team(), entry.name()));
+        }
+      }
+      layout.add(rows);
+    }
+    writeColumnsCsv(writer, List.of("Team", "Name"), layout);
   }
 
   private static String join(String first, String lastPart) {
