@@ -311,4 +311,119 @@ public class TeamCsvServiceTests {
         IllegalArgumentException.class, () -> service.writeName2TeamCsv(writer, List.of(), 0));
     assertEquals("", writer.toString());
   }
+
+  // groupByTeam
+
+  @Test
+  public void groupByTeam_sorts_teams_by_name_and_keeps_student_order_within_a_team() {
+    List<NameAndTeam> entries =
+        List.of(
+            nt("Andy", "s26-02"),
+            nt("Binghao", "s26-01"),
+            nt("Oscar", "s26-02"),
+            nt("Shanqin", "S26-01"),
+            nt("Whisper", "s26-03"));
+    assertEquals(
+        List.of(
+            List.of(nt("Shanqin", "S26-01")),
+            List.of(nt("Binghao", "s26-01")),
+            List.of(nt("Andy", "s26-02"), nt("Oscar", "s26-02")),
+            List.of(nt("Whisper", "s26-03"))),
+        service.groupByTeam(entries));
+  }
+
+  @Test
+  public void groupByTeam_puts_students_with_no_team_last() {
+    List<NameAndTeam> entries =
+        List.of(nt("Andy", ""), nt("Binghao", "s26-01"), nt("Oscar", ""), nt("Zed", "a-team"));
+    assertEquals(
+        List.of(
+            List.of(nt("Zed", "a-team")),
+            List.of(nt("Binghao", "s26-01")),
+            List.of(nt("Andy", ""), nt("Oscar", ""))),
+        service.groupByTeam(entries));
+  }
+
+  @Test
+  public void groupByTeam_of_empty_list_is_empty() {
+    assertEquals(List.of(), service.groupByTeam(List.of()));
+  }
+
+  // writeTeamTableCsv
+
+  private String teamTableCsv(List<NameAndTeam> entries, int columns) throws Exception {
+    StringWriter writer = new StringWriter();
+    service.writeTeamTableCsv(writer, entries, columns);
+    return writer.toString().replace("\r\n", "\n");
+  }
+
+  @Test
+  public void writeTeamTableCsv_balances_columns_by_team_and_never_splits_a_team()
+      throws Exception {
+    // 5 teams over 2 columns: 3 teams (5 students) in the first, 2 teams (5 students) in the
+    // second, so the second column's leading blank cell is quoted by Commons CSV.
+    List<NameAndTeam> entries =
+        List.of(
+            nt("Andy", "s26-01"),
+            nt("Binghao", "s26-01"),
+            nt("Chris", "s26-02"),
+            nt("Dana", "s26-03"),
+            nt("Erik", "s26-03"),
+            nt("Fay", "s26-04"),
+            nt("Gus", "s26-04"),
+            nt("Hal", "s26-04"),
+            nt("Ivy", "s26-04"),
+            nt("Jo", "s26-05"));
+    String expected =
+        """
+        Team,Name,,Team,Name
+        s26-01,Andy,,s26-04,Fay
+        s26-01,Binghao,,s26-04,Gus
+        s26-02,Chris,,s26-04,Hal
+        s26-03,Dana,,s26-04,Ivy
+        s26-03,Erik,,s26-05,Jo
+        """;
+    assertEquals(expected, teamTableCsv(entries, 2));
+  }
+
+  @Test
+  public void writeTeamTableCsv_pads_short_columns_and_quotes_leading_blank_cells()
+      throws Exception {
+    List<NameAndTeam> entries =
+        List.of(nt("Andy", "s26-01"), nt("Binghao", "s26-02"), nt("Chris", "s26-02"));
+    String expected =
+        """
+        Team,Name,,Team,Name,,Team,Name
+        s26-01,Andy,,s26-02,Binghao,,,
+        "",,,s26-02,Chris,,,
+        """;
+    assertEquals(expected, teamTableCsv(entries, 3));
+  }
+
+  @Test
+  public void writeTeamTableCsv_single_column_lists_unassigned_students_last() throws Exception {
+    List<NameAndTeam> entries =
+        List.of(nt("Andy", ""), nt("Binghao", "s26-02"), nt("Chris", "s26-01"));
+    String expected =
+        """
+        Team,Name
+        s26-01,Chris
+        s26-02,Binghao
+        "",Andy
+        """;
+    assertEquals(expected, teamTableCsv(entries, 1));
+  }
+
+  @Test
+  public void writeTeamTableCsv_with_no_entries_writes_only_the_header() throws Exception {
+    assertEquals("Team,Name,,Team,Name\n", teamTableCsv(List.of(), 2));
+  }
+
+  @Test
+  public void writeTeamTableCsv_rejects_less_than_one_column() {
+    StringWriter writer = new StringWriter();
+    assertThrows(
+        IllegalArgumentException.class, () -> service.writeTeamTableCsv(writer, List.of(), 0));
+    assertEquals("", writer.toString());
+  }
 }
