@@ -2,28 +2,36 @@ package edu.ucsb.cs156.frontiers.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.models.CanvasGroup;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupDetail;
 import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupSetDetail;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.HttpClientErrorException;
 
 @RestClientTest(CanvasService.class)
 @Import({TestConfig.class})
@@ -33,9 +41,14 @@ public class CanvasServiceTests {
 
   @Autowired private CanvasService canvasService;
 
+  @MockitoBean private CanvasApiTokenSecurityService canvasApiTokenSecurityService;
+
   @BeforeEach
   public void setup() {
     mockServer.reset();
+    org.mockito.Mockito.when(
+            canvasApiTokenSecurityService.decrypt(org.mockito.ArgumentMatchers.any(String.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
   }
 
   @Test
@@ -58,8 +71,8 @@ public class CanvasServiceTests {
             "course": {
               "usersConnection": {
                 "edges": [
-                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A111111", "email": "alice@ucsb.edu", "integrationId": null}},
-                  {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "A222222", "email": "bob@ucsb.edu", "integrationId": "B222222"}}
+                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A111111", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "52027 [TA] F 02:00PM PHELP2524"}}]}},
+                  {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "A222222", "email": "bob@ucsb.edu", "integrationId": "B222222", "enrollments": [{"section": {"name": "12345 [LEC] MW 10:00AM PHELP1401"}}]}}
                 ]
               }
             }
@@ -87,12 +100,149 @@ public class CanvasServiceTests {
     assertEquals("Smith", student1.getLastName());
     assertEquals("A111111", student1.getStudentId());
     assertEquals("alice@ucsb.edu", student1.getEmail());
+    assertEquals("52027", student1.getSection());
 
     RosterStudent student2 = result.get(1);
     assertEquals("Bob", student2.getFirstName());
     assertEquals("Jones", student2.getLastName());
     assertEquals("B222222", student2.getStudentId()); // integrationId takes precedence
     assertEquals("bob@ucsb.edu", student2.getEmail());
+    assertEquals("12345", student2.getSection());
+  }
+
+  @Test
+  public void testGetCanvasRoster_setsEmptySectionWhenNoEnrollments() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .school(School.UCSB)
+            .build();
+
+    // Student with no enrollments/section info returned by Canvas
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "usersConnection": {
+                "edges": [
+                  {"node": {"firstName": "Eve", "lastName": "Adams", "sisId": "E111111", "email": "eve@ucsb.edu", "integrationId": null, "enrollments": []}}
+                ]
+              }
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals("", result.get(0).getSection());
+  }
+
+  @Test
+  public void testGetCanvasRoster_setsEmptySectionWhenSectionNameMissing() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .school(School.UCSB)
+            .build();
+
+    // Student with an enrollment entry that has no section name info returned by Canvas
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "usersConnection": {
+                "edges": [
+                  {"node": {"firstName": "Frank", "lastName": "Ng", "sisId": "F111111", "email": "frank@ucsb.edu", "integrationId": null, "enrollments": [{"section": {}}]}}
+                ]
+              }
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals("", result.get(0).getSection());
+  }
+
+  @Test
+  public void testGetCanvasRoster_truncatesSectionNameToFirstFiveCharacters() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .school(School.UCSB)
+            .build();
+
+    // Canvas returns section names like "52027 [TA] F 02:00PM PHELP2524"; only the first
+    // five characters (the section number) should be stored.
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "usersConnection": {
+                "edges": [
+                  {"node": {"firstName": "Grace", "lastName": "Lee", "sisId": "G111111", "email": "grace@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "52027 [TA] F 02:00PM PHELP2524"}}]}},
+                  {"node": {"firstName": "Hank", "lastName": "Kim", "sisId": "H111111", "email": "hank@ucsb.edu", "integrationId": null, "enrollments": [{"section": {"name": "AB"}}]}}
+                ]
+              }
+            }
+          }
+        }
+        """;
+
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    // Act
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    // Assert
+    mockServer.verify();
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertEquals("52027", result.get(0).getSection());
+    assertEquals("AB", result.get(1).getSection());
   }
 
   @Test
@@ -326,7 +476,7 @@ public class CanvasServiceTests {
         """
         {
           "data": {
-            "node": {
+            "groupSet": {
               "id": "R3JvdXBTZXQtMTAx",
               "name": "Project Teams",
               "groups": [
@@ -401,7 +551,7 @@ public class CanvasServiceTests {
         """
         {
           "data": {
-            "node": {
+            "groupSet": {
               "id": "R3JvdXBTZXQtMTAx",
               "name": "Project Teams",
               "groups": []
@@ -441,7 +591,7 @@ public class CanvasServiceTests {
         """
         {
           "data": {
-            "node": {
+            "groupSet": {
               "id": "R3JvdXBTZXQtMTAx",
               "name": "Project Teams",
               "groups": [
@@ -476,5 +626,603 @@ public class CanvasServiceTests {
     assertEquals("Empty Team", group.getName());
     assertEquals(203, group.getId());
     assertTrue(group.getMembers().isEmpty());
+  }
+
+  // ---- push-to-Canvas support ----
+
+  private Course linkedCourse() {
+    return Course.builder()
+        .id(1L)
+        .courseName("CS156")
+        .canvasApiToken("test-api-token")
+        .canvasCourseId("12345")
+        .school(School.UCSB)
+        .build();
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_parsesIdsNamesAndMembers() throws Exception {
+    Course course = linkedCourse();
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "groupSet": {
+              "_id": "101",
+              "name": "Project Teams",
+              "groups": [
+                {
+                  "_id": "201",
+                  "name": "Team Alpha",
+                  "membersConnection": {
+                    "edges": [
+                      {"node": {"user": {"_id": "11", "email": "Alice@umail.ucsb.edu"}}},
+                      {"node": {"user": {"_id": "12", "email": "bob@ucsb.edu"}}}
+                    ]
+                  }
+                },
+                {
+                  "_id": "202",
+                  "name": "Team Beta",
+                  "membersConnection": {"edges": []}
+                }
+              ]
+            }
+          }
+        }
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("R3JvdXBTZXQtMTAx")))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("membersConnection")))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    CanvasGroupSetDetail result = canvasService.getCanvasGroupSetDetail(course, "R3JvdXBTZXQtMTAx");
+
+    mockServer.verify();
+    assertEquals(101, result.getId());
+    assertEquals("Project Teams", result.getName());
+    assertEquals(2, result.getGroups().size());
+    CanvasGroupDetail alpha = result.getGroups().get(0);
+    assertEquals(201, alpha.getId());
+    assertEquals("Team Alpha", alpha.getName());
+    assertEquals(Map.of("alice@ucsb.edu", 11, "bob@ucsb.edu", 12), alpha.getMemberUserIdsByEmail());
+    assertEquals(
+        List.of("alice@ucsb.edu", "bob@ucsb.edu"),
+        List.copyOf(alpha.getMemberUserIdsByEmail().keySet()));
+    CanvasGroupDetail beta = result.getGroups().get(1);
+    assertEquals(202, beta.getId());
+    assertEquals("Team Beta", beta.getName());
+    assertEquals(Map.of(), beta.getMemberUserIdsByEmail());
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_withNoGroups() throws Exception {
+    Course course = linkedCourse();
+    String graphqlResponse =
+        """
+        {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": []}}}
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    CanvasGroupSetDetail result = canvasService.getCanvasGroupSetDetail(course, "R3JvdXBTZXQtMTAx");
+
+    mockServer.verify();
+    assertEquals(101, result.getId());
+    assertEquals(List.of(), result.getGroups());
+  }
+
+  @Test
+  public void getCanvasUserIdsByEmail_mapsCanonicalEmailsToIds() throws Exception {
+    Course course = linkedCourse();
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "course": {
+              "usersConnection": {
+                "edges": [
+                  {"node": {"_id": "11", "email": "Alice@umail.ucsb.edu"}},
+                  {"node": {"_id": "12", "email": "bob@ucsb.edu"}}
+                ]
+              }
+            }
+          }
+        }
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("\"courseId\":\"12345\"")))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    Map<String, Integer> result = canvasService.getCanvasUserIdsByEmail(course);
+
+    mockServer.verify();
+    assertEquals(Map.of("alice@ucsb.edu", 11, "bob@ucsb.edu", 12), result);
+  }
+
+  @Test
+  public void getCanvasUserIdsByEmail_withNoStudents() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {"edges": []}}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(Map.of(), canvasService.getCanvasUserIdsByEmail(course));
+    mockServer.verify();
+  }
+
+  @Test
+  public void createCanvasGroup_returnsTheNewGroupId() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("createGroupInSet")))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("\"groupSetId\":\"101\"")))
+        .andExpect(
+            content().string(org.hamcrest.Matchers.containsString("\"name\":\"Team Alpha\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"createGroupInSet": {"group": {"_id": "201"}, "errors": null}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    Integer id = canvasService.createCanvasGroup(course, 101, "Team Alpha");
+
+    mockServer.verify();
+    assertEquals(201, id);
+  }
+
+  @Test
+  public void createCanvasGroup_throwsWhenCanvasReportsErrors() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"createGroupInSet": {"group": null, "errors": [{"message": "name taken"}]}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    RuntimeException e =
+        assertThrows(
+            RuntimeException.class,
+            () -> canvasService.createCanvasGroup(course, 101, "Team Alpha"));
+
+    mockServer.verify();
+    assertEquals("Canvas refused to create group Team Alpha: name taken", e.getMessage());
+  }
+
+  @Test
+  public void createCanvasGroup_treatsEmptyErrorsAsSuccess() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"createGroupInSet": {"group": {"_id": "202"}, "errors": []}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(202, canvasService.createCanvasGroup(course, 101, "Team Beta"));
+    mockServer.verify();
+  }
+
+  @Test
+  public void deleteCanvasGroup_callsTheRestApi() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/v1/groups/201"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess("{\"id\": 201}", MediaType.APPLICATION_JSON));
+
+    canvasService.deleteCanvasGroup(course, 201);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void deleteCanvasGroup_throwsOnHttpError() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/v1/groups/201"))
+        .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+    assertThrows(
+        HttpClientErrorException.class, () -> canvasService.deleteCanvasGroup(course, 201));
+    mockServer.verify();
+  }
+
+  @Test
+  public void addCanvasGroupMember_postsTheUserId() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/v1/groups/201/memberships"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json("{\"user_id\": 11}"))
+        .andRespond(withSuccess("{\"id\": 301}", MediaType.APPLICATION_JSON));
+
+    canvasService.addCanvasGroupMember(course, 201, 11);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void removeCanvasGroupMember_deletesTheMembership() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/v1/groups/201/users/11"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andExpect(header("Authorization", "Bearer test-api-token"))
+        .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+    canvasService.removeCanvasGroupMember(course, 201, 11);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void restCalls_useTheSchoolsCanvasHost() throws Exception {
+    Course course = linkedCourse();
+    course.setSchool(School.CHICO_STATE);
+    mockServer
+        .expect(requestTo("https://canvas.csuchico.edu/api/v1/groups/5/users/6"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+    canvasService.removeCanvasGroupMember(course, 5, 6);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void groupSetSelector_usesNodeForRelayIdsAndLegacyNodeForNumericIds() {
+    assertEquals("node(id: $groupId)", CanvasService.groupSetSelector("R3JvdXBTZXQtMTAx"));
+    assertEquals(
+        "legacyNode(_id: $groupId, type: GroupSet)", CanvasService.groupSetSelector("31516"));
+    assertEquals("node(id: $groupId)", CanvasService.groupSetSelector("31516x"));
+    assertEquals("node(id: $groupId)", CanvasService.groupSetSelector(""));
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_acceptsNumericGroupSetId() throws Exception {
+    Course course = linkedCourse();
+    String graphqlResponse =
+        """
+        {"data": {"groupSet": {"_id": "31516", "name": "Project Teams", "groups": []}}}
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content()
+                .string(
+                    org.hamcrest.Matchers.containsString(
+                        "groupSet: legacyNode(_id: $groupId, type: GroupSet)")))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("\"groupId\":\"31516\"")))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    CanvasGroupSetDetail result = canvasService.getCanvasGroupSetDetail(course, "31516");
+
+    mockServer.verify();
+    assertEquals(31516, result.getId());
+    assertEquals("Project Teams", result.getName());
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_usesNodeForRelayId() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content().string(org.hamcrest.Matchers.containsString("groupSet: node(id: $groupId)")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": []}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(101, canvasService.getCanvasGroupSetDetail(course, "R3JvdXBTZXQtMTAx").getId());
+    mockServer.verify();
+  }
+
+  @Test
+  public void getCanvasGroups_acceptsNumericGroupSetId() throws Exception {
+    Course course = linkedCourse();
+    String graphqlResponse =
+        """
+        {
+          "data": {
+            "groupSet": {
+              "id": "R3JvdXBTZXQtMzE1MTY=",
+              "name": "Project Teams",
+              "groups": [
+                {"name": "Team Alpha", "_id": 201, "membersConnection": {"edges": [
+                  {"node": {"user": {"email": "alice@ucsb.edu"}}}
+                ]}}
+              ]
+            }
+          }
+        }
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content()
+                .string(
+                    org.hamcrest.Matchers.containsString(
+                        "groupSet: legacyNode(_id: $groupId, type: GroupSet)")))
+        .andRespond(withSuccess(graphqlResponse, MediaType.APPLICATION_JSON));
+
+    List<CanvasGroup> result = canvasService.getCanvasGroups(course, "31516");
+
+    mockServer.verify();
+    assertEquals(1, result.size());
+    assertEquals("Team Alpha", result.get(0).getName());
+    assertEquals(List.of("alice@ucsb.edu"), result.get(0).getMembers());
+  }
+
+  @Test
+  public void getCanvasGroups_usesNodeForRelayId() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(
+            content().string(org.hamcrest.Matchers.containsString("groupSet: node(id: $groupId)")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"groupSet": {"id": "R3JvdXBTZXQtMTAx", "name": "Project Teams", "groups": []}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(List.of(), canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx"));
+    mockServer.verify();
+  }
+
+  // ---- pagination ----
+
+  private static org.hamcrest.Matcher<String> has(String text) {
+    return org.hamcrest.Matchers.containsString(text);
+  }
+
+  private static org.hamcrest.Matcher<String> lacks(String text) {
+    return org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(text));
+  }
+
+  @Test
+  public void pageSize_isCanvasMaximum() {
+    assertEquals(100, CanvasService.PAGE_SIZE);
+  }
+
+  @Test
+  public void getCanvasRoster_followsPagination() throws Exception {
+    Course course = linkedCourse();
+    String page1 =
+        """
+        {"data": {"course": {"usersConnection": {
+          "edges": [
+            {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A1", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": []}}
+          ],
+          "pageInfo": {"hasNextPage": true, "endCursor": "cursor1"}
+        }}}}
+        """;
+    String page2 =
+        """
+        {"data": {"course": {"usersConnection": {
+          "edges": [
+            {"node": {"firstName": "Bob", "lastName": "Jones", "sisId": "B2", "email": "bob@ucsb.edu", "integrationId": null, "enrollments": []}}
+          ],
+          "pageInfo": {"hasNextPage": false, "endCursor": "cursor2"}
+        }}}}
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(has("first: $first")))
+        .andExpect(content().string(has("after: $after")))
+        .andExpect(content().string(has("pageInfo")))
+        .andExpect(content().string(lacks("\"after\"")))
+        .andRespond(withSuccess(page1, MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(has("\"after\":\"cursor1\"")))
+        .andRespond(withSuccess(page2, MediaType.APPLICATION_JSON));
+
+    List<RosterStudent> result = canvasService.getCanvasRoster(course);
+
+    mockServer.verify();
+    assertEquals(2, result.size());
+    assertEquals("Alice", result.get(0).getFirstName());
+    assertEquals("Bob", result.get(1).getFirstName());
+  }
+
+  @Test
+  public void getCanvasRoster_stopsWhenPageInfoIsMissing() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {"edges": [
+                  {"node": {"firstName": "Alice", "lastName": "Smith", "sisId": "A1", "email": "alice@ucsb.edu", "integrationId": null, "enrollments": []}}
+                ]}}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    assertEquals(1, canvasService.getCanvasRoster(course).size());
+    mockServer.verify();
+  }
+
+  @Test
+  public void getCanvasUserIdsByEmail_followsPagination() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(lacks("\"after\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {
+                  "edges": [{"node": {"_id": "11", "email": "alice@ucsb.edu"}}],
+                  "pageInfo": {"hasNextPage": true, "endCursor": "c1"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"after\":\"c1\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {
+                  "edges": [{"node": {"_id": "12", "email": "bob@ucsb.edu"}}],
+                  "pageInfo": {"hasNextPage": true, "endCursor": "c2"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"after\":\"c2\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"course": {"usersConnection": {
+                  "edges": [{"node": {"_id": "13", "email": "carol@ucsb.edu"}}],
+                  "pageInfo": {"hasNextPage": false, "endCursor": "c3"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    Map<String, Integer> result = canvasService.getCanvasUserIdsByEmail(course);
+
+    mockServer.verify();
+    assertEquals(
+        List.of("alice@ucsb.edu", "bob@ucsb.edu", "carol@ucsb.edu"), List.copyOf(result.keySet()));
+    assertEquals(Map.of("alice@ucsb.edu", 11, "bob@ucsb.edu", 12, "carol@ucsb.edu", 13), result);
+  }
+
+  @Test
+  public void getCanvasGroupSetDetail_followsMemberPagination_perGroup() throws Exception {
+    Course course = linkedCourse();
+    String groupSetPage =
+        """
+        {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": [
+          {"_id": "201", "name": "Big Team", "membersConnection": {
+            "edges": [{"node": {"user": {"_id": "11", "email": "alice@ucsb.edu"}}}],
+            "pageInfo": {"hasNextPage": true, "endCursor": "m1"}
+          }},
+          {"_id": "202", "name": "Small Team", "membersConnection": {
+            "edges": [{"node": {"user": {"_id": "14", "email": "dave@ucsb.edu"}}}],
+            "pageInfo": {"hasNextPage": false, "endCursor": "x"}
+          }}
+        ]}}}
+        """;
+    String membersPage2 =
+        """
+        {"data": {"legacyNode": {"membersConnection": {
+          "edges": [{"node": {"user": {"_id": "12", "email": "bob@ucsb.edu"}}}],
+          "pageInfo": {"hasNextPage": true, "endCursor": "m2"}
+        }}}}
+        """;
+    String membersPage3 =
+        """
+        {"data": {"legacyNode": {"membersConnection": {
+          "edges": [{"node": {"user": {"_id": "13", "email": "Carol@umail.ucsb.edu"}}}],
+          "pageInfo": {"hasNextPage": false, "endCursor": "m3"}
+        }}}}
+        """;
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("membersConnection(first: $first)")))
+        .andExpect(content().string(has("\"first\":100")))
+        .andRespond(withSuccess(groupSetPage, MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("legacyNode(_id: $groupId, type: Group)")))
+        .andExpect(content().string(has("\"groupId\":\"201\"")))
+        .andExpect(content().string(has("\"first\":100")))
+        .andExpect(content().string(has("\"after\":\"m1\"")))
+        .andRespond(withSuccess(membersPage2, MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"groupId\":\"201\"")))
+        .andExpect(content().string(has("\"after\":\"m2\"")))
+        .andRespond(withSuccess(membersPage3, MediaType.APPLICATION_JSON));
+
+    CanvasGroupSetDetail result = canvasService.getCanvasGroupSetDetail(course, "R3JvdXBTZXQtMTAx");
+
+    mockServer.verify();
+    assertEquals(2, result.getGroups().size());
+    CanvasGroupDetail big = result.getGroups().get(0);
+    assertEquals(201, big.getId());
+    assertEquals(
+        List.of("alice@ucsb.edu", "bob@ucsb.edu", "carol@ucsb.edu"),
+        List.copyOf(big.getMemberUserIdsByEmail().keySet()));
+    assertEquals(
+        Map.of("alice@ucsb.edu", 11, "bob@ucsb.edu", 12, "carol@ucsb.edu", 13),
+        big.getMemberUserIdsByEmail());
+    CanvasGroupDetail small = result.getGroups().get(1);
+    assertEquals(Map.of("dave@ucsb.edu", 14), small.getMemberUserIdsByEmail());
+  }
+
+  @Test
+  public void getCanvasGroups_includesMembersFromLaterPages() throws Exception {
+    Course course = linkedCourse();
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"groupSet": {"_id": "101", "name": "Project Teams", "groups": [
+                  {"_id": "201", "name": "Big Team", "membersConnection": {
+                    "edges": [{"node": {"user": {"_id": "11", "email": "alice@ucsb.edu"}}}],
+                    "pageInfo": {"hasNextPage": true, "endCursor": "m1"}
+                  }}
+                ]}}}
+                """,
+                MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(requestTo("https://ucsb.instructure.com/api/graphql"))
+        .andExpect(content().string(has("\"after\":\"m1\"")))
+        .andRespond(
+            withSuccess(
+                """
+                {"data": {"legacyNode": {"membersConnection": {
+                  "edges": [{"node": {"user": {"_id": "12", "email": "bob@ucsb.edu"}}}],
+                  "pageInfo": {"hasNextPage": false, "endCursor": "m2"}
+                }}}}
+                """,
+                MediaType.APPLICATION_JSON));
+
+    List<CanvasGroup> result = canvasService.getCanvasGroups(course, "R3JvdXBTZXQtMTAx");
+
+    mockServer.verify();
+    assertEquals(1, result.size());
+    assertEquals(201, result.get(0).getId());
+    assertEquals("Big Team", result.get(0).getName());
+    assertEquals(List.of("alice@ucsb.edu", "bob@ucsb.edu"), result.get(0).getMembers());
   }
 }

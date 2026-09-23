@@ -21,6 +21,7 @@ import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.ApiCourseKeyService;
+import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,6 +64,8 @@ public class CoursesController extends ApiController {
 
   @Autowired private AdminRepository adminRepository;
 
+  @Autowired private CanvasApiTokenSecurityService canvasApiTokenSecurityService;
+
   @Autowired private OrganizationLinkerService linkerService;
 
   @Autowired private ApiCourseKeyService apiCourseKeyService;
@@ -94,7 +97,7 @@ public class CoursesController extends ApiController {
             .term(term)
             .school(school)
             .instructorEmail(currentUser.getUser().getEmail().strip())
-            .canvasApiToken(canvasApiToken)
+            .canvasApiToken(canvasApiTokenSecurityService.encrypt(canvasApiToken))
             .canvasCourseId(canvasCourseId)
             .build();
     Course savedCourse = courseRepository.save(course);
@@ -229,7 +232,7 @@ public class CoursesController extends ApiController {
     String obscuredToken = null;
 
     if (course.getCanvasApiToken() != null) {
-      String token = course.getCanvasApiToken();
+      String token = canvasApiTokenSecurityService.decrypt(course.getCanvasApiToken());
       if (token.length() < 4) {
         obscuredToken = token;
       } else {
@@ -612,10 +615,11 @@ public class CoursesController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
+    String existingCanvasToken = canvasApiTokenSecurityService.decrypt(course.getCanvasApiToken());
     if (canvasApiToken != null
         && !canvasApiToken.isEmpty()
-        && !canvasApiToken.equals(course.getCanvasApiToken())) {
-      course.setCanvasApiToken(canvasApiToken);
+        && !canvasApiToken.equals(existingCanvasToken)) {
+      course.setCanvasApiToken(canvasApiTokenSecurityService.encrypt(canvasApiToken));
     }
 
     if (canvasCourseId != null

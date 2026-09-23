@@ -8,6 +8,7 @@ import edu.ucsb.cs156.frontiers.enums.InsertStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromCanvasJob;
+import edu.ucsb.cs156.frontiers.jobs.PushTeamsToCanvasJob;
 import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
@@ -148,10 +149,14 @@ public class CanvasController extends ApiController {
     return canvasService.getCanvasGroupSets(course);
   }
 
-  @Operation(summary = "Load Groups from Canvas")
-  @PostMapping("/sync/teams")
+  @Operation(
+      summary = "Pull teams from Canvas",
+      description =
+          "Launches a job that creates or updates the teams in Frontiers to match the groups in"
+              + " the given Canvas group set.")
+  @PostMapping("/teams/pull")
   @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
-  public Job loadCanvasTeams(
+  public Job pullCanvasTeams(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "groupSetId") @RequestParam String groupSetId) {
     Course course =
@@ -166,6 +171,33 @@ public class CanvasController extends ApiController {
             .teamMemberRepository(teamMemberRepository)
             .courseRepository(courseRepository)
             .groupsetId(groupSetId)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(
+      summary = "Push teams to Canvas",
+      description =
+          "Launches a job that updates the groups in the given Canvas group set to match the teams"
+              + " in Frontiers: groups are created, members added and removed, and groups with no"
+              + " matching team deleted. Problems with individual students or groups are logged as"
+              + " warnings in the job log and the job proceeds.")
+  @PostMapping("/teams/push")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  public Job pushCanvasTeams(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "groupSetId") @RequestParam String groupSetId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId.toString()));
+    PushTeamsToCanvasJob job =
+        PushTeamsToCanvasJob.builder()
+            .course(course)
+            .groupSetId(groupSetId)
+            .canvasService(canvasService)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
             .build();
     return jobService.runAsJob(job);
   }

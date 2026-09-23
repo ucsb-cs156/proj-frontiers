@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -21,6 +22,7 @@ import edu.ucsb.cs156.frontiers.entities.Section;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -223,6 +225,64 @@ public class SectionsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void post_section_creates_section_with_slack_channel_name() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(sectionRepository.findByCourseIdAndSection(eq(1L), eq("0100")))
+        .thenReturn(Optional.empty());
+    when(sectionRepository.save(any(Section.class)))
+        .thenAnswer(
+            invocation -> {
+              Section s = invocation.getArgument(0);
+              s.setId(10L);
+              return s;
+            });
+
+    mockMvc
+        .perform(
+            post("/api/courses/1/sections")
+                .with(csrf())
+                .param("section", "0100")
+                .param("label", "Tue 9am")
+                .param("slackChannelName", "  #cs156-0100  "))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    ArgumentCaptor<Section> captor = ArgumentCaptor.forClass(Section.class);
+    verify(sectionRepository).save(captor.capture());
+    assertEquals("#cs156-0100", captor.getValue().getSlackChannelName());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_section_blank_slack_channel_name_is_stored_as_null() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(sectionRepository.findByCourseIdAndSection(eq(1L), eq("0100")))
+        .thenReturn(Optional.empty());
+    when(sectionRepository.save(any(Section.class)))
+        .thenAnswer(
+            invocation -> {
+              Section s = invocation.getArgument(0);
+              s.setId(10L);
+              return s;
+            });
+
+    mockMvc
+        .perform(
+            post("/api/courses/1/sections")
+                .with(csrf())
+                .param("section", "0100")
+                .param("label", "Tue 9am")
+                .param("slackChannelName", "   "))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    ArgumentCaptor<Section> captor = ArgumentCaptor.forClass(Section.class);
+    verify(sectionRepository).save(captor.capture());
+    assertEquals(null, captor.getValue().getSlackChannelName());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void post_section_missing_course_returns_404() throws Exception {
     when(courseRepository.findById(eq(99L))).thenReturn(Optional.empty());
 
@@ -342,6 +402,71 @@ public class SectionsControllerTests extends ControllerTestCase {
     Section expected =
         Section.builder().id(10L).course(course).section("0300").label("Thu 1pm").build();
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_section_updates_slack_channel_name() throws Exception {
+    Section existing =
+        Section.builder()
+            .id(10L)
+            .course(course)
+            .section("0100")
+            .label("Tue 9am")
+            .slackChannelName("#old-channel")
+            .build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(sectionRepository.findById(eq(10L))).thenReturn(Optional.of(existing));
+    when(sectionRepository.findByCourseIdAndSection(eq(1L), eq("0100")))
+        .thenReturn(Optional.of(existing));
+    when(sectionRepository.save(any(Section.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/courses/1/sections/10")
+                .with(csrf())
+                .param("section", "0100")
+                .param("label", "Tue 9am")
+                .param("slackChannelName", "  #new-channel  "))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    ArgumentCaptor<Section> captor = ArgumentCaptor.forClass(Section.class);
+    verify(sectionRepository).save(captor.capture());
+    assertEquals("#new-channel", captor.getValue().getSlackChannelName());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_section_omitted_slack_channel_name_clears_it() throws Exception {
+    Section existing =
+        Section.builder()
+            .id(10L)
+            .course(course)
+            .section("0100")
+            .label("Tue 9am")
+            .slackChannelName("#old-channel")
+            .build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(sectionRepository.findById(eq(10L))).thenReturn(Optional.of(existing));
+    when(sectionRepository.findByCourseIdAndSection(eq(1L), eq("0100")))
+        .thenReturn(Optional.of(existing));
+    when(sectionRepository.save(any(Section.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/courses/1/sections/10")
+                .with(csrf())
+                .param("section", "0100")
+                .param("label", "Tue 9am"))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    ArgumentCaptor<Section> captor = ArgumentCaptor.forClass(Section.class);
+    verify(sectionRepository).save(captor.capture());
+    assertEquals(null, captor.getValue().getSlackChannelName());
   }
 
   @Test
@@ -524,6 +649,10 @@ public class SectionsControllerTests extends ControllerTestCase {
   @Test
   @WithInstructorCoursePermissions
   public void delete_section_deletes_section() throws Exception {
+    List<Section> sectionsList = new ArrayList<>();
+    sectionsList.add(section1);
+    course.setSections(sectionsList);
+
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(sectionRepository.findById(eq(10L))).thenReturn(Optional.of(section1));
 
@@ -534,6 +663,8 @@ public class SectionsControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(sectionRepository).delete(eq(section1));
+    assertEquals(List.of(), course.getSections());
+    assertNull(section1.getCourse());
     assertEquals(
         mapper.writeValueAsString(Map.of("message", "Section with id 10 deleted")),
         response.getResponse().getContentAsString());

@@ -26,6 +26,8 @@ import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
 import edu.ucsb.cs156.frontiers.services.RosterStudentDTOService;
+import edu.ucsb.cs156.frontiers.services.SectionTranslationService;
+import edu.ucsb.cs156.frontiers.services.TeamCsvService;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +46,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = {CSVDownloadsController.class})
-@Import(TestConfig.class)
+@Import({TestConfig.class, SectionTranslationService.class, TeamCsvService.class})
 public class CSVDownloadsControllerTests extends ControllerTestCase {
 
   @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
@@ -372,10 +374,314 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
   @Test
   public void translateSection_handles_null_blank_missing_and_present() {
     Map<String, String> translations = Map.of("0100", "Tue 9am", "", "Unassigned");
-    assertEquals("Tue 9am", CSVDownloadsController.translateSection("0100", translations));
-    assertEquals("0999", CSVDownloadsController.translateSection("0999", translations));
-    assertEquals("Unassigned", CSVDownloadsController.translateSection("", translations));
-    assertEquals("Unassigned", CSVDownloadsController.translateSection(null, translations));
-    assertEquals("", CSVDownloadsController.translateSection(null, Map.of()));
+    assertEquals("Tue 9am", SectionTranslationService.translateSection("0100", translations));
+    assertEquals("0999", SectionTranslationService.translateSection("0999", translations));
+    assertEquals("Unassigned", SectionTranslationService.translateSection("", translations));
+    assertEquals("Unassigned", SectionTranslationService.translateSection(null, translations));
+    assertEquals("", SectionTranslationService.translateSection(null, Map.of()));
+  }
+
+  // name2team
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_name2team_no_such_course() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response = mockMvc.perform(get("/api/csv/name2team?courseId=1")).andReturn();
+
+    Map<String, String> errorResponse =
+        objectMapper.readValue(
+            response.getResponse().getContentAsString(),
+            new TypeReference<Map<String, String>>() {});
+    Map<String, String> expectedResponse =
+        Map.of("message", "Course with id 1 not found", "type", "EntityNotFoundException");
+    assertEquals(expectedResponse, errorResponse);
+    assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus());
+    verify(rosterStudentRepository, never())
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(any(), any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_name2team_rejects_columns_less_than_one() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+
+    MvcResult response =
+        mockMvc.perform(get("/api/csv/name2team?courseId=1&columns=0")).andReturn();
+
+    Map<String, String> errorResponse =
+        objectMapper.readValue(
+            response.getResponse().getContentAsString(),
+            new TypeReference<Map<String, String>>() {});
+    Map<String, String> expectedResponse =
+        Map.of("message", "columns must be at least 1", "type", "IllegalArgumentException");
+    assertEquals(expectedResponse, errorResponse);
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getResponse().getStatus());
+    verify(rosterStudentRepository, never())
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(any(), any());
+  }
+
+  private RosterStudent name2TeamStudent(String first, String last, String team) {
+    RosterStudent student = mock(RosterStudent.class);
+    when(student.getFirstName()).thenReturn(first);
+    when(student.getLastName()).thenReturn(last);
+    when(student.getTeams()).thenReturn(team == null ? List.of() : List.of(team));
+    return student;
+  }
+
+  private List<RosterStudent> name2TeamStudents() {
+    return List.of(
+        name2TeamStudent("ALEX", "LEE", "s26-03"),
+        name2TeamStudent("ALEX", "YOUNG", "s26-10"),
+        name2TeamStudent("ALEXANDER", "HAMILTON", "s26-07"),
+        name2TeamStudent("DAVID", "CHANG", "s26-07"),
+        name2TeamStudent("DAVID", "CHEN", "s26-02"),
+        name2TeamStudent("PAT", "SMITH", "s26-01"),
+        name2TeamStudent("PAT", "SMITH", "s26-04"),
+        name2TeamStudent("RITAM KUMAR", "SINGH", "s26-09"),
+        name2TeamStudent("ZOE", "NOTEAM", null));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_name2team_csv_default_is_four_columns() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(name2TeamStudents())
+        .when(rosterStudentRepository)
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+
+    String expectedResponse =
+        """
+            Name,Team,,Name,Team,,Name,Team,,Name,Team
+            Alex L,s26-03,,David Chang,s26-07,,Pat Smith*,s26-01,,Ritam,s26-09
+            Alex Y,s26-10,,David Chen,s26-02,,Pat Smith*,s26-04,,Zoe,
+            Alexander,s26-07,,,,,,,,,
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/name2team?courseId=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(rosterStudentRepository, times(1))
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+    assertEquals(
+        expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
+    assertEquals(
+        "attachment;filename=ucsb-cs156-s26_name2team.csv",
+        response.getResponse().getHeader("Content-Disposition"));
+    assertEquals("text/csv; charset=UTF-8", response.getResponse().getContentType());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_name2team_csv_with_explicit_columns() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(name2TeamStudents())
+        .when(rosterStudentRepository)
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+
+    String expectedResponse =
+        """
+            Name,Team,,Name,Team
+            Alex L,s26-03,,Pat Smith*,s26-01
+            Alex Y,s26-10,,Pat Smith*,s26-04
+            Alexander,s26-07,,Ritam,s26-09
+            David Chang,s26-07,,Zoe,
+            David Chen,s26-02,,,
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/name2team?courseId=1&columns=2"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_name2team_csv_with_one_column() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(List.of(name2TeamStudent("RITAM", "SINGH", "s26-09")))
+        .when(rosterStudentRepository)
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+
+    String expectedResponse = """
+            Name,Team
+            Ritam,s26-09
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/name2team?courseId=1&columns=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
+  }
+
+  // teamtable
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void test_teamtable_no_such_course() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response = mockMvc.perform(get("/api/csv/teamtable?courseId=1")).andReturn();
+
+    Map<String, String> errorResponse =
+        objectMapper.readValue(
+            response.getResponse().getContentAsString(),
+            new TypeReference<Map<String, String>>() {});
+    Map<String, String> expectedResponse =
+        Map.of("message", "Course with id 1 not found", "type", "EntityNotFoundException");
+    assertEquals(expectedResponse, errorResponse);
+    assertEquals(HttpStatus.NOT_FOUND.value(), response.getResponse().getStatus());
+    verify(rosterStudentRepository, never())
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(any(), any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_teamtable_rejects_columns_less_than_one() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+
+    MvcResult response =
+        mockMvc.perform(get("/api/csv/teamtable?courseId=1&columns=0")).andReturn();
+
+    Map<String, String> errorResponse =
+        objectMapper.readValue(
+            response.getResponse().getContentAsString(),
+            new TypeReference<Map<String, String>>() {});
+    Map<String, String> expectedResponse =
+        Map.of("message", "columns must be at least 1", "type", "IllegalArgumentException");
+    assertEquals(expectedResponse, errorResponse);
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getResponse().getStatus());
+    verify(rosterStudentRepository, never())
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(any(), any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_teamtable_csv_default_is_four_columns() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(name2TeamStudents())
+        .when(rosterStudentRepository)
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+
+    // Teams in name order: s26-01, s26-02, s26-03, s26-04, s26-07, s26-09, s26-10, then the
+    // unassigned student. 8 groups over 4 columns is 2 groups per column.
+    String expectedResponse =
+        """
+            Team,Name,,Team,Name,,Team,Name,,Team,Name
+            s26-01,Pat Smith*,,s26-03,Alex L,,s26-07,Alexander,,s26-10,Alex Y
+            s26-02,David Chen,,s26-04,Pat Smith*,,s26-07,David Chang,,,Zoe
+            "",,,,,,s26-09,Ritam,,,
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/teamtable?courseId=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(rosterStudentRepository, times(1))
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+    assertEquals(
+        expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
+    assertEquals(
+        "attachment;filename=ucsb-cs156-s26_teamtable.csv",
+        response.getResponse().getHeader("Content-Disposition"));
+    assertEquals("text/csv; charset=UTF-8", response.getResponse().getContentType());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_teamtable_csv_with_explicit_columns() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(name2TeamStudents())
+        .when(rosterStudentRepository)
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+
+    String expectedResponse =
+        """
+            Team,Name,,Team,Name
+            s26-01,Pat Smith*,,s26-07,Alexander
+            s26-02,David Chen,,s26-07,David Chang
+            s26-03,Alex L,,s26-09,Ritam
+            s26-04,Pat Smith*,,s26-10,Alex Y
+            "",,,,Zoe
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/teamtable?courseId=1&columns=2"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_teamtable_csv_with_one_column() throws Exception {
+    Course course = Course.builder().id(1L).courseName("ucsb-cs156-s26").build();
+    doReturn(Optional.of(course)).when(courseRepository).findById(eq(1L));
+    doReturn(
+            List.of(
+                name2TeamStudent("RITAM", "SINGH", "s26-09"),
+                name2TeamStudent("ZOE", "LEE", "s26-01")))
+        .when(rosterStudentRepository)
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
+
+    String expectedResponse =
+        """
+            Team,Name
+            s26-01,Zoe
+            s26-09,Ritam
+            """;
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/csv/teamtable?courseId=1&columns=1"))
+            .andExpect(request().asyncStarted())
+            .andDo(MvcResult::getAsyncResult)
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        expectedResponse, response.getResponse().getContentAsString().replace("\r\n", "\n"));
   }
 }

@@ -2511,4 +2511,167 @@ public class RosterStudentsControllerTests extends ControllerTestCase {
     assertEquals(InsertStatus.REJECTED, response.getInsertStatus());
     assertEquals(conflicting, response.rosterStudent());
   }
+
+  // ---------- purgeDropped ----------
+
+  private RosterStudent droppedStudent(Long id, String email, String githubLogin, Course course) {
+    return RosterStudent.builder()
+        .id(id)
+        .firstName("Dropped")
+        .lastName("Student" + id)
+        .studentId("D" + id)
+        .email(email)
+        .course(course)
+        .rosterStatus(RosterStatus.DROPPED)
+        .orgStatus(OrgStatus.MEMBER)
+        .githubLogin(githubLogin)
+        .teamMembers(new ArrayList<>())
+        .build();
+  }
+
+  @Test
+  public void testPurgeDropped_loggedOut() throws Exception {
+    mockMvc
+        .perform(delete("/api/rosterstudents/purgeDropped").with(csrf()).param("courseId", "1"))
+        .andExpect(status().is(403));
+    verify(rosterStudentRepository, never()).delete(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testPurgeDropped_userWithoutPermissions() throws Exception {
+    mockMvc
+        .perform(delete("/api/rosterstudents/purgeDropped").with(csrf()).param("courseId", "1"))
+        .andExpect(status().is(403));
+    verify(rosterStudentRepository, never()).delete(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPurgeDropped_courseNotFound() throws Exception {
+    when(courseRepository.findById(eq(99L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/rosterstudents/purgeDropped").with(csrf()).param("courseId", "99"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Course with id 99 not found", json.get("message"));
+    verify(rosterStudentRepository, never())
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(any(), any());
+    verify(rosterStudentRepository, never()).delete(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPurgeDropped_noDroppedStudents() throws Exception {
+    when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(course2));
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                eq(2L), eq(List.of(RosterStatus.DROPPED))))
+        .thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/rosterstudents/purgeDropped").with(csrf()).param("courseId", "2"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        objectMapper.writeValueAsString(
+            new RosterStudentsController.PurgeDroppedResponse(0, 0, List.of())),
+        response.getResponse().getContentAsString());
+    verify(rosterStudentRepository, never()).delete(any());
+    verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPurgeDropped_removesFromOrgByDefault_andReportsFailures() throws Exception {
+    // course2 has an orgName and installationId, so org removal is attempted for students
+    // with a GitHub login
+    RosterStudent withGithub = droppedStudent(10L, "one@ucsb.edu", "one-gh", course2);
+    RosterStudent orgFailure = droppedStudent(11L, "two@ucsb.edu", "two-gh", course2);
+    RosterStudent noGithub = droppedStudent(12L, "three@ucsb.edu", null, course2);
+    List<RosterStudent> courseStudents =
+        new ArrayList<>(List.of(withGithub, orgFailure, noGithub, rs2));
+    course2.setRosterStudents(courseStudents);
+
+    when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(course2));
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                eq(2L), eq(List.of(RosterStatus.DROPPED))))
+        .thenReturn(List.of(withGithub, orgFailure, noGithub));
+    doThrow(new RuntimeException("GitHub API error"))
+        .when(organizationMemberService)
+        .removeOrganizationMember(eq(orgFailure));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/rosterstudents/purgeDropped").with(csrf()).param("courseId", "2"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        objectMapper.writeValueAsString(
+            new RosterStudentsController.PurgeDroppedResponse(
+                3, 1, List.of("two@ucsb.edu: GitHub API error"))),
+        response.getResponse().getContentAsString());
+
+    verify(organizationMemberService, times(1)).removeOrganizationMember(eq(withGithub));
+    verify(organizationMemberService, times(1)).removeOrganizationMember(eq(orgFailure));
+    verify(organizationMemberService, never()).removeOrganizationMember(eq(noGithub));
+    verify(rosterStudentRepository, times(1)).delete(eq(withGithub));
+    verify(rosterStudentRepository, times(1)).delete(eq(orgFailure));
+    verify(rosterStudentRepository, times(1)).delete(eq(noGithub));
+    verify(rosterStudentRepository, never()).delete(eq(rs2));
+    // the non-dropped student remains attached to the course; purged ones are detached
+    assertEquals(List.of(rs2), course2.getRosterStudents());
+    assertEquals(null, withGithub.getCourse());
+    assertEquals(null, orgFailure.getCourse());
+    assertEquals(null, noGithub.getCourse());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPurgeDropped_removeFromOrgFalse_skipsOrgRemoval_andDetachesTeams()
+      throws Exception {
+    RosterStudent withGithub = droppedStudent(10L, "one@ucsb.edu", "one-gh", course2);
+    Team team = Team.builder().id(1L).name("Team A").course(course2).build();
+    TeamMember teamMember =
+        TeamMember.builder().id(5L).team(team).rosterStudent(withGithub).build();
+    team.setTeamMembers(new ArrayList<>(List.of(teamMember)));
+    withGithub.setTeamMembers(new ArrayList<>(List.of(teamMember)));
+    course2.setRosterStudents(new ArrayList<>(List.of(withGithub)));
+
+    when(courseRepository.findById(eq(2L))).thenReturn(Optional.of(course2));
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                eq(2L), eq(List.of(RosterStatus.DROPPED))))
+        .thenReturn(List.of(withGithub));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/rosterstudents/purgeDropped")
+                    .with(csrf())
+                    .param("courseId", "2")
+                    .param("removeFromOrg", "false"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        objectMapper.writeValueAsString(
+            new RosterStudentsController.PurgeDroppedResponse(1, 0, List.of())),
+        response.getResponse().getContentAsString());
+    verify(organizationMemberService, never()).removeOrganizationMember(any(RosterStudent.class));
+    verify(rosterStudentRepository, times(1)).delete(eq(withGithub));
+    assertEquals(List.of(), team.getTeamMembers());
+    assertEquals(null, teamMember.getTeam());
+    assertEquals(List.of(), course2.getRosterStudents());
+  }
 }

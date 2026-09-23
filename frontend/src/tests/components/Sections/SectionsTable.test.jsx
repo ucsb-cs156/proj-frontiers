@@ -89,6 +89,55 @@ describe("SectionsTable tests", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("does not render Slack Channel Name column by default", () => {
+    renderTable();
+
+    expect(
+      screen.queryByTestId(`${testId}-header-slackChannelName`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders Slack Channel Name column and edit PUT includes it when showSlackChannel is true", async () => {
+    axiosMock.onPut("/api/courses/1/sections/2").reply(200, {
+      id: 2,
+      section: "0200",
+      label: "Tue 10:00am",
+      slackChannelName: "#cs156-0200-updated",
+    });
+
+    renderTable({
+      sections: sectionsFixtures.threeSectionsWithSlackChannel,
+      showSlackChannel: true,
+    });
+
+    expect(
+      screen.getByTestId(`${testId}-header-slackChannelName`),
+    ).toHaveTextContent("Slack Channel Name");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-slackChannelName`),
+    ).toHaveTextContent("#cs156-0100");
+
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-1-col-Edit-button`));
+    expect(
+      await screen.findByTestId(`${testId}-edit-modal-body`),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("SectionsForm-slackChannelName")).toHaveValue(
+      "#cs156-0200",
+    );
+
+    fireEvent.change(screen.getByTestId("SectionsForm-slackChannelName"), {
+      target: { value: "#cs156-0200-updated" },
+    });
+    fireEvent.click(screen.getByTestId("SectionsForm-submit"));
+
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].params).toEqual({
+      section: "0200",
+      label: "Tue 10:00am",
+      slackChannelName: "#cs156-0200-updated",
+    });
+  });
+
   test("uses custom testIdPrefix", () => {
     renderTable({ testIdPrefix: "Custom" });
     expect(screen.getByTestId("Custom")).toBeInTheDocument();

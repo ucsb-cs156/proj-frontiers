@@ -21,6 +21,7 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromCanvasJob;
+import edu.ucsb.cs156.frontiers.jobs.PushTeamsToCanvasJob;
 import edu.ucsb.cs156.frontiers.jobs.RemoveStudentsJob;
 import edu.ucsb.cs156.frontiers.models.CanvasGroupSet;
 import edu.ucsb.cs156.frontiers.models.LoadResult;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -528,7 +530,7 @@ public class CanvasControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void testLoadCanvasTeams_startsJob() throws Exception {
+  public void testPullCanvasTeams_startsJob() throws Exception {
     // Arrange
     Course course =
         Course.builder()
@@ -547,7 +549,7 @@ public class CanvasControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/courses/canvas/sync/teams")
+                post("/api/courses/canvas/teams/pull")
                     .with(csrf())
                     .param("courseId", "1")
                     .param("groupSetId", "groupset123"))
@@ -565,7 +567,7 @@ public class CanvasControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"ADMIN"})
-  public void testLoadCanvasTeams_courseNotFound() throws Exception {
+  public void testPullCanvasTeams_courseNotFound() throws Exception {
     // Arrange
     when(courseRepository.findById(eq(999L))).thenReturn(Optional.empty());
 
@@ -573,7 +575,7 @@ public class CanvasControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/courses/canvas/sync/teams")
+                post("/api/courses/canvas/teams/pull")
                     .with(csrf())
                     .param("courseId", "999")
                     .param("groupSetId", "groupset123"))
@@ -591,5 +593,119 @@ public class CanvasControllerTests extends ControllerTestCase {
             "message", "Course with id 999 not found");
     String expectedJson = mapper.writeValueAsString(expectedMap);
     assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPushCanvasTeams_startsJob() throws Exception {
+    // Arrange
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .canvasApiToken("test-api-token")
+            .canvasCourseId("12345")
+            .build();
+
+    Job expectedJob = Job.builder().id(7L).build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(service.runAsJob(any(PushTeamsToCanvasJob.class))).thenReturn(expectedJob);
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/courses/canvas/teams/push")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("groupSetId", "groupset123"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // Assert
+    verify(courseRepository, atLeastOnce()).findById(eq(1L));
+    ArgumentCaptor<PushTeamsToCanvasJob> jobCaptor =
+        ArgumentCaptor.forClass(PushTeamsToCanvasJob.class);
+    verify(service).runAsJob(jobCaptor.capture());
+    PushTeamsToCanvasJob job = jobCaptor.getValue();
+    assertEquals(course, job.getCourse());
+    assertEquals("groupset123", job.getGroupSetId());
+    assertEquals(canvasService, job.getCanvasService());
+    assertEquals(courseRepository, job.getCourseRepository());
+    assertEquals(teamRepository, job.getTeamRepository());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(expectedJob);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testPushCanvasTeams_courseNotFound() throws Exception {
+    // Arrange
+    when(courseRepository.findById(eq(999L))).thenReturn(Optional.empty());
+
+    // Act
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/courses/canvas/teams/push")
+                    .with(csrf())
+                    .param("courseId", "999")
+                    .param("groupSetId", "groupset123"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // Assert
+    verify(courseRepository, atLeastOnce()).findById(eq(999L));
+    verify(service, never()).runAsJob(any(PushTeamsToCanvasJob.class));
+
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 999 not found");
+    String expectedJson = mapper.writeValueAsString(expectedMap);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testPushCanvasTeams_forbiddenForPlainUser() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/courses/canvas/teams/push")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("groupSetId", "groupset123"))
+        .andExpect(status().isForbidden());
+    verify(service, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testPullCanvasTeams_forbiddenForPlainUser() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/courses/canvas/teams/pull")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("groupSetId", "groupset123"))
+        .andExpect(status().isForbidden());
+    verify(service, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testOldSyncTeamsPathIsGone() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/courses/canvas/sync/teams")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("groupSetId", "groupset123"))
+        .andExpect(status().isNotFound());
+    verify(service, never()).runAsJob(any());
   }
 }

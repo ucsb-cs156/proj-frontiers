@@ -3,7 +3,7 @@ import { useBackend } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { useCurrentUser } from "main/utils/currentUser";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 
 import Modal from "react-bootstrap/Modal";
 import { Button, Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -19,6 +19,14 @@ import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComponent";
 import SectionsTabComponent from "main/components/TabComponent/SectionsTabComponent";
 import { useCourseOptions } from "main/utils/courseOptionsUtils";
+import SlackTabComponent from "main/components/TabComponent/SlackTabComponent";
+import { slackInfoQueryKey } from "main/utils/slackUtils";
+import {
+  COURSE_TABS,
+  chooseCourseTab,
+  getStoredCourseTab,
+  storeCourseTab,
+} from "main/utils/courseTabUtils";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -51,6 +59,43 @@ export default function InstructorCourseShowPage({
     enabled: showSettingsTab,
   });
   const showSectionsTab = courseOptions.TRANSLATE_SECTIONS === true;
+
+  // The Slack tab is only shown when the SLACK_INTEGRATION course option is
+  // enabled and a Slack token has been saved. The query key is shared with the
+  // Slack card on the Settings tab, so saving a token there shows the tab.
+  const slackIntegrationEnabled = courseOptions.SLACK_INTEGRATION === true;
+  const { data: slackInfo } = useBackend(
+    [slackInfoQueryKey(courseId)],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: slackInfoQueryKey(courseId) },
+    {},
+    true,
+    { enabled: slackIntegrationEnabled },
+  );
+  const showSlackTab =
+    slackIntegrationEnabled && Boolean(slackInfo.slackBotToken);
+
+  // Which tab is showing is kept in the URL as ?tab=<name>, so that a tab can be
+  // linked to and survives a refresh; see main/utils/courseTabUtils
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const visibleTabs = COURSE_TABS.filter(
+    (tab) =>
+      (tab !== "sections" || showSectionsTab) &&
+      (tab !== "slack" || showSlackTab) &&
+      (tab !== "settings" || showSettingsTab),
+  );
+  const activeTab = chooseCourseTab({
+    requestedTab,
+    storedTab: getStoredCourseTab(courseId),
+    visibleTabs,
+  });
+  // Remember the tab for the next time this course is opened without ?tab=
+  useEffect(() => {
+    if (COURSE_TABS.includes(requestedTab)) {
+      storeCourseTab(courseId, requestedTab);
+    }
+  }, [courseId, requestedTab]);
 
   // Stryker disable OptionalChaining -- course?.instructorEmail is more readable than course && course.instructorEmail
   const getCourseFailed = courseBackendFailureCount > 0;
@@ -160,13 +205,18 @@ export default function InstructorCourseShowPage({
           </div>
         </div>
       )}
-      <Tabs defaultActiveKey={"default"}>
+      <Tabs
+        activeKey={activeTab}
+        onSelect={(tab) => setSearchParams({ tab }, { replace: true })}
+      >
         <Tab eventKey={"students"} title={"Students"} className="pt-2">
           <EnrollmentTabComponent
             courseId={courseId}
             testIdPrefix={testId}
             currentUser={currentUser}
             canEditStudents={canEditStudents}
+            translateSections={showSectionsTab}
+            canvasEnabled={courseOptions.ENABLE_CANVAS === true}
           />
         </Tab>
         <Tab eventKey={"staff"} title={"Staff"} className="pt-2">
@@ -190,7 +240,7 @@ export default function InstructorCourseShowPage({
             <SectionsTabComponent courseId={courseId} testIdPrefix={testId} />
           </Tab>
         )}
-        <Tab eventKey={"default"} title={"Assignments"} className="pt-2">
+        <Tab eventKey={"assignments"} title={"Assignments"} className="pt-2">
           <AssignmentTabComponent
             courseId={courseId}
             testIdPrefix={testId}
@@ -203,6 +253,22 @@ export default function InstructorCourseShowPage({
         <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
           <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
+        {showSlackTab && (
+          <Tab
+            eventKey={"slack"}
+            title={"Slack"}
+            className="pt-2"
+            mountOnEnter={true}
+          >
+            <SlackTabComponent
+              courseId={courseId}
+              testIdPrefix={testId}
+              slackTeamName={slackInfo.slackTeamName}
+              slackTeamUrl={slackInfo.slackTeamUrl}
+              showSectionChannels={showSectionsTab}
+            />
+          </Tab>
+        )}
         {showSettingsTab && (
           <Tab eventKey={"settings"} title={"Settings"} className="pt-2">
             <SettingsTabComponent

@@ -34,6 +34,7 @@ import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
 import edu.ucsb.cs156.frontiers.services.ApiCourseKeyService;
+import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
 import edu.ucsb.cs156.jobs.repositories.JobsRepository;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +80,16 @@ public class CoursesControllerTests extends ControllerTestCase {
   @MockitoBean private AdminRepository adminRepository;
 
   @MockitoBean private ApiCourseKeyService apiCourseKeyService;
+  @MockitoBean private CanvasApiTokenSecurityService canvasApiTokenSecurityService;
+
+  @BeforeEach
+  public void setUpCanvasTokenSecurityServiceMocks() {
+    when(canvasApiTokenSecurityService.encrypt(any(String.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(canvasApiTokenSecurityService.decrypt(any(String.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+  }
+
   @MockitoBean private JobsRepository jobsRepository;
 
   /** Test that ROLE_ADMIN can create a course */
@@ -1665,6 +1677,41 @@ public class CoursesControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
     assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateCourseCanvasToken_encryptsBeforeSaving() throws Exception {
+    User user = currentUserService.getCurrentUser().getUser();
+
+    Course originalCourse =
+        Course.builder()
+            .id(1L)
+            .courseName("Original Course")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail(user.getEmail())
+            .canvasApiToken("enc:v1:oldCiphertext")
+            .canvasCourseId("originalCourseId")
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(originalCourse));
+    when(courseRepository.save(any(Course.class))).thenReturn(originalCourse);
+    when(canvasApiTokenSecurityService.decrypt("enc:v1:oldCiphertext")).thenReturn("oldToken");
+    when(canvasApiTokenSecurityService.encrypt("newToken")).thenReturn("enc:v1:newCiphertext");
+
+    mockMvc
+        .perform(
+            put("/api/courses/updateCourseCanvasToken")
+                .param("courseId", "1")
+                .param("canvasApiToken", "newToken")
+                .param("canvasCourseId", "originalCourseId")
+                .with(csrf()))
+        .andExpect(status().isOk());
+
+    verify(canvasApiTokenSecurityService).decrypt("enc:v1:oldCiphertext");
+    verify(canvasApiTokenSecurityService).encrypt("newToken");
+    assertEquals("enc:v1:newCiphertext", originalCourse.getCanvasApiToken());
   }
 
   @Test

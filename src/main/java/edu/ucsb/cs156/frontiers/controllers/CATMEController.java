@@ -1,21 +1,50 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import com.opencsv.CSVParser;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Section;
+import edu.ucsb.cs156.frontiers.enums.CourseOptions;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.CreateTeamsFromCATMEJob;
+import edu.ucsb.cs156.frontiers.models.CATMEAuditResult;
+import edu.ucsb.cs156.frontiers.models.CATMEStudentDrop;
+import edu.ucsb.cs156.frontiers.models.CATMEStudentUpdate;
+import edu.ucsb.cs156.frontiers.models.CATMETeamAssignment;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.SectionRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "CATME")
 @RequestMapping("/api/catme")
@@ -23,6 +52,263 @@ import org.springframework.web.bind.annotation.RestController;
 public class CATMEController extends ApiController {
 
   @Autowired private RosterStudentRepository rosterStudentRepository;
+
+  @Autowired private CourseOptionRepository courseOptionRepository;
+
+  @Autowired private SectionRepository sectionRepository;
+
+  @Autowired private CourseRepository courseRepository;
+
+  @Autowired private TeamRepository teamRepository;
+
+  @Autowired private TeamMemberRepository teamMemberRepository;
+
+  @Autowired private JobService jobService;
+
+  public static final String CATME_AUDIT_HEADER_LINE_1 = "Activity,Class,Term,Format,Instr,School";
+  public static final String CATME_AUDIT_HEADER_LINE_4 =
+      "\"Name\",\"Student ID\",\"Email\",\"Section\",\"Team Name\",";
+  public static final String CATME_AUDIT_SCORES_LINE_PREFIX = "\"Scores";
+  public static final String CATME_AUDIT_FORMAT_ERROR_MESSAGE =
+      "The uploaded file was not in a recognized CATME TeamMaker CSV format.";
+
+  /**
+   * Audit the roster for a course against a CATME TeamMaker CSV export, producing a list of
+   * students whose name and/or section should be updated in CATME, and a list of students who
+   * should be dropped from CATME because they are no longer enrolled (MANUAL or ROSTER status) in
+   * Frontiers.
+   *
+   * @param courseId the id of the course
+   * @param file the uploaded CATME TeamMaker CSV file
+   * @return a {@link CATMEAuditResult}, or a 422 error if the file is not in the expected format
+   * @throws IOException if the file cannot be read
+   */
+  @Operation(summary = "Audit a course's roster against an uploaded CATME TeamMaker CSV file")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping(
+      value = "/audit",
+      consumes = {"multipart/form-data"})
+  public ResponseEntity<Object> auditCatmeCSV(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "file") @RequestParam("file") MultipartFile file)
+      throws IOException {
+
+    List<String> lines;
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+      lines = reader.lines().collect(Collectors.toList());
+    }
+
+    List<CATMEStudentRow> csvRows = parseCatmeAuditCSV(lines);
+    if (csvRows == null) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+          .body(genericMessage(CATME_AUDIT_FORMAT_ERROR_MESSAGE));
+    }
+
+    return ResponseEntity.ok(audit(courseId, csvRows));
+  }
+
+  /**
+   * Audit a course's roster against an uploaded CATME TeamMaker CSV file, exactly as {@link
+   * #auditCatmeCSV}; if the audit finds any issue, report it and stop. If the audit is clean,
+   * launch a job that creates the teams named in the file (in Frontiers only; nothing is pushed to
+   * GitHub) and adds each student to their team.
+   *
+   * @param courseId the id of the course
+   * @param file the uploaded CATME TeamMaker CSV file
+   * @return if the audit found issues, the {@link CATMEAuditResult}; otherwise a message "Job
+   *     Launched: N" where N is the id of the job; or a 422 error if the file is not in the
+   *     expected format
+   * @throws IOException if the file cannot be read
+   */
+  @Operation(
+      summary =
+          "Audit a course's roster against a CATME TeamMaker CSV file and, if clean, launch a job that creates the teams in it")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping(
+      value = "/createteams",
+      consumes = {"multipart/form-data"})
+  public ResponseEntity<Object> createTeamsFromCatmeCSV(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "file") @RequestParam("file") MultipartFile file)
+      throws IOException {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    List<String> lines;
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+      lines = reader.lines().collect(Collectors.toList());
+    }
+
+    List<CATMEStudentRow> csvRows = parseCatmeAuditCSV(lines);
+    if (csvRows == null) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+          .body(genericMessage(CATME_AUDIT_FORMAT_ERROR_MESSAGE));
+    }
+
+    CATMEAuditResult auditResult = audit(courseId, csvRows);
+    if (!auditResult.studentsToUpdate().isEmpty() || !auditResult.studentsToDrop().isEmpty()) {
+      return ResponseEntity.ok(auditResult);
+    }
+
+    List<CATMETeamAssignment> assignments =
+        csvRows.stream()
+            .map(row -> new CATMETeamAssignment(row.studentId(), row.name(), row.teamName()))
+            .toList();
+    CreateTeamsFromCATMEJob job =
+        CreateTeamsFromCATMEJob.builder()
+            .course(course)
+            .assignments(assignments)
+            .courseRepository(courseRepository)
+            .rosterStudentRepository(rosterStudentRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .build();
+    Job launched = jobService.runAsJob(job);
+    return ResponseEntity.ok(genericMessage("Job Launched: " + launched.getId()));
+  }
+
+  /**
+   * Compares the enrolled students of a course with the rows of a CATME file.
+   *
+   * @param courseId the id of the course
+   * @param csvRows the rows of the file
+   * @return the students to update in CATME, and the students to drop from CATME
+   */
+  private CATMEAuditResult audit(Long courseId, List<CATMEStudentRow> csvRows) {
+    List<RosterStudent> enrolledStudents =
+        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
+            .filter(
+                student ->
+                    student.getStudentId() != null
+                        && (student.getRosterStatus() == RosterStatus.MANUAL
+                            || student.getRosterStatus() == RosterStatus.ROSTER))
+            .toList();
+
+    Map<String, CATMEStudentRow> csvRowsByStudentId =
+        csvRows.stream()
+            .collect(
+                Collectors.toMap(CATMEStudentRow::studentId, row -> row, (first, second) -> first));
+
+    Map<String, String> sectionToLabel = new HashMap<>();
+    Map<String, String> labelToSection = new HashMap<>();
+    boolean translateSections =
+        courseOptionRepository
+            .findByCourseIdAndOption(courseId, CourseOptions.TRANSLATE_SECTIONS.name())
+            .map(CourseOption::getEnabled)
+            .orElse(false);
+    if (translateSections) {
+      for (Section section : sectionRepository.findByCourseId(courseId)) {
+        sectionToLabel.put(section.getSection(), section.getLabel());
+        labelToSection.put(section.getLabel(), section.getSection());
+      }
+    }
+
+    List<CATMEStudentUpdate> studentsToUpdate = new ArrayList<>();
+    for (RosterStudent student : enrolledStudents) {
+      CATMEStudentRow row = csvRowsByStudentId.get(student.getStudentId());
+      if (row == null) {
+        continue;
+      }
+      String expectedName = formatStudentName(student.getLastName(), student.getFirstName());
+      if (!expectedName.equals(row.name())) {
+        studentsToUpdate.add(
+            new CATMEStudentUpdate(
+                student.getStudentId(), expectedName, "Name", row.name(), expectedName));
+      }
+      String rosterSection = student.getSection() == null ? "" : student.getSection();
+      String catmeSection = row.section();
+      String reverseTranslatedCatmeSection =
+          labelToSection.getOrDefault(catmeSection, catmeSection);
+      if (!rosterSection.equals(reverseTranslatedCatmeSection)) {
+        String expectedCatmeSection = sectionToLabel.getOrDefault(rosterSection, rosterSection);
+        studentsToUpdate.add(
+            new CATMEStudentUpdate(
+                student.getStudentId(),
+                expectedName,
+                "Section",
+                catmeSection,
+                expectedCatmeSection));
+      }
+    }
+
+    Map<String, RosterStudent> enrolledStudentsByStudentId =
+        enrolledStudents.stream()
+            .collect(
+                Collectors.toMap(
+                    RosterStudent::getStudentId, student -> student, (first, second) -> first));
+
+    List<CATMEStudentDrop> studentsToDrop = new ArrayList<>();
+    for (CATMEStudentRow row : csvRows) {
+      if (!enrolledStudentsByStudentId.containsKey(row.studentId())) {
+        studentsToDrop.add(
+            new CATMEStudentDrop(row.studentId(), row.name(), row.email(), row.section()));
+      }
+    }
+
+    return new CATMEAuditResult(studentsToUpdate, studentsToDrop);
+  }
+
+  /**
+   * Represents a single student row parsed from a CATME TeamMaker CSV export.
+   *
+   * @param name the student's name
+   * @param studentId the student's id
+   * @param email the student's email
+   * @param section the student's section
+   * @param teamName the student's team name (position 5 of the row), or an empty string if the row
+   *     has no such field
+   */
+  private record CATMEStudentRow(
+      String name, String studentId, String email, String section, String teamName) {}
+
+  /**
+   * Parses the lines of an uploaded CATME TeamMaker CSV file, validating the expected format.
+   *
+   * @param lines the lines of the file
+   * @return the list of parsed student rows, or null if the file is not in the expected format
+   */
+  private static List<CATMEStudentRow> parseCatmeAuditCSV(List<String> lines) {
+    if (lines.size() < 4) {
+      return null;
+    }
+    if (!lines.get(0).trim().equals(CATME_AUDIT_HEADER_LINE_1)) {
+      return null;
+    }
+    // line 1 (index 1) is intentionally ignored
+    if (!lines.get(2).trim().isEmpty()) {
+      return null;
+    }
+    if (!lines.get(3).trim().startsWith(CATME_AUDIT_HEADER_LINE_4)) {
+      return null;
+    }
+
+    CSVParser csvParser = new CSVParser();
+    List<CATMEStudentRow> rows = new ArrayList<>();
+    for (int i = 4; i < lines.size(); i++) {
+      String line = lines.get(i);
+      if (line.trim().isEmpty()) {
+        break;
+      }
+      if (line.trim().startsWith(CATME_AUDIT_SCORES_LINE_PREFIX)) {
+        continue;
+      }
+      try {
+        String[] fields = csvParser.parseLine(line);
+        if (fields.length < 4) {
+          return null;
+        }
+        String teamName = fields.length > 4 ? fields[4] : "";
+        rows.add(new CATMEStudentRow(fields[0], fields[1], fields[2], fields[3], teamName));
+      } catch (IOException e) {
+        return null;
+      }
+    }
+    return rows;
+  }
 
   @Operation(summary = "Convert CATME roster names into course emails")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
@@ -92,11 +378,23 @@ public class CATMEController extends ApiController {
   }
 
   private static String toLookupKey(String lastName, String firstName) {
-    return toLookupKey(lastName + ", " + firstName);
+    return toLookupKey(formatStudentName(lastName, firstName));
   }
 
   private static String toLookupKey(String name) {
     return normalizeSpaces(name).toUpperCase().replaceFirst("\\s*,\\s*", ",");
+  }
+
+  private static String formatStudentName(String lastName, String firstName) {
+    String normalizedLastName = normalizeSpaces(lastName == null ? "" : lastName);
+    String normalizedFirstName = normalizeSpaces(firstName == null ? "" : firstName);
+    if (normalizedLastName.isBlank()) {
+      return normalizedFirstName;
+    }
+    if (normalizedFirstName.isBlank()) {
+      return normalizedLastName;
+    }
+    return normalizedLastName + ", " + normalizedFirstName;
   }
 
   private static String normalizeSpaces(String value) {

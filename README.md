@@ -51,6 +51,7 @@ Then fill in the following values in your `.env` file:
 | `app_private_key` | GitHub App private key (generated via `./keyconvert-localhost.sh`) | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
 | `WEBHOOK_SECRET` | Secret for validating GitHub webhook payloads (10+ characters) | [`docs/github-app-setup-localhost.md`](docs/github-app-setup-localhost.md) |
 | `ADMIN_EMAILS` | Comma-separated list of admin email addresses | [`docs/oauth.md`](docs/oauth.md) |
+| `TOKEN_ENCRYPTION_KEY` | Base64-encoded AES key used to encrypt Canvas API tokens and Slack bot tokens at rest (see step 5 below) | [`docs/README_Canvas_API_Keys.md`](docs/README_Canvas_API_Keys.md), [`docs/slack.md`](docs/slack.md) |
 
 ### Step-by-step setup
 
@@ -61,6 +62,14 @@ Then fill in the following values in your `.env` file:
 3. **Webhook Secret** (required): Set `WEBHOOK_SECRET` to any string of 10+ characters in your `.env` file. For localhost, a placeholder like `localhost_dev_secret_123` is fine.
 
 4. **Admin Emails**: Set `ADMIN_EMAILS` to a comma-separated list (no spaces) of email addresses that should have admin access.
+
+5. **Token Encryption Key** (required for the Canvas and Slack integrations): `TOKEN_ENCRYPTION_KEY` is the key used to encrypt Canvas API tokens and Slack bot tokens before they are stored in the database. It must be a Base64-encoded AES key (16, 24, or 32 bytes; 32 is recommended). Generate one with:
+
+   ```
+   openssl rand -base64 32
+   ```
+
+   and set `TOKEN_ENCRYPTION_KEY` to the output in your `.env` file. The placeholder value from `.env.SAMPLE` is not a valid key: until you replace it, saving a Canvas or Slack token fails with an error (tokens are never stored unencrypted). Keep the same value for the life of a database; if the key changes, tokens that were already stored can no longer be decrypted and must be entered again. (This variable was formerly named `CANVAS_API_TOKEN_ENCRYPTION_KEY`; the old name still works as a fallback when `TOKEN_ENCRYPTION_KEY` is not set, but is deprecated.) For more information, see [`docs/README_Canvas_API_Keys.md`](docs/README_Canvas_API_Keys.md) and [`docs/slack.md`](docs/slack.md).
 
 Without the Google OAuth setup, you will see an error like this when trying to log in:
 

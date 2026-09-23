@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,6 +60,7 @@ public class SectionsController extends ApiController {
    * @param courseId the id of the course
    * @param section the section identifier (must be unique within the course)
    * @param label the human readable label for the section
+   * @param slackChannelName the Slack channel associated with the section, if any
    * @return the created section
    */
   @Operation(summary = "Create a new section for a course")
@@ -67,10 +69,13 @@ public class SectionsController extends ApiController {
   public Section postSection(
       @Parameter(name = "courseId") @PathVariable Long courseId,
       @Parameter(name = "section") @RequestParam String section,
-      @Parameter(name = "label") @RequestParam String label) {
+      @Parameter(name = "label") @RequestParam String label,
+      @Parameter(name = "slackChannelName") @RequestParam(required = false)
+          String slackChannelName) {
     Course course = ensureCourseExists(courseId);
     String normalizedSection = normalizeRequired("section", section);
     String normalizedLabel = normalizeRequired("label", label);
+    String normalizedSlackChannelName = normalizeOptional(slackChannelName);
 
     if (sectionRepository.findByCourseIdAndSection(courseId, normalizedSection).isPresent()) {
       throw new ResponseStatusException(
@@ -79,7 +84,12 @@ public class SectionsController extends ApiController {
     }
 
     Section newSection =
-        Section.builder().course(course).section(normalizedSection).label(normalizedLabel).build();
+        Section.builder()
+            .course(course)
+            .section(normalizedSection)
+            .label(normalizedLabel)
+            .slackChannelName(normalizedSlackChannelName)
+            .build();
     return sectionRepository.save(newSection);
   }
 
@@ -90,6 +100,7 @@ public class SectionsController extends ApiController {
    * @param id the id of the section to update
    * @param section the new section identifier (must be unique within the course)
    * @param label the new human readable label for the section
+   * @param slackChannelName the Slack channel associated with the section, if any
    * @return the updated section
    */
   @Operation(summary = "Update a section for a course")
@@ -99,11 +110,14 @@ public class SectionsController extends ApiController {
       @Parameter(name = "courseId") @PathVariable Long courseId,
       @Parameter(name = "id") @PathVariable Long id,
       @Parameter(name = "section") @RequestParam String section,
-      @Parameter(name = "label") @RequestParam String label) {
+      @Parameter(name = "label") @RequestParam String label,
+      @Parameter(name = "slackChannelName") @RequestParam(required = false)
+          String slackChannelName) {
     ensureCourseExists(courseId);
     Section existing = findSectionInCourse(courseId, id);
     String normalizedSection = normalizeRequired("section", section);
     String normalizedLabel = normalizeRequired("label", label);
+    String normalizedSlackChannelName = normalizeOptional(slackChannelName);
 
     Optional<Section> duplicate =
         sectionRepository.findByCourseIdAndSection(courseId, normalizedSection);
@@ -115,6 +129,7 @@ public class SectionsController extends ApiController {
 
     existing.setSection(normalizedSection);
     existing.setLabel(normalizedLabel);
+    existing.setSlackChannelName(normalizedSlackChannelName);
     return sectionRepository.save(existing);
   }
 
@@ -128,11 +143,18 @@ public class SectionsController extends ApiController {
   @Operation(summary = "Delete a section from a course")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @DeleteMapping("/{id}")
+  @Transactional
   public Object deleteSection(
       @Parameter(name = "courseId") @PathVariable Long courseId,
       @Parameter(name = "id") @PathVariable Long id) {
-    ensureCourseExists(courseId);
+    Course course = ensureCourseExists(courseId);
     Section existing = findSectionInCourse(courseId, id);
+
+    // Disconnect from course so that the cascade=ALL relationship on Course.sections
+    // does not cause Hibernate to re-persist the section when the course is flushed.
+    course.getSections().remove(existing);
+    existing.setCourse(null);
+
     sectionRepository.delete(existing);
     return genericMessage("Section with id %d deleted".formatted(id));
   }
@@ -161,5 +183,17 @@ public class SectionsController extends ApiController {
       throw new IllegalArgumentException("%s must not be blank".formatted(fieldName));
     }
     return normalized;
+  }
+
+  /**
+   * Normalizes an optional field: {@code null} or blank values are treated as "not set" and
+   * normalized to {@code null}; otherwise the trimmed value is returned.
+   */
+  private String normalizeOptional(String value) {
+    if (value == null) {
+      return null;
+    }
+    String normalized = value.strip();
+    return normalized.isEmpty() ? null : normalized;
   }
 }

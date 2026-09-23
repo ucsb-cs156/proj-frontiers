@@ -9,7 +9,7 @@ import {
 } from "main/utils/courseOptionsUtils";
 
 function CourseOptionsForm({ courseId, canEdit }) {
-  const { data: optionsMap } = useCourseOptions(courseId);
+  const { data: optionsMap = {} } = useCourseOptions(courseId);
 
   const objectToAxiosParams = ({ option, enabled }) => ({
     url: "/api/course/options",
@@ -42,12 +42,13 @@ function CourseOptionsForm({ courseId, canEdit }) {
           label={titleCaseFromOption(option)}
           checked={enabled}
           disabled={!canEdit}
-          onChange={(event) =>
+          onChange={(event) => {
+            const enabled = event.target.checked;
             courseOptionMutation.mutate({
               option,
-              enabled: event.target.checked,
-            })
-          }
+              enabled,
+            });
+          }}
           data-testid={`CourseOptionsForm-toggle-${option}`}
         />
       ))}

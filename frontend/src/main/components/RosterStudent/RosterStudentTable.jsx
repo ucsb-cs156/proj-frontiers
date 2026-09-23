@@ -5,6 +5,7 @@ import OurPagination from "main/components/Common/OurPagination";
 
 import { useBackendMutation } from "main/utils/useBackend";
 import { cellToAxiosParamsDelete } from "main/utils/rosterStudentUtils";
+import { useSectionLabels } from "main/utils/sectionsUtils";
 import { hasRole } from "main/utils/currentUser";
 import Modal from "react-bootstrap/Modal";
 import RosterStudentForm from "main/components/RosterStudent/RosterStudentForm";
@@ -20,6 +21,7 @@ export default function RosterStudentTable({
   courseId,
   testIdPrefix = "RosterStudentTable",
   canEditStudents,
+  translateSections = false,
 }) {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editStudent, setEditStudent] = React.useState(null);
@@ -27,6 +29,8 @@ export default function RosterStudentTable({
   const [deleteStudent, setDeleteStudent] = React.useState(null);
   const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
   const [currentPage, setCurrentPage] = React.useState(1);
+
+  const translateSection = useSectionLabels(courseId, translateSections);
 
   const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
 
@@ -134,6 +138,7 @@ export default function RosterStudentTable({
     {
       header: "Section",
       accessorKey: "section",
+      cell: ({ cell }) => translateSection(cell.row.original.section),
     },
     {
       header: "GitHub Login",
@@ -269,6 +274,8 @@ export default function RosterStudentTable({
             submitAction={submitEditForm}
             buttonLabel={"Update"}
             cancelDisabled={true}
+            courseId={courseId}
+            translateSections={translateSections}
           />
         </Modal.Body>
       </Modal>

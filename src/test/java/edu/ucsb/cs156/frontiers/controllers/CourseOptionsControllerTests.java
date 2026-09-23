@@ -70,6 +70,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     expected.put("TRANSLATE_SECTIONS", false);
     expected.put("DOKKU_MANAGER", false);
     expected.put("ENABLE_API_KEYS", false);
+    expected.put("SLACK_INTEGRATION", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -121,6 +122,36 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     assertEquals(true, captor.getValue().getEnabled());
     assertEquals(
         mapper.writeValueAsString(Map.of("ENABLE_CANVAS", true)),
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setCourseOption_createsNewSlackIntegrationValue() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseOptionRepository.findByCourseIdAndOption(eq(1L), eq("SLACK_INTEGRATION")))
+        .thenReturn(Optional.empty());
+    when(courseOptionRepository.save(any(CourseOption.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/course/options")
+                    .with(csrf())
+                    .param("courseId", "1")
+                    .param("option", "SLACK_INTEGRATION")
+                    .param("enabled", "true"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<CourseOption> captor = ArgumentCaptor.forClass(CourseOption.class);
+    verify(courseOptionRepository).save(captor.capture());
+    assertEquals(1L, captor.getValue().getCourseId());
+    assertEquals("SLACK_INTEGRATION", captor.getValue().getOption());
+    assertEquals(true, captor.getValue().getEnabled());
+    assertEquals(
+        mapper.writeValueAsString(Map.of("SLACK_INTEGRATION", true)),
         response.getResponse().getContentAsString());
   }
 
@@ -260,6 +291,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     expected.put("TRANSLATE_SECTIONS", false);
     expected.put("DOKKU_MANAGER", false);
     expected.put("ENABLE_API_KEYS", false);
+    expected.put("SLACK_INTEGRATION", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 
@@ -287,6 +319,7 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
     expected.put("TRANSLATE_SECTIONS", false);
     expected.put("DOKKU_MANAGER", false);
     expected.put("ENABLE_API_KEYS", false);
+    expected.put("SLACK_INTEGRATION", false);
     assertEquals(mapper.writeValueAsString(expected), response.getResponse().getContentAsString());
   }
 }

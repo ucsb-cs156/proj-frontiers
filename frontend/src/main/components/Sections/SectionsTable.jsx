@@ -12,6 +12,7 @@ export default function SectionsTable({
   sections,
   courseId,
   testIdPrefix = "SectionsTable",
+  showSlackChannel = false,
 }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSection, setEditSection] = useState(null);
@@ -26,6 +27,9 @@ export default function SectionsTable({
     params: {
       section: formData.section,
       label: formData.label,
+      ...(showSlackChannel && {
+        slackChannelName: formData.slackChannelName,
+      }),
     },
   });
 
@@ -89,6 +93,15 @@ export default function SectionsTable({
       accessorKey: "label",
       id: "label",
     },
+    ...(showSlackChannel
+      ? [
+          {
+            header: "Slack Channel Name",
+            accessorKey: "slackChannelName",
+            id: "slackChannelName",
+          },
+        ]
+      : []),
     ButtonColumn("Edit", "primary", editCallback, testIdPrefix),
     ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
   ];
@@ -109,6 +122,7 @@ export default function SectionsTable({
             initialContents={editSection}
             submitAction={submitEditForm}
             buttonLabel="Update"
+            showSlackChannel={showSlackChannel}
           />
         </Modal.Body>
       </Modal>
