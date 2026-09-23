@@ -768,7 +768,8 @@ public class RepositoryServiceTests {
 
   @Test
   public void isRepositoryEmpty_returns_false_when_commits_exist() throws Exception {
-    String response = """
+    String response =
+        """
         [
           {"sha": "abc123"}
         ]
@@ -845,7 +846,8 @@ public class RepositoryServiceTests {
 
   @Test
   public void deleteRepositoryIfEmpty_does_not_delete_non_empty_repository() throws Exception {
-    String response = """
+    String response =
+        """
         [
           {"sha": "abc123"}
         ]

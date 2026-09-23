@@ -86,7 +86,8 @@ public class CreateTeamRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
+    String expected =
+        """
         Creating team repositories...
         Done""";
     assertEquals(expected, jobStarted.getLog());
@@ -142,7 +143,8 @@ public class CreateTeamRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
+    String expected =
+        """
         Creating team repositories...
         Done""";
     assertEquals(expected, jobStarted.getLog());
@@ -217,7 +219,8 @@ public class CreateTeamRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
+    String expected =
+        """
         Creating team repositories...
         Done""";
     assertEquals(expected, jobStarted.getLog());
@@ -257,7 +260,8 @@ public class CreateTeamRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = """
+    String expected =
+        """
         Creating team repositories...
         Done""";
     assertEquals(expected, jobStarted.getLog());

@@ -82,7 +82,8 @@ public class SlackServiceTests {
 
   @Test
   void authTest_invalidToken_returnsError() {
-    String json = """
+    String json =
+        """
         { "ok": false, "error": "invalid_auth" }
         """;
 
