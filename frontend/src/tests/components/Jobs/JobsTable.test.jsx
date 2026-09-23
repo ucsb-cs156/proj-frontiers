@@ -288,4 +288,74 @@ describe("JobsTable tests", () => {
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     expect(mockToast).toBeCalledWith("Cancellation requested.");
   });
+
+  test("renders a View full log link for every row when fullLogLink is provided", () => {
+    const jobsFixture = [
+      {
+        id: 3,
+        createdAt: "2023-11-01T12:00:00Z",
+        updatedAt: "2023-11-01T12:00:00Z",
+        status: "complete",
+        log: "short log",
+      },
+      {
+        id: 4,
+        createdAt: "2023-11-01T12:00:00Z",
+        updatedAt: "2023-11-01T12:00:00Z",
+        status: "running",
+        log: "",
+      },
+    ];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <JobsTable
+            jobs={jobsFixture}
+            fullLogLink={(job) => `/somewhere/${job.id}/logs`}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const link0 = screen.getByTestId("JobsTable-cell-row-0-col-log-full-link");
+    expect(link0).toHaveTextContent("View full log");
+    expect(link0).toHaveAttribute("href", "/somewhere/3/logs");
+
+    const link1 = screen.getByTestId("JobsTable-cell-row-1-col-log-full-link");
+    expect(link1).toHaveTextContent("View full log");
+    expect(link1).toHaveAttribute("href", "/somewhere/4/logs");
+
+    // the preview itself is still rendered as before
+    expect(screen.getByText("short log")).toBeInTheDocument();
+    expect(screen.getByTestId("JobsTable-cell-row-0-col-log-div")).toHaveStyle(
+      "max-width: 450px; max-height: 100px; overflow-y: auto;",
+    );
+  });
+
+  test("does not render a View full log link when fullLogLink is not provided", () => {
+    const jobsFixture = [
+      {
+        id: 3,
+        createdAt: "2023-11-01T12:00:00Z",
+        updatedAt: "2023-11-01T12:00:00Z",
+        status: "complete",
+        log: "short log",
+      },
+    ];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <JobsTable jobs={jobsFixture} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.queryByTestId("JobsTable-cell-row-0-col-log-full-link"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("View full log")).not.toBeInTheDocument();
+    expect(screen.getByText("short log")).toBeInTheDocument();
+  });
 });

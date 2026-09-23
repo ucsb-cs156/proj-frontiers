@@ -2,12 +2,25 @@ import React from "react";
 import OurTable from "main/components/OurTable";
 import { formatTime } from "main/utils/dateUtils";
 import { Button } from "react-bootstrap";
+import { Link } from "react-router";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 
 const CANCELLABLE_STATUSES = ["queued", "running"];
 
-export default function JobsTable({ jobs, onCancelled = () => {} }) {
+/**
+ * @param jobs the jobs to display
+ * @param onCancelled called after a cancellation request succeeds
+ * @param fullLogLink optional; a function (job) => path. When provided, every
+ *   row's Log cell gets a "View full log" link below the preview. The preview
+ *   in job.log is only the last few lines (lib-jobs caps it server-side), so
+ *   the link is shown for every row, not just visibly long ones.
+ */
+export default function JobsTable({
+  jobs,
+  onCancelled = () => {},
+  fullLogLink,
+}) {
   const cellToAxiosParamsCancel = (cell) => ({
     url: `/api/jobs/${cell.row.original.id}/cancel`,
     method: "POST",
@@ -80,12 +93,22 @@ export default function JobsTable({ jobs, onCancelled = () => {} }) {
       header: "Log",
       accessorKey: "log",
       cell: ({ cell }) => (
-        <div
-          style={{ maxWidth: 450, maxHeight: 100, overflowY: "auto" }}
-          data-testid={`JobsTable-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
-        >
-          <pre style={{ whiteSpace: "pre-wrap" }}>{cell.getValue()}</pre>
-        </div>
+        <>
+          <div
+            style={{ maxWidth: 450, maxHeight: 100, overflowY: "auto" }}
+            data-testid={`JobsTable-cell-row-${cell.row.index}-col-${cell.column.id}-div`}
+          >
+            <pre style={{ whiteSpace: "pre-wrap" }}>{cell.getValue()}</pre>
+          </div>
+          {fullLogLink && (
+            <Link
+              to={fullLogLink(cell.row.original)}
+              data-testid={`JobsTable-cell-row-${cell.row.index}-col-${cell.column.id}-full-link`}
+            >
+              View full log
+            </Link>
+          )}
+        </>
       ),
     },
   ];

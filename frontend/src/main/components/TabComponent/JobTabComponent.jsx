@@ -30,7 +30,13 @@ export default function JobTabComponent({ courseId, testIdPrefix }) {
         Refresh
       </Button>
 
-      <JobsTable jobs={jobs} onCancelled={refetch} />
+      <JobsTable
+        jobs={jobs}
+        onCancelled={refetch}
+        fullLogLink={(job) =>
+          `/instructor/courses/${courseId}/jobs/${job.id}/logs`
+        }
+      />
     </div>
   );
 }

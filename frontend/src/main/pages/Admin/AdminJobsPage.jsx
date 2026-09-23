@@ -100,7 +100,11 @@ export default function AdminJobsPage() {
         ))}
       </Accordion>
       <h2 className="p-3">Job Status</h2>
-      <JobsTable jobs={jobs} onCancelled={refetch} />
+      <JobsTable
+        jobs={jobs}
+        onCancelled={refetch}
+        fullLogLink={(job) => `/admin/jobs/logs/${job.id}`}
+      />
       <Button variant="danger" onClick={purgeJobLog} data-testid="purgeJobLog">
         Purge Job Log
       </Button>

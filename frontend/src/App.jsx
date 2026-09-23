@@ -15,6 +15,7 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 
 import CoursesIndexPage from "main/pages/Admin/CoursesIndexPage";
 import AdminJobsPage from "main/pages/Admin/AdminJobsPage";
+import JobLogPage from "main/pages/Jobs/JobLogPage";
 import DeveloperPage from "main/pages/DeveloperPage";
 import InstructorCourseShowPage from "main/pages/Instructor/InstructorCourseShowPage";
 import StudentCourseShowPage from "main/pages/Student/StudentCourseShowPage";
@@ -146,10 +147,30 @@ function App() {
           }
         />
         <Route
+          path="/admin/jobs/logs/:id"
+          element={
+            <ProtectedPage
+              component={<JobLogPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
           path="/instructor/courses/:id"
           element={
             <ProtectedPage
               component={<InstructorCourseShowPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/instructor/courses/:courseId/jobs/:jobId/logs"
+          element={
+            <ProtectedPage
+              component={<JobLogPage />}
               enforceRole={"ROLE_INSTRUCTOR"}
               currentUser={currentUser}
             />

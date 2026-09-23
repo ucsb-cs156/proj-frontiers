@@ -28,3 +28,9 @@ export const LongLog = Template.bind({});
 LongLog.args = {
   jobs: jobsFixtures.longLogJob,
 };
+
+export const WithFullLogLinks = Template.bind({});
+WithFullLogLinks.args = {
+  jobs: jobsFixtures.threeJobs,
+  fullLogLink: (job) => `/admin/jobs/logs/${job.id}`,
+};

@@ -3,6 +3,7 @@ import { fireEvent, render, waitFor, screen } from "@testing-library/react";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
 import { vi } from "vitest";
 import * as useBackendModule from "main/utils/useBackend";
 
@@ -38,7 +39,9 @@ test("Calls useBackend with correct query key, params, and default value", async
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-      <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      <MemoryRouter>
+        <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 
@@ -63,7 +66,9 @@ test("Renders job tab with jobs returned from backend", async () => {
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-      <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      <MemoryRouter>
+        <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 
@@ -79,7 +84,9 @@ test("Renders job tab with correct testIdPrefix in data-testid attributes", asyn
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-      <JobTabComponent courseId={42} testIdPrefix="my-prefix" />
+      <MemoryRouter>
+        <JobTabComponent courseId={42} testIdPrefix="my-prefix" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 
@@ -93,7 +100,9 @@ test("Sends correct courseId as param to backend", async () => {
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-      <JobTabComponent courseId={99} testIdPrefix="test" />
+      <MemoryRouter>
+        <JobTabComponent courseId={99} testIdPrefix="test" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 
@@ -108,7 +117,9 @@ test("Refresh button triggers a refetch of jobs", async () => {
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-      <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      <MemoryRouter>
+        <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 
@@ -125,7 +136,9 @@ test("Renders empty jobs table when backend returns empty array", async () => {
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-      <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      <MemoryRouter>
+        <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 
@@ -139,7 +152,9 @@ test("Passes jobs data to JobsTable", async () => {
   const client = new QueryClient();
   render(
     <QueryClientProvider client={client}>
-      <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      <MemoryRouter>
+        <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 
@@ -148,4 +163,26 @@ test("Passes jobs data to JobsTable", async () => {
     expect(screen.getByText("Job finished successfully.")).toBeInTheDocument(),
   );
   expect(screen.getByText("Job is still running.")).toBeInTheDocument();
+});
+
+test("Renders a View full log link pointing at the instructor job log route", async () => {
+  axiosMock.onGet("/api/jobs/course").reply(200, mockJobs);
+
+  const client = new QueryClient();
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <JobTabComponent courseId={7} testIdPrefix="course-7" />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+  const link0 = await screen.findByTestId(
+    "JobsTable-cell-row-0-col-log-full-link",
+  );
+  expect(link0).toHaveTextContent("View full log");
+  expect(link0).toHaveAttribute("href", "/instructor/courses/7/jobs/1/logs");
+  expect(
+    screen.getByTestId("JobsTable-cell-row-1-col-log-full-link"),
+  ).toHaveAttribute("href", "/instructor/courses/7/jobs/2/logs");
 });
