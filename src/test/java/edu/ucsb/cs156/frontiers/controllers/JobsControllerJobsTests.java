@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,6 +36,7 @@ import edu.ucsb.cs156.jobs.entities.Job;
 import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import edu.ucsb.cs156.jobs.services.JobService;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -440,5 +442,156 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     String expectedJson = objectMapper.writeValueAsString(List.of(expectedJob1, expectedJob2));
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
+  }
+
+  // Tests for GET /api/jobs/course/logs
+
+  @Test
+  public void logged_out_users_cannot_get_job_logs_by_course() throws Exception {
+    mockMvc
+        .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "1"))
+        .andExpect(status().isForbidden());
+    verify(jobService, never()).getJobLogs(any());
+  }
+
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  @Test
+  public void instructor_without_course_permissions_cannot_get_job_logs_by_course()
+      throws Exception {
+    mockMvc
+        .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "1"))
+        .andExpect(status().isForbidden());
+    verify(jobService, never()).getJobLogs(any());
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_logs_by_course_returns_404_when_job_does_not_exist() throws Exception {
+    // arrange
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.empty());
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "7"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(jobsRepository).findById(eq(7L));
+    verify(jobService, never()).getJobLogs(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Job with id 7 not found", json.get("message"));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_logs_by_course_returns_404_when_job_belongs_to_a_different_course()
+      throws Exception {
+    // arrange
+    Job job = Job.builder().id(7L).scopeType("course").scopeId(6L).build();
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(job));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "7"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(jobsRepository).findById(eq(7L));
+    verify(jobService, never()).getJobLogs(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Job with id 7 not found", json.get("message"));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_logs_by_course_returns_404_when_job_has_a_different_scope_type()
+      throws Exception {
+    // arrange: same scopeId as the requested course, but not a course-scoped job
+    Job job = Job.builder().id(7L).scopeType("other").scopeId(5L).build();
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(job));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "7"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(jobsRepository).findById(eq(7L));
+    verify(jobService, never()).getJobLogs(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Job with id 7 not found", json.get("message"));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_logs_by_course_returns_404_when_job_is_unscoped() throws Exception {
+    // arrange: scopeType and scopeId both null (an admin-global job)
+    Job job = Job.builder().id(7L).scopeType(null).scopeId(null).build();
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(job));
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "7"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    // assert
+    verify(jobService, never()).getJobLogs(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Job with id 7 not found", json.get("message"));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void instructor_with_course_permissions_can_get_full_job_log() throws Exception {
+    // arrange
+    Job job = Job.builder().id(7L).scopeType("course").scopeId(5L).build();
+    String fullLog =
+        "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11";
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(job));
+    when(jobService.getJobLogs(eq(7L))).thenReturn(fullLog);
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "7"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(jobsRepository).findById(eq(7L));
+    verify(jobService, times(1)).getJobLogs(eq(7L));
+    assertEquals(fullLog, response.getResponse().getContentAsString());
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_get_full_job_log_by_course() throws Exception {
+    // arrange
+    Job job = Job.builder().id(8L).scopeType("course").scopeId(5L).build();
+    when(jobsRepository.findById(eq(8L))).thenReturn(Optional.of(job));
+    when(jobService.getJobLogs(eq(8L))).thenReturn("");
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs").param("courseId", "5").param("jobId", "8"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(jobService, times(1)).getJobLogs(eq(8L));
+    assertEquals("", response.getResponse().getContentAsString());
   }
 }
