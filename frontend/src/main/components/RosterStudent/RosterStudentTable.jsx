@@ -17,6 +17,7 @@ const DEFAULT_PAGE_SIZE = 100;
 
 export default function RosterStudentTable({
   students,
+  totalStudents,
   currentUser,
   courseId,
   testIdPrefix = "RosterStudentTable",
@@ -31,6 +32,9 @@ export default function RosterStudentTable({
   const [currentPage, setCurrentPage] = React.useState(1);
 
   const translateSection = useSectionLabels(courseId, translateSections);
+
+  const studentCount = totalStudents ?? students.length;
+  const isFiltered = studentCount !== students.length;
 
   const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
 
@@ -284,26 +288,32 @@ export default function RosterStudentTable({
         toggleShowModal={setShowDeleteModal}
         onSubmitAction={submitDeleteForm}
       />
-      <div className="d-flex justify-content-end align-items-center mb-2">
-        <Form.Label
-          htmlFor={`${testIdPrefix}-pageSizeSelect`}
-          className="me-2 mb-0"
-        >
-          Page Size:
-        </Form.Label>
-        <Form.Select
-          id={`${testIdPrefix}-pageSizeSelect`}
-          data-testid={`${testIdPrefix}-pageSizeSelect`}
-          style={{ width: "auto" }}
-          value={pageSize}
-          onChange={handlePageSizeChange}
-        >
-          {PAGE_SIZE_OPTIONS.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </Form.Select>
+      <div className="d-flex justify-content-between align-items-center mb-2">
+        <h4 className="mb-0" data-testid={`${testIdPrefix}-count-heading`}>
+          Students ({studentCount} total)
+          {isFiltered && ` (${students.length} shown)`}
+        </h4>
+        <div className="d-flex align-items-center">
+          <Form.Label
+            htmlFor={`${testIdPrefix}-pageSizeSelect`}
+            className="me-2 mb-0"
+          >
+            Page Size:
+          </Form.Label>
+          <Form.Select
+            id={`${testIdPrefix}-pageSizeSelect`}
+            data-testid={`${testIdPrefix}-pageSizeSelect`}
+            style={{ width: "auto" }}
+            value={pageSize}
+            onChange={handlePageSizeChange}
+          >
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </Form.Select>
+        </div>
       </div>
       <OurTable
         data={paginatedStudents}

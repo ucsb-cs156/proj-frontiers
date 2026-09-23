@@ -355,6 +355,44 @@ describe("RosterStudentTable tests", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("shows only the total count when no totalStudents prop is given or filtering is not in effect", () => {
+    const currentUser = currentUserFixtures.adminUser;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const heading = screen.getByTestId(`${testId}-count-heading`);
+    expect(heading).toHaveTextContent("Students (3 total)");
+    expect(heading).not.toHaveTextContent("shown");
+  });
+
+  test("shows both the total count and the shown count when students are filtered", () => {
+    const currentUser = currentUserFixtures.adminUser;
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RosterStudentTable
+            students={rosterStudentFixtures.threeStudents.slice(0, 1)}
+            totalStudents={rosterStudentFixtures.threeStudents.length}
+            currentUser={currentUser}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const heading = screen.getByTestId(`${testId}-count-heading`);
+    expect(heading).toHaveTextContent("Students (3 total) (1 shown)");
+  });
+
   test("pagination appears and lets user navigate when there are more students than the page size", () => {
     const currentUser = currentUserFixtures.adminUser;
     const manyStudents = Array.from({ length: 12 }, (_, index) => ({

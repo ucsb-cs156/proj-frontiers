@@ -425,6 +425,7 @@ export default function EnrollmentTabComponent({
               matchesSection(student) &&
               matchesTeam(student),
           )}
+          totalStudents={activeStudents.length}
           currentUser={currentUser}
           courseId={courseId}
           testIdPrefix={`${testIdPrefix}-RosterStudentTable`}
