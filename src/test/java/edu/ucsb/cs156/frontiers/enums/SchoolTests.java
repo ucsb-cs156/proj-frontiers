@@ -25,7 +25,9 @@ public class SchoolTests {
     assertThrows(
         IllegalArgumentException.class, () -> mapper.convertValue("invalid", School.class));
     // language=JSON
-    JsonNode node = mapper.readTree("""
+    JsonNode node =
+        mapper.readTree(
+            """
         {
           "key": "UCSB"
         }
@@ -33,7 +35,8 @@ public class SchoolTests {
     School handlesAsKey = mapper.convertValue(node, School.class);
     assertEquals(School.UCSB, handlesAsKey);
     JsonNode nextTest =
-        mapper.readTree("""
+        mapper.readTree(
+            """
         {
           "noKeyField": "NotASchool"
         }

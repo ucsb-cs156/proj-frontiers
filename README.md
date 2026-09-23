@@ -11,7 +11,7 @@ Note: CMPSC 156 Student teams should not change the prod/qa links below to match
 - <https://docs.google.com/document/d/1IXxmD4hBvDq6uSnpSukdV30o4xyaIAgiRt_Mpqv51yw/edit?usp=sharing>
 
 # Versions
-* Java: 21
+* Java: 25
 * node: 20.17.0
 See [docs/versions.md](docs/versions.md) for more information on upgrading versions.
 

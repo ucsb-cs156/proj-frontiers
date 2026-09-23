@@ -107,7 +107,8 @@ public class UpdateOrgMembershipJobTests {
                 .build());
 
     matchJob.accept(ctx);
-    String expected = """
+    String expected =
+        """
                 Processing...
                 Done""";
     assertEquals(expected, jobStarted.getLog());
@@ -136,7 +137,8 @@ public class UpdateOrgMembershipJobTests {
                 .build());
 
     matchJob.accept(ctx);
-    String expected = """
+    String expected =
+        """
                 Processing...
                 Done""";
     assertEquals(expected, jobStarted.getLog());

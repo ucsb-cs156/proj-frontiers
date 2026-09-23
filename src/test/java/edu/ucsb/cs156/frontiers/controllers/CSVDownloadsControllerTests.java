@@ -523,7 +523,8 @@ public class CSVDownloadsControllerTests extends ControllerTestCase {
         .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
             eq(1L), eq(List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)));
 
-    String expectedResponse = """
+    String expectedResponse =
+        """
             Name,Team
             Ritam,s26-09
             """;

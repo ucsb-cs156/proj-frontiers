@@ -30,7 +30,7 @@ If any fail, take appropriate steps:
 **NEVER CANCEL builds or long-running commands. Wait for completion.**
 
 #### Backend (Java/Spring Boot)
-- Set Java 21: `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 && export PATH=$JAVA_HOME/bin:$PATH`
+- Set Java 25: `export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 && export PATH=$JAVA_HOME/bin:$PATH`
 - Compile: `mvn compile` -- takes ~3 seconds. NEVER CANCEL.
 - Test: `mvn test` -- takes ~4 minutes. NEVER CANCEL. Set timeout to 10+ minutes.
 - Full build: `mvn package` -- takes ~4 minutes. NEVER CANCEL. Set timeout to 10+ minutes.
@@ -66,7 +66,7 @@ Work on a pull request in this repository is **NOT finished** until all GitHub A
 #### Development Mode (Two Terminal Windows)
 **Terminal 1 - Backend:**
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
 mvn spring-boot:run
 ```

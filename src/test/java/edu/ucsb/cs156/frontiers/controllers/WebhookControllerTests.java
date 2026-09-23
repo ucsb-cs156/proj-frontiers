@@ -1052,7 +1052,8 @@ public class WebhookControllerTests extends ControllerTestCase {
   @Test
   public void unsuccessfulWebhook_badJSON() throws Exception {
 
-    String sendBody = """
+    String sendBody =
+        """
                 INVALID JSON
                   """;
 

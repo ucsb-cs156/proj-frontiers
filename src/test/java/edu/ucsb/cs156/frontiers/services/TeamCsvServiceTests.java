@@ -247,7 +247,8 @@ public class TeamCsvServiceTests {
   @Test
   public void writeColumnsCsv_longest_column_need_not_be_first() throws Exception {
     // Commons CSV quotes a leading empty cell so the line cannot be mistaken for an empty line.
-    String expected = """
+    String expected =
+        """
         X,,X
         "",,a
         "",,b
