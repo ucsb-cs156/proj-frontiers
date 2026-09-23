@@ -798,6 +798,235 @@ describe("EnrollmentTabComponent Tests", () => {
     });
   });
 
+  describe("Section and team filters", () => {
+    const testId = "InstructorCourseShowPage";
+    const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
+    // Sections and teams deliberately out of order, so that sorting is tested;
+    // Bob's teams is a string, which the table shows as no team.
+    const studentList = [
+      {
+        id: 1,
+        studentId: "A1",
+        firstName: "Alice",
+        lastName: "Brown",
+        email: "alice@ucsb.edu",
+        section: "0200",
+        teams: ["Team B"],
+        orgStatus: "MEMBER",
+      },
+      {
+        id: 2,
+        studentId: "A2",
+        firstName: "Tom",
+        lastName: "Hanks",
+        email: "tom@ucsb.edu",
+        section: "0100",
+        teams: ["Team A", "Team B"],
+        orgStatus: "MEMBER",
+      },
+      {
+        id: 3,
+        studentId: "A3",
+        firstName: "Emma",
+        lastName: "Watson",
+        email: "emma@ucsb.edu",
+        section: "",
+        teams: [],
+        orgStatus: "MEMBER",
+      },
+      {
+        id: 4,
+        studentId: "A4",
+        firstName: "Bob",
+        lastName: "Smith",
+        email: "bob@ucsb.edu",
+        section: "0100",
+        teams: "Team A",
+        orgStatus: "MEMBER",
+      },
+      {
+        id: 5,
+        studentId: "A5",
+        firstName: "Dana",
+        lastName: "Dropped",
+        email: "dana@ucsb.edu",
+        section: "0999",
+        teams: ["Team Z"],
+        orgStatus: "MEMBER",
+        rosterStatus: "DROPPED",
+      },
+    ];
+
+    const renderTab = async (props = {}) => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <EnrollmentTabComponent
+            courseId={1}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+            {...props}
+          />
+        </QueryClientProvider>,
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-3-col-id`),
+        ).toBeInTheDocument();
+      });
+    };
+
+    const shownFirstNames = () =>
+      screen
+        .queryAllByTestId(/-RosterStudentTable-cell-row-\d+-col-firstName$/)
+        .map((cell) => cell.textContent);
+
+    const options = (select) =>
+      Array.from(select.options).map((o) => [o.value, o.textContent]);
+
+    beforeEach(() => {
+      axiosMock.onGet("/api/rosterstudents/course/1").reply(200, studentList);
+    });
+
+    test("dropdowns sit next to the search box with labels, and offer every section and team of the active students, sorted, plus none", async () => {
+      await renderTab();
+
+      const search = screen.getByTestId(`${testId}-search`);
+      const sectionSelect = screen.getByTestId(`${testId}-section-filter`);
+      const teamSelect = screen.getByTestId(`${testId}-team-filter`);
+      expect(screen.getByLabelText("Search Students:")).toBe(search);
+      expect(screen.getByLabelText("Section:")).toBe(sectionSelect);
+      expect(screen.getByLabelText("Team:")).toBe(teamSelect);
+      const row = search.closest(".row");
+      expect(row).toHaveClass("align-items-end");
+      expect(row).toContainElement(sectionSelect);
+      expect(row).toContainElement(teamSelect);
+      expect(search.closest(".col-sm-6")).not.toBeNull();
+      expect(sectionSelect.closest(".col-sm-3")).not.toBeNull();
+      expect(teamSelect.closest(".col-sm-3")).not.toBeNull();
+      expect(row.closest("form")).toHaveClass("mb-1");
+
+      expect(options(sectionSelect)).toEqual([
+        ["__all__", "All sections"],
+        ["", "(no section)"],
+        ["0100", "0100"],
+        ["0200", "0200"],
+      ]);
+      expect(options(teamSelect)).toEqual([
+        ["__all__", "All teams"],
+        ["", "(no team)"],
+        ["Team A", "Team A"],
+        ["Team B", "Team B"],
+      ]);
+      expect(sectionSelect).toHaveValue("__all__");
+      expect(teamSelect).toHaveValue("__all__");
+      expect(shownFirstNames()).toEqual(["Alice", "Tom", "Emma", "Bob"]);
+    });
+
+    test("offers only the All options when there are no students", async () => {
+      axiosMock.onGet("/api/rosterstudents/course/1").reply(200, []);
+      render(
+        <QueryClientProvider client={queryClient}>
+          <EnrollmentTabComponent
+            courseId={1}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>,
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${testId}-section-filter`),
+        ).toBeInTheDocument();
+      });
+      expect(options(screen.getByTestId(`${testId}-section-filter`))).toEqual([
+        ["__all__", "All sections"],
+      ]);
+      expect(options(screen.getByTestId(`${testId}-team-filter`))).toEqual([
+        ["__all__", "All teams"],
+      ]);
+    });
+
+    test("filters by section, including students with no section", async () => {
+      await renderTab();
+      const sectionSelect = screen.getByTestId(`${testId}-section-filter`);
+
+      fireEvent.change(sectionSelect, { target: { value: "0100" } });
+      expect(sectionSelect).toHaveValue("0100");
+      expect(shownFirstNames()).toEqual(["Tom", "Bob"]);
+
+      fireEvent.change(sectionSelect, { target: { value: "0200" } });
+      expect(shownFirstNames()).toEqual(["Alice"]);
+
+      fireEvent.change(sectionSelect, { target: { value: "" } });
+      expect(shownFirstNames()).toEqual(["Emma"]);
+
+      fireEvent.change(sectionSelect, { target: { value: "__all__" } });
+      expect(shownFirstNames()).toEqual(["Alice", "Tom", "Emma", "Bob"]);
+    });
+
+    test("filters by team, treating a non-list teams value as no team", async () => {
+      await renderTab();
+      const teamSelect = screen.getByTestId(`${testId}-team-filter`);
+
+      fireEvent.change(teamSelect, { target: { value: "Team A" } });
+      expect(teamSelect).toHaveValue("Team A");
+      expect(shownFirstNames()).toEqual(["Tom"]);
+
+      fireEvent.change(teamSelect, { target: { value: "Team B" } });
+      expect(shownFirstNames()).toEqual(["Alice", "Tom"]);
+
+      fireEvent.change(teamSelect, { target: { value: "" } });
+      expect(shownFirstNames()).toEqual(["Emma", "Bob"]);
+
+      fireEvent.change(teamSelect, { target: { value: "__all__" } });
+      expect(shownFirstNames()).toEqual(["Alice", "Tom", "Emma", "Bob"]);
+    });
+
+    test("section, team and search combine", async () => {
+      await renderTab();
+      const search = screen.getByTestId(`${testId}-search`);
+      const sectionSelect = screen.getByTestId(`${testId}-section-filter`);
+      const teamSelect = screen.getByTestId(`${testId}-team-filter`);
+
+      fireEvent.change(sectionSelect, { target: { value: "0100" } });
+      fireEvent.change(teamSelect, { target: { value: "Team B" } });
+      expect(shownFirstNames()).toEqual(["Tom"]);
+
+      fireEvent.change(search, { target: { value: "bob" } });
+      expect(shownFirstNames()).toEqual([]);
+
+      fireEvent.change(teamSelect, { target: { value: "__all__" } });
+      expect(shownFirstNames()).toEqual(["Bob"]);
+
+      // The dropdown choices do not change with the search or the other filter
+      expect(options(sectionSelect).length).toBe(4);
+      expect(options(teamSelect).length).toBe(4);
+    });
+
+    test("shows translated section labels when section translation is enabled, but filters by the raw value", async () => {
+      axiosMock.onGet("/api/courses/1/sections").reply(200, [
+        { id: 10, section: "0100", label: "Tue 9am" },
+        { id: 11, section: "0300", label: "Unused" },
+      ]);
+      await renderTab({ translateSections: true });
+      const sectionSelect = screen.getByTestId(`${testId}-section-filter`);
+      await waitFor(() => {
+        expect(options(sectionSelect)).toEqual([
+          ["__all__", "All sections"],
+          ["", "(no section)"],
+          ["0100", "Tue 9am"],
+          ["0200", "0200"],
+        ]);
+      });
+
+      fireEvent.change(sectionSelect, { target: { value: "0100" } });
+      expect(shownFirstNames()).toEqual(["Tom", "Bob"]);
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-section`),
+      ).toHaveTextContent("Tue 9am");
+    });
+  });
+
   test("purge button is disabled when there are no dropped students", async () => {
     axiosMock
       .onGet("/api/rosterstudents/course/1")
