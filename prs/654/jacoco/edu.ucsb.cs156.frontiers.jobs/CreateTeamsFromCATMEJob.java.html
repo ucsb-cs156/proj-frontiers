@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CreateTeamsFromCATMEJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">CreateTeamsFromCATMEJob.java</span></div><h1>CreateTeamsFromCATMEJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.models.CATMETeamAssignment;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.Builder;
+
+/**
+ * Creates teams in Frontiers from the team assignments of a CATME TeamMaker CSV export, and adds
+ * each student to their team. Teams that already exist are reused; students already on their team
+ * are left alone. Nothing is pushed to GitHub: that is a separate step (Push Teams to GitHub, on
+ * the Teams tab).
+ *
+ * &lt;p&gt;The assignments are expected to have passed the CATME audit first, so every student in them
+ * should be an enrolled student of the course; any that is not is logged and skipped.
+ */
+@Builder
+public class CreateTeamsFromCATMEJob implements JobContextConsumer {
+
+  Course course;
+  List&lt;CATMETeamAssignment&gt; assignments;
+  CourseRepository courseRepository;
+  RosterStudentRepository rosterStudentRepository;
+  TeamRepository teamRepository;
+  TeamMemberRepository teamMemberRepository;
+
+  /**
+   * @return the team assignments this job was given
+   */
+  public List&lt;CATMETeamAssignment&gt; getAssignments() {
+<span class="fc" id="L45">    return assignments;</span>
+  }
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L50">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L55">    return course.getId();</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L60">    Course currentCourse = courseRepository.findById(course.getId()).orElseThrow();</span>
+<span class="fc" id="L61">    ctx.log(&quot;Creating teams from CATME file (teams are NOT pushed to GitHub by this job)&quot;);</span>
+
+<span class="fc" id="L63">    Map&lt;String, RosterStudent&gt; studentsById = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">    for (RosterStudent student : rosterStudentRepository.findByCourseId(currentCourse.getId())) {</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">      if (student.getStudentId() != null</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">          &amp;&amp; (student.getRosterStatus() == RosterStatus.ROSTER</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">              || student.getRosterStatus() == RosterStatus.MANUAL)) {</span>
+<span class="fc" id="L68">        studentsById.put(student.getStudentId(), student);</span>
+      }
+<span class="fc" id="L70">    }</span>
+
+    // Group the assignments by team, keeping the order of the file
+<span class="fc" id="L73">    Map&lt;String, List&lt;CATMETeamAssignment&gt;&gt; assignmentsByTeam = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L74">    int withoutTeam = 0;</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">    for (CATMETeamAssignment assignment : assignments) {</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">      String teamName = assignment.teamName() == null ? &quot;&quot; : assignment.teamName().strip();</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">      if (teamName.isEmpty()) {</span>
+<span class="fc" id="L78">        withoutTeam++;</span>
+<span class="fc" id="L79">        continue;</span>
+      }
+<span class="fc" id="L81">      assignmentsByTeam.computeIfAbsent(teamName, name -&gt; new ArrayList&lt;&gt;()).add(assignment);</span>
+<span class="fc" id="L82">    }</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">    if (withoutTeam &gt; 0) {</span>
+<span class="fc" id="L84">      ctx.log(&quot;%d student(s) in the file have no team name; skipped&quot;.formatted(withoutTeam));</span>
+    }
+
+<span class="fc" id="L87">    int created = 0;</span>
+<span class="fc" id="L88">    int added = 0;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    for (Map.Entry&lt;String, List&lt;CATMETeamAssignment&gt;&gt; entry : assignmentsByTeam.entrySet()) {</span>
+<span class="fc" id="L90">      String teamName = entry.getKey();</span>
+<span class="fc" id="L91">      Team team =</span>
+<span class="fc" id="L92">          teamRepository.findByCourseIdAndName(currentCourse.getId(), teamName).orElse(null);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">      if (team == null) {</span>
+<span class="fc" id="L94">        team =</span>
+<span class="fc" id="L95">            teamRepository.save(</span>
+<span class="fc" id="L96">                Team.builder()</span>
+<span class="fc" id="L97">                    .name(teamName)</span>
+<span class="fc" id="L98">                    .course(currentCourse)</span>
+<span class="fc" id="L99">                    .teamMembers(new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L100">                    .build());</span>
+<span class="fc" id="L101">        created++;</span>
+<span class="fc" id="L102">        ctx.log(&quot;Created team %s&quot;.formatted(teamName));</span>
+      } else {
+<span class="fc" id="L104">        ctx.log(&quot;Team %s already exists&quot;.formatted(teamName));</span>
+      }
+
+<span class="fc bfc" id="L107" title="All 2 branches covered.">      for (CATMETeamAssignment assignment : entry.getValue()) {</span>
+<span class="fc" id="L108">        RosterStudent student = studentsById.get(assignment.studentId());</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (student == null) {</span>
+<span class="fc" id="L110">          ctx.log(</span>
+              &quot;Student %s (%s) is not an enrolled student of this course; skipped&quot;
+<span class="fc" id="L112">                  .formatted(assignment.name(), assignment.studentId()));</span>
+<span class="fc" id="L113">          continue;</span>
+        }
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (teamMemberRepository.findByTeamAndRosterStudent(team, student).isPresent()) {</span>
+<span class="fc" id="L116">          ctx.log(</span>
+              &quot;%s (%s) is already on team %s&quot;
+<span class="fc" id="L118">                  .formatted(assignment.name(), assignment.studentId(), teamName));</span>
+<span class="fc" id="L119">          continue;</span>
+        }
+<span class="fc" id="L121">        teamMemberRepository.save(TeamMember.builder().team(team).rosterStudent(student).build());</span>
+<span class="fc" id="L122">        added++;</span>
+<span class="fc" id="L123">        ctx.log(</span>
+            &quot;Added %s (%s) to team %s&quot;
+<span class="fc" id="L125">                .formatted(assignment.name(), assignment.studentId(), teamName));</span>
+<span class="fc" id="L126">      }</span>
+<span class="fc" id="L127">    }</span>
+<span class="fc" id="L128">    ctx.log(</span>
+        &quot;Done: %d team(s) created, %d student(s) added to teams. Teams have NOT been pushed to GitHub; use Push Teams to GitHub on the Teams tab when ready.&quot;
+<span class="fc" id="L130">            .formatted(created, added));</span>
+<span class="fc" id="L131">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

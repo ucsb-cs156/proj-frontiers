@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetupTeamSlackChannelsJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">SetupTeamSlackChannelsJob.java</span></div><h1>SetupTeamSlackChannelsJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.errors.SlackApiException;
+import edu.ucsb.cs156.frontiers.models.SlackChannel;
+import edu.ucsb.cs156.frontiers.models.SlackUser;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
+import edu.ucsb.cs156.frontiers.services.SlackService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import lombok.Builder;
+
+/**
+ * Makes the public Slack channels of a course's teams match the teams.
+ *
+ * &lt;ol&gt;
+ *   &lt;li&gt;For each team, works out a channel name: &quot;team-&quot; followed by the team name in the form
+ *       Slack requires (see {@link #sanitizeChannelName}). If two teams end up with the same
+ *       channel name, the job stops with an error naming them, before touching Slack.
+ *   &lt;li&gt;Creates each channel, unless it already exists.
+ *   &lt;li&gt;Adds each member of each team, and the instructor of the course, to the team's channel,
+ *       unless they are already in it. People are matched to Slack users by email; those without an
+ *       active Slack account cannot be added, and are only counted.
+ *   &lt;li&gt;Removes from each channel every person who is neither a member of the team, nor the
+ *       instructor, nor a member of the course staff. Bots (including the bot this job acts as) and
+ *       members that are not users of the workspace are never removed.
+ * &lt;/ol&gt;
+ *
+ * A problem with one channel or one person is logged, and the job carries on with the rest. The
+ * last line of the log is a summary of how many channels were created or already existed, and how
+ * many members were added, already present, or removed.
+ */
+@Builder
+public class SetupTeamSlackChannelsJob implements JobContextConsumer {
+
+  public static final String CHANNEL_PREFIX = &quot;team-&quot;;
+
+  Course course;
+  CourseRepository courseRepository;
+  TeamRepository teamRepository;
+  CourseStaffRepository courseStaffRepository;
+  SlackService slackService;
+  CanvasApiTokenSecurityService tokenSecurityService;
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L63">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L68">    return course.getId();</span>
+  }
+
+  /**
+   * Turns a team name into the form Slack requires of channel names: all lowercase, spaces replaced
+   * by hyphens, and every character other than letters, numbers, hyphens and underscores replaced
+   * by a hyphen.
+   *
+   * @param teamName the team name; may be null
+   * @return the sanitized name (without the &quot;team-&quot; prefix)
+   */
+  public static String sanitizeChannelName(String teamName) {
+<span class="fc bfc" id="L80" title="All 2 branches covered.">    if (teamName == null) {</span>
+<span class="fc" id="L81">      return &quot;&quot;;</span>
+    }
+<span class="fc" id="L83">    return teamName.toLowerCase(Locale.ROOT).replace(' ', '-').replaceAll(&quot;[^a-z0-9_-]&quot;, &quot;-&quot;);</span>
+  }
+
+  /**
+   * @param teamName the team name
+   * @return the name of the team's Slack channel
+   */
+  public static String channelNameFor(String teamName) {
+<span class="fc" id="L91">    return CHANNEL_PREFIX + sanitizeChannelName(teamName);</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L96">    Course currentCourse = courseRepository.findById(course.getId()).orElseThrow();</span>
+<span class="fc" id="L97">    String token = tokenSecurityService.decrypt(currentCourse.getSlackBotToken());</span>
+<span class="fc bfc" id="L98" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L99">      throw new IllegalStateException(</span>
+          &quot;No Slack token has been set for this course; enter one on the Settings tab.&quot;);
+    }
+
+    // Work out the channel names first, and stop if any two teams collide, before calling Slack
+<span class="fc" id="L104">    Map&lt;String, Team&gt; teamByChannelName = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L105">    Map&lt;String, List&lt;String&gt;&gt; teamNamesByChannelName = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">    for (Team team : teamRepository.findByCourseIdOrderByNameAsc(currentCourse.getId())) {</span>
+<span class="fc" id="L107">      String channelName = channelNameFor(team.getName());</span>
+<span class="fc" id="L108">      teamByChannelName.putIfAbsent(channelName, team);</span>
+<span class="fc" id="L109">      teamNamesByChannelName</span>
+<span class="fc" id="L110">          .computeIfAbsent(channelName, name -&gt; new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L111">          .add(team.getName());</span>
+<span class="fc" id="L112">    }</span>
+<span class="fc" id="L113">    List&lt;String&gt; collisions = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">    for (Map.Entry&lt;String, List&lt;String&gt;&gt; entry : teamNamesByChannelName.entrySet()) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">      if (entry.getValue().size() &gt; 1) {</span>
+<span class="fc" id="L116">        collisions.add(</span>
+<span class="fc" id="L117">            &quot;#%s (teams %s)&quot;.formatted(entry.getKey(), String.join(&quot;, &quot;, entry.getValue())));</span>
+      }
+<span class="fc" id="L119">    }</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">    if (!collisions.isEmpty()) {</span>
+<span class="fc" id="L121">      throw new IllegalStateException(</span>
+          &quot;Two or more teams would get the same Slack channel name: %s. Rename the teams so that their channel names differ, then run this job again. Nothing was changed in Slack.&quot;
+<span class="fc" id="L123">              .formatted(String.join(&quot;; &quot;, collisions)));</span>
+    }
+<span class="fc" id="L125">    ctx.log(</span>
+        &quot;Creating Team Channels (%d team(s), channel names start with %s)&quot;
+<span class="fc" id="L127">            .formatted(teamByChannelName.size(), CHANNEL_PREFIX));</span>
+
+<span class="fc" id="L129">    List&lt;SlackUser&gt; slackUsers = slackService.listUsers(token);</span>
+<span class="fc" id="L130">    Map&lt;String, SlackUser&gt; slackUsersById = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L131">    Map&lt;String, String&gt; activeSlackIdByEmail = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">    for (SlackUser user : slackUsers) {</span>
+<span class="fc" id="L133">      slackUsersById.put(user.getId(), user);</span>
+<span class="fc bfc" id="L134" title="All 4 branches covered.">      if (user.isActivePerson() &amp;&amp; user.email() != null) {</span>
+<span class="fc" id="L135">        activeSlackIdByEmail.put(canonical(user.email()), user.getId());</span>
+      }
+<span class="fc" id="L137">    }</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">    if (activeSlackIdByEmail.isEmpty()) {</span>
+      // Without emails nobody can be matched, and everybody would be removed from the channels.
+<span class="fc" id="L140">      throw new IllegalStateException(</span>
+          &quot;Slack did not provide the email of any user. Add the users:read.email scope to the Slack app, reinstall it to the workspace, and save the new token on the Settings tab.&quot;);
+    }
+
+<span class="fc" id="L144">    Summary summary = new Summary();</span>
+<span class="fc" id="L145">    Map&lt;String, String&gt; channelIdByName = createChannels(ctx, token, teamByChannelName, summary);</span>
+
+    String instructorSlackId =
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        currentCourse.getInstructorEmail() == null</span>
+<span class="fc" id="L149">            ? null</span>
+<span class="fc" id="L150">            : activeSlackIdByEmail.get(canonical(currentCourse.getInstructorEmail()));</span>
+<span class="fc bfc" id="L151" title="All 4 branches covered.">    if (currentCourse.getInstructorEmail() != null &amp;&amp; instructorSlackId == null) {</span>
+<span class="fc" id="L152">      ctx.log(</span>
+          &quot;The instructor (%s) does not have an active account in the Slack workspace, so cannot be added to the channels.&quot;
+<span class="fc" id="L154">              .formatted(currentCourse.getInstructorEmail()));</span>
+    }
+<span class="fc" id="L156">    Set&lt;String&gt; staffSlackIds = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">    for (CourseStaff staff : courseStaffRepository.findByCourseId(currentCourse.getId())) {</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">      if (staff.getEmail() != null) {</span>
+<span class="fc" id="L159">        staffSlackIds.add(activeSlackIdByEmail.get(canonical(staff.getEmail())));</span>
+      }
+<span class="fc" id="L161">    }</span>
+
+<span class="fc" id="L163">    ctx.log(&quot;Adding Team Members to Channels&quot;);</span>
+<span class="fc" id="L164">    Map&lt;String, List&lt;String&gt;&gt; membersByChannelName = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L165">    Map&lt;String, Set&lt;String&gt;&gt; belongingIdsByChannelName = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L166">    int membersNotInSlack = 0;</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">    for (Map.Entry&lt;String, String&gt; channel : channelIdByName.entrySet()) {</span>
+<span class="fc" id="L168">      String channelName = channel.getKey();</span>
+<span class="fc" id="L169">      String channelId = channel.getValue();</span>
+<span class="fc" id="L170">      Team team = teamByChannelName.get(channelName);</span>
+      List&lt;String&gt; members;
+      try {
+<span class="fc" id="L173">        members = slackService.listChannelMembers(token, channelId);</span>
+<span class="fc" id="L174">      } catch (SlackApiException e) {</span>
+<span class="fc" id="L175">        ctx.log(&quot;Error listing members of #%s: %s&quot;.formatted(channelName, e.getMessage()));</span>
+<span class="fc" id="L176">        continue;</span>
+<span class="fc" id="L177">      }</span>
+<span class="fc" id="L178">      membersByChannelName.put(channelName, members);</span>
+
+      // who belongs, with a label for the log; the instructor first
+<span class="fc" id="L181">      Map&lt;String, String&gt; belonging = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">      if (instructorSlackId != null) {</span>
+<span class="fc" id="L183">        belonging.put(instructorSlackId, &quot;instructor &quot; + currentCourse.getInstructorEmail());</span>
+      }
+      for (TeamMember member :
+<span class="fc bfc" id="L186" title="All 4 branches covered.">          team.getTeamMembers() == null ? List.&lt;TeamMember&gt;of() : team.getTeamMembers()) {</span>
+<span class="fc" id="L187">        RosterStudent student = member.getRosterStudent();</span>
+        String slackId =
+<span class="fc bfc" id="L189" title="All 4 branches covered.">            student == null || student.getEmail() == null</span>
+<span class="fc" id="L190">                ? null</span>
+<span class="fc" id="L191">                : activeSlackIdByEmail.get(canonical(student.getEmail()));</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        if (slackId == null) {</span>
+<span class="fc" id="L193">          membersNotInSlack++;</span>
+        } else {
+<span class="fc" id="L195">          belonging.putIfAbsent(slackId, describe(student));</span>
+        }
+<span class="fc" id="L197">      }</span>
+<span class="fc" id="L198">      belongingIdsByChannelName.put(channelName, belonging.keySet());</span>
+
+<span class="fc" id="L200">      List&lt;Map.Entry&lt;String, String&gt;&gt; toAdd = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">      for (Map.Entry&lt;String, String&gt; person : belonging.entrySet()) {</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        if (members.contains(person.getKey())) {</span>
+<span class="fc" id="L203">          summary.membersAlreadyPresent++;</span>
+        } else {
+<span class="fc" id="L205">          toAdd.add(person);</span>
+        }
+<span class="fc" id="L207">      }</span>
+<span class="fc" id="L208">      addMembers(ctx, token, channelName, channelId, toAdd, summary);</span>
+<span class="fc" id="L209">    }</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">    if (membersNotInSlack &gt; 0) {</span>
+<span class="fc" id="L211">      ctx.log(</span>
+          &quot;%d team member(s) could not be added, because they do not have an active account in the Slack workspace; see the Slack tab. Run this job again once they have joined.&quot;
+<span class="fc" id="L213">              .formatted(membersNotInSlack));</span>
+    }
+
+<span class="fc" id="L216">    ctx.log(&quot;Removing Channel Members Who Are Not On The Team&quot;);</span>
+    channels:
+<span class="fc bfc" id="L218" title="All 2 branches covered.">    for (Map.Entry&lt;String, String&gt; channel : channelIdByName.entrySet()) {</span>
+<span class="fc" id="L219">      String channelName = channel.getKey();</span>
+<span class="fc" id="L220">      List&lt;String&gt; members = membersByChannelName.get(channelName);</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">      if (members == null) {</span>
+<span class="fc" id="L222">        continue;</span>
+      }
+<span class="fc bfc" id="L224" title="All 2 branches covered.">      for (String memberId : members) {</span>
+<span class="fc" id="L225">        SlackUser member = slackUsersById.get(memberId);</span>
+<span class="fc" id="L226">        boolean belongs =</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">            belongingIdsByChannelName.get(channelName).contains(memberId)</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">                || staffSlackIds.contains(memberId);</span>
+        // Bots (including this one) and members who are not users of the workspace are left alone
+<span class="fc bfc" id="L230" title="All 6 branches covered.">        if (!belongs &amp;&amp; member != null &amp;&amp; member.isPerson()) {</span>
+          try {
+<span class="fc" id="L232">            slackService.removeFromChannel(token, channel.getValue(), memberId);</span>
+<span class="fc" id="L233">            summary.membersRemoved++;</span>
+<span class="fc" id="L234">            ctx.log(&quot;Removed %s from #%s&quot;.formatted(describe(member), channelName));</span>
+<span class="fc" id="L235">          } catch (SlackApiException e) {</span>
+<span class="fc" id="L236">            ctx.log(</span>
+                &quot;Error removing %s from #%s: %s&quot;
+<span class="fc" id="L238">                    .formatted(describe(member), channelName, e.getMessage()));</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">            if (SlackService.RESTRICTED_ACTION.equals(e.getMessage())) {</span>
+              // A workspace setting forbids it, so every other removal would fail the same way
+<span class="fc" id="L241">              ctx.log(SlackService.REMOVAL_RESTRICTED_ADVICE);</span>
+<span class="fc" id="L242">              break channels;</span>
+            }
+<span class="fc" id="L244">          }</span>
+        }
+<span class="fc" id="L246">      }</span>
+<span class="fc" id="L247">    }</span>
+<span class="fc" id="L248">    ctx.log(</span>
+        &quot;Done. Channels created: %d, already existed: %d. Members added: %d, already present: %d, removed: %d.&quot;
+<span class="fc" id="L250">            .formatted(</span>
+<span class="fc" id="L251">                summary.channelsCreated,</span>
+<span class="fc" id="L252">                summary.channelsExisting,</span>
+<span class="fc" id="L253">                summary.membersAdded,</span>
+<span class="fc" id="L254">                summary.membersAlreadyPresent,</span>
+<span class="fc" id="L255">                summary.membersRemoved));</span>
+<span class="fc" id="L256">  }</span>
+
+  /** The counts reported at the end of the log. */
+  private static class Summary {
+    int channelsCreated;
+    int channelsExisting;
+    int membersAdded;
+    int membersAlreadyPresent;
+    int membersRemoved;
+  }
+
+  /**
+   * Creates the channels that do not exist yet, and makes the bot a member of the ones that do.
+   *
+   * @return the id of each channel that is ready to be used, by name
+   */
+  private Map&lt;String, String&gt; createChannels(
+      JobContext ctx, String token, Map&lt;String, Team&gt; teamByChannelName, Summary summary) {
+<span class="fc" id="L274">    Map&lt;String, SlackChannel&gt; existingByName = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">    for (SlackChannel existing : slackService.listPublicChannels(token)) {</span>
+<span class="fc" id="L276">      existingByName.put(existing.getName(), existing);</span>
+<span class="fc" id="L277">    }</span>
+
+<span class="fc" id="L279">    Map&lt;String, String&gt; channelIdByName = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">    for (Map.Entry&lt;String, Team&gt; entry : teamByChannelName.entrySet()) {</span>
+<span class="fc" id="L281">      String channelName = entry.getKey();</span>
+<span class="fc" id="L282">      String teamName = entry.getValue().getName();</span>
+<span class="fc" id="L283">      SlackChannel existing = existingByName.get(channelName);</span>
+      try {
+<span class="fc bfc" id="L285" title="All 2 branches covered.">        if (existing == null) {</span>
+<span class="fc" id="L286">          SlackChannel created = slackService.createPublicChannel(token, channelName);</span>
+<span class="fc" id="L287">          channelIdByName.put(channelName, created.getId());</span>
+<span class="fc" id="L288">          summary.channelsCreated++;</span>
+<span class="fc" id="L289">          ctx.log(&quot;Created channel #%s for team %s&quot;.formatted(channelName, teamName));</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">        } else if (existing.getArchived()) {</span>
+<span class="fc" id="L291">          ctx.log(</span>
+              &quot;Channel #%s for team %s already exists, but is archived; unarchive it in Slack, then run this job again. Skipping it.&quot;
+<span class="fc" id="L293">                  .formatted(channelName, teamName));</span>
+        } else {
+<span class="fc" id="L295">          slackService.joinChannel(token, existing.getId());</span>
+<span class="fc" id="L296">          channelIdByName.put(channelName, existing.getId());</span>
+<span class="fc" id="L297">          summary.channelsExisting++;</span>
+<span class="fc" id="L298">          ctx.log(&quot;Channel #%s for team %s already exists&quot;.formatted(channelName, teamName));</span>
+        }
+<span class="fc" id="L300">      } catch (SlackApiException e) {</span>
+<span class="fc" id="L301">        ctx.log(</span>
+            &quot;Error setting up channel #%s for team %s: %s. Skipping it.&quot;
+<span class="fc" id="L303">                .formatted(channelName, teamName, e.getMessage()));</span>
+<span class="fc" id="L304">      }</span>
+<span class="fc" id="L305">    }</span>
+<span class="fc" id="L306">    return channelIdByName;</span>
+  }
+
+  /**
+   * Adds the people with one call to Slack. Slack adds all or none, so if that fails, they are
+   * added one at a time, so that one problem person does not keep the others out.
+   *
+   * @param toAdd Slack id and description of each person to add
+   */
+  private void addMembers(
+      JobContext ctx,
+      String token,
+      String channelName,
+      String channelId,
+      List&lt;Map.Entry&lt;String, String&gt;&gt; toAdd,
+      Summary summary) {
+<span class="fc bfc" id="L322" title="All 2 branches covered.">    if (toAdd.isEmpty()) {</span>
+<span class="fc" id="L323">      return;</span>
+    }
+<span class="fc" id="L325">    List&lt;String&gt; slackIds = toAdd.stream().map(Map.Entry::getKey).toList();</span>
+    try {
+<span class="fc" id="L327">      slackService.inviteToChannel(token, channelId, slackIds);</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">      for (Map.Entry&lt;String, String&gt; person : toAdd) {</span>
+<span class="fc" id="L329">        summary.membersAdded++;</span>
+<span class="fc" id="L330">        ctx.log(&quot;Added %s to #%s&quot;.formatted(person.getValue(), channelName));</span>
+<span class="fc" id="L331">      }</span>
+<span class="fc" id="L332">      return;</span>
+<span class="fc" id="L333">    } catch (SlackApiException e) {</span>
+<span class="fc" id="L334">      ctx.log(</span>
+          &quot;Could not add %d member(s) to #%s in one step (%s); adding them one at a time.&quot;
+<span class="fc" id="L336">              .formatted(toAdd.size(), channelName, e.getMessage()));</span>
+    }
+<span class="fc bfc" id="L338" title="All 2 branches covered.">    for (Map.Entry&lt;String, String&gt; person : toAdd) {</span>
+      try {
+<span class="fc" id="L340">        slackService.inviteToChannel(token, channelId, List.of(person.getKey()));</span>
+<span class="fc" id="L341">        summary.membersAdded++;</span>
+<span class="fc" id="L342">        ctx.log(&quot;Added %s to #%s&quot;.formatted(person.getValue(), channelName));</span>
+<span class="fc" id="L343">      } catch (SlackApiException e) {</span>
+<span class="fc" id="L344">        ctx.log(</span>
+<span class="fc" id="L345">            &quot;Error adding %s to #%s: %s&quot;.formatted(person.getValue(), channelName, e.getMessage()));</span>
+<span class="fc" id="L346">      }</span>
+<span class="fc" id="L347">    }</span>
+<span class="fc" id="L348">  }</span>
+
+  private static String describe(RosterStudent student) {
+<span class="fc" id="L351">    return &quot;%s %s (%s)&quot;</span>
+<span class="fc" id="L352">        .formatted(student.getFirstName(), student.getLastName(), student.getEmail());</span>
+  }
+
+  private static String describe(SlackUser user) {
+<span class="fc" id="L356">    return &quot;%s (%s)&quot;.formatted(user.getRealName(), user.email());</span>
+  }
+
+  private static String canonical(String email) {
+<span class="fc" id="L360">    return CanonicalFormConverter.convertToValidEmail(email.strip());</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
