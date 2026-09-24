@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.AddTeamMemberToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.AddTeamToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamFromGithubJob;
@@ -33,8 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * App-level job endpoints: launching this app's concrete jobs, plus the course-scoped jobs listing
- * (which uses this app's CourseSecurity rule). The generic admin endpoints (list all / paginated /
- * logs / delete) come from the lib-jobs library's own controller.
+ * and course-scoped full-log endpoint (which use this app's CourseSecurity rule). The generic admin
+ * endpoints (list all / paginated / logs / delete) come from the lib-jobs library's own controller.
  */
 @Tag(name = "Jobs")
 @RequestMapping("/api/jobs")
@@ -197,5 +198,38 @@ public class JobsController extends ApiController {
      */
     jobs.forEach(job -> job.setLog(jobService.getJobLogPreview(job.getId())));
     return jobs;
+  }
+
+  /**
+   * Returns the full log of one job that belongs to the given course.
+   *
+   * <p>Why this app-owned endpoint exists: the library's own {@code GET /api/jobs/logs/{id}}
+   * returns the full log but is restricted to {@code ROLE_ADMIN}. The per-course jobs tab is used
+   * by course instructors and staff who are not necessarily admins, and the course-scoped listing
+   * above only populates {@code Job.log} with a short tail preview ({@code
+   * JobService.getJobLogPreview}). This endpoint gives those users the same full log, guarded by
+   * the same course-permission rule as the listing.
+   *
+   * <p>A job that exists but is not scoped to the given course is deliberately reported as not
+   * found (404) rather than forbidden (403), so that job ids do not leak across courses.
+   *
+   * @param courseId the id of the course the job must belong to
+   * @param jobId the id of the job
+   * @return the full job log, oldest line first
+   */
+  @Operation(summary = "Get the full log of one job belonging to a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("/course/logs")
+  public String jobLogsByCourse(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "jobId") @RequestParam Long jobId) {
+    Job job =
+        jobsRepository
+            .findById(jobId)
+            .orElseThrow(() -> new EntityNotFoundException(Job.class, jobId));
+    if (!"course".equals(job.getScopeType()) || !courseId.equals(job.getScopeId())) {
+      throw new EntityNotFoundException(Job.class, jobId);
+    }
+    return jobService.getJobLogs(jobId);
   }
 }

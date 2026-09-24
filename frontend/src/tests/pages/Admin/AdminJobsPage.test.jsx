@@ -219,4 +219,42 @@ describe("AdminJobsPage tests", () => {
       queryClientSpecific.getQueryState(["/api/jobs/all"]).dataUpdateCount,
     ).toBe(updateAllUpdateCount + 1);
   });
+
+  test("renders a View full log link to the admin job log route for each job", async () => {
+    const jobsFixture = [
+      {
+        id: 11,
+        createdAt: "2023-01-01T10:00:00",
+        updatedAt: "2023-01-01T10:05:00",
+        status: "complete",
+        log: "tail of log 11",
+      },
+      {
+        id: 12,
+        createdAt: "2023-01-02T10:00:00",
+        updatedAt: "2023-01-02T10:05:00",
+        status: "running",
+        log: "tail of log 12",
+      },
+    ];
+
+    axiosMock.onGet("/api/jobs/all").reply(200, jobsFixture);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AdminJobsPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const link0 = await screen.findByTestId(
+      "JobsTable-cell-row-0-col-log-full-link",
+    );
+    expect(link0).toHaveTextContent("View full log");
+    expect(link0).toHaveAttribute("href", "/admin/jobs/logs/11");
+    expect(
+      screen.getByTestId("JobsTable-cell-row-1-col-log-full-link"),
+    ).toHaveAttribute("href", "/admin/jobs/logs/12");
+  });
 });
