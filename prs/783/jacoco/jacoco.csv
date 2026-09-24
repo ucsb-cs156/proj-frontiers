@@ -55,7 +55,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController.AdminDTO,0,18,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.OrgRemovalResult,0,12,0,0,0,1,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,DokkuController,0,291,0,24,0,64,0,25,0,13
+frontiers,edu.ucsb.cs156.frontiers.controllers,DokkuController,0,393,0,38,0,84,0,37,0,18
 frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController,0,933,0,104,0,206,0,81,0,27
 frontiers,edu.ucsb.cs156.frontiers.controllers,SectionsController,0,251,0,12,0,53,0,19,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
