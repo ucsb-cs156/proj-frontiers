@@ -15,6 +15,7 @@ import { teamsFixtures } from "fixtures/TeamsFixtures";
 import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
 import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
+import { dokkuAccountTranslationsFixtures } from "fixtures/dokkuAccountTranslationsFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -323,6 +324,76 @@ ExampleCourseWithSectionsTab.parameters = {
         return HttpResponse.json({}, { status: 200 });
       }),
       http.delete("/api/courses/7/sections/:id", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json({}, { status: 200 });
+      }),
+    ],
+  },
+};
+
+export const ExampleCourseWithDokkuTab = Template.bind({});
+ExampleCourseWithDokkuTab.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseWithDokkuTab.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/jobs/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/course/options", () => {
+        return HttpResponse.json(
+          {
+            ENABLE_CANVAS: false,
+            TRANSLATE_SECTIONS: false,
+            DOKKU_MANAGER: true,
+            ENABLE_API_KEYS: false,
+          },
+          { status: 200 },
+        );
+      }),
+      http.get("/api/dokku/translations", () => {
+        return HttpResponse.json(
+          dokkuAccountTranslationsFixtures.threeTranslations,
+          { status: 200 },
+        );
+      }),
+      http.get("/api/dokku/users_list_header", () => {
+        return HttpResponse.text("eci,dokku-00\neci,dokku-01", {
+          status: 200,
+        });
+      }),
+      http.put("/api/dokku/users_list_header", async ({ request }) => {
+        const body = await request.text();
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url} with body:\n${body}`,
+        );
+        return HttpResponse.text(body, { status: 200 });
+      }),
+      http.post("/api/dokku/translations", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json({}, { status: 200 });
+      }),
+      http.put("/api/dokku/translations", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json({}, { status: 200 });
+      }),
+      http.delete("/api/dokku/translations", ({ request }) => {
         window.alert(
           `Would have made HTTP request: ${request.method} ${request.url}`,
         );

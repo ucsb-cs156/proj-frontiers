@@ -24,6 +24,7 @@ import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
+import { dokkuAccountTranslationsFixtures } from "fixtures/dokkuAccountTranslationsFixtures";
 import slackFixtures from "fixtures/slackFixtures";
 import { expect, vi } from "vitest";
 
@@ -935,6 +936,122 @@ describe("InstructorCourseShowPage tests", () => {
   const slackRequests = (path) =>
     axiosMock.history.get.filter((request) => request.url.includes(path));
 
+  describe("Dokku tab", () => {
+    const setupCourse7WithDokkuOption = (dokkuManager) => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/7").reply(200, {
+        ...coursesFixtures.severalCourses[0],
+        id: 7,
+      });
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: false,
+        DOKKU_MANAGER: dokkuManager,
+        ENABLE_API_KEYS: false,
+      });
+      axiosMock
+        .onGet("/api/dokku/translations")
+        .reply(200, dokkuAccountTranslationsFixtures.threeTranslations);
+      axiosMock.onGet("/api/dokku/users_list_header").reply(200, "");
+    };
+
+    const renderPage = () =>
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+    test("is shown, between Downloads and Settings, when the DOKKU_MANAGER option is enabled", async () => {
+      setupCourse7WithDokkuOption(true);
+
+      renderPage();
+
+      const dokkuTab = await screen.findByRole("tab", { name: "Dokku" });
+      expect(dokkuTab).toHaveAttribute("data-rr-ui-event-key", "dokku");
+      const tabNames = screen.getAllByRole("tab").map((tab) => tab.textContent);
+      expect(tabNames).toEqual([
+        "Students",
+        "Staff",
+        "Teams",
+        "Assignments",
+        "Jobs",
+        "Downloads",
+        "Dokku",
+        "Settings",
+      ]);
+
+      fireEvent.click(dokkuTab);
+      expect(dokkuTab).toHaveAttribute("aria-selected", "true");
+      expect(
+        screen.getByTestId("InstructorCourseShowPage-dokku-tab-component"),
+      ).toBeInTheDocument();
+      expect(
+        await screen.findByTestId(
+          "InstructorCourseShowPage-dokku-translations-table-cell-row-0-col-email",
+        ),
+      ).toHaveTextContent("cgaucho@ucsb.edu");
+      const translationsRequests = axiosMock.history.get.filter(
+        (request) => request.url === "/api/dokku/translations",
+      );
+      expect(translationsRequests.length).toBe(1);
+      expect(translationsRequests[0].params).toEqual({ courseId: "7" });
+    });
+
+    test("is hidden when the DOKKU_MANAGER option is disabled", async () => {
+      setupCourse7WithDokkuOption(false);
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          axiosMock.history.get.some(
+            (request) => request.url === "/api/course/options",
+          ),
+        ).toBe(true),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "Dokku" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("InstructorCourseShowPage-dokku-tab-component"),
+      ).not.toBeInTheDocument();
+      expect(
+        axiosMock.history.get.some(
+          (request) => request.url === "/api/dokku/translations",
+        ),
+      ).toBe(false);
+    });
+
+    test("is hidden when the DOKKU_MANAGER option is not strictly true", async () => {
+      setupCourse7WithDokkuOption("unexpected");
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          axiosMock.history.get.some(
+            (request) => request.url === "/api/course/options",
+          ),
+        ).toBe(true),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "Dokku" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   test("shows the Slack tab when SLACK_INTEGRATION is enabled and a token is set; loads Slack data only when the tab is opened", async () => {
     setupInstructorUser();
     axiosMock.onGet("/api/courses/7").reply(200, {
@@ -1280,6 +1397,8 @@ describe("InstructorCourseShowPage tests", () => {
         ...options,
       });
       axiosMock.onGet("/api/courses/7/sections").reply(200, []);
+      axiosMock.onGet("/api/dokku/translations").reply(200, []);
+      axiosMock.onGet("/api/dokku/users_list_header").reply(200, "");
       axiosMock
         .onGet("/api/courses/slack/info?courseId=7")
         .reply(200, slackFixtures.connectedInfo);
@@ -1316,10 +1435,15 @@ describe("InstructorCourseShowPage tests", () => {
       ["assignments", "Assignments"],
       ["jobs", "Jobs"],
       ["downloads", "Downloads"],
+      ["dokku", "Dokku"],
       ["slack", "Slack"],
       ["settings", "Settings"],
     ])("?tab=%s opens the %s tab, and remembers it", async (tab, title) => {
-      setupCourse7({ TRANSLATE_SECTIONS: true, SLACK_INTEGRATION: true });
+      setupCourse7({
+        TRANSLATE_SECTIONS: true,
+        DOKKU_MANAGER: true,
+        SLACK_INTEGRATION: true,
+      });
       renderAt(`/instructor/courses/7?tab=${tab}`);
 
       await waitFor(() => expect(selectedTab()).toEqual([title]));
@@ -1396,6 +1520,24 @@ describe("InstructorCourseShowPage tests", () => {
       renderAt("/instructor/courses/7?tab=slack");
       await screen.findByRole("tab", { name: "Settings" });
       expect(selectedTab()).toEqual(["Assignments"]);
+    });
+
+    test("?tab=dokku shows the Assignments tab when the Dokku Manager option is off", async () => {
+      setupCourse7({ DOKKU_MANAGER: false });
+      renderAt("/instructor/courses/7?tab=dokku");
+      await screen.findByRole("tab", { name: "Settings" });
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ DOKKU_MANAGER: false })),
+      );
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(
+        screen.queryByRole("tab", { name: "Dokku" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7?tab=dokku",
+      );
     });
 
     test("?tab=settings shows the Assignments tab when there is no Settings tab", async () => {
