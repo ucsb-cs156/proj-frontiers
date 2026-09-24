@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JobsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">JobsController.java</span></div><h1>JobsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
 
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.jobs.AddTeamMemberToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.AddTeamToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.DeleteTeamFromGithubJob;
@@ -33,14 +34,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * App-level job endpoints: launching this app's concrete jobs, plus the course-scoped jobs listing
- * (which uses this app's CourseSecurity rule). The generic admin endpoints (list all / paginated /
- * logs / delete) come from the lib-jobs library's own controller.
+ * and course-scoped full-log endpoint (which use this app's CourseSecurity rule). The generic admin
+ * endpoints (list all / paginated / logs / delete) come from the lib-jobs library's own controller.
  */
 @Tag(name = &quot;Jobs&quot;)
 @RequestMapping(&quot;/api/jobs&quot;)
 @RestController
-<span class="fc" id="L42">@Slf4j</span>
-<span class="fc" id="L43">public class JobsController extends ApiController {</span>
+<span class="fc" id="L43">@Slf4j</span>
+<span class="fc" id="L44">public class JobsController extends ApiController {</span>
   @Autowired private JobsRepository jobsRepository;
 
   @Autowired private JobService jobService;
@@ -60,8 +61,8 @@ import org.springframework.web.bind.annotation.RestController;
   @PostMapping(&quot;/launch/updateAll&quot;)
   public Job launchUpdateAllJob() {
 
-<span class="fc" id="L63">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
-<span class="fc" id="L64">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L64">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
+<span class="fc" id="L65">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Audit All Courses Job&quot;)
@@ -70,13 +71,13 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchAuditAllCoursesJob() {
 
     MembershipAuditJob job =
-<span class="fc" id="L73">        MembershipAuditJob.builder()</span>
-<span class="fc" id="L74">            .rosterStudentRepository(rosterStudentRepository)</span>
-<span class="fc" id="L75">            .courseRepository(courseRepository)</span>
-<span class="fc" id="L76">            .organizationMemberService(organizationMemberService)</span>
-<span class="fc" id="L77">            .courseStaffRepository(courseStaffRepository)</span>
-<span class="fc" id="L78">            .build();</span>
-<span class="fc" id="L79">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L74">        MembershipAuditJob.builder()</span>
+<span class="fc" id="L75">            .rosterStudentRepository(rosterStudentRepository)</span>
+<span class="fc" id="L76">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L77">            .organizationMemberService(organizationMemberService)</span>
+<span class="fc" id="L78">            .courseStaffRepository(courseStaffRepository)</span>
+<span class="fc" id="L79">            .build();</span>
+<span class="fc" id="L80">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Push Teams to GitHub Job&quot;)
@@ -85,14 +86,14 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchPushTeamsToGithubJob(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
     PushTeamsToGithubJob job =
-<span class="fc" id="L88">        PushTeamsToGithubJob.builder()</span>
-<span class="fc" id="L89">            .courseId(courseId)</span>
-<span class="fc" id="L90">            .courseRepository(courseRepository)</span>
-<span class="fc" id="L91">            .teamRepository(teamRepository)</span>
-<span class="fc" id="L92">            .teamMemberRepository(teamMemberRepository)</span>
-<span class="fc" id="L93">            .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L94">            .build();</span>
-<span class="fc" id="L95">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L89">        PushTeamsToGithubJob.builder()</span>
+<span class="fc" id="L90">            .courseId(courseId)</span>
+<span class="fc" id="L91">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L92">            .teamRepository(teamRepository)</span>
+<span class="fc" id="L93">            .teamMemberRepository(teamMemberRepository)</span>
+<span class="fc" id="L94">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L95">            .build();</span>
+<span class="fc" id="L96">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Pull Teams from GitHub Job&quot;)
@@ -102,14 +103,14 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
     PullTeamsFromGithubJob job =
-<span class="fc" id="L105">        PullTeamsFromGithubJob.builder()</span>
-<span class="fc" id="L106">            .courseId(courseId)</span>
-<span class="fc" id="L107">            .courseRepository(courseRepository)</span>
-<span class="fc" id="L108">            .teamRepository(teamRepository)</span>
-<span class="fc" id="L109">            .teamMemberRepository(teamMemberRepository)</span>
-<span class="fc" id="L110">            .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L111">            .build();</span>
-<span class="fc" id="L112">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L106">        PullTeamsFromGithubJob.builder()</span>
+<span class="fc" id="L107">            .courseId(courseId)</span>
+<span class="fc" id="L108">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L109">            .teamRepository(teamRepository)</span>
+<span class="fc" id="L110">            .teamMemberRepository(teamMemberRepository)</span>
+<span class="fc" id="L111">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L112">            .build();</span>
+<span class="fc" id="L113">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Delete Team Member From GitHub Job&quot;)
@@ -121,13 +122,13 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
     DeleteTeamMemberFromGithubJob job =
-<span class="fc" id="L124">        DeleteTeamMemberFromGithubJob.builder()</span>
-<span class="fc" id="L125">            .memberGithubLogin(memberGithubLogin)</span>
-<span class="fc" id="L126">            .githubTeamId(githubTeamId)</span>
-<span class="fc" id="L127">            .course(courseRepository.findById(courseId).get())</span>
-<span class="fc" id="L128">            .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L129">            .build();</span>
-<span class="fc" id="L130">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L125">        DeleteTeamMemberFromGithubJob.builder()</span>
+<span class="fc" id="L126">            .memberGithubLogin(memberGithubLogin)</span>
+<span class="fc" id="L127">            .githubTeamId(githubTeamId)</span>
+<span class="fc" id="L128">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L129">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L130">            .build();</span>
+<span class="fc" id="L131">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Add Team Member To GitHub Job&quot;)
@@ -140,15 +141,15 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
     AddTeamMemberToGithubJob job =
-<span class="fc" id="L143">        AddTeamMemberToGithubJob.builder()</span>
-<span class="fc" id="L144">            .memberGithubLogin(memberGithubLogin)</span>
-<span class="fc" id="L145">            .githubTeamId(githubTeamId)</span>
-<span class="fc" id="L146">            .teamMemberId(teamMemberId)</span>
-<span class="fc" id="L147">            .course(courseRepository.findById(courseId).get())</span>
-<span class="fc" id="L148">            .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L149">            .teamMemberRepository(teamMemberRepository)</span>
-<span class="fc" id="L150">            .build();</span>
-<span class="fc" id="L151">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L144">        AddTeamMemberToGithubJob.builder()</span>
+<span class="fc" id="L145">            .memberGithubLogin(memberGithubLogin)</span>
+<span class="fc" id="L146">            .githubTeamId(githubTeamId)</span>
+<span class="fc" id="L147">            .teamMemberId(teamMemberId)</span>
+<span class="fc" id="L148">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L149">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L150">            .teamMemberRepository(teamMemberRepository)</span>
+<span class="fc" id="L151">            .build();</span>
+<span class="fc" id="L152">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Delete Team From GitHub Job&quot;)
@@ -159,12 +160,12 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
     DeleteTeamFromGithubJob job =
-<span class="fc" id="L162">        DeleteTeamFromGithubJob.builder()</span>
-<span class="fc" id="L163">            .githubTeamId(githubTeamId)</span>
-<span class="fc" id="L164">            .course(courseRepository.findById(courseId).get())</span>
-<span class="fc" id="L165">            .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L166">            .build();</span>
-<span class="fc" id="L167">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L163">        DeleteTeamFromGithubJob.builder()</span>
+<span class="fc" id="L164">            .githubTeamId(githubTeamId)</span>
+<span class="fc" id="L165">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L166">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L167">            .build();</span>
+<span class="fc" id="L168">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;Launch Add Team To GitHub Job&quot;)
@@ -175,28 +176,61 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
     AddTeamToGithubJob job =
-<span class="fc" id="L178">        AddTeamToGithubJob.builder()</span>
-<span class="fc" id="L179">            .teamName(teamName)</span>
-<span class="fc" id="L180">            .course(courseRepository.findById(courseId).get())</span>
-<span class="fc" id="L181">            .teamRepository(teamRepository)</span>
-<span class="fc" id="L182">            .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L183">            .build();</span>
-<span class="fc" id="L184">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L179">        AddTeamToGithubJob.builder()</span>
+<span class="fc" id="L180">            .teamName(teamName)</span>
+<span class="fc" id="L181">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L182">            .teamRepository(teamRepository)</span>
+<span class="fc" id="L183">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L184">            .build();</span>
+<span class="fc" id="L185">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;List jobs by courseId&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;/course&quot;)
   public Iterable&lt;Job&gt; jobsByCourse(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L191">    Iterable&lt;Job&gt; jobs = jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc(&quot;course&quot;, courseId);</span>
+<span class="fc" id="L192">    Iterable&lt;Job&gt; jobs = jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc(&quot;course&quot;, courseId);</span>
     /*
      * Since lib-jobs v0.2.0, Job.log is @Transient (see job_logs) and is no
      * longer populated automatically by JPA; callers that return Job entities
      * directly must set it explicitly, same as the library's own controller
      * does for /all and /paginated.
      */
-<span class="fc" id="L198">    jobs.forEach(job -&gt; job.setLog(jobService.getJobLogPreview(job.getId())));</span>
-<span class="fc" id="L199">    return jobs;</span>
+<span class="fc" id="L199">    jobs.forEach(job -&gt; job.setLog(jobService.getJobLogPreview(job.getId())));</span>
+<span class="fc" id="L200">    return jobs;</span>
+  }
+
+  /**
+   * Returns the full log of one job that belongs to the given course.
+   *
+   * &lt;p&gt;Why this app-owned endpoint exists: the library's own {@code GET /api/jobs/logs/{id}}
+   * returns the full log but is restricted to {@code ROLE_ADMIN}. The per-course jobs tab is used
+   * by course instructors and staff who are not necessarily admins, and the course-scoped listing
+   * above only populates {@code Job.log} with a short tail preview ({@code
+   * JobService.getJobLogPreview}). This endpoint gives those users the same full log, guarded by
+   * the same course-permission rule as the listing.
+   *
+   * &lt;p&gt;A job that exists but is not scoped to the given course is deliberately reported as not
+   * found (404) rather than forbidden (403), so that job ids do not leak across courses.
+   *
+   * @param courseId the id of the course the job must belong to
+   * @param jobId the id of the job
+   * @return the full job log, oldest line first
+   */
+  @Operation(summary = &quot;Get the full log of one job belonging to a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/course/logs&quot;)
+  public String jobLogsByCourse(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;jobId&quot;) @RequestParam Long jobId) {
+<span class="fc" id="L226">    Job job =</span>
+        jobsRepository
+<span class="fc" id="L228">            .findById(jobId)</span>
+<span class="fc" id="L229">            .orElseThrow(() -&gt; new EntityNotFoundException(Job.class, jobId));</span>
+<span class="fc bfc" id="L230" title="All 4 branches covered.">    if (!&quot;course&quot;.equals(job.getScopeType()) || !courseId.equals(job.getScopeId())) {</span>
+<span class="fc" id="L231">      throw new EntityNotFoundException(Job.class, jobId);</span>
+    }
+<span class="fc" id="L233">    return jobService.getJobLogs(jobId);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

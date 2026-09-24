@@ -77,7 +77,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberMapping
 frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController.SlackMissingMemberView,0,18,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamSourceType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,86,0,2,0,19,0,8,0,7
-frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,195,0,0,0,59,0,12,0,12
+frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,231,0,4,0,65,0,16,0,14
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,117,0,0,0,29,0,9,0,9
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
