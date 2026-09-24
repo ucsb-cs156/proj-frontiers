@@ -60,6 +60,7 @@ describe("InstructorCourseShowPage tests", () => {
       canvasCourseId: "",
     });
     axiosMock.onGet("/api/jobs/course").reply(200, []);
+    axiosMock.onGet("/api/courses/emails").reply(200, "");
     axiosMock.onGet("/api/course/options").reply(200, {
       ENABLE_CANVAS: false,
       TRANSLATE_SECTIONS: false,

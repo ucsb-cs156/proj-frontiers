@@ -513,14 +513,20 @@ describe("CourseStaffTable tests", () => {
       1,
       expect.any(Function),
       { onSuccess: expect.any(Function) },
-      [`/api/coursestaff/course?courseId=${courseId}`],
+      [
+        `/api/coursestaff/course?courseId=${courseId}`,
+        `/api/courses/emails?courseId=${courseId}`,
+      ],
     );
 
     expect(useBackendMutationSpy).toHaveBeenNthCalledWith(
       2,
       expect.any(Function),
       { onSuccess: expect.any(Function) },
-      [`/api/coursestaff/course?courseId=${courseId}`],
+      [
+        `/api/coursestaff/course?courseId=${courseId}`,
+        `/api/courses/emails?courseId=${courseId}`,
+      ],
     );
   });
 });
