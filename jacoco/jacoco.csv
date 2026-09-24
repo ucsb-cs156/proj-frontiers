@@ -55,7 +55,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController.AdminDTO,0,18,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,TestErrorController,0,8,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsCSVController.RosterSourceType,0,33,0,0,0,6,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController.OrgRemovalResult,0,12,0,0,0,1,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.controllers,DokkuController,0,244,0,20,0,52,0,21,0,11
+frontiers,edu.ucsb.cs156.frontiers.controllers,DokkuController,0,393,0,38,0,84,0,37,0,18
 frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController,0,933,0,104,0,206,0,81,0,27
 frontiers,edu.ucsb.cs156.frontiers.controllers,SectionsController,0,251,0,12,0,53,0,19,0,13
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
@@ -80,6 +80,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamSourceType,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,86,0,2,0,19,0,8,0,7
 frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,231,0,4,0,65,0,16,0,14
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO,0,27,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.controllers,DokkuAccountTranslationsController,0,161,0,4,0,37,0,13,0,11
 frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,117,0,0,0,29,0,9,0,9
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,717,0,84,0,185,0,67,0,25

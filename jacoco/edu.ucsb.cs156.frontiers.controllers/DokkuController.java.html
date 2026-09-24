@@ -2,12 +2,15 @@
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.DokkuAccountTranslation;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.DokkuAccountTranslationRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,6 +22,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,7 +51,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @Tag(name = &quot;Dokku&quot;)
 @RequestMapping(&quot;/api/dokku&quot;)
 @RestController
-<span class="fc" id="L48">public class DokkuController extends ApiController {</span>
+<span class="fc" id="L54">public class DokkuController extends ApiController {</span>
 
   /** The lowest numbered dokku instance, i.e. dokku-00. */
   public static final int LOWEST_DOKKU_NUMBER = 0;
@@ -57,22 +63,22 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
    * Matches team names of the form {@code xxx-yy}: anything, a literal hyphen, then exactly two
    * digits at the end. The two digits are captured as group 1 and are the dokku number.
    */
-<span class="fc" id="L60">  static final Pattern TEAM_NAME_PATTERN = Pattern.compile(&quot;^.*-(\\d{2})$&quot;);</span>
+<span class="fc" id="L66">  static final Pattern TEAM_NAME_PATTERN = Pattern.compile(&quot;^.*-(\\d{2})$&quot;);</span>
 
   /**
    * Every dokku instance name, keyed by its two digit suffix and ordered from {@link
    * #LOWEST_DOKKU_NUMBER} to {@link #HIGHEST_DOKKU_NUMBER}, e.g. {@code &quot;07&quot; -&gt; &quot;dokku-07&quot;}. This
    * is the single place the range of dokku numbers is expanded.
    */
-<span class="fc" id="L67">  static final Map&lt;String, String&gt; DOKKU_NAME_BY_SUFFIX = dokkuNamesBySuffix();</span>
+<span class="fc" id="L73">  static final Map&lt;String, String&gt; DOKKU_NAME_BY_SUFFIX = dokkuNamesBySuffix();</span>
 
   private static Map&lt;String, String&gt; dokkuNamesBySuffix() {
-<span class="fc" id="L70">    Map&lt;String, String&gt; names = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L71" title="All 2 branches covered.">    for (int n = LOWEST_DOKKU_NUMBER; n &lt;= HIGHEST_DOKKU_NUMBER; n++) {</span>
-<span class="fc" id="L72">      String suffix = String.format(&quot;%02d&quot;, n);</span>
-<span class="fc" id="L73">      names.put(suffix, &quot;dokku-&quot; + suffix);</span>
+<span class="fc" id="L76">    Map&lt;String, String&gt; names = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">    for (int n = LOWEST_DOKKU_NUMBER; n &lt;= HIGHEST_DOKKU_NUMBER; n++) {</span>
+<span class="fc" id="L78">      String suffix = String.format(&quot;%02d&quot;, n);</span>
+<span class="fc" id="L79">      names.put(suffix, &quot;dokku-&quot; + suffix);</span>
     }
-<span class="fc" id="L75">    return names;</span>
+<span class="fc" id="L81">    return names;</span>
   }
 
   @Autowired private CourseRepository courseRepository;
@@ -81,13 +87,15 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
   @Autowired private TeamRepository teamRepository;
 
+  @Autowired private DokkuAccountTranslationRepository dokkuAccountTranslationRepository;
+
   /**
    * Returns every dokku instance name in order, {@code dokku-00} through {@code dokku-18}.
    *
    * @return the dokku instance names
    */
   public static Collection&lt;String&gt; allDokkuNames() {
-<span class="fc" id="L90">    return DOKKU_NAME_BY_SUFFIX.values();</span>
+<span class="fc" id="L98">    return DOKKU_NAME_BY_SUFFIX.values();</span>
   }
 
   /**
@@ -98,8 +106,22 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
    * @return the username
    */
   public static String usernameFromEmail(String email) {
-<span class="fc" id="L101">    int at = email.indexOf('@');</span>
-<span class="fc bfc" id="L102" title="All 2 branches covered.">    return at &lt; 0 ? email : email.substring(0, at);</span>
+<span class="fc" id="L109">    int at = email.indexOf('@');</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">    return at &lt; 0 ? email : email.substring(0, at);</span>
+  }
+
+  /**
+   * Returns the dokku username for an email: the translated username if there is a {@link
+   * DokkuAccountTranslation} for the email (compared in canonical form), otherwise the part of the
+   * email before the {@code @}.
+   *
+   * @param email the email address
+   * @param translations map from canonical email to dokku username
+   * @return the dokku username
+   */
+  public static String usernameFor(String email, Map&lt;String, String&gt; translations) {
+<span class="fc" id="L123">    String translated = translations.get(CanonicalFormConverter.convertToValidEmail(email));</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">    return translated != null ? translated : usernameFromEmail(email);</span>
   }
 
   /**
@@ -111,14 +133,14 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
    *     correspond to a dokku instance
    */
   public static Optional&lt;String&gt; dokkuNameForTeam(String teamName) {
-<span class="fc bfc" id="L114" title="All 2 branches covered.">    if (teamName == null) {</span>
-<span class="fc" id="L115">      return Optional.empty();</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">    if (teamName == null) {</span>
+<span class="fc" id="L137">      return Optional.empty();</span>
     }
-<span class="fc" id="L117">    Matcher matcher = TEAM_NAME_PATTERN.matcher(teamName);</span>
-<span class="fc bfc" id="L118" title="All 2 branches covered.">    if (!matcher.matches()) {</span>
-<span class="fc" id="L119">      return Optional.empty();</span>
+<span class="fc" id="L139">    Matcher matcher = TEAM_NAME_PATTERN.matcher(teamName);</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">    if (!matcher.matches()) {</span>
+<span class="fc" id="L141">      return Optional.empty();</span>
     }
-<span class="fc" id="L121">    return Optional.ofNullable(DOKKU_NAME_BY_SUFFIX.get(matcher.group(1)));</span>
+<span class="fc" id="L143">    return Optional.ofNullable(DOKKU_NAME_BY_SUFFIX.get(matcher.group(1)));</span>
   }
 
   @Operation(
@@ -135,7 +157,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
               + &quot; and &quot;
               + HIGHEST_DOKKU_NUMBER
               + &quot;) is granted access to dokku-nn; other teams are ignored. Usernames are the part&quot;
-              + &quot; of the email before the @.&quot;,
+              + &quot; of the email before the @, unless the email has a dokku account translation, in&quot;
+              + &quot; which case the translated username is used.&quot;,
       responses = {
         @ApiResponse(
             responseCode = &quot;200&quot;,
@@ -153,61 +176,138 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
       @Parameter(name = &quot;courseId&quot;, description = &quot;course id&quot;, example = &quot;1&quot;) @RequestParam
           Long courseId)
       throws EntityNotFoundException {
-<span class="fc" id="L156">    courseRepository</span>
-<span class="fc" id="L157">        .findById(courseId)</span>
-<span class="fc" id="L158">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L179">    Course course =</span>
+        courseRepository
+<span class="fc" id="L181">            .findById(courseId)</span>
+<span class="fc" id="L182">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L160">    StreamingResponseBody stream =</span>
+<span class="fc" id="L184">    StreamingResponseBody stream =</span>
         (outputStream) -&gt; {
-<span class="fc" id="L162">          try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);</span>
-<span class="fc" id="L163">              CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {</span>
-<span class="fc" id="L164">            writeStaffLines(csvPrinter, courseStaffRepository.findByCourseId(courseId));</span>
-<span class="fc" id="L165">            writeTeamLines(csvPrinter, teamRepository.findByCourseIdOrderByNameAsc(courseId));</span>
+<span class="fc" id="L186">          try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L187">              CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {</span>
+<span class="fc" id="L188">            writeHeaderLines(writer, course.getDokkuUsersListHeader());</span>
+<span class="fc" id="L189">            Map&lt;String, String&gt; translations = translationsByEmail();</span>
+<span class="fc" id="L190">            writeStaffLines(</span>
+<span class="fc" id="L191">                csvPrinter, courseStaffRepository.findByCourseId(courseId), translations);</span>
+<span class="fc" id="L192">            writeTeamLines(</span>
+<span class="fc" id="L193">                csvPrinter, teamRepository.findByCourseIdOrderByNameAsc(courseId), translations);</span>
           }
-<span class="fc" id="L167">        };</span>
+<span class="fc" id="L195">        };</span>
 
-<span class="fc" id="L169">    return ResponseEntity.ok()</span>
-<span class="fc" id="L170">        .contentType(MediaType.parseMediaType(&quot;text/csv; charset=UTF-8&quot;))</span>
-<span class="fc" id="L171">        .header(HttpHeaders.CONTENT_DISPOSITION, &quot;attachment;filename=dokku_users_list.csv&quot;)</span>
-<span class="fc" id="L172">        .header(HttpHeaders.CONTENT_TYPE, &quot;text/csv; charset=UTF-8&quot;)</span>
-<span class="fc" id="L173">        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)</span>
-<span class="fc" id="L174">        .body(stream);</span>
+<span class="fc" id="L197">    return ResponseEntity.ok()</span>
+<span class="fc" id="L198">        .contentType(MediaType.parseMediaType(&quot;text/csv; charset=UTF-8&quot;))</span>
+<span class="fc" id="L199">        .header(HttpHeaders.CONTENT_DISPOSITION, &quot;attachment;filename=dokku_users_list.csv&quot;)</span>
+<span class="fc" id="L200">        .header(HttpHeaders.CONTENT_TYPE, &quot;text/csv; charset=UTF-8&quot;)</span>
+<span class="fc" id="L201">        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)</span>
+<span class="fc" id="L202">        .body(stream);</span>
+  }
+
+  @Operation(
+      summary = &quot;Get the extra lines placed at the start of dokku_users_list.csv for a course&quot;,
+      description =
+          &quot;Returns the course's dokkuUsersListHeader as plain text, or an empty body if none is&quot;
+              + &quot; set.&quot;)
+  @GetMapping(value = &quot;/users_list_header&quot;, produces = &quot;text/plain&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  public String getUsersListHeader(
+      @Parameter(name = &quot;courseId&quot;, description = &quot;course id&quot;, example = &quot;1&quot;) @RequestParam
+          Long courseId)
+      throws EntityNotFoundException {
+<span class="fc" id="L216">    Course course =</span>
+        courseRepository
+<span class="fc" id="L218">            .findById(courseId)</span>
+<span class="fc" id="L219">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">    return course.getDokkuUsersListHeader() == null ? &quot;&quot; : course.getDokkuUsersListHeader();</span>
+  }
+
+  @Operation(
+      summary = &quot;Set the extra lines placed at the start of dokku_users_list.csv for a course&quot;,
+      description =
+          &quot;The request body (plain text, line breaks preserved) replaces the course's&quot;
+              + &quot; dokkuUsersListHeader. A blank body clears it. Returns the saved text.&quot;)
+  @PutMapping(value = &quot;/users_list_header&quot;, consumes = &quot;text/plain&quot;, produces = &quot;text/plain&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  public String setUsersListHeader(
+      @Parameter(name = &quot;courseId&quot;, description = &quot;course id&quot;, example = &quot;1&quot;) @RequestParam
+          Long courseId,
+      @Parameter(name = &quot;header&quot;) @RequestBody(required = false) String header)
+      throws EntityNotFoundException {
+<span class="fc" id="L235">    Course course =</span>
+        courseRepository
+<span class="fc" id="L237">            .findById(courseId)</span>
+<span class="fc" id="L238">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L239" title="All 4 branches covered.">    String normalized = header == null || header.isBlank() ? null : header;</span>
+<span class="fc" id="L240">    course.setDokkuUsersListHeader(normalized);</span>
+<span class="fc" id="L241">    courseRepository.save(course);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">    return normalized == null ? &quot;&quot; : normalized;</span>
+  }
+
+  /**
+   * Writes the course's dokkuUsersListHeader before any generated lines: one line per non-blank
+   * line of the header, stripped, with line endings normalized to the CSV record separator. The
+   * lines are written verbatim (not as quoted CSV fields), since each is already a
+   * username,dokku-nn entry. Nothing is written when the header is null.
+   */
+  private static void writeHeaderLines(Writer writer, String header) throws IOException {
+<span class="fc bfc" id="L252" title="All 2 branches covered.">    if (header == null) {</span>
+<span class="fc" id="L253">      return;</span>
+    }
+<span class="fc bfc" id="L255" title="All 2 branches covered.">    for (String line : header.split(&quot;\\R&quot;)) {</span>
+<span class="fc" id="L256">      String trimmed = line.strip();</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">      if (!trimmed.isEmpty()) {</span>
+<span class="fc" id="L258">        writer.write(trimmed);</span>
+<span class="fc" id="L259">        writer.write(CSVFormat.DEFAULT.getRecordSeparator());</span>
+      }
+    }
+<span class="fc" id="L262">  }</span>
+
+  /** Loads every {@link DokkuAccountTranslation} into a map from canonical email to username. */
+  private Map&lt;String, String&gt; translationsByEmail() {
+<span class="fc" id="L266">    Map&lt;String, String&gt; translations = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">    for (DokkuAccountTranslation translation : dokkuAccountTranslationRepository.findAll()) {</span>
+<span class="fc" id="L268">      translations.put(</span>
+<span class="fc" id="L269">          CanonicalFormConverter.convertToValidEmail(translation.getEmail()),</span>
+<span class="fc" id="L270">          translation.getUsername());</span>
+<span class="fc" id="L271">    }</span>
+<span class="fc" id="L272">    return translations;</span>
   }
 
   /**
    * Writes one line per staff member per dokku instance: each staff member gets access to every
    * instance from {@link #LOWEST_DOKKU_NUMBER} through {@link #HIGHEST_DOKKU_NUMBER}.
    */
-  private static void writeStaffLines(CSVPrinter csvPrinter, Iterable&lt;CourseStaff&gt; staff)
+  private static void writeStaffLines(
+      CSVPrinter csvPrinter, Iterable&lt;CourseStaff&gt; staff, Map&lt;String, String&gt; translations)
       throws IOException {
-<span class="fc bfc" id="L183" title="All 2 branches covered.">    for (CourseStaff member : staff) {</span>
-<span class="fc" id="L184">      String username = usernameFromEmail(member.getEmail());</span>
-<span class="fc bfc" id="L185" title="All 2 branches covered.">      for (String dokku : allDokkuNames()) {</span>
-<span class="fc" id="L186">        csvPrinter.printRecord(username, dokku);</span>
-<span class="fc" id="L187">      }</span>
-<span class="fc" id="L188">    }</span>
-<span class="fc" id="L189">  }</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">    for (CourseStaff member : staff) {</span>
+<span class="fc" id="L283">      String username = usernameFor(member.getEmail(), translations);</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">      for (String dokku : allDokkuNames()) {</span>
+<span class="fc" id="L285">        csvPrinter.printRecord(username, dokku);</span>
+<span class="fc" id="L286">      }</span>
+<span class="fc" id="L287">    }</span>
+<span class="fc" id="L288">  }</span>
 
   /**
    * Writes one line per member of each team whose name maps to a dokku instance (see {@link
    * #dokkuNameForTeam(String)}); teams that do not map to a dokku instance are skipped.
    */
-  private static void writeTeamLines(CSVPrinter csvPrinter, Iterable&lt;Team&gt; teams)
+  private static void writeTeamLines(
+      CSVPrinter csvPrinter, Iterable&lt;Team&gt; teams, Map&lt;String, String&gt; translations)
       throws IOException {
-<span class="fc bfc" id="L197" title="All 2 branches covered.">    for (Team team : teams) {</span>
-<span class="fc" id="L198">      Optional&lt;String&gt; dokku = dokkuNameForTeam(team.getName());</span>
-<span class="fc bfc" id="L199" title="All 2 branches covered.">      if (dokku.isEmpty()) {</span>
-<span class="fc" id="L200">        continue;</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">    for (Team team : teams) {</span>
+<span class="fc" id="L298">      Optional&lt;String&gt; dokku = dokkuNameForTeam(team.getName());</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">      if (dokku.isEmpty()) {</span>
+<span class="fc" id="L300">        continue;</span>
       }
-<span class="fc" id="L202">      List&lt;TeamMember&gt; members = team.getTeamMembers();</span>
-<span class="fc bfc" id="L203" title="All 2 branches covered.">      if (members == null) {</span>
-<span class="fc" id="L204">        continue;</span>
+<span class="fc" id="L302">      List&lt;TeamMember&gt; members = team.getTeamMembers();</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">      if (members == null) {</span>
+<span class="fc" id="L304">        continue;</span>
       }
-<span class="fc bfc" id="L206" title="All 2 branches covered.">      for (TeamMember member : members) {</span>
-<span class="fc" id="L207">        csvPrinter.printRecord(</span>
-<span class="fc" id="L208">            usernameFromEmail(member.getRosterStudent().getEmail()), dokku.get());</span>
-<span class="fc" id="L209">      }</span>
-<span class="fc" id="L210">    }</span>
-<span class="fc" id="L211">  }</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">      for (TeamMember member : members) {</span>
+<span class="fc" id="L307">        csvPrinter.printRecord(</span>
+<span class="fc" id="L308">            usernameFor(member.getRosterStudent().getEmail(), translations), dokku.get());</span>
+<span class="fc" id="L309">      }</span>
+<span class="fc" id="L310">    }</span>
+<span class="fc" id="L311">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
