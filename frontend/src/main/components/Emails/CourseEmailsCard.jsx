@@ -21,8 +21,8 @@ export default function CourseEmailsCard({
 
   const { data: emails } = useBackend(
     [courseEmailsQueryKey(courseId), type, format],
-    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     {
+      // Stryker disable next-line StringLiteral : GET and empty string are equivalent
       method: "GET",
       url: "/api/courses/emails",
       params: { courseId, type, format },
