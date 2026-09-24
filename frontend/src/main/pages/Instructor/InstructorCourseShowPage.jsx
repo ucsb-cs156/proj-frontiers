@@ -20,6 +20,7 @@ import DownloadsTabComponent from "main/components/TabComponent/DownloadsTabComp
 import SectionsTabComponent from "main/components/TabComponent/SectionsTabComponent";
 import { useCourseOptions } from "main/utils/courseOptionsUtils";
 import SlackTabComponent from "main/components/TabComponent/SlackTabComponent";
+import DokkuTabComponent from "main/components/TabComponent/DokkuTabComponent";
 import { slackInfoQueryKey } from "main/utils/slackUtils";
 import {
   COURSE_TABS,
@@ -60,6 +61,9 @@ export default function InstructorCourseShowPage({
   });
   const showSectionsTab = courseOptions.TRANSLATE_SECTIONS === true;
 
+  // The Dokku tab is only shown when the DOKKU_MANAGER course option is enabled.
+  const showDokkuTab = courseOptions.DOKKU_MANAGER === true;
+
   // The Slack tab is only shown when the SLACK_INTEGRATION course option is
   // enabled and a Slack token has been saved. The query key is shared with the
   // Slack card on the Settings tab, so saving a token there shows the tab.
@@ -82,6 +86,7 @@ export default function InstructorCourseShowPage({
   const visibleTabs = COURSE_TABS.filter(
     (tab) =>
       (tab !== "sections" || showSectionsTab) &&
+      (tab !== "dokku" || showDokkuTab) &&
       (tab !== "slack" || showSlackTab) &&
       (tab !== "settings" || showSettingsTab),
   );
@@ -253,6 +258,11 @@ export default function InstructorCourseShowPage({
         <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
           <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
+        {showDokkuTab && (
+          <Tab eventKey={"dokku"} title={"Dokku"} className="pt-2">
+            <DokkuTabComponent courseId={courseId} testIdPrefix={testId} />
+          </Tab>
+        )}
         {showSlackTab && (
           <Tab
             eventKey={"slack"}

@@ -2,12 +2,15 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.DokkuAccountTranslation;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.DokkuAccountTranslationRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,6 +22,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +85,8 @@ public class DokkuController extends ApiController {
 
   @Autowired private TeamRepository teamRepository;
 
+  @Autowired private DokkuAccountTranslationRepository dokkuAccountTranslationRepository;
+
   /**
    * Returns every dokku instance name in order, {@code dokku-00} through {@code dokku-18}.
    *
@@ -100,6 +106,20 @@ public class DokkuController extends ApiController {
   public static String usernameFromEmail(String email) {
     int at = email.indexOf('@');
     return at < 0 ? email : email.substring(0, at);
+  }
+
+  /**
+   * Returns the dokku username for an email: the translated username if there is a {@link
+   * DokkuAccountTranslation} for the email (compared in canonical form), otherwise the part of the
+   * email before the {@code @}.
+   *
+   * @param email the email address
+   * @param translations map from canonical email to dokku username
+   * @return the dokku username
+   */
+  public static String usernameFor(String email, Map<String, String> translations) {
+    String translated = translations.get(CanonicalFormConverter.convertToValidEmail(email));
+    return translated != null ? translated : usernameFromEmail(email);
   }
 
   /**
@@ -135,7 +155,8 @@ public class DokkuController extends ApiController {
               + " and "
               + HIGHEST_DOKKU_NUMBER
               + ") is granted access to dokku-nn; other teams are ignored. Usernames are the part"
-              + " of the email before the @.",
+              + " of the email before the @, unless the email has a dokku account translation, in"
+              + " which case the translated username is used.",
       responses = {
         @ApiResponse(
             responseCode = "200",
@@ -161,8 +182,11 @@ public class DokkuController extends ApiController {
         (outputStream) -> {
           try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
               CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
-            writeStaffLines(csvPrinter, courseStaffRepository.findByCourseId(courseId));
-            writeTeamLines(csvPrinter, teamRepository.findByCourseIdOrderByNameAsc(courseId));
+            Map<String, String> translations = translationsByEmail();
+            writeStaffLines(
+                csvPrinter, courseStaffRepository.findByCourseId(courseId), translations);
+            writeTeamLines(
+                csvPrinter, teamRepository.findByCourseIdOrderByNameAsc(courseId), translations);
           }
         };
 
@@ -174,14 +198,26 @@ public class DokkuController extends ApiController {
         .body(stream);
   }
 
+  /** Loads every {@link DokkuAccountTranslation} into a map from canonical email to username. */
+  private Map<String, String> translationsByEmail() {
+    Map<String, String> translations = new HashMap<>();
+    for (DokkuAccountTranslation translation : dokkuAccountTranslationRepository.findAll()) {
+      translations.put(
+          CanonicalFormConverter.convertToValidEmail(translation.getEmail()),
+          translation.getUsername());
+    }
+    return translations;
+  }
+
   /**
    * Writes one line per staff member per dokku instance: each staff member gets access to every
    * instance from {@link #LOWEST_DOKKU_NUMBER} through {@link #HIGHEST_DOKKU_NUMBER}.
    */
-  private static void writeStaffLines(CSVPrinter csvPrinter, Iterable<CourseStaff> staff)
+  private static void writeStaffLines(
+      CSVPrinter csvPrinter, Iterable<CourseStaff> staff, Map<String, String> translations)
       throws IOException {
     for (CourseStaff member : staff) {
-      String username = usernameFromEmail(member.getEmail());
+      String username = usernameFor(member.getEmail(), translations);
       for (String dokku : allDokkuNames()) {
         csvPrinter.printRecord(username, dokku);
       }
@@ -192,7 +228,8 @@ public class DokkuController extends ApiController {
    * Writes one line per member of each team whose name maps to a dokku instance (see {@link
    * #dokkuNameForTeam(String)}); teams that do not map to a dokku instance are skipped.
    */
-  private static void writeTeamLines(CSVPrinter csvPrinter, Iterable<Team> teams)
+  private static void writeTeamLines(
+      CSVPrinter csvPrinter, Iterable<Team> teams, Map<String, String> translations)
       throws IOException {
     for (Team team : teams) {
       Optional<String> dokku = dokkuNameForTeam(team.getName());
@@ -205,7 +242,7 @@ public class DokkuController extends ApiController {
       }
       for (TeamMember member : members) {
         csvPrinter.printRecord(
-            usernameFromEmail(member.getRosterStudent().getEmail()), dokku.get());
+            usernameFor(member.getRosterStudent().getEmail(), translations), dokku.get());
       }
     }
   }

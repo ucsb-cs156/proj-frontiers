@@ -12,6 +12,7 @@ export const COURSE_TABS = [
   "assignments",
   "jobs",
   "downloads",
+  "dokku",
   "slack",
   "settings",
 ];

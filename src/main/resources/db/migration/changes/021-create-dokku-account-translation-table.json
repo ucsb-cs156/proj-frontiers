@@ -1,0 +1,37 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "021-create-dokku-account-translation-table",
+      "author": "pconrad",
+      "changes": [
+        {
+          "createTable": {
+            "tableName": "DOKKU_ACCOUNT_TRANSLATION",
+            "columns": [
+              {
+                "column": {
+                  "name": "EMAIL",
+                  "type": "VARCHAR(255)",
+                  "constraints": {
+                    "nullable": false,
+                    "primaryKey": true,
+                    "primaryKeyName": "DOKKU_ACCOUNT_TRANSLATION_PK"
+                  }
+                }
+              },
+              {
+                "column": {
+                  "name": "USERNAME",
+                  "type": "VARCHAR(255)",
+                  "constraints": {
+                    "nullable": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

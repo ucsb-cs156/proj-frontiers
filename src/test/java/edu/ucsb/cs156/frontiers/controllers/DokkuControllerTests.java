@@ -18,11 +18,13 @@ import edu.ucsb.cs156.frontiers.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs156.frontiers.annotations.WithStaffCoursePermissions;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.DokkuAccountTranslation;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.DokkuAccountTranslationRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.ArrayList;
@@ -46,6 +48,12 @@ public class DokkuControllerTests extends ControllerTestCase {
   @MockitoBean CourseStaffRepository courseStaffRepository;
 
   @MockitoBean TeamRepository teamRepository;
+
+  @MockitoBean DokkuAccountTranslationRepository dokkuAccountTranslationRepository;
+
+  private static DokkuAccountTranslation translation(String email, String username) {
+    return DokkuAccountTranslation.builder().email(email).username(username).build();
+  }
 
   private static CourseStaff staff(String email) {
     return CourseStaff.builder().email(email).build();
@@ -144,6 +152,20 @@ public class DokkuControllerTests extends ControllerTestCase {
     assertEquals(Optional.empty(), DokkuController.dokkuNameForTeam("s26-0a"));
     assertEquals(Optional.empty(), DokkuController.dokkuNameForTeam("s26_07"));
     assertEquals(Optional.empty(), DokkuController.dokkuNameForTeam("s26-07 "));
+  }
+
+  @Test
+  public void usernameFor_uses_translation_when_present_comparing_canonical_emails() {
+    Map<String, String> translations = Map.of("cgaucho@ucsb.edu", "chris");
+    assertEquals("chris", DokkuController.usernameFor("cgaucho@ucsb.edu", translations));
+    assertEquals("chris", DokkuController.usernameFor("CGaucho@umail.ucsb.edu", translations));
+  }
+
+  @Test
+  public void usernameFor_falls_back_to_email_prefix_when_there_is_no_translation() {
+    Map<String, String> translations = Map.of("cgaucho@ucsb.edu", "chris");
+    assertEquals("other", DokkuController.usernameFor("other@ucsb.edu", translations));
+    assertEquals("other", DokkuController.usernameFor("other@ucsb.edu", Map.of()));
   }
 
   @Test
@@ -295,6 +317,30 @@ public class DokkuControllerTests extends ControllerTestCase {
 
     assertEquals(
         "ok,dokku-05\n", response.getResponse().getContentAsString().replace("\r\n", "\n"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void translations_replace_email_prefix_for_staff_and_students() throws Exception {
+    when(courseRepository.findById(eq(1L)))
+        .thenReturn(Optional.of(Course.builder().id(1L).build()));
+    when(courseStaffRepository.findByCourseId(eq(1L)))
+        .thenReturn(List.of(staff("pconrad@ucsb.edu"), staff("ta@ucsb.edu")));
+    when(teamRepository.findByCourseIdOrderByNameAsc(eq(1L)))
+        .thenReturn(
+            List.of(team("s26-02", member("Alice@umail.ucsb.edu"), member("bob@ucsb.edu"))));
+    when(dokkuAccountTranslationRepository.findAll())
+        .thenReturn(
+            List.of(
+                translation("pconrad@ucsb.edu", "phill"),
+                translation("ALICE@umail.ucsb.edu", "alice_a")));
+
+    MvcResult response = performDownload();
+
+    String expected =
+        expectedStaffLines("phill") + expectedStaffLines("ta") + "alice_a,dokku-02\nbob,dokku-02\n";
+    assertEquals(expected, response.getResponse().getContentAsString().replace("\r\n", "\n"));
+    verify(dokkuAccountTranslationRepository, times(1)).findAll();
   }
 
   @Test
