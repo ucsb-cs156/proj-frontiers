@@ -6,8 +6,10 @@ import { toast } from "react-toastify";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import DokkuAccountTranslationsForm from "main/components/Dokku/DokkuAccountTranslationsForm";
 import DokkuAccountTranslationsTable from "main/components/Dokku/DokkuAccountTranslationsTable";
+import DokkuUsersListHeaderForm from "main/components/Dokku/DokkuUsersListHeaderForm";
 import {
   dokkuTranslationsQueryKey,
+  dokkuUsersListHeaderQueryKey,
   dokkuUsersListUrl,
   onDokkuTranslationMutationError,
 } from "main/utils/dokkuUtils";
@@ -52,6 +54,43 @@ export default function DokkuTabComponent({ courseId, testIdPrefix }) {
 
   const handleCreateSubmit = (translation) => {
     createMutation.mutate(translation);
+  };
+
+  // The header is plain text with line breaks, so it travels in the request
+  // body rather than as a query parameter.
+  const headerQueryKey = dokkuUsersListHeaderQueryKey(courseId);
+  const { data: usersListHeader } = useBackend(
+    [headerQueryKey],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    {
+      method: "GET",
+      url: "/api/dokku/users_list_header",
+      params: { courseId },
+    },
+    "",
+    true,
+  );
+
+  const objectToAxiosParamsHeader = (formData) => ({
+    url: "/api/dokku/users_list_header",
+    method: "PUT",
+    params: { courseId: courseId },
+    headers: { "Content-Type": "text/plain" },
+    data: formData.dokkuUsersListHeader,
+  });
+
+  const onHeaderSaved = () => {
+    toast("Dokku users list header saved.");
+  };
+
+  const headerMutation = useBackendMutation(
+    objectToAxiosParamsHeader,
+    { onSuccess: onHeaderSaved },
+    [headerQueryKey],
+  );
+
+  const handleHeaderSubmit = (formData) => {
+    headerMutation.mutate(formData);
   };
 
   return (
@@ -124,6 +163,23 @@ export default function DokkuTabComponent({ courseId, testIdPrefix }) {
               testIdPrefix={`${testIdPrefix}-dokku-translations-table`}
             />
           </Row>
+        </Card.Body>
+      </Card>
+
+      <Card className="mt-3">
+        <Card.Header as="h5">Dokku Users List Header</Card.Header>
+        <Card.Body>
+          <Card.Text data-testid={`${testIdPrefix}-dokku-header-text`}>
+            Lines entered here are placed, exactly as written, at the very start
+            of dokku_users_list.csv, before the lines generated for staff and
+            teams. Use it for people who need dokku access but are not part of
+            this course, such as ECI staff or people working on projects outside
+            the course enrollment. One username,dokku-nn entry per line.
+          </Card.Text>
+          <DokkuUsersListHeaderForm
+            initialContents={usersListHeader}
+            submitAction={handleHeaderSubmit}
+          />
         </Card.Body>
       </Card>
     </div>

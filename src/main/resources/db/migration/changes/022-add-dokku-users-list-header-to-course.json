@@ -1,0 +1,23 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "022-add-dokku-users-list-header-to-course",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "COURSE",
+            "columns": [
+              {
+                "column": {
+                  "name": "DOKKU_USERS_LIST_HEADER",
+                  "type": "VARCHAR(1024)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

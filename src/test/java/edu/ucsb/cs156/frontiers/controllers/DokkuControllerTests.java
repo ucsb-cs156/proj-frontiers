@@ -8,7 +8,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
@@ -341,6 +344,207 @@ public class DokkuControllerTests extends ControllerTestCase {
         expectedStaffLines("phill") + expectedStaffLines("ta") + "alice_a,dokku-02\nbob,dokku-02\n";
     assertEquals(expected, response.getResponse().getContentAsString().replace("\r\n", "\n"));
     verify(dokkuAccountTranslationRepository, times(1)).findAll();
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void
+      header_lines_come_first_verbatim_with_blank_lines_dropped_and_line_endings_normalized()
+          throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .dokkuUsersListHeader("eci,dokku-00\r\n\n  eci,dokku-01  \r\n\r\nguest,dokku-05\n")
+            .build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of(staff("staff@ucsb.edu")));
+    when(teamRepository.findByCourseIdOrderByNameAsc(eq(1L)))
+        .thenReturn(List.of(team("s26-01", member("student@ucsb.edu"))));
+
+    MvcResult response = performDownload();
+
+    String expected =
+        "eci,dokku-00\neci,dokku-01\nguest,dokku-05\n"
+            + expectedStaffLines("staff")
+            + "student,dokku-01\n";
+    String actual = response.getResponse().getContentAsString();
+    assertTrue(actual.startsWith("eci,dokku-00\r\neci,dokku-01\r\n"));
+    assertEquals(expected, actual.replace("\r\n", "\n"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void header_that_is_only_whitespace_adds_no_lines() throws Exception {
+    Course course = Course.builder().id(1L).dokkuUsersListHeader("  \n\r\n \n").build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseStaffRepository.findByCourseId(eq(1L))).thenReturn(List.of());
+    when(teamRepository.findByCourseIdOrderByNameAsc(eq(1L)))
+        .thenReturn(List.of(team("s26-01", member("student@ucsb.edu"))));
+
+    MvcResult response = performDownload();
+
+    assertEquals(
+        "student,dokku-01\n", response.getResponse().getContentAsString().replace("\r\n", "\n"));
+  }
+
+  // ---- users_list_header ----
+
+  @Test
+  public void logged_out_users_cannot_get_or_put_the_header() throws Exception {
+    mockMvc.perform(get("/api/dokku/users_list_header?courseId=1")).andExpect(status().is(403));
+    mockMvc
+        .perform(
+            put("/api/dokku/users_list_header?courseId=1")
+                .with(csrf())
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("x,dokku-00"))
+        .andExpect(status().is(403));
+    verify(courseRepository, never()).findById(any());
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void users_without_course_permissions_cannot_get_or_put_the_header() throws Exception {
+    mockMvc.perform(get("/api/dokku/users_list_header?courseId=1")).andExpect(status().is(403));
+    mockMvc
+        .perform(
+            put("/api/dokku/users_list_header?courseId=1")
+                .with(csrf())
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("x,dokku-00"))
+        .andExpect(status().is(403));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void get_header_returns_404_when_course_does_not_exist() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/dokku/users_list_header?courseId=1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    assertEquals(
+        Map.of("message", "Course with id 1 not found", "type", "EntityNotFoundException"),
+        mapper.readValue(
+            response.getResponse().getContentAsString(),
+            new TypeReference<Map<String, String>>() {}));
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void get_header_returns_empty_text_when_none_is_set() throws Exception {
+    when(courseRepository.findById(eq(1L)))
+        .thenReturn(Optional.of(Course.builder().id(1L).build()));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/dokku/users_list_header?courseId=1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("", response.getResponse().getContentAsString());
+    assertTrue(response.getResponse().getContentType().startsWith("text/plain"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void get_header_returns_the_header_text_with_line_breaks() throws Exception {
+    when(courseRepository.findById(eq(1L)))
+        .thenReturn(
+            Optional.of(
+                Course.builder().id(1L).dokkuUsersListHeader("a,dokku-00\nb,dokku-01").build()));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/dokku/users_list_header?courseId=1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("a,dokku-00\nb,dokku-01", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_header_returns_404_when_course_does_not_exist() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            put("/api/dokku/users_list_header?courseId=1")
+                .with(csrf())
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("x,dokku-00"))
+        .andExpect(status().isNotFound());
+
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_header_saves_the_text_verbatim_and_returns_it() throws Exception {
+    Course course = Course.builder().id(1L).dokkuUsersListHeader("old").build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/dokku/users_list_header?courseId=1")
+                    .with(csrf())
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .content("eci,dokku-00\n  eci,dokku-01\n"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals("eci,dokku-00\n  eci,dokku-01\n", course.getDokkuUsersListHeader());
+    verify(courseRepository, times(1)).save(eq(course));
+    assertEquals("eci,dokku-00\n  eci,dokku-01\n", response.getResponse().getContentAsString());
+    assertTrue(response.getResponse().getContentType().startsWith("text/plain"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_header_with_blank_body_clears_the_header() throws Exception {
+    Course course = Course.builder().id(1L).dokkuUsersListHeader("old").build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/dokku/users_list_header?courseId=1")
+                    .with(csrf())
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .content("  \n "))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(null, course.getDokkuUsersListHeader());
+    verify(courseRepository, times(1)).save(eq(course));
+    assertEquals("", response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_header_with_no_body_clears_the_header() throws Exception {
+    Course course = Course.builder().id(1L).dokkuUsersListHeader("old").build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/dokku/users_list_header?courseId=1")
+                    .with(csrf())
+                    .contentType(MediaType.TEXT_PLAIN))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(null, course.getDokkuUsersListHeader());
+    verify(courseRepository, times(1)).save(eq(course));
+    assertEquals("", response.getResponse().getContentAsString());
   }
 
   @Test

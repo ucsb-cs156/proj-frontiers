@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { toast } from "react-toastify";
 import {
   dokkuTranslationsQueryKey,
+  dokkuUsersListHeaderQueryKey,
   dokkuUsersListUrl,
   onDokkuTranslationMutationError,
 } from "main/utils/dokkuUtils";
@@ -21,6 +22,15 @@ describe("dokkuUtils tests", () => {
     );
     expect(dokkuTranslationsQueryKey("12")).toBe(
       "/api/dokku/translations?courseId=12",
+    );
+  });
+
+  test("dokkuUsersListHeaderQueryKey includes the course id", () => {
+    expect(dokkuUsersListHeaderQueryKey(7)).toBe(
+      "/api/dokku/users_list_header?courseId=7",
+    );
+    expect(dokkuUsersListHeaderQueryKey("12")).toBe(
+      "/api/dokku/users_list_header?courseId=12",
     );
   });
 

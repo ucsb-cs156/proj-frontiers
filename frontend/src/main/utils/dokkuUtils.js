@@ -28,3 +28,11 @@ export function onDokkuTranslationMutationError(error) {
     toast(`${error}`);
   }
 }
+
+/**
+ * Query key for a course's dokku users list header (the extra lines placed at
+ * the start of dokku_users_list.csv).
+ */
+export function dokkuUsersListHeaderQueryKey(courseId) {
+  return `/api/dokku/users_list_header?courseId=${courseId}`;
+}

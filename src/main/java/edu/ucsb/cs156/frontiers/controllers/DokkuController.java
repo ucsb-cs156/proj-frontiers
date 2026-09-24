@@ -37,6 +37,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -174,14 +176,16 @@ public class DokkuController extends ApiController {
       @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
           Long courseId)
       throws EntityNotFoundException {
-    courseRepository
-        .findById(courseId)
-        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
     StreamingResponseBody stream =
         (outputStream) -> {
           try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
               CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+            writeHeaderLines(writer, course.getDokkuUsersListHeader());
             Map<String, String> translations = translationsByEmail();
             writeStaffLines(
                 csvPrinter, courseStaffRepository.findByCourseId(courseId), translations);
@@ -196,6 +200,65 @@ public class DokkuController extends ApiController {
         .header(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
         .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
         .body(stream);
+  }
+
+  @Operation(
+      summary = "Get the extra lines placed at the start of dokku_users_list.csv for a course",
+      description =
+          "Returns the course's dokkuUsersListHeader as plain text, or an empty body if none is"
+              + " set.")
+  @GetMapping(value = "/users_list_header", produces = "text/plain")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public String getUsersListHeader(
+      @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
+          Long courseId)
+      throws EntityNotFoundException {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    return course.getDokkuUsersListHeader() == null ? "" : course.getDokkuUsersListHeader();
+  }
+
+  @Operation(
+      summary = "Set the extra lines placed at the start of dokku_users_list.csv for a course",
+      description =
+          "The request body (plain text, line breaks preserved) replaces the course's"
+              + " dokkuUsersListHeader. A blank body clears it. Returns the saved text.")
+  @PutMapping(value = "/users_list_header", consumes = "text/plain", produces = "text/plain")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  public String setUsersListHeader(
+      @Parameter(name = "courseId", description = "course id", example = "1") @RequestParam
+          Long courseId,
+      @Parameter(name = "header") @RequestBody(required = false) String header)
+      throws EntityNotFoundException {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    String normalized = header == null || header.isBlank() ? null : header;
+    course.setDokkuUsersListHeader(normalized);
+    courseRepository.save(course);
+    return normalized == null ? "" : normalized;
+  }
+
+  /**
+   * Writes the course's dokkuUsersListHeader before any generated lines: one line per non-blank
+   * line of the header, stripped, with line endings normalized to the CSV record separator. The
+   * lines are written verbatim (not as quoted CSV fields), since each is already a
+   * username,dokku-nn entry. Nothing is written when the header is null.
+   */
+  private static void writeHeaderLines(Writer writer, String header) throws IOException {
+    if (header == null) {
+      return;
+    }
+    for (String line : header.split("\\R")) {
+      String trimmed = line.strip();
+      if (!trimmed.isEmpty()) {
+        writer.write(trimmed);
+        writer.write(CSVFormat.DEFAULT.getRecordSeparator());
+      }
+    }
   }
 
   /** Loads every {@link DokkuAccountTranslation} into a map from canonical email to username. */

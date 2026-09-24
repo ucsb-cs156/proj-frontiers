@@ -13,6 +13,13 @@ const Template = (args) => {
 };
 
 const mutationHandlers = [
+  http.put("/api/dokku/users_list_header", async ({ request }) => {
+    const body = await request.text();
+    window.alert(
+      "Invoked PUT with URL: " + request.url + " and body:\n" + body,
+    );
+    return HttpResponse.text(body, { status: 200 });
+  }),
   http.post("/api/dokku/translations", ({ request }) => {
     const url = new URL(request.url);
     window.alert(
@@ -49,6 +56,9 @@ Empty.parameters = {
     http.get("/api/dokku/translations", () => {
       return HttpResponse.json([], { status: 200 });
     }),
+    http.get("/api/dokku/users_list_header", () => {
+      return HttpResponse.text("", { status: 200 });
+    }),
     ...mutationHandlers,
   ],
 };
@@ -65,6 +75,9 @@ ThreeTranslations.parameters = {
         dokkuAccountTranslationsFixtures.threeTranslations,
         { status: 200 },
       );
+    }),
+    http.get("/api/dokku/users_list_header", () => {
+      return HttpResponse.text("eci,dokku-00\neci,dokku-01", { status: 200 });
     }),
     ...mutationHandlers,
   ],

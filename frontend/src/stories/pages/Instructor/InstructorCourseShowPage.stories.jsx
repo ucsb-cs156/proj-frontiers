@@ -369,6 +369,18 @@ ExampleCourseWithDokkuTab.parameters = {
           { status: 200 },
         );
       }),
+      http.get("/api/dokku/users_list_header", () => {
+        return HttpResponse.text("eci,dokku-00\neci,dokku-01", {
+          status: 200,
+        });
+      }),
+      http.put("/api/dokku/users_list_header", async ({ request }) => {
+        const body = await request.text();
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url} with body:\n${body}`,
+        );
+        return HttpResponse.text(body, { status: 200 });
+      }),
       http.post("/api/dokku/translations", ({ request }) => {
         window.alert(
           `Would have made HTTP request: ${request.method} ${request.url}`,

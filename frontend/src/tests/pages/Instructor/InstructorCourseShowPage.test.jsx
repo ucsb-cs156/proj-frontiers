@@ -952,6 +952,7 @@ describe("InstructorCourseShowPage tests", () => {
       axiosMock
         .onGet("/api/dokku/translations")
         .reply(200, dokkuAccountTranslationsFixtures.threeTranslations);
+      axiosMock.onGet("/api/dokku/users_list_header").reply(200, "");
     };
 
     const renderPage = () =>
@@ -1397,6 +1398,7 @@ describe("InstructorCourseShowPage tests", () => {
       });
       axiosMock.onGet("/api/courses/7/sections").reply(200, []);
       axiosMock.onGet("/api/dokku/translations").reply(200, []);
+      axiosMock.onGet("/api/dokku/users_list_header").reply(200, "");
       axiosMock
         .onGet("/api/courses/slack/info?courseId=7")
         .reply(200, slackFixtures.connectedInfo);

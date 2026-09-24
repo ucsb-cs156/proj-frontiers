@@ -25,6 +25,10 @@ const formId = "DokkuAccountTranslationsForm";
 const translationsUrl = "/api/dokku/translations";
 const translationsGetHistory = () =>
   axiosMock.history.get.filter((request) => request.url === translationsUrl);
+const headerUrl = "/api/dokku/users_list_header";
+const headerGetHistory = () =>
+  axiosMock.history.get.filter((request) => request.url === headerUrl);
+const headerFormId = "DokkuUsersListHeaderForm";
 
 const renderTab = () =>
   render(
@@ -39,6 +43,7 @@ describe("DokkuTabComponent tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
     vi.resetAllMocks();
+    axiosMock.onGet(headerUrl).reply(200, "");
   });
 
   test("renders the download card, the translations card and the table from the backend", async () => {
@@ -298,6 +303,87 @@ describe("DokkuTabComponent tests", () => {
       email: "ldelplaya@ucsb.edu",
     });
     await waitFor(() => expect(translationsGetHistory().length).toBe(2));
+  });
+
+  test("renders the header card with the header loaded from the backend", async () => {
+    axiosMock.onGet(translationsUrl).reply(200, []);
+    axiosMock.onGet(headerUrl).reply(200, "eci,dokku-00\neci,dokku-01");
+
+    renderTab();
+
+    expect(screen.getByText("Dokku Users List Header")).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-dokku-header-text`)).toHaveTextContent(
+      "Lines entered here are placed, exactly as written, at the very start of " +
+        "dokku_users_list.csv, before the lines generated for staff and teams. Use it " +
+        "for people who need dokku access but are not part of this course, such as ECI " +
+        "staff or people working on projects outside the course enrollment. One " +
+        "username,dokku-nn entry per line.",
+    );
+    expect(
+      screen.getByTestId(`${headerFormId}-dokkuUsersListHeader`),
+    ).toHaveValue("");
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${headerFormId}-dokkuUsersListHeader`),
+      ).toHaveValue("eci,dokku-00\neci,dokku-01"),
+    );
+    expect(headerGetHistory().length).toBe(1);
+    expect(headerGetHistory()[0].params).toEqual({ courseId: 7 });
+  });
+
+  test("saving the header sends it as a text/plain PUT body, toasts and refetches", async () => {
+    axiosMock.onGet(translationsUrl).reply(200, []);
+    axiosMock.onGet(headerUrl).reply(200, "old,dokku-00");
+    axiosMock.onPut(headerUrl).reply(200, "new,dokku-00\nnew,dokku-01");
+
+    renderTab();
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${headerFormId}-dokkuUsersListHeader`),
+      ).toHaveValue("old,dokku-00"),
+    );
+
+    fireEvent.change(
+      screen.getByTestId(`${headerFormId}-dokkuUsersListHeader`),
+      { target: { value: "new,dokku-00\nnew,dokku-01" } },
+    );
+    fireEvent.click(screen.getByTestId(`${headerFormId}-submit`));
+
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].url).toBe(headerUrl);
+    expect(axiosMock.history.put[0].params).toEqual({ courseId: 7 });
+    expect(axiosMock.history.put[0].data).toBe("new,dokku-00\nnew,dokku-01");
+    expect(axiosMock.history.put[0].headers["Content-Type"]).toBe("text/plain");
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith("Dokku users list header saved."),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(headerGetHistory().length).toBe(2));
+    expect(translationsGetHistory().length).toBe(1);
+  });
+
+  test("a failed header save toasts the error", async () => {
+    axiosMock.onGet(translationsUrl).reply(200, []);
+    axiosMock.onPut(headerUrl).reply(500);
+
+    renderTab();
+
+    fireEvent.change(
+      screen.getByTestId(`${headerFormId}-dokkuUsersListHeader`),
+      { target: { value: "x,dokku-00" } },
+    );
+    fireEvent.click(screen.getByTestId(`${headerFormId}-submit`));
+
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "Error: Request failed with status code 500",
+      ),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
   });
 
   test("does not toast when the translations request fails", async () => {

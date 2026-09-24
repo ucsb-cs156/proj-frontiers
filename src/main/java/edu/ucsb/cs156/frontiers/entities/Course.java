@@ -45,6 +45,13 @@ public class Course {
 
   private boolean hideBasePermissionWarning;
 
+  /**
+   * Extra lines placed at the very start of dokku_users_list.csv, e.g. for people who need dokku
+   * access but are not part of the course. One username,dokku-nn entry per line.
+   */
+  @Column(length = 1024)
+  private String dokkuUsersListHeader;
+
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
