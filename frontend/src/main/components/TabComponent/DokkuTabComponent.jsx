@@ -61,8 +61,8 @@ export default function DokkuTabComponent({ courseId, testIdPrefix }) {
   const headerQueryKey = dokkuUsersListHeaderQueryKey(courseId);
   const { data: usersListHeader } = useBackend(
     [headerQueryKey],
-    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
     {
+      // Stryker disable next-line StringLiteral : GET and empty string are equivalent
       method: "GET",
       url: "/api/dokku/users_list_header",
       params: { courseId },

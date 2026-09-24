@@ -386,6 +386,19 @@ describe("DokkuTabComponent tests", () => {
     expect(toast).toHaveBeenCalledTimes(1);
   });
 
+  test("does not toast when the header request fails, and leaves the textarea empty", async () => {
+    axiosMock.onGet(translationsUrl).reply(200, []);
+    axiosMock.onGet(headerUrl).reply(500);
+
+    renderTab();
+
+    await waitFor(() => expect(headerGetHistory().length).toBe(1));
+    expect(toast).not.toHaveBeenCalled();
+    expect(
+      screen.getByTestId(`${headerFormId}-dokkuUsersListHeader`),
+    ).toHaveValue("");
+  });
+
   test("does not toast when the translations request fails", async () => {
     axiosMock.onGet(translationsUrl).reply(500);
 
