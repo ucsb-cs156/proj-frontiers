@@ -422,6 +422,118 @@ describe("StaffTabComponent Tests", () => {
     });
   });
 
+  test("shows the Emails card, with the STAFF emails of this course, below the staff table", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
+    axiosMock
+      .onGet("/api/courses/emails")
+      .reply(200, "a@ucsb.edu\r\nb@ucsb.edu");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const cardId = `${testId}-StaffEmailsCard`;
+    const card = await screen.findByTestId(`${cardId}-card`);
+    expect(screen.getByRole("button", { name: "Emails" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId(`${cardId}-emails`)).toHaveValue(
+        "a@ucsb.edu\nb@ucsb.edu",
+      ),
+    );
+
+    const emailsRequests = axiosMock.history.get.filter(
+      (request) => request.url === "/api/courses/emails",
+    );
+    expect(emailsRequests.length).toBe(1);
+    expect(emailsRequests[0].params).toEqual({
+      courseId: 7,
+      type: "STAFF",
+      format: "ONE_PER_LINE",
+    });
+    expect(emailsRequests[0].params).not.toHaveProperty("team");
+
+    // the card comes after the staff table
+    const table = screen.getByTestId(
+      "InstructorCourseShowPage-CourseStaffTable",
+    );
+    expect(
+      table.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  test("shows the Emails card to non-instructors too", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
+    axiosMock.onGet("/api/courses/emails").reply(200, "a@ucsb.edu");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+          isInstructor={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByTestId(`${testId}-StaffEmailsCard-card`),
+    ).toBeInTheDocument();
+  });
+
+  test("adding a staff member refetches the emails", async () => {
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
+    axiosMock.onGet("/api/courses/emails").reply(200, "a@ucsb.edu");
+    axiosMock.onPost("/api/coursestaff/post").reply(200);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <StaffTabComponent
+          courseId={7}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.instructorUser}
+        />
+      </QueryClientProvider>,
+    );
+
+    const emailsRequests = () =>
+      axiosMock.history.get.filter(
+        (request) => request.url === "/api/courses/emails",
+      );
+    await waitFor(() => expect(emailsRequests().length).toBe(1));
+
+    fireEvent.click(await screen.findByTestId(`${testId}-post-button`));
+    await screen.findByTestId("CourseStaffForm-firstName");
+    fireEvent.change(screen.getByTestId("CourseStaffForm-firstName"), {
+      target: { value: "Chris" },
+    });
+    fireEvent.change(screen.getByTestId("CourseStaffForm-lastName"), {
+      target: { value: "Gaucho" },
+    });
+    fireEvent.change(screen.getByTestId("CourseStaffForm-email"), {
+      target: { value: "cgaucho@ucsb.edu" },
+    });
+    fireEvent.click(screen.getByTestId("CourseStaffForm-submit"));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    await waitFor(() => expect(emailsRequests().length).toBe(2));
+  });
+
   test("Upload Staff CSV button opens modal", async () => {
     axiosMock
       .onGet("/api/coursestaff/course?courseId=1")
@@ -512,6 +624,7 @@ describe("StaffTabComponent Tests", () => {
     axiosMock
       .onGet("/api/coursestaff/course?courseId=7")
       .reply(200, courseStaffFixtures.threeStaff);
+    axiosMock.onGet("/api/courses/emails").reply(200, "a@ucsb.edu");
     axiosMock.onPost("/api/coursestaff/upload/csv").reply(200, { count: 2 });
 
     render(
@@ -530,6 +643,11 @@ describe("StaffTabComponent Tests", () => {
     const updateCountBefore = queryClientSpecific.getQueryState([
       "/api/coursestaff/course?courseId=7",
     ]).dataUpdateCount;
+    const emailsRequests = () =>
+      axiosMock.history.get.filter(
+        (request) => request.url === "/api/courses/emails",
+      );
+    const emailsRequestsBefore = emailsRequests().length;
 
     fireEvent.click(csvButton);
     await waitFor(() => {
@@ -562,6 +680,10 @@ describe("StaffTabComponent Tests", () => {
         ]).dataUpdateCount,
       ).toEqual(updateCountBefore + 1);
     });
+    // the Emails card shows the staff, so it is refetched too
+    await waitFor(() =>
+      expect(emailsRequests().length).toBe(emailsRequestsBefore + 1),
+    );
 
     await waitFor(() => {
       expect(

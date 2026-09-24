@@ -8,6 +8,7 @@ import Modal from "react-bootstrap/Modal";
 import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import { toast } from "react-toastify";
 import CourseStaffDeleteModal from "main/components/CourseStaff/CourseStaffDeleteModal";
+import { courseEmailsQueryKey } from "main/utils/courseEmailsUtils";
 
 export default function CourseStaffTable({
   staff,
@@ -67,7 +68,10 @@ export default function CourseStaffTable({
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess },
-    [`/api/coursestaff/course?courseId=${courseId}`],
+    [
+      `/api/coursestaff/course?courseId=${courseId}`,
+      courseEmailsQueryKey(courseId),
+    ],
   );
 
   // Stryker disable next-line all
@@ -86,7 +90,10 @@ export default function CourseStaffTable({
   const editMutation = useBackendMutation(
     cellToAxiosParamsEdit,
     { onSuccess: onEditSuccess },
-    [`/api/coursestaff/course?courseId=${courseId}`],
+    [
+      `/api/coursestaff/course?courseId=${courseId}`,
+      courseEmailsQueryKey(courseId),
+    ],
   );
 
   const editCallback = (cell) => {

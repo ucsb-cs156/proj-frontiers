@@ -16,6 +16,8 @@ import CourseStaffForm from "main/components/CourseStaff/CourseStaffForm";
 import CourseStaffCSVUploadForm from "main/components/CourseStaff/CourseStaffCSVUploadForm";
 import CourseStaffTable from "main/components/CourseStaff/CourseStaffTable";
 import Modal from "react-bootstrap/Modal";
+import CourseEmailsCard from "main/components/Emails/CourseEmailsCard";
+import { courseEmailsQueryKey } from "main/utils/courseEmailsUtils";
 
 export default function StaffTabComponent({
   courseId,
@@ -68,7 +70,10 @@ export default function StaffTabComponent({
   const staffPostMutation = useBackendMutation(
     objectToAxiosParamsPost,
     { onSuccess: () => onSuccessStaff(showPostModal) },
-    [`/api/coursestaff/course?courseId=${courseId}`],
+    [
+      `/api/coursestaff/course?courseId=${courseId}`,
+      courseEmailsQueryKey(courseId),
+    ],
   );
 
   const staffCsvMutation = useBackendMutation(
@@ -82,7 +87,10 @@ export default function StaffTabComponent({
         setCsvModal(false);
       },
     },
-    [`/api/coursestaff/course?courseId=${courseId}`],
+    [
+      `/api/coursestaff/course?courseId=${courseId}`,
+      courseEmailsQueryKey(courseId),
+    ],
   );
 
   const handlePostSubmit = (staff) => {
@@ -232,6 +240,11 @@ export default function StaffTabComponent({
           isInstructor={isInstructor}
         />
       </Row>
+      <CourseEmailsCard
+        courseId={courseId}
+        type="STAFF"
+        testIdPrefix={`${testIdPrefix}-StaffEmailsCard`}
+      />
     </div>
   );
 }

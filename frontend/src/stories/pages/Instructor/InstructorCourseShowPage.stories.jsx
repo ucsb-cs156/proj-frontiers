@@ -59,6 +59,14 @@ const basicHandlers = [
       status: 200,
     });
   }),
+  http.get("/api/courses/emails", ({ request }) => {
+    const format = new URL(request.url).searchParams.get("format");
+    const emails = courseStaff.map((staff) => staff.email);
+    return HttpResponse.text(
+      format === "COMMA_SEPARATED" ? emails.join(",") : emails.join("\r\n"),
+      { status: 200 },
+    );
+  }),
   http.post("/api/repos/createRepos", ({ request }) => {
     window.alert(
       `Would have made HTTP request: ${request.method} ${request.url}`,
