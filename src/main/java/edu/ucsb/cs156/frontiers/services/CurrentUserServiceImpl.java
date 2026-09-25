@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.services;
 
+import edu.ucsb.cs156.frontiers.config.ApiKeyToken;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.models.CurrentUser;
 import edu.ucsb.cs156.frontiers.repositories.UserRepository;
@@ -57,6 +58,10 @@ public class CurrentUserServiceImpl extends CurrentUserService {
     return currentUser;
   }
 
+  public User getApiKeyAuthenticatedUser(ApiKeyToken token) {
+    return userRepository.findById(token.getPrincipal().getId()).orElse(null);
+  }
+
   /**
    * This method returns the current user as a User object.
    *
@@ -67,6 +72,8 @@ public class CurrentUserServiceImpl extends CurrentUserService {
     Authentication authentication = securityContext.getAuthentication();
     if (authentication instanceof OAuth2AuthenticationToken) {
       return getOAuth2AuthenticatedUser(securityContext, authentication);
+    } else if (authentication instanceof ApiKeyToken token) {
+      return getApiKeyAuthenticatedUser(token);
     }
     return null;
   }

@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.config;
 
+import edu.ucsb.cs156.frontiers.interceptors.ApiKeyInterceptor;
 import edu.ucsb.cs156.frontiers.interceptors.RoleUpdateInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -14,5 +15,6 @@ public class WebConfig implements WebMvcConfigurer {
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(roleUpdateInterceptor);
+    registry.addInterceptor(new ApiKeyInterceptor());
   }
 }
