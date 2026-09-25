@@ -19,22 +19,21 @@ import org.springframework.web.servlet.HandlerInterceptor;
       throws IOException {
 
 <span class="fc" id="L21">    Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="pc bpc" id="L22" title="1 of 2 branches missed.">    if (auth == null</span>
-<span class="fc bfc" id="L23" title="All 2 branches covered.">        || auth.getAuthorities().stream().noneMatch(a -&gt; a.getAuthority().equals(&quot;ROLE_API_KEY&quot;))) {</span>
-<span class="fc" id="L24">      return true;</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">    if (auth.getAuthorities().stream().noneMatch(a -&gt; a.getAuthority().equals(&quot;ROLE_API_KEY&quot;))) {</span>
+<span class="fc" id="L23">      return true;</span>
     }
-<span class="fc bfc" id="L26" title="All 2 branches covered.">    if (!(handler instanceof HandlerMethod commonHandler)) {</span>
-<span class="fc" id="L27">      return true;</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">    if (!(handler instanceof HandlerMethod commonHandler)) {</span>
+<span class="fc" id="L26">      return true;</span>
     }
-<span class="fc" id="L29">    if (AnnotatedElementUtils.findAllMergedAnnotations(</span>
-<span class="fc" id="L30">            commonHandler.getMethod(), AllowApiKeyAccess.class)</span>
-<span class="fc bfc" id="L31" title="All 2 branches covered.">        .isEmpty()) {</span>
-<span class="fc" id="L32">      response.sendError(</span>
+<span class="fc" id="L28">    if (AnnotatedElementUtils.findAllMergedAnnotations(</span>
+<span class="fc" id="L29">            commonHandler.getMethod(), AllowApiKeyAccess.class)</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        .isEmpty()) {</span>
+<span class="fc" id="L31">      response.sendError(</span>
           HttpServletResponse.SC_FORBIDDEN,
           &quot;Attempting to gain access to an API endpoint that does not allow an API key&quot;);
-<span class="fc" id="L35">      return false;</span>
+<span class="fc" id="L34">      return false;</span>
     }
-<span class="fc" id="L37">    return true;</span>
+<span class="fc" id="L36">    return true;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
