@@ -19,8 +19,7 @@ public class ApiKeyInterceptor implements HandlerInterceptor {
       throws IOException {
 
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null
-        || auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ROLE_API_KEY"))) {
+    if (auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ROLE_API_KEY"))) {
       return true;
     }
     if (!(handler instanceof HandlerMethod commonHandler)) {
