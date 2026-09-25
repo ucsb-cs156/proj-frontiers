@@ -10,6 +10,7 @@ export const COURSE_TABS = [
   "teams",
   "sections",
   "assignments",
+  "new-assignments",
   "jobs",
   "downloads",
   "dokku",

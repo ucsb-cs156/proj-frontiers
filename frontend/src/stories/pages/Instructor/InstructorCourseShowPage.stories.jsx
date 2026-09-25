@@ -16,6 +16,7 @@ import { showOrganizationAgeWarning } from "fixtures/courseWarningFixtures";
 import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { dokkuAccountTranslationsFixtures } from "fixtures/dokkuAccountTranslationsFixtures";
+import { newAssignmentsFixtures } from "fixtures/newAssignmentsFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -402,6 +403,68 @@ ExampleCourseWithDokkuTab.parameters = {
         return HttpResponse.json({}, { status: 200 });
       }),
       http.delete("/api/dokku/translations", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json({}, { status: 200 });
+      }),
+    ],
+  },
+};
+
+export const ExampleCourseWithNewAssignmentsTab = Template.bind({});
+ExampleCourseWithNewAssignmentsTab.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseWithNewAssignmentsTab.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/jobs/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/course/options", () => {
+        return HttpResponse.json(
+          {
+            ENABLE_CANVAS: false,
+            TRANSLATE_SECTIONS: false,
+            DOKKU_MANAGER: false,
+            ENABLE_API_KEYS: false,
+            NEW_ASSIGNMENT_FEATURES: true,
+          },
+          { status: 200 },
+        );
+      }),
+      http.get("/api/assignments", () => {
+        return HttpResponse.json(newAssignmentsFixtures.threeAssignments, {
+          status: 200,
+        });
+      }),
+      http.post("/api/assignments/post", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json(newAssignmentsFixtures.savedWithJob, {
+          status: 200,
+        });
+      }),
+      http.put("/api/assignments/put", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json(newAssignmentsFixtures.savedWithJob, {
+          status: 200,
+        });
+      }),
+      http.delete("/api/assignments/:id", ({ request }) => {
         window.alert(
           `Would have made HTTP request: ${request.method} ${request.url}`,
         );

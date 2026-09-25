@@ -1,0 +1,333 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { toast } from "react-toastify";
+
+import NewAssignmentsTable from "main/components/NewAssignments/NewAssignmentsTable";
+import { newAssignmentsFixtures } from "fixtures/newAssignmentsFixtures";
+
+vi.mock("react-toastify", async (importOriginal) => {
+  const mockToast = vi.fn();
+  return {
+    ...(await importOriginal()),
+    toast: mockToast,
+  };
+});
+
+const axiosMock = new AxiosMockAdapter(axios);
+const queryClient = new QueryClient();
+const testId = "NewAssignmentsTable";
+const individualForm = "NewIndividualAssignmentForm";
+const teamForm = "NewTeamAssignmentForm";
+
+const renderTable = (props = {}) =>
+  render(
+    <QueryClientProvider client={queryClient}>
+      <NewAssignmentsTable
+        assignments={newAssignmentsFixtures.threeAssignments}
+        courseId={1}
+        {...props}
+      />
+    </QueryClientProvider>,
+  );
+
+const cell = (row, col) =>
+  screen.getByTestId(`${testId}-cell-row-${row}-col-${col}`);
+
+describe("NewAssignmentsTable tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    queryClient.clear();
+    vi.resetAllMocks();
+  });
+
+  test("renders headers, rows with readable labels, and buttons", () => {
+    renderTable();
+
+    expect(screen.getByTestId(testId)).toBeInTheDocument();
+    const headers = {
+      repoPrefix: "Repository Prefix",
+      asnType: "Type",
+      visibility: "Visibility",
+      permission: "Permission",
+      createReposFor: "Repositories For",
+      teamRegex: "Team Regex",
+      Edit: "Edit",
+      Delete: "Delete",
+    };
+    Object.entries(headers).forEach(([column, text]) => {
+      expect(
+        screen.getByTestId(`${testId}-header-${column}`),
+      ).toHaveTextContent(text);
+    });
+
+    expect(cell(0, "repoPrefix")).toHaveTextContent("lab01");
+    expect(cell(0, "asnType")).toHaveTextContent("Individual");
+    expect(cell(0, "visibility")).toHaveTextContent("Public");
+    expect(cell(0, "permission")).toHaveTextContent("Maintain");
+    expect(cell(0, "createReposFor")).toHaveTextContent("Students Only");
+    expect(cell(0, "teamRegex")).toHaveTextContent("");
+
+    expect(cell(1, "visibility")).toHaveTextContent("Private");
+    expect(cell(1, "permission")).toHaveTextContent("Read");
+    expect(cell(1, "createReposFor")).toHaveTextContent("Students and Staff");
+
+    expect(cell(2, "repoPrefix")).toHaveTextContent("proj-team");
+    expect(cell(2, "asnType")).toHaveTextContent("Team");
+    expect(cell(2, "permission")).toHaveTextContent("Write");
+    expect(cell(2, "createReposFor")).toHaveTextContent("");
+    expect(cell(2, "teamRegex")).toHaveTextContent("s26-.*");
+
+    const edit = screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`);
+    expect(edit).toHaveTextContent("Edit");
+    expect(edit).toHaveClass("btn-primary");
+    const del = screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`);
+    expect(del).toHaveTextContent("Delete");
+    expect(del).toHaveClass("btn-danger");
+
+    expect(
+      screen.queryByTestId(`${testId}-edit-modal-body`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("ConfirmationModal-base"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders an empty table, and uses a custom testIdPrefix", () => {
+    renderTable({ assignments: [], testIdPrefix: "Custom" });
+    expect(screen.getByTestId("Custom")).toBeInTheDocument();
+    expect(screen.getByTestId("Custom-header-repoPrefix")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("Custom-cell-row-0-col-repoPrefix"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("editing an individual assignment opens the individual form, prefilled, without a way to change the type", async () => {
+    renderTable();
+
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-1-col-Edit-button`));
+
+    expect(
+      await screen.findByTestId(`${testId}-edit-modal-body`),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-edit-modal`)).toHaveClass(
+      "modal-dialog modal-dialog-centered",
+    );
+    expect(screen.getByText("Edit Individual Assignment")).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-edit-modal-note`)).toHaveTextContent(
+      "The type of an assignment cannot be changed; to change it, delete the assignment and create a new one. Saving starts a job that creates the repositories.",
+    );
+    expect(screen.getByTestId(`${individualForm}-repoPrefix`)).toHaveValue(
+      "lab02",
+    );
+    expect(screen.getByTestId(`${individualForm}-isPrivate`)).toBeChecked();
+    expect(screen.getByTestId(`${individualForm}-permission`)).toHaveValue(
+      "READ",
+    );
+    expect(screen.getByTestId(`${individualForm}-createReposFor`)).toHaveValue(
+      "STUDENTS_AND_STAFF",
+    );
+    expect(screen.getByTestId(`${individualForm}-submit`)).toHaveTextContent(
+      "Update",
+    );
+    expect(screen.queryByTestId(`${teamForm}`)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/type/i)).not.toBeInTheDocument();
+  });
+
+  test("submitting the individual edit sends PUT without the type, toasts the job, and closes the modal", async () => {
+    axiosMock
+      .onPut("/api/assignments/put")
+      .reply(200, newAssignmentsFixtures.savedWithJob);
+
+    renderTable();
+
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-1-col-Edit-button`));
+    await screen.findByTestId(`${testId}-edit-modal-body`);
+    fireEvent.change(screen.getByTestId(`${individualForm}-repoPrefix`), {
+      target: { value: "lab02-v2" },
+    });
+    fireEvent.click(screen.getByTestId(`${individualForm}-isPrivate`));
+    fireEvent.change(screen.getByTestId(`${individualForm}-createReposFor`), {
+      target: { value: "STAFF_ONLY" },
+    });
+    fireEvent.click(screen.getByTestId(`${individualForm}-submit`));
+
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].url).toBe("/api/assignments/put");
+    expect(axiosMock.history.put[0].params).toEqual({
+      courseId: 1,
+      assignmentId: 2,
+      repoPrefix: "lab02-v2",
+      visibility: "PUBLIC",
+      permission: "READ",
+      createReposFor: "STAFF_ONLY",
+    });
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "Assignment updated. Job 99 started to create its repositories; see the Jobs tab for its log.",
+      ),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-edit-modal-body`),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  test("editing a team assignment opens the team form, and submitting sends the team regex", async () => {
+    axiosMock
+      .onPut("/api/assignments/put")
+      .reply(200, newAssignmentsFixtures.savedWithJob);
+
+    renderTable();
+
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-2-col-Edit-button`));
+    await screen.findByTestId(`${testId}-edit-modal-body`);
+    expect(screen.getByText("Edit Team Assignment")).toBeInTheDocument();
+    expect(screen.getByTestId(`${teamForm}-repoPrefix`)).toHaveValue(
+      "proj-team",
+    );
+    expect(screen.getByTestId(`${teamForm}-isPrivate`)).toBeChecked();
+    expect(screen.getByTestId(`${teamForm}-permission`)).toHaveValue("WRITE");
+    expect(screen.getByTestId(`${teamForm}-teamRegex`)).toHaveValue("s26-.*");
+    expect(screen.queryByTestId(`${individualForm}`)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId(`${teamForm}-teamRegex`), {
+      target: { value: "s26-0[1-3]" },
+    });
+    fireEvent.click(screen.getByTestId(`${teamForm}-submit`));
+
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].params).toEqual({
+      courseId: 1,
+      assignmentId: 3,
+      repoPrefix: "proj-team",
+      visibility: "PRIVATE",
+      permission: "WRITE",
+      teamRegex: "s26-0[1-3]",
+    });
+  });
+
+  test("the edit modal can be closed without submitting", async () => {
+    renderTable();
+
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`));
+    expect(
+      await screen.findByTestId(`${testId}-edit-modal-body`),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Close"));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-edit-modal-body`),
+      ).not.toBeInTheDocument(),
+    );
+    expect(axiosMock.history.put.length).toBe(0);
+    expect(toast).not.toHaveBeenCalled();
+  });
+
+  test("a failed edit shows the backend's message and keeps the modal open", async () => {
+    axiosMock
+      .onPut("/api/assignments/put")
+      .reply(400, { message: "teamRegex is not a valid regular expression" });
+
+    renderTable();
+
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-2-col-Edit-button`));
+    await screen.findByTestId(`${testId}-edit-modal-body`);
+    fireEvent.change(screen.getByTestId(`${teamForm}-teamRegex`), {
+      target: { value: "(" },
+    });
+    fireEvent.click(screen.getByTestId(`${teamForm}-submit`));
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "teamRegex is not a valid regular expression",
+      ),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId(`${testId}-edit-modal-body`)).toBeInTheDocument();
+  });
+
+  test("delete asks for confirmation, then sends DELETE and toasts", async () => {
+    axiosMock
+      .onDelete("/api/assignments/3")
+      .reply(200, { message: "Assignment with id 3 deleted" });
+
+    renderTable();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-2-col-Delete-button`),
+    );
+
+    expect(
+      await screen.findByTestId("ConfirmationModal-base"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-delete-confirmation-message`),
+    ).toHaveTextContent(
+      "Are you sure you want to delete the assignment proj-team? Repositories that have already been created are not deleted.",
+    );
+
+    fireEvent.click(screen.getByText("Yes, I'd like to do this"));
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+    expect(axiosMock.history.delete[0].url).toBe("/api/assignments/3");
+    expect(axiosMock.history.delete[0].params).toEqual({ courseId: 1 });
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith("Assignment deleted successfully."),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("ConfirmationModal-base"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  test("delete confirmation can be declined", async () => {
+    renderTable();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`),
+    );
+    expect(
+      await screen.findByTestId("ConfirmationModal-base"),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("No, take me back"));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("ConfirmationModal-base"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(axiosMock.history.delete.length).toBe(0);
+    expect(toast).not.toHaveBeenCalled();
+  });
+
+  test("a failed delete shows the backend's message", async () => {
+    axiosMock
+      .onDelete("/api/assignments/1")
+      .reply(404, { message: "Assignment with id 1 not found" });
+
+    renderTable();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-0-col-Delete-button`),
+    );
+    await screen.findByTestId("ConfirmationModal-base");
+    fireEvent.click(screen.getByText("Yes, I'd like to do this"));
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith("Assignment with id 1 not found"),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
+  });
+});

@@ -8,6 +8,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import Modal from "react-bootstrap/Modal";
 import { Button, Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
 import AssignmentTabComponent from "main/components/TabComponent/AssignmentTabComponent";
+import NewAssignmentsTabComponent from "main/components/TabComponent/NewAssignmentsTabComponent";
 import EnrollmentTabComponent from "main/components/TabComponent/EnrollmentTabComponent";
 import StaffTabComponent from "main/components/TabComponent/StaffTabComponent";
 import GithubSettingIcon from "main/components/Common/GithubSettingIcon";
@@ -61,6 +62,10 @@ export default function InstructorCourseShowPage({
   });
   const showSectionsTab = courseOptions.TRANSLATE_SECTIONS === true;
 
+  // The New Assignments tab is only shown when the NEW_ASSIGNMENT_FEATURES
+  // course option is enabled.
+  const showNewAssignmentsTab = courseOptions.NEW_ASSIGNMENT_FEATURES === true;
+
   // The Dokku tab is only shown when the DOKKU_MANAGER course option is enabled.
   const showDokkuTab = courseOptions.DOKKU_MANAGER === true;
 
@@ -86,6 +91,7 @@ export default function InstructorCourseShowPage({
   const visibleTabs = COURSE_TABS.filter(
     (tab) =>
       (tab !== "sections" || showSectionsTab) &&
+      (tab !== "new-assignments" || showNewAssignmentsTab) &&
       (tab !== "dokku" || showDokkuTab) &&
       (tab !== "slack" || showSlackTab) &&
       (tab !== "settings" || showSettingsTab),
@@ -252,6 +258,18 @@ export default function InstructorCourseShowPage({
             currentUser={currentUser}
           />
         </Tab>
+        {showNewAssignmentsTab && (
+          <Tab
+            eventKey={"new-assignments"}
+            title={"New Assignments"}
+            className="pt-2"
+          >
+            <NewAssignmentsTabComponent
+              courseId={courseId}
+              testIdPrefix={testId}
+            />
+          </Tab>
+        )}
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
