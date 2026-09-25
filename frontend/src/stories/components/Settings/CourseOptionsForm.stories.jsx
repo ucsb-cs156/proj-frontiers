@@ -7,6 +7,8 @@ const optionsState = {
   TRANSLATE_SECTIONS: true,
   DOKKU_MANAGER: false,
   ENABLE_API_KEYS: false,
+  SLACK_INTEGRATION: false,
+  NEW_ASSIGNMENT_FEATURES: false,
 };
 
 export default {

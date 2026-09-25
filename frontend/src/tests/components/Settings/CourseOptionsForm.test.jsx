@@ -28,6 +28,7 @@ describe("CourseOptionsForm tests", () => {
         DOKKU_MANAGER: false,
         ENABLE_API_KEYS: false,
         SLACK_INTEGRATION: false,
+        NEW_ASSIGNMENT_FEATURES: false,
       });
     axiosMock.onPost("/api/course/options").reply((config) => [
       200,
@@ -52,6 +53,9 @@ describe("CourseOptionsForm tests", () => {
     expect(screen.getByLabelText("Dokku Manager")).toBeInTheDocument();
     expect(screen.getByLabelText("Enable Api Keys")).toBeInTheDocument();
     expect(screen.getByLabelText("Slack Integration")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("New Assignment Features"),
+    ).toBeInTheDocument();
 
     const toggle = screen.getByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS");
     fireEvent.click(toggle);
