@@ -78,11 +78,22 @@ describe("NewTeamAssignmentForm tests", () => {
     expect(screen.getByTestId(`${testId}-teamRegex`)).toHaveClass("is-invalid");
     expect(submitAction).not.toHaveBeenCalled();
 
+    // a prefix of only spaces is not accepted, even when everything else is fine
+    fireEvent.change(screen.getByTestId(`${testId}-teamRegex`), {
+      target: { value: ".*" },
+    });
     fireEvent.change(screen.getByTestId(`${testId}-repoPrefix`), {
       target: { value: " " },
     });
     fireEvent.click(screen.getByTestId(`${testId}-submit`));
-    await screen.findByText("Team Repository Prefix is required.");
+    await waitFor(() =>
+      expect(
+        screen.queryByText("Team Regex is required."),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText("Team Repository Prefix is required."),
+    ).toBeInTheDocument();
     expect(submitAction).not.toHaveBeenCalled();
   });
 
