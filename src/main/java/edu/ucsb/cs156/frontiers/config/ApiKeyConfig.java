@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService;
 import java.security.SecureRandom;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -10,8 +11,8 @@ import org.springframework.context.annotation.Configuration;
 public class ApiKeyConfig {
 
   @Bean
-  public ApiKeyFilter apiKeyFilter(ApiKeyService apiKeyService) {
-    return new ApiKeyFilter(apiKeyService);
+  public ApiKeyFilter apiKeyFilter(ApiKeyService apiKeyService, ObjectMapper mapper) {
+    return new ApiKeyFilter(apiKeyService, mapper);
   }
 
   @Bean

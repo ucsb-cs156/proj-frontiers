@@ -1,6 +1,5 @@
 package edu.ucsb.cs156.frontiers.security;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -11,8 +10,10 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.ControllerTestCase;
 import edu.ucsb.cs156.frontiers.config.ApiKeyFilter;
 import edu.ucsb.cs156.frontiers.config.ApiKeyToken;
@@ -41,8 +42,9 @@ public class ApiKeyFilterTests extends ControllerTestCase {
   public static class ConfigClass {
     @Bean
     @Primary
-    public ApiKeyFilter under_test_api_key_filter(ApiKeyService apiKeyService) {
-      return new ApiKeyFilter(apiKeyService);
+    public ApiKeyFilter under_test_api_key_filter(
+        ApiKeyService apiKeyService, ObjectMapper mapper) {
+      return new ApiKeyFilter(apiKeyService, mapper);
     }
 
     @Bean
@@ -96,14 +98,9 @@ public class ApiKeyFilterTests extends ControllerTestCase {
     when(apiKeyService.authenticateKey(any()))
         .thenThrow(new AccessDeniedException("Access denied"));
 
-    String errorMessage =
-        mockMvc
-            .perform(post("/dummycontroller/apikey/post").header("X-API-KEY", "12345"))
-            .andExpect(status().isForbidden())
-            .andReturn()
-            .getResponse()
-            .getErrorMessage();
-
-    assertEquals("Access denied", errorMessage);
+    mockMvc
+        .perform(post("/dummycontroller/apikey/post").header("X-API-KEY", "12345"))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("Access denied"));
   }
 }

@@ -1,11 +1,13 @@
 package edu.ucsb.cs156.frontiers.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContext;
@@ -16,9 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class ApiKeyFilter extends OncePerRequestFilter {
 
   ApiKeyService apiKeyService;
+  ObjectMapper mapper;
 
-  public ApiKeyFilter(ApiKeyService apiKeyService) {
+  public ApiKeyFilter(ApiKeyService apiKeyService, ObjectMapper mapper) {
     this.apiKeyService = apiKeyService;
+    this.mapper = mapper;
   }
 
   @Override
@@ -37,7 +41,9 @@ public class ApiKeyFilter extends OncePerRequestFilter {
       SecurityContextHolder.setContext(context);
       filterChain.doFilter(request, response);
     } catch (AccessDeniedException e) {
-      response.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+      Map<String, String> responseMessage = Map.of("message", e.getMessage());
+      response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+      response.getWriter().write(mapper.writeValueAsString(responseMessage));
     }
   }
 }

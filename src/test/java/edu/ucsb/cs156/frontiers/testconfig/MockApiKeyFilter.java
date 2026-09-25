@@ -10,7 +10,7 @@ import java.io.IOException;
 public class MockApiKeyFilter extends ApiKeyFilter {
 
   public MockApiKeyFilter() {
-    super(null);
+    super(null, null);
   }
 
   @Override
