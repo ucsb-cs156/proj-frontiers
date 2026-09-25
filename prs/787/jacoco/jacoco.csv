@@ -23,7 +23,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference(
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,8,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService.new TypeReference() {...},0,8,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,JobUserProviderImpl,0,26,0,4,0,5,0,5,0,3
-frontiers,edu.ucsb.cs156.frontiers.services,ApiKeyService,3,196,1,7,1,46,1,10,0,7
+frontiers,edu.ucsb.cs156.frontiers.services,ApiKeyService,0,199,0,8,0,47,0,11,0,7
 frontiers,edu.ucsb.cs156.frontiers.services,ApiKeyService.ExpirationChoice,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,RosterStudentDTOService,0,24,0,0,0,6,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.services,GithubTeamService,0,961,0,46,0,202,0,41,0,18
