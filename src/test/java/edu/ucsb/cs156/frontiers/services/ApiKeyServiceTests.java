@@ -89,6 +89,41 @@ public class ApiKeyServiceTests {
   }
 
   @Test
+  public void key_generates_correctly_6mo() {
+    when(provider.getNow()).thenReturn(Optional.of(staticZD));
+    Course course = Course.builder().id(2L).build();
+    User user = User.builder().id(1L).build();
+    when(currentUserService.getUser()).thenReturn(user);
+    doAnswer(
+            invocation -> {
+              byte[] bytes = invocation.getArgument(0);
+              actualSecureRandom.nextBytes(bytes);
+              return null;
+            })
+        .when(secureRandom)
+        .nextBytes(any(byte[].class));
+    ArgumentCaptor<CourseApiKey> argumentCaptor = ArgumentCaptor.forClass(CourseApiKey.class);
+
+    IssuedCourseApiKey issuedCourseApiKey =
+        apiKeyService.createApiKey(course, ExpirationChoice.MONTHS_6);
+    verify(apiKeyRepository).save(argumentCaptor.capture());
+    verify(secureRandom).nextBytes(any(byte[].class));
+    CourseApiKey savedApiKey = argumentCaptor.getValue();
+
+    assertEquals(issuedCourseApiKey.courseId(), course.getId());
+    assertEquals(issuedCourseApiKey.issuedAt(), staticZD);
+    assertEquals(staticZD.plusMonths(6), issuedCourseApiKey.expiresAt());
+    assertEquals(course.getId(), savedApiKey.getCourse().getId());
+    assertEquals(user.getId(), savedApiKey.getCreatedBy().getId());
+    assertEquals(staticZD, issuedCourseApiKey.issuedAt());
+    assertEquals(staticZD.plusMonths(6), issuedCourseApiKey.expiresAt());
+    assertEquals(DigestUtils.sha256Hex(issuedCourseApiKey.key()), savedApiKey.getKeyHash());
+    assertEquals(
+        issuedCourseApiKey.key().substring(issuedCourseApiKey.key().length() - 6),
+        savedApiKey.getKeySuffix());
+  }
+
+  @Test
   public void assert_blocks_invalid_key_types() {
     when(provider.getNow()).thenReturn(Optional.of(staticZD));
     when(apiKeyRepository.findByKeyHash(DigestUtils.sha256Hex("invalid-key")))
