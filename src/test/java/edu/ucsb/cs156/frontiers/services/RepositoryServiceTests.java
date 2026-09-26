@@ -930,4 +930,166 @@ public class RepositoryServiceTests {
         () -> repositoryService.deleteRepositoryIfEmpty(course, "lab01-student1"));
     mockRestServiceServer.verify();
   }
+
+  // ---- setSignedCommitsRequired ----
+
+  private static final String RULESETS_URL =
+      "https://api.github.com/repos/ucsb-cs156/lab01-student1/rulesets";
+  private static final String LIST_URL = RULESETS_URL + "?includes_parents=false&per_page=100";
+
+  private static final String SIGNED_COMMITS_RULESET_JSON =
+      """
+      {
+        "name": "Require Signed Commits",
+        "target": "branch",
+        "enforcement": "active",
+        "conditions": { "ref_name": { "include": ["~ALL"], "exclude": ["refs/heads/gh-pages"] } },
+        "rules": [ { "type": "required_signatures" } ]
+      }
+      """;
+
+  private void expectListRulesets(String responseJson) {
+    mockRestServiceServer
+        .expect(requestTo(LIST_URL))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(responseJson, MediaType.APPLICATION_JSON));
+  }
+
+  @Test
+  public void the_ruleset_name_is_Require_Signed_Commits() {
+    assertEquals("Require Signed Commits", RepositoryService.SIGNED_COMMITS_RULESET_NAME);
+  }
+
+  @Test
+  public void setSignedCommitsRequired_true_creates_the_ruleset_when_there_is_none()
+      throws Exception {
+    expectListRulesets("[]");
+    mockRestServiceServer
+        .expect(requestTo(RULESETS_URL))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().json(SIGNED_COMMITS_RULESET_JSON, true))
+        .andRespond(withStatus(HttpStatus.CREATED));
+
+    repositoryService.setSignedCommitsRequired(course, "lab01-student1", true);
+
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setSignedCommitsRequired_true_updates_the_ruleset_in_place_when_it_exists()
+      throws Exception {
+    expectListRulesets(
+        """
+        [
+          { "id": 7, "name": "Something Else", "source_type": "Repository" },
+          { "id": 42, "name": "Require Signed Commits", "source_type": "Repository" }
+        ]
+        """);
+    mockRestServiceServer
+        .expect(requestTo(RULESETS_URL + "/42"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(content().json(SIGNED_COMMITS_RULESET_JSON, true))
+        .andRespond(withSuccess());
+
+    repositoryService.setSignedCommitsRequired(course, "lab01-student1", true);
+
+    // nothing was deleted first: the repository is never without the rule
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setSignedCommitsRequired_true_ignores_rulesets_with_other_names() throws Exception {
+    expectListRulesets("[ { \"id\": 7, \"name\": \"Require Signed Commits 2\" } ]");
+    mockRestServiceServer
+        .expect(requestTo(RULESETS_URL))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withStatus(HttpStatus.CREATED));
+
+    repositoryService.setSignedCommitsRequired(course, "lab01-student1", true);
+
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setSignedCommitsRequired_false_deletes_the_ruleset_when_it_exists() throws Exception {
+    expectListRulesets(
+        """
+        [
+          { "id": 7, "name": "Something Else" },
+          { "id": 42, "name": "Require Signed Commits" }
+        ]
+        """);
+    mockRestServiceServer
+        .expect(requestTo(RULESETS_URL + "/42"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andRespond(withStatus(HttpStatus.NO_CONTENT));
+
+    repositoryService.setSignedCommitsRequired(course, "lab01-student1", false);
+
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setSignedCommitsRequired_false_changes_nothing_when_there_is_no_ruleset()
+      throws Exception {
+    expectListRulesets("[ { \"id\": 7, \"name\": \"Something Else\" } ]");
+
+    repositoryService.setSignedCommitsRequired(course, "lab01-student1", false);
+
+    // only the list was asked for
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setSignedCommitsRequired_propagates_a_refusal_to_list_the_rulesets() {
+    mockRestServiceServer
+        .expect(requestTo(LIST_URL))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withForbiddenRequest());
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> repositoryService.setSignedCommitsRequired(course, "lab01-student1", true));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setSignedCommitsRequired_propagates_a_refusal_to_create_the_ruleset() {
+    expectListRulesets("[]");
+    mockRestServiceServer
+        .expect(requestTo(RULESETS_URL))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withStatus(HttpStatus.FORBIDDEN));
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> repositoryService.setSignedCommitsRequired(course, "lab01-student1", true));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setSignedCommitsRequired_propagates_a_refusal_to_delete_the_ruleset() {
+    expectListRulesets("[ { \"id\": 42, \"name\": \"Require Signed Commits\" } ]");
+    mockRestServiceServer
+        .expect(requestTo(RULESETS_URL + "/42"))
+        .andExpect(method(HttpMethod.DELETE))
+        .andRespond(withStatus(HttpStatus.FORBIDDEN));
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> repositoryService.setSignedCommitsRequired(course, "lab01-student1", false));
+    mockRestServiceServer.verify();
+  }
 }

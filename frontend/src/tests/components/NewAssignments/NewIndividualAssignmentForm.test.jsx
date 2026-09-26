@@ -30,6 +30,33 @@ describe("NewIndividualAssignmentForm tests", () => {
     expect(screen.getByTestId(`${testId}-submit`)).toHaveTextContent("Create");
   });
 
+  test("has a switch to require signed commits, off by default, that says what it does", () => {
+    render(<NewIndividualAssignmentForm submitAction={vi.fn()} />);
+
+    expect(screen.getByLabelText("Require Signed Commits?")).toBe(
+      screen.getByTestId(`${testId}-requireSignedCommit`),
+    );
+    expect(
+      screen.getByTestId(`${testId}-requireSignedCommit`),
+    ).not.toBeChecked();
+    expect(
+      screen.getByTestId(`${testId}-requireSignedCommit-help`),
+    ).toHaveTextContent(
+      "Repositories get a ruleset that requires signed commits on every branch except gh-pages. When this is off, that ruleset is removed from them.",
+    );
+  });
+
+  test("shows that signed commits are required when initialContents say so", () => {
+    render(
+      <NewIndividualAssignmentForm
+        submitAction={vi.fn()}
+        initialContents={{ repoPrefix: "lab02", requireSignedCommit: true }}
+      />,
+    );
+
+    expect(screen.getByTestId(`${testId}-requireSignedCommit`)).toBeChecked();
+  });
+
   test("offers the same options as the individual assignment form of the Assignments tab", () => {
     render(<NewIndividualAssignmentForm submitAction={vi.fn()} />);
 
@@ -102,6 +129,7 @@ describe("NewIndividualAssignmentForm tests", () => {
       repoPrefix: "lab03",
       isPrivate: false,
       permission: "MAINTAIN",
+      requireSignedCommit: false,
       createReposFor: "STUDENTS_ONLY",
     });
     expect(
@@ -120,6 +148,7 @@ describe("NewIndividualAssignmentForm tests", () => {
       target: { value: "lab04" },
     });
     fireEvent.click(screen.getByTestId(`${testId}-isPrivate`));
+    fireEvent.click(screen.getByTestId(`${testId}-requireSignedCommit`));
     fireEvent.change(screen.getByTestId(`${testId}-permission`), {
       target: { value: "ADMIN" },
     });
@@ -133,6 +162,7 @@ describe("NewIndividualAssignmentForm tests", () => {
       repoPrefix: "lab04",
       isPrivate: true,
       permission: "ADMIN",
+      requireSignedCommit: true,
       createReposFor: "STAFF_ONLY",
     });
   });

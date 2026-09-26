@@ -33,6 +33,9 @@ export const CREATE_REPOS_FOR_LABELS = {
   STUDENTS_AND_STAFF: "Students and Staff",
 };
 
+/** Shown in the table for an assignment whose repositories require signed commits. */
+export const SIGNED_COMMITS_REQUIRED_ICON = "\u2705";
+
 /** The team regular expression that matches every team. */
 export const DEFAULT_TEAM_REGEX = ".*";
 
@@ -49,6 +52,7 @@ export function formDataToParams(asnType, formData) {
     repoPrefix: formData.repoPrefix,
     visibility: formData.isPrivate ? "PRIVATE" : "PUBLIC",
     permission: formData.permission,
+    requireSignedCommit: Boolean(formData.requireSignedCommit),
   };
   if (asnType === "TEAM") {
     params.teamRegex = formData.teamRegex;
@@ -64,6 +68,7 @@ export function assignmentToFormData(assignment) {
     repoPrefix: assignment.repoPrefix,
     isPrivate: assignment.visibility === "PRIVATE",
     permission: assignment.permission,
+    requireSignedCommit: assignment.requireSignedCommit,
     createReposFor: assignment.createReposFor,
     teamRegex: assignment.teamRegex,
   };

@@ -26,6 +26,37 @@ describe("NewTeamAssignmentForm tests", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("has a switch to require signed commits, off by default, that says what it does", () => {
+    render(<NewTeamAssignmentForm submitAction={vi.fn()} />);
+
+    expect(screen.getByLabelText("Require Signed Commits?")).toBe(
+      screen.getByTestId(`${testId}-requireSignedCommit`),
+    );
+    expect(
+      screen.getByTestId(`${testId}-requireSignedCommit`),
+    ).not.toBeChecked();
+    expect(
+      screen.getByTestId(`${testId}-requireSignedCommit-help`),
+    ).toHaveTextContent(
+      "Repositories get a ruleset that requires signed commits on every branch except gh-pages. When this is off, that ruleset is removed from them.",
+    );
+  });
+
+  test("shows that signed commits are required when initialContents say so", () => {
+    render(
+      <NewTeamAssignmentForm
+        submitAction={vi.fn()}
+        initialContents={{
+          repoPrefix: "proj",
+          teamRegex: ".*",
+          requireSignedCommit: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId(`${testId}-requireSignedCommit`)).toBeChecked();
+  });
+
   test("shows initialContents and a custom button label", () => {
     render(
       <NewTeamAssignmentForm
@@ -111,6 +142,7 @@ describe("NewTeamAssignmentForm tests", () => {
       repoPrefix: "proj",
       isPrivate: false,
       permission: "MAINTAIN",
+      requireSignedCommit: false,
       teamRegex: ".*",
     });
     expect(
@@ -135,6 +167,7 @@ describe("NewTeamAssignmentForm tests", () => {
       target: { value: "proj2" },
     });
     fireEvent.click(screen.getByTestId(`${testId}-isPrivate`));
+    fireEvent.click(screen.getByTestId(`${testId}-requireSignedCommit`));
     fireEvent.change(screen.getByTestId(`${testId}-permission`), {
       target: { value: "READ" },
     });
@@ -148,6 +181,7 @@ describe("NewTeamAssignmentForm tests", () => {
       repoPrefix: "proj2",
       isPrivate: true,
       permission: "READ",
+      requireSignedCommit: true,
       teamRegex: "s26-0[1-3]",
     });
   });
