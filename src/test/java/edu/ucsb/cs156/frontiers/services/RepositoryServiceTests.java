@@ -27,6 +27,7 @@ import edu.ucsb.cs156.frontiers.testconfig.TestConfig;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,8 +88,12 @@ public class RepositoryServiceTests {
 
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-    repositoryService.createStudentRepository(
-        course, student, "repo1", false, RepositoryPermissions.WRITE);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStudentRepository(
+            course, student, "repo1", false, RepositoryPermissions.WRITE);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-student1", false)),
+        result);
     mockRestServiceServer.verify();
   }
 
@@ -132,8 +137,12 @@ public class RepositoryServiceTests {
 
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-    repositoryService.createStudentRepository(
-        course, student, "repo1", false, RepositoryPermissions.ADMIN);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStudentRepository(
+            course, student, "repo1", false, RepositoryPermissions.ADMIN);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-student1", true)),
+        result);
 
     mockRestServiceServer.verify();
   }
@@ -178,8 +187,12 @@ public class RepositoryServiceTests {
 
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-    repositoryService.createStudentRepository(
-        course, student, "repo1", true, RepositoryPermissions.WRITE);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStudentRepository(
+            course, student, "repo1", true, RepositoryPermissions.WRITE);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-student1", true)),
+        result);
 
     mockRestServiceServer.verify();
   }
@@ -196,8 +209,10 @@ public class RepositoryServiceTests {
 
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-    repositoryService.createStudentRepository(
-        course, student, "repo1", false, RepositoryPermissions.WRITE);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStudentRepository(
+            course, student, "repo1", false, RepositoryPermissions.WRITE);
+    assertEquals(Optional.empty(), result);
     mockRestServiceServer.verify();
   }
 
@@ -227,8 +242,12 @@ public class RepositoryServiceTests {
 
     RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
 
-    repositoryService.createStudentRepository(
-        course, student, "repo1", false, RepositoryPermissions.WRITE);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStudentRepository(
+            course, student, "repo1", false, RepositoryPermissions.WRITE);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-student1", false)),
+        result);
     mockRestServiceServer.verify();
   }
 
@@ -272,8 +291,11 @@ public class RepositoryServiceTests {
 
     CourseStaff staff = CourseStaff.builder().githubLogin("staff1").build();
 
-    repositoryService.createStaffRepository(
-        course, staff, "repo1", false, RepositoryPermissions.ADMIN);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStaffRepository(
+            course, staff, "repo1", false, RepositoryPermissions.ADMIN);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-staff1", true)), result);
 
     mockRestServiceServer.verify();
   }
@@ -308,8 +330,12 @@ public class RepositoryServiceTests {
     team.setTeamMembers(List.of(member));
     team.setGithubTeamId(12345);
 
-    repositoryService.createTeamRepository(
-        course, team, "repo1", false, RepositoryPermissions.WRITE, 1);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createTeamRepository(
+            course, team, "repo1", false, RepositoryPermissions.WRITE, 1);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-test-team", false)),
+        result);
     mockRestServiceServer.verify();
   }
 
@@ -364,8 +390,12 @@ public class RepositoryServiceTests {
     team1.setTeamMembers(List.of(member1, member2, member3));
     team1.setGithubTeamId(123456);
 
-    repositoryService.createTeamRepository(
-        course, team1, "repo1", false, RepositoryPermissions.ADMIN, 1);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createTeamRepository(
+            course, team1, "repo1", false, RepositoryPermissions.ADMIN, 1);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-test-team1", true)),
+        result);
     mockRestServiceServer.verify();
   }
 
@@ -413,8 +443,12 @@ public class RepositoryServiceTests {
     team.setTeamMembers(List.of(member));
     team.setGithubTeamId(1234567);
 
-    repositoryService.createTeamRepository(
-        course, team, "repo1", true, RepositoryPermissions.WRITE, 1);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createTeamRepository(
+            course, team, "repo1", true, RepositoryPermissions.WRITE, 1);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-test-team", true)),
+        result);
     mockRestServiceServer.verify();
   }
 
@@ -433,8 +467,10 @@ public class RepositoryServiceTests {
     TeamMember member = TeamMember.builder().rosterStudent(student).build();
     team.setTeamMembers(List.of(member));
 
-    repositoryService.createTeamRepository(
-        course, team, "repo1", false, RepositoryPermissions.WRITE, 1);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createTeamRepository(
+            course, team, "repo1", false, RepositoryPermissions.WRITE, 1);
+    assertEquals(Optional.empty(), result);
     mockRestServiceServer.verify();
   }
 
@@ -468,8 +504,12 @@ public class RepositoryServiceTests {
     team.setTeamMembers(List.of(member));
     team.setGithubTeamId(12345);
 
-    repositoryService.createTeamRepository(
-        course, team, "repo1", false, RepositoryPermissions.WRITE, 1);
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createTeamRepository(
+            course, team, "repo1", false, RepositoryPermissions.WRITE, 1);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-test-team", false)),
+        result);
     mockRestServiceServer.verify();
   }
 

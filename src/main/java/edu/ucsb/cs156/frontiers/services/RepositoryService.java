@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
@@ -46,6 +47,12 @@ public class RepositoryService {
 
   public record GithubRepository(String name, String fullName) {}
 
+  /**
+   * Result of a create-repository call: the repository name and whether the repository was newly
+   * created (true) or already existed and was potentially updated (false).
+   */
+  public record RepositoryCreationResult(String repoName, boolean created) {}
+
   private HttpHeaders githubHeaders(String token) {
     HttpHeaders headers = new HttpHeaders();
     headers.add("Authorization", "Bearer " + token);
@@ -72,11 +79,13 @@ public class RepositoryService {
    * @param repoPrefix prefix for the repository name (repoPrefix-githubLogin)
    * @param isPrivate whether the created repository should be private
    * @param permissions collaborator permissions to grant the user
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
    * @throws NoSuchAlgorithmException if signing fails
    * @throws InvalidKeySpecException if signing fails
    * @throws JsonProcessingException if JSON serialization fails
    */
-  private void createRepositoryForStudentOrStaff(
+  private Optional<RepositoryCreationResult> createRepositoryForStudentOrStaff(
       Course course,
       String githubLogin,
       String repoPrefix,
@@ -102,6 +111,7 @@ public class RepositoryService {
 
     HttpEntity<String> existenceEntity = new HttpEntity<>(existenceHeaders);
 
+    boolean created = false;
     try {
       restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);
     } catch (HttpClientErrorException e) {
@@ -116,12 +126,13 @@ public class RepositoryService {
         HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, createHeaders);
 
         restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);
+        created = true;
       } else {
         log.warn(
             "Unexpected response code {} when checking for existence of repository {}",
             e.getStatusCode(),
             newRepoName);
-        return;
+        return Optional.empty();
       }
     }
 
@@ -135,6 +146,7 @@ public class RepositoryService {
     } catch (HttpClientErrorException ignored) {
       // silently ignore if provisioning fails (same as before)
     }
+    return Optional.of(new RepositoryCreationResult(newRepoName, created));
   }
 
   public RepositoryService(
@@ -160,15 +172,17 @@ public class RepositoryService {
    * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
    *     format repoPrefix-githubLogin
    * @param isPrivate Whether the repository is private or not
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
    */
-  public void createStudentRepository(
+  public Optional<RepositoryCreationResult> createStudentRepository(
       Course course,
       RosterStudent student,
       String repoPrefix,
       Boolean isPrivate,
       RepositoryPermissions permissions)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-    createRepositoryForStudentOrStaff(
+    return createRepositoryForStudentOrStaff(
         course, student.getGithubLogin(), repoPrefix, isPrivate, permissions);
   }
 
@@ -181,8 +195,10 @@ public class RepositoryService {
    * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
    *     format repoPrefix-githubLogin
    * @param isPrivate Whether the repository is private or not
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
    */
-  public void createStaffRepository(
+  public Optional<RepositoryCreationResult> createStaffRepository(
       Course course,
       CourseStaff staff,
       String repoPrefix,
@@ -190,7 +206,7 @@ public class RepositoryService {
       RepositoryPermissions permissions)
       throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
 
-    createRepositoryForStudentOrStaff(
+    return createRepositoryForStudentOrStaff(
         course, staff.getGithubLogin(), repoPrefix, isPrivate, permissions);
   }
 
@@ -273,11 +289,13 @@ public class RepositoryService {
    * @param isPrivate whether the created repository should be private
    * @param permissions collaborator permissions to grant the user
    * @param orgId GitHub organization ID used for team-based repo provisioning
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
    * @throws NoSuchAlgorithmException if signing fails
    * @throws InvalidKeySpecException if signing fails
    * @throws JsonProcessingException if JSON serialization fails
    */
-  public void createTeamRepository(
+  public Optional<RepositoryCreationResult> createTeamRepository(
       Course course,
       Team team,
       String repoPrefix,
@@ -306,6 +324,7 @@ public class RepositoryService {
 
     HttpEntity<String> existenceEntity = new HttpEntity<>(existenceHeaders);
 
+    boolean created = false;
     try {
       restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);
     } catch (HttpClientErrorException e) {
@@ -320,12 +339,13 @@ public class RepositoryService {
         HttpEntity<String> createEntity = new HttpEntity<>(bodyAsJson, createHeaders);
 
         restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);
+        created = true;
       } else {
         log.warn(
             "Unexpected response code {} when checking for existence of repository {}",
             e.getStatusCode(),
             newRepoName);
-        return;
+        return Optional.empty();
       }
     }
     try {
@@ -338,6 +358,7 @@ public class RepositoryService {
     } catch (HttpClientErrorException ignored) {
       // silently ignore if provisioning fails (same as before)
     }
+    return Optional.of(new RepositoryCreationResult(newRepoName, created));
   }
 
   private String getOrFetchTeamSlug(Course course, Team team, Integer orgId)

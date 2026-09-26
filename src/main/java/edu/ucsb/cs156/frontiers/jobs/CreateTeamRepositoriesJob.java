@@ -5,8 +5,10 @@ import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService.RepositoryCreationResult;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.Optional;
 import lombok.Builder;
 
 @Builder
@@ -42,6 +44,9 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
           e);
     }
 
+    int reposCreated = 0;
+    int reposUpdated = 0;
+
     for (Team team : course.getTeams()) {
       // A team skipped by teamRegex never logs anything -- checkCancellation() gives this
       // loop its own checkpoint independent of whether an iteration does any work.
@@ -49,9 +54,23 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
       if (teamRegex != null && !team.getName().matches(teamRegex)) {
         continue;
       }
-      repositoryService.createTeamRepository(
-          course, team, repositoryPrefix, isPrivate, permissions, orgId);
+      Optional<RepositoryCreationResult> result =
+          repositoryService.createTeamRepository(
+              course, team, repositoryPrefix, isPrivate, permissions, orgId);
+      if (result.isPresent()) {
+        if (result.get().created()) {
+          ctx.log(" created repo " + result.get().repoName());
+          reposCreated++;
+        } else {
+          ctx.log("  updated repo " + result.get().repoName());
+          reposUpdated++;
+        }
+      }
     }
+    ctx.log("Summary:");
+    ctx.log(String.format("%4d repos created", reposCreated));
+    ctx.log(String.format("%4d repos updated", reposUpdated));
+    ctx.log(String.format("%4d repos total", reposCreated + reposUpdated));
     ctx.log("Done");
   }
 }

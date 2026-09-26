@@ -16,6 +16,7 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService.RepositoryCreationResult;
 import edu.ucsb.cs156.jobs.entities.Job;
 import edu.ucsb.cs156.jobs.errors.JobCancelledException;
 import edu.ucsb.cs156.jobs.repositories.JobsRepository;
@@ -73,6 +74,22 @@ public class CreateTeamRepositoriesJobTest {
 
     course.setTeams(List.of(team1, team2));
     when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+    when(service.createTeamRepository(
+            eq(course),
+            eq(team1),
+            eq("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-test-team1", true)));
+    when(service.createTeamRepository(
+            eq(course),
+            eq(team2),
+            eq("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE),
+            eq(1)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-test-team2", false)));
 
     var repoJob =
         spy(
@@ -89,6 +106,12 @@ public class CreateTeamRepositoriesJobTest {
     String expected =
         """
         Creating team repositories...
+         created repo repo-prefix-test-team1
+          updated repo repo-prefix-test-team2
+        Summary:
+           1 repos created
+           1 repos updated
+           2 repos total
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -130,6 +153,22 @@ public class CreateTeamRepositoriesJobTest {
 
     course.setTeams(List.of(team1, team2));
     when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+    when(service.createTeamRepository(
+            eq(course),
+            eq(team1),
+            eq("repo-prefix"),
+            eq(true),
+            eq(RepositoryPermissions.WRITE),
+            eq(1)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-test-team1", true)));
+    when(service.createTeamRepository(
+            eq(course),
+            eq(team2),
+            eq("repo-prefix"),
+            eq(true),
+            eq(RepositoryPermissions.WRITE),
+            eq(1)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-test-team2", true)));
 
     var repoJob =
         spy(
@@ -146,6 +185,12 @@ public class CreateTeamRepositoriesJobTest {
     String expected =
         """
         Creating team repositories...
+         created repo repo-prefix-test-team1
+         created repo repo-prefix-test-team2
+        Summary:
+           2 repos created
+           0 repos updated
+           2 repos total
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -222,6 +267,10 @@ public class CreateTeamRepositoriesJobTest {
     String expected =
         """
         Creating team repositories...
+        Summary:
+           0 repos created
+           0 repos updated
+           0 repos total
         Done""";
     assertEquals(expected, jobStarted.getLog());
 
@@ -263,6 +312,10 @@ public class CreateTeamRepositoriesJobTest {
     String expected =
         """
         Creating team repositories...
+        Summary:
+           0 repos created
+           0 repos updated
+           0 repos total
         Done""";
     assertEquals(expected, jobStarted.getLog());
 

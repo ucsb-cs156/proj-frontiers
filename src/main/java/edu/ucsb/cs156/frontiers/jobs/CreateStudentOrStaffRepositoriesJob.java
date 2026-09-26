@@ -7,8 +7,10 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService.RepositoryCreationResult;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.Optional;
 import lombok.Builder;
 
 @Builder
@@ -38,6 +40,9 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
     ctx.log("permissions=" + permissions);
     ctx.log("creationOption=" + creationOption);
 
+    int reposCreated = 0;
+    int reposUpdated = 0;
+
     if (creationOption == RepositoryCreationOption.STUDENTS_ONLY
         || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
       for (RosterStudent student : course.getRosterStudents()) {
@@ -48,8 +53,18 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
         if (student.getGithubLogin() != null
             && (student.getOrgStatus() == OrgStatus.MEMBER
                 || student.getOrgStatus() == OrgStatus.OWNER)) {
-          repositoryService.createStudentRepository(
-              course, student, repositoryPrefix, isPrivate, permissions);
+          Optional<RepositoryCreationResult> result =
+              repositoryService.createStudentRepository(
+                  course, student, repositoryPrefix, isPrivate, permissions);
+          if (result.isPresent()) {
+            if (result.get().created()) {
+              ctx.log(" created repo " + result.get().repoName());
+              reposCreated++;
+            } else {
+              ctx.log("  updated repo " + result.get().repoName());
+              reposUpdated++;
+            }
+          }
         }
       }
     }
@@ -63,12 +78,26 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
         if (staff.getGithubLogin() != null
             && (staff.getOrgStatus() == OrgStatus.MEMBER
                 || staff.getOrgStatus() == OrgStatus.OWNER)) {
-          repositoryService.createStaffRepository(
-              course, staff, repositoryPrefix, isPrivate, permissions);
+          Optional<RepositoryCreationResult> result =
+              repositoryService.createStaffRepository(
+                  course, staff, repositoryPrefix, isPrivate, permissions);
+          if (result.isPresent()) {
+            if (result.get().created()) {
+              ctx.log(" created repo " + result.get().repoName());
+              reposCreated++;
+            } else {
+              ctx.log("  updated repo " + result.get().repoName());
+              reposUpdated++;
+            }
+          }
         }
       }
     }
 
+    ctx.log("Summary:");
+    ctx.log(String.format("%4d repos created", reposCreated));
+    ctx.log(String.format("%4d repos updated", reposUpdated));
+    ctx.log(String.format("%4d repos total", reposCreated + reposUpdated));
     ctx.log("Done");
   }
 }
