@@ -9,6 +9,7 @@ import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
+import edu.ucsb.cs156.frontiers.models.JobLogTail;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
@@ -223,6 +224,49 @@ public class JobsController extends ApiController {
   public String jobLogsByCourse(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "jobId") @RequestParam Long jobId) {
+    findJobInCourse(courseId, jobId);
+    return jobService.getJobLogs(jobId);
+  }
+
+  /**
+   * Returns the log lines of one job that belong to the given course that were written after the
+   * line with id {@code afterId}, together with the job's status: one poll of a "tail -f" style
+   * view. The client keeps the id of the last line it has received and passes it as {@code afterId}
+   * on its next poll, and stops polling once the status is one of a job that has finished.
+   *
+   * <p>This is the course-scoped counterpart of the library's admin-only {@code GET
+   * /api/jobs/logs/{id}/tail}, for the same reason as {@link #jobLogsByCourse}. Like that endpoint
+   * it reports a job of another course as not found.
+   *
+   * <p>The status is read <em>before</em> the lines. If the job has already finished when its
+   * status is read, all of its lines have been written by the time they are read, so a client that
+   * stops polling on a finished status has not missed any. Reading them the other way round could
+   * miss the last lines of a job that finishes in between.
+   *
+   * @param courseId the id of the course the job must belong to
+   * @param jobId the id of the job
+   * @param afterId only lines with an id greater than this are returned; 0 for the whole log
+   * @return the status of the job and its new log lines, oldest first
+   */
+  @Operation(summary = "Get the new log lines and the status of one job belonging to a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @GetMapping("/course/logs/tail")
+  public JobLogTail jobLogTailByCourse(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "jobId") @RequestParam Long jobId,
+      @Parameter(name = "afterId", description = "only return lines with id greater than this")
+          @RequestParam(defaultValue = "0")
+          Long afterId) {
+    String status = findJobInCourse(courseId, jobId).getStatus();
+    return new JobLogTail(status, jobService.getJobLogTail(jobId, afterId));
+  }
+
+  /**
+   * Finds a job, which must be a course-scoped job of the given course.
+   *
+   * @throws EntityNotFoundException if there is no such job, or it belongs to something else
+   */
+  private Job findJobInCourse(Long courseId, Long jobId) {
     Job job =
         jobsRepository
             .findById(jobId)
@@ -230,6 +274,6 @@ public class JobsController extends ApiController {
     if (!"course".equals(job.getScopeType()) || !courseId.equals(job.getScopeId())) {
       throw new EntityNotFoundException(Job.class, jobId);
     }
-    return jobService.getJobLogs(jobId);
+    return job;
   }
 }

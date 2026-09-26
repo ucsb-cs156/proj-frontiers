@@ -3,6 +3,7 @@ package edu.ucsb.cs156.frontiers.controllers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,11 +29,13 @@ import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
 import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
 import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
+import edu.ucsb.cs156.frontiers.models.JobLogTail;
 import edu.ucsb.cs156.frontiers.repositories.*;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
 import edu.ucsb.cs156.frontiers.services.UpdateUserService;
 import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.entities.JobLog;
 import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import edu.ucsb.cs156.jobs.services.JobService;
 import java.util.List;
@@ -40,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -573,6 +577,140 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     verify(jobsRepository).findById(eq(7L));
     verify(jobService, times(1)).getJobLogs(eq(7L));
     assertEquals(fullLog, response.getResponse().getContentAsString());
+  }
+
+  // Tests for GET /api/jobs/course/logs/tail
+
+  private static JobLog logLine(long id, long jobId, String message) {
+    return JobLog.builder().id(id).jobId(jobId).message(message).build();
+  }
+
+  @Test
+  public void logged_out_users_cannot_get_the_job_log_tail() throws Exception {
+    mockMvc
+        .perform(get("/api/jobs/course/logs/tail").param("courseId", "5").param("jobId", "1"))
+        .andExpect(status().isForbidden());
+    verify(jobService, never()).getJobLogTail(any(), any());
+  }
+
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  @Test
+  public void instructor_without_course_permissions_cannot_get_the_job_log_tail() throws Exception {
+    mockMvc
+        .perform(get("/api/jobs/course/logs/tail").param("courseId", "5").param("jobId", "1"))
+        .andExpect(status().isForbidden());
+    verify(jobService, never()).getJobLogTail(any(), any());
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_log_tail_returns_404_when_job_does_not_exist() throws Exception {
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs/tail").param("courseId", "5").param("jobId", "7"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(jobService, never()).getJobLogTail(any(), any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("Job with id 7 not found", json.get("message"));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_log_tail_returns_404_for_a_job_of_a_different_course_or_scope() throws Exception {
+    Job otherCourse = Job.builder().id(7L).scopeType("course").scopeId(6L).build();
+    Job otherScope = Job.builder().id(8L).scopeType("other").scopeId(5L).build();
+    Job unscoped = Job.builder().id(9L).build();
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(otherCourse));
+    when(jobsRepository.findById(eq(8L))).thenReturn(Optional.of(otherScope));
+    when(jobsRepository.findById(eq(9L))).thenReturn(Optional.of(unscoped));
+
+    for (String jobId : new String[] {"7", "8", "9"}) {
+      mockMvc
+          .perform(get("/api/jobs/course/logs/tail").param("courseId", "5").param("jobId", jobId))
+          .andExpect(status().isNotFound());
+    }
+
+    verify(jobService, never()).getJobLogTail(any(), any());
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_log_tail_returns_the_status_and_the_lines_after_the_given_id() throws Exception {
+    Job job = Job.builder().id(7L).status("running").scopeType("course").scopeId(5L).build();
+    List<JobLog> lines = List.of(logLine(41L, 7L, "first new"), logLine(42L, 7L, "second new"));
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(job));
+    when(jobService.getJobLogTail(eq(7L), eq(40L))).thenReturn(lines);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/jobs/course/logs/tail")
+                    .param("courseId", "5")
+                    .param("jobId", "7")
+                    .param("afterId", "40"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        objectMapper.writeValueAsString(new JobLogTail("running", lines)),
+        response.getResponse().getContentAsString());
+    verify(jobService, times(1)).getJobLogTail(eq(7L), eq(40L));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_log_tail_starts_from_the_beginning_when_after_id_is_not_given() throws Exception {
+    Job job = Job.builder().id(7L).status("complete").scopeType("course").scopeId(5L).build();
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(job));
+    when(jobService.getJobLogTail(eq(7L), eq(0L))).thenReturn(List.of());
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/jobs/course/logs/tail").param("courseId", "5").param("jobId", "7"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(
+        objectMapper.writeValueAsString(new JobLogTail("complete", List.of())),
+        response.getResponse().getContentAsString());
+    verify(jobService, times(1)).getJobLogTail(eq(7L), eq(0L));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void job_log_tail_reads_the_status_before_the_lines() throws Exception {
+    Job job = Job.builder().id(7L).status("running").scopeType("course").scopeId(5L).build();
+    when(jobsRepository.findById(eq(7L))).thenReturn(Optional.of(job));
+    when(jobService.getJobLogTail(eq(7L), eq(0L))).thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/api/jobs/course/logs/tail").param("courseId", "5").param("jobId", "7"))
+        .andExpect(status().isOk());
+
+    // a job that has finished when its status is read has written all of its lines by the time
+    // they are read, so a client that stops polling on a finished status misses none
+    InOrder inOrder = inOrder(jobsRepository, jobService);
+    inOrder.verify(jobsRepository).findById(eq(7L));
+    inOrder.verify(jobService).getJobLogTail(eq(7L), eq(0L));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_get_the_job_log_tail_by_course() throws Exception {
+    Job job = Job.builder().id(8L).status("error").scopeType("course").scopeId(5L).build();
+    when(jobsRepository.findById(eq(8L))).thenReturn(Optional.of(job));
+    when(jobService.getJobLogTail(eq(8L), eq(0L))).thenReturn(List.of(logLine(1L, 8L, "boom")));
+
+    mockMvc
+        .perform(get("/api/jobs/course/logs/tail").param("courseId", "5").param("jobId", "8"))
+        .andExpect(status().isOk());
+
+    verify(jobService, times(1)).getJobLogTail(eq(8L), eq(0L));
   }
 
   @WithMockUser(roles = {"ADMIN"})

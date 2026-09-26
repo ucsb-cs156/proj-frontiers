@@ -25,6 +25,7 @@ import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { dokkuAccountTranslationsFixtures } from "fixtures/dokkuAccountTranslationsFixtures";
+import { newAssignmentsFixtures } from "fixtures/newAssignmentsFixtures";
 import slackFixtures from "fixtures/slackFixtures";
 import { expect, vi } from "vitest";
 
@@ -937,6 +938,139 @@ describe("InstructorCourseShowPage tests", () => {
   const slackRequests = (path) =>
     axiosMock.history.get.filter((request) => request.url.includes(path));
 
+  describe("New Assignments tab", () => {
+    const setupCourse7WithNewAssignmentFeatures = (enabled) => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/7").reply(200, {
+        ...coursesFixtures.severalCourses[0],
+        id: 7,
+      });
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: false,
+        DOKKU_MANAGER: false,
+        ENABLE_API_KEYS: false,
+        NEW_ASSIGNMENT_FEATURES: enabled,
+      });
+      axiosMock
+        .onGet("/api/assignments")
+        .reply(200, newAssignmentsFixtures.threeAssignments);
+    };
+
+    const renderPage = () =>
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+    test("is shown, right after Assignments, when the NEW_ASSIGNMENT_FEATURES option is enabled", async () => {
+      setupCourse7WithNewAssignmentFeatures(true);
+
+      renderPage();
+
+      const newAssignmentsTab = await screen.findByRole("tab", {
+        name: "New Assignments",
+      });
+      expect(newAssignmentsTab).toHaveAttribute(
+        "data-rr-ui-event-key",
+        "new-assignments",
+      );
+      const tabNames = screen.getAllByRole("tab").map((tab) => tab.textContent);
+      expect(tabNames).toEqual([
+        "Students",
+        "Staff",
+        "Teams",
+        "Assignments",
+        "New Assignments",
+        "Jobs",
+        "Downloads",
+        "Settings",
+      ]);
+
+      fireEvent.click(newAssignmentsTab);
+      expect(newAssignmentsTab).toHaveAttribute("aria-selected", "true");
+      expect(
+        screen.getByTestId(
+          "InstructorCourseShowPage-new-assignments-tab-component",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        await screen.findByTestId(
+          "InstructorCourseShowPage-new-assignments-table-cell-row-0-col-repoPrefix",
+        ),
+      ).toHaveTextContent("lab01");
+      const assignmentsRequests = axiosMock.history.get.filter(
+        (request) => request.url === "/api/assignments",
+      );
+      expect(assignmentsRequests.length).toBe(1);
+      expect(assignmentsRequests[0].params).toEqual({ courseId: "7" });
+    });
+
+    test("the existing Assignments tab is still there, and still creates repositories directly", async () => {
+      setupCourse7WithNewAssignmentFeatures(true);
+
+      renderPage();
+
+      await screen.findByRole("tab", { name: "New Assignments" });
+      expect(screen.getByRole("tab", { name: "Assignments" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      expect(screen.getByTestId("AssignmentTabComponent")).toBeInTheDocument();
+    });
+
+    test("is hidden when the NEW_ASSIGNMENT_FEATURES option is disabled", async () => {
+      setupCourse7WithNewAssignmentFeatures(false);
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          axiosMock.history.get.some(
+            (request) => request.url === "/api/course/options",
+          ),
+        ).toBe(true),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "New Assignments" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(
+          "InstructorCourseShowPage-new-assignments-tab-component",
+        ),
+      ).not.toBeInTheDocument();
+    });
+
+    test("is hidden when the NEW_ASSIGNMENT_FEATURES option is not strictly true", async () => {
+      setupCourse7WithNewAssignmentFeatures("unexpected");
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          axiosMock.history.get.some(
+            (request) => request.url === "/api/course/options",
+          ),
+        ).toBe(true),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "New Assignments" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe("Dokku tab", () => {
     const setupCourse7WithDokkuOption = (dokkuManager) => {
       setupInstructorUser();
@@ -1400,6 +1534,7 @@ describe("InstructorCourseShowPage tests", () => {
       axiosMock.onGet("/api/courses/7/sections").reply(200, []);
       axiosMock.onGet("/api/dokku/translations").reply(200, []);
       axiosMock.onGet("/api/dokku/users_list_header").reply(200, "");
+      axiosMock.onGet("/api/assignments").reply(200, []);
       axiosMock
         .onGet("/api/courses/slack/info?courseId=7")
         .reply(200, slackFixtures.connectedInfo);
@@ -1434,6 +1569,7 @@ describe("InstructorCourseShowPage tests", () => {
       ["teams", "Teams"],
       ["sections", "Sections"],
       ["assignments", "Assignments"],
+      ["new-assignments", "New Assignments"],
       ["jobs", "Jobs"],
       ["downloads", "Downloads"],
       ["dokku", "Dokku"],
@@ -1443,6 +1579,7 @@ describe("InstructorCourseShowPage tests", () => {
       setupCourse7({
         TRANSLATE_SECTIONS: true,
         DOKKU_MANAGER: true,
+        NEW_ASSIGNMENT_FEATURES: true,
         SLACK_INTEGRATION: true,
       });
       renderAt(`/instructor/courses/7?tab=${tab}`);
@@ -1521,6 +1658,21 @@ describe("InstructorCourseShowPage tests", () => {
       renderAt("/instructor/courses/7?tab=slack");
       await screen.findByRole("tab", { name: "Settings" });
       expect(selectedTab()).toEqual(["Assignments"]);
+    });
+
+    test("?tab=new-assignments shows the Assignments tab when the New Assignment Features option is off", async () => {
+      setupCourse7({ NEW_ASSIGNMENT_FEATURES: false });
+      renderAt("/instructor/courses/7?tab=new-assignments");
+      await screen.findByRole("tab", { name: "Settings" });
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ NEW_ASSIGNMENT_FEATURES: false })),
+      );
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(
+        screen.queryByRole("tab", { name: "New Assignments" }),
+      ).not.toBeInTheDocument();
     });
 
     test("?tab=dokku shows the Assignments tab when the Dokku Manager option is off", async () => {

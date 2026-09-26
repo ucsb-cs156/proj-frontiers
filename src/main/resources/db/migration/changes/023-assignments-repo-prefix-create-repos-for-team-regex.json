@@ -1,0 +1,73 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "023-rename-assignments-name-to-repo-prefix",
+      "author": "pconrad",
+      "changes": [
+        {
+          "renameColumn": {
+            "tableName": "ASSIGNMENTS",
+            "oldColumnName": "NAME",
+            "newColumnName": "REPO_PREFIX",
+            "columnDataType": "VARCHAR(255)"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "changeSet": {
+      "id": "023-add-create-repos-for-and-team-regex-to-assignments",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "ASSIGNMENTS",
+            "columns": [
+              {
+                "column": {
+                  "name": "CREATE_REPOS_FOR",
+                  "type": "VARCHAR(255)"
+                }
+              },
+              {
+                "column": {
+                  "name": "TEAM_REGEX",
+                  "type": "VARCHAR(255)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "update": {
+            "tableName": "ASSIGNMENTS",
+            "columns": [
+              {
+                "column": {
+                  "name": "CREATE_REPOS_FOR",
+                  "value": "STUDENTS_ONLY"
+                }
+              }
+            ],
+            "where": "ASN_TYPE = 'INDIVIDUAL'"
+          }
+        },
+        {
+          "update": {
+            "tableName": "ASSIGNMENTS",
+            "columns": [
+              {
+                "column": {
+                  "name": "TEAM_REGEX",
+                  "value": ".*"
+                }
+              }
+            ],
+            "where": "ASN_TYPE = 'TEAM'"
+          }
+        }
+      ]
+    }
+  }
+]}
