@@ -14,6 +14,7 @@ import edu.ucsb.cs156.frontiers.enums.OrgStatus;
 import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService.RepositoryCreationResult;
 import edu.ucsb.cs156.jobs.entities.Job;
 import edu.ucsb.cs156.jobs.errors.JobCancelledException;
 import edu.ucsb.cs156.jobs.repositories.JobsRepository;
@@ -41,13 +42,26 @@ public class CreateStudentOrStaffRepositoriesJobTest {
   }
 
   private String expectedLog(Boolean isPrivate, RepositoryCreationOption creationOption) {
+    return expectedLog(isPrivate, creationOption, "", 0, 0);
+  }
+
+  private String expectedLog(
+      Boolean isPrivate,
+      RepositoryCreationOption creationOption,
+      String repoLines,
+      int created,
+      int updated) {
     return """
         repositoryPrefix=repo-prefix
         isPrivate=%s
         permissions=WRITE
         creationOption=%s
+        %sSummary:
+        %4d repos created
+        %4d repos updated
+        %4d repos total
         Done"""
-        .formatted(isPrivate, creationOption);
+        .formatted(isPrivate, creationOption, repoLines, created, updated, created + updated);
   }
 
   @Test
@@ -68,6 +82,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
     course.setRosterStudents(List.of(student));
 
+    when(service.createStudentRepository(
+            eq(course), eq(student), eq("repo-prefix"), eq(false), eq(RepositoryPermissions.WRITE)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-studentLogin", true)));
+
     var repoJob =
         spy(
             CreateStudentOrStaffRepositoriesJob.builder()
@@ -79,7 +97,13 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = expectedLog(false, RepositoryCreationOption.STUDENTS_ONLY);
+    String expected =
+        expectedLog(
+            false,
+            RepositoryCreationOption.STUDENTS_ONLY,
+            " created repo repo-prefix-studentLogin\n",
+            1,
+            0);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
@@ -98,6 +122,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         RosterStudent.builder().githubLogin("studentLogin").orgStatus(OrgStatus.MEMBER).build();
     course.setRosterStudents(List.of(student));
 
+    when(service.createStudentRepository(
+            eq(course), eq(student), eq("repo-prefix"), eq(true), eq(RepositoryPermissions.WRITE)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-studentLogin", false)));
+
     var repoJob =
         spy(
             CreateStudentOrStaffRepositoriesJob.builder()
@@ -109,7 +137,13 @@ public class CreateStudentOrStaffRepositoriesJobTest {
                 .build());
 
     repoJob.accept(ctx);
-    String expected = expectedLog(true, RepositoryCreationOption.STUDENTS_ONLY);
+    String expected =
+        expectedLog(
+            true,
+            RepositoryCreationOption.STUDENTS_ONLY,
+            "  updated repo repo-prefix-studentLogin\n",
+            0,
+            1);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
@@ -209,6 +243,10 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
     course.setCourseStaff(List.of(staff));
 
+    when(service.createStaffRepository(
+            eq(course), eq(staff), eq("repo-prefix"), eq(false), eq(RepositoryPermissions.WRITE)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-staffLogin", true)));
+
     var repoJob =
         spy(
             CreateStudentOrStaffRepositoriesJob.builder()
@@ -222,7 +260,13 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = expectedLog(false, RepositoryCreationOption.STAFF_ONLY);
+    String expected =
+        expectedLog(
+            false,
+            RepositoryCreationOption.STAFF_ONLY,
+            " created repo repo-prefix-staffLogin\n",
+            1,
+            0);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(0)).createStudentRepository(any(), any(), any(), any(), any());
@@ -248,6 +292,13 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
     course.setCourseStaff(List.of(staff));
 
+    when(service.createStudentRepository(
+            eq(course), eq(student), eq("repo-prefix"), eq(true), eq(RepositoryPermissions.WRITE)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-studentLogin", true)));
+    when(service.createStaffRepository(
+            eq(course), eq(staff), eq("repo-prefix"), eq(true), eq(RepositoryPermissions.WRITE)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-staffLogin", false)));
+
     var repoJob =
         spy(
             CreateStudentOrStaffRepositoriesJob.builder()
@@ -261,7 +312,13 @@ public class CreateStudentOrStaffRepositoriesJobTest {
 
     repoJob.accept(ctx);
 
-    String expected = expectedLog(true, RepositoryCreationOption.STUDENTS_AND_STAFF);
+    String expected =
+        expectedLog(
+            true,
+            RepositoryCreationOption.STUDENTS_AND_STAFF,
+            " created repo repo-prefix-studentLogin\n  updated repo repo-prefix-staffLogin\n",
+            1,
+            1);
     assertEquals(expected, jobStarted.getLog());
 
     verify(service, times(1))
@@ -345,6 +402,53 @@ public class CreateStudentOrStaffRepositoriesJobTest {
         CourseStaff.builder().githubLogin("staffOwner").orgStatus(OrgStatus.OWNER).build();
 
     course.setCourseStaff(List.of(staff));
+
+    when(service.createStaffRepository(
+            eq(course), eq(staff), eq("repo-prefix"), eq(false), eq(RepositoryPermissions.WRITE)))
+        .thenReturn(Optional.of(new RepositoryCreationResult("repo-prefix-staffOwner", false)));
+
+    var repoJob =
+        spy(
+            CreateStudentOrStaffRepositoriesJob.builder()
+                .repositoryService(service)
+                .repositoryPrefix("repo-prefix")
+                .course(course)
+                .isPrivate(false)
+                .permissions(RepositoryPermissions.WRITE)
+                .creationOption(RepositoryCreationOption.STAFF_ONLY)
+                .build());
+
+    repoJob.accept(ctx);
+
+    String expected =
+        expectedLog(
+            false,
+            RepositoryCreationOption.STAFF_ONLY,
+            "  updated repo repo-prefix-staffOwner\n",
+            0,
+            1);
+    assertEquals(expected, jobStarted.getLog());
+
+    verify(service, times(1))
+        .createStaffRepository(
+            eq(course),
+            eq(staff),
+            contains("repo-prefix"),
+            eq(false),
+            eq(RepositoryPermissions.WRITE));
+  }
+
+  @Test
+  public void testCreateStaffRepository_emptyResultIsNotCountedOrLogged() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+
+    CourseStaff staff =
+        CourseStaff.builder().githubLogin("staffLogin").orgStatus(OrgStatus.MEMBER).build();
+    course.setCourseStaff(List.of(staff));
+
+    when(service.createStaffRepository(
+            eq(course), eq(staff), eq("repo-prefix"), eq(false), eq(RepositoryPermissions.WRITE)))
+        .thenReturn(Optional.empty());
 
     var repoJob =
         spy(
