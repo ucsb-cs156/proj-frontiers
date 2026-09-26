@@ -90,6 +90,7 @@ import org.springframework.web.bind.annotation.RestController;
    * @param permission the permission that students, or teams, have on the repositories
    * @param createReposFor INDIVIDUAL only: whom to create repositories for
    * @param teamRegex TEAM only: only teams whose names match get a repository
+   * @param requireSignedCommit whether the repositories must require signed commits (default false)
    * @return the created assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = &quot;Create an assignment and start creating its repositories&quot;)
@@ -103,14 +104,23 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;permission&quot;) @RequestParam Permission permission,
       @Parameter(name = &quot;createReposFor&quot;) @RequestParam(required = false)
           RepositoryCreationOption createReposFor,
-      @Parameter(name = &quot;teamRegex&quot;) @RequestParam(required = false) String teamRegex)
+      @Parameter(name = &quot;teamRegex&quot;) @RequestParam(required = false) String teamRegex,
+      @Parameter(name = &quot;requireSignedCommit&quot;) @RequestParam(required = false)
+          Boolean requireSignedCommit)
       throws EntityNotFoundException {
-<span class="fc" id="L108">    Course course = ensureCourseExists(courseId);</span>
-<span class="fc" id="L109">    Assignment assignment = Assignment.builder().course(course).asnType(asnType).build();</span>
-<span class="fc" id="L110">    applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);</span>
-<span class="fc" id="L111">    requireLinkedOrganization(course);</span>
+<span class="fc" id="L111">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L112">    Assignment assignment = Assignment.builder().course(course).asnType(asnType).build();</span>
+<span class="fc" id="L113">    applyFields(</span>
+        assignment,
+        repoPrefix,
+        visibility,
+        permission,
+        createReposFor,
+        teamRegex,
+        requireSignedCommit);
+<span class="fc" id="L121">    requireLinkedOrganization(course);</span>
 
-<span class="fc" id="L113">    return launchAndSave(course, assignment);</span>
+<span class="fc" id="L123">    return launchAndSave(course, assignment);</span>
   }
 
   /**
@@ -126,6 +136,8 @@ import org.springframework.web.bind.annotation.RestController;
    * @param permission the permission that students, or teams, have on the repositories
    * @param createReposFor INDIVIDUAL only: whom to create repositories for
    * @param teamRegex TEAM only: only teams whose names match get a repository
+   * @param requireSignedCommit whether the repositories must require signed commits; if it is not
+   *     given the assignment keeps its setting
    * @return the updated assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = &quot;Update an assignment and start creating its repositories&quot;)
@@ -139,14 +151,23 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;permission&quot;) @RequestParam Permission permission,
       @Parameter(name = &quot;createReposFor&quot;) @RequestParam(required = false)
           RepositoryCreationOption createReposFor,
-      @Parameter(name = &quot;teamRegex&quot;) @RequestParam(required = false) String teamRegex)
+      @Parameter(name = &quot;teamRegex&quot;) @RequestParam(required = false) String teamRegex,
+      @Parameter(name = &quot;requireSignedCommit&quot;) @RequestParam(required = false)
+          Boolean requireSignedCommit)
       throws EntityNotFoundException {
-<span class="fc" id="L144">    Course course = ensureCourseExists(courseId);</span>
-<span class="fc" id="L145">    Assignment assignment = findAssignmentInCourse(courseId, assignmentId);</span>
-<span class="fc" id="L146">    applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);</span>
-<span class="fc" id="L147">    requireLinkedOrganization(course);</span>
+<span class="fc" id="L158">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L159">    Assignment assignment = findAssignmentInCourse(courseId, assignmentId);</span>
+<span class="fc" id="L160">    applyFields(</span>
+        assignment,
+        repoPrefix,
+        visibility,
+        permission,
+        createReposFor,
+        teamRegex,
+        requireSignedCommit);
+<span class="fc" id="L168">    requireLinkedOrganization(course);</span>
 
-<span class="fc" id="L149">    return launchAndSave(course, assignment);</span>
+<span class="fc" id="L170">    return launchAndSave(course, assignment);</span>
   }
 
   /**
@@ -165,11 +186,11 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
       @Parameter(name = &quot;assignmentId&quot;) @RequestParam Long assignmentId)
       throws EntityNotFoundException {
-<span class="fc" id="L168">    Course course = ensureCourseExists(courseId);</span>
-<span class="fc" id="L169">    Assignment assignment = findAssignmentInCourse(courseId, assignmentId);</span>
-<span class="fc" id="L170">    requireLinkedOrganization(course);</span>
+<span class="fc" id="L189">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L190">    Assignment assignment = findAssignmentInCourse(courseId, assignmentId);</span>
+<span class="fc" id="L191">    requireLinkedOrganization(course);</span>
 
-<span class="fc" id="L172">    return launchAndSave(course, assignment);</span>
+<span class="fc" id="L193">    return launchAndSave(course, assignment);</span>
   }
 
   @Operation(summary = &quot;Delete an assignment&quot;)
@@ -178,26 +199,26 @@ import org.springframework.web.bind.annotation.RestController;
   public Object deleteAssignment(
       @Parameter(name = &quot;id&quot;) @PathVariable Long id,
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L181">    ensureCourseExists(courseId);</span>
-<span class="fc" id="L182">    Assignment assignment = findAssignmentInCourse(courseId, id);</span>
+<span class="fc" id="L202">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L203">    Assignment assignment = findAssignmentInCourse(courseId, id);</span>
 
-<span class="fc" id="L184">    assignmentRepository.delete(assignment);</span>
+<span class="fc" id="L205">    assignmentRepository.delete(assignment);</span>
 
-<span class="fc" id="L186">    return genericMessage(String.format(&quot;Assignment with id %s deleted&quot;, id));</span>
+<span class="fc" id="L207">    return genericMessage(String.format(&quot;Assignment with id %s deleted&quot;, id));</span>
   }
 
   private Course ensureCourseExists(Long courseId) {
-<span class="fc" id="L190">    return courseRepository</span>
-<span class="fc" id="L191">        .findById(courseId)</span>
-<span class="fc" id="L192">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L211">    return courseRepository</span>
+<span class="fc" id="L212">        .findById(courseId)</span>
+<span class="fc" id="L213">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
   }
 
   /** Finds an assignment, which must belong to the given course. */
   private Assignment findAssignmentInCourse(Long courseId, Long assignmentId) {
-<span class="fc" id="L197">    return assignmentRepository</span>
-<span class="fc" id="L198">        .findById(assignmentId)</span>
-<span class="fc" id="L199">        .filter(a -&gt; a.getCourse().getId().equals(courseId))</span>
-<span class="fc" id="L200">        .orElseThrow(() -&gt; new EntityNotFoundException(Assignment.class, assignmentId));</span>
+<span class="fc" id="L218">    return assignmentRepository</span>
+<span class="fc" id="L219">        .findById(assignmentId)</span>
+<span class="fc" id="L220">        .filter(a -&gt; a.getCourse().getId().equals(courseId))</span>
+<span class="fc" id="L221">        .orElseThrow(() -&gt; new EntityNotFoundException(Assignment.class, assignmentId));</span>
   }
 
   /**
@@ -205,16 +226,16 @@ import org.springframework.web.bind.annotation.RestController;
    * of that job as its last job id.
    */
   private AssignmentWithJob launchAndSave(Course course, Assignment assignment) {
-<span class="fc" id="L208">    Job job = launchJob(course, assignment);</span>
-<span class="fc" id="L209">    assignment.setLastJobId(job.getId());</span>
-<span class="fc" id="L210">    return new AssignmentWithJob(assignmentRepository.save(assignment), job);</span>
+<span class="fc" id="L229">    Job job = launchJob(course, assignment);</span>
+<span class="fc" id="L230">    assignment.setLastJobId(job.getId());</span>
+<span class="fc" id="L231">    return new AssignmentWithJob(assignmentRepository.save(assignment), job);</span>
   }
 
   private static void requireLinkedOrganization(Course course) {
-<span class="fc bfc" id="L214" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L215">      throw new NoLinkedOrganizationException(course.getCourseName());</span>
+<span class="fc bfc" id="L235" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L236">      throw new NoLinkedOrganizationException(course.getCourseName());</span>
     }
-<span class="fc" id="L217">  }</span>
+<span class="fc" id="L238">  }</span>
 
   /**
    * Sets the editable fields of an assignment, checking the ones that depend on its type.
@@ -228,66 +249,72 @@ import org.springframework.web.bind.annotation.RestController;
       Visibility visibility,
       Permission permission,
       RepositoryCreationOption createReposFor,
-      String teamRegex) {
-<span class="fc" id="L232">    String normalizedPrefix = repoPrefix.strip();</span>
-<span class="fc bfc" id="L233" title="All 2 branches covered.">    if (normalizedPrefix.isEmpty()) {</span>
-<span class="fc" id="L234">      throw new IllegalArgumentException(&quot;repoPrefix must not be blank&quot;);</span>
+      String teamRegex,
+      Boolean requireSignedCommit) {
+<span class="fc" id="L254">    String normalizedPrefix = repoPrefix.strip();</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">    if (normalizedPrefix.isEmpty()) {</span>
+<span class="fc" id="L256">      throw new IllegalArgumentException(&quot;repoPrefix must not be blank&quot;);</span>
     }
-<span class="fc bfc" id="L236" title="All 4 branches covered.">    boolean hasTeamRegex = teamRegex != null &amp;&amp; !teamRegex.isBlank();</span>
+<span class="fc bfc" id="L258" title="All 4 branches covered.">    boolean hasTeamRegex = teamRegex != null &amp;&amp; !teamRegex.isBlank();</span>
 
-<span class="fc bfc" id="L238" title="All 2 branches covered.">    if (assignment.getAsnType() == AssignmentType.TEAM) {</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">      if (createReposFor != null) {</span>
-<span class="fc" id="L240">        throw new IllegalArgumentException(</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">    if (assignment.getAsnType() == AssignmentType.TEAM) {</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">      if (createReposFor != null) {</span>
+<span class="fc" id="L262">        throw new IllegalArgumentException(</span>
             &quot;createReposFor is only allowed for INDIVIDUAL assignments&quot;);
       }
-<span class="fc bfc" id="L243" title="All 2 branches covered.">      String regex = hasTeamRegex ? teamRegex : DEFAULT_TEAM_REGEX;</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">      String regex = hasTeamRegex ? teamRegex : DEFAULT_TEAM_REGEX;</span>
       try {
-<span class="fc" id="L245">        Pattern.compile(regex);</span>
-<span class="fc" id="L246">      } catch (PatternSyntaxException e) {</span>
-<span class="fc" id="L247">        throw new IllegalArgumentException(&quot;teamRegex is not a valid regular expression&quot;, e);</span>
-<span class="fc" id="L248">      }</span>
-<span class="fc" id="L249">      assignment.setCreateReposFor(null);</span>
-<span class="fc" id="L250">      assignment.setTeamRegex(regex);</span>
-<span class="fc" id="L251">    } else {</span>
-<span class="fc bfc" id="L252" title="All 2 branches covered.">      if (hasTeamRegex) {</span>
-<span class="fc" id="L253">        throw new IllegalArgumentException(&quot;teamRegex is only allowed for TEAM assignments&quot;);</span>
+<span class="fc" id="L267">        Pattern.compile(regex);</span>
+<span class="fc" id="L268">      } catch (PatternSyntaxException e) {</span>
+<span class="fc" id="L269">        throw new IllegalArgumentException(&quot;teamRegex is not a valid regular expression&quot;, e);</span>
+<span class="fc" id="L270">      }</span>
+<span class="fc" id="L271">      assignment.setCreateReposFor(null);</span>
+<span class="fc" id="L272">      assignment.setTeamRegex(regex);</span>
+<span class="fc" id="L273">    } else {</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">      if (hasTeamRegex) {</span>
+<span class="fc" id="L275">        throw new IllegalArgumentException(&quot;teamRegex is only allowed for TEAM assignments&quot;);</span>
       }
-<span class="fc" id="L255">      assignment.setCreateReposFor(</span>
-<span class="fc bfc" id="L256" title="All 2 branches covered.">          createReposFor == null ? RepositoryCreationOption.STUDENTS_ONLY : createReposFor);</span>
-<span class="fc" id="L257">      assignment.setTeamRegex(null);</span>
+<span class="fc" id="L277">      assignment.setCreateReposFor(</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">          createReposFor == null ? RepositoryCreationOption.STUDENTS_ONLY : createReposFor);</span>
+<span class="fc" id="L279">      assignment.setTeamRegex(null);</span>
     }
 
-<span class="fc" id="L260">    assignment.setRepoPrefix(normalizedPrefix);</span>
-<span class="fc" id="L261">    assignment.setVisibility(visibility);</span>
-<span class="fc" id="L262">    assignment.setPermission(permission);</span>
-<span class="fc" id="L263">  }</span>
+<span class="fc" id="L282">    assignment.setRepoPrefix(normalizedPrefix);</span>
+<span class="fc" id="L283">    assignment.setVisibility(visibility);</span>
+<span class="fc" id="L284">    assignment.setPermission(permission);</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">    if (requireSignedCommit != null) {</span>
+<span class="fc" id="L286">      assignment.setRequireSignedCommit(requireSignedCommit);</span>
+    }
+<span class="fc" id="L288">  }</span>
 
   /** Starts the job that creates the individual or team repositories of an assignment. */
   private Job launchJob(Course course, Assignment assignment) {
-<span class="fc bfc" id="L267" title="All 2 branches covered.">    boolean isPrivate = assignment.getVisibility() == Visibility.PRIVATE;</span>
-<span class="fc" id="L268">    RepositoryPermissions permissions =</span>
-<span class="fc" id="L269">        RepositoryPermissions.valueOf(assignment.getPermission().name());</span>
-<span class="fc bfc" id="L270" title="All 2 branches covered.">    if (assignment.getAsnType() == AssignmentType.TEAM) {</span>
-<span class="fc" id="L271">      return jobService.runAsJob(</span>
-<span class="fc" id="L272">          CreateTeamRepositoriesJob.builder()</span>
-<span class="fc" id="L273">              .repositoryPrefix(assignment.getRepoPrefix())</span>
-<span class="fc" id="L274">              .isPrivate(isPrivate)</span>
-<span class="fc" id="L275">              .repositoryService(repositoryService)</span>
-<span class="fc" id="L276">              .githubTeamService(githubTeamService)</span>
-<span class="fc" id="L277">              .course(course)</span>
-<span class="fc" id="L278">              .permissions(permissions)</span>
-<span class="fc" id="L279">              .teamRegex(assignment.getTeamRegex())</span>
-<span class="fc" id="L280">              .build());</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">    boolean isPrivate = assignment.getVisibility() == Visibility.PRIVATE;</span>
+<span class="fc" id="L293">    RepositoryPermissions permissions =</span>
+<span class="fc" id="L294">        RepositoryPermissions.valueOf(assignment.getPermission().name());</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">    if (assignment.getAsnType() == AssignmentType.TEAM) {</span>
+<span class="fc" id="L296">      return jobService.runAsJob(</span>
+<span class="fc" id="L297">          CreateTeamRepositoriesJob.builder()</span>
+<span class="fc" id="L298">              .repositoryPrefix(assignment.getRepoPrefix())</span>
+<span class="fc" id="L299">              .isPrivate(isPrivate)</span>
+<span class="fc" id="L300">              .repositoryService(repositoryService)</span>
+<span class="fc" id="L301">              .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L302">              .course(course)</span>
+<span class="fc" id="L303">              .permissions(permissions)</span>
+<span class="fc" id="L304">              .teamRegex(assignment.getTeamRegex())</span>
+<span class="fc" id="L305">              .requireSignedCommit(assignment.getRequireSignedCommit())</span>
+<span class="fc" id="L306">              .build());</span>
     }
-<span class="fc" id="L282">    return jobService.runAsJob(</span>
-<span class="fc" id="L283">        CreateStudentOrStaffRepositoriesJob.builder()</span>
-<span class="fc" id="L284">            .repositoryPrefix(assignment.getRepoPrefix())</span>
-<span class="fc" id="L285">            .isPrivate(isPrivate)</span>
-<span class="fc" id="L286">            .repositoryService(repositoryService)</span>
-<span class="fc" id="L287">            .course(course)</span>
-<span class="fc" id="L288">            .permissions(permissions)</span>
-<span class="fc" id="L289">            .creationOption(assignment.getCreateReposFor())</span>
-<span class="fc" id="L290">            .build());</span>
+<span class="fc" id="L308">    return jobService.runAsJob(</span>
+<span class="fc" id="L309">        CreateStudentOrStaffRepositoriesJob.builder()</span>
+<span class="fc" id="L310">            .repositoryPrefix(assignment.getRepoPrefix())</span>
+<span class="fc" id="L311">            .isPrivate(isPrivate)</span>
+<span class="fc" id="L312">            .repositoryService(repositoryService)</span>
+<span class="fc" id="L313">            .course(course)</span>
+<span class="fc" id="L314">            .permissions(permissions)</span>
+<span class="fc" id="L315">            .creationOption(assignment.getCreateReposFor())</span>
+<span class="fc" id="L316">            .requireSignedCommit(assignment.getRequireSignedCommit())</span>
+<span class="fc" id="L317">            .build());</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
