@@ -7,6 +7,7 @@ import {
   JOBS_QUERY_KEY,
   NEW_ASSIGNMENTS_URL,
   PERMISSION_LABELS,
+  SIGNED_COMMITS_REQUIRED_ICON,
   VISIBILITY_LABELS,
   assignmentToFormData,
   assignmentsQueryKey,
@@ -62,6 +63,7 @@ describe("newAssignmentsUtils tests", () => {
         repoPrefix: "lab01",
         isPrivate: true,
         permission: "READ",
+        requireSignedCommit: true,
         createReposFor: "STAFF_ONLY",
         teamRegex: "ignored",
       }),
@@ -69,6 +71,7 @@ describe("newAssignmentsUtils tests", () => {
       repoPrefix: "lab01",
       visibility: "PRIVATE",
       permission: "READ",
+      requireSignedCommit: true,
       createReposFor: "STAFF_ONLY",
     });
   });
@@ -79,6 +82,7 @@ describe("newAssignmentsUtils tests", () => {
         repoPrefix: "proj",
         isPrivate: false,
         permission: "ADMIN",
+        requireSignedCommit: false,
         createReposFor: "ignored",
         teamRegex: "s26-.*",
       }),
@@ -86,8 +90,23 @@ describe("newAssignmentsUtils tests", () => {
       repoPrefix: "proj",
       visibility: "PUBLIC",
       permission: "ADMIN",
+      requireSignedCommit: false,
       teamRegex: "s26-.*",
     });
+  });
+
+  test("formDataToParams sends requireSignedCommit as false when the form has no value for it", () => {
+    ["INDIVIDUAL", "TEAM"].forEach((asnType) => {
+      expect(
+        formDataToParams(asnType, { repoPrefix: "x", permission: "READ" })
+          .requireSignedCommit,
+      ).toBe(false);
+    });
+  });
+
+  test("the signed commits checkmark is the white heavy check mark emoji", () => {
+    expect(SIGNED_COMMITS_REQUIRED_ICON).toBe("\u2705");
+    expect(SIGNED_COMMITS_REQUIRED_ICON).toBe("✅");
   });
 
   test("assignmentToFormData", () => {
@@ -98,6 +117,7 @@ describe("newAssignmentsUtils tests", () => {
         asnType: "TEAM",
         visibility: "PRIVATE",
         permission: "WRITE",
+        requireSignedCommit: true,
         createReposFor: null,
         teamRegex: "s26-.*",
       }),
@@ -105,6 +125,7 @@ describe("newAssignmentsUtils tests", () => {
       repoPrefix: "proj-team",
       isPrivate: true,
       permission: "WRITE",
+      requireSignedCommit: true,
       createReposFor: null,
       teamRegex: "s26-.*",
     });

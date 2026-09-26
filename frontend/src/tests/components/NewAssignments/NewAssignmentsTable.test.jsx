@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
@@ -53,6 +59,7 @@ describe("NewAssignmentsTable tests", () => {
       asnType: "Type",
       visibility: "Visibility",
       permission: "Permission",
+      requireSignedCommit: "Signed Commits",
       createReposFor: "Repositories For",
       teamRegex: "Team Regex",
       lastJobId: "Job Log",
@@ -82,6 +89,19 @@ describe("NewAssignmentsTable tests", () => {
     expect(cell(2, "permission")).toHaveTextContent("Write");
     expect(cell(2, "createReposFor")).toHaveTextContent("");
     expect(cell(2, "teamRegex")).toHaveTextContent("s26-.*");
+
+    // a checkmark for the assignments that require signed commits, nothing for the others
+    expect(cell(0, "requireSignedCommit")).toHaveTextContent("");
+    expect(cell(1, "requireSignedCommit")).toHaveTextContent("✅");
+    expect(cell(2, "requireSignedCommit")).toHaveTextContent("✅");
+    const checkmark = within(cell(1, "requireSignedCommit")).getByRole("img");
+    expect(checkmark).toHaveAccessibleName("Signed commits are required");
+    expect(checkmark).toHaveAttribute("title", "Signed commits are required");
+    expect(
+      within(cell(0, "requireSignedCommit")).queryByRole("img"),
+    ).not.toBeInTheDocument();
+    expect(cell(0, "requireSignedCommit")).not.toHaveTextContent("false");
+    expect(cell(1, "requireSignedCommit")).not.toHaveTextContent("true");
 
     expect(cell(0, "lastJobId")).toHaveTextContent("12");
     expect(cell(1, "lastJobId")).toHaveTextContent("");
@@ -318,6 +338,8 @@ describe("NewAssignmentsTable tests", () => {
       repoPrefix: "lab02-v2",
       visibility: "PUBLIC",
       permission: "READ",
+      // lab02 requires signed commits, and the edit did not change that
+      requireSignedCommit: true,
       createReposFor: "STAFF_ONLY",
     });
 
@@ -364,8 +386,44 @@ describe("NewAssignmentsTable tests", () => {
       repoPrefix: "proj-team",
       visibility: "PRIVATE",
       permission: "WRITE",
+      requireSignedCommit: true,
       teamRegex: "s26-0[1-3]",
     });
+  });
+
+  test("the edit modal shows whether signed commits are required, and the switch can clear it", async () => {
+    axiosMock
+      .onPut("/api/assignments/put")
+      .reply(200, newAssignmentsFixtures.savedWithJob);
+
+    renderTable();
+
+    // lab01 does not require them: the switch is off, and turning it on is sent
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`));
+    await screen.findByTestId(`${testId}-edit-modal-body`);
+    expect(
+      screen.getByTestId(`${individualForm}-requireSignedCommit`),
+    ).not.toBeChecked();
+    fireEvent.click(
+      screen.getByTestId(`${individualForm}-requireSignedCommit`),
+    );
+    fireEvent.click(screen.getByTestId(`${individualForm}-submit`));
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].params.requireSignedCommit).toBe(true);
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-edit-modal-body`),
+      ).not.toBeInTheDocument(),
+    );
+
+    // the team assignment requires them: the switch is on, and turning it off is sent
+    fireEvent.click(screen.getByTestId(`${testId}-cell-row-2-col-Edit-button`));
+    await screen.findByTestId(`${testId}-edit-modal-body`);
+    expect(screen.getByTestId(`${teamForm}-requireSignedCommit`)).toBeChecked();
+    fireEvent.click(screen.getByTestId(`${teamForm}-requireSignedCommit`));
+    fireEvent.click(screen.getByTestId(`${teamForm}-submit`));
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(2));
+    expect(axiosMock.history.put[1].params.requireSignedCommit).toBe(false);
   });
 
   test("the edit modal can be closed without submitting", async () => {

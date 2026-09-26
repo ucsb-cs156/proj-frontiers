@@ -90,6 +90,7 @@ public class AssignmentsController extends ApiController {
    * @param permission the permission that students, or teams, have on the repositories
    * @param createReposFor INDIVIDUAL only: whom to create repositories for
    * @param teamRegex TEAM only: only teams whose names match get a repository
+   * @param requireSignedCommit whether the repositories must require signed commits (default false)
    * @return the created assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = "Create an assignment and start creating its repositories")
@@ -103,11 +104,20 @@ public class AssignmentsController extends ApiController {
       @Parameter(name = "permission") @RequestParam Permission permission,
       @Parameter(name = "createReposFor") @RequestParam(required = false)
           RepositoryCreationOption createReposFor,
-      @Parameter(name = "teamRegex") @RequestParam(required = false) String teamRegex)
+      @Parameter(name = "teamRegex") @RequestParam(required = false) String teamRegex,
+      @Parameter(name = "requireSignedCommit") @RequestParam(required = false)
+          Boolean requireSignedCommit)
       throws EntityNotFoundException {
     Course course = ensureCourseExists(courseId);
     Assignment assignment = Assignment.builder().course(course).asnType(asnType).build();
-    applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);
+    applyFields(
+        assignment,
+        repoPrefix,
+        visibility,
+        permission,
+        createReposFor,
+        teamRegex,
+        requireSignedCommit);
     requireLinkedOrganization(course);
 
     return launchAndSave(course, assignment);
@@ -126,6 +136,8 @@ public class AssignmentsController extends ApiController {
    * @param permission the permission that students, or teams, have on the repositories
    * @param createReposFor INDIVIDUAL only: whom to create repositories for
    * @param teamRegex TEAM only: only teams whose names match get a repository
+   * @param requireSignedCommit whether the repositories must require signed commits; if it is not
+   *     given the assignment keeps its setting
    * @return the updated assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = "Update an assignment and start creating its repositories")
@@ -139,11 +151,20 @@ public class AssignmentsController extends ApiController {
       @Parameter(name = "permission") @RequestParam Permission permission,
       @Parameter(name = "createReposFor") @RequestParam(required = false)
           RepositoryCreationOption createReposFor,
-      @Parameter(name = "teamRegex") @RequestParam(required = false) String teamRegex)
+      @Parameter(name = "teamRegex") @RequestParam(required = false) String teamRegex,
+      @Parameter(name = "requireSignedCommit") @RequestParam(required = false)
+          Boolean requireSignedCommit)
       throws EntityNotFoundException {
     Course course = ensureCourseExists(courseId);
     Assignment assignment = findAssignmentInCourse(courseId, assignmentId);
-    applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);
+    applyFields(
+        assignment,
+        repoPrefix,
+        visibility,
+        permission,
+        createReposFor,
+        teamRegex,
+        requireSignedCommit);
     requireLinkedOrganization(course);
 
     return launchAndSave(course, assignment);
@@ -228,7 +249,8 @@ public class AssignmentsController extends ApiController {
       Visibility visibility,
       Permission permission,
       RepositoryCreationOption createReposFor,
-      String teamRegex) {
+      String teamRegex,
+      Boolean requireSignedCommit) {
     String normalizedPrefix = repoPrefix.strip();
     if (normalizedPrefix.isEmpty()) {
       throw new IllegalArgumentException("repoPrefix must not be blank");
@@ -260,6 +282,9 @@ public class AssignmentsController extends ApiController {
     assignment.setRepoPrefix(normalizedPrefix);
     assignment.setVisibility(visibility);
     assignment.setPermission(permission);
+    if (requireSignedCommit != null) {
+      assignment.setRequireSignedCommit(requireSignedCommit);
+    }
   }
 
   /** Starts the job that creates the individual or team repositories of an assignment. */
@@ -277,6 +302,7 @@ public class AssignmentsController extends ApiController {
               .course(course)
               .permissions(permissions)
               .teamRegex(assignment.getTeamRegex())
+              .requireSignedCommit(assignment.getRequireSignedCommit())
               .build());
     }
     return jobService.runAsJob(
@@ -287,6 +313,7 @@ public class AssignmentsController extends ApiController {
             .course(course)
             .permissions(permissions)
             .creationOption(assignment.getCreateReposFor())
+            .requireSignedCommit(assignment.getRequireSignedCommit())
             .build());
   }
 }

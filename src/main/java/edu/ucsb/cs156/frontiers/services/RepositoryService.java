@@ -22,6 +22,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -208,6 +209,82 @@ public class RepositoryService {
 
     return createRepositoryForStudentOrStaff(
         course, staff.getGithubLogin(), repoPrefix, isPrivate, permissions);
+  }
+
+  /** The name of the ruleset that requires signed commits on a repository. */
+  public static final String SIGNED_COMMITS_RULESET_NAME = "Require Signed Commits";
+
+  /**
+   * Makes a repository require signed commits, or not, by giving it a ruleset named {@value
+   * #SIGNED_COMMITS_RULESET_NAME}, or removing that ruleset. The ruleset requires signatures on
+   * every branch except gh-pages, and is active.
+   *
+   * <ul>
+   *   <li>required, and the repository has no such ruleset: it is created.
+   *   <li>required, and the repository already has it: it is updated in place, so that it has the
+   *       settings above and the repository is never without it.
+   *   <li>not required, and the repository has it: it is deleted.
+   *   <li>not required, and it does not: nothing is changed.
+   * </ul>
+   *
+   * Only rulesets of the repository itself are considered, not ones inherited from the
+   * organization.
+   *
+   * @param course the course whose organization the repository belongs to
+   * @param repositoryName the name of the repository
+   * @param required whether commits must be signed
+   * @throws HttpStatusCodeException if GitHub refuses a request, for example because the GitHub App
+   *     is not allowed to administer repositories
+   */
+  public void setSignedCommitsRequired(Course course, String repositoryName, boolean required)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    String rulesetsEndpoint =
+        "https://api.github.com/repos/" + course.getOrgName() + "/" + repositoryName + "/rulesets";
+
+    ResponseEntity<String> listResponse =
+        restTemplate.exchange(
+            rulesetsEndpoint + "?includes_parents=false&per_page=100",
+            HttpMethod.GET,
+            new HttpEntity<>(githubHeaders(token)),
+            String.class);
+    Long existingId = null;
+    for (JsonNode ruleset : mapper.readTree(listResponse.getBody())) {
+      if (SIGNED_COMMITS_RULESET_NAME.equals(ruleset.path("name").asText())) {
+        existingId = ruleset.path("id").asLong();
+        break;
+      }
+    }
+
+    if (!required) {
+      if (existingId != null) {
+        restTemplate.exchange(
+            rulesetsEndpoint + "/" + existingId,
+            HttpMethod.DELETE,
+            new HttpEntity<>(githubHeaders(token)),
+            String.class);
+      }
+      return;
+    }
+
+    Map<String, Object> body = new HashMap<>();
+    body.put("name", SIGNED_COMMITS_RULESET_NAME);
+    body.put("target", "branch");
+    body.put("enforcement", "active");
+    body.put(
+        "conditions",
+        Map.of(
+            "ref_name",
+            Map.of("include", List.of("~ALL"), "exclude", List.of("refs/heads/gh-pages"))));
+    body.put("rules", List.of(Map.of("type", "required_signatures")));
+    HttpEntity<String> entity =
+        new HttpEntity<>(mapper.writeValueAsString(body), githubHeaders(token));
+    if (existingId == null) {
+      restTemplate.exchange(rulesetsEndpoint, HttpMethod.POST, entity, String.class);
+    } else {
+      restTemplate.exchange(
+          rulesetsEndpoint + "/" + existingId, HttpMethod.PUT, entity, String.class);
+    }
   }
 
   /**

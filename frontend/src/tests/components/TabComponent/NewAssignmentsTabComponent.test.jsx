@@ -117,6 +117,9 @@ describe("NewAssignmentsTabComponent tests", () => {
       target: { value: "WRITE" },
     });
     fireEvent.click(screen.getByTestId(`${individualForm}-isPrivate`));
+    fireEvent.click(
+      screen.getByTestId(`${individualForm}-requireSignedCommit`),
+    );
     fireEvent.change(screen.getByTestId(`${individualForm}-createReposFor`), {
       target: { value: "STUDENTS_AND_STAFF" },
     });
@@ -130,6 +133,7 @@ describe("NewAssignmentsTabComponent tests", () => {
       repoPrefix: "lab04",
       visibility: "PRIVATE",
       permission: "WRITE",
+      requireSignedCommit: true,
       createReposFor: "STUDENTS_AND_STAFF",
     });
 
@@ -182,9 +186,32 @@ describe("NewAssignmentsTabComponent tests", () => {
       repoPrefix: "proj",
       visibility: "PUBLIC",
       permission: "MAINTAIN",
+      requireSignedCommit: false,
       teamRegex: ".*",
     });
     await waitFor(() => expect(toast).toHaveBeenCalledTimes(1));
+  });
+
+  test("a team assignment can be created requiring signed commits", async () => {
+    axiosMock
+      .onPost("/api/assignments/post")
+      .reply(200, newAssignmentsFixtures.savedWithJob);
+
+    renderTab();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-create-team-assignment-button`),
+    );
+    await createModalTitle("Create Team Assignment");
+    fireEvent.change(screen.getByTestId(`${teamForm}-repoPrefix`), {
+      target: { value: "proj" },
+    });
+    fireEvent.click(screen.getByTestId(`${teamForm}-requireSignedCommit`));
+    fireEvent.click(screen.getByTestId(`${teamForm}-submit`));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params.requireSignedCommit).toBe(true);
+    expect(axiosMock.history.post[0].params.teamRegex).toBe(".*");
   });
 
   test("the create modal can be closed, and reopened for the other kind of assignment", async () => {

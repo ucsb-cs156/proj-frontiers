@@ -223,7 +223,8 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             "permission", "READ",
             "createReposFor", "STUDENTS_ONLY",
             "teamRegex", "",
-            "lastJobId", 12),
+            "lastJobId", 12,
+            "requireSignedCommit", false),
         withNullsAsEmpty(body.get(0)));
   }
 
@@ -994,6 +995,193 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     assertNull(existing.getLastJobId());
     verify(assignmentRepository, never()).save(any());
     verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
+  }
+
+  // ---- requireSignedCommit ----
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder postIndividual(
+      String requireSignedCommit) {
+    var request =
+        post("/api/assignments/post")
+            .with(csrf())
+            .param("courseId", "1")
+            .param("repoPrefix", "hw1")
+            .param("asnType", "INDIVIDUAL")
+            .param("visibility", "PUBLIC")
+            .param("permission", "READ");
+    return requireSignedCommit == null
+        ? request
+        : request.param("requireSignedCommit", requireSignedCommit);
+  }
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder postTeam(
+      String requireSignedCommit) {
+    var request =
+        post("/api/assignments/post")
+            .with(csrf())
+            .param("courseId", "1")
+            .param("repoPrefix", "proj")
+            .param("asnType", "TEAM")
+            .param("visibility", "PUBLIC")
+            .param("permission", "READ");
+    return requireSignedCommit == null
+        ? request
+        : request.param("requireSignedCommit", requireSignedCommit);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_does_not_require_signed_commits_unless_asked_to() throws Exception {
+    mockMvc.perform(postIndividual(null)).andExpect(status().isOk());
+
+    ArgumentCaptor<Assignment> saved = ArgumentCaptor.forClass(Assignment.class);
+    verify(assignmentRepository, times(1)).save(saved.capture());
+    assertEquals(false, saved.getValue().getRequireSignedCommit());
+    CreateStudentOrStaffRepositoriesJob started =
+        assertInstanceOf(CreateStudentOrStaffRepositoriesJob.class, launchedJob());
+    // false, not null: the job removes the rule from the repos rather than leaving it alone
+    assertEquals(false, ReflectionTestUtils.getField(started, "requireSignedCommit"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_individual_assignment_can_require_signed_commits() throws Exception {
+    MvcResult response =
+        mockMvc.perform(postIndividual("true")).andExpect(status().isOk()).andReturn();
+
+    ArgumentCaptor<Assignment> saved = ArgumentCaptor.forClass(Assignment.class);
+    verify(assignmentRepository, times(1)).save(saved.capture());
+    assertEquals(true, saved.getValue().getRequireSignedCommit());
+    CreateStudentOrStaffRepositoriesJob started =
+        assertInstanceOf(CreateStudentOrStaffRepositoriesJob.class, launchedJob());
+    assertEquals(true, ReflectionTestUtils.getField(started, "requireSignedCommit"));
+    assertEquals(
+        true,
+        mapper.readValue(response.getResponse().getContentAsString(), Map.class).get("assignment")
+                instanceof Map<?, ?> a
+            ? a.get("requireSignedCommit")
+            : null);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_team_assignment_can_require_signed_commits() throws Exception {
+    mockMvc.perform(postTeam("true")).andExpect(status().isOk());
+
+    ArgumentCaptor<Assignment> saved = ArgumentCaptor.forClass(Assignment.class);
+    verify(assignmentRepository, times(1)).save(saved.capture());
+    assertEquals(true, saved.getValue().getRequireSignedCommit());
+    CreateTeamRepositoriesJob started =
+        assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob());
+    assertEquals(true, ReflectionTestUtils.getField(started, "requireSignedCommit"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_team_assignment_without_the_flag_clears_the_rule_on_its_repos()
+      throws Exception {
+    mockMvc.perform(postTeam("false")).andExpect(status().isOk());
+
+    CreateTeamRepositoriesJob started =
+        assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob());
+    assertEquals(false, ReflectionTestUtils.getField(started, "requireSignedCommit"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_can_set_and_clear_the_flag() throws Exception {
+    Assignment existing = individual(5L, "hw1");
+    when(assignmentRepository.findById(eq(5L))).thenReturn(Optional.of(existing));
+
+    mockMvc
+        .perform(
+            putRequest("5")
+                .param("repoPrefix", "hw1")
+                .param("visibility", "PUBLIC")
+                .param("permission", "READ")
+                .param("requireSignedCommit", "true"))
+        .andExpect(status().isOk());
+    assertEquals(true, existing.getRequireSignedCommit());
+    assertEquals(
+        true,
+        ReflectionTestUtils.getField(
+            assertInstanceOf(CreateStudentOrStaffRepositoriesJob.class, launchedJob()),
+            "requireSignedCommit"));
+
+    org.mockito.Mockito.clearInvocations(jobService);
+    mockMvc
+        .perform(
+            putRequest("5")
+                .param("repoPrefix", "hw1")
+                .param("visibility", "PUBLIC")
+                .param("permission", "READ")
+                .param("requireSignedCommit", "false"))
+        .andExpect(status().isOk());
+    assertEquals(false, existing.getRequireSignedCommit());
+    assertEquals(
+        false,
+        ReflectionTestUtils.getField(
+            assertInstanceOf(CreateStudentOrStaffRepositoriesJob.class, launchedJob()),
+            "requireSignedCommit"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_without_the_flag_keeps_the_setting_the_assignment_has() throws Exception {
+    Assignment individual = individual(5L, "hw1");
+    individual.setRequireSignedCommit(true);
+    Assignment team = team(6L, "proj", "team-.*");
+    team.setRequireSignedCommit(true);
+    when(assignmentRepository.findById(eq(5L))).thenReturn(Optional.of(individual));
+    when(assignmentRepository.findById(eq(6L))).thenReturn(Optional.of(team));
+
+    mockMvc
+        .perform(
+            putRequest("5")
+                .param("repoPrefix", "hw1")
+                .param("visibility", "PUBLIC")
+                .param("permission", "READ"))
+        .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            putRequest("6")
+                .param("repoPrefix", "proj")
+                .param("visibility", "PUBLIC")
+                .param("permission", "READ")
+                .param("teamRegex", "team-.*"))
+        .andExpect(status().isOk());
+
+    assertEquals(true, individual.getRequireSignedCommit());
+    assertEquals(true, team.getRequireSignedCommit());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void launch_gives_the_job_the_setting_the_assignment_has() throws Exception {
+    Assignment individual = individual(5L, "hw1");
+    individual.setRequireSignedCommit(true);
+    Assignment team = team(6L, "proj", "team-.*");
+    team.setRequireSignedCommit(false);
+    when(assignmentRepository.findById(eq(5L))).thenReturn(Optional.of(individual));
+    when(assignmentRepository.findById(eq(6L))).thenReturn(Optional.of(team));
+
+    mockMvc.perform(launchRequest("1", "5")).andExpect(status().isOk());
+    assertEquals(
+        true,
+        ReflectionTestUtils.getField(
+            assertInstanceOf(CreateStudentOrStaffRepositoriesJob.class, launchedJob()),
+            "requireSignedCommit"));
+
+    org.mockito.Mockito.clearInvocations(jobService);
+    mockMvc.perform(launchRequest("1", "6")).andExpect(status().isOk());
+    assertEquals(
+        false,
+        ReflectionTestUtils.getField(
+            assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob()),
+            "requireSignedCommit"));
+    // launching does not change the setting
+    assertEquals(true, individual.getRequireSignedCommit());
+    assertEquals(false, team.getRequireSignedCommit());
   }
 
   // ---- DELETE ----

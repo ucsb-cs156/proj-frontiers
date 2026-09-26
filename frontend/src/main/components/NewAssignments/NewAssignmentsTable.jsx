@@ -15,6 +15,7 @@ import {
   JOBS_QUERY_KEY,
   NEW_ASSIGNMENTS_URL,
   PERMISSION_LABELS,
+  SIGNED_COMMITS_REQUIRED_ICON,
   VISIBILITY_LABELS,
   assignmentToFormData,
   assignmentsQueryKey,
@@ -137,6 +138,24 @@ export default function NewAssignmentsTable({
       header: "Permission",
       accessorFn: (row) => PERMISSION_LABELS[row.permission],
       id: "permission",
+    },
+    {
+      header: "Signed Commits",
+      accessorKey: "requireSignedCommit",
+      id: "requireSignedCommit",
+      // a checkmark for an assignment whose repositories require signed commits
+      cell: ({ cell }) =>
+        cell.getValue() ? (
+          <span
+            role="img"
+            aria-label="Signed commits are required"
+            title="Signed commits are required"
+          >
+            {SIGNED_COMMITS_REQUIRED_ICON}
+          </span>
+        ) : (
+          ""
+        ),
     },
     {
       header: "Repositories For",
