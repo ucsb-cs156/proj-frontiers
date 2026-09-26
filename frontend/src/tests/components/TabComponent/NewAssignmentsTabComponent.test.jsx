@@ -271,7 +271,7 @@ describe("NewAssignmentsTabComponent tests", () => {
     );
   });
 
-  test("launching an assignment through the table refetches the list, so the new job shows, and the jobs", async () => {
+  test("refreshing an assignment through the table refetches the list, so the new job shows, and the jobs", async () => {
     axiosMock.onPost("/api/assignments/launch").reply(200, {
       assignment: {
         ...newAssignmentsFixtures.threeAssignments[1],
@@ -284,7 +284,7 @@ describe("NewAssignmentsTabComponent tests", () => {
     renderTab();
 
     fireEvent.click(
-      await screen.findByTestId(`${tableId}-cell-row-1-col-Launch-button`),
+      await screen.findByTestId(`${tableId}-cell-row-1-col-Refresh-button`),
     );
 
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));

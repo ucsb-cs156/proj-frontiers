@@ -149,7 +149,7 @@ export default function NewAssignmentsTable({
       id: "teamRegex",
     },
     {
-      header: "Last Job",
+      header: "Job Log",
       accessorKey: "lastJobId",
       id: "lastJobId",
       // the number of the job is a link that shows the log of the job in a modal
@@ -172,7 +172,7 @@ export default function NewAssignmentsTable({
         );
       },
     },
-    ButtonColumn("Launch", "success", launchCallback, testIdPrefix),
+    ButtonColumn("Refresh", "success", launchCallback, testIdPrefix),
     ButtonColumn("Edit", "primary", editCallback, testIdPrefix),
     ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
   ];

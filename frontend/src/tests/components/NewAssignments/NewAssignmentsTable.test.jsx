@@ -55,8 +55,8 @@ describe("NewAssignmentsTable tests", () => {
       permission: "Permission",
       createReposFor: "Repositories For",
       teamRegex: "Team Regex",
-      lastJobId: "Last Job",
-      Launch: "Launch",
+      lastJobId: "Job Log",
+      Refresh: "Refresh",
       Edit: "Edit",
       Delete: "Delete",
     };
@@ -87,9 +87,11 @@ describe("NewAssignmentsTable tests", () => {
     expect(cell(1, "lastJobId")).toHaveTextContent("");
     expect(cell(2, "lastJobId")).toHaveTextContent("15");
 
-    const launch = screen.getByTestId(`${testId}-cell-row-0-col-Launch-button`);
-    expect(launch).toHaveTextContent("Launch");
-    expect(launch).toHaveClass("btn-success");
+    const refresh = screen.getByTestId(
+      `${testId}-cell-row-0-col-Refresh-button`,
+    );
+    expect(refresh).toHaveTextContent("Refresh");
+    expect(refresh).toHaveClass("btn-success");
 
     const edit = screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`);
     expect(edit).toHaveTextContent("Edit");
@@ -189,7 +191,7 @@ describe("NewAssignmentsTable tests", () => {
     expect(axiosMock.history.get[0].params.jobId).toBe(15);
   });
 
-  test("Launch starts the job of the assignment, and says which job", async () => {
+  test("Refresh starts the job of the assignment, and says which job", async () => {
     axiosMock.onPost("/api/assignments/launch").reply(200, {
       assignment: {
         ...newAssignmentsFixtures.threeAssignments[1],
@@ -201,7 +203,7 @@ describe("NewAssignmentsTable tests", () => {
     renderTable();
 
     fireEvent.click(
-      screen.getByTestId(`${testId}-cell-row-1-col-Launch-button`),
+      screen.getByTestId(`${testId}-cell-row-1-col-Refresh-button`),
     );
 
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
@@ -218,7 +220,7 @@ describe("NewAssignmentsTable tests", () => {
     expect(toast).toHaveBeenCalledTimes(1);
   });
 
-  test("Launch on another row launches that assignment", async () => {
+  test("Refresh on another row starts the job of that assignment", async () => {
     axiosMock.onPost("/api/assignments/launch").reply(200, {
       assignment: newAssignmentsFixtures.threeAssignments[2],
       job: { id: 100, status: "processing" },
@@ -227,7 +229,7 @@ describe("NewAssignmentsTable tests", () => {
     renderTable();
 
     fireEvent.click(
-      screen.getByTestId(`${testId}-cell-row-2-col-Launch-button`),
+      screen.getByTestId(`${testId}-cell-row-2-col-Refresh-button`),
     );
 
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
@@ -237,7 +239,7 @@ describe("NewAssignmentsTable tests", () => {
     });
   });
 
-  test("a failed Launch shows the backend's message", async () => {
+  test("a failed Refresh shows the backend's message", async () => {
     axiosMock.onPost("/api/assignments/launch").reply(400, {
       type: "NoLinkedOrganizationException",
       message:
@@ -247,7 +249,7 @@ describe("NewAssignmentsTable tests", () => {
     renderTable();
 
     fireEvent.click(
-      screen.getByTestId(`${testId}-cell-row-0-col-Launch-button`),
+      screen.getByTestId(`${testId}-cell-row-0-col-Refresh-button`),
     );
 
     await waitFor(() =>
