@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CreateStudentOrStaffRepositoriesJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">CreateStudentOrStaffRepositoriesJob.java</span></div><h1>CreateStudentOrStaffRepositoriesJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService.RepositoryCreationResult;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.Optional;
+import lombok.Builder;
+
+@Builder
+public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
+  Course course;
+  RepositoryService repositoryService;
+  String repositoryPrefix;
+  Boolean isPrivate;
+  RepositoryPermissions permissions;
+
+  @Builder.Default RepositoryCreationOption creationOption = RepositoryCreationOption.STUDENTS_ONLY;
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L28">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L33">    return course.getId();</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L38">    ctx.log(&quot;repositoryPrefix=&quot; + repositoryPrefix);</span>
+<span class="fc" id="L39">    ctx.log(&quot;isPrivate=&quot; + isPrivate);</span>
+<span class="fc" id="L40">    ctx.log(&quot;permissions=&quot; + permissions);</span>
+<span class="fc" id="L41">    ctx.log(&quot;creationOption=&quot; + creationOption);</span>
+
+<span class="fc" id="L43">    int reposCreated = 0;</span>
+<span class="fc" id="L44">    int reposUpdated = 0;</span>
+
+<span class="fc bfc" id="L46" title="All 4 branches covered.">    if (creationOption == RepositoryCreationOption.STUDENTS_ONLY</span>
+        || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">      for (RosterStudent student : course.getRosterStudents()) {</span>
+        // A student not on GitHub or not yet an org member never calls repositoryService,
+        // and neither of those branches calls ctx.log() -- checkCancellation() gives this
+        // loop its own checkpoint independent of whether an iteration does anything at all.
+<span class="fc" id="L52">        ctx.checkCancellation();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (student.getGithubLogin() != null</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            &amp;&amp; (student.getOrgStatus() == OrgStatus.MEMBER</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">                || student.getOrgStatus() == OrgStatus.OWNER)) {</span>
+<span class="fc" id="L56">          Optional&lt;RepositoryCreationResult&gt; result =</span>
+<span class="fc" id="L57">              repositoryService.createStudentRepository(</span>
+                  course, student, repositoryPrefix, isPrivate, permissions);
+<span class="fc bfc" id="L59" title="All 2 branches covered.">          if (result.isPresent()) {</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (result.get().created()) {</span>
+<span class="fc" id="L61">              ctx.log(&quot; created repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L62">              reposCreated++;</span>
+            } else {
+<span class="fc" id="L64">              ctx.log(&quot;  updated repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L65">              reposUpdated++;</span>
+            }
+          }
+        }
+<span class="fc" id="L69">      }</span>
+    }
+
+<span class="fc bfc" id="L72" title="All 4 branches covered.">    if (creationOption == RepositoryCreationOption.STAFF_ONLY</span>
+        || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">      for (CourseStaff staff : course.getCourseStaff()) {</span>
+        // Same reasoning as the student loop above: a staff member not on GitHub or not yet
+        // an org member never logs, so this loop needs its own cancellation checkpoint too.
+<span class="fc" id="L77">        ctx.checkCancellation();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (staff.getGithubLogin() != null</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            &amp;&amp; (staff.getOrgStatus() == OrgStatus.MEMBER</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">                || staff.getOrgStatus() == OrgStatus.OWNER)) {</span>
+<span class="fc" id="L81">          Optional&lt;RepositoryCreationResult&gt; result =</span>
+<span class="fc" id="L82">              repositoryService.createStaffRepository(</span>
+                  course, staff, repositoryPrefix, isPrivate, permissions);
+<span class="fc bfc" id="L84" title="All 2 branches covered.">          if (result.isPresent()) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (result.get().created()) {</span>
+<span class="fc" id="L86">              ctx.log(&quot; created repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L87">              reposCreated++;</span>
+            } else {
+<span class="fc" id="L89">              ctx.log(&quot;  updated repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L90">              reposUpdated++;</span>
+            }
+          }
+        }
+<span class="fc" id="L94">      }</span>
+    }
+
+<span class="fc" id="L97">    ctx.log(&quot;Summary:&quot;);</span>
+<span class="fc" id="L98">    ctx.log(String.format(&quot;%4d repos created&quot;, reposCreated));</span>
+<span class="fc" id="L99">    ctx.log(String.format(&quot;%4d repos updated&quot;, reposUpdated));</span>
+<span class="fc" id="L100">    ctx.log(String.format(&quot;%4d repos total&quot;, reposCreated + reposUpdated));</span>
+<span class="fc" id="L101">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L102">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
