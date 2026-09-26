@@ -6,7 +6,9 @@ import OurTable, { ButtonColumn } from "main/components/OurTable";
 import ConfirmationModal from "main/components/Common/ConfirmationModal";
 import NewIndividualAssignmentForm from "main/components/NewAssignments/NewIndividualAssignmentForm";
 import NewTeamAssignmentForm from "main/components/NewAssignments/NewTeamAssignmentForm";
+import JobLogModal from "main/components/Jobs/JobLogModal";
 import { useBackendMutation } from "main/utils/useBackend";
+import { jobLogPagePath } from "main/utils/jobLogUtils";
 import {
   ASSIGNMENT_TYPE_LABELS,
   CREATE_REPOS_FOR_LABELS,
@@ -17,6 +19,7 @@ import {
   assignmentToFormData,
   assignmentsQueryKey,
   formDataToParams,
+  jobLaunchedMessage,
   jobStartedMessage,
   onAssignmentMutationError,
 } from "main/utils/newAssignmentsUtils";
@@ -30,6 +33,8 @@ export default function NewAssignmentsTable({
   const [editAssignment, setEditAssignment] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteAssignment, setDeleteAssignment] = useState(null);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logJobId, setLogJobId] = useState(null);
 
   // The type of an assignment cannot be changed, so it is not sent when editing
   const cellToAxiosParamsEdit = (formData) => ({
@@ -48,6 +53,16 @@ export default function NewAssignmentsTable({
     params: { courseId: courseId },
   });
 
+  const cellToAxiosParamsLaunch = (assignment) => ({
+    url: `${NEW_ASSIGNMENTS_URL}/launch`,
+    method: "POST",
+    params: { courseId: courseId, assignmentId: assignment.id },
+  });
+
+  const onLaunchSuccess = (data) => {
+    toast(jobLaunchedMessage(data));
+  };
+
   const onEditSuccess = (data) => {
     toast(jobStartedMessage("updated", data));
     setShowEditModal(false);
@@ -63,11 +78,26 @@ export default function NewAssignmentsTable({
     [assignmentsQueryKey(courseId), JOBS_QUERY_KEY],
   );
 
+  const launchMutation = useBackendMutation(
+    cellToAxiosParamsLaunch,
+    { onSuccess: onLaunchSuccess, onError: onAssignmentMutationError },
+    [assignmentsQueryKey(courseId), JOBS_QUERY_KEY],
+  );
+
   const deleteMutation = useBackendMutation(
     cellToAxiosParamsDelete,
     { onSuccess: onDeleteSuccess, onError: onAssignmentMutationError },
     [assignmentsQueryKey(courseId)],
   );
+
+  const launchCallback = (cell) => {
+    launchMutation.mutate(cell.row.original);
+  };
+
+  const showLog = (jobId) => {
+    setLogJobId(jobId);
+    setShowLogModal(true);
+  };
 
   const editCallback = (cell) => {
     setEditAssignment(cell.row.original);
@@ -118,6 +148,31 @@ export default function NewAssignmentsTable({
       accessorFn: (row) => row.teamRegex ?? "",
       id: "teamRegex",
     },
+    {
+      header: "Last Job",
+      accessorKey: "lastJobId",
+      id: "lastJobId",
+      // the number of the job is a link that shows the log of the job in a modal
+      cell: ({ cell }) => {
+        const jobId = cell.getValue();
+        if (jobId === null) {
+          return "";
+        }
+        return (
+          <a
+            href={jobLogPagePath(courseId, jobId)}
+            onClick={(event) => {
+              event.preventDefault();
+              showLog(jobId);
+            }}
+            data-testid={`${testIdPrefix}-cell-row-${cell.row.index}-col-lastJobId-link`}
+          >
+            {jobId}
+          </a>
+        );
+      },
+    },
+    ButtonColumn("Launch", "success", launchCallback, testIdPrefix),
     ButtonColumn("Edit", "primary", editCallback, testIdPrefix),
     ButtonColumn("Delete", "danger", deleteCallback, testIdPrefix),
   ];
@@ -166,6 +221,13 @@ export default function NewAssignmentsTable({
           created are not deleted.
         </span>
       </ConfirmationModal>
+      <JobLogModal
+        show={showLogModal}
+        onHide={() => setShowLogModal(false)}
+        courseId={courseId}
+        jobId={logJobId}
+        testIdPrefix={`${testIdPrefix}-job-log-modal`}
+      />
       <OurTable data={assignments} columns={columns} testid={testIdPrefix} />
     </>
   );

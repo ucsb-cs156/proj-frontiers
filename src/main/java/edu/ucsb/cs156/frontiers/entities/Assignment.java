@@ -70,4 +70,11 @@ public class Assignment {
    * assignments, null for INDIVIDUAL ones.
    */
   private String teamRegex;
+
+  /**
+   * The id of the last job started to create this assignment's repositories, or null if none has
+   * been started. It is not a foreign key: jobs can be deleted, and the jobs table belongs to the
+   * lib-jobs library.
+   */
+  private Long lastJobId;
 }

@@ -13,6 +13,30 @@ const Template = (args) => {
 };
 
 const mutationHandlers = [
+  http.get("/api/jobs/course/logs/tail", () => {
+    return HttpResponse.json(
+      {
+        status: "complete",
+        lines: [
+          { id: 1, jobId: 12, message: "Creating repository lab01-cgaucho" },
+          { id: 2, jobId: 12, message: "Done" },
+        ],
+      },
+      { status: 200 },
+    );
+  }),
+  http.post("/api/assignments/launch", ({ request }) => {
+    const url = new URL(request.url);
+    window.alert(
+      "Invoked POST with URL: " +
+        url +
+        " and params: " +
+        JSON.stringify(Object.fromEntries(url.searchParams)),
+    );
+    return HttpResponse.json(newAssignmentsFixtures.savedWithJob, {
+      status: 200,
+    });
+  }),
   http.post("/api/assignments/post", ({ request }) => {
     const url = new URL(request.url);
     window.alert(

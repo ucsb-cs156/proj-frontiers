@@ -135,7 +135,7 @@ describe("NewAssignmentsTabComponent tests", () => {
 
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith(
-        "Assignment created. Job 99 started to create its repositories; see the Jobs tab for its log.",
+        "Assignment created. Job 99 started to create its repositories; click the job number in the table to watch its log.",
       ),
     );
     expect(toast).toHaveBeenCalledTimes(1);
@@ -265,6 +265,33 @@ describe("NewAssignmentsTabComponent tests", () => {
     fireEvent.click(screen.getByTestId(`${individualForm}-submit`));
 
     await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    await waitFor(() => expect(assignmentsGetHistory().length).toBe(2));
+    expect(queryClient.getQueryState(["/api/jobs/course"]).isInvalidated).toBe(
+      true,
+    );
+  });
+
+  test("launching an assignment through the table refetches the list, so the new job shows, and the jobs", async () => {
+    axiosMock.onPost("/api/assignments/launch").reply(200, {
+      assignment: {
+        ...newAssignmentsFixtures.threeAssignments[1],
+        lastJobId: 99,
+      },
+      job: { id: 99, status: "processing" },
+    });
+    queryClient.setQueryData(["/api/jobs/course"], []);
+
+    renderTab();
+
+    fireEvent.click(
+      await screen.findByTestId(`${tableId}-cell-row-1-col-Launch-button`),
+    );
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: 7,
+      assignmentId: 2,
+    });
     await waitFor(() => expect(assignmentsGetHistory().length).toBe(2));
     expect(queryClient.getQueryState(["/api/jobs/course"]).isInvalidated).toBe(
       true,

@@ -1,0 +1,23 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "024-add-last-job-id-to-assignments",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "ASSIGNMENTS",
+            "columns": [
+              {
+                "column": {
+                  "name": "LAST_JOB_ID",
+                  "type": "BIGINT"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

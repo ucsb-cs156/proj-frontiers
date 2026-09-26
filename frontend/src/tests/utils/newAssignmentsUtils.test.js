@@ -11,6 +11,7 @@ import {
   assignmentToFormData,
   assignmentsQueryKey,
   formDataToParams,
+  jobLaunchedMessage,
   jobStartedMessage,
   onAssignmentMutationError,
 } from "main/utils/newAssignmentsUtils";
@@ -120,10 +121,16 @@ describe("newAssignmentsUtils tests", () => {
 
   test("jobStartedMessage", () => {
     expect(jobStartedMessage("created", { job: { id: 99 } })).toBe(
-      "Assignment created. Job 99 started to create its repositories; see the Jobs tab for its log.",
+      "Assignment created. Job 99 started to create its repositories; click the job number in the table to watch its log.",
     );
     expect(jobStartedMessage("updated", { job: { id: 5 } })).toBe(
-      "Assignment updated. Job 5 started to create its repositories; see the Jobs tab for its log.",
+      "Assignment updated. Job 5 started to create its repositories; click the job number in the table to watch its log.",
+    );
+  });
+
+  test("jobLaunchedMessage", () => {
+    expect(jobLaunchedMessage({ job: { id: 99 } })).toBe(
+      "Job 99 started to create the repositories of this assignment; click the job number in the table to watch its log.",
     );
   });
 

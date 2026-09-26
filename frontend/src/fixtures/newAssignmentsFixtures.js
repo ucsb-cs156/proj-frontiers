@@ -8,6 +8,7 @@ const newAssignmentsFixtures = {
       permission: "MAINTAIN",
       createReposFor: "STUDENTS_ONLY",
       teamRegex: null,
+      lastJobId: 12,
     },
   ],
   threeAssignments: [
@@ -19,6 +20,7 @@ const newAssignmentsFixtures = {
       permission: "MAINTAIN",
       createReposFor: "STUDENTS_ONLY",
       teamRegex: null,
+      lastJobId: 12,
     },
     {
       id: 2,
@@ -28,6 +30,7 @@ const newAssignmentsFixtures = {
       permission: "READ",
       createReposFor: "STUDENTS_AND_STAFF",
       teamRegex: null,
+      lastJobId: null,
     },
     {
       id: 3,
@@ -37,6 +40,7 @@ const newAssignmentsFixtures = {
       permission: "WRITE",
       createReposFor: null,
       teamRegex: "s26-.*",
+      lastJobId: 15,
     },
   ],
   // What POST and PUT answer with: the saved assignment and the job started
@@ -49,6 +53,7 @@ const newAssignmentsFixtures = {
       permission: "MAINTAIN",
       createReposFor: "STUDENTS_ONLY",
       teamRegex: null,
+      lastJobId: 99,
     },
     job: { id: 99, status: "processing" },
   },

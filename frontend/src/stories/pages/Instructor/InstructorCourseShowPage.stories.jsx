@@ -448,6 +448,30 @@ ExampleCourseWithNewAssignmentsTab.parameters = {
           status: 200,
         });
       }),
+      http.get("/api/jobs/course/logs/tail", () => {
+        return HttpResponse.json(
+          {
+            status: "complete",
+            lines: [
+              {
+                id: 1,
+                jobId: 12,
+                message: "Creating repository lab01-cgaucho",
+              },
+              { id: 2, jobId: 12, message: "Done" },
+            ],
+          },
+          { status: 200 },
+        );
+      }),
+      http.post("/api/assignments/launch", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json(newAssignmentsFixtures.savedWithJob, {
+          status: 200,
+        });
+      }),
       http.post("/api/assignments/post", ({ request }) => {
         window.alert(
           `Would have made HTTP request: ${request.method} ${request.url}`,

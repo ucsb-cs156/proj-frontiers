@@ -201,8 +201,10 @@ public class AssignmentsControllerTests extends ControllerTestCase {
   @Test
   @WithInstructorCoursePermissions
   public void get_does_not_include_the_course_in_the_json() throws Exception {
+    Assignment withJob = individual(1L, "hw1");
+    withJob.setLastJobId(12L);
     when(assignmentRepository.findByCourseIdOrderByRepoPrefixAsc(eq(1L)))
-        .thenReturn(List.of(individual(1L, "hw1")));
+        .thenReturn(List.of(withJob));
 
     MvcResult response =
         mockMvc
@@ -220,7 +222,8 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             "visibility", "PUBLIC",
             "permission", "READ",
             "createReposFor", "STUDENTS_ONLY",
-            "teamRegex", ""),
+            "teamRegex", "",
+            "lastJobId", 12),
         withNullsAsEmpty(body.get(0)));
   }
 
@@ -276,6 +279,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     assertEquals(Permission.READ, a.getPermission());
     assertEquals(RepositoryCreationOption.STUDENTS_ONLY, a.getCreateReposFor());
     assertNull(a.getTeamRegex());
+    assertEquals(99L, a.getLastJobId());
 
     CreateStudentOrStaffRepositoriesJob started =
         assertInstanceOf(CreateStudentOrStaffRepositoriesJob.class, launchedJob());
@@ -346,6 +350,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     assertEquals(AssignmentType.TEAM, a.getAsnType());
     assertEquals("team-\\d+", a.getTeamRegex());
     assertNull(a.getCreateReposFor());
+    assertEquals(99L, a.getLastJobId());
 
     CreateTeamRepositoriesJob started =
         assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob());
@@ -598,6 +603,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     assertEquals(Permission.WRITE, existing.getPermission());
     assertEquals(RepositoryCreationOption.STUDENTS_AND_STAFF, existing.getCreateReposFor());
     assertNull(existing.getTeamRegex());
+    assertEquals(99L, existing.getLastJobId());
     verify(assignmentRepository, times(1)).save(eq(existing));
 
     CreateStudentOrStaffRepositoriesJob started =
@@ -634,6 +640,7 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     assertEquals(Permission.ADMIN, existing.getPermission());
     assertEquals("s26-.*", existing.getTeamRegex());
     assertNull(existing.getCreateReposFor());
+    assertEquals(99L, existing.getLastJobId());
     verify(assignmentRepository, times(1)).save(eq(existing));
 
     CreateTeamRepositoriesJob started =
@@ -846,6 +853,145 @@ public class AssignmentsControllerTests extends ControllerTestCase {
         .andExpect(status().isBadRequest());
 
     assertEquals("team-.*", team.getTeamRegex());
+    verify(assignmentRepository, never()).save(any());
+    verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
+  }
+
+  // ---- LAUNCH ----
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder launchRequest(
+      String courseId, String assignmentId) {
+    return post("/api/assignments/launch")
+        .with(csrf())
+        .param("courseId", courseId)
+        .param("assignmentId", assignmentId);
+  }
+
+  @Test
+  public void logged_out_users_cannot_launch() throws Exception {
+    mockMvc.perform(launchRequest("1", "5")).andExpect(status().is(403));
+    verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void users_without_course_permissions_cannot_launch() throws Exception {
+    mockMvc.perform(launchRequest("1", "5")).andExpect(status().is(403));
+    verify(assignmentRepository, never()).save(any());
+    verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void launch_starts_the_student_repo_job_of_an_individual_assignment() throws Exception {
+    Assignment existing = individual(5L, "hw1");
+    existing.setVisibility(Visibility.PRIVATE);
+    existing.setPermission(Permission.WRITE);
+    existing.setCreateReposFor(RepositoryCreationOption.STAFF_ONLY);
+    existing.setLastJobId(12L);
+    when(assignmentRepository.findById(eq(5L))).thenReturn(Optional.of(existing));
+
+    MvcResult response =
+        mockMvc.perform(launchRequest("1", "5")).andExpect(status().isOk()).andReturn();
+
+    // only the last job id changes
+    assertEquals(99L, existing.getLastJobId());
+    assertEquals("hw1", existing.getRepoPrefix());
+    assertEquals(Visibility.PRIVATE, existing.getVisibility());
+    assertEquals(Permission.WRITE, existing.getPermission());
+    assertEquals(RepositoryCreationOption.STAFF_ONLY, existing.getCreateReposFor());
+    verify(assignmentRepository, times(1)).save(eq(existing));
+
+    CreateStudentOrStaffRepositoriesJob started =
+        assertInstanceOf(CreateStudentOrStaffRepositoriesJob.class, launchedJob());
+    assertEquals("hw1", ReflectionTestUtils.getField(started, "repositoryPrefix"));
+    assertEquals(true, ReflectionTestUtils.getField(started, "isPrivate"));
+    assertEquals(RepositoryPermissions.WRITE, ReflectionTestUtils.getField(started, "permissions"));
+    assertEquals(
+        RepositoryCreationOption.STAFF_ONLY,
+        ReflectionTestUtils.getField(started, "creationOption"));
+
+    assertEquals(
+        mapper.writeValueAsString(new AssignmentWithJob(existing, job)),
+        response.getResponse().getContentAsString());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void launch_starts_the_team_repo_job_of_a_team_assignment() throws Exception {
+    Assignment existing = team(6L, "proj", "team-.*");
+    when(assignmentRepository.findById(eq(6L))).thenReturn(Optional.of(existing));
+
+    mockMvc.perform(launchRequest("1", "6")).andExpect(status().isOk());
+
+    assertEquals(99L, existing.getLastJobId());
+    verify(assignmentRepository, times(1)).save(eq(existing));
+    CreateTeamRepositoriesJob started =
+        assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob());
+    assertEquals("proj", ReflectionTestUtils.getField(started, "repositoryPrefix"));
+    assertEquals("team-.*", ReflectionTestUtils.getField(started, "teamRegex"));
+    assertEquals(true, ReflectionTestUtils.getField(started, "isPrivate"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void launch_returns_404_when_course_does_not_exist() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc.perform(launchRequest("1", "5")).andExpect(status().isNotFound()).andReturn();
+
+    assertEquals(
+        Map.of("message", "Course with id 1 not found", "type", "EntityNotFoundException"),
+        errorBody(response));
+    verify(assignmentRepository, never()).findById(any());
+    verify(assignmentRepository, never()).save(any());
+    verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void launch_returns_404_when_assignment_does_not_exist() throws Exception {
+    when(assignmentRepository.findById(eq(5L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc.perform(launchRequest("1", "5")).andExpect(status().isNotFound()).andReturn();
+
+    assertEquals(
+        Map.of("message", "Assignment with id 5 not found", "type", "EntityNotFoundException"),
+        errorBody(response));
+    verify(assignmentRepository, never()).save(any());
+    verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void launch_returns_404_when_assignment_belongs_to_another_course() throws Exception {
+    Assignment existing = individual(5L, "hw1");
+    existing.setCourse(Course.builder().id(2L).build());
+    when(assignmentRepository.findById(eq(5L))).thenReturn(Optional.of(existing));
+
+    mockMvc.perform(launchRequest("1", "5")).andExpect(status().isNotFound());
+
+    assertNull(existing.getLastJobId());
+    verify(assignmentRepository, never()).save(any());
+    verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void launch_returns_400_when_the_course_has_no_linked_organization() throws Exception {
+    Course unlinked = Course.builder().id(1L).courseName("Unlinked").build();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(unlinked));
+    Assignment existing = individual(5L, "hw1");
+    existing.setCourse(unlinked);
+    when(assignmentRepository.findById(eq(5L))).thenReturn(Optional.of(existing));
+
+    MvcResult response =
+        mockMvc.perform(launchRequest("1", "5")).andExpect(status().isBadRequest()).andReturn();
+
+    assertEquals("NoLinkedOrganizationException", errorBody(response).get("type"));
+    assertNull(existing.getLastJobId());
     verify(assignmentRepository, never()).save(any());
     verify(jobService, never()).runAsJob(any(JobContextConsumer.class));
   }

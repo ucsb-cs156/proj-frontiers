@@ -38,7 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Assignments of a course, and the jobs that create their repositories. Creating or editing an
- * assignment saves it and starts the job that creates its individual or team repositories.
+ * assignment saves it and starts the job that creates its individual or team repositories, and the
+ * id of that job is kept as the assignment's last job id.
  */
 @Tag(name = "Assignments")
 @RequestMapping("/api/assignments")
@@ -89,7 +90,7 @@ public class AssignmentsController extends ApiController {
    * @param permission the permission that students, or teams, have on the repositories
    * @param createReposFor INDIVIDUAL only: whom to create repositories for
    * @param teamRegex TEAM only: only teams whose names match get a repository
-   * @return the created assignment and the job started to create the repositories
+   * @return the created assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = "Create an assignment and start creating its repositories")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
@@ -109,8 +110,7 @@ public class AssignmentsController extends ApiController {
     applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);
     requireLinkedOrganization(course);
 
-    Assignment saved = assignmentRepository.save(assignment);
-    return new AssignmentWithJob(saved, launchJob(course, saved));
+    return launchAndSave(course, assignment);
   }
 
   /**
@@ -126,7 +126,7 @@ public class AssignmentsController extends ApiController {
    * @param permission the permission that students, or teams, have on the repositories
    * @param createReposFor INDIVIDUAL only: whom to create repositories for
    * @param teamRegex TEAM only: only teams whose names match get a repository
-   * @return the updated assignment and the job started to create the repositories
+   * @return the updated assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = "Update an assignment and start creating its repositories")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
@@ -146,8 +146,30 @@ public class AssignmentsController extends ApiController {
     applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);
     requireLinkedOrganization(course);
 
-    Assignment saved = assignmentRepository.save(assignment);
-    return new AssignmentWithJob(saved, launchJob(course, saved));
+    return launchAndSave(course, assignment);
+  }
+
+  /**
+   * Starts the job that creates the repositories of an existing assignment again, for example to
+   * pick up students who have joined since the last run, and records it as the assignment's last
+   * job.
+   *
+   * @param courseId the ID of the course the assignment belongs to
+   * @param assignmentId the ID of the assignment
+   * @return the assignment, with its new last job id, and the job that was started
+   */
+  @Operation(summary = "Start creating the repositories of an assignment")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/launch")
+  public AssignmentWithJob launchAssignmentJob(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "assignmentId") @RequestParam Long assignmentId)
+      throws EntityNotFoundException {
+    Course course = ensureCourseExists(courseId);
+    Assignment assignment = findAssignmentInCourse(courseId, assignmentId);
+    requireLinkedOrganization(course);
+
+    return launchAndSave(course, assignment);
   }
 
   @Operation(summary = "Delete an assignment")
@@ -176,6 +198,16 @@ public class AssignmentsController extends ApiController {
         .findById(assignmentId)
         .filter(a -> a.getCourse().getId().equals(courseId))
         .orElseThrow(() -> new EntityNotFoundException(Assignment.class, assignmentId));
+  }
+
+  /**
+   * Starts the job that creates the assignment's repositories and saves the assignment with the id
+   * of that job as its last job id.
+   */
+  private AssignmentWithJob launchAndSave(Course course, Assignment assignment) {
+    Job job = launchJob(course, assignment);
+    assignment.setLastJobId(job.getId());
+    return new AssignmentWithJob(assignmentRepository.save(assignment), job);
   }
 
   private static void requireLinkedOrganization(Course course) {

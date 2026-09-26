@@ -71,7 +71,12 @@ export function assignmentToFormData(assignment) {
 
 /** The message toasted when an assignment has been saved and its job started. */
 export function jobStartedMessage(verb, data) {
-  return `Assignment ${verb}. Job ${data.job.id} started to create its repositories; see the Jobs tab for its log.`;
+  return `Assignment ${verb}. Job ${data.job.id} started to create its repositories; click the job number in the table to watch its log.`;
+}
+
+/** The message toasted when the job of an existing assignment has been started. */
+export function jobLaunchedMessage(data) {
+  return `Job ${data.job.id} started to create the repositories of this assignment; click the job number in the table to watch its log.`;
 }
 
 /** Shared onError handler for assignment mutations: shows the backend's message when it has one. */

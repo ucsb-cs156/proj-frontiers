@@ -55,6 +55,8 @@ describe("NewAssignmentsTable tests", () => {
       permission: "Permission",
       createReposFor: "Repositories For",
       teamRegex: "Team Regex",
+      lastJobId: "Last Job",
+      Launch: "Launch",
       Edit: "Edit",
       Delete: "Delete",
     };
@@ -81,6 +83,14 @@ describe("NewAssignmentsTable tests", () => {
     expect(cell(2, "createReposFor")).toHaveTextContent("");
     expect(cell(2, "teamRegex")).toHaveTextContent("s26-.*");
 
+    expect(cell(0, "lastJobId")).toHaveTextContent("12");
+    expect(cell(1, "lastJobId")).toHaveTextContent("");
+    expect(cell(2, "lastJobId")).toHaveTextContent("15");
+
+    const launch = screen.getByTestId(`${testId}-cell-row-0-col-Launch-button`);
+    expect(launch).toHaveTextContent("Launch");
+    expect(launch).toHaveClass("btn-success");
+
     const edit = screen.getByTestId(`${testId}-cell-row-0-col-Edit-button`);
     expect(edit).toHaveTextContent("Edit");
     expect(edit).toHaveClass("btn-primary");
@@ -103,6 +113,145 @@ describe("NewAssignmentsTable tests", () => {
     expect(
       screen.queryByTestId("Custom-cell-row-0-col-repoPrefix"),
     ).not.toBeInTheDocument();
+  });
+
+  test("the last job is a link to the log of the job, for the assignments that have one", () => {
+    renderTable();
+
+    const first = screen.getByTestId(`${testId}-cell-row-0-col-lastJobId-link`);
+    expect(first.tagName).toBe("A");
+    expect(first).toHaveTextContent("12");
+    // a real address, for opening the whole log in its own page
+    expect(first).toHaveAttribute("href", "/instructor/courses/1/jobs/12/logs");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-2-col-lastJobId-link`),
+    ).toHaveAttribute("href", "/instructor/courses/1/jobs/15/logs");
+
+    // an assignment that has not had a job has nothing to link to
+    expect(
+      screen.queryByTestId(`${testId}-cell-row-1-col-lastJobId-link`),
+    ).not.toBeInTheDocument();
+  });
+
+  test("clicking the last job shows its log in a modal, following the job, and the modal can be closed", async () => {
+    axiosMock.onGet("/api/jobs/course/logs/tail").reply(200, {
+      status: "complete",
+      lines: [
+        { id: 1, jobId: 12, message: "Creating lab01-cgaucho" },
+        { id: 2, jobId: 12, message: "Done" },
+      ],
+    });
+
+    renderTable();
+    expect(screen.queryByText("Job 12 Log")).not.toBeInTheDocument();
+
+    // the click is handled here, not by the browser going to the log's page
+    const notPrevented = fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-0-col-lastJobId-link`),
+    );
+    expect(notPrevented).toBe(false);
+
+    expect(await screen.findByText("Job 12 Log")).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Creating lab01-cgaucho/, { selector: "pre" }),
+    ).toHaveTextContent("Creating lab01-cgaucho Done");
+    expect(axiosMock.history.get.length).toBe(1);
+    expect(axiosMock.history.get[0].url).toBe("/api/jobs/course/logs/tail");
+    expect(axiosMock.history.get[0].params).toEqual({
+      courseId: 1,
+      jobId: 12,
+      afterId: 0,
+    });
+
+    fireEvent.click(screen.getByLabelText("Close"));
+    await waitFor(() =>
+      expect(screen.queryByText("Job 12 Log")).not.toBeInTheDocument(),
+    );
+  });
+
+  test("clicking the last job of another assignment shows the log of that job", async () => {
+    axiosMock.onGet("/api/jobs/course/logs/tail").reply(200, {
+      status: "complete",
+      lines: [{ id: 1, jobId: 15, message: "team job" }],
+    });
+
+    renderTable();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-2-col-lastJobId-link`),
+    );
+
+    expect(await screen.findByText("Job 15 Log")).toBeInTheDocument();
+    expect(axiosMock.history.get[0].params.jobId).toBe(15);
+  });
+
+  test("Launch starts the job of the assignment, and says which job", async () => {
+    axiosMock.onPost("/api/assignments/launch").reply(200, {
+      assignment: {
+        ...newAssignmentsFixtures.threeAssignments[1],
+        lastJobId: 99,
+      },
+      job: { id: 99, status: "processing" },
+    });
+
+    renderTable();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-1-col-Launch-button`),
+    );
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].url).toBe("/api/assignments/launch");
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: 1,
+      assignmentId: 2,
+    });
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "Job 99 started to create the repositories of this assignment; click the job number in the table to watch its log.",
+      ),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
+  });
+
+  test("Launch on another row launches that assignment", async () => {
+    axiosMock.onPost("/api/assignments/launch").reply(200, {
+      assignment: newAssignmentsFixtures.threeAssignments[2],
+      job: { id: 100, status: "processing" },
+    });
+
+    renderTable();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-2-col-Launch-button`),
+    );
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: 1,
+      assignmentId: 3,
+    });
+  });
+
+  test("a failed Launch shows the backend's message", async () => {
+    axiosMock.onPost("/api/assignments/launch").reply(400, {
+      type: "NoLinkedOrganizationException",
+      message:
+        "No linked GitHub Organization to CS156. Please link a GitHub Organization first.",
+    });
+
+    renderTable();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-cell-row-0-col-Launch-button`),
+    );
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        "No linked GitHub Organization to CS156. Please link a GitHub Organization first.",
+      ),
+    );
+    expect(toast).toHaveBeenCalledTimes(1);
   });
 
   test("editing an individual assignment opens the individual form, prefilled, without a way to change the type", async () => {
@@ -168,7 +317,7 @@ describe("NewAssignmentsTable tests", () => {
 
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith(
-        "Assignment updated. Job 99 started to create its repositories; see the Jobs tab for its log.",
+        "Assignment updated. Job 99 started to create its repositories; click the job number in the table to watch its log.",
       ),
     );
     expect(toast).toHaveBeenCalledTimes(1);
