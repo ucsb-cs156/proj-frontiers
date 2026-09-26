@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JobsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">JobsController.java</span></div><h1>JobsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.jobs.AddTeamMemberToGithubJob;
+import edu.ucsb.cs156.frontiers.jobs.AddTeamToGithubJob;
+import edu.ucsb.cs156.frontiers.jobs.DeleteTeamFromGithubJob;
+import edu.ucsb.cs156.frontiers.jobs.DeleteTeamMemberFromGithubJob;
+import edu.ucsb.cs156.frontiers.jobs.MembershipAuditJob;
+import edu.ucsb.cs156.frontiers.jobs.PullTeamsFromGithubJob;
+import edu.ucsb.cs156.frontiers.jobs.PushTeamsToGithubJob;
+import edu.ucsb.cs156.frontiers.jobs.UpdateAllJob;
+import edu.ucsb.cs156.frontiers.models.JobLogTail;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamMemberRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.OrganizationMemberService;
+import edu.ucsb.cs156.frontiers.services.UpdateUserService;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
+import edu.ucsb.cs156.jobs.services.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * App-level job endpoints: launching this app's concrete jobs, plus the course-scoped jobs listing
+ * and course-scoped full-log endpoint (which use this app's CourseSecurity rule). The generic admin
+ * endpoints (list all / paginated / logs / delete) come from the lib-jobs library's own controller.
+ */
+@Tag(name = &quot;Jobs&quot;)
+@RequestMapping(&quot;/api/jobs&quot;)
+@RestController
+<span class="fc" id="L44">@Slf4j</span>
+<span class="fc" id="L45">public class JobsController extends ApiController {</span>
+  @Autowired private JobsRepository jobsRepository;
+
+  @Autowired private JobService jobService;
+
+  @Autowired private UpdateUserService updateUserService;
+
+  @Autowired private RosterStudentRepository rosterStudentRepository;
+  @Autowired private CourseRepository courseRepository;
+  @Autowired private OrganizationMemberService organizationMemberService;
+  @Autowired private CourseStaffRepository courseStaffRepository;
+  @Autowired private TeamRepository teamRepository;
+  @Autowired private TeamMemberRepository teamMemberRepository;
+  @Autowired private GithubTeamService githubTeamService;
+
+  @Operation(summary = &quot;Launch UpdateAll job&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PostMapping(&quot;/launch/updateAll&quot;)
+  public Job launchUpdateAllJob() {
+
+<span class="fc" id="L65">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
+<span class="fc" id="L66">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;Launch Audit All Courses Job&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PostMapping(&quot;/launch/auditAllCourses&quot;)
+  public Job launchAuditAllCoursesJob() {
+
+    MembershipAuditJob job =
+<span class="fc" id="L75">        MembershipAuditJob.builder()</span>
+<span class="fc" id="L76">            .rosterStudentRepository(rosterStudentRepository)</span>
+<span class="fc" id="L77">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L78">            .organizationMemberService(organizationMemberService)</span>
+<span class="fc" id="L79">            .courseStaffRepository(courseStaffRepository)</span>
+<span class="fc" id="L80">            .build();</span>
+<span class="fc" id="L81">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;Launch Push Teams to GitHub Job&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PostMapping(&quot;/launch/pushTeamsToGithub&quot;)
+  public Job launchPushTeamsToGithubJob(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+
+    PushTeamsToGithubJob job =
+<span class="fc" id="L90">        PushTeamsToGithubJob.builder()</span>
+<span class="fc" id="L91">            .courseId(courseId)</span>
+<span class="fc" id="L92">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L93">            .teamRepository(teamRepository)</span>
+<span class="fc" id="L94">            .teamMemberRepository(teamMemberRepository)</span>
+<span class="fc" id="L95">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L96">            .build();</span>
+<span class="fc" id="L97">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;Launch Pull Teams from GitHub Job&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PostMapping(&quot;/launch/pullTeamsFromGithub&quot;)
+  public Job launchPullTeamsFromGithubJob(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+
+    PullTeamsFromGithubJob job =
+<span class="fc" id="L107">        PullTeamsFromGithubJob.builder()</span>
+<span class="fc" id="L108">            .courseId(courseId)</span>
+<span class="fc" id="L109">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L110">            .teamRepository(teamRepository)</span>
+<span class="fc" id="L111">            .teamMemberRepository(teamMemberRepository)</span>
+<span class="fc" id="L112">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L113">            .build();</span>
+<span class="fc" id="L114">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;Launch Delete Team Member From GitHub Job&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/launch/deleteTeamMemberFromGithub&quot;)
+  public Job launchDeleteTeamMemberFromGithubJob(
+      @Parameter(name = &quot;memberGithubLogin&quot;) @RequestParam String memberGithubLogin,
+      @Parameter(name = &quot;githubTeamId&quot;) @RequestParam Integer githubTeamId,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+
+    DeleteTeamMemberFromGithubJob job =
+<span class="fc" id="L126">        DeleteTeamMemberFromGithubJob.builder()</span>
+<span class="fc" id="L127">            .memberGithubLogin(memberGithubLogin)</span>
+<span class="fc" id="L128">            .githubTeamId(githubTeamId)</span>
+<span class="fc" id="L129">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L130">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L131">            .build();</span>
+<span class="fc" id="L132">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;Launch Add Team Member To GitHub Job&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/launch/addTeamMemberToGithub&quot;)
+  public Job launchAddTeamMemberToGithubJob(
+      @Parameter(name = &quot;memberGithubLogin&quot;) @RequestParam String memberGithubLogin,
+      @Parameter(name = &quot;githubTeamId&quot;) @RequestParam Integer githubTeamId,
+      @Parameter(name = &quot;teamMemberId&quot;) @RequestParam Long teamMemberId,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+
+    AddTeamMemberToGithubJob job =
+<span class="fc" id="L145">        AddTeamMemberToGithubJob.builder()</span>
+<span class="fc" id="L146">            .memberGithubLogin(memberGithubLogin)</span>
+<span class="fc" id="L147">            .githubTeamId(githubTeamId)</span>
+<span class="fc" id="L148">            .teamMemberId(teamMemberId)</span>
+<span class="fc" id="L149">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L150">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L151">            .teamMemberRepository(teamMemberRepository)</span>
+<span class="fc" id="L152">            .build();</span>
+<span class="fc" id="L153">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;Launch Delete Team From GitHub Job&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/launch/deleteTeamFromGithub&quot;)
+  public Job launchDeleteTeamFromGithubJob(
+      @Parameter(name = &quot;githubTeamId&quot;) @RequestParam Integer githubTeamId,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+
+    DeleteTeamFromGithubJob job =
+<span class="fc" id="L164">        DeleteTeamFromGithubJob.builder()</span>
+<span class="fc" id="L165">            .githubTeamId(githubTeamId)</span>
+<span class="fc" id="L166">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L167">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L168">            .build();</span>
+<span class="fc" id="L169">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;Launch Add Team To GitHub Job&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/launch/addTeamToGithub&quot;)
+  public Job launchAddTeamToGithubJob(
+      @Parameter(name = &quot;teamName&quot;) @RequestParam String teamName,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+
+    AddTeamToGithubJob job =
+<span class="fc" id="L180">        AddTeamToGithubJob.builder()</span>
+<span class="fc" id="L181">            .teamName(teamName)</span>
+<span class="fc" id="L182">            .course(courseRepository.findById(courseId).get())</span>
+<span class="fc" id="L183">            .teamRepository(teamRepository)</span>
+<span class="fc" id="L184">            .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L185">            .build();</span>
+<span class="fc" id="L186">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(summary = &quot;List jobs by courseId&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/course&quot;)
+  public Iterable&lt;Job&gt; jobsByCourse(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L193">    Iterable&lt;Job&gt; jobs = jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc(&quot;course&quot;, courseId);</span>
+    /*
+     * Since lib-jobs v0.2.0, Job.log is @Transient (see job_logs) and is no
+     * longer populated automatically by JPA; callers that return Job entities
+     * directly must set it explicitly, same as the library's own controller
+     * does for /all and /paginated.
+     */
+<span class="fc" id="L200">    jobs.forEach(job -&gt; job.setLog(jobService.getJobLogPreview(job.getId())));</span>
+<span class="fc" id="L201">    return jobs;</span>
+  }
+
+  /**
+   * Returns the full log of one job that belongs to the given course.
+   *
+   * &lt;p&gt;Why this app-owned endpoint exists: the library's own {@code GET /api/jobs/logs/{id}}
+   * returns the full log but is restricted to {@code ROLE_ADMIN}. The per-course jobs tab is used
+   * by course instructors and staff who are not necessarily admins, and the course-scoped listing
+   * above only populates {@code Job.log} with a short tail preview ({@code
+   * JobService.getJobLogPreview}). This endpoint gives those users the same full log, guarded by
+   * the same course-permission rule as the listing.
+   *
+   * &lt;p&gt;A job that exists but is not scoped to the given course is deliberately reported as not
+   * found (404) rather than forbidden (403), so that job ids do not leak across courses.
+   *
+   * @param courseId the id of the course the job must belong to
+   * @param jobId the id of the job
+   * @return the full job log, oldest line first
+   */
+  @Operation(summary = &quot;Get the full log of one job belonging to a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/course/logs&quot;)
+  public String jobLogsByCourse(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;jobId&quot;) @RequestParam Long jobId) {
+<span class="fc" id="L227">    findJobInCourse(courseId, jobId);</span>
+<span class="fc" id="L228">    return jobService.getJobLogs(jobId);</span>
+  }
+
+  /**
+   * Returns the log lines of one job that belong to the given course that were written after the
+   * line with id {@code afterId}, together with the job's status: one poll of a &quot;tail -f&quot; style
+   * view. The client keeps the id of the last line it has received and passes it as {@code afterId}
+   * on its next poll, and stops polling once the status is one of a job that has finished.
+   *
+   * &lt;p&gt;This is the course-scoped counterpart of the library's admin-only {@code GET
+   * /api/jobs/logs/{id}/tail}, for the same reason as {@link #jobLogsByCourse}. Like that endpoint
+   * it reports a job of another course as not found.
+   *
+   * &lt;p&gt;The status is read &lt;em&gt;before&lt;/em&gt; the lines. If the job has already finished when its
+   * status is read, all of its lines have been written by the time they are read, so a client that
+   * stops polling on a finished status has not missed any. Reading them the other way round could
+   * miss the last lines of a job that finishes in between.
+   *
+   * @param courseId the id of the course the job must belong to
+   * @param jobId the id of the job
+   * @param afterId only lines with an id greater than this are returned; 0 for the whole log
+   * @return the status of the job and its new log lines, oldest first
+   */
+  @Operation(summary = &quot;Get the new log lines and the status of one job belonging to a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/course/logs/tail&quot;)
+  public JobLogTail jobLogTailByCourse(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;jobId&quot;) @RequestParam Long jobId,
+      @Parameter(name = &quot;afterId&quot;, description = &quot;only return lines with id greater than this&quot;)
+          @RequestParam(defaultValue = &quot;0&quot;)
+          Long afterId) {
+<span class="fc" id="L260">    String status = findJobInCourse(courseId, jobId).getStatus();</span>
+<span class="fc" id="L261">    return new JobLogTail(status, jobService.getJobLogTail(jobId, afterId));</span>
+  }
+
+  /**
+   * Finds a job, which must be a course-scoped job of the given course.
+   *
+   * @throws EntityNotFoundException if there is no such job, or it belongs to something else
+   */
+  private Job findJobInCourse(Long courseId, Long jobId) {
+<span class="fc" id="L270">    Job job =</span>
+        jobsRepository
+<span class="fc" id="L272">            .findById(jobId)</span>
+<span class="fc" id="L273">            .orElseThrow(() -&gt; new EntityNotFoundException(Job.class, jobId));</span>
+<span class="fc bfc" id="L274" title="All 4 branches covered.">    if (!&quot;course&quot;.equals(job.getScopeType()) || !courseId.equals(job.getScopeId())) {</span>
+<span class="fc" id="L275">      throw new EntityNotFoundException(Job.class, jobId);</span>
+    }
+<span class="fc" id="L277">    return job;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
