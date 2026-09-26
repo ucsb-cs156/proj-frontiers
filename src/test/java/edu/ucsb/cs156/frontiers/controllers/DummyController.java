@@ -1,5 +1,6 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
+import edu.ucsb.cs156.frontiers.config.AllowApiKeyAccess;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.DuplicateGroupException;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
@@ -11,6 +12,7 @@ import java.util.Set;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,5 +57,17 @@ public class DummyController extends ApiController {
   @GetMapping("/duplicategroup")
   public String duplicateGroup() {
     throw new DuplicateGroupException();
+  }
+
+  @AllowApiKeyAccess
+  @GetMapping("/apikey")
+  public String allowApiKeyAccess() {
+    return "OK";
+  }
+
+  @AllowApiKeyAccess
+  @PostMapping("/apikey/post")
+  public String allowApiKeyPost() {
+    return "OK";
   }
 }

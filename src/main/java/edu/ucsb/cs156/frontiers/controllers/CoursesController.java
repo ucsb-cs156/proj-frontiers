@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.frontiers.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.ucsb.cs156.frontiers.config.AllowApiKeyAccess;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
@@ -440,6 +441,7 @@ public class CoursesController extends ApiController {
   @Operation(summary = "Get course emails")
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/emails")
+  @AllowApiKeyAccess
   public String getCourseEmails(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") EmailTypes type,

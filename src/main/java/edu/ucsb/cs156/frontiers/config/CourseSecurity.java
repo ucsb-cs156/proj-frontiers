@@ -7,6 +7,7 @@ import edu.ucsb.cs156.frontiers.repositories.DownloadRequestRepository;
 import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
 import edu.ucsb.cs156.frontiers.services.CurrentUserService;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
@@ -60,9 +61,12 @@ public class CourseSecurity {
    * @param courseId
    * @return true if the user has manage permissions for the course, false otherwise.
    */
-  @PreAuthorize("hasRole('ROLE_USER')")
+  @PreAuthorize("hasRole('ROLE_USER') || hasRole('ROLE_API_KEY')")
   public Boolean hasManagePermissions(
       MethodSecurityExpressionOperations operations, Long courseId) {
+    if (operations.getAuthentication() instanceof ApiKeyToken token) {
+      return Objects.equals(token.getCourseId(), courseId);
+    }
     Optional<Course> course = courseRepository.findById(courseId);
     if (course.isEmpty()) {
       return true;
@@ -78,9 +82,12 @@ public class CourseSecurity {
    * @param courseId
    * @return true if the user has instructor permissions for the course, false otherwise.
    */
-  @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+  @PreAuthorize("hasRole('ROLE_INSTRUCTOR') || hasRole('ROLE_API_KEY')")
   public Boolean hasInstructorPermissions(
       MethodSecurityExpressionOperations operations, Long courseId) {
+    if (operations.getAuthentication() instanceof ApiKeyToken token) {
+      return Objects.equals(token.getCourseId(), courseId);
+    }
     CurrentUser currentUser = currentUserService.getCurrentUser();
     Collection<? extends GrantedAuthority> authorities =
         roleHierarchy.getReachableGrantedAuthorities(currentUser.getRoles());
