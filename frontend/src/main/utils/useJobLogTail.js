@@ -54,9 +54,8 @@ export function useJobLogTail(courseId, jobId) {
           timer = setTimeout(poll, JOB_LOG_POLL_INTERVAL_SECONDS * 1000);
         }
       } catch (e) {
-        if (!stopped) {
-          setError(e);
-        }
+        // if the component is gone by now, this state is simply not used
+        setError(e);
       }
     };
 

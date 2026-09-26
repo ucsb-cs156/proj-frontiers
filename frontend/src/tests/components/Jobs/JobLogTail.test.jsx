@@ -56,13 +56,14 @@ describe("JobLogTail tests", () => {
     const log = screen.getByTestId(`${testId}-log`);
     expect(log.tagName).toBe("PRE");
     expect(log.textContent).toBe("Creating repo lab01-cgaucho\n  done");
-    expect(log).toHaveStyle({
-      backgroundColor: "rgb(0, 0, 0)",
-      color: "rgb(255, 255, 255)",
-      fontFamily: "monospace",
-      overflowY: "auto",
-      whiteSpace: "pre-wrap",
-    });
+    // a long log scrolls inside its own box instead of stretching the page
+    expect(log.style.backgroundColor).toBe("black");
+    expect(log.style.color).toBe("white");
+    expect(log.style.fontFamily).toBe("monospace");
+    expect(log.style.maxHeight).toBe("60vh");
+    expect(log.style.overflowY).toBe("auto");
+    expect(log.style.whiteSpace).toBe("pre-wrap");
+    expect(log.style.padding).toBe("0.75rem");
   });
 
   test("while the job is running it shows its status and that it checks every 3 seconds", async () => {

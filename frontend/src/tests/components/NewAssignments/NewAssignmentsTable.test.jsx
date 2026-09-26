@@ -152,6 +152,10 @@ describe("NewAssignmentsTable tests", () => {
     expect(notPrevented).toBe(false);
 
     expect(await screen.findByText("Job 12 Log")).toBeInTheDocument();
+    expect(screen.getByTestId(`${testId}-job-log-modal`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${testId}-job-log-modal-tail`),
+    ).toBeInTheDocument();
     expect(
       await screen.findByText(/Creating lab01-cgaucho/, { selector: "pre" }),
     ).toHaveTextContent("Creating lab01-cgaucho Done");

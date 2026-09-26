@@ -52,6 +52,22 @@ describe("useJobLogTail tests", () => {
     });
   });
 
+  test("what the very first render sees is nothing yet", async () => {
+    axiosMock
+      .onGet(tailUrl)
+      .reply(200, { status: "running", lines: [line(1, "first")] });
+    const seen = [];
+    const { unmount } = renderHook(() => {
+      const value = useJobLogTail(7, 12);
+      seen.push(value);
+      return value;
+    });
+
+    expect(seen[0]).toEqual({ lines: [], status: null, error: null });
+    await advance(0);
+    unmount();
+  });
+
   test("polls again every 3 seconds, asking only for the lines after the last one it has", async () => {
     axiosMock
       .onGet(tailUrl)
