@@ -79,10 +79,10 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberMapping
 frontiers,edu.ucsb.cs156.frontiers.controllers,SlackController.SlackMissingMemberView,0,18,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamSourceType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,86,0,2,0,19,0,8,0,7
-frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,231,0,4,0,65,0,16,0,14
+frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,254,0,4,0,69,0,18,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,DokkuAccountTranslationsController,0,161,0,4,0,37,0,13,0,11
-frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,117,0,0,0,29,0,9,0,9
+frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,322,0,24,0,82,0,28,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,717,0,84,0,185,0,67,0,25
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,401,0,8,0,76,0,17,0,13
@@ -117,6 +117,7 @@ frontiers,edu.ucsb.cs156.frontiers.startup,WiremockApplicationRunner,0,17,0,0,0,
 frontiers,edu.ucsb.cs156.frontiers.utilities,WebhookSecurityUtils,0,112,0,12,0,27,0,11,0,5
 frontiers,edu.ucsb.cs156.frontiers.utilities,CanonicalFormConverter,0,17,0,0,0,4,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.models,CATMEStudentUpdate,0,18,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.models,JobLogTail,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,CanvasStudent,0,10,0,2,0,3,0,2,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,UpsertResponse,0,12,0,0,0,2,0,2,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,SlackUser,0,43,0,14,0,4,0,11,0,4
@@ -128,6 +129,7 @@ frontiers,edu.ucsb.cs156.frontiers.models,CourseWarning,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,CATMETeamAssignment,0,12,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,RosterStudentDTO,0,78,0,2,0,16,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.models,LoadResult,0,15,0,0,0,1,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.models,AssignmentWithJob,0,9,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.models,UserDataDTO,0,30,0,0,0,12,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.entities,RosterStudent,0,16,0,2,0,3,0,3,0,2
 frontiers,edu.ucsb.cs156.frontiers.validators,LinkedCourseValidator,0,15,0,6,0,4,0,5,0,2

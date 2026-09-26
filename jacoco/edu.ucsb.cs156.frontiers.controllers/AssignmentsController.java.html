@@ -3,16 +3,32 @@
 import edu.ucsb.cs156.frontiers.entities.Assignment;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.enums.AssignmentType;
+import edu.ucsb.cs156.frontiers.enums.Permission;
+import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import edu.ucsb.cs156.frontiers.enums.Visibility;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.NoLinkedOrganizationException;
+import edu.ucsb.cs156.frontiers.jobs.CreateStudentOrStaffRepositoriesJob;
+import edu.ucsb.cs156.frontiers.jobs.CreateTeamRepositoriesJob;
+import edu.ucsb.cs156.frontiers.models.AssignmentWithJob;
 import edu.ucsb.cs156.frontiers.repositories.AssignmentRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,91 +36,140 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Assignments of a course, and the jobs that create their repositories. Creating or editing an
+ * assignment saves it and starts the job that creates its individual or team repositories, and the
+ * id of that job is kept as the assignment's last job id.
+ */
 @Tag(name = &quot;Assignments&quot;)
 @RequestMapping(&quot;/api/assignments&quot;)
 @RestController
-<span class="fc" id="L26">@Slf4j</span>
-<span class="fc" id="L27">public class AssignmentsController extends ApiController {</span>
+<span class="fc" id="L47">@Slf4j</span>
+<span class="fc" id="L48">public class AssignmentsController extends ApiController {</span>
+
+  /** The team regular expression that matches every team. */
+  public static final String DEFAULT_TEAM_REGEX = &quot;.*&quot;;
+
   @Autowired private AssignmentRepository assignmentRepository;
 
   @Autowired private CourseRepository courseRepository;
 
+  @Autowired private RepositoryService repositoryService;
+
+  @Autowired private GithubTeamService githubTeamService;
+
+  @Autowired private JobService jobService;
+
   /**
-   * This method creates a new Assignment.
+   * Lists the assignments of a course, sorted by repository prefix.
    *
-   * @param courseId the ID of the course the assignment is associated with
-   * @param name the name of the assignment
-   * @param asnType the assignment type (individual vs team)
-   * @param visibility the visbility of the assignment (public vs private)
-   * @param permission the permissions for the assignment (read, write, maintain, admin)
-   * @return the created Assignment
+   * @param courseId the ID of the course
+   * @return the assignments of the course
    */
-  @Operation(summary = &quot;Create a new assignment&quot;)
+  @Operation(summary = &quot;List the assignments of a course&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
-  @PostMapping(&quot;/post&quot;)
-  public Assignment postAssignment(
-      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
-      @Parameter(name = &quot;name&quot;) @RequestParam String name,
-      @Parameter(name = &quot;asnType&quot;) @RequestParam AssignmentType asnType,
-      @Parameter(name = &quot;visibility&quot;) @RequestParam
-          edu.ucsb.cs156.frontiers.enums.Visibility visibility,
-      @Parameter(name = &quot;permission&quot;) @RequestParam
-          edu.ucsb.cs156.frontiers.enums.Permission permission)
+  @GetMapping(&quot;&quot;)
+  public List&lt;Assignment&gt; getAssignments(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId)
       throws EntityNotFoundException {
-
-    // Get Course or else throw an error
-
-<span class="fc" id="L57">    Course course =</span>
-        courseRepository
-<span class="fc" id="L59">            .findById(courseId)</span>
-<span class="fc" id="L60">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-
-    Assignment assignment =
-<span class="fc" id="L63">        Assignment.builder()</span>
-<span class="fc" id="L64">            .course(course)</span>
-<span class="fc" id="L65">            .name(name)</span>
-<span class="fc" id="L66">            .asnType(asnType)</span>
-<span class="fc" id="L67">            .visibility(visibility)</span>
-<span class="fc" id="L68">            .permission(permission)</span>
-<span class="fc" id="L69">            .build();</span>
-
-<span class="fc" id="L71">    Assignment savedAssignment = assignmentRepository.save(assignment);</span>
-
-<span class="fc" id="L73">    return savedAssignment;</span>
+<span class="fc" id="L74">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L75">    return assignmentRepository.findByCourseIdOrderByRepoPrefixAsc(courseId);</span>
   }
 
   /**
-   * This method updates an Assignment.
+   * Creates an assignment and starts the job that creates its repositories.
    *
-   * @param assignmentId the ID of the course the assignment is associated with
-   * @param name the name of the assignment
+   * &lt;p&gt;For an INDIVIDUAL assignment, createReposFor says whom repositories are created for (default
+   * STUDENTS_ONLY) and teamRegex must not be given. For a TEAM assignment, teamRegex is the regular
+   * expression that team names must match (default {@value #DEFAULT_TEAM_REGEX}, every team) and
+   * createReposFor must not be given.
+   *
+   * @param courseId the ID of the course the assignment is for
+   * @param repoPrefix each repository created begins with this prefix
    * @param asnType the assignment type (individual vs team)
-   * @param visibility the visbility of the assignment (public vs private)
-   * @param permission the permissions for the assignment (read, write, maintain, admin)
-   * @return the created Assignment
+   * @param visibility the visibility of the repositories (public vs private)
+   * @param permission the permission that students, or teams, have on the repositories
+   * @param createReposFor INDIVIDUAL only: whom to create repositories for
+   * @param teamRegex TEAM only: only teams whose names match get a repository
+   * @return the created assignment, with the id of the job as its last job id, and that job
    */
-  @Operation(summary = &quot;Update an assignment&quot;)
-  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #assignmentId)&quot;)
-  @PutMapping(&quot;/put&quot;)
-  public Assignment updateAssignment(
-      @Parameter(name = &quot;assignmentId&quot;) @RequestParam Long assignmentId,
-      @Parameter(name = &quot;name&quot;) @RequestParam String name,
+  @Operation(summary = &quot;Create an assignment and start creating its repositories&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/post&quot;)
+  public AssignmentWithJob postAssignment(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;repoPrefix&quot;) @RequestParam String repoPrefix,
       @Parameter(name = &quot;asnType&quot;) @RequestParam AssignmentType asnType,
-      @Parameter(name = &quot;visibility&quot;) @RequestParam
-          edu.ucsb.cs156.frontiers.enums.Visibility visibility,
-      @Parameter(name = &quot;permission&quot;) @RequestParam
-          edu.ucsb.cs156.frontiers.enums.Permission permission)
+      @Parameter(name = &quot;visibility&quot;) @RequestParam Visibility visibility,
+      @Parameter(name = &quot;permission&quot;) @RequestParam Permission permission,
+      @Parameter(name = &quot;createReposFor&quot;) @RequestParam(required = false)
+          RepositoryCreationOption createReposFor,
+      @Parameter(name = &quot;teamRegex&quot;) @RequestParam(required = false) String teamRegex)
       throws EntityNotFoundException {
+<span class="fc" id="L108">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L109">    Assignment assignment = Assignment.builder().course(course).asnType(asnType).build();</span>
+<span class="fc" id="L110">    applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);</span>
+<span class="fc" id="L111">    requireLinkedOrganization(course);</span>
 
-<span class="fc" id="L99">    Assignment assignment =</span>
-        assignmentRepository
-<span class="fc" id="L101">            .findById(assignmentId)</span>
-<span class="fc" id="L102">            .orElseThrow(() -&gt; new EntityNotFoundException(Assignment.class, assignmentId));</span>
+<span class="fc" id="L113">    return launchAndSave(course, assignment);</span>
+  }
 
-<span class="fc" id="L104">    assignment.setAsnType(asnType);</span>
-<span class="fc" id="L105">    assignment.setVisibility(visibility);</span>
-<span class="fc" id="L106">    assignment.setPermission(permission);</span>
-<span class="fc" id="L107">    return assignmentRepository.save(assignment);</span>
+  /**
+   * Updates an assignment and starts the job that creates its repositories. The assignment type
+   * cannot be changed: to change an individual assignment to a team one, or the other way round,
+   * delete the assignment and create a new one. The same rules as for creating apply to
+   * createReposFor and teamRegex, according to the assignment's type.
+   *
+   * @param courseId the ID of the course the assignment belongs to
+   * @param assignmentId the ID of the assignment
+   * @param repoPrefix each repository created begins with this prefix
+   * @param visibility the visibility of the repositories (public vs private)
+   * @param permission the permission that students, or teams, have on the repositories
+   * @param createReposFor INDIVIDUAL only: whom to create repositories for
+   * @param teamRegex TEAM only: only teams whose names match get a repository
+   * @return the updated assignment, with the id of the job as its last job id, and that job
+   */
+  @Operation(summary = &quot;Update an assignment and start creating its repositories&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PutMapping(&quot;/put&quot;)
+  public AssignmentWithJob updateAssignment(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;assignmentId&quot;) @RequestParam Long assignmentId,
+      @Parameter(name = &quot;repoPrefix&quot;) @RequestParam String repoPrefix,
+      @Parameter(name = &quot;visibility&quot;) @RequestParam Visibility visibility,
+      @Parameter(name = &quot;permission&quot;) @RequestParam Permission permission,
+      @Parameter(name = &quot;createReposFor&quot;) @RequestParam(required = false)
+          RepositoryCreationOption createReposFor,
+      @Parameter(name = &quot;teamRegex&quot;) @RequestParam(required = false) String teamRegex)
+      throws EntityNotFoundException {
+<span class="fc" id="L144">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L145">    Assignment assignment = findAssignmentInCourse(courseId, assignmentId);</span>
+<span class="fc" id="L146">    applyFields(assignment, repoPrefix, visibility, permission, createReposFor, teamRegex);</span>
+<span class="fc" id="L147">    requireLinkedOrganization(course);</span>
+
+<span class="fc" id="L149">    return launchAndSave(course, assignment);</span>
+  }
+
+  /**
+   * Starts the job that creates the repositories of an existing assignment again, for example to
+   * pick up students who have joined since the last run, and records it as the assignment's last
+   * job.
+   *
+   * @param courseId the ID of the course the assignment belongs to
+   * @param assignmentId the ID of the assignment
+   * @return the assignment, with its new last job id, and the job that was started
+   */
+  @Operation(summary = &quot;Start creating the repositories of an assignment&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/launch&quot;)
+  public AssignmentWithJob launchAssignmentJob(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;assignmentId&quot;) @RequestParam Long assignmentId)
+      throws EntityNotFoundException {
+<span class="fc" id="L168">    Course course = ensureCourseExists(courseId);</span>
+<span class="fc" id="L169">    Assignment assignment = findAssignmentInCourse(courseId, assignmentId);</span>
+<span class="fc" id="L170">    requireLinkedOrganization(course);</span>
+
+<span class="fc" id="L172">    return launchAndSave(course, assignment);</span>
   }
 
   @Operation(summary = &quot;Delete an assignment&quot;)
@@ -113,22 +178,116 @@ import org.springframework.web.bind.annotation.RestController;
   public Object deleteAssignment(
       @Parameter(name = &quot;id&quot;) @PathVariable Long id,
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L181">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L182">    Assignment assignment = findAssignmentInCourse(courseId, id);</span>
 
-    // check course exists
-<span class="fc" id="L118">    courseRepository</span>
-<span class="fc" id="L119">        .findById(courseId)</span>
-<span class="fc" id="L120">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L184">    assignmentRepository.delete(assignment);</span>
 
-    // find assignment or throw error
-<span class="fc" id="L123">    Assignment assignment =</span>
-        assignmentRepository
-<span class="fc" id="L125">            .findById(id)</span>
-<span class="fc" id="L126">            .orElseThrow(() -&gt; new EntityNotFoundException(Assignment.class, id));</span>
+<span class="fc" id="L186">    return genericMessage(String.format(&quot;Assignment with id %s deleted&quot;, id));</span>
+  }
 
-    // delete the assignment
-<span class="fc" id="L129">    assignmentRepository.delete(assignment);</span>
+  private Course ensureCourseExists(Long courseId) {
+<span class="fc" id="L190">    return courseRepository</span>
+<span class="fc" id="L191">        .findById(courseId)</span>
+<span class="fc" id="L192">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+  }
 
-<span class="fc" id="L131">    return genericMessage(String.format(&quot;Assignment with id %s deleted&quot;, id));</span>
+  /** Finds an assignment, which must belong to the given course. */
+  private Assignment findAssignmentInCourse(Long courseId, Long assignmentId) {
+<span class="fc" id="L197">    return assignmentRepository</span>
+<span class="fc" id="L198">        .findById(assignmentId)</span>
+<span class="fc" id="L199">        .filter(a -&gt; a.getCourse().getId().equals(courseId))</span>
+<span class="fc" id="L200">        .orElseThrow(() -&gt; new EntityNotFoundException(Assignment.class, assignmentId));</span>
+  }
+
+  /**
+   * Starts the job that creates the assignment's repositories and saves the assignment with the id
+   * of that job as its last job id.
+   */
+  private AssignmentWithJob launchAndSave(Course course, Assignment assignment) {
+<span class="fc" id="L208">    Job job = launchJob(course, assignment);</span>
+<span class="fc" id="L209">    assignment.setLastJobId(job.getId());</span>
+<span class="fc" id="L210">    return new AssignmentWithJob(assignmentRepository.save(assignment), job);</span>
+  }
+
+  private static void requireLinkedOrganization(Course course) {
+<span class="fc bfc" id="L214" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L215">      throw new NoLinkedOrganizationException(course.getCourseName());</span>
+    }
+<span class="fc" id="L217">  }</span>
+
+  /**
+   * Sets the editable fields of an assignment, checking the ones that depend on its type.
+   *
+   * @throws IllegalArgumentException if a field is blank, does not apply to the type of the
+   *     assignment, or is not a valid regular expression
+   */
+  private static void applyFields(
+      Assignment assignment,
+      String repoPrefix,
+      Visibility visibility,
+      Permission permission,
+      RepositoryCreationOption createReposFor,
+      String teamRegex) {
+<span class="fc" id="L232">    String normalizedPrefix = repoPrefix.strip();</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">    if (normalizedPrefix.isEmpty()) {</span>
+<span class="fc" id="L234">      throw new IllegalArgumentException(&quot;repoPrefix must not be blank&quot;);</span>
+    }
+<span class="fc bfc" id="L236" title="All 4 branches covered.">    boolean hasTeamRegex = teamRegex != null &amp;&amp; !teamRegex.isBlank();</span>
+
+<span class="fc bfc" id="L238" title="All 2 branches covered.">    if (assignment.getAsnType() == AssignmentType.TEAM) {</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">      if (createReposFor != null) {</span>
+<span class="fc" id="L240">        throw new IllegalArgumentException(</span>
+            &quot;createReposFor is only allowed for INDIVIDUAL assignments&quot;);
+      }
+<span class="fc bfc" id="L243" title="All 2 branches covered.">      String regex = hasTeamRegex ? teamRegex : DEFAULT_TEAM_REGEX;</span>
+      try {
+<span class="fc" id="L245">        Pattern.compile(regex);</span>
+<span class="fc" id="L246">      } catch (PatternSyntaxException e) {</span>
+<span class="fc" id="L247">        throw new IllegalArgumentException(&quot;teamRegex is not a valid regular expression&quot;, e);</span>
+<span class="fc" id="L248">      }</span>
+<span class="fc" id="L249">      assignment.setCreateReposFor(null);</span>
+<span class="fc" id="L250">      assignment.setTeamRegex(regex);</span>
+<span class="fc" id="L251">    } else {</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">      if (hasTeamRegex) {</span>
+<span class="fc" id="L253">        throw new IllegalArgumentException(&quot;teamRegex is only allowed for TEAM assignments&quot;);</span>
+      }
+<span class="fc" id="L255">      assignment.setCreateReposFor(</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">          createReposFor == null ? RepositoryCreationOption.STUDENTS_ONLY : createReposFor);</span>
+<span class="fc" id="L257">      assignment.setTeamRegex(null);</span>
+    }
+
+<span class="fc" id="L260">    assignment.setRepoPrefix(normalizedPrefix);</span>
+<span class="fc" id="L261">    assignment.setVisibility(visibility);</span>
+<span class="fc" id="L262">    assignment.setPermission(permission);</span>
+<span class="fc" id="L263">  }</span>
+
+  /** Starts the job that creates the individual or team repositories of an assignment. */
+  private Job launchJob(Course course, Assignment assignment) {
+<span class="fc bfc" id="L267" title="All 2 branches covered.">    boolean isPrivate = assignment.getVisibility() == Visibility.PRIVATE;</span>
+<span class="fc" id="L268">    RepositoryPermissions permissions =</span>
+<span class="fc" id="L269">        RepositoryPermissions.valueOf(assignment.getPermission().name());</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">    if (assignment.getAsnType() == AssignmentType.TEAM) {</span>
+<span class="fc" id="L271">      return jobService.runAsJob(</span>
+<span class="fc" id="L272">          CreateTeamRepositoriesJob.builder()</span>
+<span class="fc" id="L273">              .repositoryPrefix(assignment.getRepoPrefix())</span>
+<span class="fc" id="L274">              .isPrivate(isPrivate)</span>
+<span class="fc" id="L275">              .repositoryService(repositoryService)</span>
+<span class="fc" id="L276">              .githubTeamService(githubTeamService)</span>
+<span class="fc" id="L277">              .course(course)</span>
+<span class="fc" id="L278">              .permissions(permissions)</span>
+<span class="fc" id="L279">              .teamRegex(assignment.getTeamRegex())</span>
+<span class="fc" id="L280">              .build());</span>
+    }
+<span class="fc" id="L282">    return jobService.runAsJob(</span>
+<span class="fc" id="L283">        CreateStudentOrStaffRepositoriesJob.builder()</span>
+<span class="fc" id="L284">            .repositoryPrefix(assignment.getRepoPrefix())</span>
+<span class="fc" id="L285">            .isPrivate(isPrivate)</span>
+<span class="fc" id="L286">            .repositoryService(repositoryService)</span>
+<span class="fc" id="L287">            .course(course)</span>
+<span class="fc" id="L288">            .permissions(permissions)</span>
+<span class="fc" id="L289">            .creationOption(assignment.getCreateReposFor())</span>
+<span class="fc" id="L290">            .build());</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
