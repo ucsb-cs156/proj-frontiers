@@ -77,4 +77,11 @@ public class Assignment {
    * lib-jobs library.
    */
   private Long lastJobId;
+
+  /**
+   * Whether the repositories created for this assignment must have signed commits: they get a
+   * "Require Signed Commits" ruleset when the assignment's job runs, and if this is false the
+   * ruleset is removed from them.
+   */
+  private boolean requireSignedCommit;
 }

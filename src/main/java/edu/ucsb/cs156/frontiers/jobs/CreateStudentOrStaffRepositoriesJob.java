@@ -12,6 +12,7 @@ import edu.ucsb.cs156.jobs.services.JobContext;
 import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.Optional;
 import lombok.Builder;
+import org.springframework.web.client.HttpStatusCodeException;
 
 @Builder
 public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
@@ -20,6 +21,13 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
   String repositoryPrefix;
   Boolean isPrivate;
   RepositoryPermissions permissions;
+
+  /**
+   * Whether the repositories must require signed commits: true gives each repository the ruleset
+   * that requires them, false removes it. Null, as for a caller that does not manage this, leaves
+   * the repositories' rulesets alone.
+   */
+  Boolean requireSignedCommit;
 
   @Builder.Default RepositoryCreationOption creationOption = RepositoryCreationOption.STUDENTS_ONLY;
 
@@ -39,9 +47,13 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
     ctx.log("isPrivate=" + isPrivate);
     ctx.log("permissions=" + permissions);
     ctx.log("creationOption=" + creationOption);
+    if (requireSignedCommit != null) {
+      ctx.log("requireSignedCommit=" + requireSignedCommit);
+    }
 
     int reposCreated = 0;
     int reposUpdated = 0;
+    int signedCommitsFailures = 0;
 
     if (creationOption == RepositoryCreationOption.STUDENTS_ONLY
         || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
@@ -63,6 +75,9 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
             } else {
               ctx.log("  updated repo " + result.get().repoName());
               reposUpdated++;
+            }
+            if (!applySignedCommits(ctx, result.get().repoName())) {
+              signedCommitsFailures++;
             }
           }
         }
@@ -89,6 +104,9 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
               ctx.log("  updated repo " + result.get().repoName());
               reposUpdated++;
             }
+            if (!applySignedCommits(ctx, result.get().repoName())) {
+              signedCommitsFailures++;
+            }
           }
         }
       }
@@ -98,6 +116,37 @@ public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
     ctx.log(String.format("%4d repos created", reposCreated));
     ctx.log(String.format("%4d repos updated", reposUpdated));
     ctx.log(String.format("%4d repos total", reposCreated + reposUpdated));
+    if (signedCommitsFailures > 0) {
+      ctx.log(
+          String.format("%4d repos where signed commits could not be set", signedCommitsFailures));
+    }
     ctx.log("Done");
+  }
+
+  /**
+   * Makes a repository require signed commits, or not, as this job is set to; does nothing if it is
+   * not set either way. A refusal by GitHub is logged, and does not stop the job.
+   *
+   * @return false if GitHub refused, true otherwise
+   */
+  private boolean applySignedCommits(JobContext ctx, String repoName) throws Exception {
+    if (requireSignedCommit == null) {
+      return true;
+    }
+    try {
+      repositoryService.setSignedCommitsRequired(course, repoName, requireSignedCommit);
+      return true;
+    } catch (HttpStatusCodeException e) {
+      ctx.log(
+          "  could not "
+              + (requireSignedCommit ? "require" : "stop requiring")
+              + " signed commits on "
+              + repoName
+              + ": "
+              + e.getStatusCode()
+              + " "
+              + e.getResponseBodyAsString());
+      return false;
+    }
   }
 }

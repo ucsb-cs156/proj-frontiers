@@ -22,6 +22,7 @@ export default function NewTeamAssignmentForm({
     defaultValues: {
       isPrivate: false,
       permission: "MAINTAIN",
+      requireSignedCommit: false,
       teamRegex: DEFAULT_TEAM_REGEX,
       ...initialContents,
     },
@@ -68,6 +69,23 @@ export default function NewTeamAssignmentForm({
             </option>
           ))}
         </Form.Select>
+      </Form.Group>
+      <Form.Group className="mb-3">
+        <Form.Check
+          id="requireSignedCommit"
+          type="switch"
+          label="Require Signed Commits?"
+          data-testid={`${testIdPrefix}-requireSignedCommit`}
+          {...register("requireSignedCommit")}
+        />
+        <Form.Text
+          muted
+          data-testid={`${testIdPrefix}-requireSignedCommit-help`}
+        >
+          Repositories get a ruleset that requires signed commits on every
+          branch except gh-pages. When this is off, that ruleset is removed from
+          them.
+        </Form.Text>
       </Form.Group>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="teamRegex">
