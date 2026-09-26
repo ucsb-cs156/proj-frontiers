@@ -28,6 +28,10 @@ const renderAt = (path, queryClient) =>
             path="/instructor/courses/:courseId/jobs/:jobId/logs"
             element={<JobLogPage />}
           />
+          <Route
+            path="/staff/courses/:courseId/jobs/:jobId/logs"
+            element={<JobLogPage />}
+          />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -234,6 +238,27 @@ describe("JobLogPage tests", () => {
       fireEvent.click(screen.getByTestId("JobLogPage-back"));
       expect(mockedNavigate).toHaveBeenCalledTimes(1);
       expect(mockedNavigate).toHaveBeenCalledWith("/instructor/courses/3");
+    });
+
+    test("on the staff address it shows the log of the job of the course too, and Back goes to the staff view of the course", async () => {
+      axiosMock.onGet(COURSE_URL).reply(200, "staff sees this line");
+
+      renderAt("/staff/courses/3/jobs/7/logs", queryClient);
+
+      expect(await screen.findByTestId("JobLogPage-log")).toHaveTextContent(
+        "staff sees this line",
+      );
+      expect(screen.getByTestId("JobLogPage-heading")).toHaveTextContent(
+        "Job Log for Job 7",
+      );
+      expect(getRequestsTo(axiosMock, COURSE_URL)[0].params).toEqual({
+        courseId: "3",
+        jobId: "7",
+      });
+
+      fireEvent.click(screen.getByTestId("JobLogPage-back"));
+      expect(mockedNavigate).toHaveBeenCalledTimes(1);
+      expect(mockedNavigate).toHaveBeenCalledWith("/staff/courses/3");
     });
 
     test("Refresh refetches the log", async () => {

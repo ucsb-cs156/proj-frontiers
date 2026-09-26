@@ -28,6 +28,7 @@ import {
 export default function NewAssignmentsTable({
   assignments,
   courseId,
+  courseViewPath = "instructor",
   testIdPrefix = "NewAssignmentsTable",
 }) {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -179,7 +180,7 @@ export default function NewAssignmentsTable({
         }
         return (
           <a
-            href={jobLogPagePath(courseId, jobId)}
+            href={jobLogPagePath(courseId, jobId, courseViewPath)}
             onClick={(event) => {
               event.preventDefault();
               showLog(jobId);

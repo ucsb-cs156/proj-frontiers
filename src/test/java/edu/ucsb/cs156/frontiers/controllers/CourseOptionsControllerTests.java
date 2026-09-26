@@ -251,11 +251,56 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
 
   @Test
   @WithStaffCoursePermissions
-  public void staffCannotGetOrSetCourseOptions() throws Exception {
-    mockMvc
-        .perform(get("/api/course/options").param("courseId", "1"))
-        .andExpect(status().isForbidden());
+  public void staffCanGetCourseOptions() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseOptionRepository.findByCourseId(eq(1L)))
+        .thenReturn(
+            List.of(
+                CourseOption.builder()
+                    .courseId(1L)
+                    .option("NEW_ASSIGNMENT_FEATURES")
+                    .enabled(true)
+                    .build()));
 
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/course/options").param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    Map<String, Object> options = responseToJson(response);
+    assertEquals(true, options.get("NEW_ASSIGNMENT_FEATURES"));
+    assertEquals(false, options.get("ENABLE_CANVAS"));
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void staffCanGetOneCourseOption() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(courseOptionRepository.findByCourseIdAndOption(eq(1L), eq("NEW_ASSIGNMENT_FEATURES")))
+        .thenReturn(
+            Optional.of(
+                CourseOption.builder()
+                    .courseId(1L)
+                    .option("NEW_ASSIGNMENT_FEATURES")
+                    .enabled(true)
+                    .build()));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/course/options")
+                    .param("courseId", "1")
+                    .param("option", "NEW_ASSIGNMENT_FEATURES"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(Map.of("NEW_ASSIGNMENT_FEATURES", true), responseToJson(response));
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void staffCannotSetCourseOptions() throws Exception {
     mockMvc
         .perform(
             post("/api/course/options")
@@ -264,6 +309,16 @@ public class CourseOptionsControllerTests extends ControllerTestCase {
                 .param("option", "ENABLE_CANVAS")
                 .param("enabled", "true"))
         .andExpect(status().isForbidden());
+    verify(courseOptionRepository, never()).save(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void usersWithoutPermissionsOnTheCourseCannotGetCourseOptions() throws Exception {
+    mockMvc
+        .perform(get("/api/course/options").param("courseId", "1"))
+        .andExpect(status().isForbidden());
+    verify(courseOptionRepository, never()).findByCourseId(any());
   }
 
   @Test

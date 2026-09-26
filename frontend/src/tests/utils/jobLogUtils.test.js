@@ -40,4 +40,13 @@ describe("jobLogUtils tests", () => {
       "/instructor/courses/3/jobs/40/logs",
     );
   });
+
+  test("jobLogPagePath for the staff view of a course", () => {
+    expect(jobLogPagePath(7, 12, "staff")).toBe(
+      "/staff/courses/7/jobs/12/logs",
+    );
+    expect(jobLogPagePath(7, 12, "instructor")).toBe(
+      "/instructor/courses/7/jobs/12/logs",
+    );
+  });
 });

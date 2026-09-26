@@ -16,7 +16,11 @@ import {
   onAssignmentMutationError,
 } from "main/utils/newAssignmentsUtils";
 
-export default function NewAssignmentsTabComponent({ courseId, testIdPrefix }) {
+export default function NewAssignmentsTabComponent({
+  courseId,
+  courseViewPath = "instructor",
+  testIdPrefix,
+}) {
   // which kind of assignment the create modal is for, or null when it is closed
   const [createType, setCreateType] = useState(null);
 
@@ -108,6 +112,7 @@ export default function NewAssignmentsTabComponent({ courseId, testIdPrefix }) {
         <NewAssignmentsTable
           assignments={assignments}
           courseId={courseId}
+          courseViewPath={courseViewPath}
           testIdPrefix={`${testIdPrefix}-new-assignments-table`}
         />
       </Row>

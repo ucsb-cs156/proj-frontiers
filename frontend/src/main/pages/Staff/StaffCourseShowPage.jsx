@@ -7,6 +7,7 @@ export default function StaffCourseShowPage() {
       testId="StaffCourseShowPage"
       showSettingsTab={false}
       staffTabIsInstructor={false}
+      courseViewPath="staff"
       canEditStudents={true}
       canManageTeams={true}
     />

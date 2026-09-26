@@ -16,7 +16,14 @@ export function isJobFinished(status) {
   return FINISHED_JOB_STATUSES.includes(status);
 }
 
-/** The path of the page that shows a whole job log, for a job of a course. */
-export function jobLogPagePath(courseId, jobId) {
-  return `/instructor/courses/${courseId}/jobs/${jobId}/logs`;
+/**
+ * The path of the page that shows a whole job log, for a job of a course.
+ *
+ * @param {number|string} courseId the course the job belongs to
+ * @param {number|string} jobId the job
+ * @param {"instructor"|"staff"} viewPath which view of the course the page is
+ *   in: the instructor one, or the staff one, which staff are allowed into
+ */
+export function jobLogPagePath(courseId, jobId, viewPath = "instructor") {
+  return `/${viewPath}/courses/${courseId}/jobs/${jobId}/logs`;
 }
