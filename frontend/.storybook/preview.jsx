@@ -2,7 +2,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import 'react-toastify/dist/ReactToastify.css';
 import "../src/index.css";
 
-import { initialize, mswLoader } from 'msw-storybook-addon'
+import { mswLoader } from "msw-storybook-addon/csf3";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router";
@@ -11,8 +11,6 @@ import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-// Initialize MSW
-initialize()
 
 // For conditional decorators trick, see: https://github.com/storybookjs/storybook/issues/23237#issuecomment-1611351405 
 // Decorators are applied in order; the innermost decorator is applied first.
@@ -53,7 +51,7 @@ export const decorators = [
 ];
 
 
-/** @type { import('@storybook/react-webpack5').Preview } */
+/** @type { import('@storybook/react-vite').Preview } */
 const preview = {
   parameters: {
     controls: {
@@ -63,7 +61,7 @@ const preview = {
       },
     },
   },
-  loaders: [mswLoader]
+  loaders: [mswLoader()],
 };
 
 

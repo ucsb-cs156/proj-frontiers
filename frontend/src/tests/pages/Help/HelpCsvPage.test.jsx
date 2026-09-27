@@ -2,13 +2,26 @@ import { render, screen, within } from "@testing-library/react";
 import HelpCsvPage from "main/pages/Help/HelpCsvPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
-import * as reactRouter from "react-router";
 import { vi } from "vitest";
 
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
+
+// react-router 8 is ESM-only, so vi.spyOn(reactRouter, "useLocation") is not
+// possible; instead wrap the real useLocation and let a test override its result.
+let mockLocation = null;
+vi.mock("react-router", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useLocation: () => {
+      const realLocation = actual.useLocation();
+      return mockLocation ?? realLocation;
+    },
+  };
+});
 
 describe("HelpCsvPage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
@@ -74,16 +87,13 @@ describe("HelpCsvPage tests", () => {
     const scrollIntoViewMock = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoViewMock;
 
-    let currentHash = "";
-    const useLocationSpy = vi
-      .spyOn(reactRouter, "useLocation")
-      .mockImplementation(() => ({
-        hash: currentHash,
-        pathname: "/help/csv",
-        search: "",
-        state: null,
-        key: "default",
-      }));
+    mockLocation = {
+      hash: "",
+      pathname: "/help/csv",
+      search: "",
+      state: null,
+      key: "default",
+    };
 
     const { rerender } = render(
       <QueryClientProvider client={queryClient}>
@@ -96,7 +106,7 @@ describe("HelpCsvPage tests", () => {
     await screen.findByText("Team Information");
     expect(scrollIntoViewMock).not.toHaveBeenCalled();
 
-    currentHash = "#team-information";
+    mockLocation = { ...mockLocation, hash: "#team-information" };
     rerender(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -106,7 +116,7 @@ describe("HelpCsvPage tests", () => {
     );
 
     expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
-    useLocationSpy.mockRestore();
+    mockLocation = null;
   });
 
   test("scrolls to staff section when hash is present", async () => {

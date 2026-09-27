@@ -262,9 +262,11 @@ describe("StaffTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   describe("Search filter works correctly", () => {
@@ -785,13 +787,13 @@ describe("StaffTabComponent Tests", () => {
     expect(infoIcon).toHaveStyle({
       position: "absolute",
       top: "50%",
-      right: "0.75rem",
       transform: "translateY(-50%)",
       color: "#fff",
       cursor: "pointer",
-      fontSize: "0.9rem",
       userSelect: "none",
     });
+    expect(infoIcon.style.right).toBe("0.75rem");
+    expect(infoIcon.style.fontSize).toBe("0.9rem");
     fireEvent.click(infoIcon);
     expect(openSpy).toHaveBeenCalledWith(
       "/help/csv#staff-information",

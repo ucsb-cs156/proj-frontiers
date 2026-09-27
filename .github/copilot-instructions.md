@@ -22,7 +22,7 @@ If any fail, take appropriate steps:
 
 ### Prerequisites and Setup
 - Java 21 (Spring Boot requires exactly this version)
-- Node.js >= 22.18.0 (frontend requirement)
+- Node.js >= 24.21.0 (frontend requirement)
 - Maven 3.x for backend builds
 - Required for full functionality: OAuth setup with Google and GitHub App setup
 
@@ -37,7 +37,7 @@ If any fail, take appropriate steps:
 - Integration tests: `INTEGRATION=true mvn test-compile failsafe:integration-test` -- takes ~70 seconds. NEVER CANCEL. Set timeout to 5+ minutes.
 
 #### Frontend (React/Node.js)
-- Set Node 22.18.0: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && nvm use 22.18.0`
+- Set Node 24.21.0: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && nvm use 24.21.0`
 - Install dependencies: `cd frontend && npm ci` -- takes ~4 minutes. NEVER CANCEL. Set timeout to 10+ minutes.
 - Build: `npm run build` -- takes ~20 seconds.
 - Test: `npm test -- --watchAll=false` -- takes ~11 seconds.
@@ -74,7 +74,7 @@ Backend starts on http://localhost:8080 in ~6 seconds.
 
 **Terminal 2 - Frontend:**
 ```bash
-export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && nvm use 22.18.0
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && nvm use 24.21.0
 cd frontend
 npm start
 ```
@@ -122,7 +122,7 @@ The application requires OAuth setup to function properly. Without it, you'll se
 
 ### Build Issues
 - **Java version mismatch**: Ensure Java 21 is active with `java --version`
-- **Node version mismatch**: Ensure Node >= 22.18.0 with `node --version`
+- **Node version mismatch**: Ensure Node >= 24.21.0 with `node --version`
 - **Frontend cache issues**: Delete `frontend/node_modules` and run `npm ci` again
 - **Integration test failures**: Integration tests may fail due to Playwright browser dependencies in containerized environments
 

@@ -30,8 +30,8 @@ describe("SignInCard Tests", () => {
     expect(screen.getByTestId("SignInCard-header-google")).toHaveClass(
       "text-center",
     );
-    expect(screen.getByTestId("SignInCard-base-google")).toHaveStyle(
-      "width: 18rem",
+    expect(screen.getByTestId("SignInCard-base-google").style.width).toBe(
+      "18rem",
     );
   });
 
@@ -57,8 +57,8 @@ describe("SignInCard Tests", () => {
     expect(screen.getByTestId("SignInCard-header-default")).toHaveClass(
       "text-center",
     );
-    expect(screen.getByTestId("SignInCard-base-default")).toHaveStyle(
-      "width: 18rem",
+    expect(screen.getByTestId("SignInCard-base-default").style.width).toBe(
+      "18rem",
     );
   });
 });

@@ -199,7 +199,9 @@ describe("CoursesIndexPage tests", () => {
     expect(
       queryClient.getQueryState(["/api/courses/allForAdmins"]),
     ).toBeTruthy();
-    expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument(),
+    );
   });
 
   test("Delete column does appear when deleteCourseButton is true", async () => {

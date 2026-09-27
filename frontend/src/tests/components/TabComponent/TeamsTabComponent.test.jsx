@@ -763,9 +763,11 @@ describe("TeamTabComponent tests", () => {
         "",
       );
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
   test("Modals close on close buttons, push teams button is enabled", async () => {
     axiosMock
@@ -838,11 +840,11 @@ describe("TeamTabComponent tests", () => {
     expect(infoIcon).toBeInTheDocument();
     expect(infoIcon).toHaveStyle({ position: "absolute" });
     expect(infoIcon).toHaveStyle({ top: "50%" });
-    expect(infoIcon).toHaveStyle({ right: "0.75rem" });
+    expect(infoIcon.style.right).toBe("0.75rem");
     expect(infoIcon).toHaveStyle({ transform: "translateY(-50%)" });
     expect(infoIcon).toHaveStyle({ color: "#fff" });
     expect(infoIcon).toHaveStyle({ cursor: "pointer" });
-    expect(infoIcon).toHaveStyle({ fontSize: "0.9rem" });
+    expect(infoIcon.style.fontSize).toBe("0.9rem");
     expect(infoIcon).toHaveStyle({ userSelect: "none" });
     expect(infoIcon.tagName.toLowerCase()).toBe("svg");
 

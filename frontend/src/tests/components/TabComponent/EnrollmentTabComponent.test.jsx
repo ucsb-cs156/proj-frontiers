@@ -252,7 +252,11 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   test("CsvForm error returns correctly", async () => {
@@ -461,9 +465,11 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   test("RosterStudentForm works on error", async () => {
@@ -609,11 +615,11 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(infoIcon).toBeInTheDocument();
     expect(infoIcon).toHaveStyle({ position: "absolute" });
     expect(infoIcon).toHaveStyle({ top: "50%" });
-    expect(infoIcon).toHaveStyle({ right: "0.75rem" });
+    expect(infoIcon.style.right).toBe("0.75rem");
     expect(infoIcon).toHaveStyle({ transform: "translateY(-50%)" });
     expect(infoIcon).toHaveStyle({ color: "#fff" });
     expect(infoIcon).toHaveStyle({ cursor: "pointer" });
-    expect(infoIcon).toHaveStyle({ fontSize: "0.9rem" });
+    expect(infoIcon.style.fontSize).toBe("0.9rem");
     expect(infoIcon).toHaveStyle({ userSelect: "none" });
     expect(infoIcon.tagName.toLowerCase()).toBe("svg");
 
