@@ -11,6 +11,12 @@ You will also need the command:
 
 * <tt>dokku git:set <i>appname</i> keep-git-dir true</tt>
 
+  This makes Dokku include the `.git` directory in the Docker build context, so that
+  `git-commit-id-maven-plugin` can record the commit that was deployed (shown on the Developer page).
+  The build no longer fails without it (the `Dockerfile` skips the git pre-commit hook installer, and
+  `git-commit-id` is configured not to fail when there is no `.git`), but the commit id then shows as
+  `unknown`.
+
 # Short Version
 
 This short version omits many details, but if you are already familiar with the process of deploying applications, you may be able to use this.
