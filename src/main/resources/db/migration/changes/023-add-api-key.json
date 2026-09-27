@@ -1,0 +1,195 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "1790230988747-15",
+        "author": "Division7",
+        "objectQuotingStrategy": "QUOTE_ONLY_RESERVED_WORDS",
+        "changes": [
+          {
+            "createTable": {
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "nullable": false,
+                      "primaryKey": true,
+                      "primaryKeyName": "pk_course_api_key"
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "course_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "created_by_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "key_hash",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "key_suffix",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "created_at",
+                    "type": "timestamp"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "expires_at",
+                    "type": "timestamp"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "revoked",
+                    "type": "BOOLEAN"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "last_used_at",
+                    "type": "timestamp"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "usage_count",
+                    "type": "BIGINT"
+                  }
+                }
+              ],
+              "tableName": "course_api_key"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "1790230988747-35",
+        "author": "Division7",
+        "objectQuotingStrategy": "QUOTE_ONLY_RESERVED_WORDS",
+        "changes": [
+          {
+            "createIndex": {
+              "columns": [
+                {
+                  "column": {
+                    "name": "key_hash"
+                  }
+                }
+              ],
+              "indexName": "idx_adf0988f0c38ef49beeef1414",
+              "tableName": "course_api_key"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "1790230988747-40",
+        "author": "Division7",
+        "objectQuotingStrategy": "QUOTE_ONLY_RESERVED_WORDS",
+        "changes": [
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "course_id",
+              "baseTableName": "course_api_key",
+              "constraintName": "FK_COURSE_API_KEY_ON_COURSE",
+              "onDelete": "CASCADE",
+              "referencedColumnNames": "id",
+              "referencedTableName": "course"
+            }
+          },
+          {
+            "createIndex": {
+              "columns": [
+                {
+                  "column": {
+                    "name": "course_id"
+                  }
+                }
+              ],
+              "indexName": "idx_8783a00a41b1036ac1155b55a",
+              "tableName": "course_api_key"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "1790230988747-41",
+        "author": "Division7",
+        "objectQuotingStrategy": "QUOTE_ONLY_RESERVED_WORDS",
+        "changes": [
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "created_by_id",
+              "baseTableName": "course_api_key",
+              "constraintName": "FK_COURSE_API_KEY_ON_CREATED_BY",
+              "referencedColumnNames": "id",
+              "referencedTableName": "users"
+            }
+          },
+          {
+            "createIndex": {
+              "columns": [
+                {
+                  "column": {
+                    "name": "created_by_id"
+                  }
+                }
+              ],
+              "indexName": "idx_88fb5c708eb3dc10f0dd55f12",
+              "tableName": "course_api_key"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

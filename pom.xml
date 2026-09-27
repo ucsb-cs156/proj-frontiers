@@ -218,6 +218,13 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.22.1</version>
+      <scope>compile</scope>
+    </dependency>
+
     <!-- Shared async jobs system: https://github.com/ucsb-cs156/lib-jobs -->
     <dependency>
       <groupId>com.github.ucsb-cs156</groupId>
@@ -433,6 +440,7 @@
             <param>${app.package}.services.CurrentUserServiceImpl</param>
             <param>${app.package}.FrontiersMain</param>
             <param>${app.package}.config.SecurityConfig</param>
+            <param>${app.package}.config.ApiKeyConfig</param>
             <param>${app.package}.config.SecurityConfig$CustomIssuerValidator</param>
             <param>${app.package}.config.SpaCsrfTokenRequestHandler</param>
             <param>${app.package}.config.CsrfCookieFilter</param>

@@ -3,8 +3,10 @@ package edu.ucsb.cs156.frontiers.security;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+import edu.ucsb.cs156.frontiers.config.ApiKeyToken;
 import edu.ucsb.cs156.frontiers.config.CourseSecurity;
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.DownloadRequest;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
@@ -27,7 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.TestExecutionEvent;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -496,5 +501,41 @@ public class CourseSecurityTests {
     public void returns_properly() {
       assertEquals(downloadRequest, DummyCourseSecurity.loadDownloadRequest(1L));
     }
+  }
+
+  @Test
+  public void api_key_only_allows_access_to_correct_course() {
+
+    SecurityContext context = SecurityContextHolder.createEmptyContext();
+    User user = User.builder().id(1L).email("instructoremail@ucsb.edu").build();
+    Course course = Course.builder().id(1L).instructorEmail("instructoremail@ucsb.edu").build();
+    CourseApiKey key = CourseApiKey.builder().id(1L).course(course).build();
+    Authentication matchingCourse =
+        new ApiKeyToken(key, user, Set.of(new SimpleGrantedAuthority("ROLE_API_KEY")));
+    context.setAuthentication(matchingCourse);
+    SecurityContextHolder.setContext(context);
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    assertThrows(AccessDeniedException.class, () -> DummyCourseSecurity.loadCourseInstructor(2L));
+    assertEquals(course, DummyCourseSecurity.loadCourseInstructor(1L));
+  }
+
+  @Test
+  public void api_key_only_allows_access_to_correct_course_manage_permissions() {
+
+    SecurityContext context = SecurityContextHolder.createEmptyContext();
+    User user = User.builder().id(1L).email("instructoremail@ucsb.edu").build();
+    Course course = Course.builder().id(1L).instructorEmail("instructoremail@ucsb.edu").build();
+    CourseApiKey key = CourseApiKey.builder().id(1L).course(course).build();
+    Authentication matchingCourse =
+        new ApiKeyToken(key, user, Set.of(new SimpleGrantedAuthority("ROLE_API_KEY")));
+    context.setAuthentication(matchingCourse);
+    SecurityContextHolder.setContext(context);
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    assertThrows(AccessDeniedException.class, () -> DummyCourseSecurity.loadCourse(2L));
+    assertEquals(course, DummyCourseSecurity.loadCourse(1L));
   }
 }

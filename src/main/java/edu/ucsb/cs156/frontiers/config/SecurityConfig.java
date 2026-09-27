@@ -23,6 +23,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
@@ -31,6 +33,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
@@ -63,9 +66,12 @@ public class SecurityConfig {
    */
   // https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript-spa
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, ApiKeyFilter apiKeyFilter)
+      throws Exception {
     http.exceptionHandling(
             handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
         .oauth2Login(
             oauth2 ->
                 oauth2
@@ -79,8 +85,14 @@ public class SecurityConfig {
             csrf ->
                 csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                    .ignoringRequestMatchers("/api/webhooks/github"))
+                    .ignoringRequestMatchers("/api/webhooks/github")
+                    .ignoringRequestMatchers(
+                        (request) -> {
+                          return SecurityContextHolder.getContext().getAuthentication()
+                              instanceof ApiKeyToken;
+                        }))
         .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+        .addFilterBefore(apiKeyFilter, CsrfFilter.class)
         .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
         .logout(
             logout ->
@@ -128,6 +140,7 @@ public class SecurityConfig {
   }
 
   class CustomIssuerValidator implements OAuth2TokenValidator<Jwt> {
+
     private final JwtClaimValidator<Object> validator;
 
     public CustomIssuerValidator(String issuer) {
