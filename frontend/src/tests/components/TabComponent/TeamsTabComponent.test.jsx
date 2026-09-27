@@ -763,9 +763,11 @@ describe("TeamTabComponent tests", () => {
         "",
       );
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
   test("Modals close on close buttons, push teams button is enabled", async () => {
     axiosMock

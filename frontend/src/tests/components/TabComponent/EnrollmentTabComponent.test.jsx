@@ -252,7 +252,11 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   test("CsvForm error returns correctly", async () => {
@@ -461,9 +465,11 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   test("RosterStudentForm works on error", async () => {

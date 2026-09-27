@@ -262,9 +262,11 @@ describe("StaffTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   describe("Search filter works correctly", () => {
