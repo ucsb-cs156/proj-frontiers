@@ -39,7 +39,9 @@ RUN npm --version
 
 COPY . /home/app
 
-RUN mvn --no-transfer-progress -B -Pproduction -DskipTests -f /home/app/pom.xml clean package
+# -Dgcf.skip=true: skip git-code-format-maven-plugin (install-hooks needs a .git directory, which
+# the Docker build context only has when the Dokku app sets keep-git-dir; the hook is useless in an image)
+RUN mvn --no-transfer-progress -B -Pproduction -DskipTests -Dgcf.skip=true -f /home/app/pom.xml clean package
 
 RUN ["chmod", "+x", "/home/app/startup.sh"]
 ENTRYPOINT ["/home/app/startup.sh","/home/app/target/frontiers-1.0.0.jar"]
