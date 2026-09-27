@@ -70,6 +70,14 @@ Notes from the move to node 24.21.0 (issue #800; the same update was first done 
     (`expect(el.style.width).toBe("18rem")`); `%`, `px`, colors and `transform` are unaffected.
   * Two tests asserted synchronously that the course modal was gone right after the create
     mutation's `onSuccess` toast; they now `await waitFor(...)` for the unmount.
+  * vitest 4.1.x intermittently ends a green run with exit code 1 and
+    `EnvironmentTeardownError: [vitest-worker]: Closing rpc while "onUserConsoleLog" was pending`
+    (vitest-dev/vitest#11153; the file it names is arbitrary). The cause here was test files that
+    render `BasicLayout` without mocking axios: `useCurrentUser`/`useSystemInfo` hit a real
+    `/api/currentUser`, fail, and react-query retries and `console.error`s for seconds after the test
+    finished. Those tests now install an `AxiosMockAdapter` for `/api/currentUser` and
+    `/api/systemInfo`. To find candidates: test files that import a page/layout but contain neither
+    `AxiosMockAdapter` nor a `vi.mock` of axios/`main/utils`.
   * Storybook 10 + msw-storybook-addon 3: use `mswLoader` from `msw-storybook-addon/csf3`, call
     `mswLoader()`, drop `initialize()`, and list `msw-storybook-addon` in `addons`.
     `.storybook/main.js` was renamed to `main.mjs`. `storybook-addon-remix-react-router` 7 is the
