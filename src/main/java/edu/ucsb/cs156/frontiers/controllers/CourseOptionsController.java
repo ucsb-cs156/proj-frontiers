@@ -28,8 +28,13 @@ public class CourseOptionsController extends ApiController {
 
   @Autowired private CourseRepository courseRepository;
 
+  /**
+   * The options are readable by anyone who can manage the course (its instructor, its staff and
+   * admins), because what the course pages show depends on them; they can only be changed by the
+   * instructor or an admin.
+   */
   @Operation(summary = "Get toggleable options for a course")
-  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("")
   public Map<String, Boolean> getCourseOptions(
       @Parameter(name = "courseId") @RequestParam Long courseId,

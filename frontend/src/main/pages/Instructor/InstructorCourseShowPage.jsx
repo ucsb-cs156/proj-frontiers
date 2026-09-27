@@ -34,6 +34,7 @@ export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
   showSettingsTab = true,
   staffTabIsInstructor = true,
+  courseViewPath = "instructor",
   canEditStudents,
   canManageTeams,
 }) {
@@ -54,12 +55,17 @@ export default function InstructorCourseShowPage({
     true,
   );
 
+  // Which tabs there are depends on the course options, which anyone who can
+  // manage the course can read. Staff (the view with no Settings tab) only get
+  // the New Assignments tab so far, so for them every other option is treated
+  // as off.
+  const { data: allCourseOptions } = useCourseOptions(courseId);
+  const courseOptions = showSettingsTab
+    ? allCourseOptions
+    : { NEW_ASSIGNMENT_FEATURES: allCourseOptions.NEW_ASSIGNMENT_FEATURES };
+
   // The Sections tab is only shown when the TRANSLATE_SECTIONS course option
-  // is enabled. Course options are only readable by instructors/admins, so the
-  // query is skipped entirely for views that hide the Settings tab.
-  const { data: courseOptions } = useCourseOptions(courseId, {
-    enabled: showSettingsTab,
-  });
+  // is enabled.
   const showSectionsTab = courseOptions.TRANSLATE_SECTIONS === true;
 
   // The New Assignments tab is only shown when the NEW_ASSIGNMENT_FEATURES
@@ -266,6 +272,7 @@ export default function InstructorCourseShowPage({
           >
             <NewAssignmentsTabComponent
               courseId={courseId}
+              courseViewPath={courseViewPath}
               testIdPrefix={testId}
             />
           </Tab>

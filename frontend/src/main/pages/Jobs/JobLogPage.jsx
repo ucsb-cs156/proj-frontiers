@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { Button } from "react-bootstrap";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { useBackend } from "main/utils/useBackend";
@@ -14,13 +14,16 @@ import { useBackend } from "main/utils/useBackend";
  * It serves two routes and decides what to fetch from the route params:
  *  - /admin/jobs/logs/:id
  *      -> GET /api/jobs/logs/{id} (lib-jobs endpoint, ROLE_ADMIN only)
- *  - /instructor/courses/:courseId/jobs/:jobId/logs
+ *  - /instructor/courses/:courseId/jobs/:jobId/logs and
+ *    /staff/courses/:courseId/jobs/:jobId/logs
  *      -> GET /api/jobs/course/logs?courseId=&jobId= (app endpoint, guarded by
  *         course manage permissions, so non-admin instructors/staff can use it)
  */
 export default function JobLogPage() {
   const { id, courseId, jobId } = useParams();
   const navigate = useNavigate();
+  // staff have their own address for this page, and go back to the staff view of the course
+  const isStaffView = useLocation().pathname.startsWith("/staff/");
 
   const isCourseScoped = courseId !== undefined;
   const effectiveJobId = isCourseScoped ? jobId : id;
@@ -43,7 +46,7 @@ export default function JobLogPage() {
       };
 
   const backPath = isCourseScoped
-    ? `/instructor/courses/${courseId}`
+    ? `/${isStaffView ? "staff" : "instructor"}/courses/${courseId}`
     : "/admin/jobs";
 
   const { data: log, isError, refetch } = useBackend(queryKey, axiosParameters);

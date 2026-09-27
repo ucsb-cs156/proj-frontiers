@@ -155,6 +155,17 @@ describe("NewAssignmentsTable tests", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("for staff the link to the log is to the staff address, which staff are allowed into", () => {
+    renderTable({ courseViewPath: "staff" });
+
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-lastJobId-link`),
+    ).toHaveAttribute("href", "/staff/courses/1/jobs/12/logs");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-2-col-lastJobId-link`),
+    ).toHaveAttribute("href", "/staff/courses/1/jobs/15/logs");
+  });
+
   test("clicking the last job shows its log in a modal, following the job, and the modal can be closed", async () => {
     axiosMock.onGet("/api/jobs/course/logs/tail").reply(200, {
       status: "complete",

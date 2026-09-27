@@ -177,6 +177,16 @@ function App() {
           }
         />
         <Route
+          path="/staff/courses/:courseId/jobs/:jobId/logs"
+          element={
+            <ProtectedPage
+              component={<JobLogPage />}
+              enforceRole={"ROLE_USER"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
           path="/student/courses/:id"
           element={
             <ProtectedPage

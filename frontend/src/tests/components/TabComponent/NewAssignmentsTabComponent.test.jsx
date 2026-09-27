@@ -27,10 +27,14 @@ const assignmentsUrl = "/api/assignments";
 const assignmentsGetHistory = () =>
   axiosMock.history.get.filter((request) => request.url === assignmentsUrl);
 
-const renderTab = () =>
+const renderTab = (props = {}) =>
   render(
     <QueryClientProvider client={queryClient}>
-      <NewAssignmentsTabComponent courseId={7} testIdPrefix={testId} />
+      <NewAssignmentsTabComponent
+        courseId={7}
+        testIdPrefix={testId}
+        {...props}
+      />
     </QueryClientProvider>,
   );
 
@@ -344,6 +348,20 @@ describe("NewAssignmentsTabComponent tests", () => {
     expect(queryClient.getQueryState(["/api/jobs/course"]).isInvalidated).toBe(
       false,
     );
+  });
+
+  test("the links to the logs are to the instructor address by default", async () => {
+    renderTab();
+    expect(
+      await screen.findByTestId(`${tableId}-cell-row-0-col-lastJobId-link`),
+    ).toHaveAttribute("href", "/instructor/courses/7/jobs/12/logs");
+  });
+
+  test("for staff the links to the logs are to the staff address", async () => {
+    renderTab({ courseViewPath: "staff" });
+    expect(
+      await screen.findByTestId(`${tableId}-cell-row-0-col-lastJobId-link`),
+    ).toHaveAttribute("href", "/staff/courses/7/jobs/12/logs");
   });
 
   test("does not toast when the assignments request fails", async () => {

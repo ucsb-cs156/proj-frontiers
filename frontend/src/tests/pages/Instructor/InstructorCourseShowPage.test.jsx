@@ -1014,6 +1014,25 @@ describe("InstructorCourseShowPage tests", () => {
       expect(assignmentsRequests[0].params).toEqual({ courseId: "7" });
     });
 
+    test("the links to the job logs are to the instructor address", async () => {
+      setupCourse7WithNewAssignmentFeatures(true);
+      axiosMock.onGet("/api/jobs/course/logs/tail").reply(200, {
+        status: "complete",
+        lines: [],
+      });
+
+      renderPage();
+
+      fireEvent.click(
+        await screen.findByRole("tab", { name: "New Assignments" }),
+      );
+      expect(
+        await screen.findByTestId(
+          "InstructorCourseShowPage-new-assignments-table-cell-row-0-col-lastJobId-link",
+        ),
+      ).toHaveAttribute("href", "/instructor/courses/7/jobs/12/logs");
+    });
+
     test("the existing Assignments tab is still there, and still creates repositories directly", async () => {
       setupCourse7WithNewAssignmentFeatures(true);
 
