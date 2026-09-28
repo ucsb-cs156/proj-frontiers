@@ -111,6 +111,7 @@ public class CoursesController extends ApiController {
       School school,
       String instructorEmail,
       boolean hideBasePermissionWarning,
+      boolean hideFreePlanWarning,
       int numStudents,
       int numStaff) {
 
@@ -125,6 +126,7 @@ public class CoursesController extends ApiController {
           c.getSchool(),
           c.getInstructorEmail(),
           c.getHideBasePermissionWarning(),
+          c.getHideFreePlanWarning(),
           c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
           c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);
     }
@@ -597,5 +599,21 @@ public class CoursesController extends ApiController {
 
     return genericMessage(
         "hideBasePermissionWarning set to true for course with id %s".formatted(courseId));
+  }
+
+  @Operation(summary = "Hide free plan warning for a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/warnings/hideFreePlanWarning/{courseId}")
+  public Object hideFreePlanWarning(@PathVariable @Parameter Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    course.setHideFreePlanWarning(true);
+    courseRepository.save(course);
+
+    return genericMessage(
+        "hideFreePlanWarning set to true for course with id %s".formatted(courseId));
   }
 }

@@ -553,6 +553,97 @@ describe("InstructorCourseShowPage tests", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("displays free plan warning when hideFreePlanWarning is omitted", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showFreePlanWarning: true,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("CourseWarningBanner-freePlan");
+  });
+
+  test("displays free plan warning when hideFreePlanWarning is false", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      hideFreePlanWarning: false,
+    });
+
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+      showDefaultBasePermissions: false,
+      showFreePlanWarning: true,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("CourseWarningBanner-freePlan");
+    expect(
+      screen.getByText(/this GitHub organization is on the Free plan/i),
+    ).toBeInTheDocument();
+  });
+
+  test("hides free plan warning when hideFreePlanWarning is true", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      hideFreePlanWarning: true,
+    });
+
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showFreePlanWarning: true,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+    expect(
+      screen.queryByTestId("CourseWarningBanner-freePlan"),
+    ).not.toBeInTheDocument();
+  });
+
   test("expect the correct URL to the organization for the course", async () => {
     setupInstructorUser();
 

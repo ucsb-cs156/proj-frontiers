@@ -155,6 +155,7 @@ export default function InstructorCourseShowPage({
         courseId={courseId}
         orgName={course?.orgName}
         hideBasePermissionWarning={course?.hideBasePermissionWarning ?? false}
+        hideFreePlanWarning={course?.hideFreePlanWarning ?? false}
       />
       {!course ? (
         <div data-testid={`${testId}-loading`}>Course: Loading...</div>

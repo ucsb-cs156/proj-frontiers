@@ -44,6 +44,7 @@ Scroll down to permissions, and under repository, set the following accesses:
 
 Under Organization, select the following permissions:
 - Administration: Read and Write
+- Plan: Read-only (lets Frontiers see the organization's GitHub plan, so it can warn instructors whose organization is on the Free plan, where features such as requiring signed commits on private repositories are unavailable)
 
 Then, scroll further and uncheck "Active" under "Webhooks" (localhost testing doesn't need webhook functionality)
 
