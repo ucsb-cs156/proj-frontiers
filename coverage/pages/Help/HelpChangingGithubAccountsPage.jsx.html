@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/RosterStudent/RosterStudentDeleteModal.jsx</title>
+    <title>Code coverage report for pages/Help/HelpChangingGithubAccountsPage.jsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,13 +19,13 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/RosterStudent</a> RosterStudentDeleteModal.jsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">pages/Help</a> HelpChangingGithubAccountsPage.jsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
@@ -115,25 +115,12 @@
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">889x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">889x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">889x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -173,59 +160,63 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import Modal from "react-bootstrap/Modal";
-import { useForm } from "react-hook-form";
-import { Form } from "react-bootstrap";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React from "react";
 &nbsp;
-export default function RosterStudentDeleteModal({
-  onSubmitAction,
-  showModal,
-  toggleShowModal,
-}) {
-  const hideModal = () =&gt; {
-    toggleShowModal(false);
-  };
+import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 &nbsp;
-  const { register, handleSubmit } = useForm();
-&nbsp;
+export default function HelpChangingGithubAccountsPage() {
   return (
-    &lt;Modal
-      show={showModal}
-      onHide={hideModal}
-      centered={true}
-      data-testid="RosterStudentDeleteModal"
-    &gt;
-      &lt;Modal.Header closeButton&gt;Delete Roster Student&lt;/Modal.Header&gt;
-      &lt;Form onSubmit={handleSubmit(onSubmitAction)}&gt;
-        &lt;Modal.Body&gt;
-          &lt;Form.Text&gt;
-            Are you sure you want to delete this roster student?
-          &lt;/Form.Text&gt;
-          &lt;Form.Group&gt;
-            &lt;Form.Check
-              type="radio"
-              label="Yes, I'd like to remove them from the GitHub Organization"
-              value="true"
-              id="remove-yes"
-              {...register("removeFromOrg")}
-            /&gt;
-            &lt;Form.Check
-              type="radio"
-              label="No, I'd like to keep them in the GitHub Organization"
-              value="false"
-              id="remove-no"
-              defaultChecked
-              {...register("removeFromOrg")}
-            /&gt;
-          &lt;/Form.Group&gt;
-        &lt;/Modal.Body&gt;
-        &lt;Modal.Footer&gt;
-          &lt;button type="submit" className="btn btn-primary"&gt;
-            Delete Student
-          &lt;/button&gt;
-        &lt;/Modal.Footer&gt;
-      &lt;/Form&gt;
-    &lt;/Modal&gt;
+    &lt;BasicLayout&gt;
+      &lt;div className="pt-2"&gt;
+        &lt;h1 className="my-4"&gt;Changing Github Accounts&lt;/h1&gt;
+        &lt;p&gt;
+          It often happens that during the initial on-boarding, before the
+          course has really gotten started, a student realizes that they signed
+          up with a different Github Account than the one they intended to use
+          in the course.
+        &lt;/p&gt;
+        &lt;p&gt;
+          In the student list on the instructor/staff view, if the student
+          account shows the wrong github in the Github Login column (i.e. the
+          one the student doesn&amp;apos;t want to use), here&amp;apos;s what to do:
+        &lt;/p&gt;
+        &lt;ol&gt;
+          &lt;li&gt;
+            The instructor or a staff member should delete the student by
+            clicking the &amp;quot;Delete&amp;quot; button in the student table in the
+            instructor/staff Student tab.
+          &lt;/li&gt;
+          &lt;li&gt;
+            The instructor should then re-add the student by re-uploading the
+            course roster, syncing from Canvas, or manually adding the student.
+          &lt;/li&gt;
+          &lt;li&gt;
+            The student should then log in to Frontiers again, but{" "}
+            &lt;i&gt;should not immediately join the course&lt;/i&gt;. Instead, they should
+            click on the &amp;quot;Welcome, email@school.edu&amp;quot; link, upper right
+            of the menu bar. On the page this takes the student to, they should
+            click the &amp;quot;Disconnect Github&amp;quot; button. They should then
+            login to Github again with the preferred Github Account.
+          &lt;/li&gt;
+          &lt;li&gt;
+            Then, they should rejoin the course and accept the invitation to the
+            github org.
+          &lt;/li&gt;
+          &lt;li&gt;
+            Finally, they should contact the instructor to let them know; the
+            instructor may need to refresh some assignments to ensure that they
+            are created for the students new Github Account.
+          &lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/div&gt;
+    &lt;/BasicLayout&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>
