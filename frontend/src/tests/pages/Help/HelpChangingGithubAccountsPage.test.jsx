@@ -33,6 +33,10 @@ describe("HelpChangingGithubAccountsPage tests", () => {
     expect(
       screen.getByText(/should not immediately join the course/),
     ).toBeInTheDocument();
+    const listItems = screen.getAllByRole("listitem");
+    expect(listItems[2].textContent).toContain(
+      "log in to Frontiers again, but should not immediately join the course",
+    );
     expect(
       screen.getByText(/instructor may need to refresh some assignments/),
     ).toBeInTheDocument();
