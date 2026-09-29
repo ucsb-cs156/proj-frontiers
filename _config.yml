@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/add-help-page-changing-github-accounts","number":810,"title":"[WIP] Add help page for changing Github accounts","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/810"},{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-claude-807","number":808,"title":"Warn instructors when the course's GitHub org is on the Free plan (issue #807)","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/808"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-claude-807","number":808,"title":"Warn instructors when the course's GitHub org is on the Free plan (issue #807)","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/808"}]
