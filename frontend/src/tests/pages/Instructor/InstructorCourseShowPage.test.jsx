@@ -195,6 +195,42 @@ describe("InstructorCourseShowPage tests", () => {
     vi.useRealTimers();
   });
 
+  test("does not navigate after unmount once the redirect timer is cleared", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
+    mockedNavigate.mockClear();
+    axiosMock.onGet("/api/courses/7").timeout();
+    axiosMock.onGet("/api/rosterstudents/course/7").timeout();
+    const { unmount } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // The course lookup failed, so the 3-second redirect timer is now pending.
+    await screen.findByText(
+      "Course not found. You will be returned to the course list in 3 seconds.",
+    );
+    expect(mockedNavigate).not.toHaveBeenCalled();
+
+    // Leaving the page must cancel the pending redirect.
+    unmount();
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(mockedNavigate).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
   test("Cleans up correctly on unmount", async () => {
     vi.useFakeTimers({
       shouldAdvanceTime: true,
