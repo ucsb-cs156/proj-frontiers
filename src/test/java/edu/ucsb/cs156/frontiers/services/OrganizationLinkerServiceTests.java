@@ -11,6 +11,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
 import edu.ucsb.cs156.frontiers.models.CourseWarning;
@@ -215,6 +216,7 @@ public class OrganizationLinkerServiceTests {
     CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
     assertFalse(warning.showOrganizationAgeWarning());
     assertFalse(warning.showDefaultBasePermissions());
+    assertFalse(warning.showFreePlanWarning());
   }
 
   @Test
@@ -236,6 +238,7 @@ public class OrganizationLinkerServiceTests {
     CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
     assertTrue(warning.showOrganizationAgeWarning());
     assertFalse(warning.showDefaultBasePermissions());
+    assertFalse(warning.showFreePlanWarning());
   }
 
   @Test
@@ -257,6 +260,99 @@ public class OrganizationLinkerServiceTests {
     CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
     assertFalse(warning.showOrganizationAgeWarning());
     assertTrue(warning.showDefaultBasePermissions());
+    assertFalse(warning.showFreePlanWarning());
+  }
+
+  @Test
+  public void test_showFreePlanWarning_when_plan_is_free() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    when(provider.getNow())
+        .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+            {
+              "created_at": "2024-10-11T04:33:35Z",
+              "default_repository_permission": "none",
+              "plan": {
+                "name": "free",
+                "space": 976562499,
+                "private_repos": 10000,
+                "filled_seats": 3,
+                "seats": 0
+              }
+            }
+            """;
+    expectOrgGet(apiResponse);
+    expectOrgGet(apiResponse);
+
+    CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
+    assertFalse(warning.showOrganizationAgeWarning());
+    assertFalse(warning.showDefaultBasePermissions());
+    assertTrue(warning.showFreePlanWarning());
+  }
+
+  @Test
+  public void test_no_showFreePlanWarning_when_plan_is_team() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    when(provider.getNow())
+        .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+            {
+              "created_at": "2024-10-11T04:33:35Z",
+              "default_repository_permission": "none",
+              "plan": {
+                "name": "team",
+                "space": 976562499,
+                "private_repos": 10000,
+                "filled_seats": 3,
+                "seats": 5
+              }
+            }
+            """;
+    expectOrgGet(apiResponse);
+    expectOrgGet(apiResponse);
+
+    CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
+    assertFalse(warning.showFreePlanWarning());
+  }
+
+  @Test
+  public void test_no_showFreePlanWarning_when_plan_has_no_name() throws Exception {
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("12345").build();
+    when(provider.getNow())
+        .thenReturn(Optional.of(ZonedDateTime.of(2025, 3, 11, 0, 0, 0, 0, ZoneId.of("UTC"))));
+    doReturn("definitely.real.jwt").when(jwtService).getInstallationToken(eq(course));
+    String apiResponse =
+        """
+            {
+              "created_at": "2024-10-11T04:33:35Z",
+              "default_repository_permission": "none",
+              "plan": { "seats": 0 }
+            }
+            """;
+    expectOrgGet(apiResponse);
+    expectOrgGet(apiResponse);
+
+    CourseWarning warning = organizationLinkerService.checkCourseWarnings(course);
+    assertFalse(warning.showFreePlanWarning());
+  }
+
+  @Test
+  public void test_getPlanName() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    assertEquals(
+        "free",
+        OrganizationLinkerService.getPlanName(mapper.readTree("{\"plan\": {\"name\": \"free\"}}")));
+    assertEquals(
+        "enterprise",
+        OrganizationLinkerService.getPlanName(
+            mapper.readTree("{\"plan\": {\"name\": \"enterprise\"}}")));
+    assertEquals("", OrganizationLinkerService.getPlanName(mapper.readTree("{\"plan\": {}}")));
+    assertEquals("", OrganizationLinkerService.getPlanName(mapper.readTree("{}")));
+    assertEquals("free", OrganizationLinkerService.FREE_PLAN_NAME);
   }
 
   @Test

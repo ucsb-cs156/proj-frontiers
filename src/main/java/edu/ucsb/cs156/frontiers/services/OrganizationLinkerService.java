@@ -106,7 +106,7 @@ public class OrganizationLinkerService {
           NoLinkedOrganizationException {
 
     if (course.getOrgName() == null || course.getInstallationId() == null) {
-      return new CourseWarning(false, false);
+      return new CourseWarning(false, false, false);
     }
 
     String ENDPOINT = "https://api.github.com/orgs/" + course.getOrgName();
@@ -124,7 +124,25 @@ public class OrganizationLinkerService {
     boolean showOrganizationAgeWarning = creationDate.isAfter(now.minusMonths(1));
     String defaultRepositoryPermission = getDefaultRepositoryPermission(course);
     boolean showDefaultBasePermissions = !"none".equals(defaultRepositoryPermission);
-    return new CourseWarning(showOrganizationAgeWarning, showDefaultBasePermissions);
+    boolean showFreePlanWarning = FREE_PLAN_NAME.equals(getPlanName(responseJson));
+    return new CourseWarning(
+        showOrganizationAgeWarning, showDefaultBasePermissions, showFreePlanWarning);
+  }
+
+  /** The {@code plan.name} GitHub reports for an organization on its Free plan. */
+  public static final String FREE_PLAN_NAME = "free";
+
+  /**
+   * Extracts the organization's plan name (e.g. {@code free}, {@code team}, {@code enterprise})
+   * from a GET /orgs/{org} response. GitHub only includes the {@code plan} object when the GitHub
+   * App has the organization "Plan" (read) permission; without it, the plan is unknown and the
+   * empty string is returned, so no plan-based warning is shown.
+   *
+   * @param orgJson the response body of GET /orgs/{org}
+   * @return the plan name, or the empty string if it is not present
+   */
+  public static String getPlanName(JsonNode orgJson) {
+    return orgJson.path("plan").path("name").asText("");
   }
 
   /**

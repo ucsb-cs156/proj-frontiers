@@ -682,6 +682,68 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void testGetCourseById_includesWarningDismissalFlags() throws Exception {
+    // arrange
+    User user = currentUserService.getCurrentUser().getUser();
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .orgName("ucsb-cs156-s25")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail(user.getEmail())
+            .hideBasePermissionWarning(false)
+            .hideFreePlanWarning(true)
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/1")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, Object> actual =
+        mapper.readValue(responseString, new TypeReference<Map<String, Object>>() {});
+    assertEquals(false, actual.get("hideBasePermissionWarning"));
+    assertEquals(true, actual.get("hideFreePlanWarning"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testGetCourseById_includesWarningDismissalFlags_reversed() throws Exception {
+    // arrange
+    User user = currentUserService.getCurrentUser().getUser();
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .orgName("ucsb-cs156-s25")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail(user.getEmail())
+            .hideBasePermissionWarning(true)
+            .hideFreePlanWarning(false)
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/1")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, Object> actual =
+        mapper.readValue(responseString, new TypeReference<Map<String, Object>>() {});
+    assertEquals(true, actual.get("hideBasePermissionWarning"));
+    assertEquals(false, actual.get("hideFreePlanWarning"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void testGetCourseById_courseDoesNotExist() throws Exception {
 
     when(courseRepository.findById(1L)).thenReturn(Optional.empty());
@@ -1940,14 +2002,15 @@ public class CoursesControllerTests extends ControllerTestCase {
             .build();
 
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
-    when(linkerService.checkCourseWarnings(eq(course))).thenReturn(new CourseWarning(true, false));
+    when(linkerService.checkCourseWarnings(eq(course)))
+        .thenReturn(new CourseWarning(true, false, true));
 
     MvcResult response =
         mockMvc.perform(get("/api/courses/warnings/1")).andExpect(status().isOk()).andReturn();
 
     verify(linkerService).checkCourseWarnings(eq(course));
     String responseString = response.getResponse().getContentAsString();
-    String expectedJson = mapper.writeValueAsString(new CourseWarning(true, false));
+    String expectedJson = mapper.writeValueAsString(new CourseWarning(true, false, true));
     assertEquals(expectedJson, responseString);
   }
 
@@ -2028,6 +2091,69 @@ public class CoursesControllerTests extends ControllerTestCase {
   public void hideBasePermissionWarning_forbidden_without_manage_permissions() throws Exception {
     mockMvc
         .perform(post("/api/courses/warnings/hideBasePermissionWarning/1").with(csrf()))
+        .andExpect(status().isForbidden());
+
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hideFreePlanWarning_setsFieldTrue() throws Exception {
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("test@example.com")
+            .hideFreePlanWarning(false)
+            .build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideFreePlanWarning/1").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(courseRepository).findById(eq(1L));
+    verify(courseRepository).save(eq(course));
+    assertEquals(true, course.getHideFreePlanWarning());
+    assertEquals(false, course.getHideBasePermissionWarning());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(
+            Map.of("message", "hideFreePlanWarning set to true for course with id 1"));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void hideFreePlanWarning_notFound() throws Exception {
+    doReturn(Optional.empty()).when(courseRepository).findById(eq(1L));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/warnings/hideFreePlanWarning/1").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(courseRepository, never()).save(any());
+
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson =
+        mapper.writeValueAsString(
+            Map.of("type", "EntityNotFoundException", "message", "Course with id 1 not found"));
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void hideFreePlanWarning_forbidden_without_manage_permissions() throws Exception {
+    mockMvc
+        .perform(post("/api/courses/warnings/hideFreePlanWarning/1").with(csrf()))
         .andExpect(status().isForbidden());
 
     verify(courseRepository, never()).save(any());

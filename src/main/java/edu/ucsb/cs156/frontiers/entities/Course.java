@@ -45,6 +45,9 @@ public class Course {
 
   private boolean hideBasePermissionWarning;
 
+  /** Whether the instructor has dismissed the warning that the GitHub org is on the Free plan. */
+  private boolean hideFreePlanWarning;
+
   /**
    * Extra lines placed at the very start of dokku_users_list.csv, e.g. for people who need dokku
    * access but are not part of the course. One username,dokku-nn entry per line.

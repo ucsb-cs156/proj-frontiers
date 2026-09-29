@@ -5,6 +5,7 @@ import {
   showOrganizationAgeWarning,
   hideOrganizationAgeWarning,
   showDefaultBasePermissionsWarning,
+  showFreePlanWarning,
 } from "fixtures/courseWarningFixtures";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -27,6 +28,8 @@ export const Default = Template.bind({});
 export const Empty = Template.bind({});
 
 export const DefaultBasePermissionWarning = Template.bind({});
+
+export const FreePlanWarning = Template.bind({});
 
 Default.args = {
   courseId: 1,
@@ -66,6 +69,33 @@ DefaultBasePermissionWarning.parameters = {
     handlers: [
       http.get("/api/courses/warnings/1", () =>
         HttpResponse.json(showDefaultBasePermissionsWarning),
+      ),
+    ],
+  },
+};
+
+FreePlanWarning.args = {
+  courseId: 1,
+  orgName: "ucsb-cs156-s26",
+};
+
+FreePlanWarning.parameters = {
+  msw: {
+    handlers: [
+      http.get("/api/courses/warnings/1", () =>
+        HttpResponse.json(showFreePlanWarning),
+      ),
+      http.post(
+        "/api/courses/warnings/hideFreePlanWarning/1",
+        ({ request }) => {
+          window.alert(
+            `Would have made HTTP request: ${request.method} ${request.url}`,
+          );
+          return HttpResponse.json(
+            { message: "hideFreePlanWarning set to true for course with id 1" },
+            { status: 200 },
+          );
+        },
       ),
     ],
   },
