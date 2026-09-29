@@ -17,6 +17,9 @@ export default function HelpMenu() {
         <NavDropdown.Item as={Link} to="/help/csv">
           CSV Upload/Download Formats
         </NavDropdown.Item>
+        <NavDropdown.Item as={Link} to="/help/changing-github-accounts">
+          Changing Github Accounts
+        </NavDropdown.Item>
       </NavDropdown>
     </>
   );
