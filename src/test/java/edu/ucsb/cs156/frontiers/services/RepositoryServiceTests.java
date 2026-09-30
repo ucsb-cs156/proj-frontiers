@@ -72,6 +72,15 @@ public class RepositoryServiceTests {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess());
 
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
+        .andRespond(withSuccess());
+
     Map<String, Object> provisionBody = new HashMap<>();
     provisionBody.put("permission", "push");
     String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
@@ -94,6 +103,96 @@ public class RepositoryServiceTests {
     assertEquals(
         Optional.of(new RepositoryService.RepositoryCreationResult("repo1-student1", false)),
         result);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void existing_repo_is_made_private_when_assignment_is_private() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-student1"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": true}"))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(
+            requestTo(
+                "https://api.github.com/repos/ucsb-cs156/repo1-student1/collaborators/student1"))
+        .andExpect(method(HttpMethod.PUT))
+        .andRespond(withNoContent());
+
+    RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStudentRepository(
+            course, student, "repo1", true, RepositoryPermissions.WRITE);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-student1", false)),
+        result);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void existing_staff_repo_is_made_private_when_assignment_is_private() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-staff1"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-staff1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": true}"))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(
+            requestTo("https://api.github.com/repos/ucsb-cs156/repo1-staff1/collaborators/staff1"))
+        .andExpect(method(HttpMethod.PUT))
+        .andRespond(withNoContent());
+
+    CourseStaff staff = CourseStaff.builder().githubLogin("staff1").build();
+
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createStaffRepository(
+            course, staff, "repo1", true, RepositoryPermissions.WRITE);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-staff1", false)), result);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void refused_visibility_change_of_existing_repo_propagates() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-student1"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-student1"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
+        .andRespond(withForbiddenRequest());
+
+    RosterStudent student = RosterStudent.builder().githubLogin("student1").build();
+
+    HttpClientErrorException thrown =
+        assertThrows(
+            HttpClientErrorException.class,
+            () ->
+                repositoryService.createStudentRepository(
+                    course, student, "repo1", false, RepositoryPermissions.WRITE));
+    assertEquals(HttpStatus.FORBIDDEN, thrown.getStatusCode());
+    // No collaborator request was sent: the failure is reported, not hidden
     mockRestServiceServer.verify();
   }
 
@@ -226,6 +325,15 @@ public class RepositoryServiceTests {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess());
 
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-student1"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
+        .andRespond(withSuccess());
+
     Map<String, Object> provisionBody = new HashMap<>();
     provisionBody.put("permission", "push");
     String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
@@ -310,6 +418,15 @@ public class RepositoryServiceTests {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess());
 
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
+        .andRespond(withSuccess());
+
     Map<String, Object> provisionBody = new HashMap<>();
     provisionBody.put("permission", "push");
     String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
@@ -336,6 +453,66 @@ public class RepositoryServiceTests {
     assertEquals(
         Optional.of(new RepositoryService.RepositoryCreationResult("repo1-test-team", false)),
         result);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void existing_team_repo_is_made_private_when_assignment_is_private() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": true}"))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(
+            requestTo(
+                "https://api.github.com/organizations/1/team/12345/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(method(HttpMethod.PUT))
+        .andRespond(withNoContent());
+
+    Team team =
+        Team.builder().name("test-team").githubTeamSlug("test-team").githubTeamId(12345).build();
+
+    Optional<RepositoryService.RepositoryCreationResult> result =
+        repositoryService.createTeamRepository(
+            course, team, "repo1", true, RepositoryPermissions.WRITE, 1);
+    assertEquals(
+        Optional.of(new RepositoryService.RepositoryCreationResult("repo1-test-team", false)),
+        result);
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void refused_visibility_change_of_existing_team_repo_propagates() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andRespond(withForbiddenRequest());
+
+    Team team =
+        Team.builder().name("test-team").githubTeamSlug("test-team").githubTeamId(12345).build();
+
+    HttpClientErrorException thrown =
+        assertThrows(
+            HttpClientErrorException.class,
+            () ->
+                repositoryService.createTeamRepository(
+                    course, team, "repo1", false, RepositoryPermissions.WRITE, 1));
+    assertEquals(HttpStatus.FORBIDDEN, thrown.getStatusCode());
     mockRestServiceServer.verify();
   }
 
@@ -484,6 +661,15 @@ public class RepositoryServiceTests {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess());
 
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-test-team"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
+        .andRespond(withSuccess());
+
     Map<String, Object> provisionBody = new HashMap<>();
     provisionBody.put("permission", "push");
     String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
@@ -521,6 +707,15 @@ public class RepositoryServiceTests {
         .andExpect(header("Accept", "application/vnd.github+json"))
         .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
         .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-actual-team-slug"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
         .andRespond(withSuccess());
 
     Map<String, Object> provisionBody = new HashMap<>();
@@ -562,6 +757,15 @@ public class RepositoryServiceTests {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess());
 
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-existing-slug"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
+        .andRespond(withSuccess());
+
     Map<String, Object> provisionBody = new HashMap<>();
     provisionBody.put("permission", "push");
     String provisionBodyJson = objectMapper.writeValueAsString(provisionBody);
@@ -599,6 +803,15 @@ public class RepositoryServiceTests {
         .andExpect(header("Accept", "application/vnd.github+json"))
         .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
         .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess());
+
+    mockRestServiceServer
+        .expect(requestTo("https://api.github.com/repos/ucsb-cs156/repo1-actual-team-slug"))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"private\": false}"))
         .andRespond(withSuccess());
 
     Map<String, Object> provisionBody = new HashMap<>();
