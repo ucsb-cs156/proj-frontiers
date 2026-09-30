@@ -138,7 +138,7 @@ public class RepositoryService {
       }
 <span class="fc" id="L139">    }</span>
 <span class="fc bfc" id="L140" title="All 2 branches covered.">    if (!created) {</span>
-<span class="fc" id="L141">      setRepositoryPrivate(course, newRepoName, isPrivate, token);</span>
+<span class="fc" id="L141">      setRepositoryVisibility(course, newRepoName, isPrivate, token);</span>
     }
 
     try {
@@ -165,7 +165,7 @@ public class RepositoryService {
    * @throws HttpStatusCodeException if GitHub refuses the change, for example because the GitHub
    *     App is not allowed to administer repositories
    */
-  private void setRepositoryPrivate(
+  private void setRepositoryVisibility(
       Course course, String repositoryName, Boolean isPrivate, String token)
       throws JsonProcessingException {
 <span class="fc" id="L171">    String endpoint = &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + repositoryName;</span>
@@ -453,7 +453,7 @@ public class RepositoryService {
       }
 <span class="fc" id="L454">    }</span>
 <span class="fc bfc" id="L455" title="All 2 branches covered.">    if (!created) {</span>
-<span class="fc" id="L456">      setRepositoryPrivate(course, newRepoName, isPrivate, token);</span>
+<span class="fc" id="L456">      setRepositoryVisibility(course, newRepoName, isPrivate, token);</span>
     }
     try {
 <span class="fc" id="L459">      Map&lt;String, Object&gt; provisionBody = new HashMap&lt;&gt;();</span>
