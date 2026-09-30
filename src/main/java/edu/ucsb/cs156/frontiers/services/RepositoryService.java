@@ -71,7 +71,8 @@ public class RepositoryService {
    *
    * <ul>
    *   <li>Checks whether the repository already exists.
-   *   <li>If not, creates a new repository under the course's organization.
+   *   <li>If not, creates a new repository under the course's organization; if so, makes it private
+   *       or public as given, since that may have changed since it was created.
    *   <li>Adds the user as a collaborator with the given permission level.
    * </ul>
    *
@@ -136,6 +137,9 @@ public class RepositoryService {
         return Optional.empty();
       }
     }
+    if (!created) {
+      setRepositoryVisibility(course, newRepoName, isPrivate, token);
+    }
 
     try {
       Map<String, Object> provisionBody = new HashMap<>();
@@ -148,6 +152,28 @@ public class RepositoryService {
       // silently ignore if provisioning fails (same as before)
     }
     return Optional.of(new RepositoryCreationResult(newRepoName, created));
+  }
+
+  /**
+   * Makes an existing repository private, or public, as the assignment is now set. Creating a
+   * repository sets this once, but an assignment can be changed from private to public (or back)
+   * after its repositories exist, and running its job again must apply the change to them.
+   *
+   * <p>The request is always sent: setting a repository to the visibility it already has is
+   * harmless, and doing so keeps the repositories of an assignment in step with it.
+   *
+   * @throws HttpStatusCodeException if GitHub refuses the change, for example because the GitHub
+   *     App is not allowed to administer repositories
+   */
+  private void setRepositoryVisibility(
+      Course course, String repositoryName, Boolean isPrivate, String token)
+      throws JsonProcessingException {
+    String endpoint = "https://api.github.com/repos/" + course.getOrgName() + "/" + repositoryName;
+    Map<String, Object> body = new HashMap<>();
+    body.put("private", isPrivate);
+    HttpEntity<String> entity =
+        new HttpEntity<>(mapper.writeValueAsString(body), githubHeaders(token));
+    restTemplate.exchange(endpoint, HttpMethod.PATCH, entity, String.class);
   }
 
   public RepositoryService(
@@ -356,7 +382,8 @@ public class RepositoryService {
    *
    * <ul>
    *   <li>Checks whether the repository already exists.
-   *   <li>If not, creates a new repository under the course's organization.
+   *   <li>If not, creates a new repository under the course's organization; if so, makes it private
+   *       or public as given, since that may have changed since it was created.
    *   <li>Adds all team members as collaborators with the given permission level.
    * </ul>
    *
@@ -424,6 +451,9 @@ public class RepositoryService {
             newRepoName);
         return Optional.empty();
       }
+    }
+    if (!created) {
+      setRepositoryVisibility(course, newRepoName, isPrivate, token);
     }
     try {
       Map<String, Object> provisionBody = new HashMap<>();
