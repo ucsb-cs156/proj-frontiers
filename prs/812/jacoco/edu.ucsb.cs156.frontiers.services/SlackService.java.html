@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlackService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">SlackService.java</span></div><h1>SlackService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.errors.SlackApiException;
+import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
+import edu.ucsb.cs156.frontiers.models.SlackChannel;
+import edu.ucsb.cs156.frontiers.models.SlackUser;
+import edu.ucsb.cs156.frontiers.models.SlackUsersListResponse;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * Service for interacting with the Slack Web API.
+ *
+ * &lt;p&gt;A Slack bot token (&lt;code&gt;xoxb-...&lt;/code&gt;) is already associated with a specific workspace, so
+ * the token alone is sufficient to identify where API calls go.
+ *
+ * &lt;p&gt;Note that the Slack Web API typically returns HTTP 200 even for failures; the &lt;code&gt;ok&lt;/code&gt;
+ * field of the response indicates success, and &lt;code&gt;error&lt;/code&gt; contains an error code (e.g.
+ * &lt;code&gt;invalid_auth&lt;/code&gt;, &lt;code&gt;missing_scope&lt;/code&gt;).
+ *
+ * &lt;p&gt;Tokens are secrets; they must never be logged.
+ */
+<span class="fc" id="L39">@Slf4j</span>
+@Service
+public class SlackService {
+
+  public static final String AUTH_TEST_ENDPOINT = &quot;https://slack.com/api/auth.test&quot;;
+
+  public static final String USERS_LIST_ENDPOINT = &quot;https://slack.com/api/users.list?limit=200&quot;;
+
+  /**
+   * Upper bound on the number of pages of users fetched (200 users per page), so that a misbehaving
+   * cursor can never cause an endless loop.
+   */
+  public static final int MAX_USER_PAGES = 50;
+
+  /** Error code used when Slack could not be reached or returned an unusable response. */
+  public static final String SLACK_UNREACHABLE = &quot;slack_unreachable&quot;;
+
+<span class="fc" id="L56">  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);</span>
+<span class="fc" id="L57">  private static final Duration READ_TIMEOUT = Duration.ofSeconds(30);</span>
+
+  public static final String SLACK_API = &quot;https://slack.com/api/&quot;;
+
+  public static final String CONVERSATIONS_LIST_ENDPOINT =
+      SLACK_API + &quot;conversations.list?types=public_channel&amp;exclude_archived=false&amp;limit=200&quot;;
+
+  /** Upper bound on the number of pages fetched for any paginated method; see MAX_USER_PAGES. */
+  public static final int MAX_PAGES = 50;
+
+  /** Error code used when Slack kept rate limiting a call, even after waiting as it asked. */
+  public static final String RATE_LIMITED = &quot;ratelimited&quot;;
+
+  /**
+   * Slack's error code when a workspace preference forbids the action: for &lt;code&gt;
+   * conversations.kick&lt;/code&gt;, when the workspace does not let this bot remove members from public
+   * channels (by default only Workspace Owners and Admins may).
+   */
+  public static final String RESTRICTED_ACTION = &quot;restricted_action&quot;;
+
+  /** What to tell the instructor when removing a member fails with {@link #RESTRICTED_ACTION}. */
+  public static final String REMOVAL_RESTRICTED_ADVICE =
+      &quot;Slack does not allow this bot to remove members from public channels, so no more members will be removed in this run. By default only Workspace Owners and Admins may remove members. A Workspace Owner can change this in Slack under Workspace settings, Roles &amp; permissions (on older workspaces: Permissions, Channel Management): set \&quot;People who can remove members from public channels\&quot; to \&quot;Everyone, except guests\&quot;. Then run this job again.&quot;;
+
+  /** How many times a rate limited (HTTP 429) call is tried again, after waiting. */
+  public static final int MAX_RATE_LIMIT_RETRIES = 3;
+
+  /** Longest wait, in seconds, before trying a rate limited call again. */
+  public static final long MAX_RETRY_AFTER_SECONDS = 60;
+
+  /** Waits for the given number of milliseconds; replaceable so that tests do not really wait. */
+  @FunctionalInterface
+  public interface Sleeper {
+    void sleep(long milliseconds) throws InterruptedException;
+  }
+
+  private final RestTemplate restTemplate;
+<span class="fc" id="L94">  private final ObjectMapper objectMapper = new ObjectMapper();</span>
+<span class="fc" id="L95">  private Sleeper sleeper = Thread::sleep;</span>
+
+<span class="fc" id="L97">  public SlackService(RestTemplateBuilder builder) {</span>
+<span class="fc" id="L98">    this.restTemplate = builder.connectTimeout(CONNECT_TIMEOUT).readTimeout(READ_TIMEOUT).build();</span>
+<span class="fc" id="L99">  }</span>
+
+  public void setSleeper(Sleeper sleeper) {
+<span class="fc" id="L102">    this.sleeper = sleeper;</span>
+<span class="fc" id="L103">  }</span>
+
+  /**
+   * Calls the Slack &lt;code&gt;auth.test&lt;/code&gt; method to check whether a bot token is valid.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @return the response from Slack; if &lt;code&gt;ok&lt;/code&gt; is true, &lt;code&gt;team&lt;/code&gt; and &lt;code&gt;teamId
+   *     &lt;/code&gt; identify the workspace the token belongs to. If Slack cannot be reached, a response
+   *     with &lt;code&gt;ok&lt;/code&gt; false and error {@link #SLACK_UNREACHABLE} is returned.
+   */
+  public SlackAuthTestResponse authTest(String token) {
+<span class="fc" id="L114">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L115">    headers.setBearerAuth(token);</span>
+<span class="fc" id="L116">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+    try {
+<span class="fc" id="L118">      ResponseEntity&lt;SlackAuthTestResponse&gt; response =</span>
+<span class="fc" id="L119">          restTemplate.exchange(</span>
+              AUTH_TEST_ENDPOINT, HttpMethod.POST, entity, SlackAuthTestResponse.class);
+<span class="fc" id="L121">      SlackAuthTestResponse body = response.getBody();</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">      if (body == null) {</span>
+<span class="fc" id="L123">        return SlackAuthTestResponse.builder().ok(false).error(SLACK_UNREACHABLE).build();</span>
+      }
+<span class="fc" id="L125">      return body;</span>
+<span class="fc" id="L126">    } catch (RestClientException e) {</span>
+      // Deliberately log only the exception class: the message could echo request details.
+<span class="fc" id="L128">      log.warn(&quot;Error calling Slack auth.test: {}&quot;, e.getClass().getSimpleName());</span>
+<span class="fc" id="L129">      return SlackAuthTestResponse.builder().ok(false).error(SLACK_UNREACHABLE).build();</span>
+    }
+  }
+
+  /**
+   * Calls the Slack &lt;code&gt;users.list&lt;/code&gt; method (following pagination) to get all members of the
+   * workspace the token belongs to. This includes bots, deactivated accounts, and users who have
+   * been invited but have not yet signed in; see {@link SlackUser#isActivePerson()}.
+   *
+   * &lt;p&gt;Requires the &lt;code&gt;users:read&lt;/code&gt; scope; emails are only included if the token also has
+   * the &lt;code&gt;users:read.email&lt;/code&gt; scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @return all members of the workspace
+   * @throws SlackApiException with the Slack error code (e.g. &lt;code&gt;missing_scope&lt;/code&gt;) if Slack
+   *     reports an error, or {@link #SLACK_UNREACHABLE} if Slack cannot be reached
+   */
+  public List&lt;SlackUser&gt; listUsers(String token) {
+<span class="fc" id="L147">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L148">    headers.setBearerAuth(token);</span>
+<span class="fc" id="L149">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L151">    List&lt;SlackUser&gt; users = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L152">    String cursor = &quot;&quot;;</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">    for (int page = 0; page &lt; MAX_USER_PAGES; page++) {</span>
+<span class="fc" id="L154">      SlackUsersListResponse body = getUsersPage(entity, cursor);</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">      if (body == null) {</span>
+<span class="fc" id="L156">        throw new SlackApiException(SLACK_UNREACHABLE);</span>
+      }
+<span class="fc bfc" id="L158" title="All 2 branches covered.">      if (!body.getOk()) {</span>
+<span class="fc" id="L159">        throw new SlackApiException(String.valueOf(body.getError()));</span>
+      }
+<span class="fc bfc" id="L161" title="All 2 branches covered.">      if (body.getMembers() != null) {</span>
+<span class="fc" id="L162">        users.addAll(body.getMembers());</span>
+      }
+<span class="fc" id="L164">      cursor = body.nextCursor();</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">      if (cursor.isEmpty()) {</span>
+<span class="fc" id="L166">        return users;</span>
+      }
+    }
+<span class="fc" id="L169">    log.warn(&quot;Slack users.list: stopped after {} pages&quot;, MAX_USER_PAGES);</span>
+<span class="fc" id="L170">    return users;</span>
+  }
+
+  private SlackUsersListResponse getUsersPage(HttpEntity&lt;String&gt; entity, String cursor) {
+    try {
+<span class="fc bfc" id="L175" title="All 2 branches covered.">      if (cursor.isEmpty()) {</span>
+<span class="fc" id="L176">        return restTemplate</span>
+<span class="fc" id="L177">            .exchange(USERS_LIST_ENDPOINT, HttpMethod.GET, entity, SlackUsersListResponse.class)</span>
+<span class="fc" id="L178">            .getBody();</span>
+      }
+      // cursor is passed as a URI template variable so that it gets URL encoded
+<span class="fc" id="L181">      return restTemplate</span>
+<span class="fc" id="L182">          .exchange(</span>
+              USERS_LIST_ENDPOINT + &quot;&amp;cursor={cursor}&quot;,
+              HttpMethod.GET,
+              entity,
+              SlackUsersListResponse.class,
+              cursor)
+<span class="fc" id="L188">          .getBody();</span>
+<span class="fc" id="L189">    } catch (RestClientException e) {</span>
+      // Deliberately log only the exception class: the message could echo request details.
+<span class="fc" id="L191">      log.warn(&quot;Error calling Slack users.list: {}&quot;, e.getClass().getSimpleName());</span>
+<span class="fc" id="L192">      throw new SlackApiException(SLACK_UNREACHABLE);</span>
+    }
+  }
+
+  /**
+   * Calls the Slack &lt;code&gt;conversations.list&lt;/code&gt; method (following pagination) to get all public
+   * channels of the workspace, including archived ones (the name of an archived channel is still
+   * taken). Requires the &lt;code&gt;channels:read&lt;/code&gt; scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @return the public channels of the workspace
+   * @throws SlackApiException with the Slack error code if the call fails
+   */
+  public List&lt;SlackChannel&gt; listPublicChannels(String token) {
+<span class="fc" id="L206">    List&lt;SlackChannel&gt; channels = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">    for (JsonNode page : getAllPages(token, CONVERSATIONS_LIST_ENDPOINT)) {</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">      for (JsonNode channel : page.path(&quot;channels&quot;)) {</span>
+<span class="fc" id="L209">        channels.add(objectMapper.convertValue(channel, SlackChannel.class));</span>
+<span class="fc" id="L210">      }</span>
+<span class="fc" id="L211">    }</span>
+<span class="fc" id="L212">    return channels;</span>
+  }
+
+  /**
+   * Calls the Slack &lt;code&gt;conversations.create&lt;/code&gt; method to create a public channel; the bot
+   * becomes a member of the channel it creates. Requires the &lt;code&gt;channels:manage&lt;/code&gt; scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @param name name of the channel (lowercase letters, digits, hyphens and underscores)
+   * @return the new channel
+   * @throws SlackApiException with the Slack error code (e.g. &lt;code&gt;name_taken&lt;/code&gt;, &lt;code&gt;
+   *     invalid_name_specials&lt;/code&gt;) if the call fails
+   */
+  public SlackChannel createPublicChannel(String token, String name) {
+<span class="fc" id="L226">    MultiValueMap&lt;String, String&gt; form = new LinkedMultiValueMap&lt;&gt;();</span>
+<span class="fc" id="L227">    form.add(&quot;name&quot;, name);</span>
+<span class="fc" id="L228">    JsonNode body = post(token, &quot;conversations.create&quot;, form);</span>
+<span class="fc" id="L229">    return objectMapper.convertValue(body.path(&quot;channel&quot;), SlackChannel.class);</span>
+  }
+
+  /**
+   * Calls the Slack &lt;code&gt;conversations.join&lt;/code&gt; method so that the bot is a member of a public
+   * channel, which it has to be to invite or remove members. Joining a channel the bot is already
+   * in is not an error. Requires the &lt;code&gt;channels:join&lt;/code&gt; scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @param channelId id of the channel
+   * @throws SlackApiException with the Slack error code if the call fails
+   */
+  public void joinChannel(String token, String channelId) {
+<span class="fc" id="L242">    MultiValueMap&lt;String, String&gt; form = new LinkedMultiValueMap&lt;&gt;();</span>
+<span class="fc" id="L243">    form.add(&quot;channel&quot;, channelId);</span>
+<span class="fc" id="L244">    post(token, &quot;conversations.join&quot;, form);</span>
+<span class="fc" id="L245">  }</span>
+
+  /**
+   * Calls the Slack &lt;code&gt;conversations.members&lt;/code&gt; method (following pagination). Requires the
+   * &lt;code&gt;channels:read&lt;/code&gt; scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @param channelId id of the channel
+   * @return the Slack user ids of the members of the channel
+   * @throws SlackApiException with the Slack error code if the call fails
+   */
+  public List&lt;String&gt; listChannelMembers(String token, String channelId) {
+<span class="fc" id="L257">    List&lt;String&gt; members = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L258">    String url = SLACK_API + &quot;conversations.members?limit=200&amp;channel=&quot; + channelId;</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">    for (JsonNode page : getAllPages(token, url)) {</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">      for (JsonNode member : page.path(&quot;members&quot;)) {</span>
+<span class="fc" id="L261">        members.add(member.asText());</span>
+<span class="fc" id="L262">      }</span>
+<span class="fc" id="L263">    }</span>
+<span class="fc" id="L264">    return members;</span>
+  }
+
+  /**
+   * Calls the Slack &lt;code&gt;conversations.invite&lt;/code&gt; method to add users to a channel that the bot
+   * is a member of. Slack adds either all of the users or none of them. Requires the &lt;code&gt;
+   * channels:manage&lt;/code&gt; scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @param channelId id of the channel
+   * @param userIds Slack user ids; at most 1000
+   * @throws SlackApiException with the Slack error code (e.g. &lt;code&gt;already_in_channel&lt;/code&gt;) if
+   *     the call fails
+   */
+  public void inviteToChannel(String token, String channelId, List&lt;String&gt; userIds) {
+<span class="fc" id="L279">    MultiValueMap&lt;String, String&gt; form = new LinkedMultiValueMap&lt;&gt;();</span>
+<span class="fc" id="L280">    form.add(&quot;channel&quot;, channelId);</span>
+<span class="fc" id="L281">    form.add(&quot;users&quot;, String.join(&quot;,&quot;, userIds));</span>
+<span class="fc" id="L282">    post(token, &quot;conversations.invite&quot;, form);</span>
+<span class="fc" id="L283">  }</span>
+
+  /**
+   * Calls the Slack &lt;code&gt;conversations.kick&lt;/code&gt; method to remove a user from a channel that the
+   * bot is a member of. Requires the &lt;code&gt;channels:manage&lt;/code&gt; scope. Whether the bot is allowed
+   * to remove members from public channels is also a workspace setting; if it is not, Slack answers
+   * {@link #RESTRICTED_ACTION}, and {@link #REMOVAL_RESTRICTED_ADVICE} says how to fix that.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @param channelId id of the channel
+   * @param userId Slack user id
+   * @throws SlackApiException with the Slack error code (e.g. &lt;code&gt;restricted_action&lt;/code&gt;) if
+   *     the call fails
+   */
+  public void removeFromChannel(String token, String channelId, String userId) {
+<span class="fc" id="L298">    MultiValueMap&lt;String, String&gt; form = new LinkedMultiValueMap&lt;&gt;();</span>
+<span class="fc" id="L299">    form.add(&quot;channel&quot;, channelId);</span>
+<span class="fc" id="L300">    form.add(&quot;user&quot;, userId);</span>
+<span class="fc" id="L301">    post(token, &quot;conversations.kick&quot;, form);</span>
+<span class="fc" id="L302">  }</span>
+
+  private JsonNode post(String token, String method, MultiValueMap&lt;String, String&gt; form) {
+<span class="fc" id="L305">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L306">    headers.setBearerAuth(token);</span>
+    // RestTemplate sends a MultiValueMap as application/x-www-form-urlencoded
+<span class="fc" id="L308">    return call(SLACK_API + method, HttpMethod.POST, new HttpEntity&lt;&gt;(form, headers), null);</span>
+  }
+
+  /** Gets every page of a cursor paginated method; url must already have a query string. */
+  private List&lt;JsonNode&gt; getAllPages(String token, String url) {
+<span class="fc" id="L313">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L314">    headers.setBearerAuth(token);</span>
+<span class="fc" id="L315">    HttpEntity&lt;Void&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+<span class="fc" id="L317">    List&lt;JsonNode&gt; pages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L318">    String cursor = &quot;&quot;;</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">    for (int page = 0; page &lt; MAX_PAGES; page++) {</span>
+      JsonNode body =
+<span class="fc bfc" id="L321" title="All 2 branches covered.">          cursor.isEmpty()</span>
+<span class="fc" id="L322">              ? call(url, HttpMethod.GET, entity, null)</span>
+<span class="fc" id="L323">              : call(url + &quot;&amp;cursor={cursor}&quot;, HttpMethod.GET, entity, cursor);</span>
+<span class="fc" id="L324">      pages.add(body);</span>
+<span class="fc" id="L325">      cursor = body.path(&quot;response_metadata&quot;).path(&quot;next_cursor&quot;).asText(&quot;&quot;);</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">      if (cursor.isEmpty()) {</span>
+<span class="fc" id="L327">        return pages;</span>
+      }
+    }
+<span class="fc" id="L330">    log.warn(&quot;Slack: stopped after {} pages&quot;, MAX_PAGES);</span>
+<span class="fc" id="L331">    return pages;</span>
+  }
+
+  /**
+   * Makes one call to the Slack Web API. If Slack answers 429 (rate limited), waits for as long as
+   * the Retry-After header asks and tries again, a limited number of times.
+   *
+   * @return the response, which has ok=true
+   * @throws SlackApiException with the Slack error code if ok=false, {@link #RATE_LIMITED} if still
+   *     rate limited after retrying, or {@link #SLACK_UNREACHABLE} for other failures
+   */
+  private JsonNode call(String url, HttpMethod httpMethod, HttpEntity&lt;?&gt; entity, String cursor) {
+<span class="fc" id="L343">    for (int attempt = 0; ; attempt++) {</span>
+      try {
+        ResponseEntity&lt;JsonNode&gt; response =
+<span class="fc bfc" id="L346" title="All 2 branches covered.">            cursor == null</span>
+<span class="fc" id="L347">                ? restTemplate.exchange(url, httpMethod, entity, JsonNode.class)</span>
+<span class="fc" id="L348">                : restTemplate.exchange(url, httpMethod, entity, JsonNode.class, cursor);</span>
+<span class="fc" id="L349">        JsonNode body = response.getBody();</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">        if (body == null) {</span>
+<span class="fc" id="L351">          throw new SlackApiException(SLACK_UNREACHABLE);</span>
+        }
+<span class="fc bfc" id="L353" title="All 2 branches covered.">        if (!body.path(&quot;ok&quot;).asBoolean()) {</span>
+<span class="fc" id="L354">          throw new SlackApiException(body.path(&quot;error&quot;).asText(&quot;null&quot;));</span>
+        }
+<span class="fc" id="L356">        return body;</span>
+<span class="fc" id="L357">      } catch (HttpClientErrorException.TooManyRequests e) {</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">        if (attempt &gt;= MAX_RATE_LIMIT_RETRIES) {</span>
+<span class="fc" id="L359">          throw new SlackApiException(RATE_LIMITED);</span>
+        }
+<span class="fc" id="L361">        waitBeforeRetry(e.getResponseHeaders());</span>
+<span class="fc" id="L362">      } catch (RestClientException e) {</span>
+        // Deliberately log only the exception class: the message could echo request details.
+<span class="fc" id="L364">        log.warn(&quot;Error calling Slack: {}&quot;, e.getClass().getSimpleName());</span>
+<span class="fc" id="L365">        throw new SlackApiException(SLACK_UNREACHABLE);</span>
+<span class="fc" id="L366">      }</span>
+    }
+  }
+
+  private void waitBeforeRetry(HttpHeaders responseHeaders) {
+<span class="fc" id="L371">    long seconds = 1;</span>
+    // (the headers of an exception are declared nullable, though a 429 response always has some)
+<span class="fc" id="L373">    String retryAfter =</span>
+<span class="fc" id="L374">        Optional.ofNullable(responseHeaders)</span>
+<span class="fc" id="L375">            .map(headers -&gt; headers.getFirst(&quot;Retry-After&quot;))</span>
+<span class="fc" id="L376">            .orElse(null);</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">    if (retryAfter != null) {</span>
+      try {
+<span class="fc" id="L379">        seconds = Long.parseLong(retryAfter.strip());</span>
+<span class="fc" id="L380">      } catch (NumberFormatException e) {</span>
+<span class="fc" id="L381">        seconds = 1;</span>
+<span class="fc" id="L382">      }</span>
+    }
+<span class="fc" id="L384">    seconds = Math.max(1, Math.min(seconds, MAX_RETRY_AFTER_SECONDS));</span>
+    try {
+<span class="fc" id="L386">      sleeper.sleep(seconds * 1000);</span>
+<span class="fc" id="L387">    } catch (InterruptedException e) {</span>
+<span class="fc" id="L388">      Thread.currentThread().interrupt();</span>
+<span class="fc" id="L389">      throw new SlackApiException(SLACK_UNREACHABLE);</span>
+<span class="fc" id="L390">    }</span>
+<span class="fc" id="L391">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

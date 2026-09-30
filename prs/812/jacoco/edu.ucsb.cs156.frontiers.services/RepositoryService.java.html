@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepositoryService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">RepositoryService.java</span></div><h1>RepositoryService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+<span class="fc" id="L29">@Slf4j</span>
+public class RepositoryService {
+  /*
+   * A RestTemplate built with no timeout blocks its calling thread forever on a hung external
+   * call. That's a real incident lib-jobs' single-threaded jobsExecutor hit on another app
+   * (proj-scaffold): a job stuck this way permanently wedged the executor, with no way to recover
+   * short of restarting the app (see lib-jobs DESIGN.md 9 -- cooperative job cancellation only
+   * helps a job that reaches another checkpoint, which a truly hung thread never will). Generous
+   * but finite: long enough to never trip on legitimate slowness, short enough to guarantee a job
+   * can't hang forever.
+   */
+<span class="fc" id="L40">  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);</span>
+<span class="fc" id="L41">  private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);</span>
+
+  private final JwtService jwtService;
+  private final GithubTeamService githubTeamService;
+  private final TeamRepository teamRepository;
+  private final RestTemplate restTemplate;
+  private final ObjectMapper mapper;
+
+<span class="fc" id="L49">  public record GithubRepository(String name, String fullName) {}</span>
+
+  /**
+   * Result of a create-repository call: the repository name and whether the repository was newly
+   * created (true) or already existed and was potentially updated (false).
+   */
+<span class="fc" id="L55">  public record RepositoryCreationResult(String repoName, boolean created) {}</span>
+
+  private HttpHeaders githubHeaders(String token) {
+<span class="fc" id="L58">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L59">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L60">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L61">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L62">    return headers;</span>
+  }
+
+  /**
+   * Creates a GitHub repository for a user (student or staff), given only their GitHub login.
+   *
+   * &lt;p&gt;This helper method contains the shared logic used by both {@link
+   * #createStudentRepository(Course, RosterStudent, String, Boolean, RepositoryPermissions)} and
+   * {@link #createStaffRepository(Course, CourseStaff, String, Boolean, RepositoryPermissions)}.
+   *
+   * &lt;ul&gt;
+   *   &lt;li&gt;Checks whether the repository already exists.
+   *   &lt;li&gt;If not, creates a new repository under the course's organization; if so, makes it private
+   *       or public as given, since that may have changed since it was created.
+   *   &lt;li&gt;Adds the user as a collaborator with the given permission level.
+   * &lt;/ul&gt;
+   *
+   * @param course the course whose organization the repo belongs to
+   * @param githubLogin GitHub username of the student or staff member
+   * @param repoPrefix prefix for the repository name (repoPrefix-githubLogin)
+   * @param isPrivate whether the created repository should be private
+   * @param permissions collaborator permissions to grant the user
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
+   * @throws NoSuchAlgorithmException if signing fails
+   * @throws InvalidKeySpecException if signing fails
+   * @throws JsonProcessingException if JSON serialization fails
+   */
+  private Optional&lt;RepositoryCreationResult&gt; createRepositoryForStudentOrStaff(
+      Course course,
+      String githubLogin,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+<span class="fc" id="L98">    String newRepoName = repoPrefix + &quot;-&quot; + githubLogin;</span>
+<span class="fc" id="L99">    String token = jwtService.getInstallationToken(course);</span>
+
+<span class="fc" id="L101">    String existenceEndpoint =</span>
+<span class="fc" id="L102">        &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + newRepoName;</span>
+<span class="fc" id="L103">    String createEndpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/repos&quot;;</span>
+<span class="fc" id="L104">    String provisionEndpoint =</span>
+        &quot;https://api.github.com/repos/&quot;
+<span class="fc" id="L106">            + course.getOrgName()</span>
+            + &quot;/&quot;
+            + newRepoName
+            + &quot;/collaborators/&quot;
+            + githubLogin;
+
+<span class="fc" id="L112">    HttpHeaders existenceHeaders = githubHeaders(token);</span>
+
+<span class="fc" id="L114">    HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
+
+<span class="fc" id="L116">    boolean created = false;</span>
+    try {
+<span class="fc" id="L118">      restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
+<span class="fc" id="L119">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">      if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+<span class="fc" id="L121">        HttpHeaders createHeaders = githubHeaders(token);</span>
+
+<span class="fc" id="L123">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L124">        body.put(&quot;name&quot;, newRepoName);</span>
+<span class="fc" id="L125">        body.put(&quot;private&quot;, isPrivate);</span>
+<span class="fc" id="L126">        String bodyAsJson = mapper.writeValueAsString(body);</span>
+
+<span class="fc" id="L128">        HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
+
+<span class="fc" id="L130">        restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
+<span class="fc" id="L131">        created = true;</span>
+<span class="fc" id="L132">      } else {</span>
+<span class="fc" id="L133">        log.warn(</span>
+            &quot;Unexpected response code {} when checking for existence of repository {}&quot;,
+<span class="fc" id="L135">            e.getStatusCode(),</span>
+            newRepoName);
+<span class="fc" id="L137">        return Optional.empty();</span>
+      }
+<span class="fc" id="L139">    }</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">    if (!created) {</span>
+<span class="fc" id="L141">      setRepositoryPrivate(course, newRepoName, isPrivate, token);</span>
+    }
+
+    try {
+<span class="fc" id="L145">      Map&lt;String, Object&gt; provisionBody = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L146">      provisionBody.put(&quot;permission&quot;, permissions.getApiName());</span>
+<span class="fc" id="L147">      String provisionAsJson = mapper.writeValueAsString(provisionBody);</span>
+
+<span class="fc" id="L149">      HttpEntity&lt;String&gt; provisionEntity = new HttpEntity&lt;&gt;(provisionAsJson, existenceHeaders);</span>
+<span class="fc" id="L150">      restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
+<span class="fc" id="L151">    } catch (HttpClientErrorException ignored) {</span>
+      // silently ignore if provisioning fails (same as before)
+<span class="fc" id="L153">    }</span>
+<span class="fc" id="L154">    return Optional.of(new RepositoryCreationResult(newRepoName, created));</span>
+  }
+
+  /**
+   * Makes an existing repository private, or public, as the assignment is now set. Creating a
+   * repository sets this once, but an assignment can be changed from private to public (or back)
+   * after its repositories exist, and running its job again must apply the change to them.
+   *
+   * &lt;p&gt;The request is always sent: setting a repository to the visibility it already has is
+   * harmless, and doing so keeps the repositories of an assignment in step with it.
+   *
+   * @throws HttpStatusCodeException if GitHub refuses the change, for example because the GitHub
+   *     App is not allowed to administer repositories
+   */
+  private void setRepositoryPrivate(
+      Course course, String repositoryName, Boolean isPrivate, String token)
+      throws JsonProcessingException {
+<span class="fc" id="L171">    String endpoint = &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + repositoryName;</span>
+<span class="fc" id="L172">    Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L173">    body.put(&quot;private&quot;, isPrivate);</span>
+<span class="fc" id="L174">    HttpEntity&lt;String&gt; entity =</span>
+<span class="fc" id="L175">        new HttpEntity&lt;&gt;(mapper.writeValueAsString(body), githubHeaders(token));</span>
+<span class="fc" id="L176">    restTemplate.exchange(endpoint, HttpMethod.PATCH, entity, String.class);</span>
+<span class="fc" id="L177">  }</span>
+
+  public RepositoryService(
+      JwtService jwtService,
+      GithubTeamService githubTeamService,
+      TeamRepository teamRepository,
+      RestTemplateBuilder restTemplateBuilder,
+<span class="fc" id="L184">      ObjectMapper mapper) {</span>
+<span class="fc" id="L185">    this.jwtService = jwtService;</span>
+<span class="fc" id="L186">    this.githubTeamService = githubTeamService;</span>
+<span class="fc" id="L187">    this.teamRepository = teamRepository;</span>
+<span class="fc" id="L188">    this.restTemplate =</span>
+<span class="fc" id="L189">        restTemplateBuilder.connectTimeout(CONNECT_TIMEOUT).readTimeout(READ_TIMEOUT).build();</span>
+<span class="fc" id="L190">    this.mapper = mapper;</span>
+<span class="fc" id="L191">  }</span>
+
+  /**
+   * Creates a single student repository if it doesn't already exist, and provisions access to the
+   * repository by that student
+   *
+   * @param course The Course in question
+   * @param student RosterStudent of the student the repository should be created for
+   * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
+   *     format repoPrefix-githubLogin
+   * @param isPrivate Whether the repository is private or not
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
+   */
+  public Optional&lt;RepositoryCreationResult&gt; createStudentRepository(
+      Course course,
+      RosterStudent student,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L212">    return createRepositoryForStudentOrStaff(</span>
+<span class="fc" id="L213">        course, student.getGithubLogin(), repoPrefix, isPrivate, permissions);</span>
+  }
+
+  /**
+   * Creates a single staff repository if it doesn't already exist, and provisions access to the
+   * repository by that staff member
+   *
+   * @param course The Course in question
+   * @param staff CourseStaff of the staff the repository should be created for
+   * @param repoPrefix Name of the project or assignment. Used to title the repository, in the
+   *     format repoPrefix-githubLogin
+   * @param isPrivate Whether the repository is private or not
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
+   */
+  public Optional&lt;RepositoryCreationResult&gt; createStaffRepository(
+      Course course,
+      CourseStaff staff,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+
+<span class="fc" id="L236">    return createRepositoryForStudentOrStaff(</span>
+<span class="fc" id="L237">        course, staff.getGithubLogin(), repoPrefix, isPrivate, permissions);</span>
+  }
+
+  /** The name of the ruleset that requires signed commits on a repository. */
+  public static final String SIGNED_COMMITS_RULESET_NAME = &quot;Require Signed Commits&quot;;
+
+  /**
+   * Makes a repository require signed commits, or not, by giving it a ruleset named {@value
+   * #SIGNED_COMMITS_RULESET_NAME}, or removing that ruleset. The ruleset requires signatures on
+   * every branch except gh-pages, and is active.
+   *
+   * &lt;ul&gt;
+   *   &lt;li&gt;required, and the repository has no such ruleset: it is created.
+   *   &lt;li&gt;required, and the repository already has it: it is updated in place, so that it has the
+   *       settings above and the repository is never without it.
+   *   &lt;li&gt;not required, and the repository has it: it is deleted.
+   *   &lt;li&gt;not required, and it does not: nothing is changed.
+   * &lt;/ul&gt;
+   *
+   * Only rulesets of the repository itself are considered, not ones inherited from the
+   * organization.
+   *
+   * @param course the course whose organization the repository belongs to
+   * @param repositoryName the name of the repository
+   * @param required whether commits must be signed
+   * @throws HttpStatusCodeException if GitHub refuses a request, for example because the GitHub App
+   *     is not allowed to administer repositories
+   */
+  public void setSignedCommitsRequired(Course course, String repositoryName, boolean required)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L267">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L268">    String rulesetsEndpoint =</span>
+<span class="fc" id="L269">        &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + repositoryName + &quot;/rulesets&quot;;</span>
+
+<span class="fc" id="L271">    ResponseEntity&lt;String&gt; listResponse =</span>
+<span class="fc" id="L272">        restTemplate.exchange(</span>
+            rulesetsEndpoint + &quot;?includes_parents=false&amp;per_page=100&quot;,
+            HttpMethod.GET,
+<span class="fc" id="L275">            new HttpEntity&lt;&gt;(githubHeaders(token)),</span>
+            String.class);
+<span class="fc" id="L277">    Long existingId = null;</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">    for (JsonNode ruleset : mapper.readTree(listResponse.getBody())) {</span>
+<span class="fc bfc" id="L279" title="All 2 branches covered.">      if (SIGNED_COMMITS_RULESET_NAME.equals(ruleset.path(&quot;name&quot;).asText())) {</span>
+<span class="fc" id="L280">        existingId = ruleset.path(&quot;id&quot;).asLong();</span>
+<span class="fc" id="L281">        break;</span>
+      }
+<span class="fc" id="L283">    }</span>
+
+<span class="fc bfc" id="L285" title="All 2 branches covered.">    if (!required) {</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">      if (existingId != null) {</span>
+<span class="fc" id="L287">        restTemplate.exchange(</span>
+            rulesetsEndpoint + &quot;/&quot; + existingId,
+            HttpMethod.DELETE,
+<span class="fc" id="L290">            new HttpEntity&lt;&gt;(githubHeaders(token)),</span>
+            String.class);
+      }
+<span class="fc" id="L293">      return;</span>
+    }
+
+<span class="fc" id="L296">    Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L297">    body.put(&quot;name&quot;, SIGNED_COMMITS_RULESET_NAME);</span>
+<span class="fc" id="L298">    body.put(&quot;target&quot;, &quot;branch&quot;);</span>
+<span class="fc" id="L299">    body.put(&quot;enforcement&quot;, &quot;active&quot;);</span>
+<span class="fc" id="L300">    body.put(</span>
+        &quot;conditions&quot;,
+<span class="fc" id="L302">        Map.of(</span>
+            &quot;ref_name&quot;,
+<span class="fc" id="L304">            Map.of(&quot;include&quot;, List.of(&quot;~ALL&quot;), &quot;exclude&quot;, List.of(&quot;refs/heads/gh-pages&quot;))));</span>
+<span class="fc" id="L305">    body.put(&quot;rules&quot;, List.of(Map.of(&quot;type&quot;, &quot;required_signatures&quot;)));</span>
+<span class="fc" id="L306">    HttpEntity&lt;String&gt; entity =</span>
+<span class="fc" id="L307">        new HttpEntity&lt;&gt;(mapper.writeValueAsString(body), githubHeaders(token));</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">    if (existingId == null) {</span>
+<span class="fc" id="L309">      restTemplate.exchange(rulesetsEndpoint, HttpMethod.POST, entity, String.class);</span>
+    } else {
+<span class="fc" id="L311">      restTemplate.exchange(</span>
+          rulesetsEndpoint + &quot;/&quot; + existingId, HttpMethod.PUT, entity, String.class);
+    }
+<span class="fc" id="L314">  }</span>
+
+  /**
+   * Lists repositories in the course GitHub organization whose names start with the provided
+   * prefix.
+   */
+  public List&lt;GithubRepository&gt; getRepositoriesMatchingPrefix(Course course, String prefix)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L322">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L323">    String endpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/repos?per_page=100&quot;;</span>
+
+<span class="fc" id="L325">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(githubHeaders(token));</span>
+<span class="fc" id="L326">    ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L327">        restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+
+<span class="fc" id="L329">    JsonNode repos = mapper.readTree(response.getBody());</span>
+<span class="fc" id="L330">    List&lt;GithubRepository&gt; matchingRepos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">    for (JsonNode repo : repos) {</span>
+<span class="fc" id="L332">      String name = repo.path(&quot;name&quot;).asText();</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">      if (name.startsWith(prefix)) {</span>
+<span class="fc" id="L334">        matchingRepos.add(new GithubRepository(name, repo.path(&quot;full_name&quot;).asText()));</span>
+      }
+<span class="fc" id="L336">    }</span>
+<span class="fc" id="L337">    return matchingRepos;</span>
+  }
+
+  /** Returns true when the repository has no commits. */
+  public boolean isRepositoryEmpty(Course course, String repositoryName)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L343">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L344">    String endpoint =</span>
+        &quot;https://api.github.com/repos/&quot;
+<span class="fc" id="L346">            + course.getOrgName()</span>
+            + &quot;/&quot;
+            + repositoryName
+            + &quot;/commits?per_page=1&quot;;
+
+<span class="fc" id="L351">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(githubHeaders(token));</span>
+    try {
+<span class="fc" id="L353">      ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L354">          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
+<span class="fc" id="L355">      JsonNode commits = mapper.readTree(response.getBody());</span>
+<span class="fc bfc" id="L356" title="All 4 branches covered.">      return commits.isArray() &amp;&amp; commits.isEmpty();</span>
+<span class="fc" id="L357">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">      if (e.getStatusCode().equals(HttpStatus.CONFLICT)) {</span>
+<span class="fc" id="L359">        return true;</span>
+      }
+<span class="fc" id="L361">      throw e;</span>
+    }
+  }
+
+  /** Deletes a repository only when it is empty. Returns true when a delete request was sent. */
+  public boolean deleteRepositoryIfEmpty(Course course, String repositoryName)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc bfc" id="L368" title="All 2 branches covered.">    if (!isRepositoryEmpty(course, repositoryName)) {</span>
+<span class="fc" id="L369">      return false;</span>
+    }
+
+<span class="fc" id="L372">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L373">    String endpoint = &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + repositoryName;</span>
+
+<span class="fc" id="L375">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(githubHeaders(token));</span>
+<span class="fc" id="L376">    restTemplate.exchange(endpoint, HttpMethod.DELETE, entity, String.class);</span>
+<span class="fc" id="L377">    return true;</span>
+  }
+
+  /**
+   * Creates a GitHub repository for a team (student or staff), given only their team name.
+   *
+   * &lt;ul&gt;
+   *   &lt;li&gt;Checks whether the repository already exists.
+   *   &lt;li&gt;If not, creates a new repository under the course's organization; if so, makes it private
+   *       or public as given, since that may have changed since it was created.
+   *   &lt;li&gt;Adds all team members as collaborators with the given permission level.
+   * &lt;/ul&gt;
+   *
+   * @param course the course whose organization the repo belongs to
+   * @param team the team for which the repo is being created
+   * @param repoPrefix prefix for the repository name (repoPrefix-teamSlug)
+   * @param isPrivate whether the created repository should be private
+   * @param permissions collaborator permissions to grant the user
+   * @param orgId GitHub organization ID used for team-based repo provisioning
+   * @return a {@link RepositoryCreationResult} indicating the repository name and whether it was
+   *     newly created, or {@link Optional#empty()} if the existence check failed unexpectedly
+   * @throws NoSuchAlgorithmException if signing fails
+   * @throws InvalidKeySpecException if signing fails
+   * @throws JsonProcessingException if JSON serialization fails
+   */
+  public Optional&lt;RepositoryCreationResult&gt; createTeamRepository(
+      Course course,
+      Team team,
+      String repoPrefix,
+      Boolean isPrivate,
+      RepositoryPermissions permissions,
+      Integer orgId)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc" id="L410">    String teamSlug = getOrFetchTeamSlug(course, team, orgId);</span>
+<span class="fc" id="L411">    String newRepoName = repoPrefix + &quot;-&quot; + teamSlug;</span>
+<span class="fc" id="L412">    String token = jwtService.getInstallationToken(course);</span>
+
+<span class="fc" id="L414">    String existenceEndpoint =</span>
+<span class="fc" id="L415">        &quot;https://api.github.com/repos/&quot; + course.getOrgName() + &quot;/&quot; + newRepoName;</span>
+<span class="fc" id="L416">    String createEndpoint = &quot;https://api.github.com/orgs/&quot; + course.getOrgName() + &quot;/repos&quot;;</span>
+<span class="fc" id="L417">    String provisionEndpoint =</span>
+        &quot;https://api.github.com/organizations/&quot;
+            + orgId
+            + &quot;/team/&quot;
+<span class="fc" id="L421">            + team.getGithubTeamId()</span>
+            + &quot;/repos/&quot;
+<span class="fc" id="L423">            + course.getOrgName()</span>
+            + &quot;/&quot;
+            + newRepoName;
+
+<span class="fc" id="L427">    HttpHeaders existenceHeaders = githubHeaders(token);</span>
+
+<span class="fc" id="L429">    HttpEntity&lt;String&gt; existenceEntity = new HttpEntity&lt;&gt;(existenceHeaders);</span>
+
+<span class="fc" id="L431">    boolean created = false;</span>
+    try {
+<span class="fc" id="L433">      restTemplate.exchange(existenceEndpoint, HttpMethod.GET, existenceEntity, String.class);</span>
+<span class="fc" id="L434">    } catch (HttpClientErrorException e) {</span>
+<span class="fc bfc" id="L435" title="All 2 branches covered.">      if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {</span>
+<span class="fc" id="L436">        HttpHeaders createHeaders = githubHeaders(token);</span>
+
+<span class="fc" id="L438">        Map&lt;String, Object&gt; body = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L439">        body.put(&quot;name&quot;, newRepoName);</span>
+<span class="fc" id="L440">        body.put(&quot;private&quot;, isPrivate);</span>
+<span class="fc" id="L441">        String bodyAsJson = mapper.writeValueAsString(body);</span>
+
+<span class="fc" id="L443">        HttpEntity&lt;String&gt; createEntity = new HttpEntity&lt;&gt;(bodyAsJson, createHeaders);</span>
+
+<span class="fc" id="L445">        restTemplate.exchange(createEndpoint, HttpMethod.POST, createEntity, String.class);</span>
+<span class="fc" id="L446">        created = true;</span>
+<span class="fc" id="L447">      } else {</span>
+<span class="fc" id="L448">        log.warn(</span>
+            &quot;Unexpected response code {} when checking for existence of repository {}&quot;,
+<span class="fc" id="L450">            e.getStatusCode(),</span>
+            newRepoName);
+<span class="fc" id="L452">        return Optional.empty();</span>
+      }
+<span class="fc" id="L454">    }</span>
+<span class="fc bfc" id="L455" title="All 2 branches covered.">    if (!created) {</span>
+<span class="fc" id="L456">      setRepositoryPrivate(course, newRepoName, isPrivate, token);</span>
+    }
+    try {
+<span class="fc" id="L459">      Map&lt;String, Object&gt; provisionBody = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L460">      provisionBody.put(&quot;permission&quot;, permissions.getApiName());</span>
+<span class="fc" id="L461">      String provisionAsJson = mapper.writeValueAsString(provisionBody);</span>
+
+<span class="fc" id="L463">      HttpEntity&lt;String&gt; provisionEntity = new HttpEntity&lt;&gt;(provisionAsJson, existenceHeaders);</span>
+<span class="fc" id="L464">      restTemplate.exchange(provisionEndpoint, HttpMethod.PUT, provisionEntity, String.class);</span>
+<span class="fc" id="L465">    } catch (HttpClientErrorException ignored) {</span>
+      // silently ignore if provisioning fails (same as before)
+<span class="fc" id="L467">    }</span>
+<span class="fc" id="L468">    return Optional.of(new RepositoryCreationResult(newRepoName, created));</span>
+  }
+
+  private String getOrFetchTeamSlug(Course course, Team team, Integer orgId)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc bfc" id="L473" title="All 4 branches covered.">    if (team.getGithubTeamSlug() != null &amp;&amp; !team.getGithubTeamSlug().isBlank()) {</span>
+<span class="fc" id="L474">      return team.getGithubTeamSlug();</span>
+    }
+
+<span class="fc bfc" id="L477" title="All 2 branches covered.">    if (team.getGithubTeamId() == null) {</span>
+<span class="fc" id="L478">      throw new IllegalStateException(</span>
+          &quot;Cannot create team repository without a GitHub team ID for team '&quot;
+<span class="fc" id="L480">              + team.getName()</span>
+              + &quot;'&quot;);
+    }
+
+<span class="fc" id="L484">    GithubTeamService.GithubTeamInfo teamInfo =</span>
+<span class="fc" id="L485">        githubTeamService.getTeamInfoById(orgId, team.getGithubTeamId(), course);</span>
+
+<span class="fc bfc" id="L487" title="All 6 branches covered.">    if (teamInfo == null || teamInfo.slug() == null || teamInfo.slug().isBlank()) {</span>
+<span class="fc" id="L488">      throw new IllegalStateException(</span>
+<span class="fc" id="L489">          &quot;Cannot determine GitHub team slug for team '&quot; + team.getName() + &quot;'&quot;);</span>
+    }
+
+<span class="fc" id="L492">    team.setGithubTeamSlug(teamInfo.slug());</span>
+<span class="fc" id="L493">    teamRepository.save(team);</span>
+<span class="fc" id="L494">    return teamInfo.slug();</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
