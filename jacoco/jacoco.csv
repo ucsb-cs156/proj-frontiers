@@ -33,7 +33,7 @@ frontiers,edu.ucsb.cs156.frontiers.services,SectionTranslationService,0,60,0,6,0
 frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,268,0,4,0,82,0,8,0,6
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,SlackService,0,573,0,38,0,136,0,36,0,17
-frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,735,0,38,0,166,0,31,0,12
+frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,787,0,42,0,177,0,34,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,ApiKeyService.IssuedCourseApiKey,0,15,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,475,0,20,0,107,0,23,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,CanvasApiTokenSecurityService,0,205,0,24,0,46,0,17,0,5
