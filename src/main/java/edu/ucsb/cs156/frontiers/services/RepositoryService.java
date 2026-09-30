@@ -138,7 +138,7 @@ public class RepositoryService {
       }
     }
     if (!created) {
-      setRepositoryPrivate(course, newRepoName, isPrivate, token);
+      setRepositoryVisibility(course, newRepoName, isPrivate, token);
     }
 
     try {
@@ -165,7 +165,7 @@ public class RepositoryService {
    * @throws HttpStatusCodeException if GitHub refuses the change, for example because the GitHub
    *     App is not allowed to administer repositories
    */
-  private void setRepositoryPrivate(
+  private void setRepositoryVisibility(
       Course course, String repositoryName, Boolean isPrivate, String token)
       throws JsonProcessingException {
     String endpoint = "https://api.github.com/repos/" + course.getOrgName() + "/" + repositoryName;
@@ -453,7 +453,7 @@ public class RepositoryService {
       }
     }
     if (!created) {
-      setRepositoryPrivate(course, newRepoName, isPrivate, token);
+      setRepositoryVisibility(course, newRepoName, isPrivate, token);
     }
     try {
       Map<String, Object> provisionBody = new HashMap<>();
