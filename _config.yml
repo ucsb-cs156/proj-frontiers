@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-claude-811","number":812,"title":"Apply assignment visibility to repositories that already exist","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/812"}]
+pull_requests: []
