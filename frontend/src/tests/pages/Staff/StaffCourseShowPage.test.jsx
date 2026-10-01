@@ -268,12 +268,16 @@ describe("StaffCourseShowPage tests", () => {
       expect(
         screen.queryByText(/Load Students from Canvas/),
       ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("tab", { name: "API Keys" }),
+      ).not.toBeInTheDocument();
       // and nothing that those tabs load is asked for
       expect(
         axiosMock.history.get.some(
           (request) =>
             request.url.startsWith("/api/courses/slack") ||
             request.url === "/api/dokku/translations" ||
+            request.url === "/api/courses/key" ||
             request.url === "/api/courses/7/sections",
         ),
       ).toBe(false);

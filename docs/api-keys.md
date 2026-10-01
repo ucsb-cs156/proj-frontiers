@@ -29,34 +29,39 @@ on brings the (unexpired, unrevoked) keys back to life.
 
 ## Creating a key
 
-Until the Api Keys tab on the course page exists (see
-[#816](https://github.com/ucsb-cs156/proj-frontiers/issues/816)), keys are created from Swagger
-(`/swagger-ui/index.html`, section **Course API Key**) while logged in as the course's instructor:
+On the course page, open the **API Keys** tab (it appears once **Enable Api Keys** is on) and click
+**Create API Key**. Give the key an optional label (at most 60 characters), such as which autograder
+or GitHub Action will use it, choose whether it expires after 90 days or 6 months, and submit.
+
+The key is shown **once**, in a dialog with a **Copy** button and a ready-to-paste example request.
+Copy it somewhere safe (a secret in your CI system, a file inside your autograder zip that is not
+committed to a public repo). Once the dialog is closed the key cannot be retrieved again; if it is
+lost, revoke it and create a new one.
+
+The same thing can be done from Swagger (`/swagger-ui/index.html`, section **Course API Key**):
 
 ```
 POST /api/courses/key?courseId=2&choice=DAYS_90&label=jpa02%20autograder%20F26
 ```
 
-* `choice` is `DAYS_90` or `MONTHS_6`.
-* `label` is optional (at most 60 characters): a short name so that you can tell your keys apart
-  later, e.g. which autograder or which GitHub Action uses each one.
-
-The response contains the key once:
-
 ```json
 { "key": "u1Zc6N0T0dG9xWcY4h2JbQ", "courseId": 2, "issuedAt": "...", "expiresAt": "...", "label": "jpa02 autograder F26" }
 ```
 
-Copy it somewhere safe (a secret in your CI system, a file inside your autograder zip that is not
-committed to a public repo). It cannot be retrieved again.
-
 ## Seeing which keys exist
 
-An instructor can list every key ever created for a course, newest first:
+The table on the **API Keys** tab lists every key ever created for the course, newest first:
 
-```
-GET /api/courses/key?courseId=2
-```
+| Column | Meaning |
+|---|---|
+| Label | The name given when the key was created, if any |
+| Key | The last six characters of the key, enough to match it with the copy you saved |
+| Created by, Created | Who created the key, and when |
+| Expires | When the key stops working. An active key within 14 days of expiry gets an **expires in N days** warning |
+| Last used, Uses | When the key was last used and how many requests it has made; a quick way to confirm an autograder is really using it |
+| Status | **ACTIVE**, **EXPIRED** or **REVOKED** |
+
+The same list is available from Swagger as `GET /api/courses/key?courseId=2`:
 
 ```json
 [
@@ -74,11 +79,6 @@ GET /api/courses/key?courseId=2
   }
 ]
 ```
-
-The key itself is never returned; `keySuffix` (its last six characters) is enough to match it with
-the copy you saved. `status` is `ACTIVE`, `EXPIRED` or `REVOKED`. `usageCount` and `lastUsedAt` go
-up on every request made with the key, which is a quick way to confirm that an autograder is really
-using it.
 
 ## Using a key
 
@@ -213,8 +213,8 @@ member to the roster by hand (Students tab, add student) and put them on a team.
 
 Revoking is permanent. There are two ways:
 
-* **By id, as the instructor** (this is what the Api Keys tab will use): take the `id` from the list
-  above and call
+* **From the API Keys tab, as the instructor:** click **Revoke** on the key's row and confirm. Only
+  active keys have a Revoke button. From Swagger, take the `id` from the list above and call
   ```
   DELETE /api/courses/key?courseId=2&id=7
   ```

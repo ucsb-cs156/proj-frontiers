@@ -17,6 +17,7 @@ import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { dokkuAccountTranslationsFixtures } from "fixtures/dokkuAccountTranslationsFixtures";
 import { newAssignmentsFixtures } from "fixtures/newAssignmentsFixtures";
+import { apiKeysFixtures } from "fixtures/apiKeysFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -407,6 +408,60 @@ ExampleCourseWithDokkuTab.parameters = {
           `Would have made HTTP request: ${request.method} ${request.url}`,
         );
         return HttpResponse.json({}, { status: 200 });
+      }),
+    ],
+  },
+};
+
+export const ExampleCourseWithApiKeysTab = Template.bind({});
+ExampleCourseWithApiKeysTab.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseWithApiKeysTab.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/jobs/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/course/options", () => {
+        return HttpResponse.json(
+          {
+            ENABLE_CANVAS: false,
+            TRANSLATE_SECTIONS: false,
+            DOKKU_MANAGER: false,
+            ENABLE_API_KEYS: true,
+          },
+          { status: 200 },
+        );
+      }),
+      http.get("/api/courses/key", () => {
+        return HttpResponse.json(apiKeysFixtures.severalKeys, {
+          status: 200,
+        });
+      }),
+      http.post("/api/courses/key", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json(apiKeysFixtures.issuedKey, { status: 200 });
+      }),
+      http.delete("/api/courses/key", ({ request }) => {
+        window.alert(
+          `Would have made HTTP request: ${request.method} ${request.url}`,
+        );
+        return HttpResponse.json(
+          { message: "API key revoked" },
+          { status: 200 },
+        );
       }),
     ],
   },
