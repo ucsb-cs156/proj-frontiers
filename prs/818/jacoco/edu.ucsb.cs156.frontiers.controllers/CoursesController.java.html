@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CoursesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">CoursesController.java</span></div><h1>CoursesController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.ucsb.cs156.frontiers.config.AllowApiKeyAccess;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.enums.School;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.errors.InvalidInstallationTypeException;
+import edu.ucsb.cs156.frontiers.models.CourseWarning;
+import edu.ucsb.cs156.frontiers.models.CurrentUser;
+import edu.ucsb.cs156.frontiers.repositories.AdminRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.InstructorRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.repositories.UserRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
+import edu.ucsb.cs156.frontiers.services.OrganizationLinkerService;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+@Tag(name = &quot;Course&quot;)
+@RequestMapping(&quot;/api/courses&quot;)
+@RestController
+<span class="fc" id="L49">@Slf4j</span>
+<span class="fc" id="L50">public class CoursesController extends ApiController {</span>
+
+  @Autowired private CourseRepository courseRepository;
+
+  @Autowired private UserRepository userRepository;
+
+  @Autowired private RosterStudentRepository rosterStudentRepository;
+
+  @Autowired private CourseStaffRepository courseStaffRepository;
+
+  @Autowired private InstructorRepository instructorRepository;
+
+  @Autowired private AdminRepository adminRepository;
+
+  @Autowired private CanvasApiTokenSecurityService canvasApiTokenSecurityService;
+
+  @Autowired private OrganizationLinkerService linkerService;
+
+  @Autowired private JobsRepository jobsRepository;
+
+  /**
+   * This method creates a new Course.
+   *
+   * @param courseName the name of the course
+   * @param term the term of the course
+   * @param school the school of the course
+   * @param canvasApiToken the Canvas API token (optional)
+   * @param canvasCourseId the Canvas course ID (optional)
+   */
+  @Operation(summary = &quot;Create a new course&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @PostMapping(&quot;/post&quot;)
+  public InstructorCourseView postCourse(
+      @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
+      @Parameter(name = &quot;term&quot;) @RequestParam String term,
+      @Parameter(name = &quot;school&quot;) @RequestParam School school,
+      @Parameter(name = &quot;canvasApiToken&quot;) @RequestParam(required = false) String canvasApiToken,
+      @Parameter(name = &quot;canvasCourseId&quot;) @RequestParam(required = false) String canvasCourseId) {
+    // get current date right now and set status to pending
+<span class="fc" id="L89">    CurrentUser currentUser = getCurrentUser();</span>
+    Course course =
+<span class="fc" id="L91">        Course.builder()</span>
+<span class="fc" id="L92">            .courseName(courseName)</span>
+<span class="fc" id="L93">            .term(term)</span>
+<span class="fc" id="L94">            .school(school)</span>
+<span class="fc" id="L95">            .instructorEmail(currentUser.getUser().getEmail().strip())</span>
+<span class="fc" id="L96">            .canvasApiToken(canvasApiTokenSecurityService.encrypt(canvasApiToken))</span>
+<span class="fc" id="L97">            .canvasCourseId(canvasCourseId)</span>
+<span class="fc" id="L98">            .build();</span>
+<span class="fc" id="L99">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L101">    return new InstructorCourseView(savedCourse);</span>
+  }
+
+  /** Projection of Course entity with fields that are relevant for instructors and admins */
+<span class="fc" id="L105">  public static record InstructorCourseView(</span>
+      Long id,
+      String installationId,
+      String orgName,
+      String courseName,
+      String term,
+      School school,
+      String instructorEmail,
+      boolean hideBasePermissionWarning,
+      boolean hideFreePlanWarning,
+      int numStudents,
+      int numStaff) {
+
+    // Creates view from Course entity
+    public InstructorCourseView(Course c) {
+<span class="fc" id="L120">      this(</span>
+<span class="fc" id="L121">          c.getId(),</span>
+<span class="fc" id="L122">          c.getInstallationId(),</span>
+<span class="fc" id="L123">          c.getOrgName(),</span>
+<span class="fc" id="L124">          c.getCourseName(),</span>
+<span class="fc" id="L125">          c.getTerm(),</span>
+<span class="fc" id="L126">          c.getSchool(),</span>
+<span class="fc" id="L127">          c.getInstructorEmail(),</span>
+<span class="fc" id="L128">          c.getHideBasePermissionWarning(),</span>
+<span class="fc" id="L129">          c.getHideFreePlanWarning(),</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">          c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">          c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);</span>
+<span class="fc" id="L132">    }</span>
+  }
+
+  /**
+   * This method returns a list of courses.
+   *
+   * @return a list of all courses for an instructor.
+   */
+  @Operation(summary = &quot;List all courses for an instructor&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_INSTRUCTOR')&quot;)
+  @GetMapping(&quot;/allForInstructors&quot;)
+  public Iterable&lt;InstructorCourseView&gt; allForInstructors() {
+<span class="fc" id="L144">    CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L145">    String instructorEmail = currentUser.getUser().getEmail();</span>
+<span class="fc" id="L146">    List&lt;Course&gt; courses = courseRepository.findByInstructorEmail(instructorEmail);</span>
+
+<span class="fc" id="L148">    List&lt;InstructorCourseView&gt; courseViews =</span>
+<span class="fc" id="L149">        courses.stream().map(InstructorCourseView::new).collect(Collectors.toList());</span>
+<span class="fc" id="L150">    return courseViews;</span>
+  }
+
+  /**
+   * This method returns a list of courses.
+   *
+   * @return a list of all courses for an admin.
+   */
+  @Operation(summary = &quot;List all courses for an admin&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @GetMapping(&quot;/allForAdmins&quot;)
+  public Iterable&lt;InstructorCourseView&gt; allForAdmins() {
+<span class="fc" id="L162">    List&lt;Course&gt; courses = courseRepository.findAll();</span>
+
+<span class="fc" id="L164">    List&lt;InstructorCourseView&gt; courseViews =</span>
+<span class="fc" id="L165">        courses.stream().map(InstructorCourseView::new).collect(Collectors.toList());</span>
+<span class="fc" id="L166">    return courseViews;</span>
+  }
+
+  /**
+   * This method returns single course by its id
+   *
+   * @return a course
+   */
+  @Operation(summary = &quot;Get course by id&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #id)&quot;)
+  @GetMapping(&quot;/{id}&quot;)
+  public InstructorCourseView getCourseById(@Parameter(name = &quot;id&quot;) @PathVariable Long id) {
+<span class="fc" id="L178">    Course course =</span>
+        courseRepository
+<span class="fc" id="L180">            .findById(id)</span>
+<span class="fc" id="L181">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, id));</span>
+    // Convert to InstructorCourseView
+<span class="fc" id="L183">    InstructorCourseView courseView = new InstructorCourseView(course);</span>
+<span class="fc" id="L184">    return courseView;</span>
+  }
+
+  /**
+   * This method returns the Canvas course ID and partially obscured Canvas token for a course by
+   * its id. If the token is less than or equal to 3 characters long, it is returned in full.
+   * Otherwise, all but the last three characters are replaced with asterisks. This is okay because
+   * such short tokens are not generated by Canvas.
+   *
+   * @param courseId the id of the course
+   * @return a map with courseId, canvasCourseId, and obscured canvasApiToken
+   */
+  @Operation(summary = &quot;Get course Canvas course ID and Canvas token (partially obscured)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;getCanvasInfo&quot;)
+  public Map&lt;String, String&gt; getCourseCanvasInfo(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L201">    Course course =</span>
+        courseRepository
+<span class="fc" id="L203">            .findById(courseId)</span>
+<span class="fc" id="L204">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L206">    String obscuredToken = null;</span>
+
+<span class="fc bfc" id="L208" title="All 2 branches covered.">    if (course.getCanvasApiToken() != null) {</span>
+<span class="fc" id="L209">      String token = canvasApiTokenSecurityService.decrypt(course.getCanvasApiToken());</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">      if (token.length() &lt; 4) {</span>
+<span class="fc" id="L211">        obscuredToken = token;</span>
+      } else {
+<span class="fc" id="L213">        String lastThree = token.substring(token.length() - 3);</span>
+<span class="fc" id="L214">        obscuredToken = &quot;*&quot;.repeat(token.length() - 3) + lastThree;</span>
+      }
+    }
+<span class="fc" id="L217">    return Map.of(</span>
+<span class="fc" id="L218">        &quot;courseId&quot;, course.getId().toString(),</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        &quot;canvasCourseId&quot;, course.getCanvasCourseId() != null ? course.getCanvasCourseId() : &quot;&quot;,</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        &quot;canvasApiToken&quot;, obscuredToken != null ? obscuredToken : &quot;&quot;);</span>
+  }
+
+  /**
+   * This is the outgoing method, redirecting from Frontiers to GitHub to allow a Course to be
+   * linked to a GitHub Organization. It redirects from Frontiers to the GitHub app installation
+   * process, and will return with the {@link #addInstallation(Optional, String, String, Long)
+   * addInstallation()} endpoint
+   *
+   * @param courseId id of the course to be linked to
+   * @return dynamically loaded url to install Frontiers to a Github Organization, with the courseId
+   *     marked as the state parameter, which GitHub will return.
+   */
+  @Operation(summary = &quot;Authorize Frontiers to a Github Course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/redirect&quot;)
+  public ResponseEntity&lt;Void&gt; linkCourse(@Parameter Long courseId)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L238">    String newUrl = linkerService.getRedirectUrl();</span>
+<span class="fc" id="L239">    newUrl += &quot;/installations/new?state=&quot; + courseId;</span>
+    // found this convenient solution here:
+    // https://stackoverflow.com/questions/29085295/spring-mvc-restcontroller-and-redirect
+<span class="fc" id="L242">    return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L243">        .header(HttpHeaders.LOCATION, newUrl)</span>
+<span class="fc" id="L244">        .build();</span>
+  }
+
+  /**
+   * @param installation_id id of the incoming GitHub Organization installation
+   * @param setup_action whether the permissions are installed or updated. Required RequestParam but
+   *     not used by the method.
+   * @param code token to be exchanged with GitHub to ensure the request is legitimate and not
+   *     spoofed.
+   * @param state id of the Course to be linked with the GitHub installation.
+   * @return ResponseEntity, returning /success if the course was successfully linked or /noperms if
+   *     the user does not have the permission to install the application on GitHub. Alternately
+   *     returns 403 Forbidden if the user is not the creator.
+   */
+  @Operation(summary = &quot;Link a Course to a Github Organization by installing Github App&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @GetMapping(&quot;link&quot;)
+  public ResponseEntity&lt;Void&gt; addInstallation(
+      @Parameter(name = &quot;installationId&quot;) @RequestParam Optional&lt;String&gt; installation_id,
+      @Parameter(name = &quot;setupAction&quot;) @RequestParam String setup_action,
+      @Parameter(name = &quot;code&quot;) @RequestParam String code,
+      @Parameter(name = &quot;state&quot;) @RequestParam Long state)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+<span class="fc bfc" id="L267" title="All 2 branches covered.">    if (installation_id.isEmpty()) {</span>
+<span class="fc" id="L268">      return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L269">          .header(HttpHeaders.LOCATION, &quot;/courses/nopermissions&quot;)</span>
+<span class="fc" id="L270">          .build();</span>
+    } else {
+<span class="fc" id="L272">      Course course =</span>
+          courseRepository
+<span class="fc" id="L274">              .findById(state)</span>
+<span class="fc" id="L275">              .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, state));</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">      if (!isCurrentUserAdmin()</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">          &amp;&amp; !course.getInstructorEmail().equals(getCurrentUser().getUser().getEmail())) {</span>
+<span class="fc" id="L278">        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
+      } else {
+<span class="fc" id="L280">        String orgName = linkerService.getOrgName(installation_id.get());</span>
+<span class="fc" id="L281">        course.setInstallationId(installation_id.get());</span>
+<span class="fc" id="L282">        course.setOrgName(orgName);</span>
+<span class="fc" id="L283">        course</span>
+<span class="fc" id="L284">            .getRosterStudents()</span>
+<span class="fc" id="L285">            .forEach(</span>
+                rs -&gt; {
+<span class="fc" id="L287">                  rs.setOrgStatus(OrgStatus.JOINCOURSE);</span>
+<span class="fc" id="L288">                });</span>
+<span class="fc" id="L289">        course</span>
+<span class="fc" id="L290">            .getCourseStaff()</span>
+<span class="fc" id="L291">            .forEach(</span>
+                cs -&gt; {
+<span class="fc" id="L293">                  cs.setOrgStatus(OrgStatus.JOINCOURSE);</span>
+<span class="fc" id="L294">                });</span>
+<span class="fc" id="L295">        courseRepository.save(course);</span>
+<span class="fc" id="L296">        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)</span>
+<span class="fc" id="L297">            .header(HttpHeaders.LOCATION, &quot;/login/success&quot;)</span>
+<span class="fc" id="L298">            .build();</span>
+      }
+    }
+  }
+
+  /**
+   * This method handles the InvalidInstallationTypeException.
+   *
+   * @param e the exception
+   * @return a map with the type and message of the exception
+   */
+  @ExceptionHandler({InvalidInstallationTypeException.class})
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Object handleInvalidInstallationType(Throwable e) {
+<span class="fc" id="L312">    return Map.of(</span>
+<span class="fc" id="L313">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L314">        &quot;message&quot;, e.getMessage());</span>
+  }
+
+<span class="fc" id="L317">  public record RosterStudentCoursesDTO(</span>
+      Long id,
+      String installationId,
+      String orgName,
+      String courseName,
+      String term,
+      String school,
+      OrgStatus studentStatus,
+      Long rosterStudentId) {}
+
+  /**
+   * This method returns a list of courses that the current user is enrolled.
+   *
+   * @return a list of courses in the DTO form along with the student status in the organization.
+   */
+  @Operation(summary = &quot;List all courses for the current student, including their org status&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;/list&quot;)
+  public List&lt;RosterStudentCoursesDTO&gt; listCoursesForCurrentUser() {
+<span class="fc" id="L336">    String email = getCurrentUser().getUser().getEmail();</span>
+<span class="fc" id="L337">    Iterable&lt;RosterStudent&gt; rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);</span>
+<span class="fc" id="L338">    List&lt;RosterStudent&gt; rosterStudents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L339">    rosterStudentsIterable.forEach(rosterStudents::add);</span>
+<span class="fc" id="L340">    return rosterStudents.stream()</span>
+<span class="fc" id="L341">        .map(</span>
+            rs -&gt; {
+<span class="fc" id="L343">              Course course = rs.getCourse();</span>
+<span class="fc" id="L344">              RosterStudentCoursesDTO rsDto =</span>
+                  new RosterStudentCoursesDTO(
+<span class="fc" id="L346">                      course.getId(),</span>
+<span class="fc" id="L347">                      course.getInstallationId(),</span>
+<span class="fc" id="L348">                      course.getOrgName(),</span>
+<span class="fc" id="L349">                      course.getCourseName(),</span>
+<span class="fc" id="L350">                      course.getTerm(),</span>
+<span class="fc" id="L351">                      course.getSchool().getDisplayName(),</span>
+<span class="fc" id="L352">                      rs.getOrgStatus(),</span>
+<span class="fc" id="L353">                      rs.getId());</span>
+<span class="fc" id="L354">              return rsDto;</span>
+            })
+<span class="fc" id="L356">        .collect(Collectors.toList());</span>
+  }
+
+<span class="fc" id="L359">  public record StaffCoursesDTO(</span>
+      Long id,
+      String installationId,
+      String orgName,
+      String courseName,
+      String term,
+      School school,
+      OrgStatus studentStatus,
+      Long staffId) {}
+
+<span class="fc" id="L369">  public enum EmailTypes {</span>
+<span class="fc" id="L370">    STUDENTS,</span>
+<span class="fc" id="L371">    STAFF,</span>
+<span class="fc" id="L372">    ALL</span>
+  }
+
+<span class="fc" id="L375">  public enum EmailFormats {</span>
+<span class="fc" id="L376">    COMMA_SEPARATED,</span>
+<span class="fc" id="L377">    ONE_PER_LINE</span>
+  }
+
+  /**
+   * student see what courses they appear as staff in
+   *
+   * @param studentId the id of the student making request
+   * @return a list of all courses student is staff in
+   */
+  @Operation(summary = &quot;Student see what courses they appear as staff in&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;/staffCourses&quot;)
+  public List&lt;StaffCoursesDTO&gt; staffCourses() {
+<span class="fc" id="L390">    CurrentUser currentUser = getCurrentUser();</span>
+<span class="fc" id="L391">    User user = currentUser.getUser();</span>
+
+<span class="fc" id="L393">    String email = user.getEmail();</span>
+
+<span class="fc" id="L395">    List&lt;CourseStaff&gt; staffMembers = courseStaffRepository.findAllByEmail(email);</span>
+<span class="fc" id="L396">    return staffMembers.stream()</span>
+<span class="fc" id="L397">        .map(</span>
+            s -&gt; {
+<span class="fc" id="L399">              Course course = s.getCourse();</span>
+<span class="fc" id="L400">              StaffCoursesDTO sDto =</span>
+                  new StaffCoursesDTO(
+<span class="fc" id="L402">                      course.getId(),</span>
+<span class="fc" id="L403">                      course.getInstallationId(),</span>
+<span class="fc" id="L404">                      course.getOrgName(),</span>
+<span class="fc" id="L405">                      course.getCourseName(),</span>
+<span class="fc" id="L406">                      course.getTerm(),</span>
+<span class="fc" id="L407">                      course.getSchool(),</span>
+<span class="fc" id="L408">                      s.getOrgStatus(),</span>
+<span class="fc" id="L409">                      s.getId());</span>
+<span class="fc" id="L410">              return sDto;</span>
+            })
+<span class="fc" id="L412">        .collect(Collectors.toList());</span>
+  }
+
+  @Operation(summary = &quot;Update instructor email for a course (admin only)&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PutMapping(&quot;/updateInstructor&quot;)
+  public InstructorCourseView updateInstructorEmail(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;instructorEmail&quot;) @RequestParam String instructorEmail) {
+
+<span class="fc" id="L422">    instructorEmail = instructorEmail.strip();</span>
+
+<span class="fc" id="L424">    Course course =</span>
+        courseRepository
+<span class="fc" id="L426">            .findById(courseId)</span>
+<span class="fc" id="L427">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+    // Validate that the email exists in either instructor or admin table
+<span class="fc" id="L430">    boolean isInstructor = instructorRepository.existsByEmail(instructorEmail);</span>
+<span class="fc" id="L431">    boolean isAdmin = adminRepository.existsByEmail(instructorEmail);</span>
+
+<span class="fc bfc" id="L433" title="All 4 branches covered.">    if (!isInstructor &amp;&amp; !isAdmin) {</span>
+<span class="fc" id="L434">      throw new IllegalArgumentException(&quot;Email must belong to either an instructor or admin&quot;);</span>
+    }
+
+<span class="fc" id="L437">    course.setInstructorEmail(instructorEmail);</span>
+<span class="fc" id="L438">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L440">    return new InstructorCourseView(savedCourse);</span>
+  }
+
+  @Operation(summary = &quot;Get course emails&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/emails&quot;)
+  @AllowApiKeyAccess
+  public String getCourseEmails(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;type&quot;) @RequestParam(defaultValue = &quot;STUDENTS&quot;) EmailTypes type,
+      @Parameter(name = &quot;team&quot;) @RequestParam(required = false) String team,
+      @Parameter(name = &quot;format&quot;) @RequestParam(defaultValue = &quot;ONE_PER_LINE&quot;)
+          EmailFormats format) {
+
+<span class="fc" id="L454">    List&lt;String&gt; staffEmails =</span>
+<span class="fc" id="L455">        StreamSupport.stream(courseStaffRepository.findByCourseId(courseId).spliterator(), false)</span>
+<span class="fc" id="L456">            .map(CourseStaff::getEmail)</span>
+<span class="fc" id="L457">            .filter(Objects::nonNull)</span>
+<span class="fc" id="L458">            .sorted()</span>
+<span class="fc" id="L459">            .collect(Collectors.toList());</span>
+
+    // Dropped students are not part of the current roster, so they are never included
+<span class="fc" id="L462">    List&lt;String&gt; studentEmails =</span>
+<span class="fc" id="L463">        StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)</span>
+<span class="fc bfc" id="L464" title="All 2 branches covered.">            .filter(student -&gt; student.getRosterStatus() != RosterStatus.DROPPED)</span>
+<span class="fc bfc" id="L465" title="All 6 branches covered.">            .filter(student -&gt; team == null || team.isBlank() || student.getTeams().contains(team))</span>
+<span class="fc" id="L466">            .map(RosterStudent::getEmail)</span>
+<span class="fc" id="L467">            .filter(Objects::nonNull)</span>
+<span class="fc" id="L468">            .sorted()</span>
+<span class="fc" id="L469">            .collect(Collectors.toList());</span>
+
+<span class="fc" id="L471">    List&lt;String&gt; emails = studentEmails;</span>
+<span class="fc bfc" id="L472" title="All 2 branches covered.">    if (type == EmailTypes.STAFF) {</span>
+<span class="fc" id="L473">      emails = staffEmails;</span>
+<span class="fc bfc" id="L474" title="All 2 branches covered.">    } else if (type == EmailTypes.ALL) {</span>
+<span class="fc" id="L475">      emails = new ArrayList&lt;&gt;(staffEmails);</span>
+<span class="fc" id="L476">      emails.addAll(studentEmails);</span>
+    }
+
+<span class="fc bfc" id="L479" title="All 2 branches covered.">    String separator = format == EmailFormats.COMMA_SEPARATED ? &quot;,&quot; : &quot;\r\n&quot;;</span>
+<span class="fc" id="L480">    return String.join(separator, emails);</span>
+  }
+
+  @Operation(summary = &quot;Delete a course&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @DeleteMapping(&quot;&quot;)
+  @Transactional
+  public Object deleteCourse(@RequestParam Long courseId)
+      throws NoSuchAlgorithmException, InvalidKeySpecException {
+<span class="fc" id="L489">    Course course =</span>
+        courseRepository
+<span class="fc" id="L491">            .findById(courseId)</span>
+<span class="fc" id="L492">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+    // Check if course has roster students or staff
+<span class="fc bfc" id="L495" title="All 4 branches covered.">    if (!course.getRosterStudents().isEmpty() || !course.getCourseStaff().isEmpty()) {</span>
+<span class="fc" id="L496">      throw new IllegalArgumentException(&quot;Cannot delete course with students or staff&quot;);</span>
+    }
+
+<span class="fc" id="L499">    linkerService.unenrollOrganization(course);</span>
+<span class="fc" id="L500">    jobsRepository.deleteByScopeTypeAndScopeId(&quot;course&quot;, courseId);</span>
+<span class="fc" id="L501">    courseRepository.delete(course);</span>
+<span class="fc" id="L502">    return genericMessage(&quot;Course with id %s deleted&quot;.formatted(course.getId()));</span>
+  }
+
+  /**
+   * This method updates an existing course.
+   *
+   * @param courseId the id of the course to update
+   * @param courseName the new name of the course
+   * @param term the new term of the course
+   * @param school the new school of the course
+   * @return the updated course
+   */
+  @Operation(summary = &quot;Update an existing course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PutMapping(&quot;&quot;)
+  public InstructorCourseView updateCourse(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;courseName&quot;) @RequestParam String courseName,
+      @Parameter(name = &quot;term&quot;) @RequestParam String term,
+      @Parameter(name = &quot;school&quot;) @RequestParam School school) {
+<span class="fc" id="L522">    Course course =</span>
+        courseRepository
+<span class="fc" id="L524">            .findById(courseId)</span>
+<span class="fc" id="L525">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L527">    course.setCourseName(courseName);</span>
+<span class="fc" id="L528">    course.setTerm(term);</span>
+<span class="fc" id="L529">    course.setSchool(school);</span>
+
+<span class="fc" id="L531">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L533">    return new InstructorCourseView(savedCourse);</span>
+  }
+
+  /**
+   * This method updates an existing course.
+   *
+   * @param courseId the id of the course to update
+   * @param courseName the new name of the course
+   * @param term the new term of the course
+   * @param school the new school of the course
+   * @param canvasApiToken the new Canvas API token for the course
+   * @param canvasCourseId the new Canvas course ID
+   * @return the updated course
+   */
+  @Operation(summary = &quot;Update an existing course with Canvas token and course ID&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PutMapping(&quot;/updateCourseCanvasToken&quot;)
+  public InstructorCourseView updateCourseWithCanvasToken(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;canvasApiToken&quot;) @RequestParam(required = false) String canvasApiToken,
+      @Parameter(name = &quot;canvasCourseId&quot;) @RequestParam(required = false) String canvasCourseId) {
+<span class="fc" id="L554">    Course course =</span>
+        courseRepository
+<span class="fc" id="L556">            .findById(courseId)</span>
+<span class="fc" id="L557">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L559">    String existingCanvasToken = canvasApiTokenSecurityService.decrypt(course.getCanvasApiToken());</span>
+<span class="fc bfc" id="L560" title="All 2 branches covered.">    if (canvasApiToken != null</span>
+<span class="fc bfc" id="L561" title="All 2 branches covered.">        &amp;&amp; !canvasApiToken.isEmpty()</span>
+<span class="fc bfc" id="L562" title="All 2 branches covered.">        &amp;&amp; !canvasApiToken.equals(existingCanvasToken)) {</span>
+<span class="fc" id="L563">      course.setCanvasApiToken(canvasApiTokenSecurityService.encrypt(canvasApiToken));</span>
+    }
+
+<span class="fc bfc" id="L566" title="All 2 branches covered.">    if (canvasCourseId != null</span>
+<span class="fc bfc" id="L567" title="All 2 branches covered.">        &amp;&amp; !canvasCourseId.isEmpty()</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">        &amp;&amp; !canvasCourseId.equals(course.getCanvasCourseId())) {</span>
+<span class="fc" id="L569">      course.setCanvasCourseId(canvasCourseId);</span>
+    }
+
+<span class="fc" id="L572">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L574">    return new InstructorCourseView(savedCourse);</span>
+  }
+
+  @Operation(summary = &quot;Get course warnings&quot;)
+  @GetMapping(&quot;/warnings/{courseId}&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  public CourseWarning warnings(@PathVariable @Parameter Long courseId) throws Exception {
+<span class="fc" id="L581">    Course course =</span>
+        courseRepository
+<span class="fc" id="L583">            .findById(courseId)</span>
+<span class="fc" id="L584">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L585">    return linkerService.checkCourseWarnings(course);</span>
+  }
+
+  @Operation(summary = &quot;Hide base permission warning for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/warnings/hideBasePermissionWarning/{courseId}&quot;)
+  public Object hideBasePermissionWarning(@PathVariable @Parameter Long courseId) {
+<span class="fc" id="L592">    Course course =</span>
+        courseRepository
+<span class="fc" id="L594">            .findById(courseId)</span>
+<span class="fc" id="L595">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L597">    course.setHideBasePermissionWarning(true);</span>
+<span class="fc" id="L598">    courseRepository.save(course);</span>
+
+<span class="fc" id="L600">    return genericMessage(</span>
+<span class="fc" id="L601">        &quot;hideBasePermissionWarning set to true for course with id %s&quot;.formatted(courseId));</span>
+  }
+
+  @Operation(summary = &quot;Hide free plan warning for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/warnings/hideFreePlanWarning/{courseId}&quot;)
+  public Object hideFreePlanWarning(@PathVariable @Parameter Long courseId) {
+<span class="fc" id="L608">    Course course =</span>
+        courseRepository
+<span class="fc" id="L610">            .findById(courseId)</span>
+<span class="fc" id="L611">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L613">    course.setHideFreePlanWarning(true);</span>
+<span class="fc" id="L614">    courseRepository.save(course);</span>
+
+<span class="fc" id="L616">    return genericMessage(</span>
+<span class="fc" id="L617">        &quot;hideFreePlanWarning set to true for course with id %s&quot;.formatted(courseId));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

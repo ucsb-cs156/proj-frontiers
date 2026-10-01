@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PushTeamsToCanvasJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">PushTeamsToCanvasJob.java</span></div><h1>PushTeamsToCanvasJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.entities.TeamMember;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupDetail;
+import edu.ucsb.cs156.frontiers.models.CanvasGroupSetDetail;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Updates the groups in a Canvas group set to match the teams in Frontiers: creates a Canvas group
+ * for each team that has none, adds and removes group members so that each group's membership
+ * matches the team's, and deletes Canvas groups that do not correspond to any team. A team is
+ * matched to a group by the team's stored Canvas id first, then by name.
+ *
+ * &lt;p&gt;Problems with a single team, group or student (a student who is not enrolled in the Canvas
+ * course, a Canvas API call that fails) are logged as warnings and the job proceeds; only a failure
+ * to read the group set or the Canvas roster fails the job.
+ */
+@Builder
+@Getter
+<span class="fc" id="L40">@Slf4j</span>
+public class PushTeamsToCanvasJob implements JobContextConsumer {
+
+  Course course;
+  String groupSetId;
+  CanvasService canvasService;
+  CourseRepository courseRepository;
+  TeamRepository teamRepository;
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L51">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L56">    return course.getId();</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L61">    course = courseRepository.findById(course.getId()).get();</span>
+<span class="fc" id="L62">    CanvasGroupSetDetail groupSet = canvasService.getCanvasGroupSetDetail(course, groupSetId);</span>
+<span class="fc" id="L63">    Map&lt;String, Integer&gt; canvasUserIds = canvasService.getCanvasUserIdsByEmail(course);</span>
+<span class="fc" id="L64">    ctx.log(</span>
+<span class="fc" id="L65">        String.format(</span>
+            &quot;Pushing %d teams to Canvas group set %s (id %d), which has %d groups&quot;,
+<span class="fc" id="L67">            course.getTeams().size(),</span>
+<span class="fc" id="L68">            groupSet.getName(),</span>
+<span class="fc" id="L69">            groupSet.getId(),</span>
+<span class="fc" id="L70">            groupSet.getGroups().size()));</span>
+
+<span class="fc" id="L72">    Map&lt;Integer, CanvasGroupDetail&gt; groupsByCanvasId = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L73">    Map&lt;String, CanvasGroupDetail&gt; groupsByName = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">    for (CanvasGroupDetail group : groupSet.getGroups()) {</span>
+<span class="fc" id="L75">      groupsByCanvasId.put(group.getId(), group);</span>
+<span class="fc" id="L76">      groupsByName.put(group.getName().trim(), group);</span>
+<span class="fc" id="L77">    }</span>
+
+<span class="fc" id="L79">    List&lt;Team&gt; teams = new ArrayList&lt;&gt;(course.getTeams());</span>
+<span class="fc" id="L80">    teams.sort(Comparator.comparing(Team::getName));</span>
+<span class="fc" id="L81">    Set&lt;Integer&gt; matchedGroupIds = new HashSet&lt;&gt;();</span>
+
+<span class="fc bfc" id="L83" title="All 2 branches covered.">    for (Team team : teams) {</span>
+<span class="fc" id="L84">      CanvasGroupDetail group = groupsByCanvasId.get(team.getCanvasId());</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">      if (group == null) {</span>
+<span class="fc" id="L86">        group = groupsByName.get(team.getName().trim());</span>
+      }
+<span class="fc bfc" id="L88" title="All 2 branches covered.">      if (group != null) {</span>
+<span class="fc" id="L89">        ctx.log(</span>
+<span class="fc" id="L90">            String.format(</span>
+                &quot;Team %s matches Canvas group %s (id %d)&quot;,
+<span class="fc" id="L92">                team.getName(), group.getName(), group.getId()));</span>
+      } else {
+        try {
+<span class="fc" id="L95">          Integer newId = canvasService.createCanvasGroup(course, groupSet.getId(), team.getName());</span>
+          group =
+<span class="fc" id="L97">              CanvasGroupDetail.builder()</span>
+<span class="fc" id="L98">                  .id(newId)</span>
+<span class="fc" id="L99">                  .name(team.getName())</span>
+<span class="fc" id="L100">                  .memberUserIdsByEmail(new LinkedHashMap&lt;&gt;())</span>
+<span class="fc" id="L101">                  .build();</span>
+<span class="fc" id="L102">          ctx.log(String.format(&quot;Created Canvas group %s (id %d)&quot;, team.getName(), newId));</span>
+<span class="fc" id="L103">        } catch (Exception e) {</span>
+<span class="fc" id="L104">          warn(ctx, &quot;Could not create Canvas group &quot; + team.getName() + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L105">          continue;</span>
+<span class="fc" id="L106">        }</span>
+      }
+<span class="fc" id="L108">      matchedGroupIds.add(group.getId());</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">      if (!Objects.equals(team.getCanvasId(), group.getId())) {</span>
+<span class="fc" id="L110">        team.setCanvasId(group.getId());</span>
+<span class="fc" id="L111">        teamRepository.save(team);</span>
+      }
+<span class="fc" id="L113">      syncMembers(ctx, team, group, canvasUserIds);</span>
+<span class="fc" id="L114">    }</span>
+
+<span class="fc bfc" id="L116" title="All 2 branches covered.">    for (CanvasGroupDetail group : groupSet.getGroups()) {</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">      if (!matchedGroupIds.contains(group.getId())) {</span>
+        try {
+<span class="fc" id="L119">          canvasService.deleteCanvasGroup(course, group.getId());</span>
+<span class="fc" id="L120">          ctx.log(</span>
+<span class="fc" id="L121">              String.format(</span>
+                  &quot;Deleted Canvas group %s (id %d), which has no team in Frontiers&quot;,
+<span class="fc" id="L123">                  group.getName(), group.getId()));</span>
+<span class="fc" id="L124">        } catch (Exception e) {</span>
+<span class="fc" id="L125">          warn(</span>
+              ctx,
+<span class="fc" id="L127">              String.format(</span>
+                  &quot;Could not delete Canvas group %s (id %d): %s&quot;,
+<span class="fc" id="L129">                  group.getName(), group.getId(), e.getMessage()));</span>
+<span class="fc" id="L130">        }</span>
+      }
+<span class="fc" id="L132">    }</span>
+<span class="fc" id="L133">    ctx.log(&quot;Done pushing teams to Canvas&quot;);</span>
+<span class="fc" id="L134">  }</span>
+
+  private void syncMembers(
+      JobContext ctx, Team team, CanvasGroupDetail group, Map&lt;String, Integer&gt; canvasUserIds) {
+<span class="fc" id="L138">    Map&lt;String, Integer&gt; wanted = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">    for (TeamMember member : team.getTeamMembers()) {</span>
+<span class="fc" id="L140">      RosterStudent student = member.getRosterStudent();</span>
+<span class="fc" id="L141">      String email = CanonicalFormConverter.convertToValidEmail(student.getEmail());</span>
+<span class="fc" id="L142">      Integer userId = canvasUserIds.get(email);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">      if (userId == null) {</span>
+<span class="fc" id="L144">        warn(</span>
+            ctx,
+<span class="fc" id="L146">            String.format(</span>
+                &quot;Student %s on team %s is not enrolled in the Canvas course; skipping&quot;,
+<span class="fc" id="L148">                email, team.getName()));</span>
+      } else {
+<span class="fc" id="L150">        wanted.put(email, userId);</span>
+      }
+<span class="fc" id="L152">    }</span>
+
+<span class="fc" id="L154">    Map&lt;String, Integer&gt; current = group.getMemberUserIdsByEmail();</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">    for (Map.Entry&lt;String, Integer&gt; entry : wanted.entrySet()) {</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">      if (!current.containsKey(entry.getKey())) {</span>
+        try {
+<span class="fc" id="L158">          canvasService.addCanvasGroupMember(course, group.getId(), entry.getValue());</span>
+<span class="fc" id="L159">          ctx.log(String.format(&quot;Added %s to Canvas group %s&quot;, entry.getKey(), group.getName()));</span>
+<span class="fc" id="L160">        } catch (Exception e) {</span>
+<span class="fc" id="L161">          warn(</span>
+              ctx,
+<span class="fc" id="L163">              String.format(</span>
+                  &quot;Could not add %s to Canvas group %s: %s&quot;,
+<span class="fc" id="L165">                  entry.getKey(), group.getName(), e.getMessage()));</span>
+<span class="fc" id="L166">        }</span>
+      }
+<span class="fc" id="L168">    }</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">    for (Map.Entry&lt;String, Integer&gt; entry : current.entrySet()) {</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">      if (!wanted.containsKey(entry.getKey())) {</span>
+        try {
+<span class="fc" id="L172">          canvasService.removeCanvasGroupMember(course, group.getId(), entry.getValue());</span>
+<span class="fc" id="L173">          ctx.log(</span>
+<span class="fc" id="L174">              String.format(&quot;Removed %s from Canvas group %s&quot;, entry.getKey(), group.getName()));</span>
+<span class="fc" id="L175">        } catch (Exception e) {</span>
+<span class="fc" id="L176">          warn(</span>
+              ctx,
+<span class="fc" id="L178">              String.format(</span>
+                  &quot;Could not remove %s from Canvas group %s: %s&quot;,
+<span class="fc" id="L180">                  entry.getKey(), group.getName(), e.getMessage()));</span>
+<span class="fc" id="L181">        }</span>
+      }
+<span class="fc" id="L183">    }</span>
+<span class="fc" id="L184">  }</span>
+
+  private static void warn(JobContext ctx, String message) {
+<span class="fc" id="L187">    log.warn(message);</span>
+<span class="fc" id="L188">    ctx.log(&quot;WARNING: &quot; + message);</span>
+<span class="fc" id="L189">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
