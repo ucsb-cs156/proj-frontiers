@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlackUser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.models</a> &gt; <span class="el_source">SlackUser.java</span></div><h1>SlackUser.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.models;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * A member of a Slack workspace, as returned by the Slack &lt;code&gt;users.list&lt;/code&gt; method.
+ *
+ * @see &lt;a href=&quot;https://docs.slack.dev/reference/objects/user-object&quot;&gt;User object&lt;/a&gt;
+ */
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SlackUser {
+
+  /** Slack's built in Slackbot user is not flagged as a bot, but is not a person either. */
+  public static final String SLACKBOT_ID = &quot;USLACKBOT&quot;;
+
+  private String id;
+  private String name;
+
+  /** True if the account has been deactivated. */
+  private boolean deleted;
+
+  @JsonProperty(&quot;real_name&quot;)
+  private String realName;
+
+  @JsonProperty(&quot;is_bot&quot;)
+  private boolean bot;
+
+  /** True if the user has been invited to the workspace, but has not yet signed in. */
+  @JsonProperty(&quot;is_invited_user&quot;)
+  private boolean invitedUser;
+
+  private Profile profile;
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @Builder
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class Profile {
+    /** Only present when the token has the &lt;code&gt;users:read.email&lt;/code&gt; scope. */
+    private String email;
+
+    @JsonProperty(&quot;display_name&quot;)
+    private String displayName;
+  }
+
+  /**
+   * @return the user's email, or null if Slack did not provide one
+   */
+  public String email() {
+<span class="fc bfc" id="L60" title="All 2 branches covered.">    return profile == null ? null : profile.getEmail();</span>
+  }
+
+  /**
+   * @return the user's display name, or null if Slack did not provide one
+   */
+  public String displayName() {
+<span class="fc bfc" id="L67" title="All 2 branches covered.">    return profile == null ? null : profile.getDisplayName();</span>
+  }
+
+  /**
+   * @return true if this is a person (not a bot, and not Slackbot)
+   */
+  public boolean isPerson() {
+<span class="fc bfc" id="L74" title="All 4 branches covered.">    return !bot &amp;&amp; !SLACKBOT_ID.equals(id);</span>
+  }
+
+  /**
+   * @return true if this is a person with an account that is neither deactivated nor still waiting
+   *     for an invitation to be accepted
+   */
+  public boolean isActivePerson() {
+<span class="fc bfc" id="L82" title="All 6 branches covered.">    return isPerson() &amp;&amp; !deleted &amp;&amp; !invitedUser;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
