@@ -93,8 +93,9 @@ public class StudentInfoControllerTests extends ControllerTestCase {
     RosterStudent lauren =
         student(
             "ldelplaya@ucsb.edu", "LAUREN", "DELPLAYA", "ldelplaya", RosterStatus.ROSTER, "f26-04");
+    // Chris Lee's email sorts before Chris Gaucho's, but the last name must win.
     RosterStudent chrisLee =
-        student("clee@ucsb.edu", "CHRIS", "LEE", "clee", RosterStatus.MANUAL, "f26-04");
+        student("achris@ucsb.edu", "CHRIS", "LEE", "clee", RosterStatus.MANUAL, "f26-04");
     RosterStudent chrisGaucho =
         student(
             "cgaucho@ucsb.edu", "CHRIS EDWARD", "GAUCHO", "cgaucho", RosterStatus.ROSTER, "f26-04");
@@ -121,7 +122,7 @@ public class StudentInfoControllerTests extends ControllerTestCase {
             List.of("f26-04"),
             List.of(
                 new StudentInfo.Member("cgaucho@ucsb.edu", "Chris G", "CHRIS EDWARD", "cgaucho"),
-                new StudentInfo.Member("clee@ucsb.edu", "Chris L", "CHRIS", "clee"),
+                new StudentInfo.Member("achris@ucsb.edu", "Chris L", "CHRIS", "clee"),
                 new StudentInfo.Member("ldelplaya@ucsb.edu", "Lauren", "LAUREN", "ldelplaya"),
                 new StudentInfo.Member("sam1@ucsb.edu", "Sam Smith*", "SAM", "sam1"),
                 new StudentInfo.Member("sam2@ucsb.edu", "Sam Smith*", "SAM", "sam2")));
@@ -178,24 +179,26 @@ public class StudentInfoControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void roster_rows_without_email_are_skipped_and_missing_github_login_is_null()
       throws Exception {
-    RosterStudent noEmail = student(null, "NO", "EMAIL", "noemail", RosterStatus.ROSTER, "f26-04");
+    // Same first and last name, so that the sort falls through to the (null) email.
+    RosterStudent noEmail =
+        student(null, "TARGET", "PERSON", "noemail", RosterStatus.ROSTER, "f26-04");
     RosterStudent target =
         student("target@ucsb.edu", "TARGET", "PERSON", null, RosterStatus.ROSTER, "f26-04");
 
-    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(noEmail, target));
+    when(rosterStudentRepository.findByCourseId(eq(1L))).thenReturn(List.of(target, noEmail));
 
     StudentInfo expected =
         new StudentInfo(
             "target@ucsb.edu",
-            "Target",
+            "Target Person*",
             "TARGET",
             "PERSON",
             null,
             "f26-04",
             List.of("f26-04"),
             List.of(
-                new StudentInfo.Member(null, "No", "NO", "noemail"),
-                new StudentInfo.Member("target@ucsb.edu", "Target", "TARGET", null)));
+                new StudentInfo.Member(null, "Target Person*", "TARGET", "noemail"),
+                new StudentInfo.Member("target@ucsb.edu", "Target Person*", "TARGET", null)));
 
     assertEquals(mapper.writeValueAsString(expected), getStudentInfo("target@ucsb.edu"));
   }
