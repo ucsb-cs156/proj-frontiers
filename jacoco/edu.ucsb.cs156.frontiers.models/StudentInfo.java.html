@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.models</a> &gt; <span class="el_source">StudentInfo.java</span></div><h1>StudentInfo.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.models;
+
+import java.util.List;
+
+/**
+ * What an autograder needs to know about one roster student: how to recognise them on GitHub, which
+ * team they are on, and who else is on that team. This is the response of &lt;code&gt;
+ * GET /api/courses/studentInfo&lt;/code&gt;.
+ *
+ * &lt;p&gt;The &lt;code&gt;firstName&lt;/code&gt; fields hold the shortest name that still identifies the student
+ * among all the (non-dropped) students of the course, as computed by {@link
+ * edu.ucsb.cs156.frontiers.services.TeamCsvService#nameAndTeams}: e.g. &quot;Chris&quot; if there is only one
+ * Chris, &quot;Chris L&quot; if there are several. That is the name a teammate is likely to use for them. The
+ * &lt;code&gt;legalFirstName&lt;/code&gt; fields hold the roster's first name field as is.
+ *
+ * @param email the student's email as stored on the roster
+ * @param firstName the shortest unique name for the student
+ * @param legalFirstName the roster's first name field, unchanged
+ * @param lastName the roster's last name field, unchanged
+ * @param githubLogin the student's GitHub login, or null if they have not linked GitHub yet
+ * @param team the name of the student's team (the first one, if they are on several), or null if
+ *     they are not on a team
+ * @param teams the names of all the student's teams, possibly empty
+ * @param teamMembers everyone on &lt;code&gt;team&lt;/code&gt;, including the student, or empty if the student
+ *     has no team
+ */
+<span class="fc" id="L27">public record StudentInfo(</span>
+    String email,
+    String firstName,
+    String legalFirstName,
+    String lastName,
+    String githubLogin,
+    String team,
+    List&lt;String&gt; teams,
+    List&lt;Member&gt; teamMembers) {
+
+  /**
+   * One member of the student's team.
+   *
+   * @param email the member's email as stored on the roster
+   * @param firstName the shortest unique name for the member
+   * @param legalFirstName the roster's first name field, unchanged
+   * @param githubLogin the member's GitHub login, or null if they have not linked GitHub yet
+   */
+<span class="fc" id="L45">  public record Member(String email, String firstName, String legalFirstName, String githubLogin) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

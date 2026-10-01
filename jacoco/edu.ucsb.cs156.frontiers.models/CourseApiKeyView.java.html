@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseApiKeyView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.models</a> &gt; <span class="el_source">CourseApiKeyView.java</span></div><h1>CourseApiKeyView.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.models;
+
+import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
+import java.time.ZonedDateTime;
+
+/**
+ * What an instructor may see about one of their course's API keys: everything except the key
+ * itself, which is never stored and so can never be shown again. The last six characters of the key
+ * (&lt;code&gt;keySuffix&lt;/code&gt;) are enough to tell keys apart without compromising them.
+ *
+ * @param id the key's id, used to revoke it
+ * @param label the name the instructor gave the key, or null
+ * @param keySuffix the last six characters of the key
+ * @param createdByEmail the email of the user who created the key
+ * @param createdAt when the key was created
+ * @param expiresAt when the key stops working
+ * @param lastUsedAt when the key was last used, or null if never
+ * @param usageCount how many requests have been made with the key
+ * @param revoked whether the key has been revoked
+ * @param status ACTIVE, EXPIRED or REVOKED, as of the time the view was built
+ */
+<span class="fc" id="L22">public record CourseApiKeyView(</span>
+    Long id,
+    String label,
+    String keySuffix,
+    String createdByEmail,
+    ZonedDateTime createdAt,
+    ZonedDateTime expiresAt,
+    ZonedDateTime lastUsedAt,
+    Long usageCount,
+    boolean revoked,
+    Status status) {
+
+  /** Whether a key can currently be used. A revoked key stays REVOKED even once it expires. */
+<span class="fc" id="L35">  public enum Status {</span>
+<span class="fc" id="L36">    ACTIVE,</span>
+<span class="fc" id="L37">    EXPIRED,</span>
+<span class="fc" id="L38">    REVOKED</span>
+  }
+
+  /**
+   * Builds the view of a key as of the given moment.
+   *
+   * @param key the key
+   * @param now the current time, used to decide whether the key has expired
+   * @return the view
+   */
+  public static CourseApiKeyView from(CourseApiKey key, ZonedDateTime now) {
+    Status status;
+<span class="fc bfc" id="L50" title="All 2 branches covered.">    if (key.getRevoked()) {</span>
+<span class="fc" id="L51">      status = Status.REVOKED;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">    } else if (key.getExpiresAt().isBefore(now)) {</span>
+<span class="fc" id="L53">      status = Status.EXPIRED;</span>
+    } else {
+<span class="fc" id="L55">      status = Status.ACTIVE;</span>
+    }
+<span class="fc" id="L57">    return new CourseApiKeyView(</span>
+<span class="fc" id="L58">        key.getId(),</span>
+<span class="fc" id="L59">        key.getLabel(),</span>
+<span class="fc" id="L60">        key.getKeySuffix(),</span>
+<span class="fc" id="L61">        key.getCreatedBy().getEmail(),</span>
+<span class="fc" id="L62">        key.getCreatedAt(),</span>
+<span class="fc" id="L63">        key.getExpiresAt(),</span>
+<span class="fc" id="L64">        key.getLastUsedAt(),</span>
+<span class="fc" id="L65">        key.getUsageCount(),</span>
+<span class="fc" id="L66">        key.getRevoked(),</span>
+        status);
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseApiKeyController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">CourseApiKeyController.java</span></div><h1>CourseApiKeyController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
 import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.models.CourseApiKeyView;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService.ExpirationChoice;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService.IssuedCourseApiKey;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,35 +26,81 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = &quot;Course API Key&quot;)
 @RestController
-<span class="fc" id="L21">@Slf4j</span>
+<span class="fc" id="L29">@Slf4j</span>
 @RequestMapping(&quot;/api/courses/key&quot;)
+@Validated
 public class CourseApiKeyController extends ApiController {
 
   private final ApiKeyService apiKeyService;
   private final CourseRepository courseRepository;
 
   public CourseApiKeyController(ApiKeyService apiKeyService, CourseRepository courseRepository) {
-<span class="fc" id="L29">    super();</span>
-<span class="fc" id="L30">    this.apiKeyService = apiKeyService;</span>
-<span class="fc" id="L31">    this.courseRepository = courseRepository;</span>
-<span class="fc" id="L32">  }</span>
+<span class="fc" id="L38">    super();</span>
+<span class="fc" id="L39">    this.apiKeyService = apiKeyService;</span>
+<span class="fc" id="L40">    this.courseRepository = courseRepository;</span>
+<span class="fc" id="L41">  }</span>
 
+  @Operation(
+      summary = &quot;Create an API key for a course (instructor only)&quot;,
+      description =
+          &quot;The key is returned once, in this response, and cannot be retrieved again. &quot;
+              + &quot;Requires the ENABLE_API_KEYS course option.&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
   @PostMapping(&quot;&quot;)
   public IssuedCourseApiKey createApiKey(
-      @RequestParam Long courseId, @RequestParam ExpirationChoice choice) {
-<span class="fc" id="L38">    Course course =</span>
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;choice&quot;) @RequestParam ExpirationChoice choice,
+      @Parameter(name = &quot;label&quot;, description = &quot;Optional short name for the key (at most 60 chars)&quot;)
+          @RequestParam(required = false)
+          @Size(max = 60, message = &quot;label must be at most 60 characters&quot;)
+          String label) {
+<span class="fc" id="L57">    Course course =</span>
         courseRepository
-<span class="fc" id="L40">            .findById(courseId)</span>
-<span class="fc" id="L41">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L42">    return apiKeyService.createApiKey(course, choice);</span>
+<span class="fc" id="L59">            .findById(courseId)</span>
+<span class="fc" id="L60">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">    if (!apiKeyService.apiKeysEnabled(courseId)) {</span>
+<span class="fc" id="L62">      throw new IllegalArgumentException(</span>
+          &quot;The course option ENABLE_API_KEYS must be enabled to create an API key.&quot;);
+    }
+<span class="fc" id="L65">    return apiKeyService.createApiKey(course, choice, label);</span>
   }
 
+  @Operation(
+      summary = &quot;List the API keys of a course (instructor only)&quot;,
+      description =
+          &quot;Every key ever created for the course, newest first, with its status &quot;
+              + &quot;(ACTIVE, EXPIRED or REVOKED) and usage. The keys themselves are never returned.&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;&quot;)
+  public List&lt;CourseApiKeyView&gt; listApiKeys(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L77">    courseRepository</span>
+<span class="fc" id="L78">        .findById(courseId)</span>
+<span class="fc" id="L79">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L80">    return apiKeyService.listApiKeys(courseId);</span>
+  }
+
+  @Operation(summary = &quot;Revoke one API key of a course, by id (instructor only)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasInstructorPermissions(#root, #courseId)&quot;)
+  @DeleteMapping(&quot;&quot;)
+  public Object revokeApiKeyById(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;id&quot;) @RequestParam Long id) {
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    if (!apiKeyService.revokeApiKeyById(id, courseId)) {</span>
+<span class="fc" id="L90">      throw new EntityNotFoundException(CourseApiKey.class, id);</span>
+    }
+<span class="fc" id="L92">    return genericMessage(&quot;API key with id %d revoked&quot;.formatted(id));</span>
+  }
+
+  @Operation(
+      summary = &quot;Revoke an API key, given the key itself (no login needed)&quot;,
+      description = &quot;For scripts that hold a key and need to disable it, e.g. after a leak.&quot;)
   @DeleteMapping(&quot;/revoke&quot;)
-  public ResponseEntity&lt;Void&gt; revokeApiKey(@RequestParam String apiKey) {
-<span class="fc bfc" id="L47" title="All 2 branches covered.">    return apiKeyService.revokeApiKey(apiKey)</span>
-<span class="fc" id="L48">        ? ResponseEntity.noContent().build()</span>
-<span class="fc" id="L49">        : ResponseEntity.notFound().build();</span>
+  public ResponseEntity&lt;Void&gt; revokeApiKey(
+      @Parameter(name = &quot;apiKey&quot;) @RequestParam String apiKey) {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">    return apiKeyService.revokeApiKey(apiKey)</span>
+<span class="fc" id="L102">        ? ResponseEntity.noContent().build()</span>
+<span class="fc" id="L103">        : ResponseEntity.notFound().build();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
