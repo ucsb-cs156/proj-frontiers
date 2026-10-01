@@ -161,11 +161,14 @@
       <version>2.8.14</version>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/org.liquibase/liquibase-maven-plugin -->
+    <!-- Liquibase runs the db/migration changelogs at startup (Spring Boot auto-configuration).
+         Spring Boot manages the version. Do not depend on liquibase-maven-plugin here: as a
+         dependency it drags liquibase-commercial into the runtime classpath at a different version
+         than liquibase-core, which makes Liquibase log "Cannot load service ... InitCopyCommandStep
+         ... Duplicate argument 'projectDir'" at every startup. -->
     <dependency>
       <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-maven-plugin</artifactId>
-      <version>4.29.2</version>
+      <artifactId>liquibase-core</artifactId>
     </dependency>
 
     <!-- https://central.sonatype.com/artifact/org.apache.commons/commons-csv/1.10.0 -->
