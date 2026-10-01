@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-816-api-keys-tab","number":820,"title":"API keys, part 3: API Keys tab on InstructorCourseShowPage","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/820"},{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-815-key-management","number":818,"title":"API keys, part 2: list keys, revoke by id, optional key label (backend)","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/818"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-816-api-keys-tab","number":820,"title":"API keys, part 3: API Keys tab on InstructorCourseShowPage","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/820"}]
