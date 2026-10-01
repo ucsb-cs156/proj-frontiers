@@ -1801,6 +1801,7 @@ describe("InstructorCourseShowPage tests", () => {
         .reply(200, slackFixtures.connectedInfo);
       axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
       axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+      axiosMock.onGet("/api/courses/key").reply(200, []);
     };
 
     const selectedTab = () =>
@@ -1835,11 +1836,13 @@ describe("InstructorCourseShowPage tests", () => {
       ["downloads", "Downloads"],
       ["dokku", "Dokku"],
       ["slack", "Slack"],
+      ["api-keys", "API Keys"],
       ["settings", "Settings"],
     ])("?tab=%s opens the %s tab, and remembers it", async (tab, title) => {
       setupCourse7({
         TRANSLATE_SECTIONS: true,
         DOKKU_MANAGER: true,
+        ENABLE_API_KEYS: true,
         NEW_ASSIGNMENT_FEATURES: true,
         SLACK_INTEGRATION: true,
       });
@@ -1951,6 +1954,24 @@ describe("InstructorCourseShowPage tests", () => {
       ).not.toBeInTheDocument();
       expect(screen.getByTestId("location-probe").textContent).toBe(
         "/instructor/courses/7?tab=dokku",
+      );
+    });
+
+    test("?tab=api-keys shows the Assignments tab when the Enable Api Keys option is off", async () => {
+      setupCourse7({ ENABLE_API_KEYS: false });
+      renderAt("/instructor/courses/7?tab=api-keys");
+      await screen.findByRole("tab", { name: "Settings" });
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ ENABLE_API_KEYS: false })),
+      );
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(
+        screen.queryByRole("tab", { name: "API Keys" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7?tab=api-keys",
       );
     });
 

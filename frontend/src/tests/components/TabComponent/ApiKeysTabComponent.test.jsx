@@ -169,6 +169,25 @@ describe("ApiKeysTabComponent tests", () => {
     );
   });
 
+  test("revoking a key from the table refreshes the list", async () => {
+    axiosMock.onGet(keysUrl).reply(200, apiKeysFixtures.severalKeys);
+    axiosMock
+      .onDelete(keysUrl)
+      .reply(200, { message: "API key with id 7 revoked" });
+
+    renderTab();
+
+    fireEvent.click(
+      await screen.findByTestId(`${tableId}-cell-row-0-col-Revoke-button`),
+    );
+    fireEvent.click(await screen.findByText("Yes, I'd like to do this"));
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+    expect(axiosMock.history.delete[0].params).toEqual({ courseId: 7, id: 7 });
+    // the table's mutation invalidates the tab's query, so the list is fetched again
+    await waitFor(() => expect(keysGetHistory().length).toBe(2));
+  });
+
   test("the create modal can be closed without creating anything", async () => {
     axiosMock.onGet(keysUrl).reply(200, []);
 
