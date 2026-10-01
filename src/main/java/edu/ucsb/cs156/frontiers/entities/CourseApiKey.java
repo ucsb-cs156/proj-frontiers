@@ -55,4 +55,8 @@ public class CourseApiKey {
   @Builder.Default
   @Column(nullable = false)
   private Long usageCount = 0L;
+
+  /** A short name the instructor gives the key, e.g. "jpa02 autograder F26"; may be null. */
+  @Column(length = 60)
+  private String label;
 }
