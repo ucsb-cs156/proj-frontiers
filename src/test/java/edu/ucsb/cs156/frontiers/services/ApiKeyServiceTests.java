@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -15,8 +16,10 @@ import static org.mockito.Mockito.when;
 import edu.ucsb.cs156.frontiers.config.ApiKeyToken;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.repositories.CourseApiKeyRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService.ExpirationChoice;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService.IssuedCourseApiKey;
 import java.security.SecureRandom;
@@ -46,12 +49,66 @@ public class ApiKeyServiceTests {
   @Mock private CourseApiKeyRepository apiKeyRepository;
   @Mock private CurrentUserService currentUserService;
   @Mock private SecureRandom secureRandom;
+  @Mock private CourseOptionRepository courseOptionRepository;
   private SecureRandom actualSecureRandom = new SecureRandom();
 
   private final ZonedDateTime staticZD =
       Instant.parse("2026-03-11T08:00:00.00Z").atZone(ZoneId.of("America/Los_Angeles"));
 
   @InjectMocks private ApiKeyService apiKeyService;
+
+  private void apiKeysOption(Long courseId, Boolean enabled) {
+    when(courseOptionRepository.findByCourseIdAndOption(courseId, "ENABLE_API_KEYS"))
+        .thenReturn(
+            enabled == null
+                ? Optional.empty()
+                : Optional.of(
+                    CourseOption.builder()
+                        .courseId(courseId)
+                        .option("ENABLE_API_KEYS")
+                        .enabled(enabled)
+                        .build()));
+  }
+
+  @Test
+  public void apiKeysEnabled_reflects_the_course_option() {
+    apiKeysOption(1L, true);
+    apiKeysOption(2L, false);
+    apiKeysOption(3L, null);
+    assertTrue(apiKeyService.apiKeysEnabled(1L));
+    assertFalse(apiKeyService.apiKeysEnabled(2L));
+    assertFalse(apiKeyService.apiKeysEnabled(3L));
+  }
+
+  @Test
+  public void authenticate_rejects_key_when_api_keys_are_disabled_for_the_course() {
+    when(provider.getNow()).thenReturn(Optional.of(staticZD));
+    Course course = Course.builder().id(1L).build();
+    CourseApiKey apiKey =
+        CourseApiKey.builder().course(course).expiresAt(staticZD.plusDays(90)).build();
+    when(apiKeyRepository.findByKeyHash(DigestUtils.sha256Hex("valid-key")))
+        .thenReturn(Optional.of(apiKey));
+    apiKeysOption(1L, false);
+
+    AccessDeniedException thrown =
+        assertThrows(AccessDeniedException.class, () -> apiKeyService.authenticateKey("valid-key"));
+    assertEquals("API keys are not enabled for this course", thrown.getMessage());
+    verify(apiKeyRepository, never()).save(any());
+  }
+
+  @Test
+  public void authenticate_rejects_key_when_api_keys_option_was_never_set() {
+    when(provider.getNow()).thenReturn(Optional.of(staticZD));
+    Course course = Course.builder().id(1L).build();
+    CourseApiKey apiKey =
+        CourseApiKey.builder().course(course).expiresAt(staticZD.plusDays(90)).build();
+    when(apiKeyRepository.findByKeyHash(DigestUtils.sha256Hex("valid-key")))
+        .thenReturn(Optional.of(apiKey));
+    apiKeysOption(1L, null);
+
+    assertThrows(AccessDeniedException.class, () -> apiKeyService.authenticateKey("valid-key"));
+    verify(apiKeyRepository, never()).save(any());
+  }
 
   @Test
   public void key_generates_correctly() {
@@ -160,6 +217,7 @@ public class ApiKeyServiceTests {
             .build();
 
     when(apiKeyRepository.findByKeyHash(keyHash)).thenReturn(Optional.of(apiKey));
+    apiKeysOption(1L, true);
     try (MockedStatic<Hibernate> hibernateMockedStatic = Mockito.mockStatic(Hibernate.class)) {
       hibernateMockedStatic
           .when(() -> Hibernate.unproxy(eq(userProxy), eq(User.class)))

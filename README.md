@@ -116,6 +116,12 @@ To access the swagger API endpoints, use:
 
 Or add `/swagger-ui/index.html` to the URL of your dokku deployment.
 
+# API keys for scripts
+
+Scripts (for example a Gradescope autograder or a GitHub Action) can call a few endpoints with a
+course-scoped API key instead of a logged-in session. See [docs/api-keys.md](docs/api-keys.md) for
+how to enable, create, use and revoke keys, and which endpoints accept them.
+
 # To run React Storybook
 
 * cd into frontend

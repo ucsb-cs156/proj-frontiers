@@ -3,8 +3,11 @@ package edu.ucsb.cs156.frontiers.services;
 import edu.ucsb.cs156.frontiers.config.ApiKeyToken;
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.CourseOptions;
 import edu.ucsb.cs156.frontiers.repositories.CourseApiKeyRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
 import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
@@ -25,16 +28,34 @@ public class ApiKeyService {
   private final CourseApiKeyRepository courseApiKeyRepository;
   private final CurrentUserService currentUserService;
   private final SecureRandom secureRandom;
+  private final CourseOptionRepository courseOptionRepository;
 
   public ApiKeyService(
       DateTimeProvider dateTimeProvider,
       CourseApiKeyRepository courseApiKeyRepository,
       CurrentUserService currentUserService,
-      SecureRandom secureRandom) {
+      SecureRandom secureRandom,
+      CourseOptionRepository courseOptionRepository) {
     this.dateTimeProvider = dateTimeProvider;
     this.courseApiKeyRepository = courseApiKeyRepository;
     this.currentUserService = currentUserService;
     this.secureRandom = secureRandom;
+    this.courseOptionRepository = courseOptionRepository;
+  }
+
+  /**
+   * Whether the ENABLE_API_KEYS course option is on for the course. Keys can only be created for,
+   * and used with, a course that has the option on; turning it off disables every key of the course
+   * at once.
+   *
+   * @param courseId the id of the course
+   * @return true if the option is enabled, false if it is disabled or has never been set
+   */
+  public boolean apiKeysEnabled(Long courseId) {
+    return courseOptionRepository
+        .findByCourseIdAndOption(courseId, CourseOptions.ENABLE_API_KEYS.name())
+        .map(CourseOption::getEnabled)
+        .orElse(false);
   }
 
   public record IssuedCourseApiKey(
@@ -82,6 +103,9 @@ public class ApiKeyService {
     }
     if (foundKey.getExpiresAt().isBefore(ZonedDateTime.from(dateTimeProvider.getNow().get()))) {
       throw new AccessDeniedException("API key has expired");
+    }
+    if (!apiKeysEnabled(foundKey.getCourse().getId())) {
+      throw new AccessDeniedException("API keys are not enabled for this course");
     }
     /* Forcibly load key owner for auth purposes */
     User owner = Hibernate.unproxy(foundKey.getCreatedBy(), User.class);

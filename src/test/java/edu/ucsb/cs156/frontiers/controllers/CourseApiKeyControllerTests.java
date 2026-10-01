@@ -43,6 +43,7 @@ public class CourseApiKeyControllerTests extends ControllerTestCase {
     Course course = Course.builder().id(1L).build();
 
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(apiKeyService.apiKeysEnabled(1L)).thenReturn(true);
     when(apiKeyService.createApiKey(course, ExpirationChoice.DAYS_90)).thenReturn(created);
 
     MvcResult result =
@@ -70,6 +71,27 @@ public class CourseApiKeyControllerTests extends ControllerTestCase {
                 .with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Course with id 1 not found"));
+
+    verify(apiKeyService, never()).createApiKey(any(), any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void test_create_course_api_key_requires_enable_api_keys_option() throws Exception {
+    Course course = Course.builder().id(1L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(apiKeyService.apiKeysEnabled(1L)).thenReturn(false);
+
+    mockMvc
+        .perform(
+            post("/api/courses/key")
+                .param("courseId", "1")
+                .param("choice", ExpirationChoice.DAYS_90.name())
+                .with(csrf()))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.message")
+                .value("The course option ENABLE_API_KEYS must be enabled to create an API key."));
 
     verify(apiKeyService, never()).createApiKey(any(), any());
   }
