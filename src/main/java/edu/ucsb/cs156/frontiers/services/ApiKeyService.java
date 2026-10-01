@@ -6,14 +6,18 @@ import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
 import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.User;
 import edu.ucsb.cs156.frontiers.enums.CourseOptions;
+import edu.ucsb.cs156.frontiers.models.CourseApiKeyView;
 import edu.ucsb.cs156.frontiers.repositories.CourseApiKeyRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
 import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.Hibernate;
 import org.springframework.data.auditing.DateTimeProvider;
@@ -58,16 +62,29 @@ public class ApiKeyService {
         .orElse(false);
   }
 
+  /**
+   * A freshly created key. This is the only time the key itself is available; only its hash is
+   * stored.
+   */
   public record IssuedCourseApiKey(
-      String key, Long courseId, ZonedDateTime issuedAt, ZonedDateTime expiresAt) {}
+      String key, Long courseId, ZonedDateTime issuedAt, ZonedDateTime expiresAt, String label) {}
 
   public enum ExpirationChoice {
     DAYS_90,
     MONTHS_6
   }
 
+  /**
+   * Creates a key for the course.
+   *
+   * @param course the course the key is for
+   * @param choice how long the key lasts
+   * @param label an optional short name for the key; blank is stored as null
+   * @return the key and its metadata
+   */
   @Transactional
-  public IssuedCourseApiKey createApiKey(Course course, ExpirationChoice choice) {
+  public IssuedCourseApiKey createApiKey(Course course, ExpirationChoice choice, String label) {
+    String trimmedLabel = label == null || label.isBlank() ? null : label.strip();
     byte[] nextBytes = new byte[16];
     secureRandom.nextBytes(nextBytes);
     String key = Base64.getUrlEncoder().withoutPadding().encodeToString(nextBytes);
@@ -85,11 +102,13 @@ public class ApiKeyService {
             .keyHash(DigestUtils.sha256Hex(key))
             .keySuffix(key.substring(key.length() - 6))
             .createdBy(currentUserService.getUser())
+            .label(trimmedLabel)
             .build();
 
     courseApiKeyRepository.save(keyEntity);
 
-    return new IssuedCourseApiKey(key, course.getId(), currentTime, keyEntity.getExpiresAt());
+    return new IssuedCourseApiKey(
+        key, course.getId(), currentTime, keyEntity.getExpiresAt(), trimmedLabel);
   }
 
   @Transactional
@@ -120,6 +139,40 @@ public class ApiKeyService {
 
   public List<CourseApiKey> getApiKeysForCourse(Long courseId) {
     return courseApiKeyRepository.findByCourseId(courseId);
+  }
+
+  /**
+   * The keys of a course as an instructor may see them (never the key itself), newest first.
+   *
+   * @param courseId the id of the course
+   * @return one view per key, including revoked and expired ones
+   */
+  @Transactional
+  public List<CourseApiKeyView> listApiKeys(Long courseId) {
+    ZonedDateTime now = ZonedDateTime.from(dateTimeProvider.getNow().get());
+    return courseApiKeyRepository.findByCourseId(courseId).stream()
+        .sorted(Comparator.comparing(CourseApiKey::getCreatedAt).reversed())
+        .map(key -> CourseApiKeyView.from(key, now))
+        .toList();
+  }
+
+  /**
+   * Revokes a key by id, for the instructor's key table. The course id must match the key's, so
+   * that an instructor of one course cannot revoke another course's keys by guessing ids.
+   *
+   * @param id the key's id
+   * @param courseId the course the key is expected to belong to
+   * @return true if the key was found in that course (and is now revoked), false otherwise
+   */
+  @Transactional
+  public boolean revokeApiKeyById(Long id, Long courseId) {
+    Optional<CourseApiKey> found = courseApiKeyRepository.findById(id);
+    if (found.isEmpty() || !Objects.equals(found.get().getCourse().getId(), courseId)) {
+      return false;
+    }
+    found.get().setRevoked(true);
+    courseApiKeyRepository.save(found.get());
+    return true;
   }
 
   public List<CourseApiKey> getApiKeysForUser(User user) {

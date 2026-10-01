@@ -34,17 +34,51 @@ Until the Api Keys tab on the course page exists (see
 (`/swagger-ui/index.html`, section **Course API Key**) while logged in as the course's instructor:
 
 ```
-POST /api/courses/key?courseId=2&choice=DAYS_90      (or choice=MONTHS_6)
+POST /api/courses/key?courseId=2&choice=DAYS_90&label=jpa02%20autograder%20F26
 ```
+
+* `choice` is `DAYS_90` or `MONTHS_6`.
+* `label` is optional (at most 60 characters): a short name so that you can tell your keys apart
+  later, e.g. which autograder or which GitHub Action uses each one.
 
 The response contains the key once:
 
 ```json
-{ "key": "u1Zc6N0T0dG9xWcY4h2JbQ", "courseId": 2, "issuedAt": "...", "expiresAt": "..." }
+{ "key": "u1Zc6N0T0dG9xWcY4h2JbQ", "courseId": 2, "issuedAt": "...", "expiresAt": "...", "label": "jpa02 autograder F26" }
 ```
 
 Copy it somewhere safe (a secret in your CI system, a file inside your autograder zip that is not
 committed to a public repo). It cannot be retrieved again.
+
+## Seeing which keys exist
+
+An instructor can list every key ever created for a course, newest first:
+
+```
+GET /api/courses/key?courseId=2
+```
+
+```json
+[
+  {
+    "id": 7,
+    "label": "jpa02 autograder F26",
+    "keySuffix": "4h2JbQ",
+    "createdByEmail": "phtcon@ucsb.edu",
+    "createdAt": "2026-09-28T10:15:00-07:00",
+    "expiresAt": "2026-12-27T10:15:00-08:00",
+    "lastUsedAt": "2026-10-01T08:02:11-07:00",
+    "usageCount": 143,
+    "revoked": false,
+    "status": "ACTIVE"
+  }
+]
+```
+
+The key itself is never returned; `keySuffix` (its last six characters) is enough to match it with
+the copy you saved. `status` is `ACTIVE`, `EXPIRED` or `REVOKED`. `usageCount` and `lastUsedAt` go
+up on every request made with the key, which is a quick way to confirm that an autograder is really
+using it.
 
 ## Using a key
 
@@ -177,15 +211,22 @@ member to the roster by hand (Students tab, add student) and put them on a team.
 
 ## Revoking a key
 
-A key can be revoked without logging in, by anyone who holds it. If a key ever leaks, revoke it at
-once:
+Revoking is permanent. There are two ways:
 
-```bash
-curl -s -X DELETE 'https://frontiers.dokku-00.cs.ucsb.edu/api/courses/key/revoke?apiKey=u1Zc6N0T0dG9xWcY4h2JbQ'
-```
+* **By id, as the instructor** (this is what the Api Keys tab will use): take the `id` from the list
+  above and call
+  ```
+  DELETE /api/courses/key?courseId=2&id=7
+  ```
+  `200` with `{"message": "API key with id 7 revoked"}` means it is revoked; `404` means there is no
+  key with that id in that course.
 
-`204` means it is revoked; `404` means it was not a key of this Frontiers instance. Revoking is
-permanent.
+* **With the key itself, no login needed.** Anyone who holds a key can revoke it, so a script that
+  discovers its key has leaked can disable it at once:
+  ```bash
+  curl -s -X DELETE 'https://frontiers.dokku-00.cs.ucsb.edu/api/courses/key/revoke?apiKey=u1Zc6N0T0dG9xWcY4h2JbQ'
+  ```
+  `204` means it is revoked; `404` means it was not a key of this Frontiers instance.
 
 ## Implementation notes (for developers)
 

@@ -1,0 +1,23 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "027-add-label-to-course-api-key",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "course_api_key",
+            "columns": [
+              {
+                "column": {
+                  "name": "label",
+                  "type": "VARCHAR(60)"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

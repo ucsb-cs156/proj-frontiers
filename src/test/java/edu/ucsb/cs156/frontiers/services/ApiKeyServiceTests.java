@@ -18,6 +18,8 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
 import edu.ucsb.cs156.frontiers.entities.CourseOption;
 import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.models.CourseApiKeyView;
+import edu.ucsb.cs156.frontiers.models.CourseApiKeyView.Status;
 import edu.ucsb.cs156.frontiers.repositories.CourseApiKeyRepository;
 import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
 import edu.ucsb.cs156.frontiers.services.ApiKeyService.ExpirationChoice;
@@ -127,11 +129,13 @@ public class ApiKeyServiceTests {
     ArgumentCaptor<CourseApiKey> argumentCaptor = ArgumentCaptor.forClass(CourseApiKey.class);
 
     IssuedCourseApiKey issuedCourseApiKey =
-        apiKeyService.createApiKey(course, ExpirationChoice.DAYS_90);
+        apiKeyService.createApiKey(course, ExpirationChoice.DAYS_90, "  jpa02 autograder ");
     verify(apiKeyRepository).save(argumentCaptor.capture());
     verify(secureRandom).nextBytes(any(byte[].class));
     CourseApiKey savedApiKey = argumentCaptor.getValue();
 
+    assertEquals("jpa02 autograder", savedApiKey.getLabel());
+    assertEquals("jpa02 autograder", issuedCourseApiKey.label());
     assertEquals(issuedCourseApiKey.courseId(), course.getId());
     assertEquals(issuedCourseApiKey.issuedAt(), staticZD);
     assertEquals(staticZD.plusDays(90), issuedCourseApiKey.expiresAt());
@@ -162,10 +166,13 @@ public class ApiKeyServiceTests {
     ArgumentCaptor<CourseApiKey> argumentCaptor = ArgumentCaptor.forClass(CourseApiKey.class);
 
     IssuedCourseApiKey issuedCourseApiKey =
-        apiKeyService.createApiKey(course, ExpirationChoice.MONTHS_6);
+        apiKeyService.createApiKey(course, ExpirationChoice.MONTHS_6, null);
     verify(apiKeyRepository).save(argumentCaptor.capture());
     verify(secureRandom).nextBytes(any(byte[].class));
     CourseApiKey savedApiKey = argumentCaptor.getValue();
+
+    assertEquals(null, savedApiKey.getLabel());
+    assertEquals(null, issuedCourseApiKey.label());
 
     assertEquals(issuedCourseApiKey.courseId(), course.getId());
     assertEquals(issuedCourseApiKey.issuedAt(), staticZD);
@@ -178,6 +185,149 @@ public class ApiKeyServiceTests {
     assertEquals(
         issuedCourseApiKey.key().substring(issuedCourseApiKey.key().length() - 6),
         savedApiKey.getKeySuffix());
+  }
+
+  @Test
+  public void blank_label_is_stored_as_null() {
+    when(provider.getNow()).thenReturn(Optional.of(staticZD));
+    Course course = Course.builder().id(2L).build();
+    when(currentUserService.getUser()).thenReturn(User.builder().id(1L).build());
+    ArgumentCaptor<CourseApiKey> argumentCaptor = ArgumentCaptor.forClass(CourseApiKey.class);
+
+    IssuedCourseApiKey issued = apiKeyService.createApiKey(course, ExpirationChoice.DAYS_90, "   ");
+    verify(apiKeyRepository).save(argumentCaptor.capture());
+
+    assertEquals(null, argumentCaptor.getValue().getLabel());
+    assertEquals(null, issued.label());
+  }
+
+  @Test
+  public void listApiKeys_returns_views_newest_first_with_status() {
+    when(provider.getNow()).thenReturn(Optional.of(staticZD));
+    Course course = Course.builder().id(1L).build();
+    User creator = User.builder().id(1L).email("phtcon@ucsb.edu").build();
+
+    CourseApiKey active =
+        CourseApiKey.builder()
+            .id(1L)
+            .course(course)
+            .createdBy(creator)
+            .label("jpa02 autograder")
+            .keySuffix("abc123")
+            .createdAt(staticZD.minusDays(2))
+            .expiresAt(staticZD.plusDays(88))
+            .lastUsedAt(staticZD.minusHours(1))
+            .usageCount(3L)
+            .build();
+    CourseApiKey expired =
+        CourseApiKey.builder()
+            .id(2L)
+            .course(course)
+            .createdBy(creator)
+            .keySuffix("def456")
+            .createdAt(staticZD.minusDays(1))
+            .expiresAt(staticZD.minusMinutes(1))
+            .build();
+    CourseApiKey revokedAndExpired =
+        CourseApiKey.builder()
+            .id(3L)
+            .course(course)
+            .createdBy(creator)
+            .keySuffix("ghi789")
+            .createdAt(staticZD.minusDays(3))
+            .expiresAt(staticZD.minusDays(1))
+            .revoked(true)
+            .build();
+    CourseApiKey expiresRightNow =
+        CourseApiKey.builder()
+            .id(4L)
+            .course(course)
+            .createdBy(creator)
+            .keySuffix("jkl012")
+            .createdAt(staticZD.minusDays(4))
+            .expiresAt(staticZD)
+            .build();
+    when(apiKeyRepository.findByCourseId(1L))
+        .thenReturn(List.of(active, revokedAndExpired, expiresRightNow, expired));
+
+    List<CourseApiKeyView> expected =
+        List.of(
+            new CourseApiKeyView(
+                2L,
+                null,
+                "def456",
+                "phtcon@ucsb.edu",
+                staticZD.minusDays(1),
+                staticZD.minusMinutes(1),
+                null,
+                0L,
+                false,
+                Status.EXPIRED),
+            new CourseApiKeyView(
+                1L,
+                "jpa02 autograder",
+                "abc123",
+                "phtcon@ucsb.edu",
+                staticZD.minusDays(2),
+                staticZD.plusDays(88),
+                staticZD.minusHours(1),
+                3L,
+                false,
+                Status.ACTIVE),
+            new CourseApiKeyView(
+                3L,
+                null,
+                "ghi789",
+                "phtcon@ucsb.edu",
+                staticZD.minusDays(3),
+                staticZD.minusDays(1),
+                null,
+                0L,
+                true,
+                Status.REVOKED),
+            new CourseApiKeyView(
+                4L,
+                null,
+                "jkl012",
+                "phtcon@ucsb.edu",
+                staticZD.minusDays(4),
+                staticZD,
+                null,
+                0L,
+                false,
+                Status.ACTIVE));
+
+    assertEquals(expected, apiKeyService.listApiKeys(1L));
+  }
+
+  @Test
+  public void revokeApiKeyById_revokes_a_key_of_the_course() {
+    Course course = Course.builder().id(1L).build();
+    CourseApiKey key = CourseApiKey.builder().id(5L).course(course).build();
+    when(apiKeyRepository.findById(5L)).thenReturn(Optional.of(key));
+
+    assertTrue(apiKeyService.revokeApiKeyById(5L, 1L));
+    assertTrue(key.getRevoked());
+    verify(apiKeyRepository).save(key);
+  }
+
+  @Test
+  public void revokeApiKeyById_refuses_a_key_of_another_course() {
+    Course course = Course.builder().id(1L).build();
+    CourseApiKey key = CourseApiKey.builder().id(5L).course(course).build();
+    when(apiKeyRepository.findById(5L)).thenReturn(Optional.of(key));
+
+    assertFalse(apiKeyService.revokeApiKeyById(5L, 2L));
+    assertFalse(key.getRevoked());
+    verify(apiKeyRepository, never()).save(any());
+  }
+
+  @Test
+  public void revokeApiKeyById_returns_false_for_unknown_id() {
+    when(apiKeyRepository.findById(5L)).thenReturn(Optional.empty());
+
+    assertFalse(apiKeyService.revokeApiKeyById(5L, 1L));
+    verify(apiKeyRepository, never()).save(any());
   }
 
   @Test
