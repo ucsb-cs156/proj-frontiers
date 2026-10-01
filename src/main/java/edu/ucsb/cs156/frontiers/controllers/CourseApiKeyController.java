@@ -39,6 +39,10 @@ public class CourseApiKeyController extends ApiController {
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    if (!apiKeyService.apiKeysEnabled(courseId)) {
+      throw new IllegalArgumentException(
+          "The course option ENABLE_API_KEYS must be enabled to create an API key.");
+    }
     return apiKeyService.createApiKey(course, choice);
   }
 
