@@ -25,4 +25,7 @@ public class SlackChannel {
 
   @JsonProperty("is_archived")
   private boolean archived;
+
+  /** Slack user id of whoever created the channel. */
+  private String creator;
 }

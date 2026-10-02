@@ -76,6 +76,7 @@ public class SlackServiceTests {
             .url("https://ucsb-cs156-f26.slack.com/")
             .team("ucsb-cs156-f26")
             .teamId("T12345678")
+            .userId("U12345678")
             .build();
     assertEquals(expected, result);
   }
@@ -142,7 +143,8 @@ public class SlackServiceTests {
               "deleted": false,
               "real_name": "Chris Gaucho",
               "is_bot": false,
-              "profile": { "email": "cgaucho@ucsb.edu", "display_name": "chris", "phone": "" }
+              "profile": { "email": "cgaucho@ucsb.edu", "display_name": "chris", "phone": "",
+                "first_name": "Chris", "last_name": "Gaucho" }
             },
             { "id": "U02", "name": "frontiers", "is_bot": true, "profile": {} },
             { "id": "U03", "name": "old", "deleted": true },
@@ -171,6 +173,8 @@ public class SlackServiceTests {
                     SlackUser.Profile.builder()
                         .email("cgaucho@ucsb.edu")
                         .displayName("chris")
+                        .firstName("Chris")
+                        .lastName("Gaucho")
                         .build())
                 .build(),
             SlackUser.builder()
@@ -437,6 +441,105 @@ public class SlackServiceTests {
         assertThrows(
             SlackApiException.class,
             () -> slackService.createPublicChannel(TEST_TOKEN, "sec-0100"));
+    assertEquals("name_taken", e.getMessage());
+  }
+
+  @Test
+  void listPrivateChannels_asksForPrivateChannels_andParsesCreator() {
+    mockServer
+        .expect(
+            requestTo(
+                "https://slack.com/api/conversations.list?types=private_channel&exclude_archived=false&limit=200"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+        .andRespond(
+            withSuccess(
+                """
+                { "ok": true,
+                  "channels": [
+                    { "id": "G01", "name": "private-chris-gaucho", "is_private": true,
+                      "is_archived": false, "creator": "U_BOT" },
+                    { "id": "G02", "name": "private-old", "is_archived": true, "creator": "U02" } ],
+                  "response_metadata": { "next_cursor": "" } }
+                """,
+                MediaType.APPLICATION_JSON));
+
+    List<SlackChannel> result = slackService.listPrivateChannels(TEST_TOKEN);
+
+    mockServer.verify();
+    assertEquals(
+        List.of(
+            SlackChannel.builder().id("G01").name("private-chris-gaucho").creator("U_BOT").build(),
+            SlackChannel.builder()
+                .id("G02")
+                .name("private-old")
+                .archived(true)
+                .creator("U02")
+                .build()),
+        result);
+  }
+
+  @Test
+  void createPrivateChannel_postsNameAndIsPrivate_andReturnsChannel() {
+    MultiValueMap<String, String> expectedForm = form("name", "private-chris-gaucho");
+    expectedForm.add("is_private", "true");
+    mockServer
+        .expect(requestTo("https://slack.com/api/conversations.create"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+        .andExpect(content().formData(expectedForm))
+        .andRespond(
+            withSuccess(
+                """
+                { "ok": true,
+                  "channel": { "id": "G100", "name": "private-chris-gaucho", "is_private": true,
+                    "creator": "U_BOT" } }
+                """,
+                MediaType.APPLICATION_JSON));
+
+    SlackChannel result = slackService.createPrivateChannel(TEST_TOKEN, "private-chris-gaucho");
+
+    mockServer.verify();
+    assertEquals(
+        SlackChannel.builder().id("G100").name("private-chris-gaucho").creator("U_BOT").build(),
+        result);
+  }
+
+  @Test
+  void renameChannel_postsChannelAndName() {
+    MultiValueMap<String, String> expectedForm = form("channel", "G100");
+    expectedForm.add("name", "private-chris-gaucho");
+    mockServer
+        .expect(requestTo("https://slack.com/api/conversations.rename"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(header("Authorization", "Bearer " + TEST_TOKEN))
+        .andExpect(content().formData(expectedForm))
+        .andRespond(
+            withSuccess(
+                """
+                { "ok": true, "channel": { "id": "G100", "name": "private-chris-gaucho" } }
+                """,
+                MediaType.APPLICATION_JSON));
+
+    slackService.renameChannel(TEST_TOKEN, "G100", "private-chris-gaucho");
+
+    mockServer.verify();
+  }
+
+  @Test
+  void renameChannel_nameTaken_throwsWithErrorCode() {
+    mockServer
+        .expect(requestTo("https://slack.com/api/conversations.rename"))
+        .andRespond(
+            withSuccess(
+                """
+                { "ok": false, "error": "name_taken" }
+                """,
+                MediaType.APPLICATION_JSON));
+
+    SlackApiException e =
+        assertThrows(
+            SlackApiException.class, () -> slackService.renameChannel(TEST_TOKEN, "G100", "taken"));
     assertEquals("name_taken", e.getMessage());
   }
 

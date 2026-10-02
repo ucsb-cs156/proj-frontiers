@@ -187,6 +187,77 @@ were removed. The job can be run as often as you like; it only makes the
 changes that are still needed, and needs the same scopes as the section
 channels job.
 
+## A private Slack channel for each student plus staff
+
+The Slack tab also has a **Slack Private Channels for Each Student plus Staff**
+card (it only needs **Slack Integration**). Open it and click **Create Private
+Channels for Each Student plus Staff** to launch the `SetupPrivateSlackChannels`
+job for the course. It gives each student a private channel that the student,
+the instructor and all of the course staff are in, for things that are private
+to the student but that the whole staff should see, such as grading issues.
+Its log is on the **Jobs** tab:
+
+1. Each roster student (roster status `ROSTER` or `MANUAL`) with an active
+   account in the Slack workspace gets a private channel named
+   `private-first-last`. The first and last name come from the student's Slack
+   profile when the student has entered them there, and otherwise (one by one)
+   from the roster. Only the first name up to the first space is used, so
+   "Mary Ann" "De La Cruz" gets `#private-mary-de-la-cruz`. Names are put in
+   the form Slack requires: accents are dropped, everything is lowercased, and
+   anything other than letters, numbers and underscores becomes a hyphen. If
+   two students would get the same name, both get the part of their email
+   before the `@` added at the end (`#private-sam-lee-slee2`).
+2. The job looks for the channel each student already has. It does **not** go
+   by the name of the channel. A channel is a student's channel if it is a
+   private channel that the Frontiers bot created, and that student is the
+   only student of the course among its members. So the job can be run again
+   without creating duplicates, also after a student has changed their name.
+   Private channels that the bot did not create are never touched, even if the
+   bot has been added to them.
+3. Students who have no channel yet get one. If a student's existing channel
+   does not have the name from step 1 (because the name of the student has
+   changed, or a second student with the same name has joined), it is renamed.
+   An archived channel is skipped: unarchive it in Slack first.
+4. The student, the instructor and each staff member are added to the channel,
+   unless they are in it already. So running the job again after adding
+   someone on the **Staff** tab adds them to every student's channel. The
+   instructor is added whether or not they are also listed on the Staff tab.
+5. Everyone else is removed from each student's existing channel, and logged,
+   except for bots (including the Frontiers bot itself) and members that are
+   not users of the workspace. So running the job again after deleting someone
+   from the **Staff** tab removes them from every student's channel. Note that
+   the job cannot tell a former staff member from anybody else: whoever is in
+   a student's channel without being that student, the instructor or current
+   staff is removed, including someone who was added to it by hand in Slack.
+
+Students without an active Slack account get no channel yet (the log says how
+many there were; the second table on the Slack tab says who); run the job
+again once they have joined. A student who is also the instructor or a staff
+member of the course gets no channel. Staff are matched to Slack users by
+email, like students: a staff member whose Slack account has a different email
+than the one on the Staff tab cannot be added, and is removed if they are in a
+channel.
+
+Whether the bot is allowed to remove people from private channels depends on
+the workspace's settings. If it is not, Slack answers `restricted_action` to
+the first removal; the job logs that, names the setting to change (**People
+who can remove members from private channels**, in the same place as the one
+for public channels in step 5 of "Setting up the Slack app" above), and
+attempts no further removals in that run. The rest of the job still runs.
+
+If Slack answers `name_taken` when a channel is created, there already is a
+channel with that name that the job does not recognize as the student's:
+a public channel, a private channel that the bot did not create, or one that
+does not have exactly one student in it. Rename or fix that channel in Slack
+and run the job again. If the members of one of the bot's private channels
+cannot be listed, the job stops before changing anything, since it could not
+tell whose channel that is.
+
+The last line of the log is a summary: how many channels were created, already
+existed, and were renamed, and how many members were added, were already
+present, and were removed. The job needs these scopes: `users:read`, `users:read.email`,
+`groups:read` and `groups:write`.
+
 ## Operational gotcha: adding scopes means a new token
 
 If you add scopes to the Slack app later, you must **reinstall the app to the
@@ -235,7 +306,10 @@ API tokens (see [README_Canvas_API_Keys.md](README_Canvas_API_Keys.md)):
 | `POST /api/courses/slack/teamChannels?courseId=...` (launches the job) | `SlackController` |
 | Job that sets up the team channels | `SetupTeamSlackChannelsJob` |
 | Slack Team Channels card | `SlackTeamChannelsCard.jsx`, shown by `SlackTabComponent.jsx` |
-| Calls to Slack `conversations.list`, `.create`, `.join`, `.members`, `.invite`, `.kick` (with retry when rate limited) | `SlackService` |
+| `POST /api/courses/slack/privateChannels?courseId=...` (launches the job) | `SlackController` |
+| Job that sets up a private channel for each student plus staff | `SetupPrivateSlackChannelsJob` |
+| Slack Private Channels for Each Student plus Staff card | `SlackPrivateChannelsCard.jsx`, shown by `SlackTabComponent.jsx` |
+| Calls to Slack `conversations.list`, `.create`, `.rename`, `.join`, `.members`, `.invite`, `.kick` (with retry when rate limited) | `SlackService` |
 | Slack Section Channels card | `SlackSectionChannelsCard.jsx`, shown by `SlackTabComponent.jsx` |
 | Slack tab | `SlackTabComponent.jsx`, `SlackUsersTable.jsx`, `SlackMissingMembersTable.jsx`, shown by `InstructorCourseShowPage.jsx` |
 | In-app copy of "Setting up the Slack app" (keep in sync with this file) | `SlackSetupInstructions.jsx` |

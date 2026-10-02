@@ -61,6 +61,9 @@ public class SlackService {
   public static final String CONVERSATIONS_LIST_ENDPOINT =
       SLACK_API + "conversations.list?types=public_channel&exclude_archived=false&limit=200";
 
+  public static final String PRIVATE_CONVERSATIONS_LIST_ENDPOINT =
+      SLACK_API + "conversations.list?types=private_channel&exclude_archived=false&limit=200";
+
   /** Upper bound on the number of pages fetched for any paginated method; see MAX_USER_PAGES. */
   public static final int MAX_PAGES = 50;
 
@@ -203,8 +206,25 @@ public class SlackService {
    * @throws SlackApiException with the Slack error code if the call fails
    */
   public List<SlackChannel> listPublicChannels(String token) {
+    return listChannels(token, CONVERSATIONS_LIST_ENDPOINT);
+  }
+
+  /**
+   * Calls the Slack <code>conversations.list</code> method (following pagination) to get the
+   * private channels that the bot is a member of, including archived ones; Slack does not tell a
+   * bot about any other private channels. Requires the <code>groups:read</code> scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @return the private channels of the workspace that the bot is a member of
+   * @throws SlackApiException with the Slack error code if the call fails
+   */
+  public List<SlackChannel> listPrivateChannels(String token) {
+    return listChannels(token, PRIVATE_CONVERSATIONS_LIST_ENDPOINT);
+  }
+
+  private List<SlackChannel> listChannels(String token, String url) {
     List<SlackChannel> channels = new ArrayList<>();
-    for (JsonNode page : getAllPages(token, CONVERSATIONS_LIST_ENDPOINT)) {
+    for (JsonNode page : getAllPages(token, url)) {
       for (JsonNode channel : page.path("channels")) {
         channels.add(objectMapper.convertValue(channel, SlackChannel.class));
       }
@@ -230,6 +250,42 @@ public class SlackService {
   }
 
   /**
+   * Calls the Slack <code>conversations.create</code> method to create a private channel; the bot
+   * becomes a member of the channel it creates. Requires the <code>groups:write</code> scope.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @param name name of the channel (lowercase letters, digits, hyphens and underscores)
+   * @return the new channel
+   * @throws SlackApiException with the Slack error code (e.g. <code>name_taken</code>) if the call
+   *     fails
+   */
+  public SlackChannel createPrivateChannel(String token, String name) {
+    MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+    form.add("name", name);
+    form.add("is_private", "true");
+    JsonNode body = post(token, "conversations.create", form);
+    return objectMapper.convertValue(body.path("channel"), SlackChannel.class);
+  }
+
+  /**
+   * Calls the Slack <code>conversations.rename</code> method to rename a channel that the bot
+   * created. Requires the <code>channels:manage</code> scope for a public channel, and the <code>
+   * groups:write</code> scope for a private one.
+   *
+   * @param token the (plaintext) Slack bot token
+   * @param channelId id of the channel
+   * @param name the new name of the channel
+   * @throws SlackApiException with the Slack error code (e.g. <code>name_taken</code>, <code>
+   *     not_authorized</code>) if the call fails
+   */
+  public void renameChannel(String token, String channelId, String name) {
+    MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+    form.add("channel", channelId);
+    form.add("name", name);
+    post(token, "conversations.rename", form);
+  }
+
+  /**
    * Calls the Slack <code>conversations.join</code> method so that the bot is a member of a public
    * channel, which it has to be to invite or remove members. Joining a channel the bot is already
    * in is not an error. Requires the <code>channels:join</code> scope.
@@ -246,7 +302,8 @@ public class SlackService {
 
   /**
    * Calls the Slack <code>conversations.members</code> method (following pagination). Requires the
-   * <code>channels:read</code> scope.
+   * <code>channels:read</code> scope for a public channel, and the <code>groups:read</code> scope
+   * for a private one.
    *
    * @param token the (plaintext) Slack bot token
    * @param channelId id of the channel
@@ -267,7 +324,8 @@ public class SlackService {
   /**
    * Calls the Slack <code>conversations.invite</code> method to add users to a channel that the bot
    * is a member of. Slack adds either all of the users or none of them. Requires the <code>
-   * channels:manage</code> scope.
+   * channels:manage</code> scope for a public channel, and the <code>groups:write</code> scope for
+   * a private one.
    *
    * @param token the (plaintext) Slack bot token
    * @param channelId id of the channel
@@ -284,9 +342,10 @@ public class SlackService {
 
   /**
    * Calls the Slack <code>conversations.kick</code> method to remove a user from a channel that the
-   * bot is a member of. Requires the <code>channels:manage</code> scope. Whether the bot is allowed
-   * to remove members from public channels is also a workspace setting; if it is not, Slack answers
-   * {@link #RESTRICTED_ACTION}, and {@link #REMOVAL_RESTRICTED_ADVICE} says how to fix that.
+   * bot is a member of. Requires the <code>channels:manage</code> scope for a public channel, and
+   * the <code>groups:write</code> scope for a private one. Whether the bot is allowed to remove
+   * members is also a workspace setting; if it is not, Slack answers {@link #RESTRICTED_ACTION},
+   * and for public channels {@link #REMOVAL_RESTRICTED_ADVICE} says how to fix that.
    *
    * @param token the (plaintext) Slack bot token
    * @param channelId id of the channel
