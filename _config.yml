@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-frontiers
 owner: ucsb-cs156
 repo_name: proj-frontiers
-pull_requests: []
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-823-slack-private-student-channels","number":824,"title":"Slack tab: card and job to create a private channel for each student plus staff","url":"https://github.com/ucsb-cs156/proj-frontiers/pull/824"}]
