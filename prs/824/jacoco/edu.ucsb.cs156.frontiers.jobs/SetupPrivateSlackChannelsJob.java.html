@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetupPrivateSlackChannelsJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">SetupPrivateSlackChannelsJob.java</span></div><h1>SetupPrivateSlackChannelsJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.RosterStatus;
+import edu.ucsb.cs156.frontiers.errors.SlackApiException;
+import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
+import edu.ucsb.cs156.frontiers.models.SlackChannel;
+import edu.ucsb.cs156.frontiers.models.SlackUser;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseStaffRepository;
+import edu.ucsb.cs156.frontiers.repositories.RosterStudentRepository;
+import edu.ucsb.cs156.frontiers.services.CanvasApiTokenSecurityService;
+import edu.ucsb.cs156.frontiers.services.SlackService;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Stream;
+import lombok.Builder;
+
+/**
+ * Gives each student of a course a private Slack channel shared with the staff of the course.
+ *
+ * &lt;ol&gt;
+ *   &lt;li&gt;For each roster student (status ROSTER or MANUAL) with an active Slack account, works out a
+ *       channel name: &quot;private-first-last&quot; (see {@link #channelNameFor}). The first and last name
+ *       come from the student's Slack profile when it has them, and otherwise from the roster; only
+ *       the first word of the first name is used. Students who would get the same name also get the
+ *       part of their email before the @ at the end.
+ *   &lt;li&gt;Finds the channel each student already has. A channel is a student's if it is a private
+ *       channel that this bot created, and that student is the only one of the students among its
+ *       members. Channels are never recognized by name, so a channel is found again even after the
+ *       name of the student has changed.
+ *   &lt;li&gt;Creates the private channel of each student who does not have one, and renames the channel
+ *       of each student whose channel does not have the name worked out in the first step.
+ *   &lt;li&gt;Adds the student, the instructor and the staff of the course to the channel, unless they
+ *       are already in it. People are matched to Slack users by email; those without an active
+ *       Slack account cannot be added, and are only counted.
+ * &lt;/ol&gt;
+ *
+ * Nobody is ever removed from a channel. A problem with one channel or one person is logged, and
+ * the job carries on with the rest; but if the members of an existing channel cannot be listed, the
+ * job stops before changing anything, since it could not tell whose channel that is and might
+ * create a duplicate. The last line of the log is a summary.
+ */
+@Builder
+public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
+
+  public static final String CHANNEL_PREFIX = &quot;private&quot;;
+
+  /** Slack does not allow longer channel names. */
+  public static final int MAX_CHANNEL_NAME_LENGTH = 80;
+
+  /** Slack's error code when a channel (public or private, archived or not) has the name. */
+  public static final String NAME_TAKEN = &quot;name_taken&quot;;
+
+  /** What to tell the instructor when creating a channel fails with {@link #NAME_TAKEN}. */
+  public static final String NAME_TAKEN_ADVICE =
+      &quot;Slack already has a channel named #%s, which this job does not recognize as the private channel of this student: it may be a public channel, a private channel that this bot did not create, or a private channel that does not have exactly one student of the course among its members. Rename that channel in Slack, or fix its members, then run this job again.&quot;;
+
+  /** Only these roster students are considered: in particular, not dropped students. */
+<span class="fc" id="L70">  public static final List&lt;RosterStatus&gt; ENROLLED_STATUSES =</span>
+<span class="fc" id="L71">      List.of(RosterStatus.ROSTER, RosterStatus.MANUAL);</span>
+
+  Course course;
+  CourseRepository courseRepository;
+  RosterStudentRepository rosterStudentRepository;
+  CourseStaffRepository courseStaffRepository;
+  SlackService slackService;
+  CanvasApiTokenSecurityService tokenSecurityService;
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L82">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L87">    return course.getId();</span>
+  }
+
+  /**
+   * Turns part of a name into the form Slack requires of channel names: accents are dropped, the
+   * rest is lowercased, and each run of characters other than letters, numbers and underscores is
+   * replaced by one hyphen (none at the start or the end).
+   *
+   * @param namePart for example a last name; may be null
+   * @return the sanitized name part; empty if nothing is left
+   */
+  public static String sanitize(String namePart) {
+<span class="fc bfc" id="L99" title="All 2 branches covered.">    if (namePart == null) {</span>
+<span class="fc" id="L100">      return &quot;&quot;;</span>
+    }
+<span class="fc" id="L102">    return Normalizer.normalize(namePart, Normalizer.Form.NFD)</span>
+<span class="fc" id="L103">        .replaceAll(&quot;\\p{M}&quot;, &quot;&quot;)</span>
+<span class="fc" id="L104">        .toLowerCase(Locale.ROOT)</span>
+<span class="fc" id="L105">        .replaceAll(&quot;[^a-z0-9_]+&quot;, &quot;-&quot;)</span>
+<span class="fc" id="L106">        .replaceAll(&quot;^-|-$&quot;, &quot;&quot;);</span>
+  }
+
+  /**
+   * @param firstName a first name, possibly followed by middle names; may be null
+   * @return the first name up to the first space
+   */
+  public static String firstWord(String firstName) {
+<span class="fc bfc" id="L114" title="All 2 branches covered.">    if (firstName == null) {</span>
+<span class="fc" id="L115">      return &quot;&quot;;</span>
+    }
+<span class="fc" id="L117">    return firstName.strip().split(&quot;\\s+&quot;)[0];</span>
+  }
+
+  /**
+   * @param firstName the first name; only the part up to the first space is used
+   * @param lastName the last name
+   * @param suffix added at the end, to tell apart students with the same name; may be empty
+   * @return the name of the student's private Slack channel, for example private-chris-gaucho
+   */
+  public static String channelNameFor(String firstName, String lastName, String suffix) {
+<span class="fc" id="L127">    String name =</span>
+<span class="fc" id="L128">        String.join(</span>
+            &quot;-&quot;,
+<span class="fc" id="L130">            Stream.of(CHANNEL_PREFIX, sanitize(firstWord(firstName)), sanitize(lastName), suffix)</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">                .filter(part -&gt; !part.isEmpty())</span>
+<span class="fc" id="L132">                .toList());</span>
+<span class="fc" id="L133">    return name.substring(0, Math.min(name.length(), MAX_CHANNEL_NAME_LENGTH));</span>
+  }
+
+  /** A student who has an active Slack account, and so gets a channel. */
+<span class="fc" id="L137">  private static class StudentChannel {</span>
+    RosterStudent student;
+    String firstName;
+    String lastName;
+    String channelName;
+    // the channel the student already has, if any, and its members
+    SlackChannel existing;
+<span class="fc" id="L144">    List&lt;String&gt; members = List.of();</span>
+  }
+
+  /** The counts reported at the end of the log. */
+  private static class Summary {
+    int channelsCreated;
+    int channelsExisting;
+    int channelsRenamed;
+    int membersAdded;
+    int membersAlreadyPresent;
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L158">    Course currentCourse = courseRepository.findById(course.getId()).orElseThrow();</span>
+<span class="fc" id="L159">    String token = tokenSecurityService.decrypt(currentCourse.getSlackBotToken());</span>
+<span class="fc bfc" id="L160" title="All 4 branches covered.">    if (token == null || token.isEmpty()) {</span>
+<span class="fc" id="L161">      throw new IllegalStateException(</span>
+          &quot;No Slack token has been set for this course; enter one on the Settings tab.&quot;);
+    }
+
+<span class="fc" id="L165">    Map&lt;String, SlackUser&gt; activeSlackUserByEmail = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">    for (SlackUser user : slackService.listUsers(token)) {</span>
+<span class="fc bfc" id="L167" title="All 4 branches covered.">      if (user.isActivePerson() &amp;&amp; user.email() != null) {</span>
+<span class="fc" id="L168">        activeSlackUserByEmail.put(canonical(user.email()), user);</span>
+      }
+<span class="fc" id="L170">    }</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">    if (activeSlackUserByEmail.isEmpty()) {</span>
+      // Without emails nobody can be matched to a Slack user.
+<span class="fc" id="L173">      throw new IllegalStateException(</span>
+          &quot;Slack did not provide the email of any user. Add the users:read.email scope to the Slack app, reinstall it to the workspace, and save the new token on the Settings tab.&quot;);
+    }
+
+    // The instructor and the staff, who belong in every channel: Slack id, and a label for the log
+<span class="fc" id="L178">    Map&lt;String, String&gt; staff = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L179">    int staffNotInSlack = 0;</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">    if (currentCourse.getInstructorEmail() != null) {</span>
+<span class="fc" id="L181">      SlackUser instructor =</span>
+<span class="fc" id="L182">          activeSlackUserByEmail.get(canonical(currentCourse.getInstructorEmail()));</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">      if (instructor == null) {</span>
+<span class="fc" id="L184">        staffNotInSlack++;</span>
+      } else {
+<span class="fc" id="L186">        staff.put(instructor.getId(), &quot;instructor &quot; + currentCourse.getInstructorEmail());</span>
+      }
+    }
+<span class="fc bfc" id="L189" title="All 2 branches covered.">    for (CourseStaff staffMember : courseStaffRepository.findByCourseId(currentCourse.getId())) {</span>
+      SlackUser slackUser =
+<span class="fc bfc" id="L191" title="All 2 branches covered.">          staffMember.getEmail() == null</span>
+<span class="fc" id="L192">              ? null</span>
+<span class="fc" id="L193">              : activeSlackUserByEmail.get(canonical(staffMember.getEmail()));</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">      if (slackUser == null) {</span>
+<span class="fc" id="L195">        staffNotInSlack++;</span>
+      } else {
+<span class="fc" id="L197">        staff.putIfAbsent(slackUser.getId(), &quot;staff member &quot; + staffMember.getEmail());</span>
+      }
+<span class="fc" id="L199">    }</span>
+
+    // The students who get a channel, by Slack id
+<span class="fc" id="L202">    Map&lt;String, StudentChannel&gt; students = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L203">    int studentsNotInSlack = 0;</span>
+<span class="fc" id="L204">    List&lt;String&gt; studentsOnStaff = new ArrayList&lt;&gt;();</span>
+    for (RosterStudent student :
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        rosterStudentRepository</span>
+<span class="fc" id="L207">            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(</span>
+<span class="fc" id="L208">                currentCourse.getId(), ENROLLED_STATUSES)) {</span>
+      SlackUser slackUser =
+<span class="fc bfc" id="L210" title="All 2 branches covered.">          student.getEmail() == null</span>
+<span class="fc" id="L211">              ? null</span>
+<span class="fc" id="L212">              : activeSlackUserByEmail.get(canonical(student.getEmail()));</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">      if (slackUser == null) {</span>
+<span class="fc" id="L214">        studentsNotInSlack++;</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">      } else if (staff.containsKey(slackUser.getId())) {</span>
+        // They are in every channel, so no channel could be recognized as theirs
+<span class="fc" id="L217">        studentsOnStaff.add(describe(student));</span>
+      } else {
+<span class="fc" id="L219">        StudentChannel studentChannel = new StudentChannel();</span>
+<span class="fc" id="L220">        studentChannel.student = student;</span>
+<span class="fc" id="L221">        studentChannel.firstName = firstNonBlank(slackUser.firstName(), student.getFirstName());</span>
+<span class="fc" id="L222">        studentChannel.lastName = firstNonBlank(slackUser.lastName(), student.getLastName());</span>
+<span class="fc" id="L223">        students.putIfAbsent(slackUser.getId(), studentChannel);</span>
+      }
+<span class="fc" id="L225">    }</span>
+<span class="fc" id="L226">    chooseChannelNames(students);</span>
+
+    // Fails, before anything is changed, if the members of a channel cannot be listed
+<span class="fc" id="L229">    findExistingChannels(token, students);</span>
+
+<span class="fc" id="L231">    ctx.log(</span>
+        &quot;Creating Private Channels (%d student(s), channel names start with %s-)&quot;
+<span class="fc" id="L233">            .formatted(students.size(), CHANNEL_PREFIX));</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">    for (String student : studentsOnStaff) {</span>
+<span class="fc" id="L235">      ctx.log(</span>
+          &quot;%s is also the instructor or a staff member of the course, so does not get a private channel.&quot;
+<span class="fc" id="L237">              .formatted(student));</span>
+<span class="fc" id="L238">    }</span>
+<span class="fc" id="L239">    Summary summary = new Summary();</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">    for (Map.Entry&lt;String, StudentChannel&gt; entry : students.entrySet()) {</span>
+<span class="fc" id="L241">      StudentChannel studentChannel = entry.getValue();</span>
+<span class="fc" id="L242">      String channelId = setUpChannel(ctx, token, studentChannel, summary);</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">      if (channelId == null) {</span>
+<span class="fc" id="L244">        continue;</span>
+      }
+
+      // who belongs, with a label for the log; the student first
+<span class="fc" id="L248">      Map&lt;String, String&gt; belonging = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L249">      belonging.put(entry.getKey(), describe(studentChannel.student));</span>
+<span class="fc" id="L250">      belonging.putAll(staff);</span>
+<span class="fc" id="L251">      List&lt;Map.Entry&lt;String, String&gt;&gt; toAdd = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">      for (Map.Entry&lt;String, String&gt; person : belonging.entrySet()) {</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        if (studentChannel.members.contains(person.getKey())) {</span>
+<span class="fc" id="L254">          summary.membersAlreadyPresent++;</span>
+        } else {
+<span class="fc" id="L256">          toAdd.add(person);</span>
+        }
+<span class="fc" id="L258">      }</span>
+<span class="fc" id="L259">      addMembers(ctx, token, studentChannel.channelName, channelId, toAdd, summary);</span>
+<span class="fc" id="L260">    }</span>
+
+<span class="fc bfc" id="L262" title="All 2 branches covered.">    if (studentsNotInSlack &gt; 0) {</span>
+<span class="fc" id="L263">      ctx.log(</span>
+          &quot;%d student(s) did not get a private channel, because they do not have an active account in the Slack workspace; see the Slack tab. Run this job again once they have joined.&quot;
+<span class="fc" id="L265">              .formatted(studentsNotInSlack));</span>
+    }
+<span class="fc bfc" id="L267" title="All 2 branches covered.">    if (staffNotInSlack &gt; 0) {</span>
+<span class="fc" id="L268">      ctx.log(</span>
+          &quot;%d staff member(s) (counting the instructor) could not be added to the channels, because they do not have an active account in the Slack workspace; see the Slack tab. Run this job again once they have joined.&quot;
+<span class="fc" id="L270">              .formatted(staffNotInSlack));</span>
+    }
+<span class="fc" id="L272">    ctx.log(</span>
+        &quot;Done. Channels created: %d, already existed: %d (of which renamed: %d). Members added: %d, already present: %d.&quot;
+<span class="fc" id="L274">            .formatted(</span>
+<span class="fc" id="L275">                summary.channelsCreated,</span>
+<span class="fc" id="L276">                summary.channelsExisting,</span>
+<span class="fc" id="L277">                summary.channelsRenamed,</span>
+<span class="fc" id="L278">                summary.membersAdded,</span>
+<span class="fc" id="L279">                summary.membersAlreadyPresent));</span>
+<span class="fc" id="L280">  }</span>
+
+  /**
+   * Works out the name of each student's channel. Students who would get the same name are told
+   * apart by the part of their email before the @.
+   */
+  private static void chooseChannelNames(Map&lt;String, StudentChannel&gt; students) {
+<span class="fc" id="L287">    Map&lt;String, Integer&gt; timesUsed = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">    for (StudentChannel studentChannel : students.values()) {</span>
+<span class="fc" id="L289">      studentChannel.channelName =</span>
+<span class="fc" id="L290">          channelNameFor(studentChannel.firstName, studentChannel.lastName, &quot;&quot;);</span>
+<span class="fc" id="L291">      timesUsed.merge(studentChannel.channelName, 1, Integer::sum);</span>
+<span class="fc" id="L292">    }</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">    for (StudentChannel studentChannel : students.values()) {</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">      if (timesUsed.get(studentChannel.channelName) &gt; 1) {</span>
+<span class="fc" id="L295">        studentChannel.channelName =</span>
+<span class="fc" id="L296">            channelNameFor(</span>
+                studentChannel.firstName,
+                studentChannel.lastName,
+<span class="fc" id="L299">                sanitize(studentChannel.student.getEmail().split(&quot;@&quot;)[0]));</span>
+      }
+<span class="fc" id="L301">    }</span>
+<span class="fc" id="L302">  }</span>
+
+  /**
+   * Finds the channel each student already has: a private channel that this bot created, in which
+   * that student is the only one of the students.
+   *
+   * @throws IllegalStateException if the members of such a channel cannot be listed
+   */
+  private void findExistingChannels(String token, Map&lt;String, StudentChannel&gt; students) {
+<span class="fc" id="L311">    SlackAuthTestResponse authTest = slackService.authTest(token);</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">    if (!authTest.getOk()) {</span>
+<span class="fc" id="L313">      throw new SlackApiException(String.valueOf(authTest.getError()));</span>
+    }
+<span class="fc bfc" id="L315" title="All 2 branches covered.">    for (SlackChannel channel : slackService.listPrivateChannels(token)) {</span>
+      // Only channels made by this job are considered, so that no other private channel that the
+      // bot happens to have been added to is ever renamed, or opened up to the whole staff
+<span class="fc bfc" id="L318" title="All 4 branches covered.">      if (authTest.getUserId() == null || !authTest.getUserId().equals(channel.getCreator())) {</span>
+<span class="fc" id="L319">        continue;</span>
+      }
+      List&lt;String&gt; members;
+      try {
+<span class="fc" id="L323">        members = slackService.listChannelMembers(token, channel.getId());</span>
+<span class="fc" id="L324">      } catch (SlackApiException e) {</span>
+<span class="fc" id="L325">        throw new IllegalStateException(</span>
+            &quot;Could not list the members of the private channel #%s (%s), so cannot tell which student it belongs to. Nothing was changed in Slack.&quot;
+<span class="fc" id="L327">                .formatted(channel.getName(), e.getMessage()));</span>
+<span class="fc" id="L328">      }</span>
+<span class="fc" id="L329">      List&lt;String&gt; studentMembers = members.stream().filter(students::containsKey).toList();</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">      if (studentMembers.size() == 1) {</span>
+<span class="fc" id="L331">        StudentChannel studentChannel = students.get(studentMembers.get(0));</span>
+        // If a student somehow has several, the one that is in use rather than archived wins
+<span class="fc bfc" id="L333" title="All 4 branches covered.">        if (studentChannel.existing == null || studentChannel.existing.getArchived()) {</span>
+<span class="fc" id="L334">          studentChannel.existing = channel;</span>
+<span class="fc" id="L335">          studentChannel.members = members;</span>
+        }
+      }
+<span class="fc" id="L338">    }</span>
+<span class="fc" id="L339">  }</span>
+
+  /**
+   * Creates the student's channel, or renames the one they have if its name is not the right one.
+   *
+   * @return the id of the channel, or null if it is not ready to be used
+   */
+  private String setUpChannel(
+      JobContext ctx, String token, StudentChannel studentChannel, Summary summary) {
+<span class="fc" id="L348">    String channelName = studentChannel.channelName;</span>
+<span class="fc" id="L349">    String student = describe(studentChannel.student);</span>
+<span class="fc" id="L350">    SlackChannel existing = studentChannel.existing;</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">    if (existing == null) {</span>
+      try {
+<span class="fc" id="L353">        SlackChannel created = slackService.createPrivateChannel(token, channelName);</span>
+<span class="fc" id="L354">        summary.channelsCreated++;</span>
+<span class="fc" id="L355">        ctx.log(&quot;Created private channel #%s for %s&quot;.formatted(channelName, student));</span>
+<span class="fc" id="L356">        return created.getId();</span>
+<span class="fc" id="L357">      } catch (SlackApiException e) {</span>
+<span class="fc" id="L358">        ctx.log(</span>
+            &quot;Error creating private channel #%s for %s: %s. Skipping it.&quot;
+<span class="fc" id="L360">                .formatted(channelName, student, e.getMessage()));</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">        if (NAME_TAKEN.equals(e.getMessage())) {</span>
+<span class="fc" id="L362">          ctx.log(NAME_TAKEN_ADVICE.formatted(channelName));</span>
+        }
+<span class="fc" id="L364">        return null;</span>
+      }
+    }
+<span class="fc bfc" id="L367" title="All 2 branches covered.">    if (existing.getArchived()) {</span>
+<span class="fc" id="L368">      ctx.log(</span>
+          &quot;Private channel #%s for %s already exists, but is archived; unarchive it in Slack, then run this job again. Skipping it.&quot;
+<span class="fc" id="L370">              .formatted(existing.getName(), student));</span>
+<span class="fc" id="L371">      return null;</span>
+    }
+<span class="fc" id="L373">    summary.channelsExisting++;</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">    if (channelName.equals(existing.getName())) {</span>
+<span class="fc" id="L375">      ctx.log(&quot;Private channel #%s for %s already exists&quot;.formatted(channelName, student));</span>
+<span class="fc" id="L376">      return existing.getId();</span>
+    }
+    try {
+<span class="fc" id="L379">      slackService.renameChannel(token, existing.getId(), channelName);</span>
+<span class="fc" id="L380">      summary.channelsRenamed++;</span>
+<span class="fc" id="L381">      ctx.log(</span>
+          &quot;Renamed private channel #%s to #%s for %s&quot;
+<span class="fc" id="L383">              .formatted(existing.getName(), channelName, student));</span>
+<span class="fc" id="L384">    } catch (SlackApiException e) {</span>
+<span class="fc" id="L385">      ctx.log(</span>
+          &quot;Error renaming private channel #%s to #%s for %s: %s. It keeps its name.&quot;
+<span class="fc" id="L387">              .formatted(existing.getName(), channelName, student, e.getMessage()));</span>
+<span class="fc" id="L388">      studentChannel.channelName = existing.getName();</span>
+<span class="fc" id="L389">    }</span>
+<span class="fc" id="L390">    return existing.getId();</span>
+  }
+
+  /**
+   * Adds the people with one call to Slack. Slack adds all or none, so if that fails, they are
+   * added one at a time, so that one problem person does not keep the others out.
+   *
+   * @param toAdd Slack id and description of each person to add
+   */
+  private void addMembers(
+      JobContext ctx,
+      String token,
+      String channelName,
+      String channelId,
+      List&lt;Map.Entry&lt;String, String&gt;&gt; toAdd,
+      Summary summary) {
+<span class="fc bfc" id="L406" title="All 2 branches covered.">    if (toAdd.isEmpty()) {</span>
+<span class="fc" id="L407">      return;</span>
+    }
+<span class="fc" id="L409">    List&lt;String&gt; slackIds = toAdd.stream().map(Map.Entry::getKey).toList();</span>
+    try {
+<span class="fc" id="L411">      slackService.inviteToChannel(token, channelId, slackIds);</span>
+<span class="fc bfc" id="L412" title="All 2 branches covered.">      for (Map.Entry&lt;String, String&gt; person : toAdd) {</span>
+<span class="fc" id="L413">        summary.membersAdded++;</span>
+<span class="fc" id="L414">        ctx.log(&quot;Added %s to #%s&quot;.formatted(person.getValue(), channelName));</span>
+<span class="fc" id="L415">      }</span>
+<span class="fc" id="L416">      return;</span>
+<span class="fc" id="L417">    } catch (SlackApiException e) {</span>
+<span class="fc" id="L418">      ctx.log(</span>
+          &quot;Could not add %d member(s) to #%s in one step (%s); adding them one at a time.&quot;
+<span class="fc" id="L420">              .formatted(toAdd.size(), channelName, e.getMessage()));</span>
+    }
+<span class="fc bfc" id="L422" title="All 2 branches covered.">    for (Map.Entry&lt;String, String&gt; person : toAdd) {</span>
+      try {
+<span class="fc" id="L424">        slackService.inviteToChannel(token, channelId, List.of(person.getKey()));</span>
+<span class="fc" id="L425">        summary.membersAdded++;</span>
+<span class="fc" id="L426">        ctx.log(&quot;Added %s to #%s&quot;.formatted(person.getValue(), channelName));</span>
+<span class="fc" id="L427">      } catch (SlackApiException e) {</span>
+<span class="fc" id="L428">        ctx.log(</span>
+<span class="fc" id="L429">            &quot;Error adding %s to #%s: %s&quot;.formatted(person.getValue(), channelName, e.getMessage()));</span>
+<span class="fc" id="L430">      }</span>
+<span class="fc" id="L431">    }</span>
+<span class="fc" id="L432">  }</span>
+
+  private static String firstNonBlank(String preferred, String fallback) {
+<span class="fc bfc" id="L435" title="All 4 branches covered.">    return preferred == null || preferred.isBlank() ? fallback : preferred;</span>
+  }
+
+  private static String describe(RosterStudent student) {
+<span class="fc" id="L439">    return &quot;%s %s (%s)&quot;</span>
+<span class="fc" id="L440">        .formatted(student.getFirstName(), student.getLastName(), student.getEmail());</span>
+  }
+
+  private static String canonical(String email) {
+<span class="fc" id="L444">    return CanonicalFormConverter.convertToValidEmail(email.strip());</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
