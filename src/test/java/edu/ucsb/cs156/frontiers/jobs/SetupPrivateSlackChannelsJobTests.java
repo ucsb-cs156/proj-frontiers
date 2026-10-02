@@ -276,6 +276,42 @@ public class SetupPrivateSlackChannelsJobTests {
   }
 
   @Test
+  public void adds_the_instructor_even_when_they_are_not_listed_as_staff() throws Exception {
+    courseHasToken(course);
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(
+            List.of(
+                slackUser("U_PROF", "Prof", "Essor", "prof@ucsb.edu"),
+                slackUser("U_ALICE", "Alice", "Student", "alice@ucsb.edu"),
+                slackUser("U_BOB", "Bob", "Student", "bob@ucsb.edu")));
+    // the Staff tab is empty: the instructor comes from the course itself
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+    rosterIs(
+        student("Alice", "Student", "alice@ucsb.edu"), student("Bob", "Student", "bob@ucsb.edu"));
+    botIs("U_BOT");
+    when(slackService.listPrivateChannels(TOKEN))
+        .thenReturn(List.of(channel("C_BOB", "private-bob-student")));
+    when(slackService.listChannelMembers(TOKEN, "C_BOB")).thenReturn(List.of("U_BOT", "U_BOB"));
+    when(slackService.createPrivateChannel(TOKEN, "private-alice-student"))
+        .thenReturn(channel("C_ALICE", "private-alice-student"));
+
+    job().accept(ctx);
+
+    assertEquals(
+        log(
+            "Creating Private Channels (2 student(s), channel names start with private-)",
+            "Created private channel #private-alice-student for Alice Student (alice@ucsb.edu)",
+            "Added Alice Student (alice@ucsb.edu) to #private-alice-student",
+            "Added instructor Prof@UCSB.edu to #private-alice-student",
+            "Private channel #private-bob-student for Bob Student (bob@ucsb.edu) already exists",
+            "Added instructor Prof@UCSB.edu to #private-bob-student",
+            "Done. Channels created: 1, already existed: 1 (of which renamed: 0). Members added: 3, already present: 1."),
+        jobStarted.getLog());
+    verify(slackService).inviteToChannel(TOKEN, "C_ALICE", List.of("U_ALICE", "U_PROF"));
+    verify(slackService).inviteToChannel(TOKEN, "C_BOB", List.of("U_PROF"));
+  }
+
+  @Test
   public void students_with_the_same_name_are_told_apart_by_email() throws Exception {
     Course noInstructor = Course.builder().id(1L).slackBotToken("enc:v1:ciphertext").build();
     courseHasToken(noInstructor);
