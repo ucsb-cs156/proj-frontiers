@@ -25,6 +25,7 @@ import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { dokkuAccountTranslationsFixtures } from "fixtures/dokkuAccountTranslationsFixtures";
+import { apiKeysFixtures } from "fixtures/apiKeysFixtures";
 import { newAssignmentsFixtures } from "fixtures/newAssignmentsFixtures";
 import slackFixtures from "fixtures/slackFixtures";
 import { expect, vi } from "vitest";
@@ -1333,6 +1334,120 @@ describe("InstructorCourseShowPage tests", () => {
     });
   });
 
+  describe("API Keys tab", () => {
+    const setupCourse7WithApiKeysOption = (enableApiKeys) => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/7").reply(200, {
+        ...coursesFixtures.severalCourses[0],
+        id: 7,
+      });
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: false,
+        DOKKU_MANAGER: false,
+        ENABLE_API_KEYS: enableApiKeys,
+      });
+      axiosMock
+        .onGet("/api/courses/key")
+        .reply(200, apiKeysFixtures.severalKeys);
+    };
+
+    const renderPage = () =>
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+    test("is shown, between Downloads and Settings, when the ENABLE_API_KEYS option is enabled", async () => {
+      setupCourse7WithApiKeysOption(true);
+
+      renderPage();
+
+      const apiKeysTab = await screen.findByRole("tab", { name: "API Keys" });
+      expect(apiKeysTab).toHaveAttribute("data-rr-ui-event-key", "api-keys");
+      const tabNames = screen.getAllByRole("tab").map((tab) => tab.textContent);
+      expect(tabNames).toEqual([
+        "Students",
+        "Staff",
+        "Teams",
+        "Assignments",
+        "Jobs",
+        "Downloads",
+        "API Keys",
+        "Settings",
+      ]);
+
+      fireEvent.click(apiKeysTab);
+      expect(apiKeysTab).toHaveAttribute("aria-selected", "true");
+      const tab = screen.getByTestId(
+        "InstructorCourseShowPage-api-keys-tab-component",
+      );
+      expect(tab.parentElement).toHaveClass("pt-2");
+      expect(
+        await screen.findByTestId(
+          "InstructorCourseShowPage-api-keys-table-cell-row-0-col-label",
+        ),
+      ).toHaveTextContent("jpa02 autograder F26");
+      const keysRequests = axiosMock.history.get.filter(
+        (request) => request.url === "/api/courses/key",
+      );
+      expect(keysRequests.length).toBe(1);
+      expect(keysRequests[0].params).toEqual({ courseId: "7" });
+    });
+
+    test("is hidden when the ENABLE_API_KEYS option is disabled", async () => {
+      setupCourse7WithApiKeysOption(false);
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          axiosMock.history.get.some(
+            (request) => request.url === "/api/course/options",
+          ),
+        ).toBe(true),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "API Keys" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("InstructorCourseShowPage-api-keys-tab-component"),
+      ).not.toBeInTheDocument();
+      expect(
+        axiosMock.history.get.some(
+          (request) => request.url === "/api/courses/key",
+        ),
+      ).toBe(false);
+    });
+
+    test("is hidden when the ENABLE_API_KEYS option is not strictly true", async () => {
+      setupCourse7WithApiKeysOption("unexpected");
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ ENABLE_API_KEYS: "unexpected" })),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "API Keys" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   test("shows the Slack tab when SLACK_INTEGRATION is enabled and a token is set; loads Slack data only when the tab is opened", async () => {
     setupInstructorUser();
     axiosMock.onGet("/api/courses/7").reply(200, {
@@ -1686,6 +1801,7 @@ describe("InstructorCourseShowPage tests", () => {
         .reply(200, slackFixtures.connectedInfo);
       axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
       axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+      axiosMock.onGet("/api/courses/key").reply(200, []);
     };
 
     const selectedTab = () =>
@@ -1720,11 +1836,13 @@ describe("InstructorCourseShowPage tests", () => {
       ["downloads", "Downloads"],
       ["dokku", "Dokku"],
       ["slack", "Slack"],
+      ["api-keys", "API Keys"],
       ["settings", "Settings"],
     ])("?tab=%s opens the %s tab, and remembers it", async (tab, title) => {
       setupCourse7({
         TRANSLATE_SECTIONS: true,
         DOKKU_MANAGER: true,
+        ENABLE_API_KEYS: true,
         NEW_ASSIGNMENT_FEATURES: true,
         SLACK_INTEGRATION: true,
       });
@@ -1836,6 +1954,24 @@ describe("InstructorCourseShowPage tests", () => {
       ).not.toBeInTheDocument();
       expect(screen.getByTestId("location-probe").textContent).toBe(
         "/instructor/courses/7?tab=dokku",
+      );
+    });
+
+    test("?tab=api-keys shows the Assignments tab when the Enable Api Keys option is off", async () => {
+      setupCourse7({ ENABLE_API_KEYS: false });
+      renderAt("/instructor/courses/7?tab=api-keys");
+      await screen.findByRole("tab", { name: "Settings" });
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ ENABLE_API_KEYS: false })),
+      );
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(
+        screen.queryByRole("tab", { name: "API Keys" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7?tab=api-keys",
       );
     });
 

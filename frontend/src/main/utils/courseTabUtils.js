@@ -15,6 +15,7 @@ export const COURSE_TABS = [
   "downloads",
   "dokku",
   "slack",
+  "api-keys",
   "settings",
 ];
 

@@ -29,6 +29,7 @@ describe("courseTabUtils tests", () => {
       "downloads",
       "dokku",
       "slack",
+      "api-keys",
       "settings",
     ]);
     expect(DEFAULT_COURSE_TAB).toBe("assignments");
