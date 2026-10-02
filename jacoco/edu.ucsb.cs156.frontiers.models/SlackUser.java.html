@@ -51,27 +51,47 @@ public class SlackUser {
 
     @JsonProperty(&quot;display_name&quot;)
     private String displayName;
+
+    @JsonProperty(&quot;first_name&quot;)
+    private String firstName;
+
+    @JsonProperty(&quot;last_name&quot;)
+    private String lastName;
   }
 
   /**
    * @return the user's email, or null if Slack did not provide one
    */
   public String email() {
-<span class="fc bfc" id="L60" title="All 2 branches covered.">    return profile == null ? null : profile.getEmail();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    return profile == null ? null : profile.getEmail();</span>
   }
 
   /**
    * @return the user's display name, or null if Slack did not provide one
    */
   public String displayName() {
-<span class="fc bfc" id="L67" title="All 2 branches covered.">    return profile == null ? null : profile.getDisplayName();</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">    return profile == null ? null : profile.getDisplayName();</span>
+  }
+
+  /**
+   * @return the user's first name, or null if Slack did not provide one
+   */
+  public String firstName() {
+<span class="fc bfc" id="L80" title="All 2 branches covered.">    return profile == null ? null : profile.getFirstName();</span>
+  }
+
+  /**
+   * @return the user's last name, or null if Slack did not provide one
+   */
+  public String lastName() {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">    return profile == null ? null : profile.getLastName();</span>
   }
 
   /**
    * @return true if this is a person (not a bot, and not Slackbot)
    */
   public boolean isPerson() {
-<span class="fc bfc" id="L74" title="All 4 branches covered.">    return !bot &amp;&amp; !SLACKBOT_ID.equals(id);</span>
+<span class="fc bfc" id="L94" title="All 4 branches covered.">    return !bot &amp;&amp; !SLACKBOT_ID.equals(id);</span>
   }
 
   /**
@@ -79,7 +99,7 @@ public class SlackUser {
    *     for an invitation to be accepted
    */
   public boolean isActivePerson() {
-<span class="fc bfc" id="L82" title="All 6 branches covered.">    return isPerson() &amp;&amp; !deleted &amp;&amp; !invitedUser;</span>
+<span class="fc bfc" id="L102" title="All 6 branches covered.">    return isPerson() &amp;&amp; !deleted &amp;&amp; !invitedUser;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
