@@ -342,9 +342,10 @@ public class SlackService {
 
   /**
    * Calls the Slack <code>conversations.kick</code> method to remove a user from a channel that the
-   * bot is a member of. Requires the <code>channels:manage</code> scope. Whether the bot is allowed
-   * to remove members from public channels is also a workspace setting; if it is not, Slack answers
-   * {@link #RESTRICTED_ACTION}, and {@link #REMOVAL_RESTRICTED_ADVICE} says how to fix that.
+   * bot is a member of. Requires the <code>channels:manage</code> scope for a public channel, and
+   * the <code>groups:write</code> scope for a private one. Whether the bot is allowed to remove
+   * members is also a workspace setting; if it is not, Slack answers {@link #RESTRICTED_ACTION},
+   * and for public channels {@link #REMOVAL_RESTRICTED_ADVICE} says how to fix that.
    *
    * @param token the (plaintext) Slack bot token
    * @param channelId id of the channel

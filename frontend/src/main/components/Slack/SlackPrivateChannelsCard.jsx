@@ -55,8 +55,11 @@ export default function SlackPrivateChannelsCard({
               members, not by its name, so running this again does not create
               duplicates: it creates channels for new students, adds new staff
               members to the existing channels, and renames a channel if the
-              name of its student has changed. Nobody is ever removed from a
-              channel. What was done is logged on the Jobs tab.
+              name of its student has changed. It then <strong>removes</strong>{" "}
+              from each of those existing channels everyone other than the
+              student, the instructor, the course staff, and bots; so someone
+              who has been deleted from the Staff tab is removed from the
+              channels. What was done is logged on the Jobs tab.
             </p>
             <Button
               onClick={() => mutation.mutate()}

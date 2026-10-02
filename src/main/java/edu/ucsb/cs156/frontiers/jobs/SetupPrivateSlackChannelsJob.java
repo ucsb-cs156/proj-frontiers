@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import lombok.Builder;
 
@@ -44,12 +45,18 @@ import lombok.Builder;
  *   <li>Adds the student, the instructor and the staff of the course to the channel, unless they
  *       are already in it. People are matched to Slack users by email; those without an active
  *       Slack account cannot be added, and are only counted.
+ *   <li>Removes from each student's channel every person who is neither the student, nor the
+ *       instructor, nor a member of the course staff: for example somebody who has been deleted
+ *       from the staff of the course. Bots (including the bot this job acts as) and members that
+ *       are not users of the workspace are never removed. If Slack refuses because of a workspace
+ *       setting (restricted_action), the log says how to change the setting and no further removals
+ *       are attempted in that run.
  * </ol>
  *
- * Nobody is ever removed from a channel. A problem with one channel or one person is logged, and
- * the job carries on with the rest; but if the members of an existing channel cannot be listed, the
- * job stops before changing anything, since it could not tell whose channel that is and might
- * create a duplicate. The last line of the log is a summary.
+ * A problem with one channel or one person is logged, and the job carries on with the rest; but if
+ * the members of an existing channel cannot be listed, the job stops before changing anything,
+ * since it could not tell whose channel that is and might create a duplicate. The last line of the
+ * log is a summary.
  */
 @Builder
 public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
@@ -65,6 +72,13 @@ public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
   /** What to tell the instructor when creating a channel fails with {@link #NAME_TAKEN}. */
   public static final String NAME_TAKEN_ADVICE =
       "Slack already has a channel named #%s, which this job does not recognize as the private channel of this student: it may be a public channel, a private channel that this bot did not create, or a private channel that does not have exactly one student of the course among its members. Rename that channel in Slack, or fix its members, then run this job again.";
+
+  /**
+   * What to tell the instructor when removing a member fails with {@link
+   * SlackService#RESTRICTED_ACTION}.
+   */
+  public static final String REMOVAL_RESTRICTED_ADVICE =
+      "Slack does not allow this bot to remove members from private channels, so no more members will be removed in this run. A Workspace Owner can change this in Slack under Workspace settings, Roles & permissions (on older workspaces: Permissions, Channel Management): set \"People who can remove members from private channels\" to \"Everyone, except guests\". Then run this job again.";
 
   /** Only these roster students are considered: in particular, not dropped students. */
   public static final List<RosterStatus> ENROLLED_STATUSES =
@@ -151,6 +165,9 @@ public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
     int channelsRenamed;
     int membersAdded;
     int membersAlreadyPresent;
+    int membersRemoved;
+    // set once Slack has refused a removal because of a workspace setting
+    boolean removalsRestricted;
   }
 
   @Override
@@ -162,8 +179,10 @@ public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
           "No Slack token has been set for this course; enter one on the Settings tab.");
     }
 
+    Map<String, SlackUser> slackUsersById = new HashMap<>();
     Map<String, SlackUser> activeSlackUserByEmail = new HashMap<>();
     for (SlackUser user : slackService.listUsers(token)) {
+      slackUsersById.put(user.getId(), user);
       if (user.isActivePerson() && user.email() != null) {
         activeSlackUserByEmail.put(canonical(user.email()), user);
       }
@@ -257,6 +276,8 @@ public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
         }
       }
       addMembers(ctx, token, studentChannel.channelName, channelId, toAdd, summary);
+      removeOthers(
+          ctx, token, studentChannel, channelId, belonging.keySet(), slackUsersById, summary);
     }
 
     if (studentsNotInSlack > 0) {
@@ -270,13 +291,14 @@ public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
               .formatted(staffNotInSlack));
     }
     ctx.log(
-        "Done. Channels created: %d, already existed: %d (of which renamed: %d). Members added: %d, already present: %d."
+        "Done. Channels created: %d, already existed: %d (of which renamed: %d). Members added: %d, already present: %d, removed: %d."
             .formatted(
                 summary.channelsCreated,
                 summary.channelsExisting,
                 summary.channelsRenamed,
                 summary.membersAdded,
-                summary.membersAlreadyPresent));
+                summary.membersAlreadyPresent,
+                summary.membersRemoved));
   }
 
   /**
@@ -431,6 +453,47 @@ public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
     }
   }
 
+  /**
+   * Removes from the channel everybody who does not belong in it, such as somebody who is no longer
+   * on the staff of the course. Bots (including this one) and members who are not users of the
+   * workspace are left alone.
+   *
+   * @param belonging Slack ids of the student, the instructor and the staff
+   */
+  private void removeOthers(
+      JobContext ctx,
+      String token,
+      StudentChannel studentChannel,
+      String channelId,
+      Set<String> belonging,
+      Map<String, SlackUser> slackUsersById,
+      Summary summary) {
+    String channelName = studentChannel.channelName;
+    for (String memberId : studentChannel.members) {
+      SlackUser member = slackUsersById.get(memberId);
+      if (summary.removalsRestricted
+          || belonging.contains(memberId)
+          || member == null
+          || !member.isPerson()) {
+        continue;
+      }
+      try {
+        slackService.removeFromChannel(token, channelId, memberId);
+        summary.membersRemoved++;
+        ctx.log("Removed %s from #%s".formatted(describe(member), channelName));
+      } catch (SlackApiException e) {
+        ctx.log(
+            "Error removing %s from #%s: %s"
+                .formatted(describe(member), channelName, e.getMessage()));
+        if (SlackService.RESTRICTED_ACTION.equals(e.getMessage())) {
+          // A workspace setting forbids it, so every other removal would fail the same way
+          ctx.log(REMOVAL_RESTRICTED_ADVICE);
+          summary.removalsRestricted = true;
+        }
+      }
+    }
+  }
+
   private static String firstNonBlank(String preferred, String fallback) {
     return preferred == null || preferred.isBlank() ? fallback : preferred;
   }
@@ -438,6 +501,10 @@ public class SetupPrivateSlackChannelsJob implements JobContextConsumer {
   private static String describe(RosterStudent student) {
     return "%s %s (%s)"
         .formatted(student.getFirstName(), student.getLastName(), student.getEmail());
+  }
+
+  private static String describe(SlackUser user) {
+    return "%s (%s)".formatted(user.getRealName(), user.email());
   }
 
   private static String canonical(String email) {

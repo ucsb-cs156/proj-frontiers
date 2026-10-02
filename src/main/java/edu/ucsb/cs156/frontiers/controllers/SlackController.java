@@ -462,7 +462,8 @@ public class SlackController extends ApiController {
    * Slack channel (named "private-" followed by the first and last name of the student), and adds
    * the student, the instructor and the staff of the course to it. A student's channel is
    * recognized by its members rather than by its name, so running the job again creates no
-   * duplicates. See {@link SetupPrivateSlackChannelsJob}.
+   * duplicates; it does remove from the existing channels anybody who is neither the student, nor
+   * the instructor, nor staff. See {@link SetupPrivateSlackChannelsJob}.
    *
    * @param courseId the id of the course
    * @return the job that was launched; its log can be seen on the Jobs tab of the course

@@ -220,13 +220,30 @@ Its log is on the **Jobs** tab:
    An archived channel is skipped: unarchive it in Slack first.
 4. The student, the instructor and each staff member are added to the channel,
    unless they are in it already. So running the job again after adding
-   someone on the **Staff** tab adds them to every student's channel.
+   someone on the **Staff** tab adds them to every student's channel. The
+   instructor is added whether or not they are also listed on the Staff tab.
+5. Everyone else is removed from each student's existing channel, and logged,
+   except for bots (including the Frontiers bot itself) and members that are
+   not users of the workspace. So running the job again after deleting someone
+   from the **Staff** tab removes them from every student's channel. Note that
+   the job cannot tell a former staff member from anybody else: whoever is in
+   a student's channel without being that student, the instructor or current
+   staff is removed, including someone who was added to it by hand in Slack.
 
-Nobody is ever removed from these channels by the job: a staff member who
-leaves the course has to be removed in Slack. Students without an active Slack
-account get no channel yet (the log says how many there were; the second table
-on the Slack tab says who); run the job again once they have joined. A student
-who is also the instructor or a staff member of the course gets no channel.
+Students without an active Slack account get no channel yet (the log says how
+many there were; the second table on the Slack tab says who); run the job
+again once they have joined. A student who is also the instructor or a staff
+member of the course gets no channel. Staff are matched to Slack users by
+email, like students: a staff member whose Slack account has a different email
+than the one on the Staff tab cannot be added, and is removed if they are in a
+channel.
+
+Whether the bot is allowed to remove people from private channels depends on
+the workspace's settings. If it is not, Slack answers `restricted_action` to
+the first removal; the job logs that, names the setting to change (**People
+who can remove members from private channels**, in the same place as the one
+for public channels in step 5 of "Setting up the Slack app" above), and
+attempts no further removals in that run. The rest of the job still runs.
 
 If Slack answers `name_taken` when a channel is created, there already is a
 channel with that name that the job does not recognize as the student's:
@@ -237,8 +254,8 @@ cannot be listed, the job stops before changing anything, since it could not
 tell whose channel that is.
 
 The last line of the log is a summary: how many channels were created, already
-existed, and were renamed, and how many members were added or were already
-present. The job needs these scopes: `users:read`, `users:read.email`,
+existed, and were renamed, and how many members were added, were already
+present, and were removed. The job needs these scopes: `users:read`, `users:read.email`,
 `groups:read` and `groups:write`.
 
 ## Operational gotcha: adding scopes means a new token

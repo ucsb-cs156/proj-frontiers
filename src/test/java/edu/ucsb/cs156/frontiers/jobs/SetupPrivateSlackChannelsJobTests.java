@@ -68,6 +68,7 @@ public class SetupPrivateSlackChannelsJobTests {
   private static SlackUser slackUser(String id, String firstName, String lastName, String email) {
     return SlackUser.builder()
         .id(id)
+        .realName(firstName + " " + lastName)
         .profile(
             SlackUser.Profile.builder()
                 .email(email)
@@ -180,6 +181,8 @@ public class SetupPrivateSlackChannelsJobTests {
                 slackUser("U_DAVE", "Dave", "Student", "dave@ucsb.edu"),
                 slackUser("U_ERIN", "Erin", "Student", "erin@ucsb.edu"),
                 slackUser("U_STRANGER", "Some", "Stranger", "stranger@example.org"),
+                // was on the staff, and in Dave's channel, but has been deleted from the staff
+                slackUser("U_FORMER", "Former", "Staff", "former@ucsb.edu"),
                 slackUser("U_NOEMAIL", "No", "Email", null),
                 bot,
                 invited));
@@ -223,10 +226,12 @@ public class SetupPrivateSlackChannelsJobTests {
                 channel("C_STAFF", "staff-only"),
                 channel("C_TWO", "study-group")));
     when(slackService.listChannelMembers(TOKEN, "C_DAVE"))
-        .thenReturn(List.of("U_BOT", "U_DAVE", "U_PROF"));
+        .thenReturn(List.of("U_BOT", "U_DAVE", "U_PROF", "U_FORMER"));
     when(slackService.listChannelMembers(TOKEN, "C_BOB"))
-        .thenReturn(List.of("U_BOT", "U_PROF", "U_TA", "U_BOB", "U_STRANGER", "U_EXTERNAL"));
-    when(slackService.listChannelMembers(TOKEN, "C_ERIN")).thenReturn(List.of("U_ERIN"));
+        .thenReturn(
+            List.of("U_BOT", "U_PROF", "U_TA", "U_BOB", "U_STRANGER", "U_EXTERNAL", "U_NOEMAIL"));
+    when(slackService.listChannelMembers(TOKEN, "C_ERIN"))
+        .thenReturn(List.of("U_ERIN", "U_STRANGER"));
     when(slackService.listChannelMembers(TOKEN, "C_STAFF"))
         .thenReturn(List.of("U_BOT", "U_PROF", "U_TA"));
     when(slackService.listChannelMembers(TOKEN, "C_TWO"))
@@ -248,16 +253,19 @@ public class SetupPrivateSlackChannelsJobTests {
             "Added instructor Prof@UCSB.edu to #private-alice-anderson",
             "Added staff member TA@ucsb.edu to #private-alice-anderson",
             "Renamed private channel #private-robert-old to #private-bobby-student for Bob Student (bob@ucsb.edu)",
+            "Removed Some Stranger (stranger@example.org) from #private-bobby-student",
+            "Removed No Email (null) from #private-bobby-student",
             "Created private channel #private-carol-cruz for Carol Ann Cruz (carol@ucsb.edu)",
             "Added Carol Ann Cruz (carol@ucsb.edu) to #private-carol-cruz",
             "Added instructor Prof@UCSB.edu to #private-carol-cruz",
             "Added staff member TA@ucsb.edu to #private-carol-cruz",
             "Private channel #private-dave-student for Dave Student (dave@ucsb.edu) already exists",
             "Added staff member TA@ucsb.edu to #private-dave-student",
+            "Removed Former Staff (former@ucsb.edu) from #private-dave-student",
             "Private channel #private-erin-student for Erin Student (erin@ucsb.edu) already exists, but is archived; unarchive it in Slack, then run this job again. Skipping it.",
             "2 student(s) did not get a private channel, because they do not have an active account in the Slack workspace; see the Slack tab. Run this job again once they have joined.",
             "2 staff member(s) (counting the instructor) could not be added to the channels, because they do not have an active account in the Slack workspace; see the Slack tab. Run this job again once they have joined.",
-            "Done. Channels created: 2, already existed: 2 (of which renamed: 1). Members added: 7, already present: 5."),
+            "Done. Channels created: 2, already existed: 2 (of which renamed: 1). Members added: 7, already present: 5, removed: 3."),
         jobStarted.getLog());
 
     verify(slackService).renameChannel(TOKEN, "C_BOB", "private-bobby-student");
@@ -266,10 +274,15 @@ public class SetupPrivateSlackChannelsJobTests {
     verify(slackService).inviteToChannel(TOKEN, "C_ALICE", List.of("U_ALICE", "U_PROF", "U_TA"));
     verify(slackService).inviteToChannel(TOKEN, "C_CAROL", List.of("U_CAROL", "U_PROF", "U_TA"));
     verify(slackService).inviteToChannel(TOKEN, "C_DAVE", List.of("U_TA"));
-    // everybody who belongs in Bob's channel is in it already; nobody is ever removed from it
+    // everybody who belongs in Bob's channel is in it already
     verify(slackService, never()).inviteToChannel(eq(TOKEN), eq("C_BOB"), any());
     verify(slackService, never()).inviteToChannel(eq(TOKEN), eq("C_ERIN"), any());
-    verify(slackService, never()).removeFromChannel(any(), any(), any());
+    verify(slackService).removeFromChannel(TOKEN, "C_BOB", "U_STRANGER");
+    verify(slackService).removeFromChannel(TOKEN, "C_BOB", "U_NOEMAIL");
+    verify(slackService).removeFromChannel(TOKEN, "C_DAVE", "U_FORMER");
+    // the student, the instructor, the staff, bots, and members who are not users of the
+    // workspace stay; and nobody is removed from an archived channel, or one that is nobody's
+    verify(slackService, Mockito.times(3)).removeFromChannel(any(), any(), any());
     verify(slackService, never()).listChannelMembers(TOKEN, "C_OTHER");
     verify(slackService, never()).listChannelMembers(TOKEN, "C_THEIRS");
     verify(slackService, never()).listPublicChannels(any());
@@ -305,7 +318,7 @@ public class SetupPrivateSlackChannelsJobTests {
             "Added instructor Prof@UCSB.edu to #private-alice-student",
             "Private channel #private-bob-student for Bob Student (bob@ucsb.edu) already exists",
             "Added instructor Prof@UCSB.edu to #private-bob-student",
-            "Done. Channels created: 1, already existed: 1 (of which renamed: 0). Members added: 3, already present: 1."),
+            "Done. Channels created: 1, already existed: 1 (of which renamed: 0). Members added: 3, already present: 1, removed: 0."),
         jobStarted.getLog());
     verify(slackService).inviteToChannel(TOKEN, "C_ALICE", List.of("U_ALICE", "U_PROF"));
     verify(slackService).inviteToChannel(TOKEN, "C_BOB", List.of("U_PROF"));
@@ -346,7 +359,7 @@ public class SetupPrivateSlackChannelsJobTests {
             "Added Samantha Lee (slee2@ucsb.edu) to #private-sam-lee-slee2",
             "Created private channel #private-pat-lee for Pat Lee (pat@ucsb.edu)",
             "Added Pat Lee (pat@ucsb.edu) to #private-pat-lee",
-            "Done. Channels created: 2, already existed: 1 (of which renamed: 1). Members added: 2, already present: 1."),
+            "Done. Channels created: 2, already existed: 1 (of which renamed: 1). Members added: 2, already present: 1, removed: 0."),
         jobStarted.getLog());
     verify(slackService).renameChannel(TOKEN, "C_SAM1", "private-sam-lee-sam-lee");
   }
@@ -363,7 +376,9 @@ public class SetupPrivateSlackChannelsJobTests {
                 slackUser("U_ALICE", "Alice", "Student", "alice@ucsb.edu"),
                 slackUser("U_BOB", "Bob", "Student", "bob@ucsb.edu"),
                 slackUser("U_CAROL", "Carol", "Student", "carol@ucsb.edu"),
-                slackUser("U_DAVE", "Dave", "Student", "dave@ucsb.edu")));
+                slackUser("U_DAVE", "Dave", "Student", "dave@ucsb.edu"),
+                slackUser("U_X", "Some", "Stranger", "stranger@example.org"),
+                slackUser("U_Y", "Other", "Stranger", "other@example.org")));
     when(courseStaffRepository.findByCourseId(1L))
         .thenReturn(List.of(CourseStaff.builder().email("ta@ucsb.edu").build()));
     rosterIs(
@@ -374,7 +389,12 @@ public class SetupPrivateSlackChannelsJobTests {
     botIs("U_BOT");
     when(slackService.listPrivateChannels(TOKEN))
         .thenReturn(List.of(channel("C_CAROL", "private-carol-old")));
-    when(slackService.listChannelMembers(TOKEN, "C_CAROL")).thenReturn(List.of("U_CAROL"));
+    when(slackService.listChannelMembers(TOKEN, "C_CAROL"))
+        .thenReturn(List.of("U_CAROL", "U_X", "U_Y"));
+    Mockito.lenient()
+        .doThrow(new SlackApiException("user_not_found"))
+        .when(slackService)
+        .removeFromChannel(TOKEN, "C_CAROL", "U_X");
     when(slackService.createPrivateChannel(TOKEN, "private-alice-student"))
         .thenThrow(new SlackApiException("name_taken"));
     when(slackService.createPrivateChannel(TOKEN, "private-bob-student"))
@@ -404,15 +424,66 @@ public class SetupPrivateSlackChannelsJobTests {
             "Error creating private channel #private-bob-student for Bob Student (bob@ucsb.edu): missing_scope. Skipping it.",
             "Error renaming private channel #private-carol-old to #private-carol-student for Carol Student (carol@ucsb.edu): not_authorized. It keeps its name.",
             "Added staff member ta@ucsb.edu to #private-carol-old",
+            "Error removing Some Stranger (stranger@example.org) from #private-carol-old: user_not_found",
+            "Removed Other Stranger (other@example.org) from #private-carol-old",
             "Created private channel #private-dave-student for Dave Student (dave@ucsb.edu)",
             "Could not add 2 member(s) to #private-dave-student in one step (user_is_restricted); adding them one at a time.",
             "Error adding Dave Student (dave@ucsb.edu) to #private-dave-student: user_is_restricted",
             "Added staff member ta@ucsb.edu to #private-dave-student",
             "1 staff member(s) (counting the instructor) could not be added to the channels, because they do not have an active account in the Slack workspace; see the Slack tab. Run this job again once they have joined.",
-            "Done. Channels created: 1, already existed: 1 (of which renamed: 0). Members added: 2, already present: 1."),
+            "Done. Channels created: 1, already existed: 1 (of which renamed: 0). Members added: 2, already present: 1, removed: 1."),
         jobStarted.getLog());
     verify(slackService).inviteToChannel(TOKEN, "C_CAROL", List.of("U_TA"));
     verify(slackService).inviteToChannel(TOKEN, "C_DAVE", List.of("U_TA"));
+  }
+
+  @Test
+  public void stops_removing_and_explains_when_the_workspace_forbids_removals() throws Exception {
+    Course noInstructor = Course.builder().id(1L).slackBotToken("enc:v1:ciphertext").build();
+    courseHasToken(noInstructor);
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(
+            List.of(
+                slackUser("U_TA", "Tee", "Ay", "ta@ucsb.edu"),
+                slackUser("U_ALICE", "Alice", "Student", "alice@ucsb.edu"),
+                slackUser("U_BOB", "Bob", "Student", "bob@ucsb.edu"),
+                slackUser("U_X", "Some", "Stranger", "stranger@example.org"),
+                slackUser("U_Y", "Other", "Stranger", "other@example.org"),
+                slackUser("U_Z", "Third", "Stranger", "third@example.org")));
+    when(courseStaffRepository.findByCourseId(1L))
+        .thenReturn(List.of(CourseStaff.builder().email("ta@ucsb.edu").build()));
+    rosterIs(
+        student("Alice", "Student", "alice@ucsb.edu"), student("Bob", "Student", "bob@ucsb.edu"));
+    botIs("U_BOT");
+    when(slackService.listPrivateChannels(TOKEN))
+        .thenReturn(
+            List.of(
+                channel("C_ALICE", "private-alice-student"),
+                channel("C_BOB", "private-bob-student")));
+    when(slackService.listChannelMembers(TOKEN, "C_ALICE"))
+        .thenReturn(List.of("U_ALICE", "U_TA", "U_X", "U_Y"));
+    when(slackService.listChannelMembers(TOKEN, "C_BOB")).thenReturn(List.of("U_BOB", "U_Z"));
+    Mockito.doThrow(new SlackApiException("restricted_action"))
+        .when(slackService)
+        .removeFromChannel(TOKEN, "C_ALICE", "U_X");
+
+    job().accept(ctx);
+
+    assertEquals(
+        log(
+            "Creating Private Channels (2 student(s), channel names start with private-)",
+            "Private channel #private-alice-student for Alice Student (alice@ucsb.edu) already exists",
+            "Error removing Some Stranger (stranger@example.org) from #private-alice-student: restricted_action",
+            "Slack does not allow this bot to remove members from private channels, so no more members will be removed in this run. A Workspace Owner can change this in Slack under Workspace settings, Roles & permissions (on older workspaces: Permissions, Channel Management): set \"People who can remove members from private channels\" to \"Everyone, except guests\". Then run this job again.",
+            "Private channel #private-bob-student for Bob Student (bob@ucsb.edu) already exists",
+            "Added staff member ta@ucsb.edu to #private-bob-student",
+            "Done. Channels created: 0, already existed: 2 (of which renamed: 0). Members added: 1, already present: 3, removed: 0."),
+        jobStarted.getLog());
+    // Once Slack has refused, nobody else is tried: not in the same channel, nor in later ones;
+    // but the rest of the job carries on
+    verify(slackService).removeFromChannel(TOKEN, "C_ALICE", "U_X");
+    verify(slackService, Mockito.times(1)).removeFromChannel(any(), any(), any());
+    verify(slackService).inviteToChannel(TOKEN, "C_BOB", List.of("U_TA"));
   }
 
   @Test
@@ -460,7 +531,7 @@ public class SetupPrivateSlackChannelsJobTests {
             "Private channel #private-alice-student for Alice Student (alice@ucsb.edu) already exists",
             "Private channel #private-bob-student for Bob Student (bob@ucsb.edu) already exists",
             "Private channel #private-carol-student for Carol Student (carol@ucsb.edu) already exists",
-            "Done. Channels created: 0, already existed: 3 (of which renamed: 0). Members added: 0, already present: 3."),
+            "Done. Channels created: 0, already existed: 3 (of which renamed: 0). Members added: 0, already present: 3, removed: 0."),
         jobStarted.getLog());
     verify(slackService, never()).createPrivateChannel(any(), any());
     verify(slackService, never()).renameChannel(any(), any(), any());
@@ -529,7 +600,7 @@ public class SetupPrivateSlackChannelsJobTests {
             "Creating Private Channels (1 student(s), channel names start with private-)",
             "Created private channel #private-alice-student for Alice Student (alice@ucsb.edu)",
             "Added Alice Student (alice@ucsb.edu) to #private-alice-student",
-            "Done. Channels created: 1, already existed: 0 (of which renamed: 0). Members added: 1, already present: 0."),
+            "Done. Channels created: 1, already existed: 0 (of which renamed: 0). Members added: 1, already present: 0, removed: 0."),
         jobStarted.getLog());
     verify(slackService, never()).listChannelMembers(any(), any());
   }
