@@ -250,10 +250,9 @@ describe("SlackTabComponent tests", () => {
 
     renderTab();
 
-    const card = screen.getByTestId("Test-slack-team-channels-card");
     expect(
-      screen.getByTestId("Test-slack-tab-component").lastElementChild,
-    ).toBe(card);
+      screen.getByTestId("Test-slack-team-channels-card"),
+    ).toBeInTheDocument();
     expect(
       screen.queryByTestId("Test-slack-section-channels-card"),
     ).not.toBeInTheDocument();
@@ -266,7 +265,32 @@ describe("SlackTabComponent tests", () => {
     expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
   });
 
-  test("the Slack Team Channels card comes after the Slack Section Channels card", async () => {
+  test("always has the private channels card at the bottom, which launches the job for this course", async () => {
+    axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
+    axiosMock
+      .onPost("/api/courses/slack/privateChannels")
+      .reply(200, { id: 19 });
+
+    renderTab();
+
+    const card = screen.getByTestId("Test-slack-private-channels-card");
+    expect(
+      screen.getByTestId("Test-slack-tab-component").lastElementChild,
+    ).toBe(card);
+    expect(
+      screen.getByTestId("Test-slack-private-channels-submit"),
+    ).toHaveTextContent("Create Private Channels for Each Student plus Staff");
+
+    fireEvent.click(screen.getByTestId("Test-slack-private-channels-submit"));
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/courses/slack/privateChannels",
+    );
+    expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
+  });
+
+  test("the cards are in the order section channels, team channels, private channels", async () => {
     axiosMock.onGet("/api/courses/slack/users?courseId=7").reply(200, []);
     axiosMock.onGet("/api/courses/slack/missing?courseId=7").reply(200, []);
 
@@ -275,7 +299,9 @@ describe("SlackTabComponent tests", () => {
     const tab = screen.getByTestId("Test-slack-tab-component");
     const section = screen.getByTestId("Test-slack-section-channels-card");
     const team = screen.getByTestId("Test-slack-team-channels-card");
+    const privateCard = screen.getByTestId("Test-slack-private-channels-card");
     expect(section.nextElementSibling).toBe(team);
-    expect(tab.lastElementChild).toBe(team);
+    expect(team.nextElementSibling).toBe(privateCard);
+    expect(tab.lastElementChild).toBe(privateCard);
   });
 });

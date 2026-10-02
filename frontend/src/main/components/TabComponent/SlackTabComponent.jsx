@@ -5,6 +5,7 @@ import SlackUsersTable from "main/components/Slack/SlackUsersTable";
 import SlackMissingMembersTable from "main/components/Slack/SlackMissingMembersTable";
 import SlackSectionChannelsCard from "main/components/Slack/SlackSectionChannelsCard";
 import SlackTeamChannelsCard from "main/components/Slack/SlackTeamChannelsCard";
+import SlackPrivateChannelsCard from "main/components/Slack/SlackPrivateChannelsCard";
 import { slackAdminUrl } from "main/utils/slackUtils";
 
 // Each of these queries makes the backend call the Slack API, so they are not retried on
@@ -128,6 +129,10 @@ export default function SlackTabComponent({
         />
       )}
       <SlackTeamChannelsCard
+        courseId={courseId}
+        testIdPrefix={`${testIdPrefix}-slack`}
+      />
+      <SlackPrivateChannelsCard
         courseId={courseId}
         testIdPrefix={`${testIdPrefix}-slack`}
       />

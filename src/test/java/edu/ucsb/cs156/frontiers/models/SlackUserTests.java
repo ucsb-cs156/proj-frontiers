@@ -10,20 +10,30 @@ import org.junit.jupiter.api.Test;
 public class SlackUserTests {
 
   @Test
-  void email_and_displayName_come_from_profile() {
+  void email_and_names_come_from_profile() {
     SlackUser user =
         SlackUser.builder()
-            .profile(SlackUser.Profile.builder().email("a@ucsb.edu").displayName("a").build())
+            .profile(
+                SlackUser.Profile.builder()
+                    .email("a@ucsb.edu")
+                    .displayName("a")
+                    .firstName("Alex")
+                    .lastName("Gaucho")
+                    .build())
             .build();
     assertEquals("a@ucsb.edu", user.email());
     assertEquals("a", user.displayName());
+    assertEquals("Alex", user.firstName());
+    assertEquals("Gaucho", user.lastName());
   }
 
   @Test
-  void email_and_displayName_are_null_without_profile() {
+  void email_and_names_are_null_without_profile() {
     SlackUser user = SlackUser.builder().build();
     assertNull(user.email());
     assertNull(user.displayName());
+    assertNull(user.firstName());
+    assertNull(user.lastName());
   }
 
   @Test

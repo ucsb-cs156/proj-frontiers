@@ -19,6 +19,7 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.enums.RosterStatus;
 import edu.ucsb.cs156.frontiers.enums.School;
 import edu.ucsb.cs156.frontiers.errors.SlackApiException;
+import edu.ucsb.cs156.frontiers.jobs.SetupPrivateSlackChannelsJob;
 import edu.ucsb.cs156.frontiers.jobs.SetupSectionSlackChannelsJob;
 import edu.ucsb.cs156.frontiers.jobs.SetupTeamSlackChannelsJob;
 import edu.ucsb.cs156.frontiers.models.SlackAuthTestResponse;
@@ -1134,6 +1135,134 @@ public class SlackControllerTests extends ControllerTestCase {
 
     mockMvc
         .perform(post("/api/courses/slack/teamChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isForbidden());
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupPrivateChannels_launchesJobScopedToTheCourse() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", true);
+    Job launched = Job.builder().id(20L).status("running").build();
+    when(jobService.runAsJob(any(SetupPrivateSlackChannelsJob.class))).thenReturn(launched);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/privateChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertEquals(mapper.writeValueAsString(launched), response.getResponse().getContentAsString());
+
+    ArgumentCaptor<SetupPrivateSlackChannelsJob> captor =
+        ArgumentCaptor.forClass(SetupPrivateSlackChannelsJob.class);
+    verify(jobService).runAsJob(captor.capture());
+    SetupPrivateSlackChannelsJob job = captor.getValue();
+    assertEquals("course", job.getScopeType());
+    assertEquals(1L, job.getScopeId());
+
+    // the job was given everything it needs: running it reaches Slack with the decrypted token
+    when(slackService.listUsers(TOKEN))
+        .thenReturn(List.of(slackUser("U01", "instructor@ucsb.edu")));
+    when(slackService.authTest(TOKEN))
+        .thenReturn(SlackAuthTestResponse.builder().ok(true).userId("U_BOT").build());
+    when(slackService.listPrivateChannels(TOKEN)).thenReturn(List.of());
+    when(rosterStudentRepository
+            .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+                1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL)))
+        .thenReturn(List.of());
+    when(courseStaffRepository.findByCourseId(1L)).thenReturn(List.of());
+    Job record = Job.builder().build();
+    job.accept(new edu.ucsb.cs156.jobs.services.JobContext(null, record));
+    verify(slackService).listUsers(TOKEN);
+    verify(slackService).listPrivateChannels(TOKEN);
+    verify(rosterStudentRepository)
+        .findByCourseIdAndRosterStatusInOrderByFirstNameAscLastNameAscIgnoreCase(
+            1L, List.of(RosterStatus.ROSTER, RosterStatus.MANUAL));
+    verify(courseStaffRepository).findByCourseId(1L);
+    assertEquals(true, record.getLog().startsWith("Creating Private Channels"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupPrivateChannels_requiresSlackIntegrationOption() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", false);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/privateChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals(
+        "The course option SLACK_INTEGRATION must be enabled to set up private Slack channels.",
+        responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupPrivateChannels_requiresSlackIntegrationOption_absent() throws Exception {
+    courseWithToken();
+    courseOption("SLACK_INTEGRATION", null);
+
+    mockMvc
+        .perform(post("/api/courses/slack/privateChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isBadRequest());
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupPrivateChannels_requiresToken() throws Exception {
+    when(courseRepository.findById(1L))
+        .thenReturn(Optional.of(courseBuilder().slackBotToken("").build()));
+    when(tokenSecurityService.decrypt("")).thenReturn("");
+    courseOption("SLACK_INTEGRATION", true);
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/privateChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals(
+        "No Slack token has been set for this course; enter one on the Settings tab.",
+        responseToJson(response).get("message"));
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+    when(tokenSecurityService.decrypt(null)).thenReturn(null);
+    mockMvc
+        .perform(post("/api/courses/slack/privateChannels").with(csrf()).param("courseId", "1"))
+        .andExpect(status().isBadRequest());
+    verify(jobService, never()).runAsJob(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setupPrivateChannels_courseDoesNotExist() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/courses/slack/privateChannels").with(csrf()).param("courseId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(jobService, never()).runAsJob(any());
+    assertEquals("Course with id 1 not found", responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void setupPrivateChannels_forbiddenForRegularUser() throws Exception {
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(courseBuilder().build()));
+
+    mockMvc
+        .perform(post("/api/courses/slack/privateChannels").with(csrf()).param("courseId", "1"))
         .andExpect(status().isForbidden());
     verify(jobService, never()).runAsJob(any());
   }

@@ -51,6 +51,12 @@ public class SlackUser {
 
     @JsonProperty("display_name")
     private String displayName;
+
+    @JsonProperty("first_name")
+    private String firstName;
+
+    @JsonProperty("last_name")
+    private String lastName;
   }
 
   /**
@@ -65,6 +71,20 @@ public class SlackUser {
    */
   public String displayName() {
     return profile == null ? null : profile.getDisplayName();
+  }
+
+  /**
+   * @return the user's first name, or null if Slack did not provide one
+   */
+  public String firstName() {
+    return profile == null ? null : profile.getFirstName();
+  }
+
+  /**
+   * @return the user's last name, or null if Slack did not provide one
+   */
+  public String lastName() {
+    return profile == null ? null : profile.getLastName();
   }
 
   /**

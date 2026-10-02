@@ -26,4 +26,8 @@ public class SlackAuthTestResponse {
 
   @JsonProperty("team_id")
   private String teamId;
+
+  /** Slack user id of the user (for a bot token, the bot) that the token belongs to. */
+  @JsonProperty("user_id")
+  private String userId;
 }
