@@ -5,13 +5,16 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
 import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
 import edu.ucsb.cs156.jobs.entities.Job;
 import edu.ucsb.cs156.jobs.services.JobContext;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -197,5 +200,103 @@ public class AddTeamToGithubJobTests {
     verify(githubTeamService).createTeamInfo("test-team", course);
     verify(teamRepository, never()).save(any());
     assertEquals("Failed to add team to GitHub: GitHub API error", e.getMessage());
+  }
+
+  @Test
+  public void test_staffTeam_addsTheCourseStaffToTheNewGithubTeam() throws Exception {
+    CourseStaff ta = CourseStaff.builder().email("ta@ucsb.edu").githubLogin("ta-login").build();
+    Course course =
+        Course.builder()
+            .orgName("test-org")
+            .id(2L)
+            .installationId("123")
+            .courseStaff(List.of(ta))
+            .build();
+    Team team = Team.builder().name("Staff").id(1L).isStaffTeam(true).build();
+    when(teamRepository.findByCourseIdAndName(2L, "Staff")).thenReturn(Optional.of(team));
+    when(githubTeamService.createTeamInfo("Staff", course))
+        .thenReturn(new GithubTeamInfo(11, "Staff", "staff"));
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(5);
+    when(githubTeamService.getTeamMembershipStatus("ta-login", 11, course, 5))
+        .thenReturn(TeamStatus.NOT_ORG_MEMBER);
+    when(githubTeamService.addMemberToGithubTeam("ta-login", 11, "member", course, 5))
+        .thenReturn(TeamStatus.TEAM_MEMBER);
+
+    AddTeamToGithubJob job =
+        AddTeamToGithubJob.builder()
+            .teamName("Staff")
+            .course(course)
+            .teamRepository(teamRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(teamRepository).save(team);
+    assertEquals(11, team.getGithubTeamId());
+    verify(githubTeamService).addMemberToGithubTeam("ta-login", 11, "member", course, 5);
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("Added staff member ta-login to team with status: TEAM_MEMBER"));
+    assertTrue(jobStarted.getLog().contains("Done"));
+  }
+
+  @Test
+  public void test_regularTeam_doesNotLookUpTheOrgOrAddStaff() throws Exception {
+    CourseStaff ta = CourseStaff.builder().email("ta@ucsb.edu").githubLogin("ta-login").build();
+    Course course =
+        Course.builder()
+            .orgName("test-org")
+            .id(2L)
+            .installationId("123")
+            .courseStaff(List.of(ta))
+            .build();
+    Team team = Team.builder().name("test-team").id(1L).isStaffTeam(false).build();
+    when(teamRepository.findByCourseIdAndName(2L, "test-team")).thenReturn(Optional.of(team));
+    when(githubTeamService.createTeamInfo("test-team", course))
+        .thenReturn(new GithubTeamInfo(11, "test-team", "test-team"));
+
+    AddTeamToGithubJob job =
+        AddTeamToGithubJob.builder()
+            .teamName("test-team")
+            .course(course)
+            .teamRepository(teamRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(githubTeamService, never()).getOrgId(any(), any());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
+    assertFalse(jobStarted.getLog().contains("staff"));
+  }
+
+  @Test
+  public void test_staffTeam_failsWhenTheOrgIdCannotBeFound() throws Exception {
+    Course course = Course.builder().orgName("test-org").id(2L).installationId("123").build();
+    Team team = Team.builder().name("Staff").id(1L).isStaffTeam(true).build();
+    when(teamRepository.findByCourseIdAndName(2L, "Staff")).thenReturn(Optional.of(team));
+    when(githubTeamService.createTeamInfo("Staff", course))
+        .thenReturn(new GithubTeamInfo(11, "Staff", "staff"));
+    when(githubTeamService.getOrgId("test-org", course))
+        .thenThrow(new RuntimeException("GitHub API error"));
+
+    AddTeamToGithubJob job =
+        AddTeamToGithubJob.builder()
+            .teamName("Staff")
+            .course(course)
+            .teamRepository(teamRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> job.accept(ctx));
+
+    assertEquals(
+        "Failed to get organization ID for org: test-org - GitHub API error", e.getMessage());
+    // The GitHub team itself was created and recorded before the failure
+    verify(teamRepository).save(team);
+    assertEquals(11, team.getGithubTeamId());
+    verify(githubTeamService, never()).addMemberToGithubTeam(any(), any(), any(), any(), any());
   }
 }

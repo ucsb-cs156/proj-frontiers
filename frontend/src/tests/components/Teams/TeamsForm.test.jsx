@@ -87,4 +87,49 @@ describe("TeamsForm tests", () => {
 
     await screen.findByText(/Team Name is required/);
   });
+
+  test("renders the Staff Team switch, off by default, with its explanation", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <TeamsForm />
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    const staffSwitch = await screen.findByTestId(`${testId}-isStaffTeam`);
+    expect(staffSwitch).toHaveAttribute("type", "checkbox");
+    expect(staffSwitch).toHaveAttribute("id", "isStaffTeam");
+    expect(staffSwitch).not.toBeChecked();
+    expect(screen.getByLabelText("Staff Team")).toBe(staffSwitch);
+    expect(
+      screen.getByText(/A staff team stands in for a student team/),
+    ).toBeInTheDocument();
+
+    fireEvent.click(staffSwitch);
+    expect(staffSwitch).toBeChecked();
+  });
+
+  test("submits isStaffTeam along with the name", async () => {
+    const submitAction = vi.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <TeamsForm submitAction={submitAction} />
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.change(await screen.findByTestId(`${testId}-name`), {
+      target: { value: "Staff" },
+    });
+    fireEvent.click(screen.getByTestId(`${testId}-isStaffTeam`));
+    fireEvent.click(screen.getByTestId(`${testId}-submit`));
+
+    await waitFor(() => expect(submitAction).toHaveBeenCalledTimes(1));
+    expect(submitAction.mock.calls[0][0]).toEqual({
+      name: "Staff",
+      isStaffTeam: true,
+    });
+  });
 });

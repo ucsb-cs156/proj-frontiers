@@ -380,4 +380,29 @@ public class PushTeamsToCanvasJobTests {
     verify(canvasService).getCanvasGroupSetDetail(fresh, GROUP_SET_ID);
     assertTrue(log().contains("Pushing 1 teams to Canvas group set Project Teams (id 101)"));
   }
+
+  @Test
+  public void skipsStaffTeams_andDeletesTheirGroupIfCanvasHasOne() throws Exception {
+    RosterStudent alice = student("alice@ucsb.edu");
+    Team staffTeam = team("Staff", null);
+    staffTeam.setIsStaffTeam(true);
+    Course course = course(team("Team Alpha", 201, alice), staffTeam);
+    when(canvasService.getCanvasGroupSetDetail(course, GROUP_SET_ID))
+        .thenReturn(
+            groupSet(
+                group(201, "Team Alpha", Map.of("alice@ucsb.edu", 11)),
+                group(202, "Staff", Map.of())));
+    when(canvasService.getCanvasUserIdsByEmail(course)).thenReturn(Map.of("alice@ucsb.edu", 11));
+
+    job(course).accept(ctx);
+
+    verify(canvasService, never()).createCanvasGroup(any(), anyInt(), anyString());
+    verify(canvasService, never()).addCanvasGroupMember(any(), anyInt(), anyInt());
+    // A staff team's group, if any, is treated like any other group with no team in Frontiers
+    verify(canvasService).deleteCanvasGroup(course, 202);
+    verify(canvasService, never()).deleteCanvasGroup(course, 201);
+    assertNull(staffTeam.getCanvasId());
+    verify(teamRepository, never()).save(staffTeam);
+    assertTrue(log().contains("Skipping staff team Staff; staff teams are not pushed to Canvas"));
+  }
 }

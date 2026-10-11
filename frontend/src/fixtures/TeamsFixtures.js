@@ -71,6 +71,7 @@ const teamsFixtures = {
         },
       ],
       githubTeamId: 1111111,
+      isStaffTeam: false,
     },
     {
       id: 4,
@@ -143,8 +144,17 @@ const teamsFixtures = {
         },
       ],
       githubTeamId: 1111111,
+      isStaffTeam: false,
     },
   ],
+  staffTeam: {
+    id: 7,
+    name: "Staff",
+    teamMembers: [],
+    githubTeamId: 2222222,
+    githubTeamSlug: "staff",
+    isStaffTeam: true,
+  },
 };
 
 const loadTeamResultFixtures = {

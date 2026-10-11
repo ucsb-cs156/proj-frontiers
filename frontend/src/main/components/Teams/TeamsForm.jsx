@@ -38,6 +38,21 @@ function TeamsForm({
         </Form.Control.Feedback>
       </Form.Group>
 
+      <Form.Group className="mb-3">
+        <Form.Check
+          type="switch"
+          id="isStaffTeam"
+          label="Staff Team"
+          data-testid={testIdPrefix + "-isStaffTeam"}
+          {...register("isStaffTeam")}
+        />
+        <Form.Text muted>
+          A staff team stands in for a student team: its members are the course
+          staff, so that the staff can try out team repositories and autograders
+          themselves.
+        </Form.Text>
+      </Form.Group>
+
       <Button type="submit" data-testid={testIdPrefix + "-submit"}>
         {buttonLabel}
       </Button>

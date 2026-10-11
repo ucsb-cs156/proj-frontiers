@@ -2,6 +2,7 @@ import React from "react";
 import TeamsTable from "main/components/Teams/TeamsTable";
 import { teamsFixtures } from "fixtures/TeamsFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
+import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 import { http, HttpResponse } from "msw";
 
 export default {
@@ -35,6 +36,26 @@ ItemWithEachStatusAdminUser.parameters = {
           status: 200,
         },
       );
+    }),
+  ],
+};
+
+export const WithStaffTeam = Template.bind({});
+WithStaffTeam.args = {
+  teams: [...teamsFixtures.teams, teamsFixtures.staffTeam],
+  currentUser: currentUserFixtures.adminUser,
+  courseId: 12,
+};
+
+WithStaffTeam.parameters = {
+  msw: [
+    http.get("/api/coursestaff/course", () => {
+      return HttpResponse.json(courseStaffFixtures.staffWithEachStatus, {
+        status: 200,
+      });
+    }),
+    http.get("/api/rosterstudents/course/12", () => {
+      return HttpResponse.json([], { status: 200 });
     }),
   ],
 };

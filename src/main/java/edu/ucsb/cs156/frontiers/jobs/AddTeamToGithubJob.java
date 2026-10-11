@@ -64,6 +64,21 @@ public class AddTeamToGithubJob implements JobContextConsumer {
       throw new IllegalStateException("Failed to add team to GitHub: " + e.getMessage(), e);
     }
 
+    if (Boolean.TRUE.equals(team.getIsStaffTeam())) {
+      Integer orgId;
+      try {
+        orgId = githubTeamService.getOrgId(course.getOrgName(), course);
+      } catch (Exception e) {
+        throw new IllegalStateException(
+            "Failed to get organization ID for org: "
+                + course.getOrgName()
+                + " - "
+                + e.getMessage(),
+            e);
+      }
+      StaffTeamGithubSync.addStaffMembers(ctx, course, team, orgId, githubTeamService);
+    }
+
     ctx.log("Done");
   }
 }

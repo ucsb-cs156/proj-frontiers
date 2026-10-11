@@ -85,6 +85,7 @@ export default function TeamsTabComponent({
     params: {
       courseId: courseId,
       name: team.name,
+      isStaffTeam: team.isStaffTeam,
     },
   });
 

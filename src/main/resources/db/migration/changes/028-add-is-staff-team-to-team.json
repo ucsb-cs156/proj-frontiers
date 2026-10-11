@@ -1,0 +1,40 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "028-add-is-staff-team-to-team",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "TEAM",
+            "columns": [
+              {
+                "column": {
+                  "name": "IS_STAFF_TEAM",
+                  "type": "BOOLEAN",
+                  "defaultValueBoolean": false,
+                  "constraints": {
+                    "nullable": false
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "update": {
+            "tableName": "TEAM",
+            "columns": [
+              {
+                "column": {
+                  "name": "IS_STAFF_TEAM",
+                  "valueBoolean": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

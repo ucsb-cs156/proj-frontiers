@@ -1,12 +1,14 @@
 package edu.ucsb.cs156.frontiers.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
@@ -19,6 +21,7 @@ import edu.ucsb.cs156.frontiers.services.GithubTeamService.GithubTeamInfo;
 import edu.ucsb.cs156.jobs.entities.Job;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -637,5 +640,60 @@ public class PushTeamsToGithubJobTests {
     verifyNoInteractions(teamRepository, teamMemberRepository);
     assertEquals(
         "Failed to get organization ID for org: test-org - GitHub API error", e.getMessage());
+  }
+
+  @Test
+  public void testAccept_StaffTeam_addsTheCourseStaffInsteadOfTeamMembers() throws Exception {
+    Long courseId = 1L;
+    CourseStaff ta = CourseStaff.builder().email("ta@ucsb.edu").githubLogin("ta-login").build();
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .courseStaff(List.of(ta))
+            .build();
+
+    // A staff team never has team members of its own; a stray one must not be pushed
+    RosterStudent stray = RosterStudent.builder().email("s@ucsb.edu").githubLogin("stray").build();
+    TeamMember strayMember = TeamMember.builder().rosterStudent(stray).build();
+    Team staffTeam =
+        Team.builder()
+            .name("Staff")
+            .githubTeamId(99)
+            .githubTeamSlug("staff")
+            .isStaffTeam(true)
+            .teamMembers(List.of(strayMember))
+            .build();
+
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of(staffTeam));
+    when(githubTeamService.getOrgId("test-org", course)).thenReturn(1);
+    when(githubTeamService.createOrGetTeamInfo(staffTeam, course))
+        .thenReturn(new GithubTeamInfo(99, "Staff", "staff"));
+    when(githubTeamService.getTeamMembershipStatus("ta-login", 99, course, 1))
+        .thenReturn(TeamStatus.NOT_ORG_MEMBER);
+    when(githubTeamService.addMemberToGithubTeam("ta-login", 99, "member", course, 1))
+        .thenReturn(TeamStatus.TEAM_MEMBER);
+
+    PushTeamsToGithubJob job =
+        PushTeamsToGithubJob.builder()
+            .courseId(courseId)
+            .courseRepository(courseRepository)
+            .teamRepository(teamRepository)
+            .teamMemberRepository(teamMemberRepository)
+            .githubTeamService(githubTeamService)
+            .build();
+
+    job.accept(ctx);
+
+    verify(githubTeamService).addMemberToGithubTeam("ta-login", 99, "member", course, 1);
+    verify(githubTeamService, never()).getTeamMembershipStatus(eq("stray"), any(), any(), any());
+    verifyNoInteractions(teamMemberRepository);
+    String log = jobStarted.getLog();
+    assertTrue(log.contains("Processing staff members for staff team: Staff (1 staff member(s))"));
+    assertTrue(log.contains("Added staff member ta-login to team with status: TEAM_MEMBER"));
+    assertFalse(log.contains("Processing members for team: Staff"));
   }
 }
