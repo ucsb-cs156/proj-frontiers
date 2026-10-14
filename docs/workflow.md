@@ -72,6 +72,7 @@ class Team {
     Long  id
     Integer  canvasId
     Integer  githubTeamId
+    Boolean  isStaffTeam
     String  name
 }
 class TeamMember {

@@ -2,7 +2,9 @@ package edu.ucsb.cs156.frontiers.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -992,5 +994,119 @@ public class TeamsControllerTests extends ControllerTestCase {
     verify(courseRepository, times(1)).findById(1L);
     verify(jobService, never()).runAsJob(any(PushTeamsToGithubJob.class));
     assertEquals("Unknown Roster Source Type", response.getResponse().getErrorMessage());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostTeam_staffTeam() throws Exception {
+    Course course = Course.builder().id(1L).courseName("CS156").term("F23").build();
+    Team team = Team.builder().id(1L).name("Staff").course(course).isStaffTeam(true).build();
+    Team teamToSave = Team.builder().name("Staff").course(course).isStaffTeam(true).build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(teamRepository.save(any(Team.class))).thenReturn(team);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/teams/post")
+                    .param("name", "Staff")
+                    .param("courseId", "1")
+                    .param("isStaffTeam", "true")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(teamRepository, times(1)).save(teamToSave);
+    String expectedJson = mapper.writeValueAsString(team);
+    assertEquals(expectedJson, response.getResponse().getContentAsString());
+    assertTrue(expectedJson.contains("\"isStaffTeam\":true"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testPostTeam_isStaffTeamDefaultsToFalse() throws Exception {
+    Course course = Course.builder().id(1L).courseName("CS156").term("F23").build();
+    Team team = Team.builder().id(1L).name("Team Beta").course(course).build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(teamRepository.save(any(Team.class))).thenReturn(team);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/teams/post")
+                    .param("name", "Team Beta")
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(teamRepository, times(1)).save(argThat(t -> Boolean.FALSE.equals(t.getIsStaffTeam())));
+    assertTrue(response.getResponse().getContentAsString().contains("\"isStaffTeam\":false"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testAddTeamMember_staffTeam_isRejected() throws Exception {
+    Course course = Course.builder().id(1L).courseName("CS156").term("F23").build();
+    Team team = Team.builder().id(1L).name("Staff").course(course).isStaffTeam(true).build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().id(1L).email("s@ucsb.edu").course(course).build();
+
+    when(teamRepository.findById(eq(1L))).thenReturn(Optional.of(team));
+    when(rosterStudentRepository.findById(eq(1L))).thenReturn(Optional.of(rosterStudent));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/teams/addMember")
+                    .param("teamId", "1")
+                    .param("rosterStudentId", "1")
+                    .param("courseId", "1")
+                    .with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    verify(teamMemberRepository, never()).save(any(TeamMember.class));
+    assertEquals(
+        "Team Staff is a staff team; its members are the course staff",
+        response.getResponse().getErrorMessage());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void testUploadTeamsCsv_rowNamingAStaffTeam_isRejected() throws Exception {
+    Course course = Course.builder().id(1L).courseName("CS156").term("F23").build();
+    Team staffTeam = Team.builder().id(1L).name("Staff").course(course).isStaffTeam(true).build();
+    RosterStudent rosterStudent =
+        RosterStudent.builder().id(1L).email("s@ucsb.edu").course(course).build();
+
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(rosterStudentRepository.findByCourseIdAndEmail(eq(1L), eq("s@ucsb.edu")))
+        .thenReturn(Optional.of(rosterStudent));
+    when(teamRepository.findByCourseIdAndName(eq(1L), eq("Staff")))
+        .thenReturn(Optional.of(staffTeam));
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file", "teams.csv", "text/csv", "team,email\nStaff,s@ucsb.edu\n".getBytes());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                multipart("/api/teams/upload/csv").file(file).param("courseId", "1").with(csrf()))
+            .andExpect(status().isConflict())
+            .andReturn();
+
+    verify(teamMemberRepository, never()).save(any(TeamMember.class));
+    verify(teamRepository, never()).save(any(Team.class));
+    TeamsController.TeamCreationResponse body =
+        mapper.readValue(
+            response.getResponse().getContentAsString(),
+            TeamsController.TeamCreationResponse.class);
+    assertEquals(0, body.created());
+    assertEquals(0, body.existing());
+    assertEquals(List.of("s@ucsb.edu"), body.rejected());
   }
 }

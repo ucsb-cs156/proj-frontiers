@@ -89,6 +89,8 @@ public class TeamsController extends ApiController {
    *
    * @param name the name of the team
    * @param courseId the ID of the course this team belongs to
+   * @param isStaffTeam true for a staff team, whose members are the course staff rather than roster
+   *     students (default false)
    * @return the created team
    */
   @Operation(summary = "Create a new team")
@@ -96,14 +98,16 @@ public class TeamsController extends ApiController {
   @PostMapping("/post")
   public Team postTeam(
       @Parameter(name = "name") @RequestParam String name,
-      @Parameter(name = "courseId") @RequestParam Long courseId) {
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "isStaffTeam") @RequestParam(required = false, defaultValue = "false")
+          Boolean isStaffTeam) {
 
     Course course =
         courseRepository
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
-    Team team = Team.builder().name(name).course(course).build();
+    Team team = Team.builder().name(name).course(course).isStaffTeam(isStaffTeam).build();
 
     if (teamRepository.findByCourseIdAndName(course.getId(), name).isPresent()) {
       throw new ResponseStatusException(
@@ -117,7 +121,8 @@ public class TeamsController extends ApiController {
 
   /**
    * Upload teams in CSV format (team, email) It is important to keep the code in this method
-   * consistent with the code for adding a single roster student
+   * consistent with the code for adding a single roster student. A row that names a staff team is
+   * rejected, since a staff team's members are the course staff.
    *
    * @param courseId course the teams are for
    * @param file csv file with roster student emails and team assignments
@@ -295,6 +300,11 @@ public class TeamsController extends ApiController {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Roster student is not from course %d".formatted(courseId));
     }
+    if (Boolean.TRUE.equals(team.getIsStaffTeam())) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Team %s is a staff team; its members are the course staff".formatted(team.getName()));
+    }
 
     if (teamMemberRepository.findByTeamAndRosterStudent(team, rosterStudent).isPresent()) {
       throw new ResponseStatusException(
@@ -385,6 +395,10 @@ public class TeamsController extends ApiController {
     Optional<RosterStudent> student =
         rosterStudentRepository.findByCourseIdAndEmail(course.getId(), row[1]);
     Optional<Team> team = teamRepository.findByCourseIdAndName(course.getId(), row[0]);
+    if (team.isPresent() && Boolean.TRUE.equals(team.get().getIsStaffTeam())) {
+      // A staff team's members are the course staff, so a student cannot be put on it
+      return new TeamMemberResult(row[1]);
+    }
     if (student.isPresent() && team.isPresent()) {
       Optional<TeamMember> teamMember =
           teamMemberRepository.findByTeamAndRosterStudent(team.get(), student.get());

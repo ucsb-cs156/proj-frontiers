@@ -38,6 +38,18 @@ export default function TeamsTable({
     true,
     { enabled: instructorView },
   );
+
+  // The members of a staff team are the course staff, so they are only needed
+  // when there is a staff team to show.
+  const hasStaffTeam = teams.some((team) => team.isStaffTeam);
+  const { data: courseStaff } = useBackend(
+    [`/api/coursestaff/course?courseId=${courseId}`],
+    // Stryker disable next-line all : GET and empty string are equivalent
+    { method: "GET", url: `/api/coursestaff/course?courseId=${courseId}` },
+    [],
+    true,
+    { enabled: instructorView && hasStaffTeam },
+  );
   const onSuccessMember = (modalFn) => {
     toast("Member added successfully");
     modalFn(false);
@@ -222,12 +234,36 @@ export default function TeamsTable({
         },
   ];
 
+  const staffColumns = [
+    {
+      Header: "Id",
+      accessor: "id",
+    },
+    {
+      Header: "First Name",
+      accessor: "firstName",
+    },
+    {
+      Header: "Last Name",
+      accessor: "lastName",
+    },
+    {
+      Header: "Email",
+      accessor: "email",
+    },
+    {
+      Header: "GitHub Login",
+      accessor: "githubLogin",
+    },
+  ];
+
   return (
     <>
       <Modal
         show={postMemberModal}
         onHide={() => {
           setPostMemberModal(false);
+          // Stryker disable next-line all : selectedTeam is only read while the modal is open
           setSelectedTeam(null);
         }}
         centered={true}
@@ -264,21 +300,32 @@ export default function TeamsTable({
               <span className="d-flex align-items-center justify-content-between w-100">
                 <h3 data-testid={`${testIdPrefix}-${team.id}-name`}>
                   {team.name}
+                  {team.isStaffTeam ? " (Staff Team)" : ""}
                 </h3>
 
                 {canManage && (
                   <span className="ms-auto me-3">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPostMemberModal(true);
-                        setSelectedTeam(team);
-                      }}
-                      data-testid={`${testIdPrefix}-${team.id}-add-member-button`}
-                      className="me-3"
-                    >
-                      Add Team Member
-                    </Button>
+                    {team.isStaffTeam ? (
+                      <Button
+                        disabled
+                        data-testid={`${testIdPrefix}-${team.id}-staff-team-button`}
+                        className="me-3"
+                      >
+                        Staff Team
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPostMemberModal(true);
+                          setSelectedTeam(team);
+                        }}
+                        data-testid={`${testIdPrefix}-${team.id}-add-member-button`}
+                        className="me-3"
+                      >
+                        Add Team Member
+                      </Button>
+                    )}
                     <Button
                       variant="danger"
                       onClick={(e) => {
@@ -294,23 +341,31 @@ export default function TeamsTable({
               </span>
             </Accordion.Header>
             <Accordion.Body>
-              <OurTable
-                data={team.teamMembers}
-                columns={[
-                  ...memberColumns,
-                  ...(canManage
-                    ? [
-                        ButtonColumn(
-                          "Remove",
-                          "danger",
-                          (cell) => deleteMemberCallback(cell, team),
-                          `${testIdPrefix}-${team.id}`,
-                        ),
-                      ]
-                    : []),
-                ]}
-                testid={`${testIdPrefix}-${team.id}-members-table`}
-              />
+              {team.isStaffTeam ? (
+                <OurTable
+                  data={courseStaff}
+                  columns={staffColumns}
+                  testid={`${testIdPrefix}-${team.id}-members-table`}
+                />
+              ) : (
+                <OurTable
+                  data={team.teamMembers}
+                  columns={[
+                    ...memberColumns,
+                    ...(canManage
+                      ? [
+                          ButtonColumn(
+                            "Remove",
+                            "danger",
+                            (cell) => deleteMemberCallback(cell, team),
+                            `${testIdPrefix}-${team.id}`,
+                          ),
+                        ]
+                      : []),
+                  ]}
+                  testid={`${testIdPrefix}-${team.id}-members-table`}
+                />
+              )}
             </Accordion.Body>
           </Accordion.Item>
         ))}

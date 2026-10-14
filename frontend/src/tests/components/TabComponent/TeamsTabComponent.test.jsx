@@ -738,6 +738,7 @@ describe("TeamTabComponent tests", () => {
     expect(axiosMock.history.post[0].params).toEqual({
       courseId: 1,
       name: "team5",
+      isStaffTeam: false,
     });
     expect(axiosMock.history.post[1].url).toBe(
       "/api/jobs/launch/addTeamToGithub",
@@ -1270,5 +1271,78 @@ describe("TeamTabComponent tests", () => {
     expect(toast).toBeCalledWith(
       "Pull teams from Github job successfully started.",
     );
+  });
+
+  test("creating a team with the Staff Team switch on posts isStaffTeam true", async () => {
+    axiosMock
+      .onGet("/api/teams/all?courseId=1")
+      .reply(200, teamsFixtures.teams);
+    axiosMock
+      .onPost("/api/teams/post")
+      .reply(200, { name: "Staff", isStaffTeam: true });
+    axiosMock
+      .onPost("/api/jobs/launch/addTeamToGithub")
+      .reply(200, { message: "started" });
+
+    render(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <TeamsTabComponent
+            courseId={1}
+            testIdPrefix={testId}
+            currentUser={currentUserFixtures.instructorUser}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByTestId(`${testId}-post-button`));
+    await screen.findByLabelText("Team Name");
+
+    fireEvent.change(screen.getByTestId("TeamsForm-name"), {
+      target: { value: "Staff" },
+    });
+    const staffSwitch = screen.getByTestId("TeamsForm-isStaffTeam");
+    expect(staffSwitch).not.toBeChecked();
+    fireEvent.click(staffSwitch);
+    expect(staffSwitch).toBeChecked();
+
+    fireEvent.click(screen.getByTestId("TeamsForm-submit"));
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(2));
+
+    expect(axiosMock.history.post[0].url).toBe("/api/teams/post");
+    expect(axiosMock.history.post[0].params).toEqual({
+      courseId: 1,
+      name: "Staff",
+      isStaffTeam: true,
+    });
+    expect(axiosMock.history.post[1].params).toEqual({
+      courseId: 1,
+      teamName: "Staff",
+    });
+  });
+
+  test("student view never shows a staff team, since it has no student members", async () => {
+    axiosMock
+      .onGet("/api/teams/all?courseId=1")
+      .reply(200, [...teamsFixtures.teams, teamsFixtures.staffTeam]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TeamsTabComponent
+          courseId={1}
+          testIdPrefix={testId}
+          currentUser={currentUserFixtures.userOnly}
+          instructorView={false}
+        />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId(`${testId}-teams-table-accordion`);
+    await waitFor(() => expect(axiosMock.history.get.length).toBe(1));
+    expect(screen.queryByText(/Staff/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`${testId}-teams-table-7-name`),
+    ).not.toBeInTheDocument();
   });
 });

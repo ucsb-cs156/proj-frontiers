@@ -97,6 +97,11 @@ public class PushTeamsToGithubJob implements JobContextConsumer {
         continue;
       }
 
+      if (Boolean.TRUE.equals(team.getIsStaffTeam())) {
+        StaffTeamGithubSync.addStaffMembers(ctx, course, team, orgId, githubTeamService);
+        continue;
+      }
+
       ctx.log("Processing members for team: " + team.getName());
       for (TeamMember teamMember : team.getTeamMembers()) {
         RosterStudent student = teamMember.getRosterStudent();

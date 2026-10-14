@@ -41,4 +41,14 @@ public class Team {
   private String githubTeamSlug;
 
   private Integer canvasId;
+
+  /**
+   * A staff team stands in for a student team so that the course staff can try out team-based
+   * features (team repositories, autograders) themselves. Its members are the course staff, not
+   * roster students: it has no team members of its own, is pushed to GitHub with the staff as its
+   * members, and is left out when teams are pushed to Canvas.
+   */
+  @Column(nullable = false)
+  @Builder.Default
+  private Boolean isStaffTeam = false;
 }

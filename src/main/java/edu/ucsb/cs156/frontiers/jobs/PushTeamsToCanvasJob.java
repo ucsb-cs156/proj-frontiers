@@ -29,7 +29,8 @@ import lombok.extern.slf4j.Slf4j;
  * Updates the groups in a Canvas group set to match the teams in Frontiers: creates a Canvas group
  * for each team that has none, adds and removes group members so that each group's membership
  * matches the team's, and deletes Canvas groups that do not correspond to any team. A team is
- * matched to a group by the team's stored Canvas id first, then by name.
+ * matched to a group by the team's stored Canvas id first, then by name. Staff teams are skipped:
+ * they have no students, so there is nothing to put in a Canvas group.
  *
  * <p>Problems with a single team, group or student (a student who is not enrolled in the Canvas
  * course, a Canvas API call that fails) are logged as warnings and the job proceeds; only a failure
@@ -81,6 +82,12 @@ public class PushTeamsToCanvasJob implements JobContextConsumer {
     Set<Integer> matchedGroupIds = new HashSet<>();
 
     for (Team team : teams) {
+      if (Boolean.TRUE.equals(team.getIsStaffTeam())) {
+        ctx.log(
+            String.format(
+                "Skipping staff team %s; staff teams are not pushed to Canvas", team.getName()));
+        continue;
+      }
       CanvasGroupDetail group = groupsByCanvasId.get(team.getCanvasId());
       if (group == null) {
         group = groupsByName.get(team.getName().trim());

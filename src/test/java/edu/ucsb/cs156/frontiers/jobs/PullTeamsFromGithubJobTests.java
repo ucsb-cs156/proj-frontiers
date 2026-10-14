@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
@@ -18,6 +19,7 @@ import edu.ucsb.cs156.jobs.entities.Job;
 import edu.ucsb.cs156.jobs.errors.JobCancelledException;
 import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import edu.ucsb.cs156.jobs.services.JobContext;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -927,5 +929,367 @@ public class PullTeamsFromGithubJobTests {
     assertThrows(JobCancelledException.class, () -> job2.accept(cancellingCtx));
 
     verify(teamMemberRepository, never()).findByTeamAndRosterStudent(any(), any());
+  }
+
+  // ---------- staff teams ----------
+
+  private PullTeamsFromGithubJob pullJob(Long courseId) {
+    return PullTeamsFromGithubJob.builder()
+        .courseId(courseId)
+        .courseRepository(courseRepository)
+        .teamRepository(teamRepository)
+        .teamMemberRepository(teamMemberRepository)
+        .githubTeamService(githubTeamService)
+        .build();
+  }
+
+  private static CourseStaff staff(String login) {
+    return CourseStaff.builder().email(login + "@ucsb.edu").githubLogin(login).build();
+  }
+
+  @Test
+  public void staffTeams_newGithubTeamWithOnlyStaff_isCreatedAsAStaffTeam() throws Exception {
+    Long courseId = 1L;
+    RosterStudent student = RosterStudent.builder().githubLogin("student-login").build();
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(List.of(student))
+            .courseStaff(List.of(staff("ta1"), staff("ta2")))
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "Staff", "staff")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of());
+    when(githubTeamService.getTeamMemberships("staff", course))
+        .thenReturn(Map.of("ta1", TeamStatus.TEAM_MEMBER, "ta2", TeamStatus.TEAM_MAINTAINER));
+
+    pullJob(courseId).accept(ctx);
+
+    verify(teamRepository)
+        .save(
+            argThat(
+                t ->
+                    t.getName().equals("Staff")
+                        && t.getGithubTeamId().equals(111)
+                        && Boolean.TRUE.equals(t.getIsStaffTeam())));
+    verifyNoInteractions(teamMemberRepository);
+    String log = jobStarted.getLog();
+    assertTrue(
+        log.contains(
+            "Created local team 'Staff' with GitHub team ID: 111 as a staff team (every member is on the course staff)"));
+    assertFalse(log.contains("Note:"));
+    assertTrue(log.contains("created: 1, updated: 0, unchanged: 0"));
+  }
+
+  @Test
+  public void staffTeams_mixedGithubTeam_isRegularWithOnlyStudents_andNotesTheOthers()
+      throws Exception {
+    Long courseId = 1L;
+    RosterStudent student = RosterStudent.builder().githubLogin("student-login").build();
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(List.of(student))
+            .courseStaff(List.of(staff("ta1")))
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "mixed", "mixed")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of());
+    when(githubTeamService.getTeamMemberships("mixed", course))
+        .thenReturn(
+            Map.of(
+                "student-login", TeamStatus.TEAM_MEMBER,
+                "ta1", TeamStatus.TEAM_MEMBER,
+                "stranger", TeamStatus.TEAM_MEMBER));
+    when(teamMemberRepository.findByTeamAndRosterStudent(any(Team.class), eq(student)))
+        .thenReturn(Optional.empty());
+
+    pullJob(courseId).accept(ctx);
+
+    verify(teamRepository)
+        .save(
+            argThat(t -> t.getName().equals("mixed") && Boolean.FALSE.equals(t.getIsStaffTeam())));
+    verify(teamMemberRepository, times(1)).save(any(TeamMember.class));
+    verify(teamMemberRepository).save(argThat(tm -> tm.getRosterStudent().equals(student)));
+    String log = jobStarted.getLog();
+    assertTrue(log.contains("Created local team 'mixed' with GitHub team ID: 111\n"));
+    assertTrue(
+        log.contains(
+            "Note: 'ta1' is on GitHub team 'mixed' but is on the course staff, not a student, so was not added to the local team"));
+    assertTrue(
+        log.contains(
+            "Note: 'stranger' is on GitHub team 'mixed' but is not a student of this course, so was not added to the local team"));
+  }
+
+  @Test
+  public void staffTeams_existingEmptyRegularTeam_becomesAStaffTeam() throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .courseName("Test Course")
+            .orgName("test-org")
+            .installationId("123")
+            .courseStaff(List.of(staff("ta1")))
+            .build();
+    Team local =
+        Team.builder()
+            .name("Staff")
+            .githubTeamId(111)
+            .githubTeamSlug("staff")
+            .course(course)
+            .teamMembers(new ArrayList<>())
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "Staff", "staff")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of(local));
+    when(githubTeamService.getTeamMemberships("staff", course))
+        .thenReturn(Map.of("ta1", TeamStatus.TEAM_MEMBER));
+
+    pullJob(courseId).accept(ctx);
+
+    assertTrue(local.getIsStaffTeam());
+    verify(teamRepository).save(local);
+    verifyNoInteractions(teamMemberRepository);
+    String log = jobStarted.getLog();
+    assertTrue(
+        log.contains(
+            "Local team 'Staff' is now a staff team (every member of its GitHub team is on the course staff)"));
+    assertTrue(log.contains("Updated local team 'Staff' with GitHub team ID: 111"));
+    assertTrue(log.contains("created: 0, updated: 1, unchanged: 0"));
+  }
+
+  @Test
+  public void staffTeams_existingEmptyRegularTeamWithNullMembers_becomesAStaffTeam()
+      throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .orgName("test-org")
+            .installationId("123")
+            .courseStaff(List.of(staff("ta1")))
+            .build();
+    Team local =
+        Team.builder()
+            .name("Staff")
+            .githubTeamId(111)
+            .githubTeamSlug("staff")
+            .course(course)
+            .teamMembers(null)
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "Staff", "staff")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of(local));
+    when(githubTeamService.getTeamMemberships("staff", course))
+        .thenReturn(Map.of("ta1", TeamStatus.TEAM_MEMBER));
+
+    pullJob(courseId).accept(ctx);
+
+    assertTrue(local.getIsStaffTeam());
+    verify(teamRepository).save(local);
+  }
+
+  @Test
+  public void staffTeams_existingRegularTeamWithMembers_staysRegular_andNotesTheStaff()
+      throws Exception {
+    Long courseId = 1L;
+    RosterStudent student = RosterStudent.builder().githubLogin("student-login").build();
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(List.of(student))
+            .courseStaff(List.of(staff("ta1")))
+            .build();
+    Team local =
+        Team.builder()
+            .name("t1")
+            .githubTeamId(111)
+            .githubTeamSlug("t1")
+            .course(course)
+            .teamMembers(new ArrayList<>())
+            .build();
+    local.getTeamMembers().add(TeamMember.builder().team(local).rosterStudent(student).build());
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "t1", "t1")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of(local));
+    // Students were removed on GitHub; only staff remain
+    when(githubTeamService.getTeamMemberships("t1", course))
+        .thenReturn(Map.of("ta1", TeamStatus.TEAM_MEMBER));
+
+    pullJob(courseId).accept(ctx);
+
+    assertFalse(local.getIsStaffTeam());
+    verify(teamRepository, never()).save(any());
+    verifyNoInteractions(teamMemberRepository);
+    String log = jobStarted.getLog();
+    assertFalse(log.contains("is now a staff team"));
+    assertTrue(
+        log.contains(
+            "Note: 'ta1' is on GitHub team 't1' but is on the course staff, not a student, so was not added to the local team"));
+    assertTrue(log.contains("created: 0, updated: 0, unchanged: 1"));
+  }
+
+  @Test
+  public void staffTeams_existingStaffTeam_staysAStaffTeam_andNotesNonStaffMembers()
+      throws Exception {
+    Long courseId = 1L;
+    RosterStudent student = RosterStudent.builder().githubLogin("student-login").build();
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(List.of(student))
+            .courseStaff(List.of(staff("ta1")))
+            .build();
+    Team local =
+        Team.builder()
+            .name("Staff")
+            .githubTeamId(111)
+            .githubTeamSlug("staff")
+            .course(course)
+            .isStaffTeam(true)
+            .teamMembers(new ArrayList<>())
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "Staff", "staff")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of(local));
+    when(githubTeamService.getTeamMemberships("staff", course))
+        .thenReturn(Map.of("ta1", TeamStatus.TEAM_MEMBER, "student-login", TeamStatus.TEAM_MEMBER));
+
+    pullJob(courseId).accept(ctx);
+
+    assertTrue(local.getIsStaffTeam());
+    verify(teamRepository, never()).save(any());
+    // the student on the GitHub team is not made a member of the staff team
+    verifyNoInteractions(teamMemberRepository);
+    String log = jobStarted.getLog();
+    assertTrue(
+        log.contains(
+            "Note: 'student-login' is on the GitHub team of staff team 'Staff' but is not on the course staff"));
+    assertFalse(log.contains("Note: 'ta1'"));
+    assertFalse(log.contains("is now a staff team"));
+    assertTrue(log.contains("created: 0, updated: 0, unchanged: 1"));
+  }
+
+  @Test
+  public void staffTeams_membershipsAreFetchedWhenThereAreStaffButNoStudents() throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(List.of())
+            .courseStaff(List.of(staff("ta1"), CourseStaff.builder().email("x@ucsb.edu").build()))
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "Staff", "staff")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of());
+    when(githubTeamService.getTeamMemberships("staff", course))
+        .thenReturn(Map.of("ta1", TeamStatus.TEAM_MEMBER));
+
+    pullJob(courseId).accept(ctx);
+
+    verify(githubTeamService).getTeamMemberships("staff", course);
+    verify(teamRepository).save(argThat(t -> Boolean.TRUE.equals(t.getIsStaffTeam())));
+  }
+
+  @Test
+  public void staffTeams_membershipsAreNotFetchedWithoutStudentsOrStaff_andTeamIsRegular()
+      throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .orgName("test-org")
+            .installationId("123")
+            .rosterStudents(List.of())
+            .courseStaff(null)
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "Staff", "staff")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of());
+
+    pullJob(courseId).accept(ctx);
+
+    verify(githubTeamService, never()).getTeamMemberships(any(), any());
+    verify(teamRepository).save(argThat(t -> Boolean.FALSE.equals(t.getIsStaffTeam())));
+  }
+
+  @Test
+  public void staffTeams_aGithubTeamWithNoMembers_isNotAStaffTeam() throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .orgName("test-org")
+            .installationId("123")
+            .courseStaff(List.of(staff("ta1")))
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "empty", "empty")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of());
+    when(githubTeamService.getTeamMemberships("empty", course)).thenReturn(Map.of());
+
+    pullJob(courseId).accept(ctx);
+
+    verify(teamRepository).save(argThat(t -> Boolean.FALSE.equals(t.getIsStaffTeam())));
+  }
+
+  @Test
+  public void staffTeams_existingStaffTeamWithOnlyStaffOnGithub_isUnchangedAndSilent()
+      throws Exception {
+    Long courseId = 1L;
+    Course course =
+        Course.builder()
+            .id(courseId)
+            .orgName("test-org")
+            .installationId("123")
+            .courseStaff(List.of(staff("ta1")))
+            .build();
+    Team local =
+        Team.builder()
+            .name("Staff")
+            .githubTeamId(111)
+            .githubTeamSlug("staff")
+            .course(course)
+            .isStaffTeam(true)
+            .teamMembers(new ArrayList<>())
+            .build();
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(githubTeamService.getAllTeams(course))
+        .thenReturn(List.of(new GithubTeamInfo(111, "Staff", "staff")));
+    when(teamRepository.findByCourseId(courseId)).thenReturn(List.of(local));
+    when(githubTeamService.getTeamMemberships("staff", course))
+        .thenReturn(Map.of("ta1", TeamStatus.TEAM_MEMBER));
+
+    pullJob(courseId).accept(ctx);
+
+    assertTrue(local.getIsStaffTeam());
+    verify(teamRepository, never()).save(any());
+    verifyNoInteractions(teamMemberRepository);
+    String log = jobStarted.getLog();
+    assertFalse(log.contains("Note:"));
+    assertFalse(log.contains("is now a staff team"));
+    assertTrue(log.contains("created: 0, updated: 0, unchanged: 1"));
   }
 }

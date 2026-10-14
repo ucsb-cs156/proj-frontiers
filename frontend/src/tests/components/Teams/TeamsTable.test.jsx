@@ -8,6 +8,7 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { expect, test, vi } from "vitest";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
 
 const queryClient = new QueryClient();
 const axiosMock = new AxiosMockAdapter(axios);
@@ -590,5 +591,208 @@ describe("TeamsTable tests", () => {
     expect(
       queryClientSpecific.getQueryData(["/api/rosterstudents/course/12"]),
     ).toStrictEqual([]);
+  });
+
+  describe("staff teams", () => {
+    const staffColumns = [
+      "id",
+      "firstName",
+      "lastName",
+      "email",
+      "githubLogin",
+    ];
+    const staffHeaders = [
+      "Id",
+      "First Name",
+      "Last Name",
+      "Email",
+      "GitHub Login",
+    ];
+
+    test("a staff team shows the course staff as its members, with no add or remove controls", async () => {
+      axiosMock
+        .onGet("/api/coursestaff/course?courseId=12")
+        .reply(200, courseStaffFixtures.staffWithEachStatus);
+      axiosMock.onGet("/api/rosterstudents/course/12").reply(200, []);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <TeamsTable
+              teams={[teamsFixtures.teams[0], teamsFixtures.staffTeam]}
+              currentUser={currentUserFixtures.instructorUser}
+              courseId="12"
+              testIdPrefix={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      // heading: the staff team is labelled, the regular team is not
+      expect(screen.getByTestId(`${testId}-7-name`)).toHaveTextContent(
+        "Staff (Staff Team)",
+      );
+      expect(screen.getByTestId(`${testId}-3-name`).textContent).toBe("team1");
+
+      // buttons: a disabled "Staff Team" button instead of "Add Team Member"; Delete remains
+      const staffButton = screen.getByTestId(`${testId}-7-staff-team-button`);
+      expect(staffButton).toBeDisabled();
+      expect(staffButton).toHaveTextContent("Staff Team");
+      expect(staffButton).toHaveClass("me-3");
+      expect(
+        screen.queryByTestId(`${testId}-7-add-member-button`),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${testId}-7-delete-button`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId(`${testId}-3-add-member-button`),
+      ).toBeInTheDocument();
+
+      // members: the course staff, fetched from the backend
+      await waitFor(() =>
+        expect(
+          screen.getByTestId(`${testId}-7-members-table-cell-row-0-col-id`),
+        ).toHaveTextContent("1"),
+      );
+      expect(
+        axiosMock.history.get.some(
+          (req) => req.url === "/api/coursestaff/course?courseId=12",
+        ),
+      ).toBe(true);
+      staffColumns.forEach((col) =>
+        expect(
+          screen.getByTestId(`${testId}-7-members-table-header-${col}`),
+        ).toBeInTheDocument(),
+      );
+      staffHeaders.forEach((header) =>
+        expect(
+          screen.getByTestId(
+            `${testId}-7-members-table-header-${staffColumns[staffHeaders.indexOf(header)]}`,
+          ),
+        ).toHaveTextContent(header),
+      );
+      expect(
+        screen.getByTestId(
+          `${testId}-7-members-table-cell-row-0-col-firstName`,
+        ),
+      ).toHaveTextContent("Dr. John");
+      expect(
+        screen.getByTestId(`${testId}-7-members-table-cell-row-0-col-lastName`),
+      ).toHaveTextContent("Professor");
+      expect(
+        screen.getByTestId(`${testId}-7-members-table-cell-row-0-col-email`),
+      ).toHaveTextContent("johnprof@ucsb.edu");
+      expect(
+        screen.getByTestId(
+          `${testId}-7-members-table-cell-row-2-col-githubLogin`,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`${testId}-7-members-table-header-Remove`),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId(`${testId}-7-cell-row-0-col-Remove-button`),
+      ).not.toBeInTheDocument();
+
+      // the regular team still has its Remove column
+      expect(
+        screen.getByTestId(`${testId}-3-cell-row-0-col-Remove-button`),
+      ).toBeInTheDocument();
+    });
+
+    test("the course staff are not fetched when there is no staff team", async () => {
+      axiosMock.onGet("/api/rosterstudents/course/12").reply(200, []);
+      axiosMock.onGet("/api/coursestaff/course?courseId=12").reply(200, []);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <TeamsTable
+              teams={teamsFixtures.teams}
+              currentUser={currentUserFixtures.instructorUser}
+              courseId="12"
+              testIdPrefix={testId}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() =>
+        expect(
+          axiosMock.history.get.some(
+            (req) => req.url === "/api/rosterstudents/course/12",
+          ),
+        ).toBe(true),
+      );
+      expect(
+        axiosMock.history.get.some(
+          (req) => req.url === "/api/coursestaff/course?courseId=12",
+        ),
+      ).toBe(false);
+      expect(
+        screen.queryByTestId(`${testId}-3-staff-team-button`),
+      ).not.toBeInTheDocument();
+    });
+
+    test("the course staff are not fetched outside the instructor view", async () => {
+      axiosMock.onGet("/api/coursestaff/course?courseId=12").reply(200, []);
+      axiosMock.onGet("/api/rosterstudents/course/12").reply(200, []);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <TeamsTable
+              teams={[teamsFixtures.staffTeam]}
+              currentUser={currentUserFixtures.instructorUser}
+              courseId="12"
+              testIdPrefix={testId}
+              instructorView={false}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      expect(screen.getByTestId(`${testId}-7-name`)).toHaveTextContent(
+        "Staff (Staff Team)",
+      );
+      // give any query a chance to fire
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(axiosMock.history.get.length).toBe(0);
+    });
+  });
+
+  test("the header buttons do not toggle the accordion", async () => {
+    axiosMock.onGet("/api/rosterstudents/course/12").reply(200, []);
+    axiosMock.onDelete("/api/teams").reply(200, {});
+    axiosMock.onPost("/api/jobs/launch/deleteTeamFromGithub").reply(200, {});
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <TeamsTable
+            teams={teamsFixtures.teams}
+            currentUser={currentUserFixtures.instructorUser}
+            courseId="12"
+            testIdPrefix={testId}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const header = screen.getByTestId(`${testId}-3-name`).closest("button");
+    expect(header).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(screen.getByTestId(`${testId}-3-add-member-button`));
+    expect(screen.getByTestId(`${testId}-post-modal`)).toBeInTheDocument();
+    expect(header).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(screen.getByTestId(`${testId}-3-delete-button`));
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+    expect(header).toHaveAttribute("aria-expanded", "false");
+
+    // the header itself still toggles
+    fireEvent.click(header);
+    expect(header).toHaveAttribute("aria-expanded", "true");
   });
 });
