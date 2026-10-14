@@ -60,9 +60,7 @@ public class SystemInfoServiceImpl extends SystemInfoService {
             .githubUrl(githubUrl(this.sourceRepo, this.commitId))
             .build();
 
-    if (this.microsoftEnabled != null) {
-      si.setActiveDirectoryUrl("/oauth2/authorization/azure-dev");
-    }
+    si.setActiveDirectoryUrl("/oauth2/authorization/keycloak?idp=microsoft");
     log.info("getSystemInfo returns {}", si);
     return si;
   }
