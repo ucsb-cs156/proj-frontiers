@@ -1,10 +1,19 @@
 import { useBackend } from "main/utils/useBackend";
 
+// Words whose branding does not follow plain title case.
+const SPECIAL_CASE_WORDS = {
+  edudora: "EduDora",
+};
+
 export function titleCaseFromOption(option) {
   return option
     .toLowerCase()
     .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map(
+      (word) =>
+        SPECIAL_CASE_WORDS[word] ??
+        word.charAt(0).toUpperCase() + word.slice(1),
+    )
     .join(" ");
 }
 

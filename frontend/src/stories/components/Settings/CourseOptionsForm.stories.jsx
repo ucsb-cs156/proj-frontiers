@@ -9,6 +9,7 @@ const optionsState = {
   ENABLE_API_KEYS: false,
   SLACK_INTEGRATION: false,
   NEW_ASSIGNMENT_FEATURES: false,
+  ENABLE_EDUDORA: false,
 };
 
 export default {

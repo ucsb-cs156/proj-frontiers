@@ -467,6 +467,41 @@ ExampleCourseWithApiKeysTab.parameters = {
   },
 };
 
+export const ExampleCourseWithEduDoraTab = Template.bind({});
+ExampleCourseWithEduDoraTab.args = {
+  suppressMemoryRouter: true,
+};
+ExampleCourseWithEduDoraTab.parameters = {
+  msw: {
+    handlers: [
+      ...basicHandlers,
+      http.get("/api/rosterStudents/course/7", () => {
+        return HttpResponse.json(rosterStudents, {
+          status: 200,
+        });
+      }),
+      http.get("/api/coursestaff/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/jobs/course", () => {
+        return HttpResponse.json([], { status: 200 });
+      }),
+      http.get("/api/course/options", () => {
+        return HttpResponse.json(
+          {
+            ENABLE_CANVAS: false,
+            TRANSLATE_SECTIONS: false,
+            DOKKU_MANAGER: false,
+            ENABLE_API_KEYS: false,
+            ENABLE_EDUDORA: true,
+          },
+          { status: 200 },
+        );
+      }),
+    ],
+  },
+};
+
 export const ExampleCourseWithNewAssignmentsTab = Template.bind({});
 ExampleCourseWithNewAssignmentsTab.args = {
   suppressMemoryRouter: true,

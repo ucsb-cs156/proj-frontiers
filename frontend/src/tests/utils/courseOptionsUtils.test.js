@@ -18,4 +18,8 @@ describe("courseOptionsUtils tests", () => {
     );
     expect(titleCaseFromOption("ENABLE_API_KEYS")).toBe("Enable Api Keys");
   });
+
+  test("titleCaseFromOption uses special casing for branded words", () => {
+    expect(titleCaseFromOption("ENABLE_EDUDORA")).toBe("Enable EduDora");
+  });
 });
