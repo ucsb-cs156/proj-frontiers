@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CreateTeamRepositoriesJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">CreateTeamRepositoriesJob.java</span></div><h1>CreateTeamRepositoriesJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService.RepositoryCreationResult;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.Optional;
+import lombok.Builder;
+import org.springframework.web.client.HttpStatusCodeException;
+
+@Builder
+public class CreateTeamRepositoriesJob implements JobContextConsumer {
+  Course course;
+  RepositoryService repositoryService;
+  GithubTeamService githubTeamService;
+  String repositoryPrefix;
+  Boolean isPrivate;
+  RepositoryPermissions permissions;
+  String teamRegex;
+
+  /**
+   * Whether the repositories must require signed commits: true gives each repository the ruleset
+   * that requires them, false removes it. Null, as for a caller that does not manage this, leaves
+   * the repositories' rulesets alone.
+   */
+  Boolean requireSignedCommit;
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L34">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L39">    return course.getId();</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L44">    ctx.log(&quot;Creating team repositories...&quot;);</span>
+<span class="fc" id="L45">    ctx.log(&quot;repositoryPrefix=&quot; + repositoryPrefix);</span>
+<span class="fc" id="L46">    ctx.log(&quot;isPrivate=&quot; + isPrivate);</span>
+<span class="fc" id="L47">    ctx.log(&quot;permissions=&quot; + permissions);</span>
+<span class="fc" id="L48">    ctx.log(&quot;teamRegex=&quot; + teamRegex);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">    if (requireSignedCommit != null) {</span>
+<span class="fc" id="L50">      ctx.log(&quot;requireSignedCommit=&quot; + requireSignedCommit);</span>
+    }
+
+    Integer orgId;
+    try {
+<span class="fc" id="L55">      orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
+<span class="fc" id="L56">    } catch (Exception e) {</span>
+<span class="fc" id="L57">      throw new IllegalStateException(</span>
+<span class="fc" id="L58">          &quot;Failed to get organization ID for org: &quot; + course.getOrgName() + &quot; - &quot; + e.getMessage(),</span>
+          e);
+<span class="fc" id="L60">    }</span>
+
+<span class="fc" id="L62">    int reposCreated = 0;</span>
+<span class="fc" id="L63">    int reposUpdated = 0;</span>
+<span class="fc" id="L64">    int signedCommitsFailures = 0;</span>
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    for (Team team : course.getTeams()) {</span>
+      // A team skipped by teamRegex never logs anything -- checkCancellation() gives this
+      // loop its own checkpoint independent of whether an iteration does any work.
+<span class="fc" id="L69">      ctx.checkCancellation();</span>
+<span class="fc bfc" id="L70" title="All 4 branches covered.">      if (teamRegex != null &amp;&amp; !team.getName().matches(teamRegex)) {</span>
+<span class="fc" id="L71">        continue;</span>
+      }
+<span class="fc" id="L73">      Optional&lt;RepositoryCreationResult&gt; result =</span>
+<span class="fc" id="L74">          repositoryService.createTeamRepository(</span>
+              course, team, repositoryPrefix, isPrivate, permissions, orgId);
+<span class="fc bfc" id="L76" title="All 2 branches covered.">      if (result.isPresent()) {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (result.get().created()) {</span>
+<span class="fc" id="L78">          ctx.log(&quot; created repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L79">          reposCreated++;</span>
+        } else {
+<span class="fc" id="L81">          ctx.log(&quot;  updated repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L82">          reposUpdated++;</span>
+        }
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (!applySignedCommits(ctx, result.get().repoName())) {</span>
+<span class="fc" id="L85">          signedCommitsFailures++;</span>
+        }
+      }
+<span class="fc" id="L88">    }</span>
+<span class="fc" id="L89">    ctx.log(&quot;Summary:&quot;);</span>
+<span class="fc" id="L90">    ctx.log(String.format(&quot;%4d repos created&quot;, reposCreated));</span>
+<span class="fc" id="L91">    ctx.log(String.format(&quot;%4d repos updated&quot;, reposUpdated));</span>
+<span class="fc" id="L92">    ctx.log(String.format(&quot;%4d repos total&quot;, reposCreated + reposUpdated));</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">    if (signedCommitsFailures &gt; 0) {</span>
+<span class="fc" id="L94">      ctx.log(</span>
+<span class="fc" id="L95">          String.format(&quot;%4d repos where signed commits could not be set&quot;, signedCommitsFailures));</span>
+    }
+<span class="fc" id="L97">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L98">  }</span>
+
+  /**
+   * Makes a repository require signed commits, or not, as this job is set to; does nothing if it is
+   * not set either way. A refusal by GitHub is logged, and does not stop the job.
+   *
+   * @return false if GitHub refused, true otherwise
+   */
+  private boolean applySignedCommits(JobContext ctx, String repoName) throws Exception {
+<span class="fc bfc" id="L107" title="All 2 branches covered.">    if (requireSignedCommit == null) {</span>
+<span class="fc" id="L108">      return true;</span>
+    }
+    try {
+<span class="fc" id="L111">      repositoryService.setSignedCommitsRequired(course, repoName, requireSignedCommit);</span>
+<span class="fc" id="L112">      return true;</span>
+<span class="fc" id="L113">    } catch (HttpStatusCodeException e) {</span>
+<span class="fc" id="L114">      ctx.log(</span>
+          &quot;  could not &quot;
+<span class="fc bfc" id="L116" title="All 2 branches covered.">              + (requireSignedCommit ? &quot;require&quot; : &quot;stop requiring&quot;)</span>
+              + &quot; signed commits on &quot;
+              + repoName
+              + &quot;: &quot;
+<span class="fc" id="L120">              + e.getStatusCode()</span>
+              + &quot; &quot;
+<span class="fc" id="L122">              + e.getResponseBodyAsString());</span>
+<span class="fc" id="L123">      return false;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

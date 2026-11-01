@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DokkuAccountTranslationsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.controllers</a> &gt; <span class="el_source">DokkuAccountTranslationsController.java</span></div><h1>DokkuAccountTranslationsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.controllers;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.DokkuAccountTranslation;
+import edu.ucsb.cs156.frontiers.errors.EntityNotFoundException;
+import edu.ucsb.cs156.frontiers.repositories.CourseRepository;
+import edu.ucsb.cs156.frontiers.repositories.DokkuAccountTranslationRepository;
+import edu.ucsb.cs156.frontiers.utilities.CanonicalFormConverter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+/**
+ * CRUD for {@link DokkuAccountTranslation}: the table of email addresses whose dokku username is
+ * not simply the part of the email before the {@code @}.
+ *
+ * &lt;p&gt;The table is global (not per-course), but it is managed from the Dokku tab of a course, so
+ * every endpoint takes a {@code courseId} that is used only to check that the caller can manage
+ * that course.
+ */
+@Tag(name = &quot;Dokku&quot;)
+@RequestMapping(&quot;/api/dokku/translations&quot;)
+@RestController
+<span class="fc" id="L36">public class DokkuAccountTranslationsController extends ApiController {</span>
+
+  @Autowired private DokkuAccountTranslationRepository dokkuAccountTranslationRepository;
+
+  @Autowired private CourseRepository courseRepository;
+
+  @Operation(summary = &quot;List all dokku account translations, sorted by email&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;&quot;)
+  public List&lt;DokkuAccountTranslation&gt; getTranslations(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L47">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L48">    return dokkuAccountTranslationRepository.findAllByOrderByEmailAsc();</span>
+  }
+
+  @Operation(summary = &quot;Create a dokku account translation&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;&quot;)
+  public DokkuAccountTranslation postTranslation(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;email&quot;) @RequestParam String email,
+      @Parameter(name = &quot;username&quot;) @RequestParam String username) {
+<span class="fc" id="L58">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L59">    String normalizedEmail = normalizeEmail(email);</span>
+<span class="fc" id="L60">    String normalizedUsername = normalizeRequired(&quot;username&quot;, username);</span>
+
+<span class="fc bfc" id="L62" title="All 2 branches covered.">    if (dokkuAccountTranslationRepository.findById(normalizedEmail).isPresent()) {</span>
+<span class="fc" id="L63">      throw new ResponseStatusException(</span>
+          HttpStatus.CONFLICT,
+<span class="fc" id="L65">          &quot;Dokku account translation for %s already exists&quot;.formatted(normalizedEmail));</span>
+    }
+
+    DokkuAccountTranslation translation =
+<span class="fc" id="L69">        DokkuAccountTranslation.builder()</span>
+<span class="fc" id="L70">            .email(normalizedEmail)</span>
+<span class="fc" id="L71">            .username(normalizedUsername)</span>
+<span class="fc" id="L72">            .build();</span>
+<span class="fc" id="L73">    return dokkuAccountTranslationRepository.save(translation);</span>
+  }
+
+  @Operation(summary = &quot;Update the username of a dokku account translation&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PutMapping(&quot;&quot;)
+  public DokkuAccountTranslation putTranslation(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;email&quot;) @RequestParam String email,
+      @Parameter(name = &quot;username&quot;) @RequestParam String username) {
+<span class="fc" id="L83">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L84">    String normalizedEmail = normalizeEmail(email);</span>
+<span class="fc" id="L85">    String normalizedUsername = normalizeRequired(&quot;username&quot;, username);</span>
+
+<span class="fc" id="L87">    DokkuAccountTranslation existing = findTranslation(normalizedEmail);</span>
+<span class="fc" id="L88">    existing.setUsername(normalizedUsername);</span>
+<span class="fc" id="L89">    return dokkuAccountTranslationRepository.save(existing);</span>
+  }
+
+  @Operation(summary = &quot;Delete a dokku account translation&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @DeleteMapping(&quot;&quot;)
+  public Object deleteTranslation(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;email&quot;) @RequestParam String email) {
+<span class="fc" id="L98">    ensureCourseExists(courseId);</span>
+<span class="fc" id="L99">    String normalizedEmail = normalizeEmail(email);</span>
+
+<span class="fc" id="L101">    DokkuAccountTranslation existing = findTranslation(normalizedEmail);</span>
+<span class="fc" id="L102">    dokkuAccountTranslationRepository.delete(existing);</span>
+<span class="fc" id="L103">    return genericMessage(&quot;Dokku account translation for %s deleted&quot;.formatted(normalizedEmail));</span>
+  }
+
+  private void ensureCourseExists(Long courseId) {
+<span class="fc" id="L107">    courseRepository</span>
+<span class="fc" id="L108">        .findById(courseId)</span>
+<span class="fc" id="L109">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L110">  }</span>
+
+  private DokkuAccountTranslation findTranslation(String email) {
+<span class="fc" id="L113">    return dokkuAccountTranslationRepository</span>
+<span class="fc" id="L114">        .findById(email)</span>
+<span class="fc" id="L115">        .orElseThrow(() -&gt; new EntityNotFoundException(DokkuAccountTranslation.class, email));</span>
+  }
+
+  /** Strips and canonicalizes an email; a blank email is a 400. */
+  private String normalizeEmail(String email) {
+<span class="fc" id="L120">    return CanonicalFormConverter.convertToValidEmail(normalizeRequired(&quot;email&quot;, email));</span>
+  }
+
+  private String normalizeRequired(String fieldName, String value) {
+<span class="fc" id="L124">    String normalized = value.strip();</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">    if (normalized.isEmpty()) {</span>
+<span class="fc" id="L126">      throw new IllegalArgumentException(&quot;%s must not be blank&quot;.formatted(fieldName));</span>
+    }
+<span class="fc" id="L128">    return normalized;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
