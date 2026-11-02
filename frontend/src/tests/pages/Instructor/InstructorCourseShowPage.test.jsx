@@ -2072,6 +2072,24 @@ describe("InstructorCourseShowPage tests", () => {
       );
     });
 
+    test("?tab=edudora shows the Assignments tab when the Enable EduDora option is off", async () => {
+      setupCourse7({ ENABLE_EDUDORA: false });
+      renderAt("/instructor/courses/7?tab=edudora");
+      await screen.findByRole("tab", { name: "Settings" });
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ ENABLE_EDUDORA: false })),
+      );
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(
+        screen.queryByRole("tab", { name: "EduDora" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7?tab=edudora",
+      );
+    });
+
     test("?tab=settings shows the Assignments tab when there is no Settings tab", async () => {
       setupCourse7();
       renderAt("/instructor/courses/7?tab=settings", {
