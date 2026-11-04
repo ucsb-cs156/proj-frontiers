@@ -64,7 +64,22 @@ public class AddTeamToGithubJob implements JobContextConsumer {
 <span class="fc" id="L64">      throw new IllegalStateException(&quot;Failed to add team to GitHub: &quot; + e.getMessage(), e);</span>
 <span class="fc" id="L65">    }</span>
 
-<span class="fc" id="L67">    ctx.log(&quot;Done&quot;);</span>
-<span class="fc" id="L68">  }</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">    if (Boolean.TRUE.equals(team.getIsStaffTeam())) {</span>
+      Integer orgId;
+      try {
+<span class="fc" id="L70">        orgId = githubTeamService.getOrgId(course.getOrgName(), course);</span>
+<span class="fc" id="L71">      } catch (Exception e) {</span>
+<span class="fc" id="L72">        throw new IllegalStateException(</span>
+            &quot;Failed to get organization ID for org: &quot;
+<span class="fc" id="L74">                + course.getOrgName()</span>
+                + &quot; - &quot;
+<span class="fc" id="L76">                + e.getMessage(),</span>
+            e);
+<span class="fc" id="L78">      }</span>
+<span class="fc" id="L79">      StaffTeamGithubSync.addStaffMembers(ctx, course, team, orgId, githubTeamService);</span>
+    }
+
+<span class="fc" id="L82">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L83">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
