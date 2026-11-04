@@ -29,6 +29,7 @@ describe("CourseOptionsForm tests", () => {
         ENABLE_API_KEYS: false,
         SLACK_INTEGRATION: false,
         NEW_ASSIGNMENT_FEATURES: false,
+        ENABLE_EDUDORA: false,
       });
     axiosMock.onPost("/api/course/options").reply((config) => [
       200,
@@ -56,6 +57,7 @@ describe("CourseOptionsForm tests", () => {
     expect(
       screen.getByLabelText("New Assignment Features"),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Enable EduDora")).toBeInTheDocument();
 
     const toggle = screen.getByTestId("CourseOptionsForm-toggle-ENABLE_CANVAS");
     fireEvent.click(toggle);

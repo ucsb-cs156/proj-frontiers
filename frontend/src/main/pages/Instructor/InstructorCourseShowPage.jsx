@@ -23,6 +23,7 @@ import { useCourseOptions } from "main/utils/courseOptionsUtils";
 import SlackTabComponent from "main/components/TabComponent/SlackTabComponent";
 import DokkuTabComponent from "main/components/TabComponent/DokkuTabComponent";
 import ApiKeysTabComponent from "main/components/TabComponent/ApiKeysTabComponent";
+import EduDoraTabComponent from "main/components/TabComponent/EduDoraTabComponent";
 import { slackInfoQueryKey } from "main/utils/slackUtils";
 import {
   COURSE_TABS,
@@ -80,6 +81,10 @@ export default function InstructorCourseShowPage({
   // enabled (the backend refuses to create or accept keys otherwise).
   const showApiKeysTab = courseOptions.ENABLE_API_KEYS === true;
 
+  // The EduDora tab is only shown when the ENABLE_EDUDORA course option is
+  // enabled.
+  const showEduDoraTab = courseOptions.ENABLE_EDUDORA === true;
+
   // The Slack tab is only shown when the SLACK_INTEGRATION course option is
   // enabled and a Slack token has been saved. The query key is shared with the
   // Slack card on the Settings tab, so saving a token there shows the tab.
@@ -106,6 +111,7 @@ export default function InstructorCourseShowPage({
       (tab !== "dokku" || showDokkuTab) &&
       (tab !== "slack" || showSlackTab) &&
       (tab !== "api-keys" || showApiKeysTab) &&
+      (tab !== "edudora" || showEduDoraTab) &&
       (tab !== "settings" || showSettingsTab),
   );
   const activeTab = chooseCourseTab({
@@ -314,6 +320,11 @@ export default function InstructorCourseShowPage({
         {showApiKeysTab && (
           <Tab eventKey={"api-keys"} title={"API Keys"} className="pt-2">
             <ApiKeysTabComponent courseId={courseId} testIdPrefix={testId} />
+          </Tab>
+        )}
+        {showEduDoraTab && (
+          <Tab eventKey={"edudora"} title={"EduDora"} className="pt-2">
+            <EduDoraTabComponent testIdPrefix={testId} />
           </Tab>
         )}
         {showSettingsTab && (

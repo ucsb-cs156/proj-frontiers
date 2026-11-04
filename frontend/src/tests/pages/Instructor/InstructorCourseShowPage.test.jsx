@@ -1448,6 +1448,103 @@ describe("InstructorCourseShowPage tests", () => {
     });
   });
 
+  describe("EduDora tab", () => {
+    const setupCourse7WithEduDoraOption = (enableEduDora) => {
+      setupInstructorUser();
+      axiosMock.onGet("/api/courses/7").reply(200, {
+        ...coursesFixtures.severalCourses[0],
+        id: 7,
+      });
+      axiosMock.onGet("/api/course/options").reply(200, {
+        ENABLE_CANVAS: false,
+        TRANSLATE_SECTIONS: false,
+        DOKKU_MANAGER: false,
+        ENABLE_EDUDORA: enableEduDora,
+      });
+    };
+
+    const renderPage = () =>
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+    test("is shown, between Downloads and Settings, when the ENABLE_EDUDORA option is enabled", async () => {
+      setupCourse7WithEduDoraOption(true);
+
+      renderPage();
+
+      const eduDoraTab = await screen.findByRole("tab", { name: "EduDora" });
+      expect(eduDoraTab).toHaveAttribute("data-rr-ui-event-key", "edudora");
+      const tabNames = screen.getAllByRole("tab").map((tab) => tab.textContent);
+      expect(tabNames).toEqual([
+        "Students",
+        "Staff",
+        "Teams",
+        "Assignments",
+        "Jobs",
+        "Downloads",
+        "EduDora",
+        "Settings",
+      ]);
+
+      fireEvent.click(eduDoraTab);
+      expect(eduDoraTab).toHaveAttribute("aria-selected", "true");
+      const tab = screen.getByTestId(
+        "InstructorCourseShowPage-edudora-tab-component",
+      );
+      expect(tab.parentElement).toHaveClass("pt-2");
+      expect(tab).toHaveTextContent("EduDora features coming soon");
+    });
+
+    test("is hidden when the ENABLE_EDUDORA option is disabled", async () => {
+      setupCourse7WithEduDoraOption(false);
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          axiosMock.history.get.some(
+            (request) => request.url === "/api/course/options",
+          ),
+        ).toBe(true),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "EduDora" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("InstructorCourseShowPage-edudora-tab-component"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("is hidden when the ENABLE_EDUDORA option is not strictly true", async () => {
+      setupCourse7WithEduDoraOption("unexpected");
+
+      renderPage();
+
+      await screen.findByTestId("InstructorCourseShowPage-title");
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ ENABLE_EDUDORA: "unexpected" })),
+      );
+
+      expect(
+        screen.queryByRole("tab", { name: "EduDora" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   test("shows the Slack tab when SLACK_INTEGRATION is enabled and a token is set; loads Slack data only when the tab is opened", async () => {
     setupInstructorUser();
     axiosMock.onGet("/api/courses/7").reply(200, {
@@ -1972,6 +2069,24 @@ describe("InstructorCourseShowPage tests", () => {
       ).not.toBeInTheDocument();
       expect(screen.getByTestId("location-probe").textContent).toBe(
         "/instructor/courses/7?tab=api-keys",
+      );
+    });
+
+    test("?tab=edudora shows the Assignments tab when the Enable EduDora option is off", async () => {
+      setupCourse7({ ENABLE_EDUDORA: false });
+      renderAt("/instructor/courses/7?tab=edudora");
+      await screen.findByRole("tab", { name: "Settings" });
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryData(["/api/course/options/?courseId=7"]),
+        ).toEqual(expect.objectContaining({ ENABLE_EDUDORA: false })),
+      );
+      expect(selectedTab()).toEqual(["Assignments"]);
+      expect(
+        screen.queryByRole("tab", { name: "EduDora" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId("location-probe").textContent).toBe(
+        "/instructor/courses/7?tab=edudora",
       );
     });
 

@@ -16,6 +16,7 @@ export const COURSE_TABS = [
   "dokku",
   "slack",
   "api-keys",
+  "edudora",
   "settings",
 ];
 
