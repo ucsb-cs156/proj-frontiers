@@ -149,6 +149,10 @@ member, unless they are already on it.</div>
 <dd>&nbsp;</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/controllers/CoursesController.EmailTypes.html#ALL" class="member-name-link">ALL</a> - Enum constant in enum class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/CoursesController.EmailTypes.html" title="enum class in edu.ucsb.cs156.frontiers.controllers">CoursesController.EmailTypes</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html#ALL" class="member-name-link">ALL</a> - Enum constant in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a></dt>
+<dd>
+<div class="block">Anyone who can see the repository.</div>
+</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/controllers/AdminsController.html#allAdmins()" class="member-name-link">allAdmins()</a> - Method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/AdminsController.html" title="class in edu.ucsb.cs156.frontiers.controllers">AdminsController</a></dt>
 <dd>
 <div class="block">List all admins</div>
@@ -421,6 +425,10 @@ given student, so that the field can be updated in CATME.</div>
 <dd>&nbsp;</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/enums/School.html#CHICO_STATE" class="member-name-link">CHICO_STATE</a> - Enum constant in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/School.html" title="enum class in edu.ucsb.cs156.frontiers.enums">School</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html#COLLABORATORS_ONLY" class="member-name-link">COLLABORATORS_ONLY</a> - Enum constant in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a></dt>
+<dd>
+<div class="block">Only users with at least Write access to the repository.</div>
+</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/controllers/CoursesController.EmailFormats.html#COMMA_SEPARATED" class="member-name-link">COMMA_SEPARATED</a> - Enum constant in enum class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/CoursesController.EmailFormats.html" title="enum class in edu.ucsb.cs156.frontiers.controllers">CoursesController.EmailFormats</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/jobs/CommitDownloadRequestJob.html" class="type-name-link" title="class in edu.ucsb.cs156.frontiers.jobs">CommitDownloadRequestJob</a> - Class in <a href="edu/ucsb/cs156/frontiers/jobs/package-summary.html">edu.ucsb.cs156.frontiers.jobs</a></dt>
@@ -1438,6 +1446,10 @@ instructor or an admin.</div>
 <dt><a href="edu/ucsb/cs156/frontiers/controllers/RosterStudentsCSVController.html#getFirstName(java.lang.String)" class="member-name-link">getFirstName(String)</a> - Static method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/RosterStudentsCSVController.html" title="class in edu.ucsb.cs156.frontiers.controllers">RosterStudentsCSVController</a></dt>
 <dd>
 <div class="block">Get everything except up to and not including the last space in the full name.</div>
+</dd>
+<dt><a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html#getGithubValue()" class="member-name-link">getGithubValue()</a> - Method in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a></dt>
+<dd>
+<div class="block">The value that GitHub's REST API uses for this policy.</div>
 </dd>
 <dt><a href="edu/ucsb/cs156/frontiers/services/GrantedAuthoritiesService.html#getGrantedAuthorities()" class="member-name-link">getGrantedAuthorities()</a> - Method in class edu.ucsb.cs156.frontiers.services.<a href="edu/ucsb/cs156/frontiers/services/GrantedAuthoritiesService.html" title="class in edu.ucsb.cs156.frontiers.services">GrantedAuthoritiesService</a></dt>
 <dd>
@@ -2551,7 +2563,7 @@ reach the same mailbox, and Gradescope may report either one).</div>
 <dd>
 <div class="block">Create a new admin</div>
 </dd>
-<dt><a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html#postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)" class="member-name-link">postAssignment(Long, String, AssignmentType, Visibility, Permission, RepositoryCreationOption, String, Boolean)</a> - Method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html" title="class in edu.ucsb.cs156.frontiers.controllers">AssignmentsController</a></dt>
+<dt><a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html#postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)" class="member-name-link">postAssignment(Long, String, AssignmentType, Visibility, Permission, RepositoryCreationOption, String, Boolean, Boolean)</a> - Method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html" title="class in edu.ucsb.cs156.frontiers.controllers">AssignmentsController</a></dt>
 <dd>
 <div class="block">Creates an assignment and starts the job that creates its repositories.</div>
 </dd>
@@ -2601,6 +2613,11 @@ reach the same mailbox, and Gradescope may report either one).</div>
 <dd>&nbsp;</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/controllers/CanvasController.html#pullCanvasTeams(java.lang.Long,java.lang.String)" class="member-name-link">pullCanvasTeams(Long, String)</a> - Method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/CanvasController.html" title="class in edu.ucsb.cs156.frontiers.controllers">CanvasController</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html" class="type-name-link" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a> - Enum Class in <a href="edu/ucsb/cs156/frontiers/enums/package-summary.html">edu.ucsb.cs156.frontiers.enums</a></dt>
+<dd>
+<div class="block">Who may open pull requests against a GitHub repository: the values of the repository setting
+<code>pull_request_creation_policy</code>.</div>
+</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/jobs/PullTeamsFromCanvasJob.html" class="type-name-link" title="class in edu.ucsb.cs156.frontiers.jobs">PullTeamsFromCanvasJob</a> - Class in <a href="edu/ucsb/cs156/frontiers/jobs/package-summary.html">edu.ucsb.cs156.frontiers.jobs</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/jobs/PullTeamsFromCanvasJob.html#%3Cinit%3E()" class="member-name-link">PullTeamsFromCanvasJob()</a> - Constructor for class edu.ucsb.cs156.frontiers.jobs.<a href="edu/ucsb/cs156/frontiers/jobs/PullTeamsFromCanvasJob.html" title="class in edu.ucsb.cs156.frontiers.jobs">PullTeamsFromCanvasJob</a></dt>
@@ -2939,6 +2956,11 @@ and role-based authorization based on user email addresses.</div>
 <dd>&nbsp;</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/controllers/CourseOptionsController.html#setCourseOption(java.lang.Long,java.lang.String,java.lang.Boolean)" class="member-name-link">setCourseOption(Long, String, Boolean)</a> - Method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/CourseOptionsController.html" title="class in edu.ucsb.cs156.frontiers.controllers">CourseOptionsController</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="edu/ucsb/cs156/frontiers/services/RepositoryService.html#setPullRequestCreationPolicy(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy)" class="member-name-link">setPullRequestCreationPolicy(Course, String, PullRequestCreationPolicy)</a> - Method in class edu.ucsb.cs156.frontiers.services.<a href="edu/ucsb/cs156/frontiers/services/RepositoryService.html" title="class in edu.ucsb.cs156.frontiers.services">RepositoryService</a></dt>
+<dd>
+<div class="block">Sets who may open pull requests against a repository, using the repository setting <code>
+pull_request_creation_policy</code>.</div>
+</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/services/RepositoryService.html#setSignedCommitsRequired(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,boolean)" class="member-name-link">setSignedCommitsRequired(Course, String, boolean)</a> - Method in class edu.ucsb.cs156.frontiers.services.<a href="edu/ucsb/cs156/frontiers/services/RepositoryService.html" title="class in edu.ucsb.cs156.frontiers.services">RepositoryService</a></dt>
 <dd>
 <div class="block">Makes a repository require signed commits, or not, by giving it a ruleset named <a href="edu/ucsb/cs156/frontiers/services/RepositoryService.html#SIGNED_COMMITS_RULESET_NAME">"Require Signed Commits"</a>, or removing that ruleset.</div>
@@ -3538,7 +3560,7 @@ case.</div>
 <dd>&nbsp;</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/jobs/UpdateAllJob.html#%3Cinit%3E()" class="member-name-link">UpdateAllJob()</a> - Constructor for class edu.ucsb.cs156.frontiers.jobs.<a href="edu/ucsb/cs156/frontiers/jobs/UpdateAllJob.html" title="class in edu.ucsb.cs156.frontiers.jobs">UpdateAllJob</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html#updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)" class="member-name-link">updateAssignment(Long, Long, String, Visibility, Permission, RepositoryCreationOption, String, Boolean)</a> - Method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html" title="class in edu.ucsb.cs156.frontiers.controllers">AssignmentsController</a></dt>
+<dt><a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html#updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)" class="member-name-link">updateAssignment(Long, Long, String, Visibility, Permission, RepositoryCreationOption, String, Boolean, Boolean)</a> - Method in class edu.ucsb.cs156.frontiers.controllers.<a href="edu/ucsb/cs156/frontiers/controllers/AssignmentsController.html" title="class in edu.ucsb.cs156.frontiers.controllers">AssignmentsController</a></dt>
 <dd>
 <div class="block">Updates an assignment and starts the job that creates its repositories.</div>
 </dd>
@@ -3707,6 +3729,10 @@ email before the <code>@</code>.</div>
 <dd>
 <div class="block">Returns the enum constant of this class with the specified name.</div>
 </dd>
+<dt><a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html#valueOf(java.lang.String)" class="member-name-link">valueOf(String)</a> - Static method in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this class with the specified name.</div>
+</dd>
 <dt><a href="edu/ucsb/cs156/frontiers/enums/RepositoryCreationOption.html#valueOf(java.lang.String)" class="member-name-link">valueOf(String)</a> - Static method in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/RepositoryCreationOption.html" title="enum class in edu.ucsb.cs156.frontiers.enums">RepositoryCreationOption</a></dt>
 <dd>
 <div class="block">Returns the enum constant of this class with the specified name.</div>
@@ -3790,6 +3816,11 @@ the order they are declared.</div>
 the order they are declared.</div>
 </dd>
 <dt><a href="edu/ucsb/cs156/frontiers/enums/Permission.html#values()" class="member-name-link">values()</a> - Static method in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/Permission.html" title="enum class in edu.ucsb.cs156.frontiers.enums">Permission</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum class, in
+the order they are declared.</div>
+</dd>
+<dt><a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html#values()" class="member-name-link">values()</a> - Static method in enum class edu.ucsb.cs156.frontiers.enums.<a href="edu/ucsb/cs156/frontiers/enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a></dt>
 <dd>
 <div class="block">Returns an array containing the constants of this enum class, in
 the order they are declared.</div>

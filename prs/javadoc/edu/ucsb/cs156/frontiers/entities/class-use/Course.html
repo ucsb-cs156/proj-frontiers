@@ -478,15 +478,23 @@ prefix.</div>
 <div class="block">Removes a member from a GitHub team</div>
 </div>
 <div class="col-first even-row-color"><code>void</code></div>
-<div class="col-second even-row-color"><span class="type-name-label">RepositoryService.</span><code><a href="../../services/RepositoryService.html#setSignedCommitsRequired(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,boolean)" class="member-name-link">setSignedCommitsRequired</a><wbr>(<a href="../Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course,
+<div class="col-second even-row-color"><span class="type-name-label">RepositoryService.</span><code><a href="../../services/RepositoryService.html#setPullRequestCreationPolicy(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy)" class="member-name-link">setPullRequestCreationPolicy</a><wbr>(<a href="../Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course,
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;repositoryName,
- boolean&nbsp;required)</code></div>
+ <a href="../../enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a>&nbsp;policy)</code></div>
 <div class="col-last even-row-color">
-<div class="block">Makes a repository require signed commits, or not, by giving it a ruleset named <a href="../../services/RepositoryService.html#SIGNED_COMMITS_RULESET_NAME">"Require Signed Commits"</a>, or removing that ruleset.</div>
+<div class="block">Sets who may open pull requests against a repository, using the repository setting <code>
+pull_request_creation_policy</code>.</div>
 </div>
 <div class="col-first odd-row-color"><code>void</code></div>
-<div class="col-second odd-row-color"><span class="type-name-label">OrganizationLinkerService.</span><code><a href="../../services/OrganizationLinkerService.html#unenrollOrganization(edu.ucsb.cs156.frontiers.entities.Course)" class="member-name-link">unenrollOrganization</a><wbr>(<a href="../Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course)</code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">RepositoryService.</span><code><a href="../../services/RepositoryService.html#setSignedCommitsRequired(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,boolean)" class="member-name-link">setSignedCommitsRequired</a><wbr>(<a href="../Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course,
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;repositoryName,
+ boolean&nbsp;required)</code></div>
 <div class="col-last odd-row-color">
+<div class="block">Makes a repository require signed commits, or not, by giving it a ruleset named <a href="../../services/RepositoryService.html#SIGNED_COMMITS_RULESET_NAME">"Require Signed Commits"</a>, or removing that ruleset.</div>
+</div>
+<div class="col-first even-row-color"><code>void</code></div>
+<div class="col-second even-row-color"><span class="type-name-label">OrganizationLinkerService.</span><code><a href="../../services/OrganizationLinkerService.html#unenrollOrganization(edu.ucsb.cs156.frontiers.entities.Course)" class="member-name-link">unenrollOrganization</a><wbr>(<a href="../Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course)</code></div>
+<div class="col-last even-row-color">
 <div class="block">Removes the Frontiers installation from the linked GitHub org</div>
 </div>
 </div>

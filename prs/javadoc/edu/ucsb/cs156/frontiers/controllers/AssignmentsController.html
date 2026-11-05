@@ -70,8 +70,8 @@ loadScripts(document, 'script');</script>
 <li><a href="#method-detail" tabindex="0">Method Details</a>
 <ol class="toc-list">
 <li><a href="#getAssignments(java.lang.Long)" tabindex="0">getAssignments(Long)</a></li>
-<li><a href="#postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)" tabindex="0">postAssignment(Long, String, AssignmentType, Visibility, Permission, RepositoryCreationOption, String, Boolean)</a></li>
-<li><a href="#updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)" tabindex="0">updateAssignment(Long, Long, String, Visibility, Permission, RepositoryCreationOption, String, Boolean)</a></li>
+<li><a href="#postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)" tabindex="0">postAssignment(Long, String, AssignmentType, Visibility, Permission, RepositoryCreationOption, String, Boolean, Boolean)</a></li>
+<li><a href="#updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)" tabindex="0">updateAssignment(Long, Long, String, Visibility, Permission, RepositoryCreationOption, String, Boolean, Boolean)</a></li>
 <li><a href="#launchAssignmentJob(java.lang.Long,java.lang.Long)" tabindex="0">launchAssignmentJob(Long, Long)</a></li>
 <li><a href="#deleteAssignment(java.lang.Long,java.lang.Long)" tabindex="0">deleteAssignment(Long, Long)</a></li>
 </ol>
@@ -161,26 +161,28 @@ pick up students who have joined since the last run, and records it as the assig
 job.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="../models/AssignmentWithJob.html" title="class in edu.ucsb.cs156.frontiers.models">AssignmentWithJob</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)" class="member-name-link">postAssignment</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;courseId,
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)" class="member-name-link">postAssignment</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;courseId,
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;repoPrefix,
  <a href="../enums/AssignmentType.html" title="enum class in edu.ucsb.cs156.frontiers.enums">AssignmentType</a>&nbsp;asnType,
  <a href="../enums/Visibility.html" title="enum class in edu.ucsb.cs156.frontiers.enums">Visibility</a>&nbsp;visibility,
  <a href="../enums/Permission.html" title="enum class in edu.ucsb.cs156.frontiers.enums">Permission</a>&nbsp;permission,
  <a href="../enums/RepositoryCreationOption.html" title="enum class in edu.ucsb.cs156.frontiers.enums">RepositoryCreationOption</a>&nbsp;createReposFor,
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;teamRegex,
- <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit)</code></div>
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit,
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;restrictPrsToContributors)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Creates an assignment and starts the job that creates its repositories.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="../models/AssignmentWithJob.html" title="class in edu.ucsb.cs156.frontiers.models">AssignmentWithJob</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)" class="member-name-link">updateAssignment</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;courseId,
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)" class="member-name-link">updateAssignment</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;courseId,
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Long.html" title="class or interface in java.lang" class="external-link">Long</a>&nbsp;assignmentId,
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;repoPrefix,
  <a href="../enums/Visibility.html" title="enum class in edu.ucsb.cs156.frontiers.enums">Visibility</a>&nbsp;visibility,
  <a href="../enums/Permission.html" title="enum class in edu.ucsb.cs156.frontiers.enums">Permission</a>&nbsp;permission,
  <a href="../enums/RepositoryCreationOption.html" title="enum class in edu.ucsb.cs156.frontiers.enums">RepositoryCreationOption</a>&nbsp;createReposFor,
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;teamRegex,
- <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit)</code></div>
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit,
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;restrictPrsToContributors)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Updates an assignment and starts the job that creates its repositories.</div>
 </div>
@@ -267,7 +269,7 @@ job.</div>
 </section>
 </li>
 <li>
-<section class="detail" id="postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)">
+<section class="detail" id="postAssignment(java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.AssignmentType,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)">
 <h3>postAssignment</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="annotations">@PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
@@ -287,7 +289,9 @@ job.</div>
  @RequestParam(required=false)
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;teamRegex,
  @RequestParam(required=false)
- <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit)</span>
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit,
+ @RequestParam(required=false)
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;restrictPrsToContributors)</span>
                                  throws <span class="exceptions"><a href="../errors/EntityNotFoundException.html" title="class in edu.ucsb.cs156.frontiers.errors">EntityNotFoundException</a></span></div>
 <div class="block">Creates an assignment and starts the job that creates its repositories.
 
@@ -305,6 +309,8 @@ createReposFor must not be given.</div>
 <dd><code>createReposFor</code> - INDIVIDUAL only: whom to create repositories for</dd>
 <dd><code>teamRegex</code> - TEAM only: only teams whose names match get a repository</dd>
 <dd><code>requireSignedCommit</code> - whether the repositories must require signed commits (default false)</dd>
+<dd><code>restrictPrsToContributors</code> - TEAM only: whether pull requests are restricted to users with
+    Write access (default false)</dd>
 <dt>Returns:</dt>
 <dd>the created assignment, with the id of the job as its last job id, and that job</dd>
 <dt>Throws:</dt>
@@ -314,7 +320,7 @@ createReposFor must not be given.</div>
 </section>
 </li>
 <li>
-<section class="detail" id="updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean)">
+<section class="detail" id="updateAssignment(java.lang.Long,java.lang.Long,java.lang.String,edu.ucsb.cs156.frontiers.enums.Visibility,edu.ucsb.cs156.frontiers.enums.Permission,edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption,java.lang.String,java.lang.Boolean,java.lang.Boolean)">
 <h3>updateAssignment</h3>
 <div class="horizontal-scroll">
 <div class="member-signature"><span class="annotations">@PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
@@ -334,7 +340,9 @@ createReposFor must not be given.</div>
  @RequestParam(required=false)
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;teamRegex,
  @RequestParam(required=false)
- <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit)</span>
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;requireSignedCommit,
+ @RequestParam(required=false)
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;restrictPrsToContributors)</span>
                                    throws <span class="exceptions"><a href="../errors/EntityNotFoundException.html" title="class in edu.ucsb.cs156.frontiers.errors">EntityNotFoundException</a></span></div>
 <div class="block">Updates an assignment and starts the job that creates its repositories. The assignment type
 cannot be changed: to change an individual assignment to a team one, or the other way round,
@@ -351,6 +359,8 @@ createReposFor and teamRegex, according to the assignment's type.</div>
 <dd><code>teamRegex</code> - TEAM only: only teams whose names match get a repository</dd>
 <dd><code>requireSignedCommit</code> - whether the repositories must require signed commits; if it is not
     given the assignment keeps its setting</dd>
+<dd><code>restrictPrsToContributors</code> - TEAM only: whether pull requests are restricted to users with
+    Write access; if it is not given the assignment keeps its setting</dd>
 <dt>Returns:</dt>
 <dd>the updated assignment, with the id of the job as its last job id, and that job</dd>
 <dt>Throws:</dt>

@@ -73,6 +73,7 @@ loadScripts(document, 'script');</script>
 <li><a href="#createStudentRepository(edu.ucsb.cs156.frontiers.entities.Course,edu.ucsb.cs156.frontiers.entities.RosterStudent,java.lang.String,java.lang.Boolean,edu.ucsb.cs156.frontiers.enums.RepositoryPermissions)" tabindex="0">createStudentRepository(Course, RosterStudent, String, Boolean, RepositoryPermissions)</a></li>
 <li><a href="#createStaffRepository(edu.ucsb.cs156.frontiers.entities.Course,edu.ucsb.cs156.frontiers.entities.CourseStaff,java.lang.String,java.lang.Boolean,edu.ucsb.cs156.frontiers.enums.RepositoryPermissions)" tabindex="0">createStaffRepository(Course, CourseStaff, String, Boolean, RepositoryPermissions)</a></li>
 <li><a href="#setSignedCommitsRequired(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,boolean)" tabindex="0">setSignedCommitsRequired(Course, String, boolean)</a></li>
+<li><a href="#setPullRequestCreationPolicy(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy)" tabindex="0">setPullRequestCreationPolicy(Course, String, PullRequestCreationPolicy)</a></li>
 <li><a href="#getRepositoriesMatchingPrefix(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String)" tabindex="0">getRepositoriesMatchingPrefix(Course, String)</a></li>
 <li><a href="#isRepositoryEmpty(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String)" tabindex="0">isRepositoryEmpty(Course, String)</a></li>
 <li><a href="#deleteRepositoryIfEmpty(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String)" tabindex="0">deleteRepositoryIfEmpty(Course, String)</a></li>
@@ -215,10 +216,18 @@ prefix.</div>
 <div class="block">Returns true when the repository has no commits.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setSignedCommitsRequired(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,boolean)" class="member-name-link">setSignedCommitsRequired</a><wbr>(<a href="../entities/Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course,
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setPullRequestCreationPolicy(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy)" class="member-name-link">setPullRequestCreationPolicy</a><wbr>(<a href="../entities/Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course,
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;repositoryName,
+ <a href="../enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a>&nbsp;policy)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Sets who may open pull requests against a repository, using the repository setting <code>
+pull_request_creation_policy</code>.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setSignedCommitsRequired(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,boolean)" class="member-name-link">setSignedCommitsRequired</a><wbr>(<a href="../entities/Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course,
  <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;repositoryName,
  boolean&nbsp;required)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Makes a repository require signed commits, or not, by giving it a ruleset named <a href="#SIGNED_COMMITS_RULESET_NAME">"Require Signed Commits"</a>, or removing that ruleset.</div>
 </div>
 </div>
@@ -378,6 +387,34 @@ organization.</div>
 <dt>Throws:</dt>
 <dd><code>org.springframework.web.client.HttpStatusCodeException</code> - if GitHub refuses a request, for example because the GitHub App
     is not allowed to administer repositories</dd>
+<dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/NoSuchAlgorithmException.html" title="class or interface in java.security" class="external-link">NoSuchAlgorithmException</a></code></dd>
+<dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/spec/InvalidKeySpecException.html" title="class or interface in java.security.spec" class="external-link">InvalidKeySpecException</a></code></dd>
+<dd><code>com.fasterxml.jackson.core.JsonProcessingException</code></dd>
+</dl>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="setPullRequestCreationPolicy(edu.ucsb.cs156.frontiers.entities.Course,java.lang.String,edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy)">
+<h3>setPullRequestCreationPolicy</h3>
+<div class="horizontal-scroll">
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">setPullRequestCreationPolicy</span><wbr><span class="parameters">(<a href="../entities/Course.html" title="class in edu.ucsb.cs156.frontiers.entities">Course</a>&nbsp;course,
+ <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;repositoryName,
+ <a href="../enums/PullRequestCreationPolicy.html" title="enum class in edu.ucsb.cs156.frontiers.enums">PullRequestCreationPolicy</a>&nbsp;policy)</span>
+                                  throws <span class="exceptions"><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/NoSuchAlgorithmException.html" title="class or interface in java.security" class="external-link">NoSuchAlgorithmException</a>,
+<a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/spec/InvalidKeySpecException.html" title="class or interface in java.security.spec" class="external-link">InvalidKeySpecException</a>,
+com.fasterxml.jackson.core.JsonProcessingException</span></div>
+<div class="block">Sets who may open pull requests against a repository, using the repository setting <code>
+pull_request_creation_policy</code>. This works for any repository in the course's organization,
+whatever created it.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>course</code> - the course whose organization the repository belongs to</dd>
+<dd><code>repositoryName</code> - the name of the repository</dd>
+<dd><code>policy</code> - who may open pull requests</dd>
+<dt>Throws:</dt>
+<dd><code>org.springframework.web.client.HttpStatusCodeException</code> - if GitHub refuses the request, for example because the GitHub
+    App is not allowed to administer repositories</dd>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/NoSuchAlgorithmException.html" title="class or interface in java.security" class="external-link">NoSuchAlgorithmException</a></code></dd>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/security/spec/InvalidKeySpecException.html" title="class or interface in java.security.spec" class="external-link">InvalidKeySpecException</a></code></dd>
 <dd><code>com.fasterxml.jackson.core.JsonProcessingException</code></dd>
