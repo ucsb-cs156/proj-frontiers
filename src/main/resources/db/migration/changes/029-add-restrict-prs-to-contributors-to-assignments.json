@@ -1,0 +1,27 @@
+{ "databaseChangeLog": [
+  {
+    "changeSet": {
+      "id": "029-add-restrict-prs-to-contributors-to-assignments",
+      "author": "pconrad",
+      "changes": [
+        {
+          "addColumn": {
+            "tableName": "ASSIGNMENTS",
+            "columns": [
+              {
+                "column": {
+                  "name": "RESTRICT_PRS_TO_CONTRIBUTORS",
+                  "type": "BOOLEAN",
+                  "defaultValueBoolean": false,
+                  "constraints": {
+                    "nullable": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]}

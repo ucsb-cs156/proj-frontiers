@@ -91,6 +91,8 @@ public class AssignmentsController extends ApiController {
    * @param createReposFor INDIVIDUAL only: whom to create repositories for
    * @param teamRegex TEAM only: only teams whose names match get a repository
    * @param requireSignedCommit whether the repositories must require signed commits (default false)
+   * @param restrictPrsToContributors TEAM only: whether pull requests are restricted to users with
+   *     Write access (default false)
    * @return the created assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = "Create an assignment and start creating its repositories")
@@ -106,7 +108,9 @@ public class AssignmentsController extends ApiController {
           RepositoryCreationOption createReposFor,
       @Parameter(name = "teamRegex") @RequestParam(required = false) String teamRegex,
       @Parameter(name = "requireSignedCommit") @RequestParam(required = false)
-          Boolean requireSignedCommit)
+          Boolean requireSignedCommit,
+      @Parameter(name = "restrictPrsToContributors") @RequestParam(required = false)
+          Boolean restrictPrsToContributors)
       throws EntityNotFoundException {
     Course course = ensureCourseExists(courseId);
     Assignment assignment = Assignment.builder().course(course).asnType(asnType).build();
@@ -117,7 +121,8 @@ public class AssignmentsController extends ApiController {
         permission,
         createReposFor,
         teamRegex,
-        requireSignedCommit);
+        requireSignedCommit,
+        restrictPrsToContributors);
     requireLinkedOrganization(course);
 
     return launchAndSave(course, assignment);
@@ -138,6 +143,8 @@ public class AssignmentsController extends ApiController {
    * @param teamRegex TEAM only: only teams whose names match get a repository
    * @param requireSignedCommit whether the repositories must require signed commits; if it is not
    *     given the assignment keeps its setting
+   * @param restrictPrsToContributors TEAM only: whether pull requests are restricted to users with
+   *     Write access; if it is not given the assignment keeps its setting
    * @return the updated assignment, with the id of the job as its last job id, and that job
    */
   @Operation(summary = "Update an assignment and start creating its repositories")
@@ -153,7 +160,9 @@ public class AssignmentsController extends ApiController {
           RepositoryCreationOption createReposFor,
       @Parameter(name = "teamRegex") @RequestParam(required = false) String teamRegex,
       @Parameter(name = "requireSignedCommit") @RequestParam(required = false)
-          Boolean requireSignedCommit)
+          Boolean requireSignedCommit,
+      @Parameter(name = "restrictPrsToContributors") @RequestParam(required = false)
+          Boolean restrictPrsToContributors)
       throws EntityNotFoundException {
     Course course = ensureCourseExists(courseId);
     Assignment assignment = findAssignmentInCourse(courseId, assignmentId);
@@ -164,7 +173,8 @@ public class AssignmentsController extends ApiController {
         permission,
         createReposFor,
         teamRegex,
-        requireSignedCommit);
+        requireSignedCommit,
+        restrictPrsToContributors);
     requireLinkedOrganization(course);
 
     return launchAndSave(course, assignment);
@@ -250,7 +260,8 @@ public class AssignmentsController extends ApiController {
       Permission permission,
       RepositoryCreationOption createReposFor,
       String teamRegex,
-      Boolean requireSignedCommit) {
+      Boolean requireSignedCommit,
+      Boolean restrictPrsToContributors) {
     String normalizedPrefix = repoPrefix.strip();
     if (normalizedPrefix.isEmpty()) {
       throw new IllegalArgumentException("repoPrefix must not be blank");
@@ -285,6 +296,9 @@ public class AssignmentsController extends ApiController {
     if (requireSignedCommit != null) {
       assignment.setRequireSignedCommit(requireSignedCommit);
     }
+    if (restrictPrsToContributors != null) {
+      assignment.setRestrictPrsToContributors(restrictPrsToContributors);
+    }
   }
 
   /** Starts the job that creates the individual or team repositories of an assignment. */
@@ -303,6 +317,7 @@ public class AssignmentsController extends ApiController {
               .permissions(permissions)
               .teamRegex(assignment.getTeamRegex())
               .requireSignedCommit(assignment.getRequireSignedCommit())
+              .restrictPrsToContributors(assignment.getRestrictPrsToContributors())
               .build());
     }
     return jobService.runAsJob(

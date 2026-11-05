@@ -57,6 +57,43 @@ describe("NewTeamAssignmentForm tests", () => {
     expect(screen.getByTestId(`${testId}-requireSignedCommit`)).toBeChecked();
   });
 
+  test("has an unchecked Restrict PRs to Contibutors checkbox with a tooltip", async () => {
+    const user = userEvent.setup();
+    render(<NewTeamAssignmentForm submitAction={vi.fn()} />);
+
+    const checkbox = screen.getByTestId(`${testId}-restrictPrsToContributors`);
+    expect(screen.getByLabelText(/Restrict PRs to Contibutors/)).toBe(checkbox);
+    expect(checkbox).toHaveAttribute("type", "checkbox");
+    expect(checkbox).not.toBeChecked();
+
+    const info = screen.getByTestId(`${testId}-restrictPrsToContributors-info`);
+    await user.hover(info);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "When repos are open source, this ensures that PRs only come from users with Write access to the repo. In practice, this typically restricts it to the students from your course and your course staff.",
+    );
+    await user.unhover(info);
+    await waitFor(() =>
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument(),
+    );
+  });
+
+  test("shows the restriction as on when initialContents say so", () => {
+    render(
+      <NewTeamAssignmentForm
+        submitAction={vi.fn()}
+        initialContents={{
+          repoPrefix: "proj",
+          teamRegex: ".*",
+          restrictPrsToContributors: true,
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByTestId(`${testId}-restrictPrsToContributors`),
+    ).toBeChecked();
+  });
+
   test("shows initialContents and a custom button label", () => {
     render(
       <NewTeamAssignmentForm
@@ -80,11 +117,14 @@ describe("NewTeamAssignmentForm tests", () => {
 
   test("the info icon explains the team regex", async () => {
     const user = userEvent.setup();
-    const { container } = render(
-      <NewTeamAssignmentForm submitAction={vi.fn()} />,
-    );
+    render(<NewTeamAssignmentForm submitAction={vi.fn()} />);
 
-    await user.hover(container.querySelector("svg"));
+    await user.hover(
+      screen
+        .getByText(/Team Regex/)
+        .closest("label")
+        .querySelector("svg"),
+    );
 
     const tooltip = await screen.findByRole("tooltip");
     expect(tooltip).toHaveTextContent(
@@ -143,6 +183,7 @@ describe("NewTeamAssignmentForm tests", () => {
       isPrivate: false,
       permission: "MAINTAIN",
       requireSignedCommit: false,
+      restrictPrsToContributors: false,
       teamRegex: ".*",
     });
     expect(
@@ -168,6 +209,7 @@ describe("NewTeamAssignmentForm tests", () => {
     });
     fireEvent.click(screen.getByTestId(`${testId}-isPrivate`));
     fireEvent.click(screen.getByTestId(`${testId}-requireSignedCommit`));
+    fireEvent.click(screen.getByTestId(`${testId}-restrictPrsToContributors`));
     fireEvent.change(screen.getByTestId(`${testId}-permission`), {
       target: { value: "READ" },
     });
@@ -182,6 +224,7 @@ describe("NewTeamAssignmentForm tests", () => {
       isPrivate: true,
       permission: "READ",
       requireSignedCommit: true,
+      restrictPrsToContributors: true,
       teamRegex: "s26-0[1-3]",
     });
   });

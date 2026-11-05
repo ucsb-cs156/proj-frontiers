@@ -83,6 +83,7 @@ describe("newAssignmentsUtils tests", () => {
         isPrivate: false,
         permission: "ADMIN",
         requireSignedCommit: false,
+        restrictPrsToContributors: true,
         createReposFor: "ignored",
         teamRegex: "s26-.*",
       }),
@@ -92,7 +93,22 @@ describe("newAssignmentsUtils tests", () => {
       permission: "ADMIN",
       requireSignedCommit: false,
       teamRegex: "s26-.*",
+      restrictPrsToContributors: true,
     });
+  });
+
+  test("formDataToParams sends restrictPrsToContributors as false for a team when the form has no value for it, and never for an individual assignment", () => {
+    expect(
+      formDataToParams("TEAM", { repoPrefix: "x", permission: "READ" })
+        .restrictPrsToContributors,
+    ).toBe(false);
+    expect(
+      formDataToParams("INDIVIDUAL", {
+        repoPrefix: "x",
+        permission: "READ",
+        restrictPrsToContributors: true,
+      }),
+    ).not.toHaveProperty("restrictPrsToContributors");
   });
 
   test("formDataToParams sends requireSignedCommit as false when the form has no value for it", () => {
@@ -118,6 +134,7 @@ describe("newAssignmentsUtils tests", () => {
         visibility: "PRIVATE",
         permission: "WRITE",
         requireSignedCommit: true,
+        restrictPrsToContributors: true,
         createReposFor: null,
         teamRegex: "s26-.*",
       }),
@@ -126,6 +143,7 @@ describe("newAssignmentsUtils tests", () => {
       isPrivate: true,
       permission: "WRITE",
       requireSignedCommit: true,
+      restrictPrsToContributors: true,
       createReposFor: null,
       teamRegex: "s26-.*",
     });

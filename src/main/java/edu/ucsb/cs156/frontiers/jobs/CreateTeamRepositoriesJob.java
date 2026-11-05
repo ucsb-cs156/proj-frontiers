@@ -2,6 +2,7 @@ package edu.ucsb.cs156.frontiers.jobs;
 
 import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
@@ -29,6 +30,13 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
    */
   Boolean requireSignedCommit;
 
+  /**
+   * Whether pull requests on the repositories are restricted to users with Write access: true
+   * restricts them, false lifts the restriction. Null, as for a caller that does not manage this,
+   * leaves the repositories' setting alone.
+   */
+  Boolean restrictPrsToContributors;
+
   @Override
   public String getScopeType() {
     return "course";
@@ -49,6 +57,9 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
     if (requireSignedCommit != null) {
       ctx.log("requireSignedCommit=" + requireSignedCommit);
     }
+    if (restrictPrsToContributors != null) {
+      ctx.log("restrictPrsToContributors=" + restrictPrsToContributors);
+    }
 
     Integer orgId;
     try {
@@ -62,6 +73,7 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
     int reposCreated = 0;
     int reposUpdated = 0;
     int signedCommitsFailures = 0;
+    int prPolicyFailures = 0;
 
     for (Team team : course.getTeams()) {
       // A team skipped by teamRegex never logs anything -- checkCancellation() gives this
@@ -84,6 +96,9 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
         if (!applySignedCommits(ctx, result.get().repoName())) {
           signedCommitsFailures++;
         }
+        if (!applyPullRequestPolicy(ctx, result.get().repoName())) {
+          prPolicyFailures++;
+        }
       }
     }
     ctx.log("Summary:");
@@ -93,6 +108,11 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
     if (signedCommitsFailures > 0) {
       ctx.log(
           String.format("%4d repos where signed commits could not be set", signedCommitsFailures));
+    }
+    if (prPolicyFailures > 0) {
+      ctx.log(
+          String.format(
+              "%4d repos where the pull request policy could not be set", prPolicyFailures));
     }
     ctx.log("Done");
   }
@@ -115,6 +135,39 @@ public class CreateTeamRepositoriesJob implements JobContextConsumer {
           "  could not "
               + (requireSignedCommit ? "require" : "stop requiring")
               + " signed commits on "
+              + repoName
+              + ": "
+              + e.getStatusCode()
+              + " "
+              + e.getResponseBodyAsString());
+      return false;
+    }
+  }
+
+  /**
+   * Restricts pull requests on a repository to users with Write access, or lifts that restriction,
+   * as this job is set to; does nothing if it is not set either way. A refusal by GitHub is logged,
+   * and does not stop the job.
+   *
+   * @return false if GitHub refused, true otherwise
+   */
+  private boolean applyPullRequestPolicy(JobContext ctx, String repoName) throws Exception {
+    if (restrictPrsToContributors == null) {
+      return true;
+    }
+    try {
+      repositoryService.setPullRequestCreationPolicy(
+          course,
+          repoName,
+          restrictPrsToContributors
+              ? PullRequestCreationPolicy.COLLABORATORS_ONLY
+              : PullRequestCreationPolicy.ALL);
+      return true;
+    } catch (HttpStatusCodeException e) {
+      ctx.log(
+          "  could not "
+              + (restrictPrsToContributors ? "restrict" : "stop restricting")
+              + " pull requests on "
               + repoName
               + ": "
               + e.getStatusCode()

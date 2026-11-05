@@ -192,6 +192,7 @@ describe("NewAssignmentsTabComponent tests", () => {
       permission: "MAINTAIN",
       requireSignedCommit: false,
       teamRegex: ".*",
+      restrictPrsToContributors: false,
     });
     await waitFor(() => expect(toast).toHaveBeenCalledTimes(1));
   });
@@ -216,6 +217,31 @@ describe("NewAssignmentsTabComponent tests", () => {
     await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
     expect(axiosMock.history.post[0].params.requireSignedCommit).toBe(true);
     expect(axiosMock.history.post[0].params.teamRegex).toBe(".*");
+  });
+
+  test("a team assignment can be created restricting PRs to contributors", async () => {
+    axiosMock
+      .onPost("/api/assignments/post")
+      .reply(200, newAssignmentsFixtures.savedWithJob);
+
+    renderTab();
+
+    fireEvent.click(
+      screen.getByTestId(`${testId}-create-team-assignment-button`),
+    );
+    await createModalTitle("Create Team Assignment");
+    fireEvent.change(screen.getByTestId(`${teamForm}-repoPrefix`), {
+      target: { value: "proj" },
+    });
+    fireEvent.click(
+      screen.getByTestId(`${teamForm}-restrictPrsToContributors`),
+    );
+    fireEvent.click(screen.getByTestId(`${teamForm}-submit`));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params.restrictPrsToContributors).toBe(
+      true,
+    );
   });
 
   test("the create modal can be closed, and reopened for the other kind of assignment", async () => {

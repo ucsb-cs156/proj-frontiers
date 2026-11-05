@@ -23,6 +23,7 @@ export default function NewTeamAssignmentForm({
       isPrivate: false,
       permission: "MAINTAIN",
       requireSignedCommit: false,
+      restrictPrsToContributors: false,
       teamRegex: DEFAULT_TEAM_REGEX,
       ...initialContents,
     },
@@ -86,6 +87,35 @@ export default function NewTeamAssignmentForm({
           branch except gh-pages. When this is off, that ruleset is removed from
           them.
         </Form.Text>
+      </Form.Group>
+      <Form.Group className="mb-3">
+        <Form.Check id="restrictPrsToContributors" type="checkbox">
+          <Form.Check.Input
+            type="checkbox"
+            data-testid={`${testIdPrefix}-restrictPrsToContributors`}
+            {...register("restrictPrsToContributors")}
+          />
+          <Form.Check.Label>
+            {"Restrict PRs to Contibutors "}
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip id="restrictPrsToContributors-tooltip">
+                  When repos are open source, this ensures that PRs only come
+                  from users with Write access to the repo. In practice, this
+                  typically restricts it to the students from your course and
+                  your course staff.
+                </Tooltip>
+              }
+            >
+              <span
+                data-testid={`${testIdPrefix}-restrictPrsToContributors-info`}
+              >
+                <BsInfoCircle />
+              </span>
+            </OverlayTrigger>
+          </Form.Check.Label>
+        </Form.Check>
       </Form.Group>
       <Form.Group className="mb-3">
         <Form.Label htmlFor="teamRegex">
