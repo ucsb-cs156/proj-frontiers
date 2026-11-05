@@ -84,4 +84,11 @@ public class Assignment {
    * ruleset is removed from them.
    */
   private boolean requireSignedCommit;
+
+  /**
+   * TEAM assignments only: whether pull requests on the repositories created for this assignment
+   * are restricted to users with Write access. The assignment's job applies the setting, and if
+   * this is false it lifts the restriction.
+   */
+  private boolean restrictPrsToContributors;
 }

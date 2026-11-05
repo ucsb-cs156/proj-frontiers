@@ -14,6 +14,7 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.services.GithubTeamService;
 import edu.ucsb.cs156.frontiers.services.RepositoryService;
@@ -547,6 +548,175 @@ public class CreateTeamRepositoriesJobTest {
     signedCommitsJob(course, true).build().accept(ctx);
 
     verify(service, never()).setSignedCommitsRequired(any(), any(), anyBoolean());
+    assertFalse(jobStarted.getLog().contains("could not"));
+  }
+
+  private CreateTeamRepositoriesJob.CreateTeamRepositoriesJobBuilder prPolicyJob(
+      Course course, Boolean restrictPrsToContributors) {
+    return CreateTeamRepositoriesJob.builder()
+        .repositoryService(service)
+        .githubTeamService(githubTeamService)
+        .repositoryPrefix("repo-prefix")
+        .course(course)
+        .isPrivate(false)
+        .permissions(RepositoryPermissions.WRITE)
+        .restrictPrsToContributors(restrictPrsToContributors);
+  }
+
+  @Test
+  public void restrictPrsToContributors_true_is_logged_and_applied_to_created_and_updated_repos()
+      throws Exception {
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+    Course course = courseWithTwoTeams(team1, team2);
+
+    prPolicyJob(course, true).build().accept(ctx);
+
+    String expected =
+        """
+        Creating team repositories...
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        teamRegex=null
+        restrictPrsToContributors=true
+         created repo repo-prefix-test-team1
+          updated repo repo-prefix-test-team2
+        Summary:
+           1 repos created
+           1 repos updated
+           2 repos total
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+    verify(service, times(1))
+        .setPullRequestCreationPolicy(
+            eq(course),
+            eq("repo-prefix-test-team1"),
+            eq(PullRequestCreationPolicy.COLLABORATORS_ONLY));
+    verify(service, times(1))
+        .setPullRequestCreationPolicy(
+            eq(course),
+            eq("repo-prefix-test-team2"),
+            eq(PullRequestCreationPolicy.COLLABORATORS_ONLY));
+  }
+
+  @Test
+  public void restrictPrsToContributors_false_is_logged_and_lifts_the_restriction()
+      throws Exception {
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+    Course course = courseWithTwoTeams(team1, team2);
+
+    prPolicyJob(course, false).build().accept(ctx);
+
+    assertTrue(jobStarted.getLog().contains("\nrestrictPrsToContributors=false\n"));
+    verify(service, times(1))
+        .setPullRequestCreationPolicy(
+            eq(course), eq("repo-prefix-test-team1"), eq(PullRequestCreationPolicy.ALL));
+    verify(service, times(1))
+        .setPullRequestCreationPolicy(
+            eq(course), eq("repo-prefix-test-team2"), eq(PullRequestCreationPolicy.ALL));
+  }
+
+  @Test
+  public void restrictPrsToContributors_null_leaves_the_repos_alone_and_is_not_logged()
+      throws Exception {
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+    Course course = courseWithTwoTeams(team1, team2);
+
+    prPolicyJob(course, null).build().accept(ctx);
+
+    assertFalse(jobStarted.getLog().contains("restrictPrsToContributors"));
+    assertFalse(jobStarted.getLog().contains("pull request policy"));
+    verify(service, never()).setPullRequestCreationPolicy(any(), any(), any());
+  }
+
+  @Test
+  public void a_repo_that_github_refuses_the_pr_policy_for_is_logged_and_the_job_carries_on()
+      throws Exception {
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+    Course course = courseWithTwoTeams(team1, team2);
+    doThrow(
+            HttpClientErrorException.create(
+                HttpStatus.FORBIDDEN,
+                "Forbidden",
+                HttpHeaders.EMPTY,
+                "{\"message\":\"Resource not accessible by integration\"}".getBytes(),
+                null))
+        .when(service)
+        .setPullRequestCreationPolicy(
+            eq(course),
+            eq("repo-prefix-test-team1"),
+            eq(PullRequestCreationPolicy.COLLABORATORS_ONLY));
+
+    prPolicyJob(course, true).build().accept(ctx);
+
+    String expected =
+        """
+        Creating team repositories...
+        repositoryPrefix=repo-prefix
+        isPrivate=false
+        permissions=WRITE
+        teamRegex=null
+        restrictPrsToContributors=true
+         created repo repo-prefix-test-team1
+          could not restrict pull requests on repo-prefix-test-team1: 403 FORBIDDEN {"message":"Resource not accessible by integration"}
+          updated repo repo-prefix-test-team2
+        Summary:
+           1 repos created
+           1 repos updated
+           2 repos total
+           1 repos where the pull request policy could not be set
+        Done""";
+    assertEquals(expected, jobStarted.getLog());
+    // it went on to the next repo
+    verify(service, times(1))
+        .setPullRequestCreationPolicy(
+            eq(course),
+            eq("repo-prefix-test-team2"),
+            eq(PullRequestCreationPolicy.COLLABORATORS_ONLY));
+  }
+
+  @Test
+  public void a_refusal_to_lift_the_restriction_says_so() throws Exception {
+    Team team1 = Team.builder().name("test-team1").build();
+    Team team2 = Team.builder().name("test-team2").build();
+    Course course = courseWithTwoTeams(team1, team2);
+    lenient()
+        .doThrow(
+            HttpClientErrorException.create(
+                HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, new byte[0], null))
+        .when(service)
+        .setPullRequestCreationPolicy(
+            eq(course), eq("repo-prefix-test-team2"), eq(PullRequestCreationPolicy.ALL));
+
+    prPolicyJob(course, false).build().accept(ctx);
+
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "  could not stop restricting pull requests on repo-prefix-test-team2: 404 NOT_FOUND \n"));
+    assertTrue(
+        jobStarted
+            .getLog()
+            .contains("   1 repos where the pull request policy could not be set\n"));
+  }
+
+  @Test
+  public void a_repo_whose_creation_failed_gets_no_pr_policy_call() throws Exception {
+    Team team1 = Team.builder().name("test-team1").build();
+    Course course = Course.builder().orgName("ucsb-cs156").installationId("1234").build();
+    course.setTeams(List.of(team1));
+    when(githubTeamService.getOrgId("ucsb-cs156", course)).thenReturn(1);
+    when(service.createTeamRepository(eq(course), eq(team1), any(), any(), any(), eq(1)))
+        .thenReturn(Optional.empty());
+
+    prPolicyJob(course, true).build().accept(ctx);
+
+    verify(service, never()).setPullRequestCreationPolicy(any(), any(), any());
     assertFalse(jobStarted.getLog().contains("could not"));
   }
 }

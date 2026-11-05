@@ -7,6 +7,7 @@ import edu.ucsb.cs156.frontiers.entities.Course;
 import edu.ucsb.cs156.frontiers.entities.CourseStaff;
 import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import java.security.NoSuchAlgorithmException;
@@ -311,6 +312,28 @@ public class RepositoryService {
       restTemplate.exchange(
           rulesetsEndpoint + "/" + existingId, HttpMethod.PUT, entity, String.class);
     }
+  }
+
+  /**
+   * Sets who may open pull requests against a repository, using the repository setting {@code
+   * pull_request_creation_policy}. This works for any repository in the course's organization,
+   * whatever created it.
+   *
+   * @param course the course whose organization the repository belongs to
+   * @param repositoryName the name of the repository
+   * @param policy who may open pull requests
+   * @throws HttpStatusCodeException if GitHub refuses the request, for example because the GitHub
+   *     App is not allowed to administer repositories
+   */
+  public void setPullRequestCreationPolicy(
+      Course course, String repositoryName, PullRequestCreationPolicy policy)
+      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    String token = jwtService.getInstallationToken(course);
+    String endpoint = "https://api.github.com/repos/" + course.getOrgName() + "/" + repositoryName;
+    Map<String, Object> body = Map.of("pull_request_creation_policy", policy.getGithubValue());
+    HttpEntity<String> entity =
+        new HttpEntity<>(mapper.writeValueAsString(body), githubHeaders(token));
+    restTemplate.exchange(endpoint, HttpMethod.PATCH, entity, String.class);
   }
 
   /**

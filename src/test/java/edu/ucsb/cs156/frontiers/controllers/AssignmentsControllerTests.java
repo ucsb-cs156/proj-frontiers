@@ -224,7 +224,8 @@ public class AssignmentsControllerTests extends ControllerTestCase {
             "createReposFor", "STUDENTS_ONLY",
             "teamRegex", "",
             "lastJobId", 12,
-            "requireSignedCommit", false),
+            "requireSignedCommit", false,
+            "restrictPrsToContributors", false),
         withNullsAsEmpty(body.get(0)));
   }
 
@@ -1182,6 +1183,104 @@ public class AssignmentsControllerTests extends ControllerTestCase {
     // launching does not change the setting
     assertEquals(true, individual.getRequireSignedCommit());
     assertEquals(false, team.getRequireSignedCommit());
+  }
+
+  // ---- restrictPrsToContributors ----
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
+      putTeamRestrict(String restrictPrsToContributors) {
+    var request =
+        putRequest("6")
+            .param("repoPrefix", "proj")
+            .param("visibility", "PUBLIC")
+            .param("permission", "READ")
+            .param("teamRegex", "team-.*");
+    return restrictPrsToContributors == null
+        ? request
+        : request.param("restrictPrsToContributors", restrictPrsToContributors);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_team_assignment_does_not_restrict_prs_unless_asked_to() throws Exception {
+    mockMvc.perform(postTeam(null)).andExpect(status().isOk());
+
+    ArgumentCaptor<Assignment> saved = ArgumentCaptor.forClass(Assignment.class);
+    verify(assignmentRepository, times(1)).save(saved.capture());
+    assertEquals(false, saved.getValue().getRestrictPrsToContributors());
+    CreateTeamRepositoriesJob started =
+        assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob());
+    // false, not null: the job lifts the restriction rather than leaving the repos alone
+    assertEquals(false, ReflectionTestUtils.getField(started, "restrictPrsToContributors"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_team_assignment_can_restrict_prs_to_contributors() throws Exception {
+    mockMvc
+        .perform(postTeam(null).param("restrictPrsToContributors", "true"))
+        .andExpect(status().isOk());
+
+    ArgumentCaptor<Assignment> saved = ArgumentCaptor.forClass(Assignment.class);
+    verify(assignmentRepository, times(1)).save(saved.capture());
+    assertEquals(true, saved.getValue().getRestrictPrsToContributors());
+    CreateTeamRepositoriesJob started =
+        assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob());
+    assertEquals(true, ReflectionTestUtils.getField(started, "restrictPrsToContributors"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_can_set_and_clear_restrictPrsToContributors() throws Exception {
+    Assignment team = team(6L, "proj", "team-.*");
+    when(assignmentRepository.findById(eq(6L))).thenReturn(Optional.of(team));
+
+    mockMvc.perform(putTeamRestrict("true")).andExpect(status().isOk());
+    assertEquals(true, team.getRestrictPrsToContributors());
+    assertEquals(
+        true,
+        ReflectionTestUtils.getField(
+            assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob()),
+            "restrictPrsToContributors"));
+
+    org.mockito.Mockito.clearInvocations(jobService);
+    mockMvc.perform(putTeamRestrict("false")).andExpect(status().isOk());
+    assertEquals(false, team.getRestrictPrsToContributors());
+    assertEquals(
+        false,
+        ReflectionTestUtils.getField(
+            assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob()),
+            "restrictPrsToContributors"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_without_restrictPrsToContributors_keeps_the_setting() throws Exception {
+    Assignment team = team(6L, "proj", "team-.*");
+    team.setRestrictPrsToContributors(true);
+    when(assignmentRepository.findById(eq(6L))).thenReturn(Optional.of(team));
+
+    mockMvc.perform(putTeamRestrict(null)).andExpect(status().isOk());
+
+    assertEquals(true, team.getRestrictPrsToContributors());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void launch_gives_the_team_job_the_restrictPrsToContributors_the_assignment_has()
+      throws Exception {
+    Assignment team = team(6L, "proj", "team-.*");
+    team.setRestrictPrsToContributors(true);
+    when(assignmentRepository.findById(eq(6L))).thenReturn(Optional.of(team));
+
+    mockMvc.perform(launchRequest("1", "6")).andExpect(status().isOk());
+
+    assertEquals(
+        true,
+        ReflectionTestUtils.getField(
+            assertInstanceOf(CreateTeamRepositoriesJob.class, launchedJob()),
+            "restrictPrsToContributors"));
+    assertEquals(true, team.getRestrictPrsToContributors());
   }
 
   // ---- DELETE ----

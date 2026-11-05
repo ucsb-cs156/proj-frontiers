@@ -398,6 +398,7 @@ describe("NewAssignmentsTable tests", () => {
       visibility: "PRIVATE",
       permission: "WRITE",
       requireSignedCommit: true,
+      restrictPrsToContributors: false,
       teamRegex: "s26-0[1-3]",
     });
   });

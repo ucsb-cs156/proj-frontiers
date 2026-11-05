@@ -56,6 +56,9 @@ export function formDataToParams(asnType, formData) {
   };
   if (asnType === "TEAM") {
     params.teamRegex = formData.teamRegex;
+    params.restrictPrsToContributors = Boolean(
+      formData.restrictPrsToContributors,
+    );
   } else {
     params.createReposFor = formData.createReposFor;
   }
@@ -69,6 +72,7 @@ export function assignmentToFormData(assignment) {
     isPrivate: assignment.visibility === "PRIVATE",
     permission: assignment.permission,
     requireSignedCommit: assignment.requireSignedCommit,
+    restrictPrsToContributors: assignment.restrictPrsToContributors,
     createReposFor: assignment.createReposFor,
     teamRegex: assignment.teamRegex,
   };

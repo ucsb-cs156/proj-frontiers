@@ -20,6 +20,7 @@ import edu.ucsb.cs156.frontiers.entities.RosterStudent;
 import edu.ucsb.cs156.frontiers.entities.Team;
 import edu.ucsb.cs156.frontiers.entities.TeamMember;
 import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.PullRequestCreationPolicy;
 import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
 import edu.ucsb.cs156.frontiers.repositories.TeamRepository;
 import edu.ucsb.cs156.frontiers.services.wiremock.WiremockService;
@@ -1304,5 +1305,63 @@ public class RepositoryServiceTests {
         HttpClientErrorException.class,
         () -> repositoryService.setSignedCommitsRequired(course, "lab01-student1", false));
     mockRestServiceServer.verify();
+  }
+
+  // ---- setPullRequestCreationPolicy ----
+
+  private static final String REPO_URL = "https://api.github.com/repos/ucsb-cs156/lab01-student1";
+
+  @Test
+  public void setPullRequestCreationPolicy_COLLABORATORS_ONLY_patches_the_repo() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo(REPO_URL))
+        .andExpect(header("Authorization", "Bearer real.installation.token"))
+        .andExpect(header("Accept", "application/vnd.github+json"))
+        .andExpect(header("X-GitHub-Api-Version", "2022-11-28"))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(
+            content().json("{\"pull_request_creation_policy\":\"collaborators_only\"}", true))
+        .andRespond(withSuccess());
+
+    repositoryService.setPullRequestCreationPolicy(
+        course, "lab01-student1", PullRequestCreationPolicy.COLLABORATORS_ONLY);
+
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setPullRequestCreationPolicy_ALL_patches_the_repo() throws Exception {
+    mockRestServiceServer
+        .expect(requestTo(REPO_URL))
+        .andExpect(method(HttpMethod.PATCH))
+        .andExpect(content().json("{\"pull_request_creation_policy\":\"all\"}", true))
+        .andRespond(withSuccess());
+
+    repositoryService.setPullRequestCreationPolicy(
+        course, "lab01-student1", PullRequestCreationPolicy.ALL);
+
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void setPullRequestCreationPolicy_propagates_a_refusal() {
+    mockRestServiceServer
+        .expect(requestTo(REPO_URL))
+        .andExpect(method(HttpMethod.PATCH))
+        .andRespond(withStatus(HttpStatus.FORBIDDEN));
+
+    assertThrows(
+        HttpClientErrorException.class,
+        () ->
+            repositoryService.setPullRequestCreationPolicy(
+                course, "lab01-student1", PullRequestCreationPolicy.COLLABORATORS_ONLY));
+    mockRestServiceServer.verify();
+  }
+
+  @Test
+  public void PullRequestCreationPolicy_uses_the_values_github_expects() {
+    assertEquals(
+        "collaborators_only", PullRequestCreationPolicy.COLLABORATORS_ONLY.getGithubValue());
+    assertEquals("all", PullRequestCreationPolicy.ALL.getGithubValue());
   }
 }

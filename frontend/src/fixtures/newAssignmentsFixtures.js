@@ -10,6 +10,7 @@ const newAssignmentsFixtures = {
       teamRegex: null,
       lastJobId: 12,
       requireSignedCommit: false,
+      restrictPrsToContributors: false,
     },
   ],
   threeAssignments: [
@@ -23,6 +24,7 @@ const newAssignmentsFixtures = {
       teamRegex: null,
       lastJobId: 12,
       requireSignedCommit: false,
+      restrictPrsToContributors: false,
     },
     {
       id: 2,
@@ -34,6 +36,7 @@ const newAssignmentsFixtures = {
       teamRegex: null,
       lastJobId: null,
       requireSignedCommit: true,
+      restrictPrsToContributors: false,
     },
     {
       id: 3,
@@ -45,6 +48,7 @@ const newAssignmentsFixtures = {
       teamRegex: "s26-.*",
       lastJobId: 15,
       requireSignedCommit: true,
+      restrictPrsToContributors: false,
     },
   ],
   // What POST and PUT answer with: the saved assignment and the job started
@@ -59,6 +63,7 @@ const newAssignmentsFixtures = {
       teamRegex: null,
       lastJobId: 99,
       requireSignedCommit: false,
+      restrictPrsToContributors: false,
     },
     job: { id: 99, status: "processing" },
   },
