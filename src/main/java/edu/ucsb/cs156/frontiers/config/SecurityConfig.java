@@ -26,6 +26,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.*;
@@ -66,8 +68,15 @@ public class SecurityConfig {
    */
   // https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript-spa
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, ApiKeyFilter apiKeyFilter)
+  public SecurityFilterChain filterChain(
+      HttpSecurity http,
+      ApiKeyFilter apiKeyFilter,
+      ClientRegistrationRepository clientRegistrationRepository)
       throws Exception {
+    DefaultOAuth2AuthorizationRequestResolver resolver =
+        new DefaultOAuth2AuthorizationRequestResolver(
+            clientRegistrationRepository, "/oauth2/authorization");
+    resolver.setAuthorizationRequestCustomizer(new KeyCloakPromptHandler());
     http.exceptionHandling(
             handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
         .sessionManagement(
@@ -80,7 +89,9 @@ public class SecurityConfig {
                             userInfo
                                 .oidcUserService(googleSignInService)
                                 .userService(githubSignInService))
-                    .defaultSuccessUrl("/login/success"))
+                    .defaultSuccessUrl("/login/success")
+                    .authorizationEndpoint(
+                        endpoint -> endpoint.authorizationRequestResolver(resolver)))
         .csrf(
             csrf ->
                 csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
