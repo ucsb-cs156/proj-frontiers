@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CreateStudentOrStaffRepositoriesJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">CreateStudentOrStaffRepositoriesJob.java</span></div><h1>CreateStudentOrStaffRepositoriesJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.RosterStudent;
+import edu.ucsb.cs156.frontiers.enums.OrgStatus;
+import edu.ucsb.cs156.frontiers.enums.RepositoryCreationOption;
+import edu.ucsb.cs156.frontiers.enums.RepositoryPermissions;
+import edu.ucsb.cs156.frontiers.services.RepositoryService;
+import edu.ucsb.cs156.frontiers.services.RepositoryService.RepositoryCreationResult;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.Optional;
+import lombok.Builder;
+import org.springframework.web.client.HttpStatusCodeException;
+
+@Builder
+public class CreateStudentOrStaffRepositoriesJob implements JobContextConsumer {
+  Course course;
+  RepositoryService repositoryService;
+  String repositoryPrefix;
+  Boolean isPrivate;
+  RepositoryPermissions permissions;
+
+  /**
+   * Whether the repositories must require signed commits: true gives each repository the ruleset
+   * that requires them, false removes it. Null, as for a caller that does not manage this, leaves
+   * the repositories' rulesets alone.
+   */
+  Boolean requireSignedCommit;
+
+  @Builder.Default RepositoryCreationOption creationOption = RepositoryCreationOption.STUDENTS_ONLY;
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L36">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L41">    return course.getId();</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L46">    ctx.log(&quot;repositoryPrefix=&quot; + repositoryPrefix);</span>
+<span class="fc" id="L47">    ctx.log(&quot;isPrivate=&quot; + isPrivate);</span>
+<span class="fc" id="L48">    ctx.log(&quot;permissions=&quot; + permissions);</span>
+<span class="fc" id="L49">    ctx.log(&quot;creationOption=&quot; + creationOption);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">    if (requireSignedCommit != null) {</span>
+<span class="fc" id="L51">      ctx.log(&quot;requireSignedCommit=&quot; + requireSignedCommit);</span>
+    }
+
+<span class="fc" id="L54">    int reposCreated = 0;</span>
+<span class="fc" id="L55">    int reposUpdated = 0;</span>
+<span class="fc" id="L56">    int signedCommitsFailures = 0;</span>
+
+<span class="fc bfc" id="L58" title="All 4 branches covered.">    if (creationOption == RepositoryCreationOption.STUDENTS_ONLY</span>
+        || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
+<span class="fc bfc" id="L60" title="All 2 branches covered.">      for (RosterStudent student : course.getRosterStudents()) {</span>
+        // A student not on GitHub or not yet an org member never calls repositoryService,
+        // and neither of those branches calls ctx.log() -- checkCancellation() gives this
+        // loop its own checkpoint independent of whether an iteration does anything at all.
+<span class="fc" id="L64">        ctx.checkCancellation();</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (student.getGithubLogin() != null</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            &amp;&amp; (student.getOrgStatus() == OrgStatus.MEMBER</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                || student.getOrgStatus() == OrgStatus.OWNER)) {</span>
+<span class="fc" id="L68">          Optional&lt;RepositoryCreationResult&gt; result =</span>
+<span class="fc" id="L69">              repositoryService.createStudentRepository(</span>
+                  course, student, repositoryPrefix, isPrivate, permissions);
+<span class="fc bfc" id="L71" title="All 2 branches covered.">          if (result.isPresent()) {</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            if (result.get().created()) {</span>
+<span class="fc" id="L73">              ctx.log(&quot; created repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L74">              reposCreated++;</span>
+            } else {
+<span class="fc" id="L76">              ctx.log(&quot;  updated repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L77">              reposUpdated++;</span>
+            }
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            if (!applySignedCommits(ctx, result.get().repoName())) {</span>
+<span class="fc" id="L80">              signedCommitsFailures++;</span>
+            }
+          }
+        }
+<span class="fc" id="L84">      }</span>
+    }
+
+<span class="fc bfc" id="L87" title="All 4 branches covered.">    if (creationOption == RepositoryCreationOption.STAFF_ONLY</span>
+        || creationOption == RepositoryCreationOption.STUDENTS_AND_STAFF) {
+<span class="fc bfc" id="L89" title="All 2 branches covered.">      for (CourseStaff staff : course.getCourseStaff()) {</span>
+        // Same reasoning as the student loop above: a staff member not on GitHub or not yet
+        // an org member never logs, so this loop needs its own cancellation checkpoint too.
+<span class="fc" id="L92">        ctx.checkCancellation();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (staff.getGithubLogin() != null</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            &amp;&amp; (staff.getOrgStatus() == OrgStatus.MEMBER</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                || staff.getOrgStatus() == OrgStatus.OWNER)) {</span>
+<span class="fc" id="L96">          Optional&lt;RepositoryCreationResult&gt; result =</span>
+<span class="fc" id="L97">              repositoryService.createStaffRepository(</span>
+                  course, staff, repositoryPrefix, isPrivate, permissions);
+<span class="fc bfc" id="L99" title="All 2 branches covered.">          if (result.isPresent()) {</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            if (result.get().created()) {</span>
+<span class="fc" id="L101">              ctx.log(&quot; created repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L102">              reposCreated++;</span>
+            } else {
+<span class="fc" id="L104">              ctx.log(&quot;  updated repo &quot; + result.get().repoName());</span>
+<span class="fc" id="L105">              reposUpdated++;</span>
+            }
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (!applySignedCommits(ctx, result.get().repoName())) {</span>
+<span class="fc" id="L108">              signedCommitsFailures++;</span>
+            }
+          }
+        }
+<span class="fc" id="L112">      }</span>
+    }
+
+<span class="fc" id="L115">    ctx.log(&quot;Summary:&quot;);</span>
+<span class="fc" id="L116">    ctx.log(String.format(&quot;%4d repos created&quot;, reposCreated));</span>
+<span class="fc" id="L117">    ctx.log(String.format(&quot;%4d repos updated&quot;, reposUpdated));</span>
+<span class="fc" id="L118">    ctx.log(String.format(&quot;%4d repos total&quot;, reposCreated + reposUpdated));</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">    if (signedCommitsFailures &gt; 0) {</span>
+<span class="fc" id="L120">      ctx.log(</span>
+<span class="fc" id="L121">          String.format(&quot;%4d repos where signed commits could not be set&quot;, signedCommitsFailures));</span>
+    }
+<span class="fc" id="L123">    ctx.log(&quot;Done&quot;);</span>
+<span class="fc" id="L124">  }</span>
+
+  /**
+   * Makes a repository require signed commits, or not, as this job is set to; does nothing if it is
+   * not set either way. A refusal by GitHub is logged, and does not stop the job.
+   *
+   * @return false if GitHub refused, true otherwise
+   */
+  private boolean applySignedCommits(JobContext ctx, String repoName) throws Exception {
+<span class="fc bfc" id="L133" title="All 2 branches covered.">    if (requireSignedCommit == null) {</span>
+<span class="fc" id="L134">      return true;</span>
+    }
+    try {
+<span class="fc" id="L137">      repositoryService.setSignedCommitsRequired(course, repoName, requireSignedCommit);</span>
+<span class="fc" id="L138">      return true;</span>
+<span class="fc" id="L139">    } catch (HttpStatusCodeException e) {</span>
+<span class="fc" id="L140">      ctx.log(</span>
+          &quot;  could not &quot;
+<span class="fc bfc" id="L142" title="All 2 branches covered.">              + (requireSignedCommit ? &quot;require&quot; : &quot;stop requiring&quot;)</span>
+              + &quot; signed commits on &quot;
+              + repoName
+              + &quot;: &quot;
+<span class="fc" id="L146">              + e.getStatusCode()</span>
+              + &quot; &quot;
+<span class="fc" id="L148">              + e.getResponseBodyAsString());</span>
+<span class="fc" id="L149">      return false;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
