@@ -14,18 +14,19 @@ following the instructions below should take care of that.
 
 # Steps to setup Github Pages for this repo
 
-## Step 1: Launch  `02-gh-pages-rebuild-part-1` action
+## Step 1: Launch  `02-gh-pages-rebuild` action
 
-Go to the `Actions` menu, and launch workflow `02-gh-pages-rebuild-part-1` as shown. You
+Go to the `Actions` menu, and launch workflow `02-gh-pages-rebuild` as shown. You
  * select the job in the left hand navigation,
  * click on right where it says 'Run workflow'
  * then select `main` branch and click the green `Run Workflow` button **ONCE**.  **DO NOT CLICK IT TWICE**.
 
 Note that it can take a long time for the display to update, and you may even need to refresh the page.  If you click the button twice (because you don't think it "heard you the first time"), it will just take longer and possible fail.
-   
-<img width="1307" alt="Run Workflow: 02-gh-pages-rebuild-part-1" src="https://github.com/ucsb-cs156-m23/STARTER-jpa03/assets/1119017/fb506c1f-dc95-4e33-9cfa-f91324705c87">
 
-You now need to wait for this job to finish, kick off job `04-gh-pages-rebuild-part-2`, and then complete.
+![run-workflow-02](https://user-images.githubusercontent.com/1119017/235545108-e6da1791-5a29-44e9-a8f8-ff4e7a6b889b.gif)
+
+You now need to wait for this job to finish.  It builds the documentation and then publishes it to the `gh-pages` branch;
+this may take a few minutes.
 
 It will create the Github Pages site for the repo, with links to documentation for both the backend (javadoc) and
 frontend (storybook).
