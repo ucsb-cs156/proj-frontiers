@@ -1,0 +1,92 @@
+Activity,Class,Term,Format,Instr,School
+"TeamFormation","CMPSC 123","Fall 2026","Studio","FakeInstructor","University of California - Santa Barbara"
+
+"Name","Student ID","Email","Section","Platform","Sex","Java Knowledge","React Experience",
+"OKONKWO-LARK, NIA","A769503","niaokonkwolark@ucsb.edu","71530","macos,linux","Female","1","2",
+"DELACROUTE, MIREILLE","A876700","mireilledelacroute@ucsb.edu","71530","macos","Female","3","1",
+"KESTRELLE, AUGUSTIN","A085650","augustinkestrelle@ucsb.edu","71530","macos","Male","3","1",
+"QUILLFEATHER, AMARA JUNE","A041641","amaraquillfeather@ucsb.edu","71530","windows","Female","3","2",
+"VANTERPOOL, ISOLDE","A989506","isoldevanterpool@ucsb.edu","71530","macos,linux","Female","3","3",
+"THISTLEWAITE, BARNABY","A368804","barnabythistlewaite@ucsb.edu","71530","windows,macos","Male","2","3",
+"PENWARDEN, OPHELIA WREN","A608618","opheliapenwarden@ucsb.edu","71530","windows,macos","Female","1","2",
+"HOLLISTRAND, SORREL","A546601","sorrelhollistrand@ucsb.edu","71530","macos,linux","Male","1","2",
+"MARLOWE-PIKE, CASPIAN LOCKE","A802174","caspianmarlowepike@ucsb.edu","71530","macos","Male","2","2",
+"BRAMBLEWOOD, TOBIAS","A225853","tobiasbramblewood@ucsb.edu","71530","macos","Male","1","3",
+"ACKERLY, DORIAN FELIX","A469747","dorianackerly@ucsb.edu","71530","windows","Male","2","2",
+"PEMBERWICK, GWENDOLYN","A953789","gwendolynpemberwick@ucsb.edu","71530","linux","Female","2","1",
+"ULLSWATER, THADDEUS ROOK","A588825","thaddeusullswater@ucsb.edu","71548","macos,linux","Male","1","2",
+"CORRIGANDER, PHILIPPA","A270577","philippacorrigander@ucsb.edu","71548","linux","Female","3","1",
+"NORTHCLIFFE, ALARIC","A975638","alaricnorthcliffe@ucsb.edu","71548","macos","Male","1","3",
+"ESPERANZO, MAXIMILIAN","A138303","maximilianesperanzo@ucsb.edu","71548","linux","Male","2","1",
+"GRIMSHAWE, TEMPERANCE","A588282","temperancegrimshawe@ucsb.edu","71548","windows,macos","Female","3","3",
+"IRONSIDES, HORATIO","A641795","horatioironsides@ucsb.edu","71548","macos","Male","3","2",
+"STROMBERGEN, LEOPOLD","A532606","leopoldstrombergen@ucsb.edu","71548","windows,macos","Male","2","1",
+"BLACKTHORNE, WILHELMINA","A514833","wilhelminablackthorne@ucsb.edu","71548","linux","Female","2","3",
+"FAIRWEATHER, CLEMENTINE ROSE","A910575","clementinefairweather@ucsb.edu","71548","windows,macos","Female","2","2",
+"ZABRISKIE, LUCINDA MAE","A310868","lucindazabriskie@ucsb.edu","71548","linux","Female","2","2",
+"SALTONSTALL, CORNELIUS","A210672","corneliussaltonstall@ucsb.edu","71548","windows,macos","Male","3","1",
+"YARBOROUGHE, MARISOL","A782553","marisolyarboroughe@ucsb.edu","71548","macos,linux","Female","1","2",
+
+
+"Name","Student ID","Email","Section",
+"Rater Practice"
+"Student","Team","Section","Max Rater Practice Score","Average Rater Practice Score","Total Attempts"
+"YARBOROUGHE, MARISOL","cmpsc123-06","71548","","",""
+"BRAMBLEWOOD, TOBIAS","cmpsc123-01","71530","","",""
+"PEMBERWICK, GWENDOLYN","cmpsc123-01","71530","","",""
+"GRIMSHAWE, TEMPERANCE","cmpsc123-05","71548","","",""
+"QUILLFEATHER, AMARA JUNE","cmpsc123-02","71530","","",""
+"BLACKTHORNE, WILHELMINA","cmpsc123-05","71548","","",""
+"STROMBERGEN, LEOPOLD","cmpsc123-06","71548","","",""
+"ESPERANZO, MAXIMILIAN","cmpsc123-05","71548","","",""
+"MARLOWE-PIKE, CASPIAN LOCKE","cmpsc123-03","71530","","",""
+"THISTLEWAITE, BARNABY","cmpsc123-02","71530","","",""
+"ACKERLY, DORIAN FELIX","cmpsc123-01","71530","","",""
+"IRONSIDES, HORATIO","cmpsc123-06","71548","","",""
+"CORRIGANDER, PHILIPPA","cmpsc123-04","71548","","",""
+"OKONKWO-LARK, NIA","cmpsc123-02","71530","","",""
+"NORTHCLIFFE, ALARIC","cmpsc123-05","71548","","",""
+"ULLSWATER, THADDEUS ROOK","cmpsc123-04","71548","","",""
+"KESTRELLE, AUGUSTIN","cmpsc123-03","71530","","",""
+"ZABRISKIE, LUCINDA MAE","cmpsc123-04","71548","","",""
+"FAIRWEATHER, CLEMENTINE ROSE","cmpsc123-06","71548","","",""
+"DELACROUTE, MIREILLE","cmpsc123-03","71530","","",""
+"HOLLISTRAND, SORREL","cmpsc123-01","71530","","",""
+"SALTONSTALL, CORNELIUS","cmpsc123-04","71548","","",""
+"PENWARDEN, OPHELIA WREN","cmpsc123-03","71530","","",""
+"VANTERPOOL, ISOLDE","cmpsc123-02","71530","","",""
+
+"Comments"
+"OKONKWO-LARK, NIA","A769503","niaokonkwolark@ucsb.edu","71530",""
+"DELACROUTE, MIREILLE","A876700","mireilledelacroute@ucsb.edu","71530",""
+"KESTRELLE, AUGUSTIN","A085650","augustinkestrelle@ucsb.edu","71530",""
+"QUILLFEATHER, AMARA JUNE","A041641","amaraquillfeather@ucsb.edu","71530",""
+"VANTERPOOL, ISOLDE","A989506","isoldevanterpool@ucsb.edu","71530","I have a part-time job on Tuesday and Thursday afternoons, so evening meetings work best for me."
+"THISTLEWAITE, BARNABY","A368804","barnabythistlewaite@ucsb.edu","71530","Please put me with Nia Okonkwo-Lark if possible; we worked well together in CMPSC 48."
+"PENWARDEN, OPHELIA WREN","A608618","opheliapenwarden@ucsb.edu","71530",""
+"HOLLISTRAND, SORREL","A546601","sorrelhollistrand@ucsb.edu","71530",""
+"MARLOWE-PIKE, CASPIAN LOCKE","A802174","caspianmarlowepike@ucsb.edu","71530","About me:
+I've built a couple of small web apps with Flask and some React.
+
+Looking forward to the class!"
+"BRAMBLEWOOD, TOBIAS","A225853","tobiasbramblewood@ucsb.edu","71530",""
+"ACKERLY, DORIAN FELIX","A469747","dorianackerly@ucsb.edu","71530","I'd like to be on a team with Rosalind Fennimore."
+"PEMBERWICK, GWENDOLYN","A953789","gwendolynpemberwick@ucsb.edu","71530",""
+"ULLSWATER, THADDEUS ROOK","A588825","thaddeusullswater@ucsb.edu","71548",""
+"CORRIGANDER, PHILIPPA","A270577","philippacorrigander@ucsb.edu","71548","About me:
+I've built a couple of small web apps with Flask and some React.
+
+Looking forward to the class!"
+"NORTHCLIFFE, ALARIC","A975638","alaricnorthcliffe@ucsb.edu","71548",""
+"ESPERANZO, MAXIMILIAN","A138303","maximilianesperanzo@ucsb.edu","71548",""
+"GRIMSHAWE, TEMPERANCE","A588282","temperancegrimshawe@ucsb.edu","71548",""
+"IRONSIDES, HORATIO","A641795","horatioironsides@ucsb.edu","71548","About me:
+I've built a couple of small web apps with Flask and some React.
+
+Looking forward to the class!"
+"STROMBERGEN, LEOPOLD","A532606","leopoldstrombergen@ucsb.edu","71548","I'd like to be on a team with Clementine Fairweather."
+"BLACKTHORNE, WILHELMINA","A514833","wilhelminablackthorne@ucsb.edu","71548","Please put me with Maximilian Esperanzo if possible; we worked well together in CMPSC 48."
+"FAIRWEATHER, CLEMENTINE ROSE","A910575","clementinefairweather@ucsb.edu","71548",""
+"ZABRISKIE, LUCINDA MAE","A310868","lucindazabriskie@ucsb.edu","71548","I'd like to be on a team with Ezekiel Wrexhampton."
+"SALTONSTALL, CORNELIUS","A210672","corneliussaltonstall@ucsb.edu","71548",""
+"YARBOROUGHE, MARISOL","A782553","marisolyarboroughe@ucsb.edu","71548",""
