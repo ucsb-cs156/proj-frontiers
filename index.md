@@ -40,14 +40,13 @@ tbody tr:nth-child(even) {background-color: #f2f2f2;}
 <thead>
 <tr>
 <th colspan="2" style="text-align:center">Backend</th>
-<th colspan="3" style="text-align:center">Frontend</th>
+<th colspan="2" style="text-align:center">Frontend</th>
 </tr>
 <tr>
 <th>Jacoco</th>
 <th>Pitest</th>
 <th>Coverage</th>
 <th>Stryker</th>
-<th>Storybook Coverage</th>
 </tr>
 </thead>
 <tbody>
@@ -56,7 +55,6 @@ tbody tr:nth-child(even) {background-color: #f2f2f2;}
 <td><a href="pitest">pitest</a></td>
 <td><a href="coverage">coverage</a></td>
 <td><a href="stryker/mutation.html">stryker</a></td>
-<td><a href="storybook-coverage">Storybook Coverage</a></td>
 </tr>
 </tbody>
 </table>
@@ -102,7 +100,7 @@ tbody tr:nth-child(even) {background-color: #f2f2f2;}
 <tr>
 <th colspan="3" style="text-align:center">Pull Request</th>
 <th colspan="2" style="text-align:center">Backend</th>
-<th colspan="3" style="text-align:center">Frontend</th>
+<th colspan="2" style="text-align:center">Frontend</th>
 </tr>
 <tr>
 <th>PR</th>
@@ -112,7 +110,6 @@ tbody tr:nth-child(even) {background-color: #f2f2f2;}
 <th>Pitest</th>
 <th>Coverage</th>
 <th>Stryker</th>
-<th>Storybook Coverage</th>
 </tr>
 </thead>
 <tbody>
@@ -125,7 +122,6 @@ tbody tr:nth-child(even) {background-color: #f2f2f2;}
 <td><a href="prs/{{pr.number}}/pitest">pitest</a></td>
 <td><a href="prs/{{pr.number}}/coverage">coverage</a></td>
 <td><a href="prs/{{pr.number}}/stryker/mutation.html">stryker</a></td>
-<td><a href="prs/{{pr.number}}/storybook-coverage">Storybook Coverage</a></td>
 </tr>
 {% endfor %}
 </tbody>
