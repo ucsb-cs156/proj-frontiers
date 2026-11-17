@@ -24,29 +24,19 @@ Select "New Github App". Fill in an appropriate name, and write it down. You wil
 
 For the homepage url, fill in `http://localhost:8080`.
 
-![image](https://github.com/user-attachments/assets/fa37f61d-4a7e-4f76-bba1-02e52bcd99b9)
+<img width="1516" height="1018" alt="image" src="https://github.com/user-attachments/assets/c7537871-8827-4a65-9103-3146b1053751" />
 
-Under `Identifying and authorizing users`, click the button "Add Callback URL"; this should make it so that you see two spaces in which you can add a Callback URL.
+Under `Identifying and authorizing users`, click the button "Add Redirect URI"; this should make it so that you see two spaces in which you can add a Redirect URI.
 
 Fill these in as follows:
-* First callback URL: `http://localhost:8080/api/courses/link`
-* Second callback URL: `http://localhost:8080/login/oauth2/code/github`
+* First Redirect URI: `http://localhost:8080/api/courses/link`
+* Second Redirect URI: `http://localhost:8080/login/oauth2/code/github`
 
 Click the checkbox for "Request user authorization (OAuth) during installation"
 
-![image](https://github.com/user-attachments/assets/a06af72c-e08d-4f47-bd6a-91b5d1aef65f)
+<img width="1523" height="695" alt="image" src="https://github.com/user-attachments/assets/1eca7040-8c47-4b58-b423-9997c8d9c592" />
 
-Scroll down to permissions, and under repository, set the following accesses:
-- Administration: Read and Write
-- Contents: Read and Write
-- Metadata: Read-only
-- Workflows: Read and Write
-
-Under Organization, select the following permissions:
-- Administration: Read and Write
-- Plan: Read-only (lets Frontiers see the organization's GitHub plan, so it can warn instructors whose organization is on the Free plan, where features such as requiring signed commits on private repositories are unavailable)
-
-Then, scroll further and uncheck "Active" under "Webhooks" (localhost testing doesn't need webhook functionality)
+Scroll further and uncheck "Active" under "Webhooks" (localhost testing doesn't need webhook functionality)
 
 ![image](https://github.com/user-attachments/assets/74119317-b1a5-40c8-88ce-d7e394f7e5a6)
 
@@ -56,17 +46,25 @@ Then, scroll further and uncheck "Active" under "Webhooks" (localhost testing do
 WEBHOOK_SECRET=localhost_dev_secret_123
 ```
 
+Then, scroll down to permissions, and under repository, set the following accesses:
+- Administration: Read and Write
+- Contents: Read and Write
+- Metadata: Read-only
+- Workflows: Read and Write
+
+Under Organization, select the following permissions:
+- Administration: Read and Write
+- Plan: Read-only (lets Frontiers see the organization's GitHub plan, so it can warn instructors whose organization is on the Free plan, where features such as requiring signed commits on private repositories are unavailable)
 
 Then, scroll further and under "Where can this Github App be installed?" select "Any Account"
 
-Click "Create".
+Click "Create". Once created, copy the value for the client id into `GITHUB_CLIENT_ID` in `.env`.
 
-Now, Select "Generate Client Secret". Copy this client secret to a safe location, you will use it in a few minutes. Copy the Client ID as well.
+Now, click the "Credentials" tab and select "Generate Client Secret". Copy this client secret to a safe location, you will use it in a few minutes. Copy the Client ID as well.
 
 ![image](https://github.com/user-attachments/assets/856cf882-b6f3-44a5-b70b-115531bb8cae)
 
-* Copy the value for the client id into `GITHUB_CLIENT_ID` in `.env`
-* Copy the value for the client secret into `GITHUB_CLIENT_SECRET` in `.env`
+Copy the value for the client secret into `GITHUB_CLIENT_SECRET` in `.env`
 
 ## Generating a value for `app_private_key`
 
