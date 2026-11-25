@@ -15,14 +15,14 @@ For the homepage url, fill in `https://<appname>.dokku-<dokku-number>.cs.ucsb.ed
 
 
 
-Next to the heading for `Identifying and authorizing users`, find the button "Add Callback URL", and click it once.
+Next to the heading for `Identifying and authorizing users`, find the button "Add redirect URI", and click it once.
 
-You should now see two spaces to add Callback URLs, like this:
+You should now see a space to add a Callback URL, like this:
 
-<img width="878" alt="image" src="https://github.com/user-attachments/assets/1f3bcf9b-113e-4d72-bc0f-f5687b63e172" />
+<img width="1538" height="834" alt="image" src="https://github.com/user-attachments/assets/43526a27-f1f2-4e99-8e65-c674fc3ae7a8" />
 
 
-Fill in the two callback URLs with these values:
+Fill in two callback URLs with these values:
 ```
 https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/api/courses/link
 https://<appname>.dokku-<dokku-number>.cs.ucsb.edu/login/oauth2/code/github
@@ -33,7 +33,7 @@ Then, click the checkbox for "Request user authorization (OAuth) during installa
 
 As an example, when filled it, it might look like this:
 
-<img width="898" alt="image" src="https://github.com/user-attachments/assets/ee58c776-0e1d-4290-b278-8ea4d87884f0" />
+<img width="1545" height="1079" alt="image" src="https://github.com/user-attachments/assets/24d837dd-68e1-42dc-bd2c-26b74cd815a4" />
 
 ## Set up Webhooks and `WEBHOOK_SECRET`
 
@@ -57,7 +57,7 @@ In the GitHub App setup page, find the "Webhook secret" field and enter your gen
 
 Final settings should look like this (with your webhook secret value, not the example one show above.)
 
-<img width="522" height="419" alt="image" src="https://github.com/user-attachments/assets/7102a889-666f-4917-b194-654c7e6f2a52" />
+<img width="1019" height="574" alt="image" src="https://github.com/user-attachments/assets/af82e603-fb86-4994-8cd4-bea1332b41ac" />
 
 
 ## Set App Permissions
@@ -89,9 +89,9 @@ Click "Create".
 <img width="518" height="204" alt="image" src="https://github.com/user-attachments/assets/2df7b8e8-4bf7-4d59-bc0c-ec8f1adff9da" />
 
 
-Now, select "Generate Client Secret". 
+Now, click "Credentials" on the lefthand side and select "New Secret". 
 
-![image](https://github.com/user-attachments/assets/856cf882-b6f3-44a5-b70b-115531bb8cae)
+<img width="1503" height="616" alt="image" src="https://github.com/user-attachments/assets/b111d0e8-3b33-4eb1-9b0e-8154763b45b6" />
 
 
 Then, set your Github Client ID and Github Client Secret with the following commands respectively:
@@ -102,7 +102,7 @@ dokku config:set --no-restart <appname> GITHUB_CLIENT_SECRET=<client-secret>
 
 ## Generating a value for `app_private_key`
 
-Scroll down to "Private Keys" and select "Generate a Private Key"
+Go back to the "Credentials" tab and click "Key Pairs," then select "New Key"
 
 ![image](https://github.com/user-attachments/assets/7c2b958a-f912-4972-af63-9ff2c30339cd)
 
