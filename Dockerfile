@@ -7,6 +7,7 @@ WORKDIR /home/app
 # have to reload them constantly.
 
 COPY pom.xml .
+COPY .mvn .mvn
 
 RUN --mount=id=156-base-mvn,type=cache,target=/root/.m2/repository mvn dependency:go-offline -B
 
