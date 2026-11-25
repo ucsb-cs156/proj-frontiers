@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StaffTeamGithubSync.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.jobs</a> &gt; <span class="el_source">StaffTeamGithubSync.java</span></div><h1>StaffTeamGithubSync.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.jobs;
+
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseStaff;
+import edu.ucsb.cs156.frontiers.entities.Team;
+import edu.ucsb.cs156.frontiers.enums.TeamStatus;
+import edu.ucsb.cs156.frontiers.services.GithubTeamService;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import java.util.List;
+
+/**
+ * Puts the course staff on the GitHub team of a staff team (see {@link Team#getIsStaffTeam()}).
+ * Shared by the jobs that push teams to GitHub, so that a staff team is handled the same way
+ * whether it was just created or is being pushed with all of the other teams.
+ */
+public final class StaffTeamGithubSync {
+
+  private StaffTeamGithubSync() {}
+
+  /**
+   * Adds every member of the course staff who has a GitHub login to the team's GitHub team, as a
+   * member, unless they are already on it. A staff member without a GitHub login, and a staff
+   * member GitHub refuses, are logged and skipped; nothing is stored in Frontiers, since staff
+   * members have no team member records.
+   *
+   * @param ctx the job context, for logging
+   * @param course the course; its staff are the members of the team
+   * @param team the staff team, which must already have a GitHub team id
+   * @param orgId the GitHub id of the course's organization
+   * @param githubTeamService the service that talks to GitHub
+   */
+  public static void addStaffMembers(
+      JobContext ctx,
+      Course course,
+      Team team,
+      Integer orgId,
+      GithubTeamService githubTeamService) {
+<span class="fc bfc" id="L38" title="All 2 branches covered.">    List&lt;CourseStaff&gt; staff = course.getCourseStaff() == null ? List.of() : course.getCourseStaff();</span>
+<span class="fc" id="L39">    ctx.log(</span>
+        &quot;Processing staff members for staff team: &quot;
+<span class="fc" id="L41">            + team.getName()</span>
+            + &quot; (&quot;
+<span class="fc" id="L43">            + staff.size()</span>
+            + &quot; staff member(s))&quot;);
+<span class="fc bfc" id="L45" title="All 2 branches covered.">    for (CourseStaff member : staff) {</span>
+<span class="fc" id="L46">      String login = member.getGithubLogin();</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">      if (login == null) {</span>
+<span class="fc" id="L48">        ctx.log(&quot;Staff member &quot; + member.getEmail() + &quot; has no GitHub login - skipped&quot;);</span>
+<span class="fc" id="L49">        continue;</span>
+      }
+      try {
+<span class="fc" id="L52">        TeamStatus currentStatus =</span>
+<span class="fc" id="L53">            githubTeamService.getTeamMembershipStatus(login, team.getGithubTeamId(), course, orgId);</span>
+<span class="fc bfc" id="L54" title="All 4 branches covered.">        if (currentStatus == TeamStatus.TEAM_MEMBER</span>
+            || currentStatus == TeamStatus.TEAM_MAINTAINER) {
+<span class="fc" id="L56">          ctx.log(&quot;Staff member &quot; + login + &quot; already has status: &quot; + currentStatus);</span>
+        } else {
+<span class="fc" id="L58">          TeamStatus newStatus =</span>
+<span class="fc" id="L59">              githubTeamService.addMemberToGithubTeam(</span>
+<span class="fc" id="L60">                  login, team.getGithubTeamId(), &quot;member&quot;, course, orgId);</span>
+<span class="fc" id="L61">          ctx.log(&quot;Added staff member &quot; + login + &quot; to team with status: &quot; + newStatus);</span>
+        }
+<span class="fc" id="L63">      } catch (Exception e) {</span>
+<span class="fc" id="L64">        ctx.log(</span>
+            &quot;ERROR: Failed to process staff member &quot;
+                + login
+                + &quot; for team '&quot;
+<span class="fc" id="L68">                + team.getName()</span>
+                + &quot;': &quot;
+<span class="fc" id="L70">                + e.getMessage());</span>
+<span class="fc" id="L71">      }</span>
+<span class="fc" id="L72">    }</span>
+<span class="fc" id="L73">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

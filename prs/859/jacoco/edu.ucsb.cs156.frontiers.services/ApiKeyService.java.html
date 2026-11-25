@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiKeyService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">frontiers</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.frontiers.services</a> &gt; <span class="el_source">ApiKeyService.java</span></div><h1>ApiKeyService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.frontiers.services;
+
+import edu.ucsb.cs156.frontiers.config.ApiKeyToken;
+import edu.ucsb.cs156.frontiers.entities.Course;
+import edu.ucsb.cs156.frontiers.entities.CourseApiKey;
+import edu.ucsb.cs156.frontiers.entities.CourseOption;
+import edu.ucsb.cs156.frontiers.entities.User;
+import edu.ucsb.cs156.frontiers.enums.CourseOptions;
+import edu.ucsb.cs156.frontiers.models.CourseApiKeyView;
+import edu.ucsb.cs156.frontiers.repositories.CourseApiKeyRepository;
+import edu.ucsb.cs156.frontiers.repositories.CourseOptionRepository;
+import jakarta.transaction.Transactional;
+import java.security.SecureRandom;
+import java.time.ZonedDateTime;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.hibernate.Hibernate;
+import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ApiKeyService {
+  private final DateTimeProvider dateTimeProvider;
+  private final CourseApiKeyRepository courseApiKeyRepository;
+  private final CurrentUserService currentUserService;
+  private final SecureRandom secureRandom;
+  private final CourseOptionRepository courseOptionRepository;
+
+  public ApiKeyService(
+      DateTimeProvider dateTimeProvider,
+      CourseApiKeyRepository courseApiKeyRepository,
+      CurrentUserService currentUserService,
+      SecureRandom secureRandom,
+<span class="fc" id="L42">      CourseOptionRepository courseOptionRepository) {</span>
+<span class="fc" id="L43">    this.dateTimeProvider = dateTimeProvider;</span>
+<span class="fc" id="L44">    this.courseApiKeyRepository = courseApiKeyRepository;</span>
+<span class="fc" id="L45">    this.currentUserService = currentUserService;</span>
+<span class="fc" id="L46">    this.secureRandom = secureRandom;</span>
+<span class="fc" id="L47">    this.courseOptionRepository = courseOptionRepository;</span>
+<span class="fc" id="L48">  }</span>
+
+  /**
+   * Whether the ENABLE_API_KEYS course option is on for the course. Keys can only be created for,
+   * and used with, a course that has the option on; turning it off disables every key of the course
+   * at once.
+   *
+   * @param courseId the id of the course
+   * @return true if the option is enabled, false if it is disabled or has never been set
+   */
+  public boolean apiKeysEnabled(Long courseId) {
+<span class="fc" id="L59">    return courseOptionRepository</span>
+<span class="fc" id="L60">        .findByCourseIdAndOption(courseId, CourseOptions.ENABLE_API_KEYS.name())</span>
+<span class="fc" id="L61">        .map(CourseOption::getEnabled)</span>
+<span class="fc" id="L62">        .orElse(false);</span>
+  }
+
+  /**
+   * A freshly created key. This is the only time the key itself is available; only its hash is
+   * stored.
+   */
+<span class="fc" id="L69">  public record IssuedCourseApiKey(</span>
+      String key, Long courseId, ZonedDateTime issuedAt, ZonedDateTime expiresAt, String label) {}
+
+<span class="fc" id="L72">  public enum ExpirationChoice {</span>
+<span class="fc" id="L73">    DAYS_90,</span>
+<span class="fc" id="L74">    MONTHS_6</span>
+  }
+
+  /**
+   * Creates a key for the course.
+   *
+   * @param course the course the key is for
+   * @param choice how long the key lasts
+   * @param label an optional short name for the key; blank is stored as null
+   * @return the key and its metadata
+   */
+  @Transactional
+  public IssuedCourseApiKey createApiKey(Course course, ExpirationChoice choice, String label) {
+<span class="fc bfc" id="L87" title="All 4 branches covered.">    String trimmedLabel = label == null || label.isBlank() ? null : label.strip();</span>
+<span class="fc" id="L88">    byte[] nextBytes = new byte[16];</span>
+<span class="fc" id="L89">    secureRandom.nextBytes(nextBytes);</span>
+<span class="fc" id="L90">    String key = Base64.getUrlEncoder().withoutPadding().encodeToString(nextBytes);</span>
+
+<span class="fc" id="L92">    ZonedDateTime currentTime = ZonedDateTime.from(dateTimeProvider.getNow().get());</span>
+
+    CourseApiKey keyEntity =
+<span class="fc" id="L95">        CourseApiKey.builder()</span>
+<span class="fc" id="L96">            .course(course)</span>
+<span class="fc" id="L97">            .createdAt(currentTime)</span>
+<span class="fc" id="L98">            .expiresAt(</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                choice == ExpirationChoice.DAYS_90</span>
+<span class="fc" id="L100">                    ? currentTime.plusDays(90)</span>
+<span class="fc" id="L101">                    : currentTime.plusMonths(6))</span>
+<span class="fc" id="L102">            .keyHash(DigestUtils.sha256Hex(key))</span>
+<span class="fc" id="L103">            .keySuffix(key.substring(key.length() - 6))</span>
+<span class="fc" id="L104">            .createdBy(currentUserService.getUser())</span>
+<span class="fc" id="L105">            .label(trimmedLabel)</span>
+<span class="fc" id="L106">            .build();</span>
+
+<span class="fc" id="L108">    courseApiKeyRepository.save(keyEntity);</span>
+
+<span class="fc" id="L110">    return new IssuedCourseApiKey(</span>
+<span class="fc" id="L111">        key, course.getId(), currentTime, keyEntity.getExpiresAt(), trimmedLabel);</span>
+  }
+
+  @Transactional
+  public ApiKeyToken authenticateKey(String key) {
+<span class="fc" id="L116">    CourseApiKey foundKey =</span>
+        courseApiKeyRepository
+<span class="fc" id="L118">            .findByKeyHash(DigestUtils.sha256Hex(key))</span>
+<span class="fc" id="L119">            .orElseThrow(() -&gt; new AccessDeniedException(&quot;Invalid API key&quot;));</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">    if (foundKey.getRevoked()) {</span>
+<span class="fc" id="L121">      throw new AccessDeniedException(&quot;API key has been revoked&quot;);</span>
+    }
+<span class="fc bfc" id="L123" title="All 2 branches covered.">    if (foundKey.getExpiresAt().isBefore(ZonedDateTime.from(dateTimeProvider.getNow().get()))) {</span>
+<span class="fc" id="L124">      throw new AccessDeniedException(&quot;API key has expired&quot;);</span>
+    }
+<span class="fc bfc" id="L126" title="All 2 branches covered.">    if (!apiKeysEnabled(foundKey.getCourse().getId())) {</span>
+<span class="fc" id="L127">      throw new AccessDeniedException(&quot;API keys are not enabled for this course&quot;);</span>
+    }
+    /* Forcibly load key owner for auth purposes */
+<span class="fc" id="L130">    User owner = Hibernate.unproxy(foundKey.getCreatedBy(), User.class);</span>
+<span class="fc" id="L131">    foundKey.setCreatedBy(owner);</span>
+<span class="fc" id="L132">    foundKey.setUsageCount(foundKey.getUsageCount() + 1);</span>
+<span class="fc" id="L133">    foundKey.setLastUsedAt(ZonedDateTime.from(dateTimeProvider.getNow().get()));</span>
+<span class="fc" id="L134">    courseApiKeyRepository.save(foundKey);</span>
+<span class="fc" id="L135">    HashSet&lt;GrantedAuthority&gt; authority = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L136">    authority.add(new SimpleGrantedAuthority(&quot;ROLE_API_KEY&quot;));</span>
+<span class="fc" id="L137">    return new ApiKeyToken(foundKey, owner, authority);</span>
+  }
+
+  public List&lt;CourseApiKey&gt; getApiKeysForCourse(Long courseId) {
+<span class="fc" id="L141">    return courseApiKeyRepository.findByCourseId(courseId);</span>
+  }
+
+  /**
+   * The keys of a course as an instructor may see them (never the key itself), newest first.
+   *
+   * @param courseId the id of the course
+   * @return one view per key, including revoked and expired ones
+   */
+  @Transactional
+  public List&lt;CourseApiKeyView&gt; listApiKeys(Long courseId) {
+<span class="fc" id="L152">    ZonedDateTime now = ZonedDateTime.from(dateTimeProvider.getNow().get());</span>
+<span class="fc" id="L153">    return courseApiKeyRepository.findByCourseId(courseId).stream()</span>
+<span class="fc" id="L154">        .sorted(Comparator.comparing(CourseApiKey::getCreatedAt).reversed())</span>
+<span class="fc" id="L155">        .map(key -&gt; CourseApiKeyView.from(key, now))</span>
+<span class="fc" id="L156">        .toList();</span>
+  }
+
+  /**
+   * Revokes a key by id, for the instructor's key table. The course id must match the key's, so
+   * that an instructor of one course cannot revoke another course's keys by guessing ids.
+   *
+   * @param id the key's id
+   * @param courseId the course the key is expected to belong to
+   * @return true if the key was found in that course (and is now revoked), false otherwise
+   */
+  @Transactional
+  public boolean revokeApiKeyById(Long id, Long courseId) {
+<span class="fc" id="L169">    Optional&lt;CourseApiKey&gt; found = courseApiKeyRepository.findById(id);</span>
+<span class="fc bfc" id="L170" title="All 4 branches covered.">    if (found.isEmpty() || !Objects.equals(found.get().getCourse().getId(), courseId)) {</span>
+<span class="fc" id="L171">      return false;</span>
+    }
+<span class="fc" id="L173">    found.get().setRevoked(true);</span>
+<span class="fc" id="L174">    courseApiKeyRepository.save(found.get());</span>
+<span class="fc" id="L175">    return true;</span>
+  }
+
+  public List&lt;CourseApiKey&gt; getApiKeysForUser(User user) {
+<span class="fc" id="L179">    return courseApiKeyRepository.findByCreatedBy(user);</span>
+  }
+
+  public boolean revokeApiKey(String key) {
+<span class="fc" id="L183">    CourseApiKey foundKey =</span>
+<span class="fc" id="L184">        courseApiKeyRepository.findByKeyHash(DigestUtils.sha256Hex(key)).orElse(null);</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">    if (foundKey != null) {</span>
+<span class="fc" id="L186">      foundKey.setRevoked(true);</span>
+<span class="fc" id="L187">      courseApiKeyRepository.save(foundKey);</span>
+<span class="fc" id="L188">      return true;</span>
+    } else {
+<span class="fc" id="L190">      return false;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
