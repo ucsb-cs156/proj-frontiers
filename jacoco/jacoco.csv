@@ -15,6 +15,7 @@ frontiers,edu.ucsb.cs156.frontiers.enums,RepositoryPermissions,0,39,0,0,0,8,0,2,
 frontiers,edu.ucsb.cs156.frontiers.enums,RepositoryCreationOption,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,InsertStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,Permission,0,27,0,0,0,5,0,1,0,1
+frontiers,edu.ucsb.cs156.frontiers.enums,PullRequestCreationPolicy,0,28,0,0,0,7,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.enums,AssignmentType,0,15,0,0,0,3,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.enums,TeamStatus,0,27,0,0,0,5,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.interceptors,RoleUpdateInterceptor,0,100,0,12,0,26,0,9,0,3
@@ -32,9 +33,9 @@ frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeRe
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService.new TypeReference() {...},0,8,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,SectionTranslationService,0,60,0,6,0,13,0,7,0,4
 frontiers,edu.ucsb.cs156.frontiers.services,GithubGraphQLService,0,268,0,4,0,82,0,8,0,6
-frontiers,edu.ucsb.cs156.frontiers.services,SlackService,0,629,0,38,0,148,0,40,0,21
 frontiers,edu.ucsb.cs156.frontiers.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
-frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,787,0,42,0,177,0,34,0,13
+frontiers,edu.ucsb.cs156.frontiers.services,SlackService,0,629,0,38,0,148,0,40,0,21
+frontiers,edu.ucsb.cs156.frontiers.services,RepositoryService,0,824,0,42,0,184,0,35,0,14
 frontiers,edu.ucsb.cs156.frontiers.services,ApiKeyService.IssuedCourseApiKey,0,18,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.services,OrganizationMemberService,0,475,0,20,0,107,0,23,0,13
 frontiers,edu.ucsb.cs156.frontiers.services,CanvasApiTokenSecurityService,0,205,0,24,0,46,0,17,0,5
@@ -89,7 +90,7 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,AdminsController,0,86,0,2,0,19,0,
 frontiers,edu.ucsb.cs156.frontiers.controllers,JobsController,0,254,0,4,0,69,0,18,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,CoursesController.StaffCoursesDTO,0,27,0,0,0,1,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,DokkuAccountTranslationsController,0,161,0,4,0,37,0,13,0,11
-frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,338,0,26,0,86,0,29,0,16
+frontiers,edu.ucsb.cs156.frontiers.controllers,AssignmentsController,0,350,0,28,0,89,0,30,0,16
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberStatus,0,21,0,0,0,4,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.controllers,RosterStudentsController,0,717,0,84,0,185,0,67,0,25
 frontiers,edu.ucsb.cs156.frontiers.controllers,CSVDownloadsController,0,401,0,8,0,76,0,17,0,13
@@ -100,8 +101,8 @@ frontiers,edu.ucsb.cs156.frontiers.controllers,CourseStaffController,0,307,0,36,
 frontiers,edu.ucsb.cs156.frontiers.controllers,TeamsController.TeamMemberResult,0,24,0,0,0,5,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.controllers,SystemInfoController,0,10,0,0,0,3,0,3,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteRepoJob,0,196,0,10,0,42,0,8,0,3
-frontiers,edu.ucsb.cs156.frontiers.jobs,AddTeamToGithubJob,0,130,0,10,0,34,0,8,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToCanvasJob,0,515,0,28,0,102,0,20,0,6
+frontiers,edu.ucsb.cs156.frontiers.jobs,AddTeamToGithubJob,0,130,0,10,0,34,0,8,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,RemoveStudentsJob,0,86,0,12,0,20,0,7,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,PullTeamsFromCanvasJob,0,267,0,18,0,64,0,18,0,9
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamFromGithubJob,0,79,0,6,0,22,0,6,0,3
@@ -109,7 +110,7 @@ frontiers,edu.ucsb.cs156.frontiers.jobs,CreateStudentOrStaffRepositoriesJob,0,29
 frontiers,edu.ucsb.cs156.frontiers.jobs,DeleteTeamMemberFromGithubJob,0,90,0,8,0,26,0,7,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamsFromCATMEJob,0,297,0,26,0,59,0,18,0,5
 frontiers,edu.ucsb.cs156.frontiers.jobs,StaffTeamGithubSync,0,84,0,10,0,24,0,6,0,1
-frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamRepositoriesJob,0,229,0,20,0,51,0,14,0,4
+frontiers,edu.ucsb.cs156.frontiers.jobs,CreateTeamRepositoriesJob,0,300,0,32,0,73,0,21,0,5
 frontiers,edu.ucsb.cs156.frontiers.jobs,SetupPrivateSlackChannelsJob.StudentChannel,0,6,0,0,0,2,0,1,0,1
 frontiers,edu.ucsb.cs156.frontiers.jobs,PushTeamsToGithubJob,0,297,0,26,0,79,0,16,0,3
 frontiers,edu.ucsb.cs156.frontiers.jobs,MembershipAuditJob,0,253,0,30,0,65,0,22,0,7
