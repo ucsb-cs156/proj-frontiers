@@ -14,11 +14,16 @@ import {
  * visible, so the modal says so and offers a copy button.
  *
  * @param issuedKey the response of POST /api/courses/key, or null to hide
+ * @param baseUrl optional scheme and host to show in the example request,
+ *   without a trailing slash. When omitted, the host the app is being served
+ *   from is used. Stories pass a fixed value so that the rendered output does
+ *   not change from one Chromatic build to the next.
  */
 export default function NewApiKeyModal({
   issuedKey,
   courseId,
   onClose,
+  baseUrl,
   testIdPrefix = "NewApiKeyModal",
 }) {
   if (!issuedKey) {
@@ -78,7 +83,7 @@ export default function NewApiKeyModal({
           className="bg-light p-2 rounded"
           data-testid={`${testIdPrefix}-example`}
         >
-          {studentInfoCurlExample(courseId, issuedKey.key)}
+          {studentInfoCurlExample(courseId, issuedKey.key, baseUrl)}
         </pre>
       </Modal.Body>
       <Modal.Footer>

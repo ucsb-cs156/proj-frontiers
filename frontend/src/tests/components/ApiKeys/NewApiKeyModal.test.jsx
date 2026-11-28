@@ -78,6 +78,38 @@ describe("NewApiKeyModal tests", () => {
     );
   });
 
+  test("the example request uses the current host when no baseUrl is given", () => {
+    render(
+      <NewApiKeyModal
+        issuedKey={apiKeysFixtures.issuedKey}
+        courseId={7}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(window.location.origin).toMatch(/^http/);
+    expect(screen.getByTestId(`${testId}-example`).textContent).toBe(
+      `curl -s '${window.location.origin}/api/courses/studentInfo?courseId=7&email=cgaucho@ucsb.edu' \\\n` +
+        "  -H 'X-API-KEY: u1Zc6N0T0dG9xWcY4h2JbQ'",
+    );
+  });
+
+  test("the example request uses the baseUrl instead of the current host when one is given", () => {
+    render(
+      <NewApiKeyModal
+        issuedKey={apiKeysFixtures.issuedKey}
+        courseId={7}
+        baseUrl="https://frontiers.example-host.cs.ucsb.edu"
+        onClose={vi.fn()}
+      />,
+    );
+    const example = screen.getByTestId(`${testId}-example`).textContent;
+    expect(example).toBe(
+      "curl -s 'https://frontiers.example-host.cs.ucsb.edu/api/courses/studentInfo?courseId=7&email=cgaucho@ucsb.edu' \\\n" +
+        "  -H 'X-API-KEY: u1Zc6N0T0dG9xWcY4h2JbQ'",
+    );
+    expect(example).not.toContain(window.location.origin);
+  });
+
   test("leaves the label out of the details when the key has none", () => {
     const issuedKey = apiKeysFixtures.issuedKeyWithoutLabel;
     render(
