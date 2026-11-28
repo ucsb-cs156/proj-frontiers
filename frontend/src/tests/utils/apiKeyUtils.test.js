@@ -32,6 +32,19 @@ describe("apiKeyUtils tests", () => {
     expect(window.location.origin).toMatch(/^http/);
   });
 
+  test("studentInfoCurlExample uses the given base URL instead of this deployment", () => {
+    const example = studentInfoCurlExample(
+      7,
+      "u1Zc6N0T0dG9xWcY4h2JbQ",
+      "https://frontiers.example-host.cs.ucsb.edu",
+    );
+    expect(example).toBe(
+      "curl -s 'https://frontiers.example-host.cs.ucsb.edu/api/courses/studentInfo?courseId=7&email=cgaucho@ucsb.edu' \\\n" +
+        "  -H 'X-API-KEY: u1Zc6N0T0dG9xWcY4h2JbQ'",
+    );
+    expect(example).not.toContain(window.location.origin);
+  });
+
   test("daysUntil rounds up to whole days", () => {
     const now = new Date("2026-10-01T12:00:00Z");
     expect(daysUntil("2026-10-03T00:00:00Z", now)).toBe(2); // 36 hours

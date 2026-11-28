@@ -13,10 +13,18 @@ export function apiKeysQueryKey(courseId) {
  * A ready-to-paste example request for the new-key modal: the student lookup
  * endpoint that autograders use, against this deployment, with the course id
  * and the key filled in.
+ *
+ * @param baseUrl scheme and host of the deployment, without a trailing slash;
+ *   defaults to the host the app is being served from. Pass a fixed value
+ *   where the output must not depend on the host, e.g. in Storybook.
  */
-export function studentInfoCurlExample(courseId, key) {
+export function studentInfoCurlExample(
+  courseId,
+  key,
+  baseUrl = window.location.origin,
+) {
   return (
-    `curl -s '${window.location.origin}/api/courses/studentInfo?courseId=${courseId}&email=cgaucho@ucsb.edu' \\\n` +
+    `curl -s '${baseUrl}/api/courses/studentInfo?courseId=${courseId}&email=cgaucho@ucsb.edu' \\\n` +
     `  -H 'X-API-KEY: ${key}'`
   );
 }
