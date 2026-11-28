@@ -1,11 +1,18 @@
 import React from "react";
 import { http, HttpResponse } from "msw";
+import MockDate from "mockdate";
 import ApiKeysTable from "main/components/ApiKeys/ApiKeysTable";
-import { apiKeysFixtures } from "fixtures/apiKeysFixtures";
+import { apiKeysFixtures, apiKeysFixturesNow } from "fixtures/apiKeysFixtures";
 
 export default {
   title: "components/ApiKeys/ApiKeysTable",
   component: ApiKeysTable,
+  // The table warns about keys that expire soon, counting from the current
+  // date. Freeze the date so that the stories look the same every day.
+  beforeEach: () => {
+    MockDate.set(apiKeysFixturesNow);
+    return () => MockDate.reset();
+  },
   parameters: {
     msw: [
       http.delete("/api/courses/key", ({ request }) => {
