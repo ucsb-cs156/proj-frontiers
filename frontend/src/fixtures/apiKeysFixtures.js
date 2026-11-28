@@ -79,4 +79,10 @@ const apiKeysFixtures = {
   },
 };
 
-export { apiKeysFixtures };
+// The dates above are written around this moment. Seen from here, severalKeys
+// has a key far from expiry, one expiring in 3 days, one expired and one
+// revoked. Stories freeze the clock to it, so that the expiry warnings they
+// show do not change from one day to the next.
+const apiKeysFixturesNow = "2026-10-01T12:00:00-07:00";
+
+export { apiKeysFixtures, apiKeysFixturesNow };

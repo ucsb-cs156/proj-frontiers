@@ -1,6 +1,7 @@
 import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { http, HttpResponse } from "msw";
+import MockDate from "mockdate";
 
 import {
   withRouter,
@@ -17,7 +18,7 @@ import { jobsByCourseFixtures } from "fixtures/jobsByCourseFixtures";
 import { sectionsFixtures } from "fixtures/sectionsFixtures";
 import { dokkuAccountTranslationsFixtures } from "fixtures/dokkuAccountTranslationsFixtures";
 import { newAssignmentsFixtures } from "fixtures/newAssignmentsFixtures";
-import { apiKeysFixtures } from "fixtures/apiKeysFixtures";
+import { apiKeysFixtures, apiKeysFixturesNow } from "fixtures/apiKeysFixtures";
 
 export default {
   title: "pages/Instructor/InstructorCourseShowPage",
@@ -416,6 +417,12 @@ ExampleCourseWithDokkuTab.parameters = {
 export const ExampleCourseWithApiKeysTab = Template.bind({});
 ExampleCourseWithApiKeysTab.args = {
   suppressMemoryRouter: true,
+};
+// The API Keys tab warns about keys that expire soon, counting from the
+// current date. Freeze the date so that the story looks the same every day.
+ExampleCourseWithApiKeysTab.beforeEach = () => {
+  MockDate.set(apiKeysFixturesNow);
+  return () => MockDate.reset();
 };
 ExampleCourseWithApiKeysTab.parameters = {
   msw: {

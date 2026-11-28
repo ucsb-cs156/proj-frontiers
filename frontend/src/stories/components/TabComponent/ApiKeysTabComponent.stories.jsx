@@ -1,11 +1,18 @@
 import React from "react";
 import ApiKeysTabComponent from "main/components/TabComponent/ApiKeysTabComponent";
-import { apiKeysFixtures } from "fixtures/apiKeysFixtures";
+import { apiKeysFixtures, apiKeysFixturesNow } from "fixtures/apiKeysFixtures";
 import { http, HttpResponse } from "msw";
+import MockDate from "mockdate";
 
 export default {
   title: "components/TabComponent/ApiKeysTabComponent",
   component: ApiKeysTabComponent,
+  // The table of keys warns about keys that expire soon, counting from the
+  // current date. Freeze the date so that the stories look the same every day.
+  beforeEach: () => {
+    MockDate.set(apiKeysFixturesNow);
+    return () => MockDate.reset();
+  },
 };
 
 const Template = (args) => {
